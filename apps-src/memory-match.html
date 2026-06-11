@@ -1,0 +1,36 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<style>:root{color-scheme:light dark}
+body{font-family:-apple-system,system-ui,sans-serif;margin:0;padding:18px;background:#f2f2f7;color:#111;text-align:center}
+@media(prefers-color-scheme:dark){body{background:#000;color:#eee}.tile{background:#1c1c1e}}
+h1{font-size:22px;margin:4px 0 2px}
+#stats{font-size:14px;opacity:.65;margin-bottom:14px;min-height:18px}
+#grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;max-width:340px;margin:0 auto}
+.tile{aspect-ratio:1;border-radius:12px;background:#fff;border:0;font-size:30px;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.tile span{opacity:0}
+.tile.up span,.tile.got span{opacity:1}
+.tile.got{background:#bf5af2;box-shadow:none}
+button.new{margin-top:16px;border:0;border-radius:10px;padding:11px 26px;font-size:15px;font-weight:600;background:#bf5af2;color:#fff}
+</style></head><body>
+<h1>🃏 Memory Match</h1>
+<div id="stats"></div>
+<div id="grid"></div>
+<button class="new" onclick="deal()">New game</button>
+<script>
+var store=window.myllmStorage||{getItem:function(){return Promise.resolve(null)},setItem:function(){return Promise.resolve()}};
+var EMOJI=['🍎','🚀','🐙','🌵','🎲','🔑','🐝','🌙'];
+var deck=[],up=[],moves=0,found=0,best=null,lock=false;
+function deal(){deck=EMOJI.concat(EMOJI).sort(function(){return Math.random()-.5});
+up=[];moves=0;found=0;lock=false;var g=document.getElementById('grid');g.innerHTML='';
+deck.forEach(function(e,i){var b=document.createElement('button');b.className='tile';
+b.innerHTML='<span>'+e+'</span>';b.onclick=function(){flip(i,b)};g.appendChild(b)});stats()}
+function stats(){document.getElementById('stats').textContent='Moves: '+moves+(best?' · Best: '+best:'')}
+function flip(i,b){if(lock||b.classList.contains('up')||b.classList.contains('got'))return;
+b.classList.add('up');up.push({i:i,b:b});
+if(up.length===2){moves++;stats();lock=true;
+setTimeout(function(){var a=up[0],c=up[1];
+if(deck[a.i]===deck[c.i]){a.b.classList.add('got');c.b.classList.add('got');found++;
+if(found===8){if(!best||moves<best){best=moves;store.setItem('best',String(best))}
+document.getElementById('stats').textContent='🎉 Solved in '+moves+' moves'+(best===moves?' — new best!':' · Best: '+best)}}
+a.b.classList.remove('up');c.b.classList.remove('up');up=[];lock=false},650)}}
+store.getItem('best').then(function(v){if(v)best=parseInt(v,10)||null;deal()});
+</script></body></html>

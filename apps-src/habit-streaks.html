@@ -1,0 +1,41 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<style>:root{color-scheme:light dark}
+body{font-family:-apple-system,system-ui,sans-serif;margin:0;padding:20px;background:#f2f2f7;color:#111}
+@media(prefers-color-scheme:dark){body{background:#000;color:#eee}.card{background:#1c1c1e}input{background:#2c2c2e;color:#eee;border-color:#3a3a3c}.done-btn.off{background:#3a3a3c;color:#aaa}}
+h1{font-size:22px;margin:0 0 14px}
+.row{display:flex;gap:8px;margin-bottom:14px}
+input{flex:1;padding:12px;border:1px solid #d1d1d6;border-radius:10px;font-size:16px;background:#fff}
+button{border:0;background:#ff9f0a;color:#fff;border-radius:10px;padding:0 16px;font-size:15px;font-weight:600}
+.card{background:#fff;border-radius:12px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px}
+.card b{flex:1;font-size:16px;font-weight:600}
+.streak{font-size:14px;opacity:.8}
+.done-btn{padding:8px 12px;border-radius:8px;font-size:14px}
+.done-btn.off{background:#d1d1d6;color:#555}
+.del{background:none;color:#ff453a;font-size:17px;padding:6px}
+.empty{text-align:center;opacity:.5;margin-top:30px}
+</style></head><body>
+<h1>🔥 Habit Streaks</h1>
+<div class="row"><input id="h" placeholder="New habit (e.g. Read 10 pages)"><button onclick="add()">Add</button></div>
+<div id="list"></div>
+<script>
+var store=window.myllmStorage||{getItem:function(){return Promise.resolve(null)},setItem:function(){return Promise.resolve()}};
+var habits=[];
+function today(){return new Date().toISOString().slice(0,10)}
+function save(){store.setItem('habits',JSON.stringify(habits))}
+function streak(h){var n=0;var d=new Date();if(h.days.indexOf(today())<0)d.setDate(d.getDate()-1);
+while(h.days.indexOf(d.toISOString().slice(0,10))>=0){n++;d.setDate(d.getDate()-1)}return n}
+function render(){var L=document.getElementById('list');L.innerHTML='';
+if(!habits.length){L.innerHTML='<p class="empty">Add a habit, then tap Done each day to grow the streak.</p>';return}
+habits.forEach(function(h,i){var doneToday=h.days.indexOf(today())>=0;
+var d=document.createElement('div');d.className='card';
+var nm=document.createElement('b');nm.textContent=h.name;
+var st=document.createElement('span');st.className='streak';st.textContent='🔥 '+streak(h)+'d';
+var b=document.createElement('button');b.className='done-btn'+(doneToday?'':' off');b.textContent=doneToday?'Done ✓':'Done?';
+b.onclick=function(){if(doneToday)h.days=h.days.filter(function(x){return x!==today()});else h.days.push(today());save();render()};
+var x=document.createElement('button');x.className='del';x.textContent='✕';
+x.onclick=function(){habits.splice(i,1);save();render()};
+d.appendChild(nm);d.appendChild(st);d.appendChild(b);d.appendChild(x);L.appendChild(d)})}
+function add(){var t=document.getElementById('h');var v=t.value.trim();if(!v)return;habits.push({name:v,days:[]});t.value='';save();render()}
+document.getElementById('h').addEventListener('keydown',function(e){if(e.key==='Enter')add()});
+store.getItem('habits').then(function(v){if(v)try{habits=JSON.parse(v)}catch(e){}render()});
+</script></body></html>

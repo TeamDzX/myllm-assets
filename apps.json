@@ -1,0 +1,202 @@
+{
+  "updated": "2026-06-11",
+  "apps": [
+    {
+      "id": "flashcard-forge",
+      "name": "Flashcard Forge",
+      "emoji": "🧠",
+      "tagline": "Decks that write themselves",
+      "description": "Type any topic and your own AI writes a fresh deck of study flashcards — tap to flip, swipe through, every deck saved on-device. Needs the latest MyLLM with “Allow apps to use the AI” enabled in Settings.",
+      "tags": [
+        "AI-powered",
+        "saves data"
+      ],
+      "iconSymbol": "brain.head.profile",
+      "iconColor": "indigo",
+      "version": 1,
+      "featured": true,
+      "requiresAI": true,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/flashcard-forge.jpg",
+      "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/flashcard-forge.html",
+      "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/flashcard-forge.myllmapp",
+      "sizeKB": 5
+    },
+    {
+      "id": "language-lab",
+      "name": "Language Lab",
+      "emoji": "🌍",
+      "tagline": "Your AI language tutor",
+      "description": "Learn any language with your own AI: generate phrase lessons on any topic (with pronunciation), tap to reveal meanings, and get your own sentences checked by the coach. Lessons are saved on-device. Needs the latest MyLLM with “Allow apps to use the AI” enabled in Settings.",
+      "tags": [
+        "AI-powered",
+        "saves data"
+      ],
+      "iconSymbol": "globe",
+      "iconColor": "cyan",
+      "version": 1,
+      "featured": true,
+      "requiresAI": true,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/language-lab.jpg",
+      "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/language-lab.html",
+      "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/language-lab.myllmapp",
+      "sizeKB": 6
+    },
+    {
+      "id": "quick-todo",
+      "name": "Quick Todo",
+      "emoji": "✅",
+      "tagline": "Tasks that stay done",
+      "description": "A clean little task list. Tap a task to tick it off, ✕ to remove it. Your list is saved on-device and is still there next time you open the app.",
+      "tags": [
+        "productivity",
+        "saves data"
+      ],
+      "iconSymbol": "list.bullet.rectangle",
+      "iconColor": "blue",
+      "version": 1,
+      "featured": false,
+      "requiresAI": false,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/quick-todo.jpg",
+      "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/quick-todo.html",
+      "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/quick-todo.myllmapp",
+      "sizeKB": 2
+    },
+    {
+      "id": "habit-streaks",
+      "name": "Habit Streaks",
+      "emoji": "🔥",
+      "tagline": "Keep the flame alive",
+      "description": "Track daily habits and keep the flame alive — tap Done each day and watch your streak grow. Progress is saved on-device.",
+      "tags": [
+        "health",
+        "saves data"
+      ],
+      "iconSymbol": "flame.fill",
+      "iconColor": "orange",
+      "version": 1,
+      "featured": false,
+      "requiresAI": false,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/habit-streaks.jpg",
+      "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/habit-streaks.html",
+      "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/habit-streaks.myllmapp",
+      "sizeKB": 3
+    },
+    {
+      "id": "tip-split",
+      "name": "Tip Split",
+      "emoji": "💷",
+      "tagline": "Settle the bill in seconds",
+      "description": "Settle the bill in seconds: amount, tip preset, party size — see what each person pays. Works fully offline.",
+      "tags": [
+        "utility"
+      ],
+      "iconSymbol": "function",
+      "iconColor": "green",
+      "version": 1,
+      "featured": false,
+      "requiresAI": false,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/tip-split.jpg",
+      "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/tip-split.html",
+      "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/tip-split.myllmapp",
+      "sizeKB": 3
+    },
+    {
+      "id": "box-breathing",
+      "name": "Box Breathing",
+      "emoji": "🌊",
+      "tagline": "One calm minute",
+      "description": "A calming 4·4·4·4 breathing coach with a softly expanding square to follow. One minute between meetings goes a long way.",
+      "tags": [
+        "wellbeing"
+      ],
+      "iconSymbol": "heart.fill",
+      "iconColor": "teal",
+      "version": 1,
+      "featured": false,
+      "requiresAI": false,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/box-breathing.jpg",
+      "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/box-breathing.html",
+      "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/box-breathing.myllmapp",
+      "sizeKB": 2
+    },
+    {
+      "id": "memory-match",
+      "name": "Memory Match",
+      "emoji": "🃏",
+      "tagline": "Find the pairs",
+      "description": "Flip the tiles, find the eight emoji pairs, beat your best score. Your record is saved on-device.",
+      "tags": [
+        "game",
+        "saves data"
+      ],
+      "iconSymbol": "gamecontroller",
+      "iconColor": "purple",
+      "version": 1,
+      "featured": false,
+      "requiresAI": false,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/memory-match.jpg",
+      "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/memory-match.html",
+      "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/memory-match.myllmapp",
+      "sizeKB": 2
+    },
+    {
+      "id": "draw",
+      "name": "Draw",
+      "emoji": "🎨",
+      "tagline": "A pocket painting studio",
+      "description": "A full finger-painting studio: brushes, colours, undo (two-finger tap), and a clean fullscreen canvas — quick doodles or proper artwork, fully offline.",
+      "tags": [
+        "creative"
+      ],
+      "iconSymbol": "paintbrush.fill",
+      "iconColor": "pink",
+      "version": 1,
+      "featured": true,
+      "requiresAI": false,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/draw.jpg",
+      "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/draw.html",
+      "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/draw.myllmapp",
+      "sizeKB": 87
+    },
+    {
+      "id": "snake",
+      "name": "Snake",
+      "emoji": "🐍",
+      "tagline": "The classic, made for thumbs",
+      "description": "The classic, rebuilt for thumbs: swipe to steer, eat apples, speed creeps up, haptics on every bite. Best score saved on-device.",
+      "tags": [
+        "game",
+        "saves data"
+      ],
+      "iconSymbol": "gamecontroller",
+      "iconColor": "green",
+      "version": 1,
+      "featured": true,
+      "requiresAI": false,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/snake.jpg",
+      "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/snake.html",
+      "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/snake.myllmapp",
+      "sizeKB": 3
+    },
+    {
+      "id": "2048",
+      "name": "2048",
+      "emoji": "🔢",
+      "tagline": "Slide. Merge. 2048.",
+      "description": "Swipe to slide and merge the tiles — can you reach 2048? Haptics on merges, best score saved on-device.",
+      "tags": [
+        "game",
+        "saves data"
+      ],
+      "iconSymbol": "cube.fill",
+      "iconColor": "yellow",
+      "version": 1,
+      "featured": false,
+      "requiresAI": false,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/2048.jpg",
+      "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/2048.html",
+      "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/2048.myllmapp",
+      "sizeKB": 4
+    }
+  ]
+}
