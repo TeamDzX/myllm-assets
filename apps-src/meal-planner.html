@@ -83,7 +83,7 @@ function shoppingList(){
   .then(function(list){
     setStatus('');
     if(window.myllmShare)myllmShare('🛒 Shopping list\n\n'+list.trim());
-    else alert(list);
+    else setStatus('Update MyLLM to share your shopping list.');
   }).catch(function(err){setStatus('Could not build list: '+err.message)});
 }
 

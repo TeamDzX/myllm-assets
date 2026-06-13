@@ -132,8 +132,8 @@ function renderManage(){
 }
 function addFeed(){
   var n=el('fname').value.trim(),u=el('furl').value.trim();
-  if(!n||!/^https?:\/\//.test(u)){alert('Enter a name and a full http(s) feed URL.');return}
-  custom.push({name:n,url:u});saveCustom();renderManage();renderTabs();
+  if(!n||!/^https?:\/\//.test(u)){setStatus('Enter a name and a full feed URL (https://…).');return}
+  setStatus('');custom.push({name:n,url:u});saveCustom();renderManage();renderTabs();
 }
 function saveCustom(){store.setItem('feeds',JSON.stringify(custom))}
 function escapeHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}

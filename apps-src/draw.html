@@ -1843,13 +1843,22 @@
             window.toastTimeout = setTimeout(() => toast.classList.remove('visible'), 1500);
         }
 
+        var clearArmed = false;
         function clearCanvas() {
-            if (confirm('Clear the canvas?')) {
-                ctx.fillStyle = '#ffffff';
-                ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
-                saveState();
-                showToast('Canvas cleared');
+            // The sandboxed web view has no confirm() dialog, so use a two-tap
+            // confirm via the toast instead (tap Clear twice within 2.5s).
+            if (!clearArmed) {
+                clearArmed = true;
+                showToast('Tap clear again to confirm');
+                clearTimeout(window.clearArmTimeout);
+                window.clearArmTimeout = setTimeout(function () { clearArmed = false; }, 2500);
+                return;
             }
+            clearArmed = false;
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
+            saveState();
+            showToast('Canvas cleared');
         }
 
         function downloadCanvas() {
