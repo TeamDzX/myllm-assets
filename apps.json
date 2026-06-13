@@ -508,6 +508,69 @@
       "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/star-match.html",
       "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/star-match.myllmapp",
       "sizeKB": 6
+    },
+    {
+      "id": "weather",
+      "name": "Weather",
+      "emoji": "⛅",
+      "tagline": "Live forecast, anywhere",
+      "description": "A clean live weather app: search any city for current conditions and a 5-day forecast, switch between °C and °F, and (with app AI on) get a one-line what-to-wear tip. No account, no tracking — powered by the free Open-Meteo service. Needs app network access (on by default in Settings).",
+      "tags": [
+        "news",
+        "network"
+      ],
+      "category": "News & Web",
+      "iconSymbol": "cloud.sun.fill",
+      "iconColor": "blue",
+      "version": 1,
+      "featured": false,
+      "requiresAI": false,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/weather.jpg",
+      "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/weather.html",
+      "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/weather.myllmapp",
+      "sizeKB": 9
+    },
+    {
+      "id": "hacker-news",
+      "name": "Hacker News",
+      "emoji": "🟠",
+      "tagline": "Tech news, ranked",
+      "description": "Read Hacker News in a clean reader: Top, Best, New, Ask and Show tabs, with scores, comment counts and one tap to the article or the discussion. Powered by the official Hacker News API. Needs app network access (on by default in Settings).",
+      "tags": [
+        "news",
+        "network"
+      ],
+      "category": "News & Web",
+      "iconSymbol": "newspaper.fill",
+      "iconColor": "orange",
+      "version": 1,
+      "featured": false,
+      "requiresAI": false,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/hacker-news.jpg",
+      "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/hacker-news.html",
+      "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/hacker-news.myllmapp",
+      "sizeKB": 5
+    },
+    {
+      "id": "on-this-day",
+      "name": "On This Day",
+      "emoji": "📜",
+      "tagline": "History, every day",
+      "description": "Discover what happened on today's date through history — events, births, deaths and holidays, each linking to Wikipedia to read more. A lovely thing to open with your morning coffee. Powered by Wikipedia. Needs app network access (on by default in Settings).",
+      "tags": [
+        "news",
+        "network"
+      ],
+      "category": "News & Web",
+      "iconSymbol": "calendar",
+      "iconColor": "indigo",
+      "version": 1,
+      "featured": false,
+      "requiresAI": false,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/on-this-day.jpg",
+      "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/on-this-day.html",
+      "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/on-this-day.myllmapp",
+      "sizeKB": 4
     }
   ]
 }

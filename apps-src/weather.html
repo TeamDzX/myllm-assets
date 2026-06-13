@@ -1,0 +1,115 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<style>:root{color-scheme:light dark;--accent:#0a84ff}
+*{box-sizing:border-box}
+body{font-family:-apple-system,system-ui,sans-serif;margin:0;padding:18px;background:#f2f2f7;color:#111}
+@media(prefers-color-scheme:dark){body{background:#000;color:#eee}input,.cur,.day,.tip{background:#1c1c1e;color:#eee;border-color:#3a3a3c}.unit{background:#1c1c1e}}
+h1{font-size:22px;margin:0 0 4px}
+.sub{font-size:13px;opacity:.6;margin-bottom:14px}
+.row{display:flex;gap:8px;margin-bottom:10px}
+input{flex:1;min-width:0;padding:11px;border:1px solid #d1d1d6;border-radius:10px;font-size:16px;background:#fff;color:#111}
+button.go{border:0;background:var(--accent);color:#fff;border-radius:10px;padding:0 16px;font-size:15px;font-weight:600}
+.unit{display:inline-flex;background:#e5e5ea;border-radius:9px;overflow:hidden;margin-bottom:12px}
+.unit button{border:0;background:transparent;color:inherit;padding:7px 14px;font-size:14px;font-weight:600}
+.unit button.on{background:var(--accent);color:#fff}
+#status{font-size:13px;opacity:.7;min-height:16px;margin:6px 0}
+.cur{background:#fff;border-radius:18px;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,.1);display:none;text-align:center}
+.cur .loc{font-size:15px;opacity:.7}
+.cur .big{font-size:58px;line-height:1.05;font-weight:300;margin:2px 0}
+.cur .ico{font-size:46px}
+.cur .desc{font-size:16px;font-weight:600}
+.cur .extra{font-size:13px;opacity:.65;margin-top:8px}
+.days{display:flex;gap:8px;overflow-x:auto;margin-top:12px;display:none}
+.day{flex:1;min-width:62px;background:#fff;border-radius:13px;padding:11px 6px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.day .d{font-size:12px;opacity:.65}.day .e{font-size:24px;margin:4px 0}.day .hi{font-weight:700;font-size:14px}.day .lo{font-size:13px;opacity:.55}
+.tip{background:#eef;border-radius:13px;padding:13px 15px;margin-top:12px;font-size:14px;line-height:1.5;display:none}
+button.wear{margin-top:12px;border:0;background:#e8eefc;color:var(--accent);border-radius:11px;padding:11px 16px;font-size:14px;font-weight:600;display:none}
+@media(prefers-color-scheme:dark){.unit{background:#1c1c1e}.tip{background:#15152a}button.wear{background:#15223a}}
+</style></head><body>
+<h1>⛅ Weather</h1>
+<div class="sub">Live forecast for anywhere. No account, no tracking.</div>
+<div class="row"><input id="city" placeholder="City (e.g. London, Tokyo)" enterkeyhint="search"><button class="go" onclick="search()">Get weather</button></div>
+<div class="unit"><button id="uC" class="on" onclick="setUnit('c')">°C</button><button id="uF" onclick="setUnit('f')">°F</button></div>
+<div id="status"></div>
+<div class="cur" id="cur"></div>
+<div class="days" id="days"></div>
+<button class="wear" id="wearBtn" onclick="wear()">👕 What should I wear?</button>
+<div class="tip" id="tip"></div>
+<script>
+var store=window.myllmStorage||{getItem:function(){return Promise.resolve(null)},setItem:function(){return Promise.resolve()}};
+var unit='c',place=null,last=null;
+function el(i){return document.getElementById(i)}
+function setStatus(t){el('status').textContent=t||''}
+function uTemp(){return unit==='f'?'fahrenheit':'celsius'}
+function uWind(){return unit==='f'?'mph':'kmh'}
+function deg(){return unit==='f'?'°F':'°C'}
+function wspd(){return unit==='f'?'mph':'km/h'}
+
+var WMO={0:['☀️','Clear sky'],1:['🌤️','Mainly clear'],2:['⛅','Partly cloudy'],3:['☁️','Overcast'],
+45:['🌫️','Fog'],48:['🌫️','Rime fog'],51:['🌦️','Light drizzle'],53:['🌦️','Drizzle'],55:['🌦️','Heavy drizzle'],
+56:['🌧️','Freezing drizzle'],57:['🌧️','Freezing drizzle'],61:['🌧️','Light rain'],63:['🌧️','Rain'],65:['🌧️','Heavy rain'],
+66:['🌧️','Freezing rain'],67:['🌧️','Freezing rain'],71:['🌨️','Light snow'],73:['🌨️','Snow'],75:['🌨️','Heavy snow'],
+77:['🌨️','Snow grains'],80:['🌦️','Light showers'],81:['🌦️','Showers'],82:['⛈️','Violent showers'],
+85:['🌨️','Snow showers'],86:['🌨️','Snow showers'],95:['⛈️','Thunderstorm'],96:['⛈️','Thunderstorm + hail'],99:['⛈️','Thunderstorm + hail']};
+function wmo(c,day){var w=WMO[c]||['🌡️','—'];var e=w[0];if(c<=1&&day===0)e='🌙';return{e:e,t:w[1]}}
+function dayName(iso){var d=new Date(iso+'T00:00');return d.toLocaleDateString(undefined,{weekday:'short'})}
+
+function search(){
+  var q=el('city').value.trim();if(!q)return;
+  if(!window.myllmFetch){setStatus('This app needs network access — update MyLLM and enable app network access in Settings.');return}
+  setStatus('Finding “'+q+'”…');
+  myllmFetch('https://geocoding-api.open-meteo.com/v1/search?count=1&language=en&name='+encodeURIComponent(q))
+  .then(function(r){
+    if(!r||!r.ok)throw new Error('lookup failed');
+    var g=JSON.parse(r.body);
+    if(!g.results||!g.results.length)throw new Error('couldn’t find that place');
+    var p=g.results[0];place={lat:p.latitude,lon:p.longitude,name:p.name,region:p.admin1||'',country:p.country||''};
+    store.setItem('place',JSON.stringify(place));load();
+  }).catch(function(e){setStatus('Could not search: '+e.message)});
+}
+function load(){
+  if(!place)return;setStatus('Loading forecast…');
+  var u='https://api.open-meteo.com/v1/forecast?latitude='+place.lat+'&longitude='+place.lon+
+    '&current=temperature_2m,weather_code,wind_speed_10m,relative_humidity_2m,is_day'+
+    '&daily=weather_code,temperature_2m_max,temperature_2m_min&forecast_days=5&timezone=auto'+
+    '&temperature_unit='+uTemp()+'&wind_speed_unit='+uWind();
+  myllmFetch(u).then(function(r){
+    if(!r||!r.ok)throw new Error('forecast failed');
+    last=JSON.parse(r.body);render();setStatus('');
+  }).catch(function(e){setStatus('Could not load forecast: '+e.message)});
+}
+function render(){
+  if(!last)return;var c=last.current,w=wmo(c.weather_code,c.is_day);
+  var loc=place.name+(place.region&&place.region!==place.name?', '+place.region:'')+(place.country?', '+place.country:'');
+  el('cur').style.display='block';
+  el('cur').innerHTML='<div class="loc">'+loc+'</div><div class="ico">'+w.e+'</div>'+
+    '<div class="big">'+Math.round(c.temperature_2m)+deg()+'</div>'+
+    '<div class="desc">'+w.t+'</div>'+
+    '<div class="extra">💧 '+c.relative_humidity_2m+'%  ·  💨 '+Math.round(c.wind_speed_10m)+' '+wspd()+'</div>';
+  var D=el('days');D.style.display='flex';D.innerHTML='';
+  for(var i=0;i<last.daily.time.length;i++){
+    var dw=wmo(last.daily.weather_code[i],1);
+    var div=document.createElement('div');div.className='day';
+    div.innerHTML='<div class="d">'+(i===0?'Today':dayName(last.daily.time[i]))+'</div>'+
+      '<div class="e">'+dw.e+'</div>'+
+      '<div class="hi">'+Math.round(last.daily.temperature_2m_max[i])+'°</div>'+
+      '<div class="lo">'+Math.round(last.daily.temperature_2m_min[i])+'°</div>';
+    D.appendChild(div);
+  }
+  el('tip').style.display='none';
+  el('wearBtn').style.display=window.myllmAsk?'inline-block':'none';
+}
+function setUnit(u){if(unit===u)return;unit=u;el('uC').classList.toggle('on',u==='c');el('uF').classList.toggle('on',u==='f');store.setItem('unit',u);if(place)load()}
+function wear(){
+  if(!last||!window.myllmAsk)return;var c=last.current,w=wmo(c.weather_code,c.is_day);
+  el('wearBtn').disabled=true;setStatus('Thinking…');
+  myllmAsk('Weather right now: '+Math.round(c.temperature_2m)+deg()+', '+w.t+', wind '+Math.round(c.wind_speed_10m)+' '+wspd()+', humidity '+c.relative_humidity_2m+'%. In ONE friendly sentence, say what to wear and whether to take an umbrella.')
+  .then(function(reply){var t=el('tip');t.textContent='👕 '+reply.trim();t.style.display='block';setStatus('')})
+  .catch(function(e){setStatus('')}).then(function(){el('wearBtn').disabled=false});
+}
+el('city').addEventListener('keydown',function(e){if(e.key==='Enter')search()});
+Promise.all([store.getItem('place'),store.getItem('unit')]).then(function(r){
+  if(r[1])unit=r[1];el('uC').classList.toggle('on',unit==='c');el('uF').classList.toggle('on',unit==='f');
+  if(r[0]){try{place=JSON.parse(r[0]);el('city').value=place.name;load()}catch(e){}}
+  if(!window.myllmFetch)setStatus('Heads-up: this app needs app network access (Settings).');
+});
+</script></body></html>
