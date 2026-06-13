@@ -123,6 +123,10 @@ function render(){
 }
 function escapeHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 
+// Add on Return from the keyboard — the on-screen keyboard would otherwise eat
+// the first tap on the Add button (you'd have to tap it twice).
+['t','subj'].forEach(function(id){el(id).addEventListener('keydown',function(e){if(e.key==='Enter')add()})});
+
 store.getItem('items').then(function(v){
   if(v)try{items=JSON.parse(v)}catch(e){}
   render();

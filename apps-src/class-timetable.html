@@ -20,13 +20,37 @@ h1{font-size:22px;margin:0 0 4px}
 .bar button{flex:1;border:0;background:#e5e5ea;color:#111;border-radius:10px;padding:11px;font-size:14px;font-weight:600}
 @media(prefers-color-scheme:dark){.bar button{background:#2c2c2e;color:#eee}.tab{background:#1c1c1e}}
 .hint{font-size:11px;opacity:.4;text-align:center;margin-top:12px}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;padding:24px;z-index:50}
+.overlay.show{display:flex}
+.modal{background:#fff;border-radius:16px;padding:18px;width:100%;max-width:340px;box-shadow:0 12px 44px rgba(0,0,0,.35)}
+@media(prefers-color-scheme:dark){.modal{background:#1c1c1e}}
+.modal h3{margin:0 0 12px;font-size:17px}
+.modal input{width:100%;padding:12px;border:1px solid #d1d1d6;border-radius:10px;font-size:16px;margin-bottom:10px;background:#fff;color:#111;-webkit-user-select:text;user-select:text}
+@media(prefers-color-scheme:dark){.modal input{background:#2c2c2e;color:#eee;border-color:#3a3a3c}}
+.mbtns{display:flex;gap:8px;margin-top:2px}
+.mbtns button{flex:1;border:0;border-radius:10px;padding:12px;font-size:15px;font-weight:600;background:var(--accent);color:#fff}
+.mbtns .msec{background:#e5e5ea;color:#333}
+.mbtns .mclr{background:#ffe5e3;color:#ff3b30}
+@media(prefers-color-scheme:dark){.mbtns .msec{background:#2c2c2e;color:#eee}.mbtns .mclr{background:#3a1f1e;color:#ff6b60}}
 </style></head><body>
 <h1>🗓️ Class Timetable</h1>
 <div class="sub">Tap any slot to set the subject and room.</div>
 <div class="tabs" id="tabs"></div>
 <div id="slots"></div>
-<div class="bar"><button onclick="editTimes()">Edit period times</button><button onclick="clearDay()">Clear this day</button></div>
-<div class="hint">Saved on-device. Your timetable is private to this app.</div>
+<div class="bar"><button onclick="editTimes()">Edit period times</button><button id="clearBtn" onclick="clearDay()">Clear this day</button></div>
+<div class="hint">Tap a slot to add a lesson. Saved on-device, private to this app.</div>
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <h3 id="m-title"></h3>
+    <input id="m-f1" autocapitalize="words" autocomplete="off">
+    <input id="m-f2" autocomplete="off">
+    <div class="mbtns">
+      <button class="msec" onclick="closeModal()">Cancel</button>
+      <button id="m-clear" class="mclr" onclick="modalClear()">Clear</button>
+      <button onclick="modalSave()">Save</button>
+    </div>
+  </div>
+</div>
 <script>
 var store=window.myllmStorage||{getItem:function(){return Promise.resolve(null)},setItem:function(){return Promise.resolve()}};
 var DAYS=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
@@ -75,26 +99,49 @@ function render(){
   });
 }
 
+// In-app editor — the sandboxed web view has no prompt()/confirm() dialogs, so
+// we use a real in-page modal instead (this was why tapping a slot did nothing).
+var modalMode=null,modalP=-1,clearArmed=false;
+function openModal(){el('overlay').classList.add('show');setTimeout(function(){el('m-f1').focus()},60)}
+function closeModal(){el('overlay').classList.remove('show');modalMode=null}
 function editCell(p){
-  var c=cell(DAYS[day],p);
-  var subj=prompt('Subject for '+DAYS[day]+' '+data.times[p]+' (leave blank to clear):',c.subj);
-  if(subj===null)return;
-  var room='';
-  if(subj.trim())room=prompt('Room / location (optional):',c.room)||'';
-  if(!data.grid[DAYS[day]])data.grid[DAYS[day]]=[];
-  data.grid[DAYS[day]][p]={subj:subj.trim(),room:room.trim()};
-  save();render();if(window.myllmHaptic)myllmHaptic('light');
-}
-function clearDay(){
-  if(!confirm('Clear all of '+DAYS[day]+'?'))return;
-  data.grid[DAYS[day]]=[];save();render();
+  modalMode='cell';modalP=p;var c=cell(DAYS[day],p);
+  el('m-title').textContent=DAYS[day]+' · '+data.times[p];
+  el('m-f1').placeholder='Subject (e.g. Maths)';el('m-f1').value=c.subj||'';
+  el('m-f2').style.display='';el('m-f2').placeholder='Room / location (optional)';el('m-f2').value=c.room||'';
+  el('m-clear').style.display='';
+  openModal();
 }
 function editTimes(){
-  var t=prompt('Period start times, comma-separated (24h):',data.times.join(', '));
-  if(t===null)return;
-  var arr=t.split(',').map(function(x){return x.trim()}).filter(function(x){return/^\d{1,2}:\d{2}$/.test(x)});
-  if(arr.length){data.times=arr;save();render()}
+  modalMode='times';
+  el('m-title').textContent='Period start times';
+  el('m-f1').placeholder='e.g. 09:00, 10:00, 11:00';el('m-f1').value=data.times.join(', ');
+  el('m-f2').style.display='none';el('m-clear').style.display='none';
+  openModal();
 }
+function modalSave(){
+  if(modalMode==='cell'){
+    if(!data.grid[DAYS[day]])data.grid[DAYS[day]]=[];
+    data.grid[DAYS[day]][modalP]={subj:el('m-f1').value.trim(),room:el('m-f2').value.trim()};
+    save();render();
+  }else if(modalMode==='times'){
+    var arr=el('m-f1').value.split(',').map(function(x){return x.trim()}).filter(function(x){return/^\d{1,2}:\d{2}$/.test(x)});
+    if(arr.length){data.times=arr;save();render()}
+  }
+  closeModal();if(window.myllmHaptic)myllmHaptic('light');
+}
+function modalClear(){
+  if(modalMode==='cell'&&data.grid[DAYS[day]]){data.grid[DAYS[day]][modalP]={subj:'',room:''};save();render()}
+  closeModal();
+}
+function clearDay(){
+  if(!clearArmed){clearArmed=true;el('clearBtn').textContent='Tap again to clear';
+    setTimeout(function(){clearArmed=false;el('clearBtn').textContent='Clear this day'},2500);return}
+  clearArmed=false;el('clearBtn').textContent='Clear this day';
+  data.grid[DAYS[day]]=[];save();render();
+}
+['m-f1','m-f2'].forEach(function(id){el(id).addEventListener('keydown',function(e){if(e.key==='Enter')modalSave()})});
+el('overlay').addEventListener('click',function(e){if(e.target===el('overlay'))closeModal()});
 
 store.getItem('tt').then(function(v){
   if(v)try{var o=JSON.parse(v);if(o.times)data.times=o.times;if(o.grid)data.grid=o.grid}catch(e){}
