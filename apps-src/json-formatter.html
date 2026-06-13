@@ -1,0 +1,90 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<style>:root{color-scheme:light dark;--accent:#30b56a;--key:#0a84ff;--str:#c93b6b;--num:#9a6f00;--bool:#7b3ff2;--nul:#8a8a8e}
+@media(prefers-color-scheme:dark){:root{--key:#5ac8fa;--str:#ff7ab2;--num:#ffd479;--bool:#bf9cff;--nul:#8a8a8e}}
+*{box-sizing:border-box}
+body{font-family:-apple-system,system-ui,sans-serif;margin:0;padding:16px;background:#f2f2f7;color:#111}
+@media(prefers-color-scheme:dark){body{background:#000;color:#eee}textarea,pre,.bar{background:#1c1c1e;color:#eee;border-color:#3a3a3c}}
+h1{font-size:21px;margin:0 0 4px}
+.sub{font-size:13px;opacity:.6;margin-bottom:12px}
+textarea{width:100%;height:150px;padding:12px;border:1px solid #d1d1d6;border-radius:11px;font:13px ui-monospace,Menlo,monospace;background:#fff;color:#111;resize:vertical;-webkit-user-select:text;user-select:text}
+.bar{display:flex;gap:7px;flex-wrap:wrap;margin:10px 0}
+.bar button{border:0;background:var(--accent);color:#fff;border-radius:9px;padding:9px 13px;font-size:14px;font-weight:600}
+.bar button.sec{background:#e5e5ea;color:#333}
+@media(prefers-color-scheme:dark){.bar button.sec{background:#2c2c2e;color:#eee}}
+.bar .indent{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:13px;opacity:.7}
+.bar select{border:1px solid #d1d1d6;border-radius:8px;padding:5px 8px;background:#fff;color:#111;font-size:13px}
+@media(prefers-color-scheme:dark){.bar select{background:#1c1c1e;color:#eee;border-color:#3a3a3c}}
+#msg{font-size:13px;min-height:18px;margin-bottom:8px;font-weight:600}
+#msg.ok{color:var(--accent)}#msg.err{color:#ff453a}
+pre{margin:0;padding:14px;border:1px solid #d1d1d6;border-radius:11px;background:#fff;font:13px ui-monospace,Menlo,monospace;line-height:1.5;overflow:auto;white-space:pre;-webkit-user-select:text;user-select:text;min-height:60px}
+.key{color:var(--key)}.str{color:var(--str)}.num{color:var(--num)}.bool{color:var(--bool)}.nul{color:var(--nul)}
+</style></head><body>
+<h1>🧩 JSON Formatter</h1>
+<div class="sub">Beautify, minify and validate JSON — fully offline, nothing leaves your device.</div>
+<textarea id="in" placeholder='Paste JSON here, e.g. {"hello":"world","items":[1,2,3]}' autocapitalize="off" autocorrect="off" spellcheck="false"></textarea>
+<div class="bar">
+  <button onclick="format()">Beautify</button>
+  <button class="sec" onclick="minify()">Minify</button>
+  <button class="sec" onclick="copyOut()">Copy</button>
+  <button class="sec" onclick="clearAll()">Clear</button>
+  <span class="indent">Indent
+    <select id="indent"><option value="2">2</option><option value="4">4</option><option value="\t">Tab</option></select>
+  </span>
+</div>
+<div id="msg"></div>
+<pre id="out"></pre>
+<script>
+var store=window.myllmStorage||{getItem:function(){return Promise.resolve(null)},setItem:function(){return Promise.resolve()}};
+var lastOut='';
+function el(i){return document.getElementById(i)}
+function msg(t,cls){var m=el('msg');m.textContent=t||'';m.className=cls||''}
+
+function parseInput(){
+  var raw=el('in').value;
+  store.setItem('json',raw);
+  if(!raw.trim()){msg('');el('out').innerHTML='';lastOut='';return null}
+  try{return {ok:true,val:JSON.parse(raw)}}
+  catch(e){return {ok:false,err:e,raw:raw}}
+}
+function showError(r){
+  el('out').innerHTML='';lastOut='';
+  var m=String(r.err.message||r.err);
+  var pos=m.match(/position\s+(\d+)/);
+  if(pos){var i=+pos[1],before=r.raw.slice(0,i),line=before.split('\n').length,col=i-before.lastIndexOf('\n');
+    msg('✗ Invalid JSON — line '+line+', column '+col+': '+m,'err');}
+  else msg('✗ Invalid JSON — '+m,'err');
+  if(window.myllmHaptic)myllmHaptic('error');
+}
+function render(text){
+  lastOut=text;el('out').innerHTML=highlight(text);
+  var bytes=new Blob([text]).size;
+  msg('✓ Valid JSON · '+text.split('\n').length+' lines · '+bytes+' bytes','ok');
+  if(window.myllmHaptic)myllmHaptic('light');
+}
+function format(){
+  var r=parseInput();if(!r)return;if(!r.ok)return showError(r);
+  var ind=el('indent').value;render(JSON.stringify(r.val,null,ind==='\\t'?'\t':parseInt(ind,10)));
+}
+function minify(){var r=parseInput();if(!r)return;if(!r.ok)return showError(r);render(JSON.stringify(r.val))}
+function clearAll(){el('in').value='';store.setItem('json','');msg('');el('out').innerHTML='';lastOut=''}
+function copyOut(){
+  if(!lastOut){msg('Nothing to copy yet — Beautify or Minify first.','');return}
+  var done=function(){msg('✓ Copied to clipboard','ok')};
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(lastOut).then(done,function(){fallbackCopy()});
+  else fallbackCopy();
+  function fallbackCopy(){if(window.myllmShare){myllmShare(lastOut);msg('✓ Opened share sheet','ok')}else msg('Copy unavailable on this version.','')}
+}
+function highlight(json){
+  json=json.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false)\b|\bnull\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,function(m){
+    var cls='num';
+    if(/^"/.test(m))cls=/:$/.test(m)?'key':'str';
+    else if(/true|false/.test(m))cls='bool';
+    else if(/null/.test(m))cls='nul';
+    return '<span class="'+cls+'">'+m+'</span>';
+  });
+}
+el('in').addEventListener('input',function(){if(el('in').value.trim()&&JSONtest())format()});
+function JSONtest(){try{JSON.parse(el('in').value);return true}catch(e){msg('');el('out').innerHTML='';return false}}
+store.getItem('json').then(function(v){if(v){el('in').value=v;if(v.trim())format()}});
+</script></body></html>
