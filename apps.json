@@ -6,6 +6,7 @@
     "News & Web",
     "Health & Wellbeing",
     "Home & Garden",
+    "Food & Cooking",
     "Astrology",
     "Games",
     "Creative",
@@ -571,6 +572,49 @@
       "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/on-this-day.html",
       "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/on-this-day.myllmapp",
       "sizeKB": 4
+    },
+    {
+      "id": "recipe-finder",
+      "name": "Recipe Finder",
+      "emoji": "🍳",
+      "tagline": "A recipe from whatever you've got",
+      "description": "Tell it what's in your fridge or a dish you fancy and your AI returns a full recipe — ingredients and method — that you can save for later. “Surprise me” and “Something quick” for when you can't decide. Saved recipes live on-device. Needs the latest MyLLM with “Allow apps to use the AI” enabled in Settings.",
+      "tags": [
+        "food & cooking",
+        "AI-powered",
+        "saves data"
+      ],
+      "category": "Food & Cooking",
+      "iconSymbol": "frying.pan",
+      "iconColor": "red",
+      "version": 1,
+      "featured": true,
+      "requiresAI": true,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/recipe-finder.jpg",
+      "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/recipe-finder.html",
+      "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/recipe-finder.myllmapp",
+      "sizeKB": 7
+    },
+    {
+      "id": "kitchen-converter",
+      "name": "Kitchen Converter",
+      "emoji": "🥄",
+      "tagline": "Cups, grams, ml & oven temps",
+      "description": "The kitchen maths sorted: convert between cups, tablespoons, millilitres, grams and ounces — with per-ingredient densities so volume↔weight is accurate — plus an oven temperature converter for °C, °F and Gas Mark. Works completely offline.",
+      "tags": [
+        "food & cooking",
+        "utility"
+      ],
+      "category": "Food & Cooking",
+      "iconSymbol": "scalemass.fill",
+      "iconColor": "teal",
+      "version": 1,
+      "featured": false,
+      "requiresAI": false,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/kitchen-converter.jpg",
+      "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/kitchen-converter.html",
+      "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/kitchen-converter.myllmapp",
+      "sizeKB": 6
     }
   ]
 }

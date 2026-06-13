@@ -1,0 +1,92 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<style>:root{color-scheme:light dark;--accent:#34c0c0}
+*{box-sizing:border-box}
+body{font-family:-apple-system,system-ui,sans-serif;margin:0;padding:18px;background:#f2f2f7;color:#111}
+@media(prefers-color-scheme:dark){body{background:#000;color:#eee}.card,input,select{background:#1c1c1e;color:#eee;border-color:#3a3a3c}}
+h1{font-size:22px;margin:0 0 4px}
+.sub{font-size:13px;opacity:.6;margin-bottom:14px}
+.card{background:#fff;border-radius:16px;padding:16px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.card h2{font-size:15px;margin:0 0 12px}
+label{font-size:12px;opacity:.6;display:block;margin-bottom:4px}
+input,select{width:100%;padding:11px;border:1px solid #d1d1d6;border-radius:10px;font-size:16px;background:#fff;color:#111}
+.two{display:flex;gap:10px}.two>div{flex:1}
+.swap{text-align:center;margin:8px 0}
+.swap button{border:0;background:#e5e5ea;color:#333;border-radius:8px;padding:6px 12px;font-size:13px;font-weight:600}
+@media(prefers-color-scheme:dark){.swap button{background:#2c2c2e;color:#eee}}
+.out{margin-top:14px;text-align:center}
+.out .big{font-size:34px;font-weight:700;color:var(--accent)}
+.out .small{font-size:13px;opacity:.6;margin-top:2px}
+.temps{display:flex;gap:10px;margin-top:14px;text-align:center}
+.temps div{flex:1;background:rgba(52,192,192,.12);border-radius:11px;padding:11px 4px}
+.temps .v{font-size:20px;font-weight:700;color:var(--accent)}.temps .l{font-size:11px;opacity:.6}
+.hint{font-size:11px;opacity:.45;margin-top:8px}
+</style></head><body>
+<h1>🥄 Kitchen Converter</h1>
+<div class="sub">Cups, grams, millilitres and oven temperatures — fully offline.</div>
+
+<div class="card">
+  <h2>Measure</h2>
+  <div class="two">
+    <div><label>Amount</label><input id="amt" type="number" inputmode="decimal" value="1"></div>
+    <div><label>Ingredient</label><select id="ing"></select></div>
+  </div>
+  <div class="two" style="margin-top:10px">
+    <div><label>From</label><select id="from"></select></div>
+    <div><label>To</label><select id="to"></select></div>
+  </div>
+  <div class="swap"><button onclick="swap()">⇅ Swap</button></div>
+  <div class="out"><div class="big" id="res">—</div><div class="small" id="resSub"></div></div>
+  <div class="hint" id="densHint"></div>
+</div>
+
+<div class="card">
+  <h2>Oven temperature</h2>
+  <div class="two">
+    <div><label>Value</label><input id="tval" type="number" inputmode="numeric" value="180"></div>
+    <div><label>Unit</label><select id="tunit"><option value="C">°C</option><option value="F">°F</option><option value="G">Gas mark</option></select></div>
+  </div>
+  <div class="temps"><div><div class="v" id="oc">—</div><div class="l">°C</div></div><div><div class="v" id="of">—</div><div class="l">°F</div></div><div><div class="v" id="og">—</div><div class="l">Gas</div></div></div>
+</div>
+<script>
+var VOL={'cup':240,'tbsp':15,'tsp':5,'ml':1,'litre':1000,'fl oz':29.5735};
+var WT={'g':1,'oz':28.3495,'lb':453.592,'kg':1000};
+var UNITS=[['cup','Cups'],['tbsp','Tablespoons'],['tsp','Teaspoons'],['ml','Millilitres'],['litre','Litres'],['fl oz','Fluid ounces'],['g','Grams'],['oz','Ounces'],['lb','Pounds'],['kg','Kilograms']];
+var DENS={'Water':1.00,'Plain flour':0.52,'Sugar (granulated)':0.83,'Brown sugar (packed)':0.92,'Butter':0.95,'Rice (uncooked)':0.77,'Milk':1.02,'Honey':1.42,'Rolled oats':0.375};
+var GAS={1:140,2:150,3:170,4:180,5:190,6:200,7:220,8:230,9:240};
+function el(i){return document.getElementById(i)}
+function isVol(u){return VOL.hasOwnProperty(u)}
+
+function fillUnit(sel,def){UNITS.forEach(function(u){var o=document.createElement('option');o.value=u[0];o.textContent=u[1];sel.appendChild(o)});sel.value=def}
+function fillIng(){Object.keys(DENS).forEach(function(k){var o=document.createElement('option');o.value=k;o.textContent=k;el('ing').appendChild(o)})}
+
+function fmt(n){if(!isFinite(n))return'—';if(n>=100)return Math.round(n).toString();if(n>=10)return n.toFixed(1);if(n>=1)return n.toFixed(2);return n.toFixed(3).replace(/0+$/,'').replace(/\.$/,'')}
+
+function convert(){
+  var amt=parseFloat(el('amt').value);var from=el('from').value,to=el('to').value,d=DENS[el('ing').value];
+  var cross=isVol(from)!==isVol(to);
+  el('densHint').textContent=cross?('Using '+el('ing').value.toLowerCase()+' (≈'+Math.round(d*240)+' g per cup) to convert between volume and weight.'):'';
+  if(isNaN(amt)){el('res').textContent='—';el('resSub').textContent='';return}
+  var ml,g;
+  if(isVol(from)){ml=amt*VOL[from];g=ml*d;}else{g=amt*WT[from];ml=g/d;}
+  var out=isVol(to)?ml/VOL[to]:g/WT[to];
+  var label=UNITS.filter(function(u){return u[0]===to})[0][1].toLowerCase();
+  el('res').textContent=fmt(out)+' '+to;
+  el('resSub').textContent=fmt(amt)+' '+from+' = '+fmt(out)+' '+label;
+}
+function swap(){var f=el('from').value;el('from').value=el('to').value;el('to').value=f;convert()}
+
+function nearestGas(c){var best=1,bd=1e9;for(var k in GAS){var diff=Math.abs(GAS[k]-c);if(diff<bd){bd=diff;best=k}}return best}
+function temp(){
+  var v=parseFloat(el('tval').value),u=el('tunit').value,c;
+  if(isNaN(v)){el('oc').textContent=el('of').textContent=el('og').textContent='—';return}
+  if(u==='C')c=v;else if(u==='F')c=(v-32)*5/9;else c=GAS[Math.round(v)]||GAS[nearestGas(GAS[Math.round(v)]||180)];
+  if(u==='G'&&!GAS[Math.round(v)]){el('oc').textContent='—';el('of').textContent='—';el('og').textContent='1–9';return}
+  el('oc').textContent=Math.round(c);
+  el('of').textContent=Math.round(c*9/5+32);
+  el('og').textContent=nearestGas(c);
+}
+fillUnit(el('from'),'cup');fillUnit(el('to'),'g');fillIng();
+['amt','from','to','ing'].forEach(function(id){el(id).addEventListener('input',convert);el(id).addEventListener('change',convert)});
+['tval','tunit'].forEach(function(id){el(id).addEventListener('input',temp);el(id).addEventListener('change',temp)});
+convert();temp();
+</script></body></html>
