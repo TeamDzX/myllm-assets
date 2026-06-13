@@ -1,0 +1,92 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<style>:root{color-scheme:light dark;--accent:#ff453a}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
+body{font-family:-apple-system,system-ui,sans-serif;margin:0;padding:20px 16px;background:#f2f2f7;color:#111;text-align:center}
+@media(prefers-color-scheme:dark){body{background:#000;color:#eee}.tab,input{background:#1c1c1e;color:#eee}.set{background:#1c1c1e}}
+h1{font-size:21px;margin:0 0 12px}
+.tabs{display:inline-flex;background:#e5e5ea;border-radius:11px;padding:3px;margin-bottom:14px}
+.tab{border:0;background:transparent;color:#555;border-radius:9px;padding:8px 16px;font-size:14px;font-weight:600}
+.tab.on{background:#fff;color:#111;box-shadow:0 1px 2px rgba(0,0,0,.12)}
+@media(prefers-color-scheme:dark){.tabs{background:#1c1c1e}.tab.on{background:#3a3a3c;color:#fff}}
+.ringwrap{position:relative;width:260px;height:260px;margin:6px auto 8px}
+canvas{width:260px;height:260px}
+.center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.time{font-size:56px;font-weight:200;font-variant-numeric:tabular-nums}
+.phase{font-size:13px;text-transform:uppercase;letter-spacing:.1em;opacity:.55;margin-top:2px}
+.pom{font-size:15px;min-height:20px;margin:4px 0 14px;letter-spacing:2px}
+.ctrl{display:flex;gap:10px;justify-content:center}
+.ctrl button{border:0;border-radius:13px;padding:14px 26px;font-size:16px;font-weight:600;background:var(--accent);color:#fff}
+.ctrl .sec{background:#e5e5ea;color:#333;padding:14px 18px}
+@media(prefers-color-scheme:dark){.ctrl .sec{background:#2c2c2e;color:#eee}}
+.set{margin-top:20px;background:#fff;border-radius:14px;padding:12px 14px;display:inline-flex;gap:16px;box-shadow:0 1px 3px rgba(0,0,0,.07)}
+.set label{font-size:11px;opacity:.6;display:block}
+.set input{width:54px;padding:7px;border:1px solid #d1d1d6;border-radius:8px;font-size:16px;text-align:center;background:#fff;color:#111;-webkit-user-select:text;user-select:text}
+</style></head><body>
+<h1>🍅 Focus Timer</h1>
+<div class="tabs" id="tabs"></div>
+<div class="ringwrap"><canvas id="ring"></canvas><div class="center"><div class="time" id="time">25:00</div><div class="phase" id="phase">Focus</div></div></div>
+<div class="pom" id="pom"></div>
+<div class="ctrl"><button id="go" onclick="toggle()">Start</button><button class="sec" onclick="reset()">Reset</button></div>
+<div class="set">
+  <div><label>Focus</label><input id="dFocus" type="number" min="1" max="90" value="25"></div>
+  <div><label>Short break</label><input id="dShort" type="number" min="1" max="30" value="5"></div>
+  <div><label>Long break</label><input id="dLong" type="number" min="1" max="60" value="15"></div>
+</div>
+<script>
+var store=window.myllmStorage||{getItem:function(){return Promise.resolve(null)},setItem:function(){return Promise.resolve()}};
+var MODES=[['focus','Focus','dFocus'],['short','Short break','dShort'],['long','Long break','dLong']];
+var COLOR={focus:'#ff453a',short:'#30d158',long:'#0a84ff'};
+var dur={focus:25,short:5,long:15};
+var mode='focus',running=false,endTime=0,remaining=25*60,cycle=0,pom=0,actx=null,loop=null;
+var cv=document.getElementById('ring'),ctx2=cv.getContext('2d'),DPR=Math.min(window.devicePixelRatio||1,3);
+cv.width=260*DPR;cv.height=260*DPR;ctx2.scale(DPR,DPR);
+function el(i){return document.getElementById(i)}
+function mmss(s){s=Math.max(0,Math.round(s));return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')}
+function total(){return dur[mode]*60}
+
+function draw(){
+  var frac=Math.max(0,Math.min(1,remaining/total()));
+  ctx2.clearRect(0,0,260,260);
+  ctx2.lineWidth=14;ctx2.lineCap='round';
+  ctx2.strokeStyle='rgba(127,127,127,.18)';ctx2.beginPath();ctx2.arc(130,130,112,0,Math.PI*2);ctx2.stroke();
+  ctx2.strokeStyle=COLOR[mode];ctx2.beginPath();ctx2.arc(130,130,112,-Math.PI/2,-Math.PI/2+frac*Math.PI*2);ctx2.stroke();
+  el('time').textContent=mmss(remaining);
+  document.documentElement.style.setProperty('--accent',COLOR[mode]);
+}
+function renderTabs(){var T=el('tabs');T.innerHTML='';MODES.forEach(function(m){var b=document.createElement('button');b.className='tab'+(mode===m[0]?' on':'');b.textContent=m[1];b.onclick=function(){setMode(m[0])};T.appendChild(b)});el('phase').textContent=MODES.filter(function(m){return m[0]===mode})[0][1]}
+function renderPom(){el('pom').textContent=pom>0?('🍅'.repeat(Math.min(pom,8))+(pom>8?' +'+(pom-8):'')):''}
+
+function setMode(m){mode=m;running=false;remaining=total();el('go').textContent='Start';renderTabs();draw();save()}
+function toggle(){
+  if(running){running=false;remaining=(endTime-Date.now())/1000;el('go').textContent='Start';if(loop){clearInterval(loop);loop=null}}
+  else{ensureAudio();running=true;endTime=Date.now()+remaining*1000;el('go').textContent='Pause';loop=setInterval(tick,250);if(window.myllmHaptic)myllmHaptic('light')}
+  save();
+}
+function reset(){running=false;if(loop){clearInterval(loop);loop=null}remaining=total();el('go').textContent='Start';draw();save()}
+function tick(){
+  remaining=(endTime-Date.now())/1000;
+  if(remaining<=0){remaining=0;draw();complete();return}
+  draw();
+}
+function complete(){
+  running=false;if(loop){clearInterval(loop);loop=null}chime();if(window.myllmHaptic)myllmHaptic('success');
+  if(mode==='focus'){pom++;cycle++;renderPom();setMode(cycle%4===0?'long':'short')}
+  else setMode('focus');
+  el('go').textContent='Start';save();
+}
+function ensureAudio(){if(!actx){try{actx=new(window.AudioContext||window.webkitAudioContext)()}catch(e){}}if(actx&&actx.state==='suspended')actx.resume()}
+function chime(){
+  if(!actx)return;var t=actx.currentTime;[0,0.18,0.36].forEach(function(off,i){
+    var o=actx.createOscillator(),g=actx.createGain();o.type='sine';o.frequency.value=[660,880,990][i];
+    g.gain.setValueAtTime(0.0001,t+off);g.gain.exponentialRampToValueAtTime(0.3,t+off+0.02);g.gain.exponentialRampToValueAtTime(0.0001,t+off+0.4);
+    o.connect(g);g.connect(actx.destination);o.start(t+off);o.stop(t+off+0.42)});
+}
+function readDur(){MODES.forEach(function(m){var v=parseInt(el(m[2]).value,10);if(v>0)dur[m[0]]=v});if(!running)remaining=total();draw();save()}
+function save(){store.setItem('focus',JSON.stringify({dur:dur,pom:pom,cycle:cycle}))}
+
+MODES.forEach(function(m){el(m[2]).addEventListener('change',readDur)});
+store.getItem('focus').then(function(v){
+  if(v)try{var o=JSON.parse(v);if(o.dur)dur=o.dur;pom=o.pom||0;cycle=o.cycle||0;el('dFocus').value=dur.focus;el('dShort').value=dur.short;el('dLong').value=dur.long}catch(e){}
+  remaining=total();renderTabs();renderPom();draw();
+});
+</script></body></html>
