@@ -1,0 +1,106 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<style>:root{color-scheme:light dark;--accent:#30d158}
+*{box-sizing:border-box}
+body{font-family:-apple-system,system-ui,sans-serif;margin:0;padding:18px;background:#f2f2f7;color:#111}
+@media(prefers-color-scheme:dark){body{background:#000;color:#eee}.item,input{background:#1c1c1e;color:#eee;border-color:#3a3a3c}.tips{background:#0e0e10}}
+h1{font-size:22px;margin:0 0 4px}
+.sub{font-size:13px;opacity:.6;margin-bottom:14px}
+input{padding:11px;border:1px solid #d1d1d6;border-radius:10px;font-size:15px;background:#fff;font-family:inherit}
+.row{display:flex;gap:8px;margin-bottom:8px}
+#name{flex:1;min-width:0}#days{width:108px;flex:none}
+button{border:0;background:var(--accent);color:#fff;border-radius:10px;padding:11px 16px;font-size:15px;font-weight:600}
+button:disabled{opacity:.5}
+.add{width:100%}
+.item{background:#fff;border-radius:13px;padding:12px 14px;margin-bottom:9px;box-shadow:0 1px 3px rgba(0,0,0,.08);border-left:4px solid var(--accent)}
+.item.thirsty{border-left-color:#ff9f0a}.item.dry{border-left-color:#ff453a}
+.top{display:flex;align-items:flex-start;gap:10px}
+.leaf{font-size:26px;flex:none;line-height:1}
+.body{flex:1;min-width:0}
+.name{font-size:16px;font-weight:600}
+.meta{font-size:12px;opacity:.65;margin-top:2px}
+.meta .due.soon{color:#ff9f0a;font-weight:600}.meta .due.late{color:#ff453a;font-weight:600}
+.btns{display:flex;gap:8px;margin-top:9px}
+.btns .water{flex:1;background:#e8f7ee;color:#1a8a44;padding:9px;border-radius:9px;font-size:14px}
+.btns .tip{flex:none;background:#eef;color:#5e5ce6;padding:9px 12px;border-radius:9px;font-size:14px}
+@media(prefers-color-scheme:dark){.btns .water{background:#13351f;color:#5fd98a}.btns .tip{background:#15152a;color:#9a98ff}}
+.del{background:none;color:#ff453a;font-size:18px;padding:0 2px;flex:none}
+.tips{background:#f2f2f7;border-radius:9px;padding:9px 11px;margin-top:9px;font-size:13.5px;line-height:1.5;white-space:pre-wrap}
+#status{font-size:13px;opacity:.7;min-height:16px;margin:4px 0}
+.empty{text-align:center;opacity:.5;font-size:14px;padding:34px 0}
+</style></head><body>
+<h1>🪴 Plant Care</h1>
+<div class="sub">Never forget to water again — track each plant and when it's next due.</div>
+<div class="row"><input id="name" placeholder="Plant (e.g. Monstera, tomatoes)"><input id="days" type="number" inputmode="numeric" min="1" value="7" aria-label="days between watering"></div>
+<button class="add" onclick="add()">Add plant</button>
+<div id="status"></div>
+<div id="list"></div>
+<script>
+var store=window.myllmStorage||{getItem:function(){return Promise.resolve(null)},setItem:function(){return Promise.resolve()}};
+var plants=[];
+function el(i){return document.getElementById(i)}
+function save(){store.setItem('plants',JSON.stringify(plants))}
+function setStatus(t){el('status').textContent=t||''}
+function uid(){return 'p'+plants.reduce(function(m,p){return Math.max(m,+String(p.id).slice(1)||0)},0)+1}
+var DAY=86400000;
+
+function add(){
+  var name=el('name').value.trim();if(!name)return;
+  var days=Math.max(1,parseInt(el('days').value,10)||7);
+  plants.push({id:uid(),name:name,interval:days,last:Date.now(),tips:null});
+  el('name').value='';el('days').value='7';
+  save();render();if(window.myllmHaptic)myllmHaptic('light');
+}
+function water(id){var p=byId(id);p.last=Date.now();save();render();if(window.myllmHaptic)myllmHaptic('success')}
+function del(id){plants=plants.filter(function(p){return p.id!==id});save();render()}
+function byId(id){return plants.filter(function(p){return p.id===id})[0]}
+
+function dueInfo(p){
+  var next=p.last+p.interval*DAY;
+  var days=Math.ceil((next-Date.now())/DAY);
+  if(days<0)return{txt:'Overdue by '+(-days)+'d',cls:'late',state:'dry'};
+  if(days===0)return{txt:'Water today',cls:'late',state:'thirsty'};
+  if(days===1)return{txt:'Water tomorrow',cls:'soon',state:'thirsty'};
+  return{txt:'Water in '+days+' days',cls:'',state:''};
+}
+
+function tips(id){
+  var p=byId(id);
+  if(!window.myllmAsk){setStatus('Care tips need AI — enable “Allow apps to use the AI” in Settings.');return}
+  setStatus('Getting care tips for '+p.name+'…');
+  myllmAsk('Give 3 short, practical care tips for growing "'+p.name+'" (watering, light, and one extra). Reply as exactly 3 lines starting with "• " and nothing else.')
+  .then(function(reply){
+    p.tips=reply.trim();save();render();setStatus('');
+  }).catch(function(err){setStatus('Could not get tips: '+err.message)});
+}
+
+function render(){
+  var L=el('list');L.innerHTML='';
+  if(!plants.length){L.innerHTML='<div class="empty">No plants yet — add your first above. 🌱</div>';return}
+  plants.slice().sort(function(a,b){return(a.last+a.interval*DAY)-(b.last+b.interval*DAY)}).forEach(function(p){
+    var di=dueInfo(p);
+    var card=document.createElement('div');card.className='item'+(di.state?' '+di.state:'');
+    var top=document.createElement('div');top.className='top';
+    var leaf=document.createElement('div');leaf.className='leaf';leaf.textContent='🪴';
+    var body=document.createElement('div');body.className='body';
+    var nm=document.createElement('div');nm.className='name';nm.textContent=p.name;body.appendChild(nm);
+    var meta=document.createElement('div');meta.className='meta';
+    meta.innerHTML='💧 every '+p.interval+' day'+(p.interval===1?'':'s')+' · <span class="due '+di.cls+'">'+di.txt+'</span>';
+    body.appendChild(meta);
+    var btns=document.createElement('div');btns.className='btns';
+    var w=document.createElement('button');w.className='water';w.textContent='💧 Watered';w.onclick=function(){water(p.id)};
+    var t=document.createElement('button');t.className='tip';t.textContent=p.tips?'🌱 Tips':'🌱 Care tips';t.onclick=function(){tips(p.id)};
+    btns.appendChild(w);btns.appendChild(t);body.appendChild(btns);
+    if(p.tips){var tp=document.createElement('div');tp.className='tips';tp.textContent=p.tips;body.appendChild(tp)}
+    var x=document.createElement('button');x.className='del';x.textContent='✕';x.onclick=function(){del(p.id)};
+    top.appendChild(leaf);top.appendChild(body);top.appendChild(x);
+    card.appendChild(top);L.appendChild(card);
+  });
+}
+
+el('name').addEventListener('keydown',function(e){if(e.key==='Enter')add()});
+el('days').addEventListener('keydown',function(e){if(e.key==='Enter')add()});
+store.getItem('plants').then(function(v){
+  if(v)try{plants=JSON.parse(v)}catch(e){}
+  render();
+});
+</script></body></html>

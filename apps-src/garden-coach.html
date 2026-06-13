@@ -1,0 +1,71 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<style>:root{color-scheme:light dark;--accent:#34c759}
+*{box-sizing:border-box}
+body{font-family:-apple-system,system-ui,sans-serif;margin:0;padding:18px;background:#f2f2f7;color:#111}
+@media(prefers-color-scheme:dark){body{background:#000;color:#eee}input,.answer{background:#1c1c1e;color:#eee;border-color:#3a3a3c}.chip{background:#1c1c1e;color:#eee}}
+h1{font-size:22px;margin:0 0 4px}
+.sub{font-size:13px;opacity:.6;margin-bottom:14px}
+input{width:100%;padding:11px;border:1px solid #d1d1d6;border-radius:10px;font-size:15px;background:#fff;font-family:inherit;margin-bottom:8px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.chip{border:0;background:#e8f7ee;color:#1a8a44;border-radius:18px;padding:9px 13px;font-size:14px;font-weight:600}
+@media(prefers-color-scheme:dark){.chip{background:#13351f;color:#5fd98a}}
+.ask{display:flex;gap:8px}
+.ask input{flex:1;margin-bottom:0}
+.ask button{border:0;background:var(--accent);color:#fff;border-radius:10px;padding:0 16px;font-size:15px;font-weight:600}
+button:disabled{opacity:.5}
+#status{font-size:13px;opacity:.7;min-height:16px;margin:10px 0}
+.answer{background:#fff;border-radius:13px;padding:14px 16px;margin-top:6px;font-size:15px;line-height:1.55;white-space:pre-wrap;box-shadow:0 1px 3px rgba(0,0,0,.08);display:none}
+.answer .q{font-weight:700;color:var(--accent);margin-bottom:6px}
+.season{font-size:12px;opacity:.55;margin-bottom:12px}
+</style></head><body>
+<h1>🌱 Garden Coach</h1>
+<div class="sub">Your AI gardening helper — what to plant right now, and answers to anything.</div>
+<div class="season" id="season"></div>
+<input id="region" placeholder="Your area / climate (optional, e.g. UK, mild)">
+<div class="chips">
+  <button class="chip" onclick="quick('vegetables to sow or plant now')">🥕 Veg to sow now</button>
+  <button class="chip" onclick="quick('flowers to plant now')">🌸 Flowers</button>
+  <button class="chip" onclick="quick('herbs to grow now')">🌿 Herbs</button>
+  <button class="chip" onclick="quick('key gardening jobs to do this month')">🧤 Jobs this month</button>
+</div>
+<div class="ask"><input id="q" placeholder="Ask the coach anything…" enterkeyhint="send"><button id="askBtn" onclick="ask()">Ask</button></div>
+<div id="status"></div>
+<div class="answer" id="answer"></div>
+<script>
+var store=window.myllmStorage||{getItem:function(){return Promise.resolve(null)},setItem:function(){return Promise.resolve()}};
+var month=new Date().toLocaleDateString(undefined,{month:'long'});
+function el(i){return document.getElementById(i)}
+function setStatus(t){el('status').textContent=t||''}
+el('season').textContent='🗓️ Tips tuned for '+month;
+
+function regionClause(){var r=el('region').value.trim();return r?(' I garden in: '+r+'.'):''}
+function busy(b){el('askBtn').disabled=b;var c=document.querySelectorAll('.chip');for(var i=0;i<c.length;i++)c[i].disabled=b}
+
+function run(prompt,heading){
+  if(!window.myllmAsk){setStatus('This app needs AI — update MyLLM and enable “Allow apps to use the AI” in Settings.');return}
+  busy(true);setStatus('Asking the garden coach…');
+  store.setItem('region',el('region').value.trim());
+  myllmAsk(prompt,{system:'You are a friendly, practical gardening expert. Be concise and specific. Prefer short bulleted lists. Assume a home gardener.'})
+  .then(function(reply){
+    var a=el('answer');a.style.display='block';
+    a.innerHTML='<div class="q"></div>';a.querySelector('.q').textContent=heading;
+    a.appendChild(document.createTextNode(reply.trim()));
+    setStatus('');if(window.myllmHaptic)myllmHaptic('success');
+    a.scrollIntoView({behavior:'smooth',block:'nearest'});
+  }).catch(function(err){setStatus('Coach unavailable: '+err.message)})
+  .then(function(){busy(false)});
+}
+function quick(what){
+  run('It is '+month+'.'+regionClause()+' List '+what+', as short bullet lines, each with a one-line tip. No preamble.',
+      month+' · '+what.charAt(0).toUpperCase()+what.slice(1));
+}
+function ask(){
+  var q=el('q').value.trim();if(!q)return;
+  run('It is '+month+'.'+regionClause()+' Gardening question: '+q+' Answer concisely for a home gardener.', q);
+  el('q').value='';
+}
+
+el('q').addEventListener('keydown',function(e){if(e.key==='Enter')ask()});
+store.getItem('region').then(function(v){if(v)el('region').value=v});
+if(!window.myllmAsk)setStatus('Heads-up: this app needs the latest MyLLM with apps-AI enabled.');
+</script></body></html>

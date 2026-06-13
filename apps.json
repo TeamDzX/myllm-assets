@@ -5,6 +5,7 @@
     "Productivity",
     "News & Web",
     "Health & Wellbeing",
+    "Home & Garden",
     "Games",
     "Creative",
     "Utilities"
@@ -401,6 +402,48 @@
       "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/word-tiles.html",
       "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/word-tiles.myllmapp",
       "sizeKB": 85
+    },
+    {
+      "id": "plant-care",
+      "name": "Plant Care",
+      "emoji": "🪴",
+      "tagline": "Never forget to water again",
+      "description": "Track every plant and how often it needs water — see at a glance what's due today, tap when you've watered, and get quick AI care tips for any plant. Saved on-device. (Care tips need the latest MyLLM with “Allow apps to use the AI” enabled in Settings.)",
+      "tags": [
+        "home & garden",
+        "saves data"
+      ],
+      "category": "Home & Garden",
+      "iconSymbol": "leaf.fill",
+      "iconColor": "green",
+      "version": 1,
+      "featured": false,
+      "requiresAI": false,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/plant-care.jpg",
+      "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/plant-care.html",
+      "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/plant-care.myllmapp",
+      "sizeKB": 7
+    },
+    {
+      "id": "garden-coach",
+      "name": "Garden Coach",
+      "emoji": "🌱",
+      "tagline": "What to plant, right now",
+      "description": "Your AI gardening helper: one tap shows what vegetables, flowers and herbs to plant this month (it knows the season), plus the jobs to do now — and you can ask it anything. Add your area for local advice. Needs the latest MyLLM with “Allow apps to use the AI” enabled in Settings.",
+      "tags": [
+        "home & garden",
+        "AI-powered"
+      ],
+      "category": "Home & Garden",
+      "iconSymbol": "camera.macro",
+      "iconColor": "mint",
+      "version": 1,
+      "featured": false,
+      "requiresAI": true,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/garden-coach.jpg",
+      "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/garden-coach.html",
+      "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/garden-coach.myllmapp",
+      "sizeKB": 5
     }
   ]
 }
