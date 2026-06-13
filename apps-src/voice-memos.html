@@ -1,0 +1,127 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<style>:root{color-scheme:light dark;--accent:#ff453a}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,system-ui,sans-serif;margin:0;padding:18px 16px 40px;background:#f2f2f7;color:#111}
+@media(prefers-color-scheme:dark){body{background:#000;color:#eee}.memo{background:#1c1c1e}}
+h1{font-size:22px;margin:0 0 4px}
+.sub{font-size:13px;opacity:.6;margin-bottom:18px}
+.recwrap{text-align:center;margin:10px 0 18px}
+.rec{border:0;width:84px;height:84px;border-radius:50%;background:var(--accent);color:#fff;font-size:32px;box-shadow:0 4px 14px rgba(255,69,58,.35)}
+.rec.on{animation:pulse 1.2s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(255,69,58,.45)}70%{box-shadow:0 0 0 18px rgba(255,69,58,0)}100%{box-shadow:0 0 0 0 rgba(255,69,58,0)}}
+.timer{font-size:30px;font-variant-numeric:tabular-nums;font-weight:300;margin-top:10px;min-height:36px}
+#status{font-size:13px;opacity:.75;min-height:18px;text-align:center;line-height:1.45;margin-bottom:6px}
+#status a,.link{color:var(--accent);font-weight:600}
+.bar{height:5px;border-radius:3px;background:rgba(127,127,127,.18);overflow:hidden;margin:12px 0 4px}
+.bar i{display:block;height:100%;background:var(--accent);width:0}
+h2{font-size:13px;text-transform:uppercase;letter-spacing:.05em;opacity:.55;margin:20px 0 8px}
+.memo{background:#fff;border-radius:13px;padding:11px 14px;margin-bottom:9px;display:flex;align-items:center;gap:12px;box-shadow:0 1px 3px rgba(0,0,0,.07)}
+.play{border:0;background:rgba(255,69,58,.12);color:var(--accent);width:40px;height:40px;border-radius:50%;font-size:16px;flex:none}
+.mi{flex:1;min-width:0}
+.mi .nm{font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mi .dt{font-size:12px;opacity:.55}
+.del{border:0;background:none;color:#ff453a;font-size:16px;padding:4px 6px;flex:none;font-weight:600}
+.empty{text-align:center;opacity:.5;font-size:14px;padding:24px 0}
+.use{font-size:12px;opacity:.5;text-align:right;margin-top:4px}
+</style></head><body>
+<h1>🎙️ Voice Memos</h1>
+<div class="sub">Quick voice notes, recorded and kept on your device.</div>
+<div class="recwrap">
+  <button class="rec" id="rec" onclick="toggle()">●</button>
+  <div class="timer" id="timer"></div>
+</div>
+<div id="status"></div>
+<h2 id="head" style="display:none">Memos</h2>
+<div id="list"></div>
+<div class="use" id="use"></div>
+<audio id="player"></audio>
+<script>
+var store=window.myllmStorage||{getItem:function(){return Promise.resolve(null)},setItem:function(){return Promise.resolve()}};
+var memos=[],rec=null,stream=null,chunks=[],recording=false,t0=0,tHandle=null,armed=null;
+var MAXBYTES=950000,MAXSECS=120;
+function el(i){return document.getElementById(i)}
+function setStatus(t){el('status').innerHTML=t||''}
+function pad(n){return String(n).padStart(2,'0')}
+function mmss(s){return pad(Math.floor(s/60))+':'+pad(Math.floor(s%60))}
+
+function pickMime(){
+  if(typeof MediaRecorder==='undefined')return null;
+  var c=['audio/mp4','audio/aac','audio/webm;codecs=opus','audio/webm'];
+  for(var i=0;i<c.length;i++){try{if(MediaRecorder.isTypeSupported(c[i]))return c[i]}catch(e){}}
+  return '';
+}
+function toggle(){recording?stop():start()}
+
+function start(){
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){setStatus('Recording isn’t available on this version of MyLLM.');return}
+  setStatus('Starting…');
+  navigator.mediaDevices.getUserMedia({audio:true}).then(function(s){
+    stream=s;var mime=pickMime();
+    try{rec=mime?new MediaRecorder(s,{mimeType:mime}):new MediaRecorder(s)}catch(e){rec=new MediaRecorder(s)}
+    chunks=[];rec.ondataavailable=function(e){if(e.data&&e.data.size)chunks.push(e.data)};
+    rec.onstop=finish;rec.start();
+    recording=true;t0=Date.now();el('rec').textContent='■';el('rec').classList.add('on');setStatus('Recording… tap to stop');
+    tick();
+  }).catch(function(err){
+    setStatus('Microphone blocked. Turn on <b>Allow apps to use the microphone</b> in Settings → MyLLMos Apps, then reopen this app. <span class="link">(iOS will also ask once.)</span>');
+  });
+}
+function tick(){
+  if(!recording)return;var s=(Date.now()-t0)/1000;el('timer').textContent=mmss(s);
+  if(s>=MAXSECS){stop();return}
+  tHandle=setTimeout(tick,200);
+}
+function stop(){
+  if(!rec||!recording)return;recording=false;if(tHandle)clearTimeout(tHandle);
+  el('rec').textContent='●';el('rec').classList.remove('on');
+  try{rec.stop()}catch(e){}
+  if(stream)stream.getTracks().forEach(function(t){t.stop()});
+}
+function finish(){
+  var secs=Math.max(1,Math.round((Date.now()-t0)/1000));el('timer').textContent='';
+  var blob=new Blob(chunks,{type:(rec&&rec.mimeType)||'audio/mp4'});
+  var fr=new FileReader();
+  fr.onload=function(){
+    var memo={id:'m'+t0,name:defaultName(),dur:secs,url:fr.result,date:Date.now()};
+    var trial=memos.slice();trial.unshift(memo);
+    var size=JSON.stringify(trial).length;
+    if(size>MAXBYTES){setStatus('🎙️ Recorded, but on-device memo storage is full — delete an old memo to keep this one.');renderUse();return}
+    memos=trial;persist().then(function(){setStatus('');renderUse()}).catch(function(){setStatus('Couldn’t save — storage may be full.');memos.shift()});
+    render();if(window.myllmHaptic)myllmHaptic('success');
+  };
+  fr.readAsDataURL(blob);
+}
+function defaultName(){var d=new Date();return 'Memo · '+d.toLocaleDateString(undefined,{month:'short',day:'numeric'})+' '+pad(d.getHours())+':'+pad(d.getMinutes())}
+
+function play(id){var m=byId(id);if(!m)return;var p=el('player');p.src=m.url;p.play();if(window.myllmHaptic)myllmHaptic('light')}
+function del(id){
+  if(armed!==id){armed=id;render();setTimeout(function(){if(armed===id){armed=null;render()}},2500);return}
+  armed=null;memos=memos.filter(function(m){return m.id!==id});persist();render();renderUse();
+}
+function byId(id){return memos.filter(function(m){return m.id===id})[0]}
+function persist(){return store.setItem('memos',JSON.stringify(memos))}
+
+function render(){
+  var L=el('list');L.innerHTML='';el('head').style.display=memos.length?'block':'none';
+  if(!memos.length){L.innerHTML='<div class="empty">No memos yet — tap the red button to record.</div>';renderUse();return}
+  memos.forEach(function(m){
+    var d=document.createElement('div');d.className='memo';
+    var pl=document.createElement('button');pl.className='play';pl.textContent='▶';pl.onclick=function(){play(m.id)};
+    var info=document.createElement('div');info.className='mi';
+    info.innerHTML='<div class="nm">'+m.name+'</div><div class="dt">'+mmss(m.dur)+'</div>';
+    var x=document.createElement('button');x.className='del';x.textContent=armed===m.id?'Delete?':'✕';x.onclick=function(){del(m.id)};
+    d.appendChild(pl);d.appendChild(info);d.appendChild(x);L.appendChild(d);
+  });
+  renderUse();
+}
+function renderUse(){
+  var kb=Math.round(JSON.stringify(memos).length/1024);
+  el('use').textContent=memos.length?(kb+' KB of ~930 KB used'):'';
+}
+
+store.getItem('memos').then(function(v){
+  if(v)try{memos=JSON.parse(v)}catch(e){}
+  render();
+  if(typeof MediaRecorder==='undefined')setStatus('Recording needs the latest MyLLM. Update from the App Store.');
+});
+</script></body></html>

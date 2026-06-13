@@ -636,6 +636,28 @@
       "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/white-noise.html",
       "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/white-noise.myllmapp",
       "sizeKB": 10
+    },
+    {
+      "id": "voice-memos",
+      "name": "Voice Memos",
+      "emoji": "🎙️",
+      "tagline": "Quick voice notes",
+      "description": "Record quick voice notes and keep them on your device — tap to record, tap to play back, swipe-free delete. Recordings are saved on-device (a few minutes' worth). Requires MyLLM 3.1+ and “Allow apps to use the microphone” in Settings → MyLLMos Apps (off by default; iOS asks once).",
+      "tags": [
+        "utility",
+        "microphone",
+        "saves data"
+      ],
+      "category": "Utilities",
+      "iconSymbol": "mic.fill",
+      "iconColor": "red",
+      "version": 1,
+      "featured": false,
+      "requiresAI": false,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/voice-memos.jpg",
+      "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/voice-memos.html",
+      "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/voice-memos.myllmapp",
+      "sizeKB": 8
     }
   ]
 }
