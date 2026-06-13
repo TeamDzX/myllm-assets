@@ -1,0 +1,85 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<style>:root{color-scheme:light dark;--accent:#ff375f}
+*{box-sizing:border-box}
+body{font-family:-apple-system,system-ui,sans-serif;margin:0;padding:18px;background:#f2f2f7;color:#111}
+@media(prefers-color-scheme:dark){body{background:#000;color:#eee}select,.result{background:#1c1c1e;color:#eee;border-color:#3a3a3c}}
+h1{font-size:22px;margin:0 0 4px}
+.sub{font-size:13px;opacity:.6;margin-bottom:14px}
+.pick{display:flex;gap:10px;align-items:center;margin-bottom:10px}
+.pick label{font-size:12px;opacity:.6;width:64px;flex:none}
+select{flex:1;padding:11px;border:1px solid #d1d1d6;border-radius:10px;font-size:16px;background:#fff;color:#111}
+button.go{width:100%;border:0;background:var(--accent);color:#fff;border-radius:11px;padding:13px;font-size:15px;font-weight:600;margin-top:4px}
+button:disabled{opacity:.5}
+#status{font-size:13px;opacity:.7;min-height:16px;margin:10px 0}
+.result{background:#fff;border-radius:16px;padding:20px;margin-top:8px;box-shadow:0 1px 4px rgba(0,0,0,.1);display:none;text-align:center}
+.result .pair{font-size:30px}
+.score{font-size:46px;font-weight:800;color:var(--accent);margin:6px 0 2px}
+.bar{height:10px;border-radius:6px;background:rgba(127,127,127,.2);overflow:hidden;margin:8px 0 14px}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,#ff9f0a,var(--accent));border-radius:6px}
+.reading{font-size:15px;line-height:1.6;text-align:left}
+</style></head><body>
+<h1>💞 Star Match</h1>
+<div class="sub">See how two star signs get along — just for fun ✨</div>
+<div class="pick"><label>You</label><select id="a"></select></div>
+<div class="pick"><label>Them</label><select id="b"></select></div>
+<button class="go" id="go" onclick="match()">Reveal our match</button>
+<div id="status"></div>
+<div class="result" id="result"></div>
+<script>
+var store=window.myllmStorage||{getItem:function(){return Promise.resolve(null)},setItem:function(){return Promise.resolve()}};
+var SIGNS=[['Aries','♈','Fire'],['Taurus','♉','Earth'],['Gemini','♊','Air'],['Cancer','♋','Water'],
+ ['Leo','♌','Fire'],['Virgo','♍','Earth'],['Libra','♎','Air'],['Scorpio','♏','Water'],
+ ['Sagittarius','♐','Fire'],['Capricorn','♑','Earth'],['Aquarius','♒','Air'],['Pisces','♓','Water']];
+function el(i){return document.getElementById(i)}
+function setStatus(t){el('status').textContent=t||''}
+function sym(n){for(var i=0;i<SIGNS.length;i++)if(SIGNS[i][0]===n)return SIGNS[i][1];return''}
+function elem(n){for(var i=0;i<SIGNS.length;i++)if(SIGNS[i][0]===n)return SIGNS[i][2];return''}
+function fill(sel){SIGNS.forEach(function(s){var o=document.createElement('option');o.value=s[0];o.textContent=s[1]+' '+s[0];sel.appendChild(o)})}
+fill(el('a'));fill(el('b'));el('b').selectedIndex=4;
+
+function hash(s){var h=0;for(var i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))>>>0;return h}
+function pairScore(a,b){
+  var e1=elem(a),e2=elem(b),base;
+  var key=[e1,e2].sort().join('+');
+  if(e1===e2)base=92;
+  else if(key==='Air+Fire')base=88;else if(key==='Earth+Water')base=88;
+  else if(key==='Earth+Fire')base=70;else if(key==='Air+Water')base=70;
+  else if(key==='Fire+Water')base=62;else base=64; // Air+Earth
+  var j=(hash(a+'·'+b)%9)-4;
+  return Math.max(55,Math.min(98,base+j));
+}
+function tier(n){
+  if(n>=85)return'A natural match — your elements spark and flow together beautifully.';
+  if(n>=72)return'Strong potential — a little give and take and you’ll really click.';
+  if(n>=64)return'Opposites that intrigue — different energies that can balance each other out.';
+  return'A slow burn — it takes effort, but the contrast keeps things interesting.';
+}
+
+function show(a,b,score,reading){
+  var r=el('result');r.style.display='block';
+  r.innerHTML='<div class="pair">'+sym(a)+' &nbsp;💖&nbsp; '+sym(b)+'</div>'+
+    '<div class="score">'+score+'%</div>'+
+    '<div class="bar"><i style="width:'+score+'%"></i></div>'+
+    '<div class="reading"></div>';
+  r.querySelector('.reading').textContent=reading;
+  if(window.myllmHaptic)myllmHaptic('success');
+  r.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function match(){
+  var a=el('a').value,b=el('b').value;
+  var score=pairScore(a,b);
+  store.setItem('last',a+'|'+b);
+  if(!window.myllmAsk){show(a,b,score,tier(score)+'\n\n(Turn on “Allow apps to use the AI” in Settings for a full personalised reading.)');return}
+  el('go').disabled=true;setStatus('Consulting the stars for '+a+' & '+b+'…');
+  myllmAsk('Write a fun, playful zodiac compatibility reading for '+a+' ('+elem(a)+') and '+b+' ('+elem(b)+') as a pair. 3–4 sentences, positive and entertaining. No preamble, no score, no headings.',
+           {system:'You are a witty astrologer writing short, light-hearted compatibility readings.'})
+  .then(function(reply){show(a,b,score,reply.trim());setStatus('')})
+  .catch(function(err){setStatus('');show(a,b,score,tier(score))})
+  .then(function(){el('go').disabled=false});
+}
+
+store.getItem('last').then(function(v){
+  if(v){var p=v.split('|');if(p.length===2){el('a').value=p[0];el('b').value=p[1]}}
+});
+</script></body></html>

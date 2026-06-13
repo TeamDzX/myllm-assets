@@ -1,0 +1,82 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<style>:root{color-scheme:light dark;--accent:#5e5ce6}
+*{box-sizing:border-box}
+body{font-family:-apple-system,system-ui,sans-serif;margin:0;padding:18px;background:#f2f2f7;color:#111}
+@media(prefers-color-scheme:dark){body{background:#000;color:#eee}.sign{background:#1c1c1e}.reading{background:#15152a}}
+h1{font-size:22px;margin:0 0 4px}
+.sub{font-size:13px;opacity:.6;margin-bottom:14px}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
+.sign{background:#fff;border:2px solid transparent;border-radius:13px;padding:9px 4px;text-align:center;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,.07)}
+.sign.on{border-color:var(--accent)}
+.sign .sym{font-size:24px;line-height:1.1}
+.sign .nm{font-size:11px;opacity:.7;margin-top:2px}
+.sign .dt{font-size:9px;opacity:.45}
+button.go{width:100%;border:0;background:var(--accent);color:#fff;border-radius:11px;padding:13px;font-size:15px;font-weight:600}
+button:disabled{opacity:.5}
+#status{font-size:13px;opacity:.7;min-height:16px;margin:10px 0}
+.reading{background:#eef;border-radius:14px;padding:16px;margin-top:8px;font-size:15px;line-height:1.6;display:none}
+.reading h2{margin:0 0 4px;font-size:17px}
+.reading .when{font-size:12px;opacity:.6;margin-bottom:10px}
+</style></head><body>
+<h1>🔮 Daily Horoscope</h1>
+<div class="sub">Pick your star sign for today's reading. For fun ✨</div>
+<div class="grid" id="grid"></div>
+<button class="go" id="go" onclick="reveal()">Today's horoscope</button>
+<div id="status"></div>
+<div class="reading" id="reading"></div>
+<script>
+var store=window.myllmStorage||{getItem:function(){return Promise.resolve(null)},setItem:function(){return Promise.resolve()}};
+var SIGNS=[
+ {n:'Aries',s:'♈',d:'Mar 21–Apr 19'},{n:'Taurus',s:'♉',d:'Apr 20–May 20'},
+ {n:'Gemini',s:'♊',d:'May 21–Jun 20'},{n:'Cancer',s:'♋',d:'Jun 21–Jul 22'},
+ {n:'Leo',s:'♌',d:'Jul 23–Aug 22'},{n:'Virgo',s:'♍',d:'Aug 23–Sep 22'},
+ {n:'Libra',s:'♎',d:'Sep 23–Oct 22'},{n:'Scorpio',s:'♏',d:'Oct 23–Nov 21'},
+ {n:'Sagittarius',s:'♐',d:'Nov 22–Dec 21'},{n:'Capricorn',s:'♑',d:'Dec 22–Jan 19'},
+ {n:'Aquarius',s:'♒',d:'Jan 20–Feb 18'},{n:'Pisces',s:'♓',d:'Feb 19–Mar 20'}];
+var chosen=null,cache={};
+function el(i){return document.getElementById(i)}
+function setStatus(t){el('status').textContent=t||''}
+function todayKey(){return new Date().toDateString()}
+function todayLabel(){return new Date().toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'})}
+
+function renderGrid(){
+  var G=el('grid');G.innerHTML='';
+  SIGNS.forEach(function(sg){
+    var d=document.createElement('div');d.className='sign'+(chosen===sg.n?' on':'');
+    d.innerHTML='<div class="sym">'+sg.s+'</div><div class="nm">'+sg.n+'</div><div class="dt">'+sg.d+'</div>';
+    d.onclick=function(){chosen=sg.n;store.setItem('sign',sg.n);renderGrid();showCached()};
+    G.appendChild(d);
+  });
+}
+function signObj(){return SIGNS.filter(function(s){return s.n===chosen})[0]}
+function showReading(text){
+  var sg=signObj();var r=el('reading');r.style.display='block';
+  r.innerHTML='<h2></h2><div class="when"></div>';
+  r.querySelector('h2').textContent=sg.s+' '+sg.n;
+  r.querySelector('.when').textContent=todayLabel();
+  r.appendChild(document.createTextNode(text));
+}
+function showCached(){
+  el('reading').style.display='none';
+  if(chosen&&cache[chosen]&&cache[chosen].key===todayKey())showReading(cache[chosen].text);
+}
+function reveal(){
+  if(!chosen){setStatus('Tap your star sign first.');return}
+  if(cache[chosen]&&cache[chosen].key===todayKey()){showReading(cache[chosen].text);return}
+  if(!window.myllmAsk){setStatus('Horoscopes need AI — update MyLLM and enable “Allow apps to use the AI” in Settings.');return}
+  el('go').disabled=true;setStatus('Reading the stars for '+chosen+'…');
+  myllmAsk('Write a fun, upbeat daily horoscope for '+chosen+' for '+todayLabel()+'. 3–4 sentences covering mood, love and one piece of practical advice. Light and positive, no preamble.',
+           {system:'You are a playful astrologer writing short, entertaining daily horoscopes.'})
+  .then(function(reply){
+    cache[chosen]={key:todayKey(),text:reply.trim()};store.setItem('cache',JSON.stringify(cache));
+    showReading(reply.trim());setStatus('');if(window.myllmHaptic)myllmHaptic('success');
+  }).catch(function(err){setStatus('Could not read the stars: '+err.message)})
+  .then(function(){el('go').disabled=false});
+}
+
+Promise.all([store.getItem('sign'),store.getItem('cache')]).then(function(r){
+  if(r[0])chosen=r[0];
+  if(r[1])try{cache=JSON.parse(r[1])}catch(e){}
+  renderGrid();showCached();
+});
+</script></body></html>
