@@ -1,0 +1,103 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<style>:root{color-scheme:light dark;--accent:#40c8e0}
+*{box-sizing:border-box}
+body{font-family:-apple-system,system-ui,sans-serif;margin:0;padding:18px;background:#f2f2f7;color:#111}
+@media(prefers-color-scheme:dark){body{background:#000;color:#eee}.slot{background:#1c1c1e}.tab{background:#1c1c1e;color:#aaa}}
+h1{font-size:22px;margin:0 0 4px}
+.sub{font-size:13px;opacity:.6;margin-bottom:14px}
+.tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:8px;margin-bottom:6px}
+.tab{flex:none;padding:8px 14px;border-radius:20px;background:#e5e5ea;color:#555;font-size:14px;font-weight:600;border:0;cursor:pointer}
+.tab.on{background:var(--accent);color:#fff}
+.slot{background:#fff;border-radius:12px;padding:11px 14px;margin-bottom:8px;display:flex;align-items:center;gap:12px;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.07);border-left:5px solid transparent}
+.time{font-size:13px;font-variant-numeric:tabular-nums;opacity:.6;width:48px;flex:none}
+.dot{width:10px;height:10px;border-radius:50%;flex:none;background:#c7c7cc}
+.info{flex:1;min-width:0}
+.subj{font-size:16px;font-weight:600}
+.subj.empty{font-weight:400;opacity:.4}
+.room{font-size:12px;opacity:.6}
+.now{background:var(--accent);color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:6px;letter-spacing:.04em}
+.bar{display:flex;gap:8px;margin-top:14px}
+.bar button{flex:1;border:0;background:#e5e5ea;color:#111;border-radius:10px;padding:11px;font-size:14px;font-weight:600}
+@media(prefers-color-scheme:dark){.bar button{background:#2c2c2e;color:#eee}.tab{background:#1c1c1e}}
+.hint{font-size:11px;opacity:.4;text-align:center;margin-top:12px}
+</style></head><body>
+<h1>🗓️ Class Timetable</h1>
+<div class="sub">Tap any slot to set the subject and room.</div>
+<div class="tabs" id="tabs"></div>
+<div id="slots"></div>
+<div class="bar"><button onclick="editTimes()">Edit period times</button><button onclick="clearDay()">Clear this day</button></div>
+<div class="hint">Saved on-device. Your timetable is private to this app.</div>
+<script>
+var store=window.myllmStorage||{getItem:function(){return Promise.resolve(null)},setItem:function(){return Promise.resolve()}};
+var DAYS=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+var COLORS=["#ff453a","#ff9f0a","#ffd60a","#30d158","#40c8e0","#5e5ce6","#bf5af2","#ff375f"];
+var DEFTIMES=["09:00","10:00","11:00","12:00","14:00","15:00"];
+var data={times:DEFTIMES.slice(),grid:{}};   // grid[day] = [{subj,room}]
+var day=Math.min(new Date().getDay()===0?6:new Date().getDay()-1,6);
+function el(i){return document.getElementById(i)}
+function save(){store.setItem('tt',JSON.stringify(data))}
+function colorFor(s){if(!s)return'#c7c7cc';var h=0;for(var i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))>>>0;return COLORS[h%COLORS.length]}
+function cell(d,p){var row=data.grid[d]||[];return row[p]||{subj:'',room:''}}
+
+function nowSlot(){
+  var n=new Date();if((n.getDay()===0?6:n.getDay()-1)!==day)return -1;
+  var mins=n.getHours()*60+n.getMinutes();
+  for(var i=0;i<data.times.length;i++){
+    var t=data.times[i].split(':'),start=(+t[0])*60+(+t[1]);
+    if(mins>=start&&mins<start+60)return i;
+  }
+  return -1;
+}
+
+function renderTabs(){
+  var T=el('tabs');T.innerHTML='';
+  DAYS.forEach(function(d,i){
+    var b=document.createElement('button');b.className='tab'+(i===day?' on':'');b.textContent=d;
+    b.onclick=function(){day=i;render()};T.appendChild(b);
+  });
+}
+function render(){
+  renderTabs();
+  var S=el('slots');S.innerHTML='';var live=nowSlot();
+  data.times.forEach(function(time,p){
+    var c=cell(DAYS[day],p);
+    var div=document.createElement('div');div.className='slot';
+    div.style.borderLeftColor=c.subj?colorFor(c.subj):'transparent';
+    var tm=document.createElement('div');tm.className='time';tm.textContent=time;
+    var info=document.createElement('div');info.className='info';
+    var sj=document.createElement('div');sj.className='subj'+(c.subj?'':' empty');sj.textContent=c.subj||'Free / tap to set';
+    info.appendChild(sj);
+    if(c.room){var rm=document.createElement('div');rm.className='room';rm.textContent='📍 '+c.room;info.appendChild(rm)}
+    div.appendChild(tm);div.appendChild(info);
+    if(p===live){var n=document.createElement('span');n.className='now';n.textContent='NOW';div.appendChild(n)}
+    div.onclick=function(){editCell(p)};
+    S.appendChild(div);
+  });
+}
+
+function editCell(p){
+  var c=cell(DAYS[day],p);
+  var subj=prompt('Subject for '+DAYS[day]+' '+data.times[p]+' (leave blank to clear):',c.subj);
+  if(subj===null)return;
+  var room='';
+  if(subj.trim())room=prompt('Room / location (optional):',c.room)||'';
+  if(!data.grid[DAYS[day]])data.grid[DAYS[day]]=[];
+  data.grid[DAYS[day]][p]={subj:subj.trim(),room:room.trim()};
+  save();render();if(window.myllmHaptic)myllmHaptic('light');
+}
+function clearDay(){
+  if(!confirm('Clear all of '+DAYS[day]+'?'))return;
+  data.grid[DAYS[day]]=[];save();render();
+}
+function editTimes(){
+  var t=prompt('Period start times, comma-separated (24h):',data.times.join(', '));
+  if(t===null)return;
+  var arr=t.split(',').map(function(x){return x.trim()}).filter(function(x){return/^\d{1,2}:\d{2}$/.test(x)});
+  if(arr.length){data.times=arr;save();render()}
+}
+
+store.getItem('tt').then(function(v){
+  if(v)try{var o=JSON.parse(v);if(o.times)data.times=o.times;if(o.grid)data.grid=o.grid}catch(e){}
+  render();
+});
+</script></body></html>

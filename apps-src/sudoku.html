@@ -1,0 +1,159 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<style>:root{color-scheme:light dark;--accent:#0a84ff;--grid:#c7c7cc;--cell:#fff;--fixed:#111;--user:#0a84ff}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
+@media(prefers-color-scheme:dark){:root{--grid:#48484a;--cell:#1c1c1e;--fixed:#eee}}
+html,body{margin:0;height:100%}
+body{font-family:-apple-system,system-ui,sans-serif;background:#f2f2f7;color:#111;display:flex;flex-direction:column;align-items:center;padding:14px 12px;gap:12px}
+@media(prefers-color-scheme:dark){body{background:#000;color:#eee}.pad button,.diff button{background:#1c1c1e;color:#eee}}
+.bar{display:flex;align-items:center;gap:10px;width:100%;max-width:440px;justify-content:space-between}
+.diff{display:flex;gap:5px}
+.diff button{border:0;background:#e5e5ea;color:#333;border-radius:8px;padding:7px 11px;font-size:13px;font-weight:600}
+.diff button.on{background:var(--accent);color:#fff}
+#info{font-size:13px;opacity:.7;font-variant-numeric:tabular-nums}
+.board{width:min(94vw,440px);aspect-ratio:1;display:grid;grid-template-columns:repeat(9,1fr);background:var(--grid);gap:1px;border:2.5px solid var(--grid);border-radius:6px;overflow:hidden}
+.c{background:var(--cell);display:flex;align-items:center;justify-content:center;font-size:min(6.4vw,30px);font-weight:500;color:var(--user);position:relative}
+.c.fixed{color:var(--fixed);font-weight:600}
+.c.sel{background:#cfe6ff}.c.peer{background:#eaf3ff}.c.same{background:#bcd9f7}.c.bad{color:#ff453a!important;background:#ffddd9}
+@media(prefers-color-scheme:dark){.c.sel{background:#0a3a66}.c.peer{background:#16263a}.c.same{background:#0e4f86}.c.bad{background:#5c1a16}}
+.c:nth-child(3n){border-right:2px solid var(--grid)}.c:nth-child(9n){border-right:0}
+.brow3{box-shadow:0 2px 0 var(--grid)}
+.notes{position:absolute;inset:1px;display:grid;grid-template-columns:repeat(3,1fr);font-size:min(2.4vw,11px);color:#888;font-weight:600}
+.notes span{display:flex;align-items:center;justify-content:center}
+.pad{display:grid;grid-template-columns:repeat(9,1fr);gap:5px;width:min(94vw,440px)}
+.pad button{border:0;background:#fff;color:var(--accent);border-radius:9px;padding:12px 0;font-size:20px;font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.pad button .n{font-size:9px;display:block;opacity:.5;font-weight:600}
+.tools{display:flex;gap:8px;width:min(94vw,440px)}
+.tools button{flex:1;border:0;background:#e5e5ea;color:#333;border-radius:10px;padding:11px;font-size:14px;font-weight:600}
+.tools button.on{background:var(--accent);color:#fff}
+@media(prefers-color-scheme:dark){.tools button{background:#1c1c1e;color:#eee}}
+#msg{font-size:15px;font-weight:600;min-height:20px;text-align:center}
+.win{color:#30d158}
+</style></head><body>
+<div class="bar">
+  <div class="diff" id="diff"></div>
+  <div id="info"></div>
+</div>
+<div class="board" id="board"></div>
+<div id="msg"></div>
+<div class="tools">
+  <button id="notesBtn" onclick="toggleNotes()">✏️ Notes</button>
+  <button onclick="erase()">⌫ Erase</button>
+  <button onclick="hint()">💡 Hint</button>
+</div>
+<div class="pad" id="pad"></div>
+<script>
+var store=window.myllmStorage||{getItem:function(){return Promise.resolve(null)},setItem:function(){return Promise.resolve()}};
+var DIFFS=[["Easy",42],["Medium",34],["Hard",28],["Expert",24]];
+var puzzle=[],solution=[],given=[],notes=[],sel=-1,notesMode=false,diff=1,mistakes=0,startT=0,timer=null,won=false;
+function el(i){return document.getElementById(i)}
+
+// ---- generator ----
+function emptyGrid(){return Array(81).fill(0)}
+function rc(i){return[Math.floor(i/9),i%9]}
+function ok(g,i,v){var r=Math.floor(i/9),c=i%9,br=r-r%3,bc=c-c%3;
+  for(var k=0;k<9;k++){if(g[r*9+k]===v||g[k*9+c]===v)return false}
+  for(var a=0;a<3;a++)for(var b=0;b<3;b++)if(g[(br+a)*9+(bc+b)]===v)return false;
+  return true}
+function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t}return a}
+function fill(g){
+  var i=g.indexOf(0);if(i<0)return true;
+  var nums=shuffle([1,2,3,4,5,6,7,8,9]);
+  for(var k=0;k<9;k++){if(ok(g,i,nums[k])){g[i]=nums[k];if(fill(g))return true;g[i]=0}}
+  return false}
+function countSolutions(g,cap){
+  var i=g.indexOf(0);if(i<0)return 1;
+  var n=0;
+  for(var v=1;v<=9;v++){if(ok(g,i,v)){g[i]=v;n+=countSolutions(g,cap);if(n>=cap){g[i]=0;return n}g[i]=0}}
+  return n}
+function generate(clues){
+  var g=emptyGrid();fill(g);solution=g.slice();
+  var idx=shuffle(Array.from({length:81},function(_,i){return i}));
+  var p=g.slice(),removed=0,target=81-clues;
+  for(var k=0;k<idx.length&&removed<target;k++){
+    var i=idx[k],bak=p[i];if(bak===0)continue;
+    p[i]=0;var t=p.slice();
+    if(countSolutions(t,2)!==1){p[i]=bak}else{removed++}
+  }
+  puzzle=p.slice();given=p.map(function(v){return v!==0});
+  notes=Array.from({length:81},function(){return[]});
+  mistakes=0;won=false;startT=Date.now();
+}
+
+// ---- rendering ----
+function render(){
+  var B=el('board');if(!B.children.length){for(var i=0;i<81;i++){var d=document.createElement('div');d.className='c';d.dataset.i=i;d.onclick=(function(i){return function(){select(i)}})(i);B.appendChild(d)}}
+  for(var i=0;i<81;i++){
+    var c=B.children[i],v=puzzle[i];c.className='c'+(given[i]?' fixed':'');
+    var r=Math.floor(i/9);if(r===2||r===5)c.classList.add('brow3');
+    if(v){c.textContent=v}
+    else if(notes[i].length){c.innerHTML='<div class="notes">'+[1,2,3,4,5,6,7,8,9].map(function(n){return'<span>'+(notes[i].indexOf(n)>=0?n:'')+'</span>'}).join('')+'</div>'}
+    else c.textContent='';
+  }
+  paint();renderInfo();renderPad();
+}
+function paint(){
+  var B=el('board');var sv=sel>=0?puzzle[sel]:0;
+  for(var i=0;i<81;i++){var c=B.children[i];c.classList.remove('sel','peer','same','bad')}
+  if(sel<0)return;
+  var sr=Math.floor(sel/9),sc=sel%9;
+  for(var i=0;i<81;i++){
+    var c=B.children[i],r=Math.floor(i/9),cc=i%9;
+    if(i===sel){c.classList.add('sel');continue}
+    if(r===sr||cc===sc||(Math.floor(r/3)===Math.floor(sr/3)&&Math.floor(cc/3)===Math.floor(sc/3)))c.classList.add('peer');
+    if(sv&&puzzle[i]===sv)c.classList.add('same');
+  }
+  // mark conflicts
+  for(var i=0;i<81;i++){var v=puzzle[i];if(!v||given[i])continue;var t=puzzle.slice();t[i]=0;if(!ok(t,i,v))B.children[i].classList.add('bad')}
+}
+function renderInfo(){
+  var s=Math.floor((Date.now()-startT)/1000);
+  el('info').textContent=(mistakes?('✕'+mistakes+'  '):'')+String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');
+}
+function renderPad(){
+  var P=el('pad');if(P.children.length)return;
+  for(var n=1;n<=9;n++){var b=document.createElement('button');b.dataset.n=n;b.onclick=(function(n){return function(){place(n)}})(n);P.appendChild(b)}
+  updatePad();
+}
+function updatePad(){
+  var counts={};for(var i=0;i<81;i++)if(puzzle[i])counts[puzzle[i]]=(counts[puzzle[i]]||0)+1;
+  var P=el('pad');for(var n=1;n<=9;n++){var left=9-(counts[n]||0);P.children[n-1].innerHTML=n+'<span class="n">'+(left>0?left:'')+'</span>';P.children[n-1].style.opacity=left>0?1:.35}
+}
+function renderDiff(){var D=el('diff');D.innerHTML='';DIFFS.forEach(function(d,i){var b=document.createElement('button');b.textContent=d[0];if(i===diff)b.className='on';b.onclick=function(){diff=i;newGame()};D.appendChild(b)})}
+
+// ---- interaction ----
+function select(i){sel=i;paint();if(window.myllmHaptic)myllmHaptic('selection')}
+function place(n){
+  if(sel<0||given[sel]||won)return;
+  if(notesMode){var a=notes[sel],k=a.indexOf(n);if(k>=0)a.splice(k,1);else a.push(n);puzzle[sel]=0}
+  else{
+    if(puzzle[sel]===n){puzzle[sel]=0}
+    else{puzzle[sel]=n;notes[sel]=[];if(solution[sel]!==n){mistakes++;if(window.myllmHaptic)myllmHaptic('error')}else if(window.myllmHaptic)myllmHaptic('light')}
+  }
+  save();render();checkWin();
+}
+function erase(){if(sel<0||given[sel]||won)return;puzzle[sel]=0;notes[sel]=[];save();render()}
+function toggleNotes(){notesMode=!notesMode;el('notesBtn').classList.toggle('on',notesMode);if(window.myllmHaptic)myllmHaptic('selection')}
+function hint(){
+  if(won)return;var blanks=[];for(var i=0;i<81;i++)if(!puzzle[i])blanks.push(i);
+  if(!blanks.length)return;var i=sel>=0&&!puzzle[sel]?sel:blanks[Math.floor(Math.random()*blanks.length)];
+  puzzle[i]=solution[i];given[i]=true;notes[i]=[];save();render();checkWin();if(window.myllmHaptic)myllmHaptic('success');
+}
+function checkWin(){
+  for(var i=0;i<81;i++)if(puzzle[i]!==solution[i])return;
+  won=true;if(timer){clearInterval(timer);timer=null}
+  el('msg').innerHTML='<span class="win">🎉 Solved!'+(mistakes?'':' Flawless!')+'</span>';
+  if(window.myllmHaptic)myllmHaptic('success');save();
+}
+function newGame(){
+  el('msg').textContent='Generating…';
+  setTimeout(function(){generate(DIFFS[diff][1]);sel=-1;el('msg').textContent='';renderDiff();render();updatePad();save();
+    if(timer)clearInterval(timer);timer=setInterval(function(){if(!won)renderInfo()},1000);},20);
+}
+function save(){store.setItem('game',JSON.stringify({puzzle:puzzle,solution:solution,given:given,notes:notes,diff:diff,mistakes:mistakes,startT:startT,won:won}))}
+
+renderDiff();renderPad();
+store.getItem('game').then(function(v){
+  if(v){try{var g=JSON.parse(v);if(g.solution&&g.solution.length===81){puzzle=g.puzzle;solution=g.solution;given=g.given;notes=g.notes||Array.from({length:81},function(){return[]});diff=g.diff||1;mistakes=g.mistakes||0;startT=g.startT||Date.now();won=g.won||false;renderDiff();render();updatePad();if(won)el('msg').innerHTML='<span class="win">🎉 Solved!</span>';if(!timer)timer=setInterval(function(){if(!won)renderInfo()},1000);return}}catch(e){}}
+  newGame();
+});
+</script></body></html>

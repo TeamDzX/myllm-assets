@@ -1,5 +1,14 @@
 {
-  "updated": "2026-06-11",
+  "updated": "2026-06-13",
+  "categories": [
+    "Students",
+    "Productivity",
+    "News & Web",
+    "Health & Wellbeing",
+    "Games",
+    "Creative",
+    "Utilities"
+  ],
   "apps": [
     {
       "id": "flashcard-forge",
@@ -19,7 +28,8 @@
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/flashcard-forge.jpg",
       "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/flashcard-forge.html",
       "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/flashcard-forge.myllmapp",
-      "sizeKB": 5
+      "sizeKB": 5,
+      "category": "Students"
     },
     {
       "id": "language-lab",
@@ -39,7 +49,8 @@
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/language-lab.jpg",
       "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/language-lab.html",
       "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/language-lab.myllmapp",
-      "sizeKB": 6
+      "sizeKB": 6,
+      "category": "Students"
     },
     {
       "id": "quick-todo",
@@ -59,7 +70,8 @@
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/quick-todo.jpg",
       "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/quick-todo.html",
       "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/quick-todo.myllmapp",
-      "sizeKB": 2
+      "sizeKB": 2,
+      "category": "Productivity"
     },
     {
       "id": "habit-streaks",
@@ -79,7 +91,8 @@
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/habit-streaks.jpg",
       "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/habit-streaks.html",
       "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/habit-streaks.myllmapp",
-      "sizeKB": 3
+      "sizeKB": 3,
+      "category": "Health & Wellbeing"
     },
     {
       "id": "tip-split",
@@ -98,7 +111,8 @@
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/tip-split.jpg",
       "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/tip-split.html",
       "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/tip-split.myllmapp",
-      "sizeKB": 3
+      "sizeKB": 3,
+      "category": "Utilities"
     },
     {
       "id": "box-breathing",
@@ -117,7 +131,8 @@
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/box-breathing.jpg",
       "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/box-breathing.html",
       "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/box-breathing.myllmapp",
-      "sizeKB": 2
+      "sizeKB": 2,
+      "category": "Health & Wellbeing"
     },
     {
       "id": "memory-match",
@@ -137,7 +152,8 @@
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/memory-match.jpg",
       "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/memory-match.html",
       "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/memory-match.myllmapp",
-      "sizeKB": 2
+      "sizeKB": 2,
+      "category": "Games"
     },
     {
       "id": "draw",
@@ -156,7 +172,8 @@
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/draw.jpg",
       "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/draw.html",
       "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/draw.myllmapp",
-      "sizeKB": 87
+      "sizeKB": 87,
+      "category": "Creative"
     },
     {
       "id": "snake",
@@ -176,7 +193,8 @@
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/snake.jpg",
       "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/snake.html",
       "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/snake.myllmapp",
-      "sizeKB": 3
+      "sizeKB": 3,
+      "category": "Games"
     },
     {
       "id": "2048",
@@ -196,7 +214,193 @@
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/2048.jpg",
       "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/2048.html",
       "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/2048.myllmapp",
-      "sizeKB": 4
+      "sizeKB": 4,
+      "category": "Games"
+    },
+    {
+      "id": "meal-planner",
+      "name": "Meal Planner",
+      "emoji": "🍽️",
+      "tagline": "A week of meals, written by AI",
+      "description": "Plan a whole week of meals in one tap — your own AI writes the menu, swap any single meal you don't fancy, and generate a tidy shopping list to share. Tune it to your tastes (vegetarian, quick, budget). Needs the latest MyLLM with “Allow apps to use the AI” enabled in Settings.",
+      "tags": [
+        "AI-powered",
+        "saves data"
+      ],
+      "category": "Productivity",
+      "iconSymbol": "fork.knife",
+      "iconColor": "orange",
+      "version": 1,
+      "featured": false,
+      "requiresAI": true,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/meal-planner.jpg",
+      "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/meal-planner.html",
+      "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/meal-planner.myllmapp",
+      "sizeKB": 7
+    },
+    {
+      "id": "homework-tracker",
+      "name": "Homework Tracker",
+      "emoji": "📚",
+      "tagline": "Every assignment and deadline, sorted",
+      "description": "Track every assignment with its subject and due date, sorted by what's due next with overdue flagged in red. Tap “Break into steps” and your AI turns any task into a checklist you can tick off. Saved on-device. AI steps need “Allow apps to use the AI” enabled in Settings.",
+      "tags": [
+        "students",
+        "saves data"
+      ],
+      "category": "Students",
+      "iconSymbol": "books.vertical.fill",
+      "iconColor": "indigo",
+      "version": 1,
+      "featured": false,
+      "requiresAI": false,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/homework-tracker.jpg",
+      "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/homework-tracker.html",
+      "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/homework-tracker.myllmapp",
+      "sizeKB": 8
+    },
+    {
+      "id": "class-timetable",
+      "name": "Class Timetable",
+      "emoji": "🗓️",
+      "tagline": "Your week of lessons at a glance",
+      "description": "A clean weekly timetable: tap any slot to set the subject and room, switch days with a tap, and the current lesson is highlighted as NOW. Period times are editable. Works fully offline, saved on-device.",
+      "tags": [
+        "students",
+        "saves data"
+      ],
+      "category": "Students",
+      "iconSymbol": "calendar",
+      "iconColor": "teal",
+      "version": 1,
+      "featured": false,
+      "requiresAI": false,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/class-timetable.jpg",
+      "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/class-timetable.html",
+      "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/class-timetable.myllmapp",
+      "sizeKB": 6
+    },
+    {
+      "id": "news-feed",
+      "name": "News",
+      "emoji": "📰",
+      "tagline": "Headlines by topic, live",
+      "description": "A live news reader: switch between Top, World, UK, Tech, Business, Science and Sport in the header, tap a story to expand it or open the full article. Add any site's own RSS feed too. Needs app network access (on by default; toggle in Settings).",
+      "tags": [
+        "news",
+        "network"
+      ],
+      "category": "News & Web",
+      "iconSymbol": "newspaper.fill",
+      "iconColor": "red",
+      "version": 1,
+      "featured": false,
+      "requiresAI": false,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/news-feed.jpg",
+      "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/news-feed.html",
+      "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/news-feed.myllmapp",
+      "sizeKB": 8
+    },
+    {
+      "id": "reader",
+      "name": "Reader",
+      "emoji": "📖",
+      "tagline": "Clean reading, then ask your AI",
+      "description": "Paste any article link and Reader fetches the page and strips it down to clean, distraction-free text — then ask your AI questions about what you're reading. Needs app network access (on by default in Settings); the “ask” feature uses your model if enabled.",
+      "tags": [
+        "network",
+        "reading"
+      ],
+      "category": "News & Web",
+      "iconSymbol": "book.fill",
+      "iconColor": "blue",
+      "version": 1,
+      "featured": false,
+      "requiresAI": false,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/reader.jpg",
+      "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/reader.html",
+      "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/reader.myllmapp",
+      "sizeKB": 7
+    },
+    {
+      "id": "sudoku",
+      "name": "Sudoku",
+      "emoji": "🔢",
+      "tagline": "The classic number puzzle",
+      "description": "The timeless 9×9 logic puzzle with four difficulty levels, pencil-mark notes, conflict highlighting and hints when you're stuck. Every board is generated fresh with a guaranteed unique solution, and your game is saved on-device so you can pick up where you left off.",
+      "tags": [
+        "game"
+      ],
+      "category": "Games",
+      "iconSymbol": "square.grid.3x3.fill",
+      "iconColor": "blue",
+      "version": 1,
+      "featured": false,
+      "requiresAI": false,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/sudoku.jpg",
+      "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/sudoku.html",
+      "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/sudoku.myllmapp",
+      "sizeKB": 10
+    },
+    {
+      "id": "word-search",
+      "name": "Word Search",
+      "emoji": "🔍",
+      "tagline": "Find the hidden words",
+      "description": "Hunt for hidden words across seven themes — animals, countries, space and more. Swipe in any direction to grab a word; found words stay highlighted and your puzzle is saved on-device. A relaxing classic for any spare minute.",
+      "tags": [
+        "game"
+      ],
+      "category": "Games",
+      "iconSymbol": "magnifyingglass",
+      "iconColor": "purple",
+      "version": 1,
+      "featured": false,
+      "requiresAI": false,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/word-search.jpg",
+      "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/word-search.html",
+      "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/word-search.myllmapp",
+      "sizeKB": 8
+    },
+    {
+      "id": "word-master",
+      "name": "Word Master",
+      "emoji": "🟩",
+      "tagline": "Guess the five-letter word",
+      "description": "Guess the hidden five-letter word in six tries — green means right spot, yellow means wrong spot. A full on-screen keyboard tracks your letters, hundreds of answers keep it fresh, and your win streak is saved on-device. (An original take on the daily word game.)",
+      "tags": [
+        "game"
+      ],
+      "category": "Games",
+      "iconSymbol": "character.square.fill",
+      "iconColor": "green",
+      "version": 1,
+      "featured": false,
+      "requiresAI": false,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/word-master.jpg",
+      "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/word-master.html",
+      "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/word-master.myllmapp",
+      "sizeKB": 65
+    },
+    {
+      "id": "word-tiles",
+      "name": "Word Tiles",
+      "emoji": "🔠",
+      "tagline": "Build words, score points",
+      "description": "Six letter tiles, two minutes — build as many words as you can, scored by letter value like the classic tile game. Find the hidden six-letter word for a bonus. Your best score is saved on-device. (An original anagram word game, not affiliated with any brand.)",
+      "tags": [
+        "game"
+      ],
+      "category": "Games",
+      "iconSymbol": "rectangle.grid.3x2.fill",
+      "iconColor": "yellow",
+      "version": 1,
+      "featured": false,
+      "requiresAI": false,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/word-tiles.jpg",
+      "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/word-tiles.html",
+      "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/word-tiles.myllmapp",
+      "sizeKB": 85
     }
   ]
 }

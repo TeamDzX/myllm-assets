@@ -1,0 +1,116 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<style>:root{color-scheme:light dark;--accent:#ff9f0a}
+*{box-sizing:border-box}
+body{font-family:-apple-system,system-ui,sans-serif;margin:0;padding:18px;background:#f2f2f7;color:#111}
+@media(prefers-color-scheme:dark){body{background:#000;color:#eee}.card,input,textarea{background:#1c1c1e;color:#eee;border-color:#3a3a3c}.meal{border-color:#2c2c2e}}
+h1{font-size:22px;margin:0 0 4px}
+.sub{font-size:13px;opacity:.6;margin-bottom:14px}
+input,textarea{width:100%;padding:11px;border:1px solid #d1d1d6;border-radius:10px;font-size:15px;background:#fff;font-family:inherit}
+textarea{min-height:42px;resize:vertical}
+.row{display:flex;gap:8px;margin-bottom:10px}
+button{border:0;background:var(--accent);color:#fff;border-radius:10px;padding:11px 16px;font-size:15px;font-weight:600;white-space:nowrap}
+button.sec{background:#e5e5ea;color:#111}
+@media(prefers-color-scheme:dark){button.sec{background:#2c2c2e;color:#eee}}
+button:disabled{opacity:.5}
+#status{font-size:13px;opacity:.7;min-height:18px;margin:8px 0}
+.card{background:#fff;border-radius:14px;padding:12px 14px;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.day{font-size:13px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--accent);margin-bottom:8px}
+.meal{display:flex;align-items:baseline;gap:8px;padding:7px 0;border-top:1px solid #eee;cursor:pointer}
+.meal:first-of-type{border-top:0}
+.meal .lbl{font-size:11px;text-transform:uppercase;letter-spacing:.05em;opacity:.5;width:64px;flex:none}
+.meal .dish{font-size:15px;flex:1}
+.actions{display:flex;gap:8px;margin-top:6px}
+.actions button{flex:1;padding:12px}
+.hint{font-size:11px;opacity:.4;text-align:center;margin-top:14px}
+</style></head><body>
+<h1>🍽️ Meal Planner</h1>
+<div class="sub">A week of meals, written by your AI — tap any meal to swap it.</div>
+<textarea id="prefs" placeholder="Any preferences? e.g. vegetarian, quick dinners, no nuts, budget-friendly (optional)"></textarea>
+<div class="actions">
+  <button id="gen" onclick="generate()">Plan my week</button>
+  <button class="sec" id="shop" onclick="shoppingList()" style="display:none">Shopping list</button>
+</div>
+<div id="status"></div>
+<div id="week"></div>
+<div class="hint" id="hint"></div>
+<script>
+var store=window.myllmStorage||{getItem:function(){return Promise.resolve(null)},setItem:function(){return Promise.resolve()}};
+var DAYS=["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
+var MEALS=["breakfast","lunch","dinner"];
+var plan=null;
+function el(i){return document.getElementById(i)}
+function setStatus(t){el('status').textContent=t||''}
+function save(){store.setItem('plan',JSON.stringify({prefs:el('prefs').value,plan:plan}))}
+function prefsText(){var p=el('prefs').value.trim();return p?('Preferences: '+p+'. '):''}
+
+function needAI(){
+  if(window.myllmAsk)return true;
+  setStatus('This app needs AI — update MyLLM and turn on “Allow apps to use the AI” in Settings.');
+  return false;
+}
+
+function generate(){
+  if(!needAI())return;
+  el('gen').disabled=true;setStatus('Cooking up a week of meals…');
+  myllmAsk(prefsText()+'Create a 7-day meal plan (Monday to Sunday). Reply with ONLY a JSON object exactly like {"days":[{"day":"Monday","breakfast":"...","lunch":"...","dinner":"..."}]} with all 7 days in order and nothing else. Keep each meal under 9 words.')
+  .then(function(reply){
+    var s=reply.indexOf('{'),e=reply.lastIndexOf('}');
+    if(s<0||e<=s)throw new Error('the model did not return a plan');
+    var obj=JSON.parse(reply.slice(s,e+1));
+    var days=(obj.days||[]).filter(function(d){return d&&d.day});
+    if(days.length<5)throw new Error('the plan came back incomplete');
+    plan=days;save();render();setStatus('');
+    if(window.myllmHaptic)myllmHaptic('success');
+  }).catch(function(err){setStatus('Could not plan: '+err.message)})
+  .then(function(){el('gen').disabled=false});
+}
+
+function swap(di,meal){
+  if(!needAI())return;
+  var d=plan[di];setStatus('Swapping '+meal+' for '+d.day+'…');
+  myllmAsk(prefsText()+'Suggest ONE different '+meal+' idea to replace "'+d[meal]+'" for '+d.day+'. Reply with ONLY the dish name, under 9 words, no trailing punctuation.')
+  .then(function(reply){
+    var dish=reply.trim().replace(/^["'\-\s]+|["'\.\s]+$/g,'').split('\n')[0];
+    if(dish){d[meal]=dish;save();render();if(window.myllmHaptic)myllmHaptic('light')}
+    setStatus('');
+  }).catch(function(err){setStatus('Could not swap: '+err.message)});
+}
+
+function shoppingList(){
+  if(!needAI()||!plan)return;
+  setStatus('Building your shopping list…');
+  myllmAsk('From this 7-day meal plan, write a concise grocery shopping list grouped under simple aisle headings (Produce, Dairy, etc.). Plan JSON: '+JSON.stringify(plan)+'. Reply as plain text, headings on their own line, one item per line with a "- " bullet.')
+  .then(function(list){
+    setStatus('');
+    if(window.myllmShare)myllmShare('🛒 Shopping list\n\n'+list.trim());
+    else alert(list);
+  }).catch(function(err){setStatus('Could not build list: '+err.message)});
+}
+
+function render(){
+  var W=el('week');W.innerHTML='';
+  el('shop').style.display=plan?'block':'none';
+  el('gen').textContent=plan?'Refresh week':'Plan my week';
+  if(!plan){el('hint').textContent=window.myllmAsk?'':'Needs the latest MyLLM with apps-AI enabled.';return}
+  el('hint').textContent='Tap any meal to swap just that one.';
+  plan.forEach(function(d,di){
+    var c=document.createElement('div');c.className='card';
+    var h=document.createElement('div');h.className='day';h.textContent=d.day;c.appendChild(h);
+    MEALS.forEach(function(m){
+      if(!d[m])return;
+      var r=document.createElement('div');r.className='meal';
+      var l=document.createElement('span');l.className='lbl';l.textContent=m;
+      var t=document.createElement('span');t.className='dish';t.textContent=d[m];
+      r.appendChild(l);r.appendChild(t);
+      r.onclick=function(){swap(di,m)};
+      c.appendChild(r);
+    });
+    W.appendChild(c);
+  });
+}
+
+store.getItem('plan').then(function(v){
+  if(v)try{var o=JSON.parse(v);el('prefs').value=o.prefs||'';plan=o.plan||null}catch(e){}
+  render();
+});
+</script></body></html>

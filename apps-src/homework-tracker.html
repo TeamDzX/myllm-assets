@@ -1,0 +1,130 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<style>:root{color-scheme:light dark;--accent:#5e5ce6}
+*{box-sizing:border-box}
+body{font-family:-apple-system,system-ui,sans-serif;margin:0;padding:18px;background:#f2f2f7;color:#111}
+@media(prefers-color-scheme:dark){body{background:#000;color:#eee}.item,input,select{background:#1c1c1e;color:#eee;border-color:#3a3a3c}.steps{background:#0e0e10}}
+h1{font-size:22px;margin:0 0 4px}
+.sub{font-size:13px;opacity:.6;margin-bottom:14px}
+input,select{width:100%;padding:11px;border:1px solid #d1d1d6;border-radius:10px;font-size:15px;background:#fff;font-family:inherit;margin-bottom:8px}
+.grid{display:flex;gap:8px}.grid>*{flex:1}
+button{border:0;background:var(--accent);color:#fff;border-radius:10px;padding:11px 16px;font-size:15px;font-weight:600;width:100%}
+button:disabled{opacity:.5}
+.item{background:#fff;border-radius:13px;padding:12px 14px;margin-bottom:9px;box-shadow:0 1px 3px rgba(0,0,0,.08);border-left:4px solid var(--accent)}
+.item.done{opacity:.55}.item.overdue{border-left-color:#ff453a}
+.top{display:flex;align-items:flex-start;gap:10px}
+.chk{width:24px;height:24px;border-radius:7px;border:2px solid #c7c7cc;flex:none;margin-top:1px;display:flex;align-items:center;justify-content:center;font-size:15px;cursor:pointer}
+.chk.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.body{flex:1;min-width:0}
+.title{font-size:16px;font-weight:600}.done .title{text-decoration:line-through}
+.meta{font-size:12px;opacity:.65;margin-top:2px}
+.due.soon{color:#ff9f0a;font-weight:600}.due.late{color:#ff453a;font-weight:600}
+.del{background:none;color:#ff453a;font-size:18px;width:auto;padding:0 2px;flex:none}
+.tools{display:flex;gap:14px;margin-top:8px}
+.tools a{font-size:13px;color:var(--accent);font-weight:600;cursor:pointer}
+.steps{background:#f2f2f7;border-radius:9px;padding:8px 10px;margin-top:8px;font-size:14px}
+.steps div{padding:3px 0;display:flex;gap:7px}
+.steps .s{cursor:pointer}.steps .s.on{opacity:.5;text-decoration:line-through}
+#status{font-size:13px;opacity:.7;min-height:16px;margin:6px 0}
+.empty{text-align:center;opacity:.5;font-size:14px;padding:30px 0}
+h2{font-size:13px;text-transform:uppercase;letter-spacing:.05em;opacity:.55;margin:18px 0 8px}
+</style></head><body>
+<h1>📚 Homework Tracker</h1>
+<div class="sub">Keep every assignment, deadline and study step in one place.</div>
+<input id="t" placeholder="Assignment (e.g. History essay: the Tudors)">
+<div class="grid"><input id="subj" placeholder="Subject"><input id="due" type="date"></div>
+<button onclick="add()">Add assignment</button>
+<div id="status"></div>
+<div id="list"></div>
+<script>
+var store=window.myllmStorage||{getItem:function(){return Promise.resolve(null)},setItem:function(){return Promise.resolve()}};
+var items=[];
+function el(i){return document.getElementById(i)}
+function save(){store.setItem('items',JSON.stringify(items))}
+function setStatus(t){el('status').textContent=t||''}
+function uid(){return'a'+items.reduce(function(m,i){return Math.max(m,+i.id.slice(1)||0)},0)+1}
+function todayStr(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+
+function add(){
+  var t=el('t').value.trim();if(!t)return;
+  items.push({id:uid(),title:t,subj:el('subj').value.trim(),due:el('due').value,done:false,steps:null});
+  el('t').value='';el('subj').value='';el('due').value='';
+  save();render();if(window.myllmHaptic)myllmHaptic('light');
+}
+function toggle(id){var i=byId(id);i.done=!i.done;save();render();if(window.myllmHaptic)myllmHaptic(i.done?'success':'selection')}
+function del(id){items=items.filter(function(i){return i.id!==id});save();render()}
+function byId(id){return items.filter(function(i){return i.id===id})[0]}
+
+function dueInfo(due){
+  if(!due)return{txt:'',cls:''};
+  var today=todayStr();
+  var d=new Date(due+'T00:00'),n=new Date(today+'T00:00');
+  var days=Math.round((d-n)/86400000);
+  var label=d.toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'});
+  if(days<0)return{txt:'Overdue · '+label,cls:'late',over:true};
+  if(days===0)return{txt:'Due today',cls:'late'};
+  if(days===1)return{txt:'Due tomorrow',cls:'soon'};
+  if(days<=3)return{txt:'Due in '+days+' days · '+label,cls:'soon'};
+  return{txt:'Due '+label,cls:''};
+}
+
+function plan(id){
+  var i=byId(id);
+  if(!window.myllmAsk){setStatus('Step-by-step planning needs AI — enable “Allow apps to use the AI” in Settings.');return}
+  setStatus('Breaking “'+i.title+'” into steps…');
+  myllmAsk('Break this school assignment into 3-6 concrete, ordered steps a student can tick off. Assignment: "'+i.title+'"'+(i.subj?(' (subject: '+i.subj+')'):'')+'. Reply with ONLY a JSON array of short step strings, e.g. ["...","..."] and nothing else.')
+  .then(function(reply){
+    var s=reply.indexOf('['),e=reply.lastIndexOf(']');
+    if(s<0||e<=s)throw new Error('no steps returned');
+    var arr=JSON.parse(reply.slice(s,e+1)).filter(function(x){return typeof x==='string'&&x.trim()});
+    i.steps=arr.map(function(x){return{t:x,done:false}});save();render();setStatus('');
+  }).catch(function(err){setStatus('Could not plan: '+err.message)});
+}
+function toggleStep(id,si){var i=byId(id);i.steps[si].done=!i.steps[si].done;save();render();if(window.myllmHaptic)myllmHaptic('selection')}
+
+function render(){
+  var L=el('list');L.innerHTML='';
+  if(!items.length){L.innerHTML='<div class="empty">No assignments yet — add your first above.</div>';return}
+  var open=items.filter(function(i){return!i.done}),done=items.filter(function(i){return i.done});
+  var byDue=function(a,b){return(a.due||'9999')<(b.due||'9999')?-1:1};
+  open.sort(byDue);
+  function block(list,heading){
+    if(!list.length)return;
+    var h=document.createElement('h2');h.textContent=heading;L.appendChild(h);
+    list.forEach(function(i){
+      var di=dueInfo(i.due);
+      var card=document.createElement('div');card.className='item'+(i.done?' done':'')+(di.over&&!i.done?' overdue':'');
+      var top=document.createElement('div');top.className='top';
+      var chk=document.createElement('div');chk.className='chk'+(i.done?' on':'');chk.textContent=i.done?'✓':'';chk.onclick=function(){toggle(i.id)};
+      var body=document.createElement('div');body.className='body';
+      var tt=document.createElement('div');tt.className='title';tt.textContent=i.title;body.appendChild(tt);
+      var meta=[];if(i.subj)meta.push(i.subj);
+      var m=document.createElement('div');m.className='meta';
+      m.innerHTML=(i.subj?'<span>'+escapeHtml(i.subj)+'</span> · ':'')+'<span class="due '+di.cls+'">'+escapeHtml(di.txt||'No date')+'</span>';
+      body.appendChild(m);
+      if(!i.done){
+        var tools=document.createElement('div');tools.className='tools';
+        var a=document.createElement('a');a.textContent=i.steps?'↻ Re-plan steps':'✨ Break into steps';a.onclick=function(){plan(i.id)};
+        tools.appendChild(a);body.appendChild(tools);
+      }
+      if(i.steps&&i.steps.length){
+        var st=document.createElement('div');st.className='steps';
+        i.steps.forEach(function(s,si){
+          var r=document.createElement('div');r.className='s'+(s.done?' on':'');r.textContent=(s.done?'☑ ':'☐ ')+s.t;
+          r.onclick=function(){toggleStep(i.id,si)};st.appendChild(r);
+        });
+        body.appendChild(st);
+      }
+      var x=document.createElement('button');x.className='del';x.textContent='✕';x.onclick=function(){del(i.id)};
+      top.appendChild(chk);top.appendChild(body);top.appendChild(x);
+      card.appendChild(top);L.appendChild(card);
+    });
+  }
+  block(open,'To do');block(done,'Done');
+}
+function escapeHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+
+store.getItem('items').then(function(v){
+  if(v)try{items=JSON.parse(v)}catch(e){}
+  render();
+});
+</script></body></html>
