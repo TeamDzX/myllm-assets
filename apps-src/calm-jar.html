@@ -1,0 +1,72 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<style>:root{color-scheme:light dark}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
+html,body{margin:0;height:100%;overflow:hidden;font-family:-apple-system,system-ui,sans-serif}
+body{background:#0b1020;color:#fff;display:flex;flex-direction:column;touch-action:none}
+canvas{flex:1;display:block;width:100%}
+.hint{position:fixed;left:0;right:0;top:calc(14px + env(safe-area-inset-top));text-align:center;font-size:15px;opacity:.85;pointer-events:none;transition:opacity .6s}
+.bar{position:fixed;left:0;right:0;bottom:0;display:flex;gap:10px;justify-content:center;padding:12px 14px calc(12px + env(safe-area-inset-bottom))}
+.bar button{border:0;background:rgba(255,255,255,.14);color:#fff;border-radius:16px;padding:11px 18px;font-size:15px;font-weight:600;backdrop-filter:blur(6px)}
+.bar button:active{background:rgba(255,255,255,.28)}
+</style></head><body>
+<canvas id="c"></canvas>
+<div class="hint" id="hint">Tap anywhere to shake the jar 🌟<br><span style="font-size:13px;opacity:.7">then watch the glitter settle and breathe slowly</span></div>
+<div class="bar">
+  <button onclick="shake()">Shake</button>
+  <button onclick="nextTheme()">Colours</button>
+</div>
+<script>
+function haptic(s){if(window.myllmHaptic)try{myllmHaptic(s)}catch(e){}}
+var c=document.getElementById('c'),ctx=c.getContext('2d');
+var dpr=Math.max(1,Math.min(3,window.devicePixelRatio||1)),W=0,H=0;
+var THEMES=[[200,260],[280,330],[150,200],[20,60],[330,30]]; // hue ranges
+var theme=0,parts=[];
+function resize(){W=c.clientWidth;H=c.clientHeight;c.width=W*dpr;c.height=H*dpr;ctx.setTransform(dpr,0,0,dpr,0,0)}
+function rnd(a,b){return a+Math.random()*(b-a)}
+function makeParts(){
+  parts=[];var n=Math.min(170,Math.floor(W*H/4200));
+  for(var i=0;i<n;i++){
+    parts.push({x:rnd(20,W-20),y:rnd(20,H-20),vx:0,vy:0,r:rnd(2.2,5.2),hue:0,a:rnd(.6,1),tw:rnd(0,6.28)});
+  }
+  recolor();
+}
+function recolor(){var t=THEMES[theme];parts.forEach(function(p){p.hue=rnd(t[0],t[1])})}
+function nextTheme(){theme=(theme+1)%THEMES.length;recolor();haptic('selection')}
+function shake(x,y){
+  haptic('medium');
+  hideHint();
+  parts.forEach(function(p){
+    var ang=rnd(0,6.28),sp=rnd(2,7);
+    p.vx+=Math.cos(ang)*sp+(x!=null?(p.x-x)*0.01:0);
+    p.vy+=Math.sin(ang)*sp-rnd(1,4);
+  });
+}
+var hintGone=false;
+function hideHint(){if(!hintGone){hintGone=true;document.getElementById('hint').style.opacity='0'}}
+function step(){
+  ctx.fillStyle='rgba(11,16,32,0.30)';ctx.fillRect(0,0,W,H); // motion trails
+  for(var i=0;i<parts.length;i++){
+    var p=parts[i];
+    p.vy+=0.045;            // gentle gravity
+    p.vx*=0.975;p.vy*=0.975; // fluid drag → slow, dreamy settle
+    p.x+=p.vx;p.y+=p.vy;
+    if(p.x<p.r){p.x=p.r;p.vx*=-0.45}
+    if(p.x>W-p.r){p.x=W-p.r;p.vx*=-0.45}
+    if(p.y>H-p.r){p.y=H-p.r;p.vy*=-0.35;p.vx*=0.9}
+    if(p.y<p.r){p.y=p.r;p.vy*=-0.4}
+    p.tw+=0.05;
+    var tw=0.65+0.35*Math.sin(p.tw);
+    ctx.globalAlpha=p.a*tw;
+    ctx.fillStyle='hsl('+p.hue+',85%,'+(62+10*Math.sin(p.tw))+'%)';
+    ctx.shadowBlur=8;ctx.shadowColor='hsl('+p.hue+',90%,70%)';
+    ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,6.2832);ctx.fill();
+  }
+  ctx.globalAlpha=1;ctx.shadowBlur=0;
+  requestAnimationFrame(step);
+}
+function pt(e){var t=e.touches?e.touches[0]:e,r=c.getBoundingClientRect();return{x:t.clientX-r.left,y:t.clientY-r.top}}
+c.addEventListener('touchstart',function(e){var q=pt(e);shake(q.x,q.y);e.preventDefault()},{passive:false});
+c.addEventListener('mousedown',function(e){var q=pt(e);shake(q.x,q.y)});
+window.addEventListener('resize',function(){resize();makeParts()});
+resize();makeParts();shake();step();
+</script></body></html>

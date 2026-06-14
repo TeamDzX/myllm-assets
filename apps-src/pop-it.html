@@ -1,0 +1,69 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<style>:root{color-scheme:light dark;--bg:#f2f2f7;--fg:#111}
+@media(prefers-color-scheme:dark){:root{--bg:#000;--fg:#eee}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
+html,body{margin:0;height:100%;overflow:hidden}
+body{font-family:-apple-system,system-ui,sans-serif;background:var(--bg);color:var(--fg);display:flex;flex-direction:column;align-items:center;padding:calc(12px + env(safe-area-inset-top)) 12px calc(12px + env(safe-area-inset-bottom));touch-action:manipulation}
+h1{font-size:19px;margin:0 0 2px;font-weight:700}
+.sub{font-size:12px;opacity:.55;margin-bottom:8px}
+.grid{flex:1;display:grid;gap:9px;width:100%;max-width:460px;align-content:center}
+.b{aspect-ratio:1;border-radius:50%;border:none;position:relative;transition:transform .07s,box-shadow .07s,filter .07s;
+  box-shadow:inset 0 -6px 10px rgba(0,0,0,.28),inset 0 4px 8px rgba(255,255,255,.55),0 2px 4px rgba(0,0,0,.15)}
+.b.popped{transform:scale(.9);filter:brightness(.82);
+  box-shadow:inset 0 6px 12px rgba(0,0,0,.45),inset 0 -3px 6px rgba(255,255,255,.18)}
+.bar{display:flex;gap:10px;margin-top:10px}
+.bar button{border:0;background:rgba(127,127,127,.16);color:var(--fg);border-radius:15px;padding:11px 20px;font-size:15px;font-weight:600}
+.bar button:active{background:rgba(127,127,127,.32)}
+.count{font-size:12px;opacity:.5;margin-top:6px;min-height:14px}
+</style></head><body>
+<h1>🟣 Pop-It</h1>
+<div class="sub">Tap the bubbles to pop them — pop, pop, pop!</div>
+<div class="grid" id="grid"></div>
+<div class="count" id="count"></div>
+<div class="bar"><button onclick="flip()">Flip / Reset</button></div>
+<script>
+function haptic(s){if(window.myllmHaptic)try{myllmHaptic(s)}catch(e){}}
+var COLS=6,ROWS=8,N=COLS*ROWS,state=new Array(N).fill(false);
+var HUES=[0,30,55,120,200,260,300];
+var grid=document.getElementById('grid'),countEl=document.getElementById('count');
+grid.style.gridTemplateColumns='repeat('+COLS+',1fr)';
+var actx=null;
+function pop(rising){
+  try{
+    if(!actx){var AC=window.AudioContext||window.webkitAudioContext;actx=new AC()}
+    if(actx.state==='suspended')actx.resume();
+    var o=actx.createOscillator(),g=actx.createGain(),t=actx.currentTime;
+    o.type='triangle';
+    var f=rising?420:260;o.frequency.setValueAtTime(f,t);o.frequency.exponentialRampToValueAtTime(f*(rising?2.4:0.6),t+0.07);
+    g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(0.28,t+0.005);g.gain.exponentialRampToValueAtTime(0.0001,t+0.13);
+    o.connect(g);g.connect(actx.destination);o.start(t);o.stop(t+0.15);
+  }catch(e){}
+}
+function build(){
+  grid.innerHTML='';
+  for(var i=0;i<N;i++){
+    (function(i){
+      var b=document.createElement('button');b.className='b'+(state[i]?' popped':'');
+      var hue=HUES[Math.floor(i/COLS)%HUES.length];
+      b.style.background='radial-gradient(circle at 38% 32%,hsl('+hue+',90%,72%),hsl('+hue+',75%,52%))';
+      b.addEventListener('touchstart',function(e){e.preventDefault();tap(i,b)},{passive:false});
+      b.addEventListener('mousedown',function(e){e.preventDefault();tap(i,b)});
+      grid.appendChild(b);
+    })(i);
+  }
+}
+function tap(i,b){
+  state[i]=!state[i];
+  b.classList.toggle('popped',state[i]);
+  pop(!state[i]);
+  haptic(state[i]?'medium':'light');
+  var done=state.filter(Boolean).length;
+  countEl.textContent=done+' / '+N+' popped';
+  if(done===N){haptic('success');countEl.textContent='All popped! 🎉  Tap Flip to play again';}
+}
+function flip(){
+  for(var i=0;i<N;i++)state[i]=false;
+  build();countEl.textContent='';haptic('selection');
+}
+build();
+</script></body></html>

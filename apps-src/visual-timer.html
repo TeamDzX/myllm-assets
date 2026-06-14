@@ -1,0 +1,94 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<style>:root{color-scheme:light dark;--bg:#f2f2f7;--fg:#111;--card:#fff}
+@media(prefers-color-scheme:dark){:root{--bg:#000;--fg:#eee;--card:#1c1c1e}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
+html,body{margin:0;height:100%;overflow:hidden}
+body{font-family:-apple-system,system-ui,sans-serif;background:var(--bg);color:var(--fg);display:flex;flex-direction:column;align-items:center;padding:calc(16px + env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom));touch-action:manipulation}
+h1{font-size:20px;margin:0 0 10px;font-weight:700}
+.presets{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:10px}
+.presets button{border:0;background:rgba(127,127,127,.16);color:var(--fg);border-radius:14px;padding:9px 14px;font-size:14px;font-weight:600}
+.presets button.on{background:var(--accent,#f0584f);color:#fff}
+.stage{flex:1;display:flex;align-items:center;justify-content:center;width:100%}
+canvas{max-width:100%;max-height:100%}
+.digits{font-size:34px;font-weight:800;font-variant-numeric:tabular-nums;margin-top:4px;min-height:42px}
+.bar{display:flex;gap:10px;margin-top:8px}
+.bar button{border:0;border-radius:16px;padding:13px 30px;font-size:16px;font-weight:700}
+#go{background:#f0584f;color:#fff}
+.sec{background:rgba(127,127,127,.16);color:var(--fg)}
+.opts{display:flex;gap:14px;margin-top:10px;font-size:13px;opacity:.7}
+.opts label{display:flex;align-items:center;gap:5px}
+</style></head><body>
+<h1>⏳ Visual Timer</h1>
+<div class="presets" id="presets"></div>
+<div class="stage"><canvas id="c" width="280" height="280"></canvas></div>
+<div class="digits" id="digits"></div>
+<div class="bar">
+  <button id="go" onclick="toggle()">Start</button>
+  <button class="sec" onclick="reset()">Reset</button>
+</div>
+<div class="opts">
+  <label><input type="checkbox" id="showNum" checked onchange="draw()"> Show numbers</label>
+</div>
+<script>
+function haptic(s){if(window.myllmHaptic)try{myllmHaptic(s)}catch(e){}}
+var PRESETS=[1,2,3,5,10,15,20],COLOR='#f0584f';
+var total=5*60,remaining=5*60,running=false,endAt=0,loop=null;
+var c=document.getElementById('c'),ctx=c.getContext('2d'),dpr=Math.max(1,Math.min(3,window.devicePixelRatio||1));
+function sizeCanvas(){var s=Math.min(window.innerWidth-32,window.innerHeight-340,320);s=Math.max(180,s);c.style.width=s+'px';c.style.height=s+'px';c.width=s*dpr;c.height=s*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);C=s}
+var C=280;
+function renderPresets(){var P=document.getElementById('presets');P.innerHTML='';PRESETS.forEach(function(m){var b=document.createElement('button');b.textContent=m+'m';if(total===m*60)b.className='on';b.onclick=function(){if(running)return;total=remaining=m*60;renderPresets();draw();document.getElementById('digits').textContent=fmt(remaining)};P.appendChild(b)})}
+function fmt(s){s=Math.max(0,Math.ceil(s));var m=Math.floor(s/60),ss=s%60;return m+':'+(ss<10?'0':'')+ss}
+function draw(){
+  var cx=C/2,cy=C/2,r=C/2-8;
+  ctx.clearRect(0,0,C,C);
+  // track
+  ctx.beginPath();ctx.arc(cx,cy,r,0,6.2832);ctx.fillStyle='rgba(127,127,127,.14)';ctx.fill();
+  // remaining wedge (depletes clockwise from top)
+  var frac=total>0?remaining/total:0;
+  if(frac>0){
+    ctx.beginPath();ctx.moveTo(cx,cy);
+    ctx.arc(cx,cy,r,-Math.PI/2,-Math.PI/2+frac*6.2832,false);
+    ctx.closePath();ctx.fillStyle=COLOR;ctx.fill();
+  }
+  // rim
+  ctx.beginPath();ctx.arc(cx,cy,r,0,6.2832);ctx.lineWidth=4;ctx.strokeStyle='rgba(127,127,127,.35)';ctx.stroke();
+  if(document.getElementById('showNum').checked){
+    ctx.fillStyle=getComputedStyle(document.body).color;
+    ctx.font='800 '+Math.round(C*0.16)+'px -apple-system,system-ui';
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(fmt(remaining),cx,cy);
+  }
+}
+function tick(){
+  remaining=(endAt-Date.now())/1000;
+  if(remaining<=0){remaining=0;finish()}
+  document.getElementById('digits').textContent=fmt(remaining);
+  draw();
+}
+function toggle(){
+  if(total<=0)return;
+  if(running){running=false;remaining=(endAt-Date.now())/1000;document.getElementById('go').textContent='Start';if(loop)clearInterval(loop);}
+  else{if(remaining<=0)remaining=total;running=true;endAt=Date.now()+remaining*1000;document.getElementById('go').textContent='Pause';haptic('light');loop=setInterval(tick,100);tick();}
+}
+function reset(){running=false;if(loop)clearInterval(loop);remaining=total;document.getElementById('go').textContent='Start';document.getElementById('digits').textContent=fmt(remaining);draw();}
+function finish(){
+  running=false;if(loop)clearInterval(loop);
+  document.getElementById('go').textContent='Start';
+  haptic('success');chime();
+}
+var actx=null;
+function chime(){
+  try{
+    if(!actx){var AC=window.AudioContext||window.webkitAudioContext;actx=new AC()}
+    if(actx.state==='suspended')actx.resume();
+    [523.25,659.25,783.99].forEach(function(f,i){
+      var o=actx.createOscillator(),g=actx.createGain(),t=actx.currentTime+i*0.18;
+      o.type='sine';o.frequency.value=f;
+      g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(0.3,t+0.03);g.gain.exponentialRampToValueAtTime(0.0001,t+0.6);
+      o.connect(g);g.connect(actx.destination);o.start(t);o.stop(t+0.65);
+    });
+  }catch(e){}
+}
+window.addEventListener('resize',function(){sizeCanvas();draw()});
+sizeCanvas();renderPresets();document.getElementById('digits').textContent=fmt(remaining);draw();
+</script></body></html>

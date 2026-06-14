@@ -1,0 +1,97 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<style>:root{color-scheme:light dark;--bg:#f2f2f7;--fg:#111;--card:#fff}
+@media(prefers-color-scheme:dark){:root{--bg:#000;--fg:#eee;--card:#1c1c1e}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
+html,body{margin:0;min-height:100%}
+body{font-family:-apple-system,system-ui,sans-serif;background:var(--bg);color:var(--fg);margin:0 auto;max-width:560px;padding:calc(16px + env(safe-area-inset-top)) 16px calc(20px + env(safe-area-inset-bottom))}
+h1{font-size:21px;margin:0 0 2px;font-weight:700}
+.sub{font-size:13px;opacity:.6;margin-bottom:14px}
+.zones{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.zone{border-radius:18px;padding:18px 12px;color:#fff;text-align:center;border:0;box-shadow:0 3px 8px rgba(0,0,0,.12)}
+.zone:active{transform:scale(.97)}
+.zone .em{font-size:44px}
+.zone .nm{font-size:16px;font-weight:700;margin-top:4px}
+.zone .ds{font-size:11px;opacity:.9;margin-top:1px}
+.panel{display:none;margin-top:16px;background:var(--card);border-radius:18px;padding:18px;box-shadow:0 2px 8px rgba(0,0,0,.1)}
+.panel.show{display:block}
+.panel h2{margin:0 0 2px;font-size:20px}
+.panel .msg{font-size:14px;opacity:.75;margin-bottom:12px}
+.tool{display:flex;align-items:center;gap:12px;padding:12px;border-radius:14px;background:var(--bg);margin-bottom:8px;font-size:16px;font-weight:600}
+.tool .em{font-size:26px}
+.pbtns{display:flex;gap:10px;margin-top:12px}
+.pbtns button{flex:1;border:0;border-radius:14px;padding:13px;font-size:15px;font-weight:700}
+.logbtn{background:#4a7bf0;color:#fff}.closebtn{background:rgba(127,127,127,.18);color:var(--fg)}
+.hist{margin-top:22px}
+.hist h3{font-size:13px;opacity:.55;text-transform:uppercase;letter-spacing:.5px;margin:0 0 8px}
+.hrow{display:flex;align-items:center;gap:10px;font-size:14px;padding:7px 0;border-top:1px solid rgba(127,127,127,.14)}
+.hrow .em{font-size:20px}.hrow .t{margin-left:auto;opacity:.5;font-size:12px}
+.clear{border:0;background:none;color:#f0584f;font-size:12px;font-weight:600;margin-top:6px}
+</style></head><body>
+<h1>💗 How Are You Feeling?</h1>
+<div class="sub">Tap the colour that matches how you feel right now.</div>
+<div class="zones" id="zones"></div>
+<div class="panel" id="panel"></div>
+<div class="hist" id="hist"></div>
+<script>
+var store=window.myllmStorage||{getItem:function(){return Promise.resolve(null)},setItem:function(){return Promise.resolve()}};
+function haptic(s){if(window.myllmHaptic)try{myllmHaptic(s)}catch(e){}}
+var ZONES=[
+ {id:'blue',c:'#4a7bf0',em:'😢',nm:'Blue',ds:'sad · tired · poorly',
+  msg:"It's okay to feel low. These can help you feel a bit better.",
+  tools:[['🤗','Ask for a hug or a chat'],['💧','Have a drink of water'],['🛋️','Rest in a cosy quiet spot'],['🌬️','Take three slow breaths']]},
+ {id:'green',c:'#34a853',em:'😊',nm:'Green',ds:'happy · calm · ready',
+  msg:"You're in a great place to learn and play. Keep it up!",
+  tools:[['🎯','Carry on with what you’re doing'],['🤝','Help a friend or say hello'],['🌟','Notice one good thing right now']]},
+ {id:'yellow',c:'#f4b400',em:'😟',nm:'Yellow',ds:'worried · wiggly · silly',
+  msg:"Feeling a bit wobbly is normal. Let's get steady again.",
+  tools:[['🌬️','Breathe in for 4, out for 4'],['🔢','Slowly count to ten'],['✋','Squeeze and let go your hands'],['⏸️','Ask for a short break']]},
+ {id:'red',c:'#ea4335',em:'😠',nm:'Red',ds:'angry · upset · too much',
+  msg:"Big feelings are okay. You are safe. Let's calm your body.",
+  tools:[['🛑','Stop and stand still'],['🌬️','Take long, slow breaths'],['🧱','Push your hands on a wall'],['🧑','Find a grown-up you trust']]}
+];
+var hist=[];
+function el(i){return document.getElementById(i)}
+function renderZones(){
+  var Z=el('zones');Z.innerHTML='';
+  ZONES.forEach(function(z){
+    var b=document.createElement('button');b.className='zone';b.style.background=z.c;
+    b.innerHTML='<div class="em">'+z.em+'</div><div class="nm">'+z.nm+'</div><div class="ds">'+z.ds+'</div>';
+    b.onclick=function(){openZone(z)};
+    Z.appendChild(b);
+  });
+}
+function openZone(z){
+  haptic('selection');
+  // pick up to 3 tools, rotating so it feels fresh
+  var t=z.tools.slice();for(var i=t.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var x=t[i];t[i]=t[j];t[j]=x}
+  t=t.slice(0,3);
+  var P=el('panel');P.className='panel show';P.style.borderTop='6px solid '+z.c;
+  P.innerHTML='<h2>'+z.em+' '+z.nm+'</h2><div class="msg">'+z.msg+'</div>'+
+    t.map(function(x){return '<div class="tool"><span class="em">'+x[0]+'</span>'+x[1]+'</div>'}).join('')+
+    '<div class="pbtns"><button class="logbtn" id="logb">Save how I feel</button><button class="closebtn" id="closeb">Close</button></div>';
+  el('logb').onclick=function(){logFeeling(z)};
+  el('closeb').onclick=function(){P.className='panel'};
+  P.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+function logFeeling(z){
+  hist.unshift({z:z.id,em:z.em,nm:z.nm,t:Date.now()});
+  hist=hist.slice(0,30);
+  store.setItem('fc_hist',JSON.stringify(hist));
+  haptic('success');
+  el('panel').className='panel';
+  renderHist();
+}
+function fmtTime(ts){var d=new Date(ts);var h=d.getHours(),m=d.getMinutes();var ap=h<12?'am':'pm';h=h%12||12;return h+':'+(m<10?'0':'')+m+ap}
+function sameDay(a,b){var x=new Date(a),y=new Date(b);return x.toDateString()===y.toDateString()}
+function renderHist(){
+  var H=el('hist');
+  var today=hist.filter(function(r){return sameDay(r.t,Date.now())});
+  if(!today.length){H.innerHTML='';return}
+  H.innerHTML='<h3>Today’s check-ins</h3>'+today.map(function(r){
+    return '<div class="hrow"><span class="em">'+r.em+'</span>'+r.nm+'<span class="t">'+fmtTime(r.t)+'</span></div>';
+  }).join('')+'<button class="clear" id="clr">Clear today</button>';
+  el('clr').onclick=function(){hist=hist.filter(function(r){return !sameDay(r.t,Date.now())});store.setItem('fc_hist',JSON.stringify(hist));renderHist()};
+}
+renderZones();
+store.getItem('fc_hist').then(function(v){if(v){try{hist=JSON.parse(v)||[]}catch(e){}}renderHist()});
+</script></body></html>

@@ -1,0 +1,66 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<style>:root{color-scheme:light dark;--bg:#eef4ff;--fg:#1b2440}
+@media(prefers-color-scheme:dark){:root{--bg:#0a0f1f;--fg:#eaf0ff}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
+html,body{margin:0;height:100%;overflow:hidden}
+body{font-family:-apple-system,system-ui,sans-serif;background:var(--bg);color:var(--fg);display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:calc(18px + env(safe-area-inset-top)) 16px calc(20px + env(safe-area-inset-bottom));touch-action:manipulation}
+h1{font-size:20px;margin:0;font-weight:700}
+.sub{font-size:13px;opacity:.6;margin-top:2px}
+.stage{flex:1;display:flex;align-items:center;justify-content:center;width:100%;position:relative}
+.bubble{width:62vw;max-width:300px;aspect-ratio:1;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  background:radial-gradient(circle at 35% 30%,#7ad0ff,#4a7bf0 70%);box-shadow:0 12px 40px rgba(74,123,240,.45);transition:none}
+.bubble .face{font-size:54px}
+.word{position:absolute;bottom:-6px;font-size:22px;font-weight:700;opacity:.9}
+.count{font-size:13px;opacity:.55;margin-top:6px}
+.modes{display:flex;gap:8px;margin-bottom:12px}
+.modes button{border:0;background:rgba(127,127,127,.16);color:var(--fg);border-radius:14px;padding:8px 14px;font-size:13px;font-weight:600}
+.modes button.on{background:#4a7bf0;color:#fff}
+.go{border:0;background:#4a7bf0;color:#fff;border-radius:18px;padding:15px 44px;font-size:18px;font-weight:700;box-shadow:0 6px 18px rgba(74,123,240,.4)}
+.go:active{transform:scale(.97)}
+</style></head><body>
+<div style="text-align:center"><h1>🫧 Bubble Breathing</h1><div class="sub">Grow big as you breathe in, shrink as you breathe out</div></div>
+<div class="stage">
+  <div class="bubble" id="bubble"><span class="face" id="face">😌</span></div>
+  <div class="word" id="word"></div>
+</div>
+<div style="text-align:center;width:100%">
+  <div class="modes" id="modes"></div>
+  <button class="go" id="go" onclick="toggle()">Start</button>
+  <div class="count" id="count"></div>
+</div>
+<script>
+function haptic(s){if(window.myllmHaptic)try{myllmHaptic(s)}catch(e){}}
+// [inhale, hold-in, exhale, hold-out] seconds
+var MODES=[['Calm',[4,1,4,1],'😌'],['Relax',[4,2,6,1],'😊'],['Sleepy',[4,7,8,0],'😴']];
+var mode=0,running=false,t0=0,raf=null,breaths=0,lastPhase=-1;
+var bubble=document.getElementById('bubble'),face=document.getElementById('face'),word=document.getElementById('word'),countEl=document.getElementById('count');
+function renderModes(){var M=document.getElementById('modes');M.innerHTML='';MODES.forEach(function(m,i){var b=document.createElement('button');b.textContent=m[0];if(i===mode)b.className='on';b.onclick=function(){if(running)return;mode=i;renderModes()};M.appendChild(b)})}
+function cycleLen(){var p=MODES[mode][1];return p[0]+p[1]+p[2]+p[3]}
+function ease(x){return 0.5-0.5*Math.cos(Math.PI*x)} // smooth in/out
+function frame(now){
+  if(!running)return;
+  var p=MODES[mode][1],L=cycleLen();
+  var el=((now-t0)/1000)%L, phase, frac, scale, txt;
+  if(el<p[0]){phase=0;frac=el/p[0];scale=0.55+0.45*ease(frac);txt='Breathe in…'}
+  else if(el<p[0]+p[1]){phase=1;scale=1;txt='Hold'}
+  else if(el<p[0]+p[1]+p[2]){phase=2;frac=(el-p[0]-p[1])/p[2];scale=1-0.45*ease(frac);txt='Breathe out…'}
+  else{phase=3;scale=0.55;txt='Hold'}
+  if(p[1]===0&&phase===1)phase=2;
+  bubble.style.transform='scale('+scale+')';
+  word.textContent=txt;
+  if(phase!==lastPhase){
+    lastPhase=phase;haptic(phase===0?'medium':phase===2?'soft':'selection');
+    if(phase===0){breaths++;countEl.textContent=breaths+' breath'+(breaths===1?'':'s')}
+    face.textContent=phase===0?'🙂':phase===2?'😮':MODES[mode][2];
+  }
+  raf=requestAnimationFrame(frame);
+}
+function toggle(){
+  running=!running;
+  document.getElementById('go').textContent=running?'Stop':'Start';
+  renderModes();
+  if(running){breaths=0;lastPhase=-1;t0=performance.now();haptic('light');raf=requestAnimationFrame(frame)}
+  else{if(raf)cancelAnimationFrame(raf);bubble.style.transform='scale(0.7)';word.textContent='';face.textContent='😌';countEl.textContent=''}
+}
+renderModes();bubble.style.transform='scale(0.7)';
+</script></body></html>

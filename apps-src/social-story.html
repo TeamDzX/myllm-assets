@@ -1,0 +1,125 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<style>:root{color-scheme:light dark;--bg:#f2f2f7;--fg:#111;--card:#fff;--accent:#7c5cff}
+@media(prefers-color-scheme:dark){:root{--bg:#000;--fg:#eee;--card:#1c1c1e}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,system-ui,sans-serif;background:var(--bg);color:var(--fg);margin:0 auto;max-width:600px;padding:calc(16px + env(safe-area-inset-top)) 16px calc(24px + env(safe-area-inset-bottom));-webkit-user-select:none;user-select:none}
+h1{font-size:21px;margin:0 0 2px;font-weight:700}
+.sub{font-size:13px;opacity:.6;margin-bottom:16px}
+label{display:block;font-size:12px;font-weight:600;opacity:.7;margin:12px 2px 5px}
+input,textarea,select{width:100%;border:1px solid rgba(127,127,127,.3);background:var(--card);color:var(--fg);border-radius:12px;padding:12px;font-size:16px;font-family:inherit;-webkit-user-select:text;user-select:text}
+textarea{min-height:74px;resize:none}
+.rowflex{display:flex;gap:10px}.rowflex>div{flex:1}
+.gen{width:100%;border:0;background:var(--accent);color:#fff;border-radius:14px;padding:15px;font-size:17px;font-weight:700;margin-top:16px}
+.gen:disabled{opacity:.5}
+.note{font-size:12px;opacity:.55;margin-top:8px;text-align:center}
+.err{background:rgba(240,88,79,.14);color:#f0584f;border-radius:12px;padding:12px;font-size:14px;margin-top:14px;display:none}
+.err.show{display:block}
+.story{display:none;margin-top:18px;background:var(--card);border-radius:18px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,.1)}
+.story.show{display:block}
+.story h2{margin:0 0 12px;font-size:22px}
+.story p{font-size:19px;line-height:1.6;margin:0 0 14px;-webkit-user-select:text;user-select:text}
+.sbtns{display:flex;gap:10px;margin-top:8px}
+.sbtns button{flex:1;border:0;border-radius:13px;padding:12px;font-size:15px;font-weight:700}
+.save{background:#34a853;color:#fff}.again{background:rgba(127,127,127,.18);color:var(--fg)}
+.saved{margin-top:26px}
+.saved h3{font-size:13px;opacity:.55;text-transform:uppercase;letter-spacing:.5px;margin:0 0 8px}
+.srow{display:flex;align-items:center;gap:10px;padding:12px;background:var(--card);border-radius:13px;margin-bottom:8px}
+.srow .ttl{flex:1;font-size:15px;font-weight:600}
+.srow button{border:0;background:none;font-size:18px}
+.spin{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:sp .7s linear infinite;vertical-align:-2px;margin-right:6px}
+@keyframes sp{to{transform:rotate(360deg)}}
+</style></head><body>
+<h1>📖 Social Story Maker</h1>
+<div class="sub">Make a gentle, personalised story to help a child get ready for something new. Created privately by the AI on your device.</div>
+
+<div id="form">
+  <label>What is the story about?</label>
+  <textarea id="situation" placeholder="e.g. Going to the dentist for a check-up"></textarea>
+  <div class="rowflex">
+    <div><label>Child’s name (optional)</label><input id="name" placeholder="e.g. Sam"></div>
+    <div><label>Age</label>
+      <select id="age"><option value="young child">3–5</option><option value="child" selected>6–9</option><option value="older child">10–12</option></select>
+    </div>
+  </div>
+  <label>Anything to include? (optional)</label>
+  <input id="extra" placeholder="e.g. they feel nervous about the noise">
+  <button class="gen" id="gen" onclick="generate()">Create story</button>
+  <div class="note">Needs the latest MyLLM with “Allow apps to use the AI” turned on (MyLLMos settings menu).</div>
+  <div class="err" id="err"></div>
+</div>
+
+<div class="story" id="story"></div>
+
+<div class="saved" id="saved"></div>
+
+<script>
+var store=window.myllmStorage||{getItem:function(){return Promise.resolve(null)},setItem:function(){return Promise.resolve()}};
+function haptic(s){if(window.myllmHaptic)try{myllmHaptic(s)}catch(e){}}
+function el(i){return document.getElementById(i)}
+var saved=[],current=null;
+var SYSTEM="You write Social Stories in the style of Carol Gray to help a neurodivergent child (autism/ADHD) prepare for a situation. Rules: write in the FIRST PERSON ('I'). Use short, simple, clear sentences. Be calm, positive and reassuring. Describe what will happen, what I might see, hear or feel, and the helpful things I can do. Use gentle words like 'sometimes', 'usually', 'I can try' rather than 'always' or 'must'. Never use anything scary or negative. End on a calm, encouraging note. Output ONLY the story: a short title line, then 8 to 14 short sentences as 2-4 small paragraphs. No headings, bullet points, markdown, or notes.";
+
+function generate(){
+  var sit=el('situation').value.trim();
+  if(!sit){el('situation').focus();return}
+  if(!window.myllmAsk){showErr("This needs the MyLLM app’s on-device AI. Please update MyLLM and try again.");return}
+  var name=el('name').value.trim(),age=el('age').value,extra=el('extra').value.trim();
+  var prompt="Write a Social Story about: "+sit+".\nThe reader is a "+age+".";
+  if(name)prompt+="\nUse the child’s name: "+name+" — but the story is still told as 'I'.";
+  if(extra)prompt+="\nPlease gently address: "+extra+".";
+  el('err').className='err';
+  var g=el('gen');g.disabled=true;g.innerHTML='<span class="spin"></span>Writing…';
+  haptic('light');
+  window.myllmAsk(prompt,{system:SYSTEM}).then(function(text){
+    showStory(sit,text);
+  }).catch(function(e){
+    showErr(String(e&&e.message||e));
+  }).then(function(){g.disabled=false;g.textContent='Create story'});
+}
+function showErr(m){var E=el('err');E.textContent=m;E.className='err show';haptic('warning')}
+function parseStory(text){
+  var lines=text.trim().split(/\n+/).map(function(l){return l.trim()}).filter(Boolean);
+  var title=lines.shift()||'My Story';
+  title=title.replace(/^#+\s*/,'').replace(/^title:\s*/i,'').replace(/["*]/g,'');
+  return {title:title,body:lines};
+}
+function showStory(sit,text){
+  var s=parseStory(text);current={sit:sit,title:s.title,body:s.body};
+  var S=el('story');S.className='story show';
+  S.innerHTML='<h2>'+esc(s.title)+'</h2>'+s.body.map(function(p){return '<p>'+esc(p)+'</p>'}).join('')+
+    '<div class="sbtns"><button class="save" id="saveb">Save story</button><button class="again" id="againb">New story</button></div>';
+  el('saveb').onclick=saveCurrent;
+  el('againb').onclick=function(){S.className='story';el('situation').value='';el('extra').value='';window.scrollTo({top:0,behavior:'smooth'})};
+  haptic('success');
+  S.scrollIntoView({behavior:'smooth',block:'start'});
+}
+function saveCurrent(){
+  if(!current)return;
+  saved.unshift({id:Date.now(),title:current.title,body:current.body});
+  saved=saved.slice(0,40);
+  persist();haptic('success');el('saveb').textContent='Saved ✓';renderSaved();
+}
+function persist(){store.setItem('ss_stories',JSON.stringify(saved))}
+function renderSaved(){
+  var W=el('saved');
+  if(!saved.length){W.innerHTML='';return}
+  W.innerHTML='<h3>Saved stories</h3>'+saved.map(function(s){
+    return '<div class="srow" data-id="'+s.id+'"><span class="ttl">'+esc(s.title)+'</span><button class="open">📖</button><button class="rm">🗑️</button></div>';
+  }).join('');
+  Array.prototype.forEach.call(W.querySelectorAll('.srow'),function(row){
+    var id=+row.getAttribute('data-id');
+    row.querySelector('.open').onclick=function(){var s=saved.filter(function(x){return x.id===id})[0];if(s)openSaved(s)};
+    row.querySelector('.rm').onclick=function(){saved=saved.filter(function(x){return x.id!==id});persist();renderSaved()};
+  });
+}
+function openSaved(s){
+  current={sit:s.title,title:s.title,body:s.body};
+  var S=el('story');S.className='story show';
+  S.innerHTML='<h2>'+esc(s.title)+'</h2>'+s.body.map(function(p){return '<p>'+esc(p)+'</p>'}).join('')+
+    '<div class="sbtns"><button class="again" id="againb">Close</button></div>';
+  el('againb').onclick=function(){S.className='story'};
+  S.scrollIntoView({behavior:'smooth',block:'start'});
+}
+function esc(t){return String(t).replace(/[&<>]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;'}[c]})}
+store.getItem('ss_stories').then(function(v){if(v){try{saved=JSON.parse(v)||[]}catch(e){}}renderSaved()});
+</script></body></html>
