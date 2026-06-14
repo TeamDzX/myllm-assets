@@ -21,6 +21,28 @@ h2{font-size:15px;margin:20px 0 8px;opacity:.7}
 .deck .n{opacity:.5;font-size:13px}
 .deck .del{background:none;color:#ff453a;font-size:16px;padding:4px}
 </style></head><body>
+<style>
+@keyframes myllmAiSpin{to{transform:rotate(360deg)}}
+.myllm-ai-busy{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(18px);z-index:99999;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;display:flex;align-items:center;gap:10px;background:rgba(28,28,30,.96);color:#fff;border-radius:999px;padding:10px 16px 10px 14px;box-shadow:0 6px 22px rgba(0,0,0,.4);font-family:-apple-system,system-ui,sans-serif;font-size:14px;font-weight:600;max-width:92%}
+.myllm-ai-busy.on{opacity:1;transform:translateX(-50%) translateY(0)}
+.myllm-ai-cog{font-size:18px;line-height:1;animation:myllmAiSpin 2.4s linear infinite;filter:drop-shadow(0 0 5px rgba(124,92,255,.85))}
+.myllm-ai-busy small{font-weight:400;opacity:.6}
+</style>
+<script>
+(function(){
+  if(window.__myllmAiWrap||typeof window.myllmAsk!=='function')return;
+  window.__myllmAiWrap=true;
+  var orig=window.myllmAsk,depth=0,node=null;
+  function ensure(){if(node)return;node=document.createElement('div');node.className='myllm-ai-busy';
+    node.innerHTML='<span class="myllm-ai-cog">\u2699\uFE0F</span><span>AI is thinking\u2026 <small>privately, on your device</small></span>';
+    (document.body||document.documentElement).appendChild(node);}
+  function show(){ensure();depth++;node.classList.add('on');}
+  function hide(){depth=Math.max(0,depth-1);if(depth===0&&node)node.classList.remove('on');}
+  window.myllmAsk=function(){show();var p;try{p=orig.apply(this,arguments);}catch(e){hide();throw e;}
+    return Promise.resolve(p).then(function(r){hide();return r;},function(e){hide();throw e;});};
+})();
+</script>
+
 <h1>🧠 Flashcard Forge</h1>
 <div class="row"><input id="topic" placeholder="Topic (e.g. The Tudors, photosynthesis)…"><button id="gen" onclick="gen()">Forge</button></div>
 <div id="status"></div>
