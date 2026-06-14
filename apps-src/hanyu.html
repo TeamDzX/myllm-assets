@@ -4046,6 +4046,14 @@
     </style>
 </head>
 <body>
+<style>
+/* MyLLMos: take over the chat's keyboard behaviour. The app's own handler
+   fixes the input bar to bottom:0 (behind the keyboard); we instead resize the
+   chat window to fit above the keyboard, keeping the input bar in normal flow
+   and the messages list scrollable. Neutralise the app's conflicting rules. */
+body.keyboard-open .chat-input-area{position:static !important;bottom:auto !important;}
+body.keyboard-open .chat-messages{padding-bottom:12px !important;}
+</style>
 <script>
 /* === MyLLMos compatibility layer (auto-injected; do not edit the app above) === */
 (function(){
@@ -4121,30 +4129,26 @@
     window.myllmAsk(prompt, {system:SYS}).then(function(t){ reply(true,t); }, function(e){ reply(false,null,(e&&e.message)||'The AI is unavailable right now.'); });
   });
 
-  // AI tutor keyboard fix: pin the chat input bar just above the on-screen
-  // keyboard while it's focused. WKWebView keeps window.innerHeight but shrinks
-  // visualViewport; the app's own bottom:0 rule otherwise leaves the input
-  // hidden behind the keyboard.
+  // AI tutor keyboard fix: shrink the chat window to fit above the keyboard so
+  // the input bar stays in normal flow at the bottom and the messages list
+  // scrolls normally (WKWebView shrinks visualViewport, not window.innerHeight).
   (function(){
-    var vv = window.visualViewport;
-    function inset(){ return vv ? Math.max(0, window.innerHeight - vv.height - vv.offsetTop) : 0; }
-    function place(){
-      var area=document.querySelector('.chat-input-area'); if(!area) return;
-      area.style.position='fixed'; area.style.left='0'; area.style.right='0';
-      area.style.bottom=inset()+'px'; area.style.zIndex='3000';
-      var msgs=document.querySelector('.chat-messages');
-      if(msgs){ msgs.style.paddingBottom=(area.offsetHeight+12)+'px'; msgs.scrollTop=msgs.scrollHeight; }
+    var vv = window.visualViewport; if(!vv) return;
+    var active=false;
+    function sizeWin(){
+      var win=document.querySelector('.chat-window-tab'); if(!win) return;
+      var top=win.getBoundingClientRect().top; if(!(top>0 && top<320)) top=90;
+      var h=Math.round(vv.height - top - 8); if(h<200) h=200;
+      win.style.height=h+'px'; win.style.maxHeight=h+'px';
+      var msgs=document.querySelector('.chat-messages'); if(msgs) msgs.scrollTop=msgs.scrollHeight;
     }
-    function reset(){
-      var area=document.querySelector('.chat-input-area');
-      if(area){ area.style.position=''; area.style.left=''; area.style.right=''; area.style.bottom=''; area.style.zIndex=''; }
-      var msgs=document.querySelector('.chat-messages'); if(msgs) msgs.style.paddingBottom='';
-    }
+    function reset(){ var win=document.querySelector('.chat-window-tab'); if(win){ win.style.height=''; win.style.maxHeight=''; } }
+    function onVV(){ if(active) sizeWin(); }
     document.addEventListener('focusin', function(e){
-      if(e.target && e.target.id==='chatInput'){ place(); if(vv){ vv.addEventListener('resize',place); vv.addEventListener('scroll',place); } setTimeout(place,250); setTimeout(place,550); }
+      if(e.target && e.target.id==='chatInput'){ active=true; sizeWin(); vv.addEventListener('resize',onVV); vv.addEventListener('scroll',onVV); setTimeout(sizeWin,250); setTimeout(sizeWin,550); }
     });
     document.addEventListener('focusout', function(e){
-      if(e.target && e.target.id==='chatInput'){ if(vv){ vv.removeEventListener('resize',place); vv.removeEventListener('scroll',place); } setTimeout(reset,120); }
+      if(e.target && e.target.id==='chatInput'){ active=false; vv.removeEventListener('resize',onVV); vv.removeEventListener('scroll',onVV); setTimeout(reset,150); }
     });
   })();
 
