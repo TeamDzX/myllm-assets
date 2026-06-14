@@ -16,7 +16,7 @@ OUT  = os.path.join(HERE, 'apps-src', 'hanyu.html')
 WRAP = os.path.join(HERE, 'apps-src', 'hanyu.myllmapp')
 MANIFEST = os.path.join(HERE, 'apps.json')
 APPSTORE = 'https://apps.apple.com/us/app/hanyu-learn-chinese/id6760541929'
-VERSION  = 6  # bump on every adapted change; also cache-busts the html URL
+VERSION  = 7  # bump on every adapted change; also cache-busts the html URL
 
 # --- HEAD shim: injected right after <body>, before any app script runs ---
 HEAD = r'''
@@ -227,8 +227,9 @@ STORIES_FEATURE = r'''
 </style>
 <script>
 (function(){
-  var STORIES = window.__hanyuStories || [];
-  if(!STORIES.length) return;
+  var ALL = window.__hanyuStories || [];
+  if(!ALL.length) return;
+  var STORIES = ALL.slice(0, Math.max(1, Math.ceil(ALL.length*0.30)));   // demo: ~30%
   function speak(zh,py){ try{ if(typeof speakVocab==='function'){ speakVocab(zh,py||''); return; } if('speechSynthesis' in window){ speechSynthesis.cancel(); var u=new SpeechSynthesisUtterance(zh); u.lang='zh-CN'; u.rate=0.85; speechSynthesis.speak(u); } }catch(e){} }
   function esc(t){ return String(t==null?'':t).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
   var reader=document.createElement('div'); reader.className='hy-reader';
@@ -271,6 +272,12 @@ STORIES_FEATURE = r'''
       c.onclick=function(){ open(s); };
       grid.appendChild(c);
     });
+    if(ALL.length>STORIES.length){
+      var a=document.createElement('a'); a.href='https://apps.apple.com/us/app/hanyu-learn-chinese/id6760541929';
+      a.target='_blank'; a.rel='noopener'; a.className='hy-cta'; a.style.gridColumn='1 / -1';
+      a.innerHTML='🔒 +'+(ALL.length-STORIES.length)+' more stories in the full app<small>Get Hanyu on the App Store →</small>';
+      grid.appendChild(a);
+    }
     return grid;
   }
   function install(){
@@ -284,6 +291,57 @@ STORIES_FEATURE = r'''
   function tryInstall(n){ if(install()||n<=0) return; setTimeout(function(){ tryInstall(n-1); },300); }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', function(){ tryInstall(6); });
   else tryInstall(6);
+})();
+</script>
+'''
+
+# --- Demo gate: cap each content section to ~30% + App Store call-to-action.
+#     Data-driven sections (Learn, games' question pools) shrink by truncating
+#     their source arrays in place; static grids (games list, vocabulary,
+#     radicals, geography, grammar) keep ~30% of cards and append a CTA. Tools
+#     (Translator / Worksheets / AI tutor) stay fully usable as the hook. ---
+DEMO_GATE = r'''
+<style>
+.hy-cta{display:block;margin:14px;padding:13px 16px;border-radius:14px;text-align:center;font-weight:700;font-size:14px;text-decoration:none;color:#fff;background:linear-gradient(135deg,#4a6bdf,#8b5cf6);box-shadow:0 4px 14px rgba(74,107,223,.35)}
+.hy-cta small{display:block;font-weight:500;opacity:.92;font-size:12px;margin-top:3px}
+</style>
+<script>
+(function(){
+  var RATIO=0.30, APP='https://apps.apple.com/us/app/hanyu-learn-chinese/id6760541929';
+  function keepN(n){ return Math.max(1, Math.ceil(n*RATIO)); }
+  function cut(a){ if(Array.isArray(a) && a.length>1){ a.length=keepN(a.length); } }
+  // Data-driven content: truncate the global source arrays (runs at parse,
+  // before the app's DOMContentLoaded init reads them).
+  try{ if(typeof characters!=='undefined') cut(characters); }catch(e){}
+  try{ if(typeof strokeChallengeCharacters!=='undefined') cut(strokeChallengeCharacters); }catch(e){}
+  try{ if(typeof compoundWords!=='undefined') cut(compoundWords); }catch(e){}
+  try{ if(typeof sentencesDatabase!=='undefined') cut(sentencesDatabase); }catch(e){}
+  // Static grids: keep ~30%, hide the rest, append a CTA card.
+  function cta(extra,label,span){
+    var a=document.createElement('a'); a.href=APP; a.target='_blank'; a.rel='noopener'; a.className='hy-cta';
+    if(span) a.style.gridColumn='1 / -1';
+    a.innerHTML='🔒 +'+extra+' more '+label+' in the full app<small>Get Hanyu on the App Store →</small>';
+    return a;
+  }
+  function trimGrid(grid,label){
+    if(!grid || grid.__hy) return; grid.__hy=1;
+    var kids=[]; for(var i=0;i<grid.children.length;i++){ if(grid.children[i].nodeType===1) kids.push(grid.children[i]); }
+    if(kids.length<=2) return;
+    var keep=keepN(kids.length);
+    for(var j=keep;j<kids.length;j++){ kids[j].style.display='none'; }
+    grid.appendChild(cta(kids.length-keep,label,true));
+  }
+  function run(){
+    document.querySelectorAll('.game-grid').forEach(function(g){ trimGrid(g,'games'); });
+    document.querySelectorAll('.vocab-grid').forEach(function(g){ trimGrid(g,'words'); });
+    document.querySelectorAll('.radicals-grid').forEach(function(g){ trimGrid(g,'radicals'); });
+    document.querySelectorAll('.province-grid').forEach(function(g){ trimGrid(g,'places'); });
+    var gc=document.getElementById('grammarContent');
+    if(gc && !gc.__hy){ gc.__hy=1; var cards=gc.querySelectorAll('.grammar-card');
+      if(cards.length>2){ var k=keepN(cards.length); for(var i=k;i<cards.length;i++){ cards[i].style.display='none'; } gc.appendChild(cta(cards.length-k,'grammar topics',false)); } }
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', function(){ run(); setTimeout(run,500); });
+  else { run(); setTimeout(run,500); }
 })();
 </script>
 '''
@@ -310,7 +368,7 @@ def main():
     if os.path.exists(stories_path):
         sj = json.dumps(json.load(open(stories_path, encoding='utf-8')), ensure_ascii=True, separators=(',', ':'))
         sj = sj.replace('</', '<\\/')
-        stories_block = '<script>window.__hanyuStories=' + sj + ';</script>\n' + STORIES_FEATURE
+        stories_block = '<script>window.__hanyuStories=' + sj + ';</script>\n' + DEMO_GATE + STORIES_FEATURE
     else:
         print('WARN: %s missing — Stories feature not embedded' % stories_path)
 
@@ -332,7 +390,7 @@ def main():
     d['apps'].append({
         "id":"hanyu","name":"Hanyu – Learn Chinese","emoji":"学",
         "tagline":"Learn Mandarin Chinese",
-        "description":"A full Mandarin course in one app: character flashcards with stroke order, 20+ games, grammar, radicals, vocabulary, geography and history, printable worksheets, and a private AI tutor powered by MyLLM's on-device AI (turn on 'Allow apps to use the AI'). Saves your progress on-device and works offline. The full native app is also on the App Store: "+APPSTORE,
+        "description":"A free taste of the Hanyu Mandarin course: character flashcards with stroke order, games, illustrated stories, grammar, radicals, vocabulary, and a private AI tutor powered by MyLLM's on-device AI (turn on 'Allow apps to use the AI'). This is a demo — each section shows a sample of the content; unlock the full course in the native Hanyu app on the App Store: "+APPSTORE,
         "tags":["AI-powered","learning","offline"],
         "category":"Students","iconSymbol":icon,"iconColor":color,
         "version":VERSION,"featured":True,"requiresAI":False,
