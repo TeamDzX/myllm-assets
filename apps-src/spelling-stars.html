@@ -1,0 +1,178 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<style>:root{color-scheme:light dark;--bg:#f2f2f7;--fg:#111;--card:#fff;--accent:#7c5cff}
+@media(prefers-color-scheme:dark){:root{--bg:#000;--fg:#eee;--card:#1c1c1e}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
+html,body{margin:0;min-height:100%}
+body{font-family:-apple-system,system-ui,sans-serif;background:var(--bg);color:var(--fg);margin:0 auto;max-width:560px;min-height:100vh;display:flex;flex-direction:column;padding:calc(16px + env(safe-area-inset-top)) 16px calc(20px + env(safe-area-inset-bottom))}
+h1{font-size:22px;margin:0 0 2px;font-weight:700}
+.sub{font-size:13px;opacity:.6;margin-bottom:16px}
+.levels{display:flex;flex-direction:column;gap:10px}
+.lvl{display:flex;align-items:center;gap:14px;background:var(--card);border:0;border-radius:16px;padding:15px;box-shadow:0 1px 3px rgba(0,0,0,.08);text-align:left;color:var(--fg)}
+.lvl:active{background:rgba(124,92,255,.12)}
+.lvl .ic{font-size:28px;width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--accent),#a98bff);flex:none}
+.lvl .t{flex:1}.lvl .t b{font-size:17px}.lvl .t small{display:block;opacity:.6;font-size:13px}
+.lvl .bst{font-size:11px;opacity:.55}
+.scr{flex:1;display:none;flex-direction:column}
+.scr.show{display:flex}
+.top{display:flex;justify-content:space-between;align-items:center;font-size:14px;font-weight:600;margin-bottom:6px}
+.bar{height:8px;border-radius:6px;background:rgba(127,127,127,.18);overflow:hidden;margin-bottom:14px}
+.bar>div{height:100%;background:var(--accent);width:0;transition:width .3s}
+.mid{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;text-align:center}
+.bigword{font-size:46px;font-weight:800;letter-spacing:2px}
+.phaselbl{font-size:13px;opacity:.6;text-transform:uppercase;letter-spacing:1px}
+.hear{border:0;background:rgba(127,127,127,.16);color:var(--fg);border-radius:14px;padding:10px 18px;font-size:15px;font-weight:600}
+.inp{width:100%;border:2px solid rgba(124,92,255,.4);background:var(--card);color:var(--fg);border-radius:14px;padding:16px;font-size:26px;text-align:center;letter-spacing:2px;-webkit-user-select:text;user-select:text}
+.feedback{font-size:40px;font-weight:800;letter-spacing:3px}
+.feedback .g{color:#34a853}.feedback .r{color:#ea4335;text-decoration:underline}
+.note{font-size:14px;opacity:.7;min-height:18px}
+.btn{border:0;background:var(--accent);color:#fff;border-radius:16px;padding:15px;font-size:17px;font-weight:700;width:100%}
+.ghost{background:rgba(127,127,127,.18);color:var(--fg)}
+.row{display:flex;gap:10px;width:100%}
+.row>*{flex:1}
+/* editor */
+.ed{display:none;flex-direction:column;gap:10px}
+.ed.show{display:flex}
+.erow{display:flex;gap:8px}
+.erow input{flex:1;border:1px solid rgba(127,127,127,.3);background:var(--card);color:var(--fg);border-radius:12px;padding:12px;font-size:16px;-webkit-user-select:text;user-select:text}
+.erow .add{border:0;background:var(--accent);color:#fff;border-radius:12px;padding:0 18px;font-weight:700}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{background:var(--card);border-radius:20px;padding:7px 12px;font-size:15px;display:flex;align-items:center;gap:8px}
+.chip button{border:0;background:none;color:#ea4335;font-size:16px}
+/* results */
+.res{flex:1;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:10px}
+.res.show{display:flex}
+.res .big{font-size:60px}.res .sc{font-size:40px;font-weight:800}.res .stars{font-size:34px;letter-spacing:4px}
+</style></head><body>
+<div id="home">
+  <h1>🐝 Spelling Stars</h1>
+  <div class="sub">Look at the word, cover it, write it, then check. Build your spelling, one star at a time.</div>
+  <div class="levels" id="levels"></div>
+</div>
+
+<div class="scr" id="scr">
+  <div class="top"><span id="prog">1 / 10</span><span id="streak"></span></div>
+  <div class="bar"><div id="fill"></div></div>
+  <div class="mid" id="mid"></div>
+  <div id="controls"></div>
+</div>
+
+<div class="res" id="res"></div>
+
+<script>
+var store=window.myllmStorage||{getItem:function(){return Promise.resolve(null)},setItem:function(){return Promise.resolve()}};
+function haptic(s){if(window.myllmHaptic)try{myllmHaptic(s)}catch(e){}}
+function el(i){return document.getElementById(i)}
+var LEVELS=[
+ {ic:'🌱',t:'Beginner',d:'First words & sight words',
+  w:['cat','dog','sun','run','big','red','box','you','and','the','was','for','play','jump','like','went','said','they','here','help','look','some','come','make','that','this']},
+ {ic:'📗',t:'Year 3–4',d:'Everyday words',
+  w:['because','friend','before','animal','school','family','people','water','money','morning','should','enough','answer','length','popular','remember','perhaps','special','thought','through','various','straight']},
+ {ic:'📘',t:'Year 5–6',d:'Trickier spellings',
+  w:['separate','believe','special','different','important','question','sentence','favourite','beautiful','knowledge','necessary','probably','occasion','sincerely','definite','immediately','experience','available','community','accidentally']},
+ {ic:'🎓',t:'Middle School',d:'Challenge words',
+  w:['necessary','definitely','embarrass','rhythm','conscience','accommodate','occurrence','parliament','vocabulary','achievement','environment','recommend','privilege','perseverance','exaggerate','questionnaire','maintenance','noticeable','restaurant','government']},
+ {ic:'✏️',t:'My Words',d:'Add your own spelling list',custom:true,w:[]}
+];
+var best={},myWords=[];
+var lvl=0,words=[],idx=0,correct=0,streak=0,phase='look',target='';
+var canSpeak=('speechSynthesis' in window);
+
+function renderHome(){
+  var L=el('levels');L.innerHTML='';
+  LEVELS.forEach(function(lv,i){
+    var b=document.createElement('button');b.className='lvl';
+    var bs=best['s'+i]?('★ '+best['s'+i]):'';
+    var count=lv.custom?(myWords.length+' words'):(lv.w.length+' words');
+    b.innerHTML='<div class="ic">'+lv.ic+'</div><div class="t"><b>'+lv.t+'</b><small>'+lv.d+' · '+count+'</small></div><div class="bst">'+bs+'</div>';
+    b.onclick=function(){lv.custom?openEditor():startSet(i)};
+    L.appendChild(b);
+  });
+}
+function showScreen(s){el('home').style.display=s==='home'?'block':'none';el('scr').className='scr'+(s==='scr'?' show':'');el('res').className='res'+(s==='res'?' show':'')}
+function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1)),t=a[i];a[i]=a[j];a[j]=t}return a}
+function startSet(i){
+  lvl=i;var pool=LEVELS[i].custom?myWords:LEVELS[i].w;
+  words=shuffle(pool).slice(0,Math.min(10,pool.length));
+  idx=0;correct=0;streak=0;showScreen('scr');loadWord();
+}
+function speak(w){if(canSpeak){try{window.speechSynthesis.cancel();var u=new SpeechSynthesisUtterance(w);u.rate=0.85;window.speechSynthesis.speak(u)}catch(e){}}}
+function loadWord(){
+  target=words[idx];phase='look';
+  el('prog').textContent=(idx+1)+' / '+words.length;
+  el('streak').textContent=streak>=2?('🔥 '+streak):'';
+  el('fill').style.width=(idx/words.length*100)+'%';
+  speak(target);
+  el('mid').innerHTML='<div class="phaselbl">Look 👀</div><div class="bigword">'+esc(target)+'</div>'+
+    (canSpeak?'<button class="hear" id="hear">🔊 Hear it</button>':'');
+  if(canSpeak)el('hear').onclick=function(){speak(target)};
+  el('controls').innerHTML='<button class="btn" id="cover">Cover &amp; Spell</button>';
+  el('cover').onclick=writePhase;
+}
+function writePhase(){
+  phase='write';
+  el('mid').innerHTML='<div class="phaselbl">Write ✍️</div>'+
+    (canSpeak?'<button class="hear" id="hear">🔊 Hear it again</button>':'')+
+    '<input class="inp" id="answer" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="type the word">';
+  if(canSpeak)el('hear').onclick=function(){speak(target)};
+  el('controls').innerHTML='<button class="btn" id="check">Check</button>';
+  el('check').onclick=check;
+  var inp=el('answer');inp.addEventListener('keydown',function(e){if(e.key==='Enter')check()});
+  setTimeout(function(){inp.focus()},80);
+}
+function check(){
+  var typed=(el('answer').value||'').trim();
+  if(!typed){el('answer').focus();return}
+  var ok=typed.toLowerCase()===target.toLowerCase();
+  // letter-by-letter feedback against the correct word
+  var fb='';for(var i=0;i<target.length;i++){var c=esc(target[i]);var good=typed[i]&&typed[i].toLowerCase()===target[i].toLowerCase();fb+='<span class="'+(good?'g':'r')+'">'+c+'</span>'}
+  phase='check';
+  if(ok){correct++;streak++;haptic('success')}else{streak=0;haptic('error')}
+  el('mid').innerHTML='<div class="phaselbl">Check ✓</div><div class="feedback">'+fb+'</div>'+
+    '<div class="note">'+(ok?'Perfect! ⭐':'You wrote “'+esc(typed)+'”. The correct spelling is above.')+'</div>';
+  if(ok){el('controls').innerHTML='<button class="btn" id="next">Next word</button>';el('next').onclick=advance;}
+  else{el('controls').innerHTML='<div class="row"><button class="btn ghost" id="retry">Try again</button><button class="btn" id="next">Next word</button></div>';
+    el('retry').onclick=writePhase;el('next').onclick=advance;}
+}
+function advance(){idx++;if(idx>=words.length)finish();else loadWord()}
+function finish(){
+  showScreen('res');
+  var pct=words.length?correct/words.length:0;
+  var stars=pct>=1?'⭐⭐⭐':pct>=0.7?'⭐⭐':pct>=0.4?'⭐':'';
+  var key='s'+lvl,isBest=!best[key]||correct>best[key];
+  if(isBest&&words.length){best[key]=correct;store.setItem('ss_best',JSON.stringify(best))}
+  haptic(pct>=0.7?'success':'warning');
+  el('res').innerHTML='<div class="big">'+(pct>=0.7?'🎉':'💪')+'</div><div class="stars">'+stars+'</div>'+
+    '<div class="sc">'+correct+' / '+words.length+'</div><div>'+LEVELS[lvl].t+' spelt</div>'+
+    '<button class="btn" id="again">Practise again</button><button class="btn ghost" id="menu">Back to levels</button>';
+  el('again').onclick=function(){startSet(lvl)};
+  el('menu').onclick=function(){renderHome();showScreen('home')};
+}
+// ---- custom word editor ----
+function openEditor(){
+  showScreen('scr');
+  el('mid').innerHTML='';el('streak').textContent='';el('prog').textContent='My Words';el('fill').style.width='0';
+  el('mid').style.justifyContent='flex-start';
+  el('mid').innerHTML='<div class="ed show" style="width:100%"><div class="phaselbl" style="text-align:left">Add this week\'s spelling words</div>'+
+    '<div class="erow"><input id="newword" placeholder="type a word" autocorrect="off" autocapitalize="off" spellcheck="false"><button class="add" id="addw">Add</button></div>'+
+    '<div class="chips" id="chips"></div></div>';
+  renderChips();
+  el('addw').onclick=addWord;
+  el('newword').addEventListener('keydown',function(e){if(e.key==='Enter')addWord()});
+  el('controls').innerHTML='<button class="btn" id="practise">Practise these</button><button class="btn ghost" id="back">Back</button>';
+  el('practise').onclick=function(){if(myWords.length){lvl=4;startSet(4)}};
+  el('back').onclick=function(){el('mid').style.justifyContent='center';renderHome();showScreen('home')};
+}
+function addWord(){var v=(el('newword').value||'').trim();if(!v)return;if(myWords.indexOf(v)<0){myWords.push(v);persistWords()}el('newword').value='';el('newword').focus();renderChips();updatePractise();haptic('light')}
+function removeWord(w){myWords=myWords.filter(function(x){return x!==w});persistWords();renderChips();updatePractise()}
+function updatePractise(){var p=el('practise');if(p)p.style.opacity=myWords.length?'1':'.5'}
+function renderChips(){var C=el('chips');if(!C)return;C.innerHTML=myWords.length?myWords.map(function(w){return '<span class="chip">'+esc(w)+'<button data-w="'+esc(w)+'">✕</button></span>'}).join(''):'<div class="note">No words yet — add some above.</div>';
+  Array.prototype.forEach.call(C.querySelectorAll('button'),function(b){b.onclick=function(){removeWord(b.getAttribute('data-w'))}});updatePractise()}
+function persistWords(){store.setItem('ss_mywords',JSON.stringify(myWords))}
+function esc(t){return String(t).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+
+Promise.all([store.getItem('ss_best'),store.getItem('ss_mywords')]).then(function(r){
+  if(r[0]){try{best=JSON.parse(r[0])||{}}catch(e){}}
+  if(r[1]){try{myWords=JSON.parse(r[1])||[]}catch(e){}}
+  renderHome();showScreen('home');
+});
+</script></body></html>
