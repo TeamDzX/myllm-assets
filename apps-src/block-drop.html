@@ -1,0 +1,282 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<style>:root{color-scheme:light dark;--accent:#5e5ce6;--bg:#f2f2f7;--fg:#111;--cell:#d8d8df;--grid:rgba(0,0,0,.06);--btn:#fff;--btnfg:#111}
+@media(prefers-color-scheme:dark){:root{--bg:#000;--fg:#eee;--cell:#1c1c1e;--grid:rgba(255,255,255,.05);--btn:#1c1c1e;--btnfg:#eee}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
+html,body{margin:0;height:100%}
+body{font-family:-apple-system,system-ui,sans-serif;background:var(--bg);color:var(--fg);display:flex;flex-direction:column;align-items:center;padding:8px 10px calc(8px + env(safe-area-inset-bottom));touch-action:none;overflow:hidden}
+.top{width:100%;max-width:520px;display:flex;align-items:flex-end;justify-content:space-between;gap:10px;margin-bottom:6px}
+.title{font-size:18px;font-weight:700}
+.stats{display:flex;gap:14px;font-size:12px}
+.stats b{display:block;font-size:16px;font-weight:700}
+.stats span{opacity:.55}
+.stage{position:relative;display:flex;gap:10px;align-items:flex-start}
+canvas{background:var(--cell);border-radius:10px;box-shadow:0 1px 4px rgba(0,0,0,.12);display:block}
+.side{display:flex;flex-direction:column;gap:8px}
+.side .lbl{font-size:10px;opacity:.5;text-transform:uppercase;letter-spacing:.5px;text-align:center}
+#next{background:var(--cell);border-radius:8px}
+.pad{width:100%;max-width:520px;margin-top:10px;display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.pad button{border:0;background:var(--btn);color:var(--btnfg);border-radius:14px;height:54px;font-size:22px;font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.1);touch-action:none}
+.pad button:active{background:var(--accent);color:#fff}
+.pad .wide{grid-column:span 1}
+.row2{width:100%;max-width:520px;margin-top:8px;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.row2 button{border:0;background:var(--btn);color:var(--btnfg);border-radius:14px;height:48px;font-size:15px;font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.row2 button:active{background:var(--accent);color:#fff}
+.overlay{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:rgba(0,0,0,.55);border-radius:10px;color:#fff;text-align:center;padding:18px}
+.overlay.show{display:flex}
+.overlay h2{margin:0;font-size:22px}
+.overlay p{margin:0;font-size:14px;opacity:.85}
+.overlay button{border:0;background:var(--accent);color:#fff;border-radius:14px;padding:12px 26px;font-size:16px;font-weight:700}
+</style></head><body>
+<div class="top">
+  <div class="title">🧩 Block Drop</div>
+  <div class="stats">
+    <div><span>Score</span><b id="score">0</b></div>
+    <div><span>Lines</span><b id="lines">0</b></div>
+    <div><span>Level</span><b id="level">1</b></div>
+    <div><span>Best</span><b id="best">0</b></div>
+  </div>
+</div>
+<div class="stage">
+  <canvas id="board"></canvas>
+  <div class="side">
+    <div class="lbl">Next</div>
+    <canvas id="next" width="64" height="64"></canvas>
+  </div>
+  <div class="overlay" id="overlay">
+    <h2 id="otitle">Block Drop</h2>
+    <p id="omsg">Stack the falling blocks, clear full rows.</p>
+    <button id="obtn" onclick="startGame()">Play</button>
+  </div>
+</div>
+<div class="pad">
+  <button id="bL" aria-label="Left">◀</button>
+  <button id="bRot" aria-label="Rotate">⟳</button>
+  <button id="bR" aria-label="Right">▶</button>
+</div>
+<div class="row2">
+  <button id="bDown">▼ Soft drop</button>
+  <button id="bDrop">⤓ Hard drop</button>
+</div>
+<script>
+var store=window.myllmStorage||{getItem:function(){return Promise.resolve(null)},setItem:function(){return Promise.resolve()}};
+function haptic(s){if(window.myllmHaptic)try{myllmHaptic(s)}catch(e){}}
+var COLS=10,ROWS=20;
+var COLORS=[null,'#39c5e8','#f5d33b','#b66be8','#5ad15a','#f0584f','#4a7bf0','#f0942f'];
+// Tetromino matrices, indexed 1..7 = I,O,T,S,Z,J,L
+var SHAPES={
+ 1:[[0,0,0,0],[1,1,1,1],[0,0,0,0],[0,0,0,0]],
+ 2:[[2,2],[2,2]],
+ 3:[[0,3,0],[3,3,3],[0,0,0]],
+ 4:[[0,4,4],[4,4,0],[0,0,0]],
+ 5:[[5,5,0],[0,5,5],[0,0,0]],
+ 6:[[6,0,0],[6,6,6],[0,0,0]],
+ 7:[[0,0,7],[7,7,7],[0,0,0]]};
+var board,cur,curX,curY,nextId,bag=[],score,lines,level,best=0,playing=false,over=false,dropTimer=null,cell=24;
+var bc=document.getElementById('board'),ctx=bc.getContext('2d');
+var nc=document.getElementById('next'),nctx=nc.getContext('2d');
+var dpr=Math.max(1,Math.min(3,window.devicePixelRatio||1));
+
+function emptyBoard(){var b=[];for(var r=0;r<ROWS;r++){b.push(new Array(COLS).fill(0))}return b}
+function clone(m){return m.map(function(row){return row.slice()})}
+function rotateCW(m){var n=m.length,out=[];for(var x=0;x<n;x++){out.push(new Array(n).fill(0));for(var y=0;y<n;y++){out[x][n-1-y]=m[y][x]}}return out}
+
+function refillBag(){var ids=[1,2,3,4,5,6,7];for(var i=ids.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=ids[i];ids[i]=ids[j];ids[j]=t}bag=ids.concat(bag)}
+function nextFromBag(){if(bag.length<1)refillBag();return bag.shift()}
+
+function spawn(){
+  cur=clone(SHAPES[nextId]);
+  curX=Math.floor((COLS-cur[0].length)/2);curY=(nextId===1?-1:0);
+  nextId=nextFromBag();drawNext();
+  if(collide(cur,curX,curY)){gameOver()}
+}
+function collide(m,px,py){
+  for(var y=0;y<m.length;y++)for(var x=0;x<m[y].length;x++){
+    if(!m[y][x])continue;
+    var nx=px+x,ny=py+y;
+    if(nx<0||nx>=COLS||ny>=ROWS)return true;
+    if(ny>=0&&board[ny][nx])return true;
+  }
+  return false;
+}
+function merge(){
+  for(var y=0;y<cur.length;y++)for(var x=0;x<cur[y].length;x++){
+    if(cur[y][x]&&curY+y>=0)board[curY+y][curX+x]=cur[y][x];
+  }
+}
+function clearLines(){
+  var cleared=0;
+  for(var y=ROWS-1;y>=0;y--){
+    if(board[y].every(function(v){return v})){
+      board.splice(y,1);board.unshift(new Array(COLS).fill(0));cleared++;y++;
+    }
+  }
+  if(cleared){
+    lines+=cleared;
+    score+=[0,100,300,500,800][cleared]*level;
+    var nl=Math.floor(lines/10)+1;
+    if(nl!==level){level=nl;restartTimer()}
+    haptic(cleared>=4?'success':'medium');
+    updateStats();
+  }
+}
+function lock(){
+  merge();clearLines();
+  if(!over){spawn();}
+}
+function move(dx){
+  if(!playing)return;
+  if(!collide(cur,curX+dx,curY)){curX+=dx;draw();}
+}
+function rotate(){
+  if(!playing)return;
+  var r=rotateCW(cur);
+  var kicks=[0,-1,1,-2,2];
+  for(var i=0;i<kicks.length;i++){
+    if(!collide(r,curX+kicks[i],curY)){cur=r;curX+=kicks[i];haptic('selection');draw();return;}
+  }
+}
+function softDrop(){
+  if(!playing)return;
+  if(!collide(cur,curX,curY+1)){curY++;score+=1;updateStats();draw();}
+  else{lock();draw();}
+}
+function hardDrop(){
+  if(!playing)return;
+  var d=0;while(!collide(cur,curX,curY+1)){curY++;d++;}
+  score+=d*2;updateStats();haptic('heavy');lock();draw();
+}
+function tick(){
+  if(!playing)return;
+  if(!collide(cur,curX,curY+1)){curY++;}
+  else{lock();}
+  draw();
+}
+function restartTimer(){
+  if(dropTimer)clearInterval(dropTimer);
+  var ms=Math.max(90,800-(level-1)*65);
+  dropTimer=setInterval(tick,ms);
+}
+
+// ---- drawing ----
+function fit(){
+  var topH=document.querySelector('.top').offsetHeight;
+  var padH=document.querySelector('.pad').offsetHeight+document.querySelector('.row2').offsetHeight;
+  var availW=Math.min(window.innerWidth,520)-20- (74); // minus side column
+  var availH=window.innerHeight-topH-padH-60;
+  cell=Math.max(12,Math.floor(Math.min(availW/COLS,availH/ROWS)));
+  bc.width=COLS*cell*dpr;bc.height=ROWS*cell*dpr;
+  bc.style.width=(COLS*cell)+'px';bc.style.height=(ROWS*cell)+'px';
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  draw();drawNext();
+}
+function cellRect(cx,cy,c,a){
+  ctx.globalAlpha=a==null?1:a;
+  ctx.fillStyle=c;
+  var px=cx*cell,py=cy*cell;
+  ctx.fillRect(px+1,py+1,cell-2,cell-2);
+  ctx.globalAlpha=1;
+  ctx.fillStyle='rgba(255,255,255,.18)';
+  ctx.fillRect(px+1,py+1,cell-2,Math.max(2,cell*0.22));
+}
+function draw(){
+  ctx.clearRect(0,0,bc.width,bc.height);
+  // grid
+  ctx.strokeStyle=getComputedStyle(document.body).getPropertyValue('--grid')||'rgba(0,0,0,.06)';
+  ctx.lineWidth=1;
+  for(var x=1;x<COLS;x++){ctx.beginPath();ctx.moveTo(x*cell,0);ctx.lineTo(x*cell,ROWS*cell);ctx.stroke();}
+  for(var y=1;y<ROWS;y++){ctx.beginPath();ctx.moveTo(0,y*cell);ctx.lineTo(COLS*cell,y*cell);ctx.stroke();}
+  // settled
+  for(var r=0;r<ROWS;r++)for(var c=0;c<COLS;c++){if(board[r][c])cellRect(c,r,COLORS[board[r][c]]);}
+  if(playing&&cur){
+    // ghost
+    var gy=curY;while(!collide(cur,curX,gy+1))gy++;
+    for(var y2=0;y2<cur.length;y2++)for(var x2=0;x2<cur[y2].length;x2++){
+      if(cur[y2][x2]&&gy+y2>=0)cellRect(curX+x2,gy+y2,COLORS[cur[y2][x2]],0.22);
+    }
+    // active
+    for(var y3=0;y3<cur.length;y3++)for(var x3=0;x3<cur[y3].length;x3++){
+      if(cur[y3][x3]&&curY+y3>=0)cellRect(curX+x3,curY+y3,COLORS[cur[y3][x3]]);
+    }
+  }
+}
+function drawNext(){
+  nctx.clearRect(0,0,nc.width,nc.height);
+  if(!nextId)return;
+  var m=SHAPES[nextId],n=m.length,cs=Math.floor(56/n),off=(64-cs*n)/2;
+  for(var y=0;y<n;y++)for(var x=0;x<n;x++){
+    if(m[y][x]){nctx.fillStyle=COLORS[m[y][x]];nctx.fillRect(off+x*cs+1,off+y*cs+1,cs-2,cs-2);}
+  }
+}
+function updateStats(){
+  document.getElementById('score').textContent=score;
+  document.getElementById('lines').textContent=lines;
+  document.getElementById('level').textContent=level;
+  if(score>best){best=score;document.getElementById('best').textContent=best;store.setItem('bd_best',String(best));}
+}
+
+// ---- game flow ----
+function startGame(){
+  board=emptyBoard();score=0;lines=0;level=1;over=false;bag=[];
+  nextId=nextFromBag();spawn();
+  playing=true;updateStats();
+  document.getElementById('overlay').classList.remove('show');
+  restartTimer();draw();
+}
+function gameOver(){
+  playing=false;over=true;
+  if(dropTimer)clearInterval(dropTimer);
+  haptic('error');
+  document.getElementById('otitle').textContent='Game Over';
+  document.getElementById('omsg').textContent='Score '+score+' · '+lines+' lines · level '+level;
+  document.getElementById('obtn').textContent='Play again';
+  document.getElementById('overlay').classList.add('show');
+}
+
+// ---- controls ----
+function hold(btn,fn,rate){
+  var iv=null,to=null;
+  function start(e){e.preventDefault();fn();to=setTimeout(function(){iv=setInterval(fn,rate||90)},220);}
+  function stop(){if(to)clearTimeout(to);if(iv)clearInterval(iv);to=iv=null;}
+  btn.addEventListener('touchstart',start,{passive:false});
+  btn.addEventListener('touchend',stop);btn.addEventListener('touchcancel',stop);
+  btn.addEventListener('mousedown',start);btn.addEventListener('mouseup',stop);btn.addEventListener('mouseleave',stop);
+}
+hold(document.getElementById('bL'),function(){move(-1)});
+hold(document.getElementById('bR'),function(){move(1)});
+hold(document.getElementById('bDown'),function(){softDrop()},60);
+function tap(btn,fn){btn.addEventListener('touchstart',function(e){e.preventDefault();fn()},{passive:false});btn.addEventListener('click',function(e){e.preventDefault();fn()});}
+tap(document.getElementById('bRot'),rotate);
+tap(document.getElementById('bDrop'),hardDrop);
+
+// swipe + tap-to-rotate on the board
+(function(){
+  var sx=0,sy=0,st=0,moved=false,acc=0;
+  bc.addEventListener('touchstart',function(e){var t=e.touches[0];sx=t.clientX;sy=t.clientY;st=Date.now();moved=false;acc=0;},{passive:true});
+  bc.addEventListener('touchmove',function(e){
+    if(!playing)return;
+    var t=e.touches[0],dx=t.clientX-sx,dy=t.clientY-sy;
+    if(Math.abs(dx)>Math.abs(dy)){
+      while(Math.abs(dx-acc)>=cell){if(dx>acc){move(1);acc+=cell}else{move(-1);acc-=cell}moved=true;}
+    }else if(dy>cell*0.6){softDrop();sy=t.clientY;moved=true;}
+    e.preventDefault();
+  },{passive:false});
+  bc.addEventListener('touchend',function(e){
+    if(!playing)return;
+    if(!moved&&Date.now()-st<250){rotate();}
+  });
+})();
+
+// keyboard (nice on desktop preview)
+window.addEventListener('keydown',function(e){
+  if(!playing)return;
+  if(e.key==='ArrowLeft')move(-1);
+  else if(e.key==='ArrowRight')move(1);
+  else if(e.key==='ArrowDown')softDrop();
+  else if(e.key==='ArrowUp'||e.key==='x'||e.key==='X')rotate();
+  else if(e.key===' '){e.preventDefault();hardDrop();}
+});
+
+window.addEventListener('resize',fit);
+store.getItem('bd_best').then(function(v){if(v){best=parseInt(v,10)||0;document.getElementById('best').textContent=best;}});
+board=emptyBoard();fit();
+</script></body></html>
