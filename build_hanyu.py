@@ -16,14 +16,10 @@ OUT  = os.path.join(HERE, 'apps-src', 'hanyu.html')
 WRAP = os.path.join(HERE, 'apps-src', 'hanyu.myllmapp')
 MANIFEST = os.path.join(HERE, 'apps.json')
 APPSTORE = 'https://apps.apple.com/us/app/hanyu-learn-chinese/id6760541929'
-VERSION  = 3  # bump on every adapted change; also cache-busts the html URL
+VERSION  = 4  # bump on every adapted change; also cache-busts the html URL
 
 # --- HEAD shim: injected right after <body>, before any app script runs ---
 HEAD = r'''
-<style>/* MyLLMos: hide the AI tutor tab. The on-device model overruns the chat's
-   timeout and the web view's keyboard covers the bottom input. The full AI
-   tutor lives in the native App Store app. */
-#tab-chat{display:none !important;}</style>
 <script>
 /* === MyLLMos compatibility layer (auto-injected; do not edit the app above) === */
 (function(){
@@ -99,11 +95,41 @@ HEAD = r'''
     window.myllmAsk(prompt, {system:SYS}).then(function(t){ reply(true,t); }, function(e){ reply(false,null,(e&&e.message)||'The AI is unavailable right now.'); });
   });
 
-  // Belt-and-suspenders: also remove the AI tutor tab in JS (CSS hides it too).
+  // AI tutor keyboard fix: pin the chat input bar just above the on-screen
+  // keyboard while it's focused. WKWebView keeps window.innerHeight but shrinks
+  // visualViewport; the app's own bottom:0 rule otherwise leaves the input
+  // hidden behind the keyboard.
+  (function(){
+    var vv = window.visualViewport;
+    function inset(){ return vv ? Math.max(0, window.innerHeight - vv.height - vv.offsetTop) : 0; }
+    function place(){
+      var area=document.querySelector('.chat-input-area'); if(!area) return;
+      area.style.position='fixed'; area.style.left='0'; area.style.right='0';
+      area.style.bottom=inset()+'px'; area.style.zIndex='3000';
+      var msgs=document.querySelector('.chat-messages');
+      if(msgs){ msgs.style.paddingBottom=(area.offsetHeight+12)+'px'; msgs.scrollTop=msgs.scrollHeight; }
+    }
+    function reset(){
+      var area=document.querySelector('.chat-input-area');
+      if(area){ area.style.position=''; area.style.left=''; area.style.right=''; area.style.bottom=''; area.style.zIndex=''; }
+      var msgs=document.querySelector('.chat-messages'); if(msgs) msgs.style.paddingBottom='';
+    }
+    document.addEventListener('focusin', function(e){
+      if(e.target && e.target.id==='chatInput'){ place(); if(vv){ vv.addEventListener('resize',place); vv.addEventListener('scroll',place); } setTimeout(place,250); setTimeout(place,550); }
+    });
+    document.addEventListener('focusout', function(e){
+      if(e.target && e.target.id==='chatInput'){ if(vv){ vv.removeEventListener('resize',place); vv.removeEventListener('scroll',place); } setTimeout(reset,120); }
+    });
+  })();
+
+  // Tutor empty-state hint about model speed / backends.
   window.addEventListener('DOMContentLoaded', function(){
     try{
-      var ct=document.getElementById('tab-chat'); if(ct&&ct.parentNode) ct.parentNode.removeChild(ct);
-      var cc=document.getElementById('chatTab'); if(cc&&cc.parentNode) cc.parentNode.removeChild(cc);
+      var w=document.querySelector('#chatTab .welcome-message'); if(!w) return;
+      var p=document.createElement('p');
+      p.style.cssText='margin-top:12px;font-size:12px;opacity:.7';
+      p.textContent='Answers come from your selected AI model (MyLLM Settings → needs “Allow apps to use the AI”). The on-device model takes a few seconds; pairing a backend or adding a cloud key makes it near-instant.';
+      w.appendChild(p);
     }catch(e){}
   });
 
@@ -169,6 +195,11 @@ def main():
     if not head:
         sys.exit('Could not find closing </body>.')
     new = head + TAIL + '</body>' + tailpart
+    # Give the AI tutor more breathing room than its 30s default (offline model).
+    new, tcount = re.subn(r"(reject\(new Error\('Request timeout'\)\);[\s\S]{0,80}?\}, )30000(\);)",
+                          r"\g<1>120000\g<2>", new, count=1)
+    if tcount != 1:
+        print('WARN: chat timeout not bumped (pattern not found)')
     open(OUT, 'w', encoding='utf-8').write(new)
 
     icon, color = 'character.book.closed.fill', 'orange'
@@ -181,8 +212,8 @@ def main():
     d['apps'].append({
         "id":"hanyu","name":"Hanyu – Learn Chinese","emoji":"学",
         "tagline":"Learn Mandarin Chinese",
-        "description":"A full Mandarin course in one app: character flashcards with stroke order, 20+ games, grammar, radicals, vocabulary, geography and history, and printable worksheets. Saves your progress on-device and works offline. Love it? The full native app — with an AI tutor — is on the App Store: "+APPSTORE,
-        "tags":["learning","offline"],
+        "description":"A full Mandarin course in one app: character flashcards with stroke order, 20+ games, grammar, radicals, vocabulary, geography and history, printable worksheets, and a private AI tutor powered by MyLLM's on-device AI (turn on 'Allow apps to use the AI'). Saves your progress on-device and works offline. The full native app is also on the App Store: "+APPSTORE,
+        "tags":["AI-powered","learning","offline"],
         "category":"Students","iconSymbol":icon,"iconColor":color,
         "version":VERSION,"featured":True,"requiresAI":False,
         "banner":RAWBASE+"/apps/hanyu.jpg","icon":RAWBASE+"/apps/hanyu-icon.png",

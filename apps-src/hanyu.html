@@ -4046,10 +4046,6 @@
     </style>
 </head>
 <body>
-<style>/* MyLLMos: hide the AI tutor tab. The on-device model overruns the chat's
-   timeout and the web view's keyboard covers the bottom input. The full AI
-   tutor lives in the native App Store app. */
-#tab-chat{display:none !important;}</style>
 <script>
 /* === MyLLMos compatibility layer (auto-injected; do not edit the app above) === */
 (function(){
@@ -4125,11 +4121,41 @@
     window.myllmAsk(prompt, {system:SYS}).then(function(t){ reply(true,t); }, function(e){ reply(false,null,(e&&e.message)||'The AI is unavailable right now.'); });
   });
 
-  // Belt-and-suspenders: also remove the AI tutor tab in JS (CSS hides it too).
+  // AI tutor keyboard fix: pin the chat input bar just above the on-screen
+  // keyboard while it's focused. WKWebView keeps window.innerHeight but shrinks
+  // visualViewport; the app's own bottom:0 rule otherwise leaves the input
+  // hidden behind the keyboard.
+  (function(){
+    var vv = window.visualViewport;
+    function inset(){ return vv ? Math.max(0, window.innerHeight - vv.height - vv.offsetTop) : 0; }
+    function place(){
+      var area=document.querySelector('.chat-input-area'); if(!area) return;
+      area.style.position='fixed'; area.style.left='0'; area.style.right='0';
+      area.style.bottom=inset()+'px'; area.style.zIndex='3000';
+      var msgs=document.querySelector('.chat-messages');
+      if(msgs){ msgs.style.paddingBottom=(area.offsetHeight+12)+'px'; msgs.scrollTop=msgs.scrollHeight; }
+    }
+    function reset(){
+      var area=document.querySelector('.chat-input-area');
+      if(area){ area.style.position=''; area.style.left=''; area.style.right=''; area.style.bottom=''; area.style.zIndex=''; }
+      var msgs=document.querySelector('.chat-messages'); if(msgs) msgs.style.paddingBottom='';
+    }
+    document.addEventListener('focusin', function(e){
+      if(e.target && e.target.id==='chatInput'){ place(); if(vv){ vv.addEventListener('resize',place); vv.addEventListener('scroll',place); } setTimeout(place,250); setTimeout(place,550); }
+    });
+    document.addEventListener('focusout', function(e){
+      if(e.target && e.target.id==='chatInput'){ if(vv){ vv.removeEventListener('resize',place); vv.removeEventListener('scroll',place); } setTimeout(reset,120); }
+    });
+  })();
+
+  // Tutor empty-state hint about model speed / backends.
   window.addEventListener('DOMContentLoaded', function(){
     try{
-      var ct=document.getElementById('tab-chat'); if(ct&&ct.parentNode) ct.parentNode.removeChild(ct);
-      var cc=document.getElementById('chatTab'); if(cc&&cc.parentNode) cc.parentNode.removeChild(cc);
+      var w=document.querySelector('#chatTab .welcome-message'); if(!w) return;
+      var p=document.createElement('p');
+      p.style.cssText='margin-top:12px;font-size:12px;opacity:.7';
+      p.textContent='Answers come from your selected AI model (MyLLM Settings → needs “Allow apps to use the AI”). The on-device model takes a few seconds; pairing a backend or adding a cloud key makes it near-instant.';
+      w.appendChild(p);
     }catch(e){}
   });
 
@@ -21233,7 +21259,7 @@
                             this.pendingRequests.delete(requestId);
                             reject(new Error('Request timeout'));
                         }
-                    }, 30000);
+                    }, 120000);
                 });
 
                 try {
