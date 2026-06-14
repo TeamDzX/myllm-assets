@@ -279,4 +279,7 @@ window.addEventListener('keydown',function(e){
 window.addEventListener('resize',fit);
 store.getItem('bd_best').then(function(v){if(v){best=parseInt(v,10)||0;document.getElementById('best').textContent=best;}});
 board=emptyBoard();fit();
+// Show the start screen so the player can tap Play (controls stay inert until
+// the game is running).
+document.getElementById('overlay').classList.add('show');
 </script></body></html>
