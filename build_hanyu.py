@@ -16,6 +16,7 @@ OUT  = os.path.join(HERE, 'apps-src', 'hanyu.html')
 WRAP = os.path.join(HERE, 'apps-src', 'hanyu.myllmapp')
 MANIFEST = os.path.join(HERE, 'apps.json')
 APPSTORE = 'https://apps.apple.com/us/app/hanyu-learn-chinese/id6760541929'
+VERSION  = 3  # bump on every adapted change; also cache-busts the html URL
 
 # --- HEAD shim: injected right after <body>, before any app script runs ---
 HEAD = r'''
@@ -98,6 +99,14 @@ HEAD = r'''
     window.myllmAsk(prompt, {system:SYS}).then(function(t){ reply(true,t); }, function(e){ reply(false,null,(e&&e.message)||'The AI is unavailable right now.'); });
   });
 
+  // Belt-and-suspenders: also remove the AI tutor tab in JS (CSS hides it too).
+  window.addEventListener('DOMContentLoaded', function(){
+    try{
+      var ct=document.getElementById('tab-chat'); if(ct&&ct.parentNode) ct.parentNode.removeChild(ct);
+      var cc=document.getElementById('chatTab'); if(cc&&cc.parentNode) cc.parentNode.removeChild(cc);
+    }catch(e){}
+  });
+
   // "Get the full app" App Store banner (opens in Safari).
   window.addEventListener('DOMContentLoaded', function(){
     try{
@@ -175,9 +184,9 @@ def main():
         "description":"A full Mandarin course in one app: character flashcards with stroke order, 20+ games, grammar, radicals, vocabulary, geography and history, and printable worksheets. Saves your progress on-device and works offline. Love it? The full native app — with an AI tutor — is on the App Store: "+APPSTORE,
         "tags":["learning","offline"],
         "category":"Students","iconSymbol":icon,"iconColor":color,
-        "version":2,"featured":True,"requiresAI":False,
+        "version":VERSION,"featured":True,"requiresAI":False,
         "banner":RAWBASE+"/apps/hanyu.jpg","icon":RAWBASE+"/apps/hanyu-icon.png",
-        "html":RAWBASE+"/apps-src/hanyu.html","json":RAWBASE+"/apps-src/hanyu.myllmapp",
+        "html":RAWBASE+"/apps-src/hanyu.html?v=%d"%VERSION,"json":RAWBASE+"/apps-src/hanyu.myllmapp",
         "sizeKB":max(1,round(os.path.getsize(OUT)/1024))
     })
     d['updated']="2026-06-14"

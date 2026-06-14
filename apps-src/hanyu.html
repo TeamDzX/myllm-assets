@@ -4125,6 +4125,14 @@
     window.myllmAsk(prompt, {system:SYS}).then(function(t){ reply(true,t); }, function(e){ reply(false,null,(e&&e.message)||'The AI is unavailable right now.'); });
   });
 
+  // Belt-and-suspenders: also remove the AI tutor tab in JS (CSS hides it too).
+  window.addEventListener('DOMContentLoaded', function(){
+    try{
+      var ct=document.getElementById('tab-chat'); if(ct&&ct.parentNode) ct.parentNode.removeChild(ct);
+      var cc=document.getElementById('chatTab'); if(cc&&cc.parentNode) cc.parentNode.removeChild(cc);
+    }catch(e){}
+  });
+
   // "Get the full app" App Store banner (opens in Safari).
   window.addEventListener('DOMContentLoaded', function(){
     try{
