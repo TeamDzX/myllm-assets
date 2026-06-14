@@ -4046,6 +4046,10 @@
     </style>
 </head>
 <body>
+<style>/* MyLLMos: hide the AI tutor tab. The on-device model overruns the chat's
+   timeout and the web view's keyboard covers the bottom input. The full AI
+   tutor lives in the native App Store app. */
+#tab-chat{display:none !important;}</style>
 <script>
 /* === MyLLMos compatibility layer (auto-injected; do not edit the app above) === */
 (function(){

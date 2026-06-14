@@ -19,6 +19,10 @@ APPSTORE = 'https://apps.apple.com/us/app/hanyu-learn-chinese/id6760541929'
 
 # --- HEAD shim: injected right after <body>, before any app script runs ---
 HEAD = r'''
+<style>/* MyLLMos: hide the AI tutor tab. The on-device model overruns the chat's
+   timeout and the web view's keyboard covers the bottom input. The full AI
+   tutor lives in the native App Store app. */
+#tab-chat{display:none !important;}</style>
 <script>
 /* === MyLLMos compatibility layer (auto-injected; do not edit the app above) === */
 (function(){
@@ -168,10 +172,10 @@ def main():
     d['apps'].append({
         "id":"hanyu","name":"Hanyu – Learn Chinese","emoji":"学",
         "tagline":"Learn Mandarin Chinese",
-        "description":"A full Mandarin course in one app: character flashcards with stroke order, 20+ games, grammar, radicals, vocabulary, geography and history, printable worksheets, and an AI tutor that runs privately on your device. Saves your progress on-device, works offline. Loves it? The full native app is on the App Store: "+APPSTORE,
-        "tags":["AI-powered","learning","offline"],
+        "description":"A full Mandarin course in one app: character flashcards with stroke order, 20+ games, grammar, radicals, vocabulary, geography and history, and printable worksheets. Saves your progress on-device and works offline. Love it? The full native app — with an AI tutor — is on the App Store: "+APPSTORE,
+        "tags":["learning","offline"],
         "category":"Students","iconSymbol":icon,"iconColor":color,
-        "version":1,"featured":False,"requiresAI":False,
+        "version":2,"featured":True,"requiresAI":False,
         "banner":RAWBASE+"/apps/hanyu.jpg","icon":RAWBASE+"/apps/hanyu-icon.png",
         "html":RAWBASE+"/apps-src/hanyu.html","json":RAWBASE+"/apps-src/hanyu.myllmapp",
         "sizeKB":max(1,round(os.path.getsize(OUT)/1024))
