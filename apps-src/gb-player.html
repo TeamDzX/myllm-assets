@@ -103,6 +103,8 @@
   var GB_W=160, GB_H=144;
   var FRAME_BYTES=GB_W*GB_H*4;          // 92160, RGBA8888
   var PPU_FRAME_TICKS=70224;            // ticks per video frame
+  var CPU_TICKS_PER_SECOND=4194304;    // drive emulation by real elapsed time (binjgb demo)
+  var MAX_UPDATE_SEC=5/60;             // clamp a long stall so we never spiral
   var EVENT_NEW_FRAME=0x1, EVENT_AUDIO_BUFFER_FULL=0x2, EVENT_UNTIL_TICKS=0x4;
   var CGB_COLOR_CURVE_GAMBATTE=2;       // 0=NONE,1=SAMEBOY,2=GAMBATTE
   var AUDIO_FRAMES=4096;                // stereo pairs per AUDIO_BUFFER_FULL (matches binjgb demo)
@@ -172,6 +174,7 @@
     this.m=Module; this.sampleRate=sampleRate|0; this.audioFrames=AUDIO_FRAMES;
     this.e=0; this.romPtr=0; this.romSize=0; this._romCopy=null; this.joypadBufferPtr=0;
     this._fbPtr=0; this._fbSize=0; this._auPtr=0; this._auCapBytes=0; this._auView=null;
+    this._leftover=0;    // tick overshoot carried to the next slice (keeps timing exact)
     this.onAudio=null;   // (view:Uint8Array, frames:int) called on each EVENT_AUDIO_BUFFER_FULL
   }
   GBCore.create=function(wasmBytes, sampleRate){
@@ -194,7 +197,7 @@
     new Uint8Array(this.m.HEAPU8.buffer, ptr, size).fill(0).set(rom);
     var e=this.m._emulator_new_simple(ptr, size, this.sampleRate, this.audioFrames, CGB_COLOR_CURVE_GAMBATTE);
     if(e===0){ this.m._free(ptr); throw new Error('Invalid or unsupported ROM'); }
-    this.e=e; this.romPtr=ptr; this.romSize=size; this._romCopy=rom.slice();
+    this.e=e; this.romPtr=ptr; this.romSize=size; this._romCopy=rom.slice(); this._leftover=0;
     // CRITICAL: emulator_new_simple does NOT wire up joypad reading. binjgb reads
     // input through a callback that copies the s_buttons state (written by
     // _set_joyp_*) into the emulator each poll. Install the default callback (with
@@ -209,17 +212,22 @@
     // so HEAPU8.buffer never detaches and this stays valid for the emulator's life.
     this._auView=new Uint8Array(this.m.HEAPU8.buffer, this._auPtr, this._auCapBytes);
   };
-  GBCore.prototype.runFrame=function(outRGBA){
-    if(!this.e) return false;
-    var m=this.m, e=this.e, target=m._emulator_get_ticks_f64(e)+PPU_FRAME_TICKS;
+  // Run the emulator for `deltaTicks` of emulated time (= real elapsed wall time,
+  // so audio is produced at real-time and stays in sync). Audio is scheduled on
+  // each EVENT_AUDIO_BUFFER_FULL; the latest video frame is copied out at the end.
+  GBCore.prototype.runFor=function(deltaTicks, outRGBA){
+    if(!this.e || deltaTicks<=0) return false;
+    var m=this.m, e=this.e;
+    var target=m._emulator_get_ticks_f64(e)+deltaTicks-this._leftover;
     var gotFrame=false, guard=0;
-    while(guard++<16){
+    while(guard++<2048){
       var event=m._emulator_run_until_f64(e, target);
       if((event & EVENT_AUDIO_BUFFER_FULL) && this.onAudio) this.onAudio(this._auView, this.audioFrames);
       if(event & EVENT_NEW_FRAME) gotFrame=true;
       if(event & EVENT_UNTIL_TICKS){ if(m._emulator_get_ticks_f64(e)>=target) break; }
     }
-    outRGBA.set(new Uint8Array(m.HEAPU8.buffer, this._fbPtr, this._fbSize)); // RGBA already
+    this._leftover=(m._emulator_get_ticks_f64(e)-target)|0;   // carry the small overshoot
+    if(gotFrame) outRGBA.set(new Uint8Array(m.HEAPU8.buffer, this._fbPtr, this._fbSize)); // RGBA
     return gotFrame;
   };
   GBCore.prototype.setButton=function(name, pressed){
@@ -245,9 +253,13 @@
     status('Couldn’t start the emulator core: '+((err&&err.message)||err));
   });
 
-  function loop(){ if(!running) return;
+  var lastSec=0;
+  function loop(ts){ if(!running) return;
+    var startSec=(ts||0)/1000;
+    var deltaSec=Math.max(startSec-(lastSec||startSec), 0); lastSec=startSec;
+    var deltaTicks=Math.min(deltaSec, MAX_UPDATE_SEC)*CPU_TICKS_PER_SECOND;
     try{
-      if(core.runFrame(img.data)) ctx.putImageData(img,0,0);   // audio is scheduled inside runFrame
+      if(core.runFor(deltaTicks, img.data)) ctx.putImageData(img,0,0); // audio scheduled inside
     }catch(e){ running=false; status('Emulation stopped: '+((e&&e.message)||e)); return; }
     requestAnimationFrame(loop);
   }
@@ -263,7 +275,7 @@
     if(!core){ status('Still starting up — tap Load ROM again in a moment.'); return; }
     try{ core.load(bytes); }catch(e){ status('That doesn’t look like a valid Game Boy ROM.'); return; }
     running=true; resumeAudio(); document.body.classList.add('playing'); status('');
-    requestAnimationFrame(loop);
+    lastSec=0; requestAnimationFrame(loop);
   }
 
   document.getElementById('file').addEventListener('change', function(e){
@@ -320,7 +332,7 @@
   // Pause the loop when backgrounded; resume on return.
   document.addEventListener('visibilitychange', function(){
     if(document.visibilityState==='hidden'){ running=false; }
-    else if(core && document.body.classList.contains('playing') && !running){ running=true; requestAnimationFrame(loop); }
+    else if(core && document.body.classList.contains('playing') && !running){ running=true; lastSec=0; requestAnimationFrame(loop); }
   });
 })();
 </script>
