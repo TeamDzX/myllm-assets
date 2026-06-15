@@ -105,7 +105,7 @@
   var PPU_FRAME_TICKS=70224;            // ticks per video frame
   var EVENT_NEW_FRAME=0x1, EVENT_AUDIO_BUFFER_FULL=0x2, EVENT_UNTIL_TICKS=0x4;
   var CGB_COLOR_CURVE_GAMBATTE=2;       // 0=NONE,1=SAMEBOY,2=GAMBATTE
-  var AUDIO_FRAMES=1024;                // stereo pairs per AUDIO_BUFFER_FULL (smaller = lower latency)
+  var AUDIO_FRAMES=4096;                // stereo pairs per AUDIO_BUFFER_FULL (matches binjgb demo)
 
   var canvas=document.getElementById('screen'), ctx=canvas.getContext('2d');
   var img=ctx.createImageData(GB_W,GB_H);
@@ -119,25 +119,40 @@
     return;
   }
 
-  // --- Audio: schedule small AudioBuffers back-to-back on the timeline. iOS
-  //     WKWebView is unreliable with ScriptProcessorNode (that's why the NES
-  //     player is silent); scheduled BufferSources are the robust path. binjgb
-  //     resamples its PCM to our AudioContext rate, so no conversion is needed. ---
+  // --- Audio: read the core's audio buffer DIRECTLY into a scheduled AudioBuffer
+  //     on each EVENT_AUDIO_BUFFER_FULL — binjgb's own demo approach, minimal
+  //     allocation (one AudioBuffer per ~93ms, no intermediate arrays/queues).
+  //     ScriptProcessorNode is unreliable/silent on iOS WKWebView. NOTE: audible
+  //     output ALSO needs the native AVAudioSession in .playback mode (MyLLMos),
+  //     which is independent of this JS. ---
   var AC=window.AudioContext||window.webkitAudioContext;
   var actx=AC?new AC():null, RATE=actx?actx.sampleRate:44100;
-  var playHead=0;
-  function scheduleAudio(left,right){
-    // Only feed once the context is actually running (post user-gesture resume),
-    // so we never queue stale buffers against a frozen clock.
-    if(!actx || actx.state!=='running' || !left || left.length===0) return;
-    var n=left.length, buf=actx.createBuffer(2,n,RATE);
-    buf.getChannelData(0).set(left); buf.getChannelData(1).set(right);
-    var src=actx.createBufferSource(); src.buffer=buf; src.connect(actx.destination);
+  var AUDIO_LATENCY=0.1, startSec=0;
+  function scheduleAudio(view, frames){           // view = Uint8Array over the wasm audio buffer
+    if(!actx || actx.state!=='running') return;   // wait for a gesture-driven resume
     var now=actx.currentTime;
-    if(playHead < now+0.05) playHead = now+0.05;   // keep ~50ms lead; re-floor on underrun
-    src.start(playHead); playHead += n/RATE;
+    startSec = startSec || (now+AUDIO_LATENCY);
+    if(startSec < now){ startSec = now+AUDIO_LATENCY; return; }  // underrun -> resync, drop one
+    var buf=actx.createBuffer(2, frames, RATE);
+    var c0=buf.getChannelData(0), c1=buf.getChannelData(1);
+    for(var i=0;i<frames;i++){ c0[i]=view[2*i]/255; c1[i]=view[2*i+1]/255; }
+    var src=actx.createBufferSource(); src.buffer=buf; src.connect(actx.destination);
+    src.start(startSec); startSec += frames/RATE;
   }
-  function resumeAudio(){ try{ if(actx && actx.state==='suspended') actx.resume(); }catch(e){} }
+  var audioUnlocked=false;
+  function resumeAudio(){
+    try{
+      if(actx && actx.state!=='running') actx.resume();
+      if(actx && !audioUnlocked){          // iOS WebAudio unlock: play one silent sample
+        var b=actx.createBuffer(1,1,RATE), s=actx.createBufferSource();
+        s.buffer=b; s.connect(actx.destination); s.start(0); audioUnlocked=true;
+      }
+    }catch(e){}
+  }
+  // Resume on ANY user gesture (iOS gates audio behind a trusted gesture).
+  ['touchstart','mousedown','keydown'].forEach(function(ev){
+    document.addEventListener(ev, resumeAudio, {passive:true});
+  });
 
   // ============================================================================
   // GBCore — binjgb adapter (jsnes-style contract: WE own canvas/audio/input).
@@ -151,7 +166,8 @@
   function GBCore(Module, sampleRate){
     this.m=Module; this.sampleRate=sampleRate|0; this.audioFrames=AUDIO_FRAMES;
     this.e=0; this.romPtr=0; this.romSize=0; this._romCopy=null; this.joypadBufferPtr=0;
-    this._fbPtr=0; this._fbSize=0; this._auPtr=0; this._auCapBytes=0; this._audioOut=[];
+    this._fbPtr=0; this._fbSize=0; this._auPtr=0; this._auCapBytes=0; this._auView=null;
+    this.onAudio=null;   // (view:Uint8Array, frames:int) called on each EVENT_AUDIO_BUFFER_FULL
   }
   GBCore.create=function(wasmBytes, sampleRate){
     // wasmBinary => plain WebAssembly.instantiate (no fetch/stream, no SAB). Offline.
@@ -163,7 +179,7 @@
     if(this.e){ this.m._emulator_delete(this.e); this.e=0; }
     if(this.joypadBufferPtr){ this.m._joypad_delete(this.joypadBufferPtr); this.joypadBufferPtr=0; }
     if(this.romPtr){ this.m._free(this.romPtr); this.romPtr=0; }
-    this._audioOut.length=0;
+    this._auView=null;
   };
   GBCore.prototype.load=function(romBytes){
     this._destroyEmu();
@@ -184,6 +200,9 @@
     this._fbSize=this.m._get_frame_buffer_size(e);        // == 92160
     this._auPtr=this.m._get_audio_buffer_ptr(e);
     this._auCapBytes=this.m._get_audio_buffer_capacity(e);// == 2*audioFrames bytes
+    // Cache a view over the audio buffer. binjgb memory is FIXED (resize->abort),
+    // so HEAPU8.buffer never detaches and this stays valid for the emulator's life.
+    this._auView=new Uint8Array(this.m.HEAPU8.buffer, this._auPtr, this._auCapBytes);
   };
   GBCore.prototype.runFrame=function(outRGBA){
     if(!this.e) return false;
@@ -191,27 +210,12 @@
     var gotFrame=false, guard=0;
     while(guard++<16){
       var event=m._emulator_run_until_f64(e, target);
-      if(event & EVENT_AUDIO_BUFFER_FULL) this._drainAudio();
+      if((event & EVENT_AUDIO_BUFFER_FULL) && this.onAudio) this.onAudio(this._auView, this.audioFrames);
       if(event & EVENT_NEW_FRAME) gotFrame=true;
       if(event & EVENT_UNTIL_TICKS){ if(m._emulator_get_ticks_f64(e)>=target) break; }
     }
     outRGBA.set(new Uint8Array(m.HEAPU8.buffer, this._fbPtr, this._fbSize)); // RGBA already
     return gotFrame;
-  };
-  GBCore.prototype._drainAudio=function(){
-    var m=this.m, capBytes=this._auCapBytes; if(capBytes<=0) return;
-    var src=new Uint8Array(m.HEAPU8.buffer, this._auPtr, capBytes), frames=capBytes>>1;
-    var left=new Float32Array(frames), right=new Float32Array(frames);
-    for(var i=0,j=0;i<frames;i++,j+=2){ left[i]=(src[j]-128)/128; right[i]=(src[j+1]-128)/128; }
-    this._audioOut.push({left:left,right:right});
-  };
-  GBCore.prototype.pullAudio=function(){
-    if(this._audioOut.length===0) return null;
-    if(this._audioOut.length===1){ var c=this._audioOut.shift(); return {left:c.left,right:c.right}; }
-    var total=0,k; for(k=0;k<this._audioOut.length;k++) total+=this._audioOut[k].left.length;
-    var left=new Float32Array(total), right=new Float32Array(total), off=0;
-    for(k=0;k<this._audioOut.length;k++){ var ch=this._audioOut[k]; left.set(ch.left,off); right.set(ch.right,off); off+=ch.left.length; }
-    this._audioOut.length=0; return {left:left,right:right};
   };
   GBCore.prototype.setButton=function(name, pressed){
     if(!this.e) return; var m=this.m, e=this.e, on=pressed?1:0;
@@ -231,15 +235,14 @@
   // --- Boot the core (async), then the file picker is live --------------------
   var core=null, running=false;
   GBCore.create(decodeWasmBase64(window.BINJGB_WASM_B64), RATE).then(function(c){
-    core=c;
+    core=c; core.onAudio=scheduleAudio;   // core schedules audio directly on each buffer-full
   }).catch(function(err){
     status('Couldn’t start the emulator core: '+((err&&err.message)||err));
   });
 
   function loop(){ if(!running) return;
     try{
-      if(core.runFrame(img.data)) ctx.putImageData(img,0,0);
-      var a=core.pullAudio(); if(a) scheduleAudio(a.left, a.right);
+      if(core.runFrame(img.data)) ctx.putImageData(img,0,0);   // audio is scheduled inside runFrame
     }catch(e){ running=false; status('Emulation stopped: '+((e&&e.message)||e)); return; }
     requestAnimationFrame(loop);
   }
