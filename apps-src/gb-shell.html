@@ -103,7 +103,7 @@
   var PPU_FRAME_TICKS=70224;            // ticks per video frame
   var EVENT_NEW_FRAME=0x1, EVENT_AUDIO_BUFFER_FULL=0x2, EVENT_UNTIL_TICKS=0x4;
   var CGB_COLOR_CURVE_GAMBATTE=2;       // 0=NONE,1=SAMEBOY,2=GAMBATTE
-  var AUDIO_FRAMES=2048;                // stereo pairs per AUDIO_BUFFER_FULL
+  var AUDIO_FRAMES=1024;                // stereo pairs per AUDIO_BUFFER_FULL (smaller = lower latency)
 
   var canvas=document.getElementById('screen'), ctx=canvas.getContext('2d');
   var img=ctx.createImageData(GB_W,GB_H);
@@ -117,21 +117,23 @@
     return;
   }
 
-  // --- Audio: same ring buffer the NES shell uses; MyLLMos's .playback session
-  //     makes WebAudio audible. binjgb resamples PCM to our AudioContext rate. ---
+  // --- Audio: schedule small AudioBuffers back-to-back on the timeline. iOS
+  //     WKWebView is unreliable with ScriptProcessorNode (that's why the NES
+  //     player is silent); scheduled BufferSources are the robust path. binjgb
+  //     resamples its PCM to our AudioContext rate, so no conversion is needed. ---
   var AC=window.AudioContext||window.webkitAudioContext;
   var actx=AC?new AC():null, RATE=actx?actx.sampleRate:44100;
-  var RB=16384, aL=new Float32Array(RB), aR=new Float32Array(RB), aw=0, ar=0;
-  function audioPush(l,r){ aL[aw]=l; aR[aw]=r; aw=(aw+1)%RB; }
-  if(actx){
-    var sp=actx.createScriptProcessor(1024,0,2);
-    sp.onaudioprocess=function(e){
-      var l=e.outputBuffer.getChannelData(0), r=e.outputBuffer.getChannelData(1);
-      for(var i=0;i<l.length;i++){
-        if(ar!==aw){ l[i]=aL[ar]; r[i]=aR[ar]; ar=(ar+1)%RB; } else { l[i]=0; r[i]=0; }
-      }
-    };
-    sp.connect(actx.destination);
+  var playHead=0;
+  function scheduleAudio(left,right){
+    // Only feed once the context is actually running (post user-gesture resume),
+    // so we never queue stale buffers against a frozen clock.
+    if(!actx || actx.state!=='running' || !left || left.length===0) return;
+    var n=left.length, buf=actx.createBuffer(2,n,RATE);
+    buf.getChannelData(0).set(left); buf.getChannelData(1).set(right);
+    var src=actx.createBufferSource(); src.buffer=buf; src.connect(actx.destination);
+    var now=actx.currentTime;
+    if(playHead < now+0.05) playHead = now+0.05;   // keep ~50ms lead; re-floor on underrun
+    src.start(playHead); playHead += n/RATE;
   }
   function resumeAudio(){ try{ if(actx && actx.state==='suspended') actx.resume(); }catch(e){} }
 
@@ -235,7 +237,7 @@
   function loop(){ if(!running) return;
     try{
       if(core.runFrame(img.data)) ctx.putImageData(img,0,0);
-      var a=core.pullAudio(); if(a){ for(var i=0;i<a.left.length;i++) audioPush(a.left[i], a.right[i]); }
+      var a=core.pullAudio(); if(a) scheduleAudio(a.left, a.right);
     }catch(e){ running=false; status('Emulation stopped: '+((e&&e.message)||e)); return; }
     requestAnimationFrame(loop);
   }
@@ -279,10 +281,10 @@
       if(relT){ clearTimeout(relT); relT=null; }
       if(core) core.setButton(name, true); el.classList.add('on'); downAt=Date.now(); }
     // Minimum hold: a fast tap can fire down+up inside one emulated frame, so the
-    // press is never seen. Keep it held ~90ms (≈5 frames) before release.
+    // press is never seen. ~50ms (≈3 frames) registers reliably yet stays snappy.
     function up(e){ if(e&&e.cancelable) e.preventDefault(); el.classList.remove('on');
       var rel=function(){ relT=null; if(core) core.setButton(name, false); };
-      var held=Date.now()-downAt, MIN=90;
+      var held=Date.now()-downAt, MIN=50;
       if(held>=MIN){ rel(); } else { if(relT) clearTimeout(relT); relT=setTimeout(rel, MIN-held); } }
     el.addEventListener('touchstart',dn,{passive:false});
     el.addEventListener('touchend',up,{passive:false});
