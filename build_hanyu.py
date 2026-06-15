@@ -16,7 +16,7 @@ OUT  = os.path.join(HERE, 'apps-src', 'hanyu.html')
 WRAP = os.path.join(HERE, 'apps-src', 'hanyu.myllmapp')
 MANIFEST = os.path.join(HERE, 'apps.json')
 APPSTORE = 'https://apps.apple.com/us/app/hanyu-learn-chinese/id6760541929'
-VERSION  = 7  # bump on every adapted change; also cache-busts the html URL
+VERSION  = 8  # bump on every adapted change; also cache-busts the html URL
 
 # --- HEAD shim: injected right after <body>, before any app script runs ---
 HEAD = r'''

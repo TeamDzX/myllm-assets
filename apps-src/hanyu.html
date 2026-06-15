@@ -2003,49 +2003,82 @@
         visibility: visible;
     }
 
+    /* Editorial gradient hero header — adapts per mode */
     .practice-modal-header {
         display: flex;
-        align-items: center;
+        align-items: flex-end;
         justify-content: space-between;
-        padding: 12px 20px;
-        background: white;
-        border-bottom: 1px solid var(--gray-200);
+        gap: 14px;
+        padding: calc(env(safe-area-inset-top, 0px) + 18px) 20px 22px;
         position: sticky;
         top: 0;
         z-index: 10;
+        color: white;
+        border: none;
+        box-shadow: 0 12px 28px -16px rgba(0,0,0,0.35);
+        transition: background 0.25s ease;
+    }
+    .practice-modal.mode-character .practice-modal-header {
+        background: linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%);
+    }
+    .practice-modal.mode-sentence .practice-modal-header {
+        background: linear-gradient(135deg, #c026d3 0%, #f97316 100%);
+    }
+    /* Default fallback if no mode class is set yet */
+    .practice-modal .practice-modal-header {
+        background: linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%);
     }
 
     .practice-modal-title {
-        font-size: 18px;
-        font-weight: 700;
-        color: var(--gray-800);
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        min-width: 0;
+        flex: 1;
+    }
+    .practice-modal-eyebrow {
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 1.6px;
+        text-transform: uppercase;
+        color: rgba(255,255,255,0.85);
+    }
+    .practice-modal-name {
+        font-size: 22px;
+        font-weight: 900;
+        line-height: 1.1;
+        color: white;
         display: flex;
         align-items: center;
         gap: 10px;
     }
-
-    .practice-modal-title i {
-        color: var(--primary-color);
+    .practice-modal-name i {
+        font-size: 18px;
+        opacity: 0.85;
+        color: white;
     }
 
     .practice-modal-close {
-        width: 40px;
-        height: 40px;
+        width: 38px;
+        height: 38px;
         border: none;
-        background: var(--gray-100);
+        background: rgba(255,255,255,0.22);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
         border-radius: 50%;
         cursor: pointer;
         display: flex;
         align-items: center;
         justify-content: center;
-        color: var(--gray-600);
-        font-size: 18px;
-        transition: all 0.2s ease;
+        color: white;
+        font-size: 15px;
+        flex-shrink: 0;
+        transition: background 0.18s ease, transform 0.18s ease;
     }
-
-    .practice-modal-close:hover {
-        background: var(--gray-200);
-        color: var(--gray-800);
+    .practice-modal-close:hover,
+    .practice-modal-close:active {
+        background: rgba(255,255,255,0.35);
+        transform: scale(0.96);
     }
 
     .practice-modal-body {
@@ -4217,20 +4250,22 @@ body.keyboard-open .chat-messages{padding-bottom:12px !important;}
         <!-- Practice Tab -->
         <div class="tab-content" id="practiceTab" role="tabpanel" aria-labelledby="tab-practice">
             <!-- Practice Mode Selection Cards -->
-            <div class="practice-mode-grid">
-                <div class="practice-mode-card" onclick="openPracticeModal('character')">
-                    <div class="practice-mode-icon" style="background: linear-gradient(135deg, var(--primary-color), var(--blue-primary));">
-                        <i class="fas fa-language"></i>
-                    </div>
-                    <div class="practice-mode-title">Character Practice</div>
-                    <div class="practice-mode-description">Learn Chinese characters with pinyin, meanings, stroke animations, and spaced repetition</div>
+            <div class="ed-section-header ed-practice-hdr-static">
+                <div>
+                    <div class="eyebrow">PRACTICE</div>
+                    <div class="title">Pick a mode</div>
                 </div>
-                <div class="practice-mode-card" onclick="openPracticeModal('sentence')">
-                    <div class="practice-mode-icon" style="background: linear-gradient(135deg, var(--purple-primary), #a855f7);">
-                        <i class="fas fa-paragraph"></i>
-                    </div>
-                    <div class="practice-mode-title">Sentence Practice</div>
-                    <div class="practice-mode-description">Build sentences by arranging words in the correct order</div>
+            </div>
+            <div class="ed-practice-grid" id="practice-mode-section">
+                <div class="ed-mode-card ed-mode-character" onclick="openPracticeModal('character')">
+                    <div class="ed-mode-icon"><i class="fas fa-language"></i></div>
+                    <div class="ed-mode-title">Character Practice</div>
+                    <div class="ed-mode-sub">Pinyin, meanings, stroke animations &amp; spaced repetition</div>
+                </div>
+                <div class="ed-mode-card ed-mode-sentence" onclick="openPracticeModal('sentence')">
+                    <div class="ed-mode-icon"><i class="fas fa-paragraph"></i></div>
+                    <div class="ed-mode-title">Sentence Practice</div>
+                    <div class="ed-mode-sub">Build sentences by arranging words in order</div>
                 </div>
             </div>
 
@@ -10644,12 +10679,17 @@ body.keyboard-open .chat-messages{padding-bottom:12px !important;}
     function openPracticeModal(mode) {
         currentPracticeMode = mode;
 
-        // Update modal title
+        // Update modal title + mode class (drives gradient header)
         const titleEl = document.getElementById('practiceModalTitle');
+        const modalEl = document.getElementById('practiceModal');
+        if (modalEl) {
+            modalEl.classList.remove('mode-character', 'mode-sentence');
+            modalEl.classList.add(mode === 'sentence' ? 'mode-sentence' : 'mode-character');
+        }
         if (mode === 'character') {
-            titleEl.innerHTML = '<i class="fas fa-language"></i><span>Character Practice</span>';
+            titleEl.innerHTML = '<span class="practice-modal-eyebrow">PRACTICE</span><span class="practice-modal-name"><i class="fas fa-language"></i> Character Practice</span>';
         } else if (mode === 'sentence') {
-            titleEl.innerHTML = '<i class="fas fa-paragraph"></i><span>Sentence Practice</span>';
+            titleEl.innerHTML = '<span class="practice-modal-eyebrow">PRACTICE</span><span class="practice-modal-name"><i class="fas fa-paragraph"></i> Sentence Practice</span>';
         }
 
         // Get content from template
@@ -21484,6 +21524,1783 @@ body.keyboard-open .chat-messages{padding-bottom:12px !important;}
     };
     </script>
 
+    <!-- ============================================================== -->
+    <!-- hanyu-v3 editorial design layer — ported from the iOS app      -->
+    <!-- (bottom tab bar, Today feed, editorial cards & per-tab polish) -->
+    <!-- ============================================================== -->
+    <script>
+    /* Browser-demo shim: lightweight stand-ins for the iOS app's native /
+       Plans subsystem so the editorial Today feed's CTAs work standalone. */
+    (function(){
+        window.Hanyu = window.Hanyu || {};
+        function go(mode){
+            if (typeof switchTab === 'function') switchTab('practice');
+            if (typeof openPracticeModal === 'function') {
+                setTimeout(function(){ openPracticeModal(mode || 'character'); }, 60);
+            }
+        }
+        // Daily-plan / "Start plan" CTA → open character practice
+        if (!Hanyu.openDailyPlan) Hanyu.openDailyPlan = function(){ go('character'); };
+        // Character-of-the-day "Learn it" → jump to that character in practice
+        if (!Hanyu.jumpToChar) Hanyu.jumpToChar = function(ch){
+            try {
+                if (typeof characters !== 'undefined' && characters && ch) {
+                    var i = characters.findIndex(function(c){ return c && c.character === ch; });
+                    if (i >= 0 && typeof currentIndex !== 'undefined') { currentIndex = i; }
+                }
+            } catch(e){}
+            go('character');
+        };
+        // Daily-goal editor → simple prompt persisted to localStorage
+        if (!Hanyu.editGoal) Hanyu.editGoal = function(){
+            try {
+                var cur = parseInt(localStorage.getItem('dailyGoalXp') || '30', 10);
+                var v = prompt('Set your daily XP goal:', cur);
+                if (v !== null) {
+                    var n = parseInt(v, 10);
+                    if (!isNaN(n) && n > 0) {
+                        localStorage.setItem('dailyGoalXp', String(n));
+                        if (window.Hanyu && Hanyu.renderTodayFeed) Hanyu.renderTodayFeed();
+                    }
+                }
+            } catch(e){}
+        };
+        // SRS due items — demo has no spaced-repetition queue surfaced here
+        if (!Hanyu.dueItems) Hanyu.dueItems = function(){ return []; };
+        // AI-tutor mnemonic CTA → open the Tutor tab
+        if (!Hanyu.generateMnemonic) Hanyu.generateMnemonic = function(){
+            if (typeof switchTab === 'function') switchTab('chat');
+        };
+    })();
+    </script>
+    <!-- ================================================================== -->
+    <!-- Wave 3: iOS-style bottom tab bar + App Store "Today" editorial feed -->
+    <!-- ================================================================== -->
+    <style>
+    /* --- Page wash + hide old top nav on iOS app ------------------- */
+    body.hanyu-v3 .top-header { display: none !important; }
+    body.hanyu-v3 {
+        padding-top: env(safe-area-inset-top, 0px);
+        padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 72px);
+        background: linear-gradient(180deg, #fef3c7 0%, #fff7ed 180px, #f9fafb 420px);
+        background-attachment: fixed;
+    }
+    body.dark-mode.hanyu-v3 {
+        background: linear-gradient(180deg, #1e1b4b 0%, #0f172a 240px, #0b1120 520px);
+    }
+
+    /* --- Today header (replaces top nav area on Today tab) ---------- */
+    .today-header {
+        padding: 16px 20px 4px;
+        display: flex; align-items: flex-end; justify-content: space-between;
+        gap: 10px;
+    }
+    .today-header-date {
+        font-size: 13px; font-weight: 800; letter-spacing: 1.2px;
+        color: #ef4444; text-transform: uppercase;
+    }
+    .today-header-title {
+        font-size: 32px; font-weight: 900; color: var(--gray-800);
+        line-height: 1.05; margin-top: 2px;
+    }
+    body.dark-mode .today-header-title { color: #f9fafb; }
+    .today-header-actions { display: flex; gap: 6px; }
+    .today-icon-btn {
+        width: 40px; height: 40px; border-radius: 50%;
+        background: rgba(255,255,255,0.85); backdrop-filter: blur(12px);
+        border: 1px solid rgba(0,0,0,0.06); color: var(--gray-700);
+        display: flex; align-items: center; justify-content: center;
+        cursor: pointer; font-size: 15px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    body.dark-mode .today-icon-btn { background: rgba(30,30,40,0.85); color: #f3f4f6; border-color: rgba(255,255,255,0.1); }
+
+    /* --- Editorial cards -------------------------------------------- */
+    .today-feed { padding: 10px 16px 24px; display: flex; flex-direction: column; gap: 14px; }
+    .ed-card {
+        position: relative; border-radius: 20px; overflow: hidden;
+        box-shadow: 0 12px 28px -12px rgba(0,0,0,0.25);
+        background: white; cursor: pointer;
+        transition: transform 0.18s ease;
+        color: var(--gray-800);
+    }
+    .ed-card:active { transform: scale(0.985); }
+    .ed-card-bleed { color: white; }
+    .ed-card-inner { padding: 22px; position: relative; z-index: 2; }
+    .ed-tag {
+        font-size: 11px; letter-spacing: 1.5px; font-weight: 800;
+        opacity: 0.85; text-transform: uppercase; margin-bottom: 6px;
+    }
+    .ed-title  { font-size: 22px; font-weight: 900; line-height: 1.15; margin-bottom: 4px; }
+    .ed-sub    { font-size: 14px; opacity: 0.85; font-weight: 500; }
+    .ed-meta   { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+    .ed-chip {
+        background: rgba(255,255,255,0.25); backdrop-filter: blur(8px);
+        padding: 6px 12px; border-radius: 999px; font-size: 12px; font-weight: 700;
+    }
+    .ed-card-bleed.dark .ed-chip, .ed-card-bleed .ed-chip { background: rgba(0,0,0,0.25); color: white; }
+    .ed-cta {
+        position: absolute; bottom: 20px; right: 20px;
+        background: white; color: #111827; border-radius: 999px;
+        padding: 8px 16px; font-size: 13px; font-weight: 800;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    }
+
+    /* Hero (Today plan) full-bleed */
+    .ed-hero {
+        min-height: 230px;
+        background: radial-gradient(circle at 80% -10%, #ffcc33 0%, transparent 55%),
+                    linear-gradient(135deg, #ff7e5f 0%, #8b5cf6 100%);
+    }
+    .ed-hero .ed-inner-grid {
+        display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 16px;
+    }
+    .ed-hero .ed-stat { background: rgba(0,0,0,0.22); border-radius: 12px; padding: 10px 12px; }
+    .ed-hero .ed-stat .v { font-size: 22px; font-weight: 900; line-height: 1.1; }
+    .ed-hero .ed-stat .l { font-size: 11px; opacity: 0.85; font-weight: 600; }
+    .ed-hero .ed-bar { margin-top: 12px; background: rgba(0,0,0,0.22); border-radius: 999px; height: 6px; overflow: hidden; }
+    .ed-hero .ed-bar > span { display: block; height: 100%; background: #ffe066; transition: width 0.4s; }
+    .ed-hero .ed-cta-row { display: flex; gap: 8px; margin-top: 16px; }
+    .ed-hero .ed-cta-row button {
+        flex: 1; padding: 11px; border: none; border-radius: 12px; font-weight: 800;
+        font-size: 14px; cursor: pointer; background: white; color: #8b5cf6;
+    }
+    .ed-hero .ed-cta-row .secondary {
+        flex: 0 0 auto; padding: 11px 14px; background: rgba(0,0,0,0.22); color: white;
+    }
+
+    /* Character-of-the-day */
+    /* Today feed cards with generated photo: brand-colour left->right scrim, photo revealed right */
+    .ed-game .card-art, .ed-story .card-art, .ed-tip .card-art {
+        position: absolute; inset: 0; z-index: 0; pointer-events: none;
+        background-size: cover; background-position: center right; background-repeat: no-repeat;
+    }
+    .ed-game .card-art::after, .ed-story .card-art::after, .ed-tip .card-art::after {
+        content: ""; position: absolute; inset: 0;
+    }
+    .ed-story .card-art::after { background: linear-gradient(105deg, #0ea5e9 0%, #6366f1 48%, rgba(99,102,241,0.45) 68%, rgba(99,102,241,0) 100%); }
+    .ed-game  .card-art::after { background: linear-gradient(105deg, #10b981 0%, #059669 48%, rgba(5,150,105,0.45) 68%, rgba(5,150,105,0) 100%); }
+    .ed-tip   .card-art::after { background: linear-gradient(105deg, #f59e0b 0%, #ef4444 48%, rgba(239,68,68,0.45) 68%, rgba(239,68,68,0) 100%); }
+    /* keep the white CTA pill above the artwork */
+    .ed-game .ed-cta, .ed-story .ed-cta, .ed-tip .ed-cta { z-index: 3; }
+
+    .ed-char { background: linear-gradient(135deg, #0f172a, #4c1d95); min-height: 190px; }
+    .ed-char .zi {
+        position: absolute; right: -10px; bottom: -20px; font-size: 220px;
+        font-family: 'Noto Sans SC', serif; font-weight: 700;
+        color: rgba(255,255,255,0.14); line-height: 1; pointer-events: none; user-select: none;
+    }
+
+    /* Story / Game / Tip cards */
+    .ed-story { background: linear-gradient(135deg, #0ea5e9, #6366f1); min-height: 170px; }
+    .ed-game  { background: linear-gradient(135deg, #10b981, #059669); min-height: 170px; }
+    .ed-tip   { background: linear-gradient(135deg, #f59e0b, #ef4444); min-height: 170px; }
+
+    /* ----- Continue / Today's Progress / Due for Review / Practice ed-cards ----- */
+    .ed-continue { background: linear-gradient(135deg, #2563eb, #7c3aed); min-height: 130px; }
+    .ed-continue .ed-icon-tile {
+        position: absolute; left: 22px; top: 22px;
+        width: 44px; height: 44px; border-radius: 12px;
+        background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center;
+        font-size: 20px; color: white;
+    }
+    .ed-continue .ed-card-inner { padding-left: 82px; min-height: 88px; }
+
+    .ed-progress { background: linear-gradient(135deg, #0ea5e9 0%, #14b8a6 60%, #84cc16 100%); }
+    .ed-progress .ed-stat-row {
+        display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 14px;
+    }
+    .ed-progress .ed-stat {
+        background: rgba(0,0,0,0.22); border-radius: 12px; padding: 10px 4px; text-align: center;
+    }
+    .ed-progress .ed-stat .v { font-size: 22px; font-weight: 900; line-height: 1.1; color: white; }
+    .ed-progress .ed-stat .l { font-size: 10px; opacity: 0.9; font-weight: 700; margin-top: 2px; letter-spacing: 0.3px; }
+
+    .ed-review { background: linear-gradient(135deg, #8b5cf6, #ec4899); min-height: 130px; }
+    .ed-review-empty {
+        margin-top: 12px; padding: 14px;
+        background: rgba(255,255,255,0.14); border-radius: 14px;
+        display: flex; align-items: center; gap: 12px;
+        font-size: 14px; font-weight: 600; color: white;
+    }
+    .ed-review-empty .check {
+        width: 32px; height: 32px; border-radius: 50%;
+        background: rgba(255,255,255,0.25); display: flex; align-items: center; justify-content: center;
+        flex-shrink: 0;
+    }
+    .ed-review .ed-tag-meta { font-size: 11px; font-weight: 700; opacity: 0.85; letter-spacing: 0.5px; margin-left: 6px; }
+    .ed-review-chips {
+        display: flex; gap: 8px; overflow-x: auto; margin-top: 12px; padding-bottom: 4px;
+        scrollbar-width: none;
+    }
+    .ed-review-chips::-webkit-scrollbar { display: none; }
+    .ed-review-chip {
+        flex-shrink: 0; width: 56px; padding: 10px 6px;
+        background: rgba(255,255,255,0.18); border-radius: 12px; text-align: center;
+        cursor: pointer; transition: background 0.15s;
+    }
+    .ed-review-chip:active { background: rgba(255,255,255,0.3); }
+    .ed-review-chip .zi { font-size: 22px; font-weight: 800; color: white; line-height: 1.1; }
+    .ed-review-chip .py { font-size: 10px; opacity: 0.85; color: white; font-weight: 700; margin-top: 2px; }
+    .ed-review .ed-cta-row { display: flex; gap: 8px; margin-top: 12px; }
+    .ed-review .ed-cta-row button {
+        flex: 1; padding: 11px; border: none; border-radius: 12px; font-weight: 800;
+        font-size: 14px; cursor: pointer; background: white; color: #8b5cf6;
+    }
+
+    /* Practice mode cards: two side-by-side bold editorial cards */
+    .ed-practice-grid {
+        display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+    }
+    .ed-mode-card {
+        position: relative; border-radius: 20px; padding: 22px 18px;
+        color: white; cursor: pointer; overflow: hidden;
+        box-shadow: 0 12px 28px -12px rgba(0,0,0,0.25);
+        transition: transform 0.18s ease;
+        min-height: 150px;
+        display: flex; flex-direction: column;
+    }
+    .ed-mode-card:active { transform: scale(0.985); }
+    .ed-mode-card .ed-mode-icon {
+        width: 44px; height: 44px; border-radius: 12px;
+        background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center;
+        font-size: 20px; margin-bottom: 14px;
+    }
+    .ed-mode-card .ed-mode-title { font-size: 17px; font-weight: 900; line-height: 1.15; margin-bottom: 4px; }
+    .ed-mode-card .ed-mode-sub { font-size: 12px; opacity: 0.9; font-weight: 500; line-height: 1.35; }
+    .ed-mode-character { background: linear-gradient(135deg, #4f46e5, #06b6d4); }
+    .ed-mode-sentence  { background: linear-gradient(135deg, #c026d3, #f97316); }
+
+    /* Editorial cards directly under #practiceTab (below the today-feed) */
+    #practiceTab > .ed-card,
+    #practiceTab > .plan-hero,
+    #practiceTab > .ed-practice-grid { margin: 14px 16px 0; }
+    /* Inset the Plans screen so its story card & steps align with the rest of the app */
+    body.hanyu-v3 #plansTab { padding: 12px 16px !important; }
+    .plan-step-status { align-self: center; font-size: 12px; font-weight: 700; color: var(--gray-500); }
+    .plan-step-skip { background: none; border: none; color: var(--gray-400); font-size: 12px; cursor: pointer; padding: 8px 2px 0; text-decoration: underline; }
+    /* Reset the ed-section-header's own padding so it aligns with the ed-cards (16px) */
+    #practiceTab > .ed-section-header { padding-left: 16px; padding-right: 16px; }
+
+    /* --- Bottom tab bar --------------------------------------------- */
+    .bottom-tab-bar {
+        position: fixed; left: 0; right: 0; bottom: 0; z-index: 300;
+        background: rgba(255,255,255,0.92); backdrop-filter: saturate(180%) blur(22px);
+        -webkit-backdrop-filter: saturate(180%) blur(22px);
+        border-top: 0.5px solid rgba(0,0,0,0.12);
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+        display: flex;
+    }
+    body.dark-mode .bottom-tab-bar {
+        background: rgba(20,22,28,0.9);
+        border-top-color: rgba(255,255,255,0.08);
+    }
+    .bt-tab {
+        flex: 1; padding: 9px 4px 6px; background: none; border: none;
+        cursor: pointer; color: var(--gray-500);
+        display: flex; flex-direction: column; align-items: center; gap: 3px;
+        font-size: 10px; font-weight: 600; transition: color 0.15s;
+    }
+    .bt-tab i { font-size: 21px; line-height: 1; }
+    .bt-tab.active { color: var(--primary-color); }
+    body.dark-mode .bt-tab { color: #9ca3af; }
+    body.dark-mode .bt-tab.active { color: #8b5cf6; }
+
+    /* --- More sheet -------------------------------------------------- */
+    .more-sheet-mask {
+        position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 310;
+        display: none;
+    }
+    .more-sheet-mask.open { display: block; }
+    .more-sheet {
+        position: fixed; left: 0; right: 0; bottom: 0; z-index: 311;
+        background: white; border-top-left-radius: 22px; border-top-right-radius: 22px;
+        padding: 12px 16px calc(env(safe-area-inset-bottom, 0px) + 24px);
+        transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+        box-shadow: 0 -10px 30px rgba(0,0,0,0.25);
+    }
+    body.dark-mode .more-sheet { background: #1a1d26; color: #f3f4f6; }
+    .more-sheet.open { transform: translateY(0); }
+    .more-sheet-handle {
+        width: 40px; height: 5px; background: var(--gray-300); border-radius: 3px;
+        margin: 4px auto 14px;
+    }
+    .more-row {
+        display: flex; align-items: center; gap: 14px; padding: 14px 12px;
+        background: var(--gray-50); border-radius: 14px; margin-bottom: 8px;
+        cursor: pointer; border: none; width: 100%; text-align: left;
+        color: inherit; font: inherit;
+    }
+    body.dark-mode .more-row { background: rgba(255,255,255,0.05); }
+    .more-row .ico {
+        width: 40px; height: 40px; border-radius: 10px;
+        display: flex; align-items: center; justify-content: center;
+        color: white; font-size: 17px; flex-shrink: 0;
+    }
+    .more-row .txt { flex: 1; }
+    .more-row .t1 { font-weight: 700; font-size: 15px; color: var(--gray-800); }
+    body.dark-mode .more-row .t1 { color: #f3f4f6; }
+    .more-row .t2 { font-size: 12px; color: var(--gray-500); margin-top: 1px; }
+
+    /* --- Hide Wave 1's original gradient dashboard (superseded) ------ */
+    body.hanyu-v3 #today-dashboard { display: none !important; }
+    </style>
+
+    <script>
+    (function(){
+        'use strict';
+
+        document.body.classList.add('hanyu-v3');
+
+        const BT_TABS = [
+            { id: 'practice', label: 'Today',   icon: 'fa-house' },
+            { id: 'games',    label: 'Games',   icon: 'fa-gamepad' },
+            { id: 'stories',  label: 'Stories', icon: 'fa-book-open' },
+            { id: 'chat',     label: 'Tutor',   icon: 'fa-comments' },
+            { id: 'more',     label: 'More',    icon: 'fa-ellipsis' }
+        ];
+
+        const MORE_ROWS = [
+            { id: 'learnmore',  icon: 'fa-brain',          grad: 'linear-gradient(135deg,#ec4899,#f472b6)', t1: 'Topic Lessons',     t2: 'Grammar, vocabulary & culture' },
+            { id: 'worksheets', icon: 'fa-file-pdf',       grad: 'linear-gradient(135deg,#06b6d4,#22d3ee)', t1: 'Worksheets',        t2: 'Printable PDFs' },
+            { id: 'profile',    icon: 'fa-user',           grad: 'linear-gradient(135deg,#4a6bdf,#6366f1)', t1: 'Profile & Settings',t2: 'Stats, streak, preferences' }
+        ];
+
+        // --- Build bottom tab bar ---------------------------------------
+        function buildBottomBar() {
+            if (document.getElementById('bottom-tab-bar')) return;
+            const bar = document.createElement('nav');
+            bar.id = 'bottom-tab-bar';
+            bar.className = 'bottom-tab-bar';
+            bar.setAttribute('role', 'tablist');
+            bar.innerHTML = BT_TABS.map(t => `
+                <button class="bt-tab" data-tab="${t.id}" role="tab" aria-label="${t.label}">
+                    <i class="fas ${t.icon}"></i>
+                    <span>${t.label}</span>
+                </button>
+            `).join('');
+            document.body.appendChild(bar);
+
+            bar.addEventListener('click', (e) => {
+                const btn = e.target.closest('.bt-tab');
+                if (!btn) return;
+                const tab = btn.dataset.tab;
+                if (tab === 'more') { openMoreSheet(); return; }
+                if (typeof switchTab === 'function') switchTab(tab);
+                syncActive(tab);
+            });
+        }
+
+        function syncActive(activeTab) {
+            document.querySelectorAll('.bt-tab').forEach(b => {
+                b.classList.toggle('active', b.dataset.tab === activeTab);
+            });
+        }
+
+        // --- More sheet -------------------------------------------------
+        function buildMoreSheet() {
+            if (document.getElementById('more-sheet')) return;
+            const mask = document.createElement('div');
+            mask.id = 'more-sheet-mask';
+            mask.className = 'more-sheet-mask';
+            mask.onclick = closeMoreSheet;
+
+            const sheet = document.createElement('div');
+            sheet.id = 'more-sheet';
+            sheet.className = 'more-sheet';
+            sheet.innerHTML = `
+              <div class="more-sheet-handle"></div>
+              <div style="font-weight:800;font-size:18px;padding:2px 4px 10px;">More</div>
+              ${MORE_ROWS.map(r => `
+                <button class="more-row" data-more="${r.id}">
+                  <div class="ico" style="background:${r.grad};"><i class="fas ${r.icon}"></i></div>
+                  <div class="txt">
+                    <div class="t1">${r.t1}</div>
+                    <div class="t2">${r.t2}</div>
+                  </div>
+                  <i class="fas fa-chevron-right" style="color:var(--gray-300);"></i>
+                </button>
+              `).join('')}
+            `;
+            document.body.appendChild(mask);
+            document.body.appendChild(sheet);
+
+            sheet.addEventListener('click', (e) => {
+                const row = e.target.closest('.more-row');
+                if (!row) return;
+                const id = row.dataset.more;
+                closeMoreSheet();
+                if (id === 'scan') { if (window.Hanyu?.scanText) window.Hanyu.scanText(); return; }
+                if (typeof switchTab === 'function') switchTab(id);
+                // Don't highlight the More tab after switching
+                syncActive(id);
+            });
+        }
+        function openMoreSheet() {
+            buildMoreSheet();
+            document.getElementById('more-sheet-mask').classList.add('open');
+            requestAnimationFrame(() => {
+                document.getElementById('more-sheet').classList.add('open');
+            });
+        }
+        function closeMoreSheet() {
+            const s = document.getElementById('more-sheet');
+            const m = document.getElementById('more-sheet-mask');
+            if (s) s.classList.remove('open');
+            if (m) setTimeout(() => m.classList.remove('open'), 280);
+        }
+
+        // --- Dynamic (rotating) copy for the Today cards ----------------
+        // Live-tile feel: each rotating card refreshes its copy on every visit,
+        // and one card cross-fades to a fresh variation every few seconds.
+        const TODAY_ROT = {
+            herosub: [
+                'Personalised from your weakest areas',
+                'Built around what you keep forgetting',
+                'Five quick wins, picked just for you',
+                'Today\'s focus: your trickiest characters',
+                'A short, smart session to keep the streak alive'
+            ],
+            game: [
+                { t: 'Warm up with 60-second drills', s: 'Memory Match, Time Attack, Tone Challenge &amp; 15 more' },
+                { t: 'Beat your Time Attack score', s: 'How many characters can you nail in 60 seconds?' },
+                { t: 'Train your ear', s: 'Listening practice &amp; tone challenges are waiting' },
+                { t: 'Quick-fire Memory Match', s: 'Flip, match, remember — 18 games inside' },
+                { t: 'Sharpen your tones', s: 'The Tone Challenge is one tap away' }
+            ],
+            story: [
+                { t: 'Read a story today', s: '27 graded readers · tap any word for help' },
+                { t: 'A 3-minute read awaits', s: 'Bite-size stories pitched at your level' },
+                { t: 'Build fluency by reading', s: 'Graded tales from beginner to HSK 3' },
+                { t: 'Never reach for a dictionary', s: 'Tap any word in 27 stories for an instant gloss' }
+            ],
+            tip: [
+                { t: 'Generate a mnemonic', s: 'A vivid story so today\'s character sticks' },
+                { t: 'Ask your AI tutor anything', s: 'Grammar, tones, usage — instant answers' },
+                { t: 'Stuck on a character?', s: 'Get a memory hook written just for you' },
+                { t: 'Practise a real conversation', s: 'Roleplay ordering food with your tutor' }
+            ]
+        };
+        function rotPick(a) { return a[Math.floor(Math.random() * a.length)]; }
+        function rotFadeSet(id, text) {
+            const el = document.getElementById(id);
+            if (!el || el.innerHTML === text) return;
+            el.style.transition = 'opacity .25s ease';
+            el.style.opacity = '0';
+            setTimeout(function(){ el.innerHTML = text; el.style.opacity = '1'; }, 250);
+        }
+        const ROT_ORDER = ['game', 'story', 'tip', 'herosub'];
+        let _todayRotTimer = null, _rotIdx = 0;
+        function startTodayRotation() {
+            if (_todayRotTimer) clearInterval(_todayRotTimer);
+            _todayRotTimer = setInterval(function() {
+                if (document.hidden) return;
+                // Only animate while the Today tab is actually on screen.
+                const pt = document.getElementById('practiceTab');
+                if (!pt || pt.classList.contains('hidden')) return;
+                const key = ROT_ORDER[_rotIdx % ROT_ORDER.length]; _rotIdx++;
+                if (key === 'herosub') {
+                    rotFadeSet('ed-rot-herosub', rotPick(TODAY_ROT.herosub));
+                } else {
+                    const v = rotPick(TODAY_ROT[key]);
+                    rotFadeSet('ed-rot-' + key + '-t', v.t);
+                    rotFadeSet('ed-rot-' + key + '-s', v.s);
+                }
+            }, 8000);
+        }
+
+        // --- New Today editorial feed ----------------------------------
+        function renderTodayFeed() {
+            const practiceTab = document.getElementById('practiceTab');
+            if (!practiceTab) return;
+            let feed = document.getElementById('today-feed');
+            if (!feed) {
+                feed = document.createElement('div');
+                feed.id = 'today-feed';
+                practiceTab.insertBefore(feed, practiceTab.firstChild);
+            }
+
+            const streak = parseInt(localStorage.getItem('streak') || '0', 10);
+            const due = (window.Hanyu?.dueItems?.() || []);
+            const goal = parseInt(localStorage.getItem('dailyGoalXp') || '30', 10);
+            const xp = xpToday();
+            const pct = Math.min(100, Math.round((xp / goal) * 100));
+            const cotd = pickCharacterOfTheDay();
+            const dateStr = new Date().toLocaleDateString(undefined,
+                { weekday: 'long', day: 'numeric', month: 'long' }).toUpperCase();
+
+            // Initial random variation for the rotating cards (fresh each visit).
+            const rHero = rotPick(TODAY_ROT.herosub);
+            const rGame = rotPick(TODAY_ROT.game);
+            const rStory = rotPick(TODAY_ROT.story);
+            const rTip = rotPick(TODAY_ROT.tip);
+
+            feed.innerHTML = `
+              <div class="today-header">
+                <div>
+                  <div class="today-header-date">${dateStr}</div>
+                  <div class="today-header-title">Good ${greet()}</div>
+                </div>
+                <div class="today-header-actions">
+                  ${window.Hanyu?.scanText ? `<button class="today-icon-btn" onclick="Hanyu.scanText()" aria-label="Scan text"><i class="fas fa-camera"></i></button>` : ''}
+                  <button class="today-icon-btn" onclick="if(typeof toggleGlobalSearch==='function') toggleGlobalSearch()" aria-label="Search"><i class="fas fa-search"></i></button>
+                </div>
+              </div>
+
+              <div class="today-feed">
+                <!-- HERO: Today's plan -->
+                <div class="ed-card ed-card-bleed ed-hero" onclick="Hanyu.openDailyPlan()">
+                  <div class="ed-card-inner">
+                    <div class="ed-tag">TODAY · YOUR PLAN</div>
+                    <div class="ed-title">Your 10-minute session</div>
+                    <div class="ed-sub" id="ed-rot-herosub">${rHero}</div>
+                    <div class="ed-inner-grid">
+                      <div class="ed-stat"><div class="v"><i class="fas fa-fire" style="color:#ffe066;"></i> ${streak}</div><div class="l">day streak</div></div>
+                      <div class="ed-stat"><div class="v">${due.length}</div><div class="l">due for review</div></div>
+                    </div>
+                    <div class="ed-bar"><span style="width:${pct}%;"></span></div>
+                    <div style="font-size:11px;opacity:0.85;font-weight:700;margin-top:6px;">${xp} / ${goal} XP today</div>
+                    <div class="ed-cta-row">
+                      <button onclick="event.stopPropagation();Hanyu.openDailyPlan()"><i class="fas fa-bolt"></i> Start plan</button>
+                      <button class="secondary" onclick="event.stopPropagation();Hanyu.editGoal()" aria-label="Edit goal"><i class="fas fa-cog"></i></button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- CHAR OF THE DAY -->
+                ${cotd ? `
+                <div class="ed-card ed-card-bleed ed-char" onclick="Hanyu.jumpToChar('${(cotd.character||'').replace(/'/g,"\\'")}')">
+                  <div class="zi">${cotd.character}</div>
+                  <div class="ed-card-inner">
+                    <div class="ed-tag">CHARACTER OF THE DAY</div>
+                    <div class="ed-title" style="font-family:'Noto Sans SC',serif;font-size:28px;">${cotd.character} · ${cotd.pinyin}</div>
+                    <div class="ed-sub">${cotd.meaning}</div>
+                    <div class="ed-meta">
+                      <span class="ed-chip">HSK ${cotd.hsk || '?'}</span>
+                      <span class="ed-chip">${cotd.strokes || '?'} strokes</span>
+                    </div>
+                  </div>
+                  <div class="ed-cta">Learn it →</div>
+                </div>` : ''}
+
+                <!-- GAME PICK -->
+                <div class="ed-card ed-card-bleed ed-game" onclick="switchTab('games')">
+                  <div class="card-art" style="background-image:url('img/today/game.jpg')"></div>
+                  <div class="ed-card-inner">
+                    <div class="ed-tag">TRY A GAME</div>
+                    <div class="ed-title" id="ed-rot-game-t">${rGame.t}</div>
+                    <div class="ed-sub" id="ed-rot-game-s">${rGame.s}</div>
+                  </div>
+                  <div class="ed-cta">Play →</div>
+                </div>
+
+                <!-- STORY PICK -->
+                <div class="ed-card ed-card-bleed ed-story" onclick="switchTab('stories')">
+                  <div class="card-art" style="background-image:url('img/today/reading.jpg')"></div>
+                  <div class="ed-card-inner">
+                    <div class="ed-tag">READING</div>
+                    <div class="ed-title" id="ed-rot-story-t">${rStory.t}</div>
+                    <div class="ed-sub" id="ed-rot-story-s">${rStory.s}</div>
+                  </div>
+                  <div class="ed-cta">Open →</div>
+                </div>
+
+                <!-- TIP / AI -->
+                <div class="ed-card ed-card-bleed ed-tip" onclick="Hanyu.generateMnemonic && Hanyu.generateMnemonic('${(cotd?.character||'好').replace(/'/g,"\\'")}','${(cotd?.pinyin||'hǎo').replace(/'/g,"\\'")}','${(cotd?.meaning||'good').replace(/'/g,"\\'")}')">
+                  <div class="card-art" style="background-image:url('img/today/tutor.jpg')"></div>
+                  <div class="ed-card-inner">
+                    <div class="ed-tag">AI TUTOR</div>
+                    <div class="ed-title" id="ed-rot-tip-t">${rTip.t}</div>
+                    <div class="ed-sub" id="ed-rot-tip-s">${rTip.s}</div>
+                  </div>
+                  <div class="ed-cta"><i class="fas fa-wand-magic-sparkles"></i> Create</div>
+                </div>
+              </div>
+            `;
+
+            startTodayRotation();
+        }
+
+        function greet() {
+            const h = new Date().getHours();
+            if (h < 5)  return 'night';
+            if (h < 12) return 'morning';
+            if (h < 18) return 'afternoon';
+            return 'evening';
+        }
+
+        function xpToday() {
+            try {
+                const m = JSON.parse(localStorage.getItem('xpByDate') || '{}');
+                return m[new Date().toISOString().slice(0,10)] || 0;
+            } catch(e) { return 0; }
+        }
+
+        function pickCharacterOfTheDay() {
+            if (typeof characters === 'undefined' || !characters.length) return null;
+            // Seeded by date so the character is stable for the day
+            const day = Math.floor(Date.now() / 86400000);
+            return characters[day % characters.length];
+        }
+
+        // --- Boot ------------------------------------------------------
+        function boot() {
+            buildBottomBar();
+            renderTodayFeed();
+            // Default active = whatever tab is currently open (practice by default)
+            const currentActive =
+                document.querySelector('.tab-content:not(.hidden)')?.id?.replace(/Tab$/, '') || 'practice';
+            const known = BT_TABS.find(t => t.id === currentActive);
+            syncActive(known ? currentActive : 'more');
+
+            // Hook switchTab so bottom bar stays in sync when other code calls it
+            if (typeof switchTab === 'function' && !switchTab.__v3wrapped) {
+                const orig = switchTab;
+                window.switchTab = function(name) {
+                    const r = orig.apply(this, arguments);
+                    const known = BT_TABS.find(t => t.id === name);
+                    syncActive(known ? name : 'more');
+                    if (name === 'practice') setTimeout(renderTodayFeed, 30);
+                    return r;
+                };
+                window.switchTab.__v3wrapped = true;
+            }
+
+            // Keep the Today feed fresh on visibility
+            document.addEventListener('visibilitychange', () => {
+                if (!document.hidden) renderTodayFeed();
+            });
+        }
+
+        // Expose for debugging
+        window.Hanyu = Object.assign(window.Hanyu || {}, {
+            renderTodayFeed,
+            openMore: openMoreSheet
+        });
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', boot);
+        } else {
+            boot();
+        }
+    })();
+    </script>
+    <!-- ================================================================== -->
+    <!-- Wave 4: Apply App Store editorial style to every tab                -->
+    <!-- ================================================================== -->
+    <style>
+    /* Shared page hero header for every tab */
+    .page-hero {
+        padding: 14px 20px 6px;
+        display: flex; align-items: flex-end; justify-content: space-between; gap: 10px;
+    }
+    .page-hero .ph-tag {
+        font-size: 12px; font-weight: 800; letter-spacing: 1.2px;
+        text-transform: uppercase; opacity: 0.85;
+    }
+    .page-hero .ph-title {
+        font-size: 30px; font-weight: 900; color: var(--gray-800); line-height: 1.05;
+        margin-top: 2px;
+    }
+    body.dark-mode .page-hero .ph-title { color: #f9fafb; }
+
+    /* Hide the legacy small "lesson-type" chip where we've added a page hero */
+    body.hanyu-v3 #gamesTab       > .lesson-type,
+    body.hanyu-v3 #certTab        > .lesson-type,
+    body.hanyu-v3 #profileTab     > .lesson-type,
+    body.hanyu-v3 #worksheetsTab  > .lesson-type,
+    body.hanyu-v3 #learnmoreTab   > .lesson-type { display: none !important; }
+
+    /* Editorial upgrade: game cards → bigger, more breathable */
+    body.hanyu-v3 .game-grid {
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)) !important;
+        gap: 14px !important;
+    }
+    body.hanyu-v3 .game-card {
+        border-radius: 20px !important;
+        padding: 22px !important;
+        box-shadow: 0 12px 28px -14px rgba(0,0,0,0.25) !important;
+        border: 1px solid rgba(0,0,0,0.04) !important;
+        transition: transform 0.18s ease !important;
+    }
+    body.hanyu-v3 .game-card:active { transform: scale(0.985); }
+    body.hanyu-v3 .game-card .game-icon {
+        width: 52px !important; height: 52px !important;
+        border-radius: 14px !important; font-size: 22px !important;
+        box-shadow: 0 6px 16px -6px rgba(0,0,0,0.25);
+    }
+    body.hanyu-v3 .game-card .game-title {
+        font-size: 18px !important; font-weight: 800 !important; margin-top: 12px !important;
+    }
+    body.hanyu-v3 .game-card .game-description {
+        font-size: 13px !important; color: var(--gray-500) !important;
+    }
+    body.hanyu-v3 .game-card .play-button {
+        border-radius: 12px !important;
+        font-weight: 700 !important;
+    }
+    /* Games tab: abstract 'essence' photo with left->right reveal (left-aligned) */
+    #gamesTab .game-card.has-art {
+        position: relative; overflow: hidden; isolation: isolate; text-align: left;
+    }
+    #gamesTab .game-card.has-art > *:not(.card-art) { position: relative; z-index: 1; }
+    #gamesTab .game-card.has-art .game-icon { margin: 0 0 12px 0; }
+    #gamesTab .game-card.has-art .play-button { width: auto; display: inline-block; padding: 11px 26px; }
+    #gamesTab .game-card .card-art {
+        position: absolute; inset: 0; z-index: 0; pointer-events: none;
+        background-size: cover; background-position: center right; background-repeat: no-repeat;
+    }
+    #gamesTab .game-card .card-art::after {
+        content: ""; position: absolute; inset: 0;
+        background: linear-gradient(100deg, #fff 0%, #fff 54%, rgba(255,255,255,0.5) 74%, rgba(255,255,255,0) 100%);
+    }
+    body.dark-mode #gamesTab .game-card .card-art::after {
+        background: linear-gradient(100deg, #1e293b 0%, #1e293b 54%, rgba(30,41,59,0.5) 74%, rgba(30,41,59,0) 100%);
+    }
+
+    /* HSK cert cards → full-bleed gradient tiles */
+    body.hanyu-v3 #cert-level-select .game-grid {
+        grid-template-columns: 1fr !important;
+        max-width: 560px; margin: 0 auto;
+    }
+    body.hanyu-v3 #cert-level-select .game-card {
+        color: white !important;
+        overflow: hidden; position: relative;
+    }
+    body.hanyu-v3 #cert-level-select .game-card:nth-child(1) { background: linear-gradient(135deg,#059669,#34d399); }
+    body.hanyu-v3 #cert-level-select .game-card:nth-child(2) { background: linear-gradient(135deg,#d97706,#f59e0b); }
+    body.hanyu-v3 #cert-level-select .game-card:nth-child(3) { background: linear-gradient(135deg,#b91c1c,#ef4444); }
+    body.hanyu-v3 #cert-level-select .game-card .game-icon {
+        background: rgba(255,255,255,0.22) !important;
+        backdrop-filter: blur(6px);
+    }
+    body.hanyu-v3 #cert-level-select .game-card .game-title { color: white !important; font-size: 22px !important; }
+    body.hanyu-v3 #cert-level-select .game-card .game-description { color: rgba(255,255,255,0.85) !important; }
+    body.hanyu-v3 #cert-level-select .game-card .play-button {
+        background: white !important; color: #111827 !important;
+    }
+
+    /* ===== HSK exam cards: relevant photo + brand-colour scrim ===== */
+    body.hanyu-v3 #cert-level-select .game-card { isolation: isolate; }
+    body.hanyu-v3 #cert-level-select .game-card > *:not(.card-art) { position: relative; z-index: 1; }
+    body.hanyu-v3 #cert-level-select .game-card .card-art {
+        position: absolute; inset: 0; z-index: 0;
+        background-size: cover; background-position: center right;
+        background-repeat: no-repeat; pointer-events: none; border-radius: inherit;
+    }
+    /* colour stays opaque on the left for white-text legibility, fades to reveal the photo on the right */
+    body.hanyu-v3 #cert-level-select .game-card .card-art::after {
+        content: ""; position: absolute; inset: 0;
+    }
+    body.hanyu-v3 #cert-level-select .game-card:nth-child(1) .card-art::after {
+        background: linear-gradient(100deg, #059669 0%, #059669 44%, rgba(5,150,105,0.55) 66%, rgba(5,150,105,0.12) 100%);
+    }
+    body.hanyu-v3 #cert-level-select .game-card:nth-child(2) .card-art::after {
+        background: linear-gradient(100deg, #d97706 0%, #d97706 44%, rgba(217,119,6,0.55) 66%, rgba(217,119,6,0.12) 100%);
+    }
+    body.hanyu-v3 #cert-level-select .game-card:nth-child(3) .card-art::after {
+        background: linear-gradient(100deg, #b91c1c 0%, #b91c1c 44%, rgba(185,28,28,0.55) 66%, rgba(185,28,28,0.12) 100%);
+    }
+
+    /* Story library header → editorial */
+    body.hanyu-v3 .story-library-header {
+        padding: 4px 20px 6px !important; text-align: left !important; background: none !important;
+        margin-bottom: 12px !important;
+    }
+    body.hanyu-v3 .story-library-header h2 {
+        font-size: 30px !important; font-weight: 900 !important;
+        margin: 0 !important; color: var(--gray-800) !important;
+    }
+    body.dark-mode.hanyu-v3 .story-library-header h2 { color: #f9fafb !important; }
+    body.hanyu-v3 .story-library-header p {
+        font-size: 14px !important; color: var(--gray-500) !important; margin-top: 4px !important;
+    }
+
+    /* Profile stats → editorial */
+    body.hanyu-v3 .stats-grid {
+        gap: 12px !important;
+    }
+    body.hanyu-v3 .stat-card {
+        border-radius: 18px !important; padding: 18px !important;
+        box-shadow: 0 8px 20px -10px rgba(0,0,0,0.2) !important;
+    }
+
+    /* Learn More cards → editorial */
+    body.hanyu-v3 .more-section-card {
+        border-radius: 18px !important; padding: 18px !important;
+        box-shadow: 0 8px 20px -12px rgba(0,0,0,0.18) !important;
+    }
+    body.hanyu-v3 .more-section-card-icon {
+        width: 48px !important; height: 48px !important; border-radius: 13px !important;
+        font-size: 20px !important;
+    }
+    body.hanyu-v3 .more-section-card-title {
+        font-size: 17px !important; font-weight: 800 !important;
+    }
+
+    /* Chat tab → editorial chat shell */
+    body.hanyu-v3 .chat-tab-container { padding-top: 4px !important; }
+    body.hanyu-v3 .chat-header {
+        padding: 16px 20px !important; background: transparent !important; border-bottom: none !important;
+    }
+    body.hanyu-v3 .chat-header-title h3 {
+        font-size: 30px !important; font-weight: 900 !important;
+        background: linear-gradient(135deg, #8b5cf6, #ef4444);
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    body.hanyu-v3 .chat-header-title p {
+        font-size: 13px !important; letter-spacing: 1.2px !important; font-weight: 800 !important;
+        text-transform: uppercase !important; color: var(--gray-500) !important;
+        margin-top: 2px !important;
+    }
+
+    /* Main content padding fine-tune to breathe on small screens */
+    body.hanyu-v3 .main-content { padding: 0 !important; }
+    body.hanyu-v3 .tab-content { padding: 0 !important; }
+    body.hanyu-v3 .game-grid,
+    body.hanyu-v3 .more-section-grid,
+    body.hanyu-v3 #storyGrid {
+        padding: 0 16px !important;
+    }
+    </style>
+
+    <script>
+    (function(){
+        'use strict';
+
+        // Page hero definitions per tab
+        const HEROES = {
+            gamesTab: {
+                tag: 'PLAY · 18 GAMES', tagColor: '#10b981',
+                title: 'Games', sub: 'Bite-sized drills that reinforce what you\'ve learned'
+            },
+            storiesTab: {
+                tag: 'READING · 27 STORIES', tagColor: '#0ea5e9',
+                title: 'Stories', sub: 'Graded readers — tap any word for instant lookup'
+            },
+            chatTab: {
+                tag: 'AI TUTOR · APPLE INTELLIGENCE', tagColor: '#8b5cf6',
+                title: '中文老师', sub: 'Your on-device Chinese tutor'
+            },
+            certTab: {
+                tag: 'CERTIFICATION · HSK 1–3', tagColor: '#ef4444',
+                title: 'Take an exam', sub: '30 questions · real HSK format · downloadable certificate'
+            },
+            worksheetsTab: {
+                tag: 'PRINT · PDF', tagColor: '#06b6d4',
+                title: 'Worksheets', sub: 'Generate printable exercises for any character set'
+            },
+            learnmoreTab: {
+                tag: 'LESSONS · 11 TOPICS', tagColor: '#ec4899',
+                title: 'Topics', sub: 'Grammar, vocabulary, culture and everyday scenarios'
+            },
+            profileTab: {
+                tag: 'YOU', tagColor: '#4a6bdf',
+                title: 'Your progress', sub: 'Stats, streak, certificates and settings'
+            }
+        };
+
+        function injectHero(tabId, cfg) {
+            const tab = document.getElementById(tabId);
+            if (!tab) return;
+            if (tab.querySelector(':scope > .page-hero')) return;
+            const hero = document.createElement('div');
+            hero.className = 'page-hero';
+            hero.innerHTML = `
+              <div>
+                <div class="ph-tag" style="color:${cfg.tagColor};">${cfg.tag}</div>
+                <div class="ph-title">${cfg.title}</div>
+                ${cfg.sub ? `<div style="font-size:14px;color:var(--gray-500);margin-top:6px;max-width:480px;">${cfg.sub}</div>` : ''}
+              </div>
+              <button class="today-icon-btn" onclick="if(typeof toggleGlobalSearch==='function')toggleGlobalSearch()" aria-label="Search" title="Search">
+                <i class="fas fa-search"></i>
+              </button>`;
+            tab.insertBefore(hero, tab.firstChild);
+        }
+
+        // Keep the Stories hero count in sync with the live library (so packs
+        // that add stories are reflected). Also fixes the previously-hardcoded 27.
+        function refreshStoriesHero() {
+            const tab = document.getElementById('storiesTab');
+            if (!tab) return;
+            const tagEl = tab.querySelector('.page-hero .ph-tag');
+            if (!tagEl) return;
+            const n = (typeof storyLibrary !== 'undefined' && storyLibrary) ? storyLibrary.length : 27;
+            tagEl.textContent = 'READING · ' + n + ' STORIES';
+        }
+        window.__refreshStoriesHero = refreshStoriesHero;
+
+        function applyAll() {
+            Object.keys(HEROES).forEach(id => injectHero(id, HEROES[id]));
+            refreshStoriesHero();
+        }
+
+        // Re-apply on tab switches (in case a tab re-renders its contents)
+        if (typeof switchTab === 'function' && !switchTab.__v4wrapped) {
+            const orig = switchTab;
+            window.switchTab = function(name) {
+                const r = orig.apply(this, arguments);
+                setTimeout(applyAll, 30);
+                return r;
+            };
+            window.switchTab.__v4wrapped = true;
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', applyAll);
+        } else {
+            applyAll();
+        }
+    })();
+    </script>
+    <!-- ================================================================== -->
+    <!-- Wave 6: Editorial polish for Games, Stories, Tutor & Today bottom   -->
+    <!-- ================================================================== -->
+    <style>
+    /* Section divider inside a tab — matches Today's editorial rhythm */
+    .ed-section-header {
+        padding: 22px 20px 6px; display: flex; align-items: flex-end; justify-content: space-between;
+    }
+    .ed-section-header .eyebrow {
+        font-size: 11px; letter-spacing: 1.5px; font-weight: 800;
+        color: var(--gray-500); text-transform: uppercase;
+    }
+    .ed-section-header .title {
+        font-size: 22px; font-weight: 900; color: var(--gray-800); line-height: 1.1;
+    }
+    body.dark-mode .ed-section-header .title { color: #f9fafb; }
+    .ed-section-header .see-all {
+        font-size: 13px; font-weight: 700; color: var(--primary-color);
+        background: none; border: none; cursor: pointer;
+    }
+
+    /* Games: featured hero card */
+    .games-featured {
+        margin: 0 16px 4px; border-radius: 22px; overflow: hidden;
+        color: white; position: relative; min-height: 200px; cursor: pointer;
+        box-shadow: 0 14px 32px -14px rgba(0,0,0,0.3);
+        transition: transform 0.18s ease;
+    }
+    .games-featured:active { transform: scale(0.985); }
+    .games-featured .inner { padding: 26px; position: relative; z-index: 2; }
+    .games-featured .tag {
+        font-size: 11px; letter-spacing: 1.5px; font-weight: 800; text-transform: uppercase; opacity: 0.85;
+    }
+    .games-featured .t { font-size: 26px; font-weight: 900; margin: 4px 0 6px; line-height: 1.1; }
+    .games-featured .s { font-size: 14px; opacity: 0.9; max-width: 420px; }
+    .games-featured .pill {
+        position: absolute; right: 22px; bottom: 22px;
+        background: white; color: #111827; padding: 10px 18px; border-radius: 999px;
+        font-weight: 800; font-size: 13px; box-shadow: 0 4px 10px rgba(0,0,0,0.18);
+    }
+    .games-featured .watermark {
+        position: absolute; right: -20px; bottom: -40px; font-size: 190px; line-height: 1;
+        opacity: 0.14; pointer-events: none;
+    }
+
+    /* Games: horizontal scroll rails (flex — grid-auto-flow was flaky on iOS) */
+    body.hanyu-v3 #gamesTab .ed-rail {
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        gap: 12px !important;
+        padding: 0 16px 4px !important;
+        overflow-x: auto !important;
+        overflow-y: visible !important;
+        scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+    }
+    body.hanyu-v3 #gamesTab .ed-rail::-webkit-scrollbar { display: none; }
+    body.hanyu-v3 #gamesTab .ed-rail > .game-card {
+        flex: 0 0 78% !important;
+        max-width: 320px;
+        scroll-snap-align: start;
+        margin: 0 !important;
+    }
+    @media (min-width: 700px) {
+        body.hanyu-v3 #gamesTab .ed-rail > .game-card { flex: 0 0 38% !important; }
+    }
+    /* Outer container should NOT be a grid — it holds hero + headers + rails */
+    body.hanyu-v3 #gamesTab .game-grid[data-ed-layout="1"] {
+        display: block !important;
+        grid-template-columns: unset !important;
+        gap: 0 !important;
+        padding: 0 !important;
+    }
+
+    /* Chat input was hiding behind the new bottom tab bar. Recompute height
+       to allow for the bar (72px) + safe-area insets. */
+    body.hanyu-v3 .chat-tab-container {
+        height: calc(100vh - 72px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)) !important;
+        padding-top: 4px !important;
+        padding-bottom: 8px !important;
+    }
+
+    /* Stories: featured story hero */
+    .story-featured {
+        margin: 0 16px 4px; border-radius: 22px; overflow: hidden;
+        color: white; position: relative; min-height: 220px; cursor: pointer;
+        box-shadow: 0 14px 32px -14px rgba(0,0,0,0.3);
+        background: linear-gradient(135deg,#0f172a 0%, #334155 60%, #6366f1 100%);
+    }
+    .story-featured .inner { padding: 26px; position: relative; z-index: 2; }
+    .story-featured .theme {
+        position: absolute; right: -10px; bottom: -30px; font-size: 200px; line-height: 1;
+        opacity: 0.22;
+    }
+    .story-featured .tag { font-size: 11px; letter-spacing: 1.5px; font-weight: 800; opacity: 0.85; text-transform: uppercase; }
+    .story-featured .t  { font-size: 28px; font-weight: 900; margin: 4px 0 4px; font-family: 'Noto Sans SC', serif; }
+    .story-featured .p  { font-size: 14px; opacity: 0.9; }
+    .story-featured .en { font-size: 13px; opacity: 0.75; margin-top: 2px; }
+    .story-featured .chips { display: flex; gap: 6px; margin-top: 14px; flex-wrap: wrap; }
+    .story-featured .chip { background: rgba(255,255,255,0.22); padding: 6px 12px; border-radius: 999px; font-size: 12px; font-weight: 700; }
+    .story-featured .pill {
+        position: absolute; right: 22px; bottom: 22px;
+        background: white; color: #111827; padding: 10px 18px; border-radius: 999px;
+        font-weight: 800; font-size: 13px;
+    }
+
+    /* Stories: style story cards with a stronger visual */
+    body.hanyu-v3 #storyGrid {
+        display: grid !important;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)) !important;
+        gap: 12px !important;
+        padding: 0 16px 0 !important;
+    }
+    body.hanyu-v3 .story-card-thumb {
+        border-radius: 18px !important;
+        padding: 18px !important;
+        background: linear-gradient(135deg, #ffffff, #f8fafc);
+        box-shadow: 0 8px 20px -12px rgba(0,0,0,0.2);
+        border: 1px solid rgba(0,0,0,0.05);
+        transition: transform 0.15s ease;
+    }
+    body.hanyu-v3 .story-card-thumb:active { transform: scale(0.98); }
+    body.hanyu-v3 .story-theme-icon {
+        font-size: 40px !important; line-height: 1 !important; margin-bottom: 8px !important;
+    }
+
+    /* ===== Story card background art + left->right legibility gradient ===== */
+    body.hanyu-v3 .story-card-thumb { isolation: isolate; }
+    /* keep all card content above the artwork */
+    .story-card-thumb > *:not(.card-art) { position: relative; z-index: 1; }
+    .story-card-thumb .card-art {
+        position: absolute; inset: 0; z-index: 0;
+        background-size: cover;
+        background-position: center right;
+        background-repeat: no-repeat;
+        pointer-events: none;
+        border-radius: inherit;
+    }
+    /* solid card colour on the left fading to clear so the picture shows on the right */
+    .story-card-thumb .card-art::after {
+        content: ""; position: absolute; inset: 0;
+        background: linear-gradient(100deg,
+            #ffffff 0%, #ffffff 42%,
+            rgba(255,255,255,0.6) 62%,
+            rgba(255,255,255,0) 92%);
+    }
+    body.dark-mode .story-card-thumb .card-art::after {
+        background: linear-gradient(100deg,
+            #1e293b 0%, #1e293b 42%,
+            rgba(30,41,59,0.6) 62%,
+            rgba(30,41,59,0) 92%);
+    }
+
+    /* Tutor: welcome hero card */
+    .tutor-hero {
+        margin: 0 16px 10px; border-radius: 22px; overflow: hidden;
+        background: linear-gradient(135deg, #8b5cf6 0%, #ef4444 100%);
+        color: white; padding: 24px; position: relative; min-height: 160px;
+        box-shadow: 0 14px 32px -14px rgba(139,92,246,0.4);
+    }
+    .tutor-hero .eyebrow { font-size: 11px; letter-spacing: 1.5px; font-weight: 800; opacity: 0.85; text-transform: uppercase; }
+    .tutor-hero h3 { font-family: 'Noto Sans SC', serif; font-size: 34px; font-weight: 900; margin: 2px 0 6px; }
+    .tutor-hero p { font-size: 14px; opacity: 0.9; max-width: 420px; line-height: 1.55; }
+    .tutor-hero .wm {
+        position: absolute; right: -8px; bottom: -30px; font-size: 180px;
+        font-family: 'Noto Sans SC', serif; opacity: 0.14; line-height: 1;
+    }
+    .tutor-suggestions {
+        padding: 4px 16px 12px; display: flex; gap: 8px; flex-wrap: wrap;
+    }
+    .tutor-sugg {
+        padding: 9px 14px; border-radius: 999px; font-size: 13px; font-weight: 700;
+        background: white; color: var(--gray-700); border: 1px solid rgba(0,0,0,0.06);
+        cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+    }
+    body.dark-mode .tutor-sugg { background: rgba(255,255,255,0.08); color: #f3f4f6; border-color: rgba(255,255,255,0.1); }
+
+    /* Today bottom: legacy hide rules are no longer needed — all sections
+       below the today-feed are now ed-card editorial cards. */
+    </style>
+
+    <script>
+    (function(){
+        'use strict';
+
+        // ---- Day-seed (stable for a given date) -----------------------
+        function dayIdx() { return Math.floor(Date.now() / 86400000); }
+
+        // ---- Games: categories + featured ----------------------------
+        const CATEGORIES = [
+            { key: 'listen',   title: 'Listen & Speak',    sub: 'Train your ear and your tongue',
+              calls: ['startParrotMode','openShadowing','Hanyu.openShadowing','startListeningGame','startAudioDictation','startTonePractice'] },
+            { key: 'recall',   title: 'Vocabulary & Recall', sub: 'Drill characters into long-term memory',
+              calls: ['startMemoryGame','startQuizMode','startTimeAttack','startSpeedDrill','startMemoryChain','startProgressiveFade'] },
+            { key: 'writing',  title: 'Writing & Strokes', sub: 'Master the pen, one stroke at a time',
+              calls: ['startStrokeChallenge','startStrokeCountGame','startStrokeTypeTrainer','startMissingStroke','startWriteAndEarn'] },
+            { key: 'structure',title: 'Character Structure', sub: 'Radicals, components and sentence build',
+              calls: ['startRadicalHunt','startSimilarCharDrill','startCharacterCombo','startPinyinTyping','startSentenceBuilder'] }
+        ];
+
+        const FEATURED_POOL = [
+            { onclick: 'startParrotMode()', tag: 'PRONUNCIATION', title: 'Parrot Mode',
+              sub: 'Hear it. Repeat it. Get instant tone-by-tone feedback.',
+              watermark: '🦜', grad: 'linear-gradient(135deg,#f59e0b 0%,#ef4444 100%)' },
+            { onclick: 'startMemoryGame()', tag: 'CLASSIC', title: 'Memory Match',
+              sub: 'Match Chinese characters with their meanings. A 3-minute brain workout.',
+              watermark: '🧠', grad: 'linear-gradient(135deg,#059669 0%,#0ea5e9 100%)' },
+            { onclick: 'startQuizMode()', tag: 'DAILY DRILL', title: 'Quiz Mode',
+              sub: 'Test your recall across characters, pinyin and meanings.',
+              watermark: '🎯', grad: 'linear-gradient(135deg,#ec4899 0%,#8b5cf6 100%)' },
+            { onclick: 'startWriteAndEarn()', tag: 'WRITING', title: 'Write & Earn',
+              sub: 'Practise your writing on the most-needed characters — earn XP as you go.',
+              watermark: '✍️', grad: 'linear-gradient(135deg,#d97706 0%,#8b5cf6 100%)' }
+        ];
+
+        function layoutGamesEditorial() {
+            const tab = document.getElementById('gamesTab');
+            if (!tab) return;
+            const grid = tab.querySelector('.game-grid');
+            if (!grid || grid.dataset.edLayout === '1') return;
+
+            // Collect original cards by onclick function name
+            const cards = Array.from(grid.querySelectorAll('.game-card'));
+            const byKey = {};
+            CATEGORIES.forEach(c => byKey[c.key] = []);
+            const uncategorised = [];
+            cards.forEach(card => {
+                const onclick = (card.getAttribute('onclick') || '').trim();
+                const match = CATEGORIES.find(c => c.calls.some(fn => onclick.startsWith(fn)));
+                if (match) byKey[match.key].push(card);
+                else uncategorised.push(card);
+            });
+
+            // Wipe & rebuild
+            grid.innerHTML = '';
+            grid.style.display = 'block';
+            grid.style.padding = '0';
+
+            // Featured hero
+            const f = FEATURED_POOL[dayIdx() % FEATURED_POOL.length];
+            const hero = document.createElement('div');
+            hero.className = 'games-featured';
+            hero.style.background = f.grad;
+            hero.setAttribute('onclick', f.onclick);
+            hero.innerHTML = `
+              <div class="watermark">${f.watermark}</div>
+              <div class="inner">
+                <div class="tag">${f.tag}</div>
+                <div class="t">${f.title}</div>
+                <div class="s">${f.sub}</div>
+              </div>
+              <div class="pill"><i class="fas fa-play"></i> Play</div>`;
+            grid.appendChild(hero);
+
+            // Category rails
+            CATEGORIES.forEach(cat => {
+                const list = byKey[cat.key];
+                if (!list.length) return;
+                const hdr = document.createElement('div');
+                hdr.className = 'ed-section-header';
+                hdr.innerHTML = `
+                  <div>
+                    <div class="eyebrow">${cat.sub}</div>
+                    <div class="title">${cat.title}</div>
+                  </div>
+                  <div style="font-size:13px;color:var(--gray-400);font-weight:700;">${list.length} game${list.length>1?'s':''}</div>`;
+                grid.appendChild(hdr);
+                const rail = document.createElement('div');
+                rail.className = 'ed-rail';
+                list.forEach(c => rail.appendChild(c));
+                grid.appendChild(rail);
+            });
+
+            // Stash any remaining
+            if (uncategorised.length) {
+                const hdr = document.createElement('div');
+                hdr.className = 'ed-section-header';
+                hdr.innerHTML = '<div><div class="eyebrow">MORE</div><div class="title">Other games</div></div>';
+                grid.appendChild(hdr);
+                const rail = document.createElement('div');
+                rail.className = 'ed-rail';
+                uncategorised.forEach(c => rail.appendChild(c));
+                grid.appendChild(rail);
+            }
+
+            grid.dataset.edLayout = '1';
+        }
+
+        // ---- Stories: featured story hero -----------------------------
+        function layoutStoriesEditorial() {
+            const tab = document.getElementById('storiesTab');
+            if (!tab) return;
+            if (typeof storyLibrary === 'undefined' || !storyLibrary.length) return;
+
+            const libraryView = tab.querySelector('#storyLibraryView');
+            if (!libraryView) return;
+            if (libraryView.querySelector('.story-featured')) return;
+
+            const pick = storyLibrary[dayIdx() % storyLibrary.length];
+            const levelLabel = { 1: 'Beginner', 2: 'Elementary', 3: 'Intermediate' }[pick.level] || 'Story';
+            const hero = document.createElement('div');
+            hero.className = 'story-featured';
+            hero.setAttribute('onclick', `openStory('${(pick.id || '').replace(/'/g, "\\'")}')`);
+            hero.innerHTML = `
+              <div class="theme">${pick.theme || '📖'}</div>
+              <div class="inner">
+                <div class="tag">STORY OF THE DAY · ${levelLabel.toUpperCase()}</div>
+                <div class="t">${pick.title}</div>
+                <div class="p">${pick.titlePinyin || ''}</div>
+                <div class="en">${pick.titleEnglish || ''}</div>
+                <div class="chips">
+                  <span class="chip">${(pick.sentences || []).length} sentences</span>
+                  <span class="chip">Interactive</span>
+                </div>
+              </div>
+              <div class="pill"><i class="fas fa-book-open"></i> Read</div>`;
+
+            // Insert after the page-hero (Wave 4) if present, else at the top
+            const pageHero = libraryView.querySelector(':scope > .page-hero')
+                           || tab.querySelector(':scope > .page-hero');
+            if (pageHero && pageHero.parentNode === libraryView) libraryView.insertBefore(hero, pageHero.nextSibling);
+            else libraryView.insertBefore(hero, libraryView.firstChild);
+
+            // Add section header above the story grid
+            const filter = libraryView.querySelector('.story-library-filter');
+            if (filter && !libraryView.querySelector('.stories-all-hdr')) {
+                const hdr = document.createElement('div');
+                hdr.className = 'ed-section-header stories-all-hdr';
+                hdr.innerHTML = '<div><div class="eyebrow">LIBRARY</div><div class="title">All stories</div></div>';
+                filter.parentNode.insertBefore(hdr, filter);
+            }
+        }
+
+        // ---- Tutor: welcome hero + styled suggestions -----------------
+        function layoutTutorEditorial() {
+            const tab = document.getElementById('chatTab');
+            if (!tab) return;
+            const container = tab.querySelector('.chat-tab-container');
+            if (!container || container.querySelector('.tutor-hero')) return;
+
+            const hero = document.createElement('div');
+            hero.className = 'tutor-hero';
+            hero.innerHTML = `
+              <div class="wm">老师</div>
+              <div class="eyebrow">AI TUTOR · APPLE INTELLIGENCE</div>
+              <h3>你好! I'm your Chinese tutor.</h3>
+              <p>Ask anything about Mandarin — grammar, vocabulary, tones or roleplay a real conversation. Turn on Voice mode in the top-right to speak instead of type.</p>`;
+
+            const suggestions = document.createElement('div');
+            suggestions.className = 'tutor-suggestions';
+            [
+                'How do I say good morning?',
+                'Teach me to count 1–10',
+                'Practice ordering food',
+                'What are the four tones?',
+                'Explain the particle 了',
+                'Give me 5 HSK 2 phrases'
+            ].forEach(q => {
+                const chip = document.createElement('button');
+                chip.className = 'tutor-sugg';
+                chip.textContent = q;
+                chip.onclick = () => {
+                    const bot = window._chatbot;
+                    if (bot?.chatInput) {
+                        bot.chatInput.value = q;
+                        if (typeof bot.sendMessage === 'function') bot.sendMessage();
+                    } else if (typeof fillChatInput === 'function') {
+                        fillChatInput(q);
+                    }
+                };
+                suggestions.appendChild(chip);
+            });
+
+            // Insert hero + suggestions above the chat window
+            const chatWindow = container.querySelector('.chat-window-tab');
+            if (chatWindow) {
+                container.insertBefore(hero, chatWindow);
+                container.insertBefore(suggestions, chatWindow);
+            } else {
+                container.insertBefore(hero, container.firstChild);
+                container.insertBefore(suggestions, container.firstChild.nextSibling);
+            }
+        }
+
+        // ---- Today bottom: insert editorial section headers above grouped content ----
+        function polishTodayBottom() {
+            const tab = document.getElementById('practiceTab');
+            if (!tab) return;
+            // "Topics for you" header above the bespoke topic carousel
+            const bespoke = tab.querySelector('#bespoke-lessons-section');
+            if (bespoke && !tab.querySelector('.ed-topics-hdr')) {
+                const hdr = document.createElement('div');
+                hdr.className = 'ed-section-header ed-topics-hdr';
+                hdr.innerHTML = '<div><div class="eyebrow">LESSONS</div><div class="title">Topics for you</div></div>';
+                bespoke.parentNode.insertBefore(hdr, bespoke);
+                const inner = bespoke.querySelector('.bespoke-lessons-title');
+                if (inner) inner.style.display = 'none';
+            }
+        }
+
+        // ---- Boot ------------------------------------------------------
+        function applyAll() {
+            polishTodayBottom();
+            layoutGamesEditorial();
+            layoutStoriesEditorial();
+            layoutTutorEditorial();
+        }
+
+        if (typeof switchTab === 'function' && !switchTab.__v6wrapped) {
+            const orig = switchTab;
+            window.switchTab = function(name) {
+                const r = orig.apply(this, arguments);
+                setTimeout(applyAll, 60);
+                return r;
+            };
+            window.switchTab.__v6wrapped = true;
+        }
+
+        // Also retry when stories lazy-load and when chat tab initializes
+        if (typeof filterStoriesByLevel === 'function' && !filterStoriesByLevel.__v6) {
+            const orig = filterStoriesByLevel;
+            window.filterStoriesByLevel = function() {
+                const r = orig.apply(this, arguments);
+                setTimeout(layoutStoriesEditorial, 30);
+                return r;
+            };
+            window.filterStoriesByLevel.__v6 = true;
+        }
+
+        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', applyAll);
+        else applyAll();
+    })();
+    </script>
+    <!-- Wave 7: Editorial polish for Today's bottom section                 -->
+    <!-- ================================================================== -->
+    <style>
+    /* --- Character practice lesson card ---------------------------- */
+    body.hanyu-v3 #practiceTab > .lesson-card,
+    body.hanyu-v3 #practiceTab .lesson-card#practiceContent,
+    body.hanyu-v3 #practiceTab > div > .lesson-card {
+        margin: 0 16px 14px !important;
+        border-radius: 22px !important;
+        padding: 22px 20px !important;
+        box-shadow: 0 14px 32px -18px rgba(0,0,0,0.25) !important;
+        border: 1px solid rgba(0,0,0,0.04) !important;
+        position: relative;
+        overflow: hidden;
+    }
+    /* Gradient accent stripe at the top of the practice card */
+    body.hanyu-v3 #practiceTab > .lesson-card::before {
+        content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
+        background: linear-gradient(90deg, #8b5cf6, #ef4444, #f59e0b);
+        pointer-events: none;
+    }
+    body.dark-mode.hanyu-v3 #practiceTab > .lesson-card {
+        background: rgba(30,33,40,0.7) !important;
+        border-color: rgba(255,255,255,0.06) !important;
+    }
+
+    /* Hide the tiny category label inside the card (the Today hero already states intent) */
+    body.hanyu-v3 #practiceTab #character-mode > .lesson-type:first-child { display: none !important; }
+
+    /* Hide the duplicate quick-stats banner — streak/accuracy shown in Today hero */
+    body.hanyu-v3 #practiceTab .quick-stats-banner { display: none !important; }
+
+    /* Slimmer progress counter with editorial colors */
+    body.hanyu-v3 #practiceTab .progress-counter {
+        background: transparent !important; padding: 0 !important; margin: 4px 0 14px !important;
+        box-shadow: none !important; border: none !important;
+    }
+    body.hanyu-v3 #practiceTab .progress-counter-text {
+        font-size: 11px !important; font-weight: 800 !important;
+        color: var(--gray-500) !important; letter-spacing: 0.5px !important;
+        text-transform: uppercase !important; margin-bottom: 6px !important;
+    }
+    body.hanyu-v3 #practiceTab .progress-counter-bar {
+        height: 4px !important; border-radius: 999px !important;
+        background: var(--gray-100) !important;
+    }
+    body.hanyu-v3 #practiceTab .progress-counter-fill {
+        background: linear-gradient(90deg, #8b5cf6, #ef4444) !important;
+        border-radius: 999px !important;
+    }
+    body.dark-mode.hanyu-v3 #practiceTab .progress-counter-bar { background: rgba(255,255,255,0.08) !important; }
+
+    /* Filter + level pickers → pill style */
+    body.hanyu-v3 #practiceTab .filter-difficulty-row {
+        display: flex !important; gap: 10px !important; margin: 10px 0 14px !important;
+    }
+    body.hanyu-v3 #practiceTab .filter-difficulty-row .picker-group {
+        flex: 1; display: flex !important; flex-direction: column !important; gap: 4px !important;
+        background: var(--gray-50) !important; border: 1px solid rgba(0,0,0,0.04);
+        border-radius: 14px !important; padding: 8px 12px !important;
+    }
+    body.dark-mode.hanyu-v3 #practiceTab .filter-difficulty-row .picker-group {
+        background: rgba(255,255,255,0.05) !important; border-color: rgba(255,255,255,0.06);
+    }
+    body.hanyu-v3 #practiceTab .filter-difficulty-row .picker-label {
+        font-size: 10px !important; letter-spacing: 0.8px !important;
+        font-weight: 800 !important; color: var(--gray-500) !important;
+        text-transform: uppercase !important; margin: 0 !important;
+    }
+    body.hanyu-v3 #practiceTab .filter-difficulty-row .picker-select {
+        font-size: 14px !important; font-weight: 700 !important;
+        color: var(--gray-800) !important; background: transparent !important;
+        border: none !important; padding: 0 !important; outline: none;
+        appearance: none; -webkit-appearance: none;
+        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'><path fill='%238b5cf6' d='M6 9L1 4h10z'/></svg>") !important;
+        background-repeat: no-repeat !important; background-position: right center !important;
+        padding-right: 16px !important;
+    }
+    body.dark-mode.hanyu-v3 #practiceTab .filter-difficulty-row .picker-select { color: #f3f4f6 !important; }
+
+    /* Search input softened */
+    body.hanyu-v3 #practiceTab #dictionary-search {
+        border-radius: 14px !important;
+        border: 1px solid rgba(0,0,0,0.06) !important;
+        background: var(--gray-50) !important;
+        padding: 12px 40px 12px 16px !important;
+    }
+
+    /* --- Topics for You section (floats inline with editorial cards) --- */
+    body.hanyu-v3 #bespoke-lessons-section {
+        margin: 0 0 14px !important; padding: 0 !important; background: transparent !important;
+    }
+    body.hanyu-v3 .bespoke-lessons-header { padding: 0 20px 6px !important; display: none !important; }
+    body.hanyu-v3 .bespoke-difficulty-filter {
+        padding: 0 16px 8px !important; gap: 8px !important;
+    }
+    body.hanyu-v3 .bespoke-diff-pill {
+        padding: 8px 14px !important; border-radius: 999px !important;
+        font-weight: 700 !important; font-size: 13px !important;
+        background: white !important; color: var(--gray-600) !important;
+        border: 1px solid rgba(0,0,0,0.06) !important;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+    }
+    body.dark-mode.hanyu-v3 .bespoke-diff-pill {
+        background: rgba(255,255,255,0.06) !important; color: #f3f4f6 !important;
+        border-color: rgba(255,255,255,0.08) !important;
+    }
+    body.hanyu-v3 .bespoke-diff-pill.active {
+        background: linear-gradient(135deg, #8b5cf6, #ef4444) !important;
+        color: white !important; border-color: transparent !important;
+        box-shadow: 0 6px 18px rgba(139, 92, 246, 0.35) !important;
+    }
+    body.hanyu-v3 .bespoke-lessons-scroll {
+        padding: 6px 16px 8px !important; gap: 12px !important;
+    }
+    /* Bigger, more editorial topic cards */
+    body.hanyu-v3 .bespoke-topic-card {
+        flex: 0 0 180px !important;
+        padding: 18px 16px !important;
+        border-radius: 18px !important;
+        text-align: left !important;
+        background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%) !important;
+        border: 1px solid rgba(0,0,0,0.05) !important;
+        box-shadow: 0 10px 24px -14px rgba(0,0,0,0.2) !important;
+        position: relative; overflow: hidden;
+        min-height: 140px;
+    }
+    body.dark-mode.hanyu-v3 .bespoke-topic-card {
+        background: linear-gradient(135deg, rgba(40,42,55,0.9) 0%, rgba(30,32,45,0.9) 100%) !important;
+        border-color: rgba(255,255,255,0.06) !important;
+    }
+    body.hanyu-v3 .bespoke-topic-card:hover {
+        transform: translateY(-3px) !important;
+        box-shadow: 0 16px 36px -14px rgba(0,0,0,0.3) !important;
+    }
+    body.hanyu-v3 .bespoke-topic-icon {
+        width: 44px !important; height: 44px !important; border-radius: 12px !important;
+        font-size: 20px !important; margin: 0 0 10px !important;
+    }
+    body.hanyu-v3 .bespoke-topic-name {
+        font-size: 15px !important; font-weight: 800 !important;
+        line-height: 1.3 !important; margin-bottom: 6px !important;
+    }
+    body.hanyu-v3 .bespoke-topic-level {
+        display: inline-block; padding: 3px 8px !important;
+        background: rgba(139, 92, 246, 0.1); color: #8b5cf6 !important;
+        border-radius: 999px !important; font-size: 10px !important;
+        letter-spacing: 0.5px !important; margin: 0 !important;
+    }
+    body.dark-mode.hanyu-v3 .bespoke-topic-level {
+        background: rgba(139, 92, 246, 0.2);
+    }
+    /* Subtle colored watermark per card, mirroring Today's hero language */
+    body.hanyu-v3 .bespoke-topic-card::after {
+        content: ''; position: absolute; right: -30px; top: -30px;
+        width: 100px; height: 100px; border-radius: 50%;
+        background: radial-gradient(circle, rgba(139,92,246,0.08) 0%, transparent 70%);
+        pointer-events: none;
+    }
+    /* Topic cards with a generated photo: accent-tinted full-bleed art + white text */
+    body.hanyu-v3 .bespoke-topic-card.has-art { isolation: isolate; }
+    body.hanyu-v3 .bespoke-topic-card.has-art::after { display: none; } /* drop watermark; photo replaces it */
+    body.hanyu-v3 .bespoke-topic-card.has-art > *:not(.card-art) { position: relative; z-index: 1; }
+    body.hanyu-v3 .bespoke-topic-card .card-art {
+        position: absolute; inset: 0; z-index: 0; border-radius: inherit; pointer-events: none;
+    }
+    body.hanyu-v3 .bespoke-topic-card.has-art .bespoke-topic-name {
+        color: #fff !important; text-shadow: 0 1px 6px rgba(0,0,0,0.28);
+    }
+    body.dark-mode.hanyu-v3 .bespoke-topic-card.has-art .bespoke-topic-name { color: #fff !important; }
+    /* HSK pill must read as white on the tinted photo (beats the purple !important rule) */
+    body.hanyu-v3 .bespoke-topic-card.has-art .bespoke-topic-level {
+        color: #fff !important; background: rgba(255,255,255,0.25) !important;
+        backdrop-filter: blur(3px);
+    }
+
+    </style>
+    <!-- Wave 8: Simplify AI Tutor — single header, scrollable chat          -->
+    <!-- ================================================================== -->
+    <style>
+    /* Strip the busy tutor chrome (hero card, external suggestion pills,
+       and the duplicate in-chat header). Page-hero is the sole header. */
+    body.hanyu-v3 #chatTab .tutor-hero,
+    body.hanyu-v3 #chatTab .tutor-suggestions,
+    body.hanyu-v3 #chatTab .chat-header { display: none !important; }
+
+    /* Turn the chat tab into a flex column filling the viewport between
+       page-hero and the bottom tab bar. This makes .chat-messages the
+       only scrolling area, so the user can focus on the conversation. */
+    body.hanyu-v3 #chatTab:not(.hidden) {
+        display: flex !important;
+        flex-direction: column !important;
+        /* 100dvh tracks the real iOS viewport — 100vh over-reports on WKWebView */
+        height: calc(100dvh - 72px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)) !important;
+        max-height: calc(100dvh - 72px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)) !important;
+        overflow: hidden !important;
+        position: relative;
+    }
+    /* Page-hero must sit ABOVE the chat card in stacking order and never
+       be clipped or shadowed over by it. */
+    body.hanyu-v3 #chatTab > .page-hero {
+        flex: 0 0 auto !important;
+        padding: 12px 20px 10px !important;
+        position: relative;
+        z-index: 3 !important;
+        background: transparent;
+    }
+    body.hanyu-v3 #chatTab .chat-tab-container {
+        flex: 1 1 auto !important;
+        height: auto !important;
+        min-height: 0 !important;
+        padding: 0 !important;
+        max-width: 800px !important;
+        width: 100% !important;
+        position: relative;
+        z-index: 1;
+    }
+    body.hanyu-v3 #chatTab .chat-window-tab {
+        flex: 1 1 auto !important;
+        min-height: 0 !important;
+        border-radius: 20px 20px 0 0 !important;
+        margin: 0 12px !important;
+        /* Subtle downward shadow only — no more upward bleed onto the header */
+        box-shadow: 0 4px 24px -10px rgba(0,0,0,0.15) !important;
+    }
+    body.dark-mode.hanyu-v3 #chatTab .chat-window-tab {
+        background: #1a1d26 !important;
+    }
+    body.hanyu-v3 #chatTab .chat-messages {
+        flex: 1 1 auto !important;
+        min-height: 0 !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch;
+        padding: 16px !important;
+    }
+    body.hanyu-v3 #chatTab .chat-input-area {
+        flex: 0 0 auto !important;
+        border-top: 1px solid rgba(0,0,0,0.06) !important;
+    }
+    body.dark-mode.hanyu-v3 #chatTab .chat-input-area {
+        background: #1a1d26 !important;
+        border-top-color: rgba(255,255,255,0.08) !important;
+    }
+
+    /* Editorial polish on the welcome state (inside .chat-messages so it
+       scrolls with the conversation and vanishes naturally once chatting) */
+    body.hanyu-v3 #chatTab .welcome-message {
+        padding: 28px 18px !important;
+        color: var(--gray-600) !important;
+        text-align: left !important;
+        align-items: flex-start !important;
+        justify-content: flex-start !important;
+    }
+    body.hanyu-v3 #chatTab .welcome-message i {
+        font-size: 36px !important;
+        margin-bottom: 12px !important;
+    }
+    body.hanyu-v3 #chatTab .welcome-message h4 {
+        font-size: 24px !important; font-weight: 900 !important;
+        color: var(--gray-800) !important;
+    }
+    body.dark-mode.hanyu-v3 #chatTab .welcome-message h4 { color: #f9fafb !important; }
+    body.hanyu-v3 #chatTab .welcome-message p {
+        font-size: 14px !important; line-height: 1.6 !important; max-width: 480px;
+    }
+    body.hanyu-v3 #chatTab .welcome-message .setup-hint {
+        background: rgba(139, 92, 246, 0.08) !important;
+        color: #8b5cf6 !important;
+        border-radius: 12px !important;
+    }
+    body.hanyu-v3 #chatTab .chat-quick-actions {
+        justify-content: flex-start !important;
+        gap: 8px !important;
+        margin-top: 20px !important;
+    }
+    body.hanyu-v3 #chatTab .chat-quick-chip {
+        padding: 10px 16px !important;
+        border-radius: 999px !important;
+        background: white !important;
+        border: 1px solid rgba(0,0,0,0.06) !important;
+        color: var(--gray-700) !important;
+        font-weight: 700 !important;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.04) !important;
+    }
+    body.hanyu-v3 #chatTab .chat-quick-chip:hover,
+    body.hanyu-v3 #chatTab .chat-quick-chip:active {
+        background: linear-gradient(135deg, #8b5cf6, #ef4444) !important;
+        color: white !important;
+        border-color: transparent !important;
+    }
+    body.dark-mode.hanyu-v3 #chatTab .chat-quick-chip {
+        background: rgba(255,255,255,0.06) !important;
+        color: #f3f4f6 !important;
+        border-color: rgba(255,255,255,0.08) !important;
+    }
+
+    /* Chat tab hero: single-line compact header (eyebrow inline with title)
+       to reclaim vertical space for the conversation. */
+    body.hanyu-v3 #chatTab > .page-hero {
+        align-items: center !important;
+        padding: 8px 14px 6px !important;
+    }
+    body.hanyu-v3 #chatTab > .page-hero > div:first-child {
+        flex: 1 1 auto; min-width: 0;
+        display: flex !important; align-items: baseline !important; gap: 8px !important;
+    }
+    body.hanyu-v3 #chatTab > .page-hero .ph-tag {
+        font-size: 10px !important; order: 2;
+    }
+    body.hanyu-v3 #chatTab > .page-hero .ph-title {
+        font-size: 20px !important; margin-top: 0 !important; order: 1;
+    }
+    /* Hide sub line — eyebrow covers intent */
+    body.hanyu-v3 #chatTab > .page-hero > div:first-child > div:nth-child(3) {
+        display: none !important;
+    }
+    body.hanyu-v3 #chatTab .page-hero .voice-toggle {
+        padding: 6px 10px !important; font-size: 11px !important; flex: 0 0 auto;
+    }
+    body.hanyu-v3 #chatTab .page-hero .today-icon-btn { flex: 0 0 auto; width: 34px !important; height: 34px !important; font-size: 13px !important; }
+
+    /* Chat card hugs right below the hero — no gap */
+    body.hanyu-v3 #chatTab .chat-window-tab { margin-top: 0 !important; }
+
+    /* Pin the chat input FIXED above the bottom tab bar. Flex sizing on
+       the chat window was unreliable across WKWebView height quirks — this
+       guarantees the input is always visible and tappable. */
+    body.hanyu-v3 #chatTab .chat-input-area {
+        position: fixed !important;
+        left: 12px !important;
+        right: 12px !important;
+        bottom: calc(72px + env(safe-area-inset-bottom, 0px)) !important;
+        z-index: 50 !important;
+        background: white !important;
+        border-radius: 0 0 16px 16px !important;
+        border-top: 1px solid rgba(0,0,0,0.06) !important;
+        padding: 8px 10px !important;
+        box-shadow: 0 -4px 16px -6px rgba(0,0,0,0.08);
+    }
+    body.hanyu-v3 #chatTab .chat-input { padding: 8px 14px !important; }
+    body.dark-mode.hanyu-v3 #chatTab .chat-input-area {
+        background: #1a1d26 !important;
+        border-top-color: rgba(255,255,255,0.08) !important;
+    }
+    /* Generous bottom padding so even a long AI reply lands wholly above
+       the fixed input bar after auto-scroll. */
+    body.hanyu-v3 #chatTab .chat-messages {
+        padding-bottom: 120px !important;
+    }
+
+    /* Welcome message: trim the paragraph + 'Powered by Apple Intelligence'
+       card so the actual conversation lands above the fold. */
+    body.hanyu-v3 #chatTab .welcome-message p,
+    body.hanyu-v3 #chatTab .welcome-message .setup-hint {
+        display: none !important;
+    }
+    body.hanyu-v3 #chatTab .welcome-message { padding: 16px 18px 4px !important; }
+    body.hanyu-v3 #chatTab .welcome-message i { font-size: 28px !important; margin-bottom: 8px !important; }
+    body.hanyu-v3 #chatTab .welcome-message h4 {
+        font-size: 18px !important; margin-bottom: 4px !important;
+    }
+    </style>
+
+    <script>
+    // Re-title the chat-tab page-hero so the header reads "Tutor" (stable in
+    // every font) instead of 中文老师 which can miss CJK glyphs on simulator.
+    (function(){
+        function retitle() {
+            const chat = document.getElementById('chatTab');
+            if (!chat) return;
+            const title = chat.querySelector(':scope > .page-hero .ph-title');
+            if (title && title.textContent.trim() !== 'Tutor') title.textContent = 'Tutor';
+        }
+        if (typeof switchTab === 'function' && !switchTab.__v9wrapped) {
+            const orig = switchTab;
+            window.switchTab = function(name) {
+                const r = orig.apply(this, arguments);
+                if (name === 'chat') setTimeout(retitle, 60);
+                return r;
+            };
+            window.switchTab.__v9wrapped = true;
+        }
+        [100, 400, 900].forEach(t => setTimeout(retitle, t));
+    })();
+    </script>
+
+    <script>
+    (function(){
+        'use strict';
+        // Move the Voice-mode toggle from the (now-hidden) chat-header up into
+        // the page-hero so it stays accessible.
+        function relocateVoiceToggle() {
+            const chatTab = document.getElementById('chatTab');
+            if (!chatTab) return;
+            const toggle = chatTab.querySelector('.voice-toggle');
+            const hero   = chatTab.querySelector(':scope > .page-hero');
+            if (!toggle || !hero || toggle.parentElement === hero) return;
+            hero.appendChild(toggle);
+        }
+        // Run on tab switch and after Wave 5 injects the toggle
+        if (typeof switchTab === 'function' && !switchTab.__v8wrapped) {
+            const orig = switchTab;
+            window.switchTab = function(name) {
+                const r = orig.apply(this, arguments);
+                if (name === 'chat') setTimeout(relocateVoiceToggle, 80);
+                return r;
+            };
+            window.switchTab.__v8wrapped = true;
+        }
+        setTimeout(relocateVoiceToggle, 300);
+        // Repeat a couple of times for lazy init
+        [600, 1200, 2000].forEach(t => setTimeout(relocateVoiceToggle, t));
+    })();
+    </script>
 
 <script>
 /* === MyLLMos: re-sync app state after async storage hydration === */
