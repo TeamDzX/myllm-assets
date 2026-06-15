@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>Shopping List</title>
+
+<!-- #1 intent bus: this app can RECEIVE an "add-item" hand-off from another app. -->
+<meta name="myllm:intents" content="add-item">
+
+<!-- #2 app actions: the assistant can run this from chat ("add milk to my list"). -->
+<script type="application/myllm-actions">
+[
+  { "name": "add-item",
+    "description": "Add an item to the shopping list",
+    "parameters": { "text": "the item(s) to add (one per line for several)" } }
+]
+</script>
+
+<style>
+  :root{
+    --bg: var(--myllm-bg, #f6f7f9);
+    --surface: var(--myllm-surface, #ffffff);
+    --text: var(--myllm-text, #11131a);
+    --muted: var(--myllm-muted, #6b7280);
+    --accent: var(--myllm-accent, #4f7cff);
+    --border: var(--myllm-border, rgba(0,0,0,.10));
+    --radius: var(--myllm-radius, 14px);
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg: var(--myllm-bg,#0e0f13); --surface: var(--myllm-surface,#1a1c22); --text: var(--myllm-text,#f3f4f7); --muted: var(--myllm-muted,#a4abba); --border: var(--myllm-border,rgba(255,255,255,.14)); }
+  }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body{ margin:0; height:100%; }
+  body{
+    background:var(--bg); color:var(--text);
+    font-family:var(--myllm-font, -apple-system,system-ui,'Segoe UI',Roboto,sans-serif);
+    display:flex; flex-direction:column; padding:max(16px,env(safe-area-inset-top)) 16px 16px;
+    user-select:none; -webkit-user-select:none;
+  }
+  header{ margin-bottom:14px; }
+  h1{ font-size:24px; margin:0 0 2px; display:flex; align-items:center; gap:8px; }
+  .sub{ color:var(--muted); font-size:13px; }
+  .add{ display:flex; gap:8px; margin-bottom:14px; }
+  input[type=text]{
+    flex:1; min-width:0; font:inherit; font-size:16px; color:var(--text);
+    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+    padding:12px 14px; outline:none; user-select:text; -webkit-user-select:text;
+  }
+  input[type=text]:focus{ border-color:var(--accent); }
+  button{ font:inherit; cursor:pointer; border:0; }
+  .btn{
+    background:var(--accent); color:#fff; font-weight:700; font-size:16px;
+    border-radius:var(--radius); padding:12px 16px;
+  }
+  ul{ list-style:none; margin:0; padding:0; flex:1; overflow:auto; }
+  li{
+    display:flex; align-items:center; gap:12px; background:var(--surface);
+    border:1px solid var(--border); border-radius:var(--radius); padding:13px 14px; margin-bottom:9px;
+  }
+  li .check{
+    width:24px; height:24px; border-radius:50%; border:2px solid var(--accent);
+    flex:none; display:flex; align-items:center; justify-content:center; color:#fff; font-size:14px;
+  }
+  li.done .check{ background:var(--accent); }
+  li.done .label{ text-decoration:line-through; color:var(--muted); }
+  .label{ flex:1; min-width:0; font-size:17px; word-break:break-word; }
+  .del{ background:transparent; color:var(--muted); font-size:20px; padding:4px 6px; }
+  .empty{ color:var(--muted); text-align:center; padding:40px 16px; font-size:15px; }
+  footer{ display:flex; justify-content:space-between; align-items:center; padding-top:8px; color:var(--muted); font-size:13px; }
+  .clear{ background:transparent; color:var(--accent); font-weight:600; font-size:13px; }
+  .toast{
+    position:fixed; left:50%; bottom:22px; transform:translateX(-50%) translateY(20px);
+    background:var(--text); color:var(--bg); padding:10px 16px; border-radius:999px; font-size:14px;
+    opacity:0; transition:opacity .2s, transform .2s; pointer-events:none; max-width:80%;
+  }
+  .toast.show{ opacity:1; transform:translateX(-50%); }
+</style>
+</head>
+<body>
+<header>
+  <h1>🛒 Shopping List</h1>
+  <div class="sub">Saved to your shared files — other apps and the assistant can add to it.</div>
+</header>
+
+<form class="add" id="addForm">
+  <input type="text" id="text" placeholder="Add an item…" autocomplete="off" enterkeyhint="done">
+  <button class="btn" type="submit">Add</button>
+</form>
+
+<ul id="list"></ul>
+
+<footer>
+  <span id="count">0 items</span>
+  <button class="clear" id="clearDone" type="button">Clear ticked</button>
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  var FILE = 'lists/shopping.json';
+  var items = [];
+
+  function toast(msg){
+    var t = document.getElementById('toast');
+    t.textContent = msg; t.classList.add('show');
+    clearTimeout(t._t); t._t = setTimeout(function(){ t.classList.remove('show'); }, 1800);
+  }
+  function haptic(s){ try{ if(window.myllmHaptic) myllmHaptic(s); }catch(e){} }
+
+  // Persist to the SHARED file store (#3) so the Files app + other apps see it;
+  // fall back to per-app storage, then localStorage (for the web preview).
+  async function load(){
+    try{ if(window.myllmFiles){ var t = await myllmFiles.read(FILE); return t ? JSON.parse(t) : []; } }catch(e){}
+    try{ if(window.myllmStorage){ var v = await myllmStorage.getItem('shopping'); return v ? JSON.parse(v) : []; } }catch(e){}
+    try{ var l = localStorage.getItem('shopping'); return l ? JSON.parse(l) : []; }catch(e){}
+    return [];
+  }
+  async function save(){
+    var s = JSON.stringify(items);
+    try{ if(window.myllmFiles){ await myllmFiles.write(FILE, s); return; } }catch(e){}
+    try{ if(window.myllmStorage){ await myllmStorage.setItem('shopping', s); return; } }catch(e){}
+    try{ localStorage.setItem('shopping', s); }catch(e){}
+  }
+
+  function render(){
+    var ul = document.getElementById('list');
+    ul.innerHTML = '';
+    if(!items.length){
+      ul.innerHTML = '<div class="empty">Nothing on the list yet.<br>Add an item, ask the assistant, or send one from Quick Capture.</div>';
+    }
+    items.forEach(function(it, i){
+      var li = document.createElement('li');
+      if(it.done) li.className = 'done';
+      li.innerHTML = '<div class="check">'+(it.done?'✓':'')+'</div><div class="label"></div><button class="del" aria-label="Delete">×</button>';
+      li.querySelector('.label').textContent = it.text;
+      li.querySelector('.check').onclick = function(){ items[i].done = !items[i].done; haptic('selection'); save(); render(); };
+      li.querySelector('.del').onclick = function(){ items.splice(i,1); haptic('light'); save(); render(); };
+      ul.appendChild(li);
+    });
+    var n = items.length;
+    document.getElementById('count').textContent = n + (n===1?' item':' items');
+  }
+
+  function addItem(text, opts){
+    opts = opts || {};
+    String(text).split('\n').forEach(function(line){
+      var t = line.trim();
+      if(t) items.unshift({ text: t, done: false });
+    });
+    haptic('success'); save(); render();
+    if(opts.toast) toast(opts.toast);
+  }
+
+  document.getElementById('addForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    var inp = document.getElementById('text');
+    if(inp.value.trim()){ addItem(inp.value); inp.value = ''; }
+    inp.focus();
+  });
+  document.getElementById('clearDone').addEventListener('click', function(){
+    items = items.filter(function(it){ return !it.done; });
+    haptic('light'); save(); render();
+  });
+
+  // #1/#2 — handle a hand-off (from Quick Capture) or an assistant action.
+  if(window.myllmIntent && myllmIntent.receive){
+    myllmIntent.receive(function(intent){
+      if(intent && intent.action === 'add-item' && intent.data){
+        var text = intent.data.text || intent.data.item || intent.data.value || '';
+        if(text) addItem(text, { toast: 'Added ✓' });
+      }
+    });
+  }
+
+  load().then(function(saved){ items = saved || []; render(); });
+})();
+</script>
+</body>
+</html>

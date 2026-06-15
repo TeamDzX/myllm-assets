@@ -980,6 +980,51 @@
       "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/hanyu.html?v=7",
       "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/hanyu.myllmapp",
       "sizeKB": 1140
+    },
+    {
+      "id": "shopping-list",
+      "name": "Shopping List",
+      "emoji": "🛒",
+      "tagline": "A list your apps & assistant share",
+      "description": "A shopping list your other apps — and the assistant — can add to. Tick items off, and just say \"add milk to my list\" in MyLLM. It saves to your shared Files so everything stays in sync. A showcase of MyLLMos apps working together.",
+      "tags": [
+        "productivity",
+        "list",
+        "shared files",
+        "assistant"
+      ],
+      "iconSymbol": "cart.fill",
+      "iconColor": "green",
+      "version": 1,
+      "featured": true,
+      "requiresAI": false,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/shopping-list.jpg",
+      "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/shopping-list.html",
+      "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/shopping-list.myllmapp",
+      "sizeKB": 7,
+      "category": "Productivity"
+    },
+    {
+      "id": "quick-capture",
+      "name": "Quick Capture",
+      "emoji": "⚡",
+      "tagline": "Capture, then send to your list",
+      "description": "Jot quick notes and fire any line straight into your Shopping List with one tap — a tiny demo of MyLLMos apps handing off to each other.",
+      "tags": [
+        "productivity",
+        "notes",
+        "capture"
+      ],
+      "iconSymbol": "bolt.fill",
+      "iconColor": "purple",
+      "version": 1,
+      "featured": true,
+      "requiresAI": false,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/quick-capture.jpg",
+      "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/quick-capture.html",
+      "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/quick-capture.myllmapp",
+      "sizeKB": 4,
+      "category": "Productivity"
     }
   ]
 }
