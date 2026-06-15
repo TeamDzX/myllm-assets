@@ -15,7 +15,7 @@ OUT   = os.path.join(HERE, 'apps-src', 'retro-player.html')
 WRAP  = os.path.join(HERE, 'apps-src', 'retro-player.myllmapp')
 MANIFEST = os.path.join(HERE, 'apps.json')
 RAWBASE = 'https://raw.githubusercontent.com/TeamDzX/myllm-assets/main'
-VERSION = 4
+VERSION = 5
 
 shell = open(SHELL, encoding='utf-8').read()
 fflate = open(FFLATE, encoding='utf-8').read()

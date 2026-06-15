@@ -124,10 +124,19 @@
   }
   window.addEventListener('error', function(ev){ showErr('ERR', (ev&&(ev.message||(ev.error&&ev.error.message)))||'script error'); });
   window.addEventListener('unhandledrejection', function(ev){ showErr('REJECT', (ev&&ev.reason)||'promise rejected'); });
-  if(window.console && console.error){
-    var _ce=console.error;
-    console.error=function(){ try{ showErr('LOG', Array.prototype.slice.call(arguments).map(function(x){return (x&&x.message)||x;}).join(' ')); }catch(e){} return _ce.apply(console,arguments); };
+  // Rolling trail: surface EmulatorJS's console output so we can see WHERE it
+  // stalls. Fatal errors (above) latch red; logs roll in grey, last line wins.
+  function roll(color, args){ if(shown) return; var s=document.getElementById('status'); if(!s) return;
+    s.style.color=color; s.style.whiteSpace='pre-wrap'; s.style.padding='0 16px';
+    try{ s.textContent=('· '+Array.prototype.slice.call(args).map(function(x){return (x&&x.message)||x;}).join(' ')).slice(0,240); }catch(e){} }
+  if(window.console){
+    ['log','info','warn'].forEach(function(fn){ if(console[fn]){ var o=console[fn]; console[fn]=function(){ roll('#9aa0b4',arguments); return o.apply(console,arguments); }; } });
+    if(console.error){ var _ce=console.error; console.error=function(){ roll('#ff8a8a',arguments); return _ce.apply(console,arguments); }; }
   }
+  // Worker errors never reach window.onerror — capture them explicitly.
+  if(window.Worker){ var OW=window.Worker;
+    try{ var NW=function(u,o){ var w=new OW(u,o); try{ w.addEventListener('error',function(e){ shown=false; showErr('WORKER', (e&&(e.message||e.filename))||String(u)); }); }catch(_){} return w; };
+      NW.prototype=OW.prototype; window.Worker=NW; }catch(e){} }
 
   // Map a ROM extension to an EmulatorJS core.
   function coreFor(ext){
@@ -176,6 +185,7 @@
     window.EJS_gameName=name.replace(/\.[^.]+$/,'');
     window.EJS_pathtodata=DATA;
     window.EJS_startOnLoaded=true;
+    window.EJS_DEBUG_XX=true;   // verbose logging so the progress trail shows where it stalls
     document.getElementById('start').style.display='none';
     document.getElementById('game').style.display='block';
     var s=document.createElement('script');
