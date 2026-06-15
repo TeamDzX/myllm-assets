@@ -1025,6 +1025,30 @@
       "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/hanyu.html?v=9",
       "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/hanyu.myllmapp",
       "sizeKB": 1227
+    },
+    {
+      "id": "expense-tracker",
+      "name": "Expense Tracker",
+      "emoji": "💷",
+      "tagline": "Shared household spending, synced",
+      "description": "A shared expense tracker for a household sharing one card — everyone's phone updates the same Google Sheet, so the running total is always in sync. Categories, per-person summaries, recurring detection, and a private setup using your OWN free Google Sheet (paste-in Apps Script included). You can also just tell MyLLM “add £12 lunch to expenses”.",
+      "tags": [
+        "productivity",
+        "expenses",
+        "household",
+        "shared",
+        "google sheets"
+      ],
+      "iconSymbol": "creditcard.fill",
+      "iconColor": "green",
+      "version": 1,
+      "featured": true,
+      "requiresAI": false,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/expense-tracker.jpg",
+      "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/expense-tracker.html",
+      "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/expense-tracker.myllmapp",
+      "sizeKB": 91,
+      "category": "Productivity"
     }
   ]
 }
