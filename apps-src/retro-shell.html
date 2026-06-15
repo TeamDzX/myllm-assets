@@ -59,6 +59,53 @@
   });
 })();
 </script>
+<script>
+/* MyLLMos: indexedDB.open() throws "invalid security context" on the null origin,
+   which EmulatorJS doesn't catch (it caches cores + holds saves in IDB) — so it
+   dies during init. Provide a minimal in-memory IndexedDB (session-only). */
+(function(){
+  function brokenIDB(){ try{ var f=window.indexedDB; if(!f||!f.open) return false; var p=f.open('__probe__'); return false; }catch(e){ return true; } }
+  if(!brokenIDB()) return;
+  function fire(req, prop, val){ setTimeout(function(){ req.result=val; var h=req['on'+prop]; if(typeof h==='function'){ try{ h({target:req}); }catch(e){} } }, 0); }
+  function Req(){ return {result:undefined,error:null,onsuccess:null,onerror:null,onupgradeneeded:null}; }
+  function Store(){ this.m={}; }
+  Store.prototype.put=function(v,k){ var r=Req(); this.m[String(k)]=v; fire(r,'success',k); return r; };
+  Store.prototype.add=Store.prototype.put;
+  Store.prototype.get=function(k){ var r=Req(); fire(r,'success',this.m[String(k)]); return r; };
+  Store.prototype['delete']=function(k){ var r=Req(); delete this.m[String(k)]; fire(r,'success',undefined); return r; };
+  Store.prototype.clear=function(){ var r=Req(); this.m={}; fire(r,'success',undefined); return r; };
+  Store.prototype.getAllKeys=function(){ var r=Req(); fire(r,'success',Object.keys(this.m)); return r; };
+  Store.prototype.getAll=function(){ var r=Req(); var o=this.m, a=[]; for(var k in o) a.push(o[k]); fire(r,'success',a); return r; };
+  Store.prototype.count=function(){ var r=Req(); fire(r,'success',Object.keys(this.m).length); return r; };
+  Store.prototype.openCursor=function(){ var r=Req(); fire(r,'success',null); return r; };
+  function Tx(db){ this.db=db; this.oncomplete=null; this.onerror=null; this.onabort=null; var s=this;
+    setTimeout(function(){ if(typeof s.oncomplete==='function'){ try{ s.oncomplete({target:s}); }catch(e){} } },0); }
+  Tx.prototype.objectStore=function(n){ if(!this.db.stores[n]) this.db.stores[n]=new Store(); return this.db.stores[n]; };
+  Tx.prototype.abort=function(){};
+  function DB(name){ var self=this; this.name=name; this.stores={}; this.version=1;
+    this.objectStoreNames={ contains:function(n){ return !!self.stores[n]; }, length:0, item:function(){return null;} }; }
+  DB.prototype.createObjectStore=function(n){ this.stores[n]=new Store(); return this.stores[n]; };
+  DB.prototype.deleteObjectStore=function(n){ delete this.stores[n]; };
+  DB.prototype.transaction=function(){ return new Tx(this); };
+  DB.prototype.close=function(){};
+  var DBS={};
+  var idb={
+    open:function(name, version){
+      var req=Req();
+      setTimeout(function(){
+        var isNew=!DBS[name]; var db=DBS[name]||(DBS[name]=new DB(name)); db.version=version||db.version||1; req.result=db;
+        if(isNew && typeof req.onupgradeneeded==='function'){ try{ req.onupgradeneeded({target:req,oldVersion:0,newVersion:db.version}); }catch(e){} }
+        if(typeof req.onsuccess==='function'){ try{ req.onsuccess({target:req}); }catch(e){} }
+      },0);
+      return req;
+    },
+    deleteDatabase:function(name){ var r=Req(); delete DBS[name]; fire(r,'success',undefined); return r; },
+    cmp:function(a,b){ return a<b?-1:a>b?1:0; }
+  };
+  try{ Object.defineProperty(window,'indexedDB',{value:idb,configurable:true}); }
+  catch(e){ try{ window.indexedDB=idb; }catch(e2){} }
+})();
+</script>
 <script>/*__FFLATE__*/</script>
 <script>
 (function(){
