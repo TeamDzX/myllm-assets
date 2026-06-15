@@ -63,7 +63,24 @@
 <script>
 (function(){
   var DATA='https://cdn.emulatorjs.org/stable/data/';
-  function status(m){ document.getElementById('status').textContent=m||''; }
+  function status(m){ var s=document.getElementById('status'); if(s){ s.style.color='#aab0c4'; s.textContent=m||''; } }
+
+  // Surface the real failure instead of hanging silently — so we can see WHICH
+  // null-origin feature EmulatorJS is tripping on (localStorage / IndexedDB /
+  // Worker / WASM). Shows the first error/rejection/console.error on screen.
+  var shown=false;
+  function showErr(tag, m){
+    if(shown) return; shown=true;
+    var s=document.getElementById('status');
+    if(s){ s.style.color='#ff8a8a'; s.style.whiteSpace='pre-wrap'; s.style.padding='0 16px';
+      s.textContent=(tag+': '+String((m&&m.message)||m)).slice(0,260); }
+  }
+  window.addEventListener('error', function(ev){ showErr('ERR', (ev&&(ev.message||(ev.error&&ev.error.message)))||'script error'); });
+  window.addEventListener('unhandledrejection', function(ev){ showErr('REJECT', (ev&&ev.reason)||'promise rejected'); });
+  if(window.console && console.error){
+    var _ce=console.error;
+    console.error=function(){ try{ showErr('LOG', Array.prototype.slice.call(arguments).map(function(x){return (x&&x.message)||x;}).join(' ')); }catch(e){} return _ce.apply(console,arguments); };
+  }
 
   // Map a ROM extension to an EmulatorJS core.
   function coreFor(ext){
