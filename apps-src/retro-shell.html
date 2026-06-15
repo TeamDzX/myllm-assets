@@ -106,6 +106,19 @@
   catch(e){ try{ window.indexedDB=idb; }catch(e2){} }
 })();
 </script>
+<script>
+/* Emscripten cores read window.screen.width/height ("Could not get screen
+   dimension"); the webview can report 0. Make them report the viewport size. */
+(function(){ try{
+  if(!window.screen || !window.screen.width || !window.screen.height){
+    var sc={ get width(){return window.innerWidth||document.documentElement.clientWidth||390;},
+             get height(){return window.innerHeight||document.documentElement.clientHeight||844;},
+             get availWidth(){return this.width;}, get availHeight(){return this.height;},
+             colorDepth:24, pixelDepth:24 };
+    try{ Object.defineProperty(window,'screen',{value:sc,configurable:true}); }catch(e){ try{ window.screen=sc; }catch(e2){} }
+  }
+}catch(e){} })();
+</script>
 <script>/*__FFLATE__*/</script>
 <script>
 (function(){
@@ -197,7 +210,11 @@
     window.EJS_pathtodata=DATA;
     window.EJS_startOnLoaded=true;                 // auto-start; canvas is sized by now
     window.EJS_DEBUG_XX=true;                       // verbose: trail shows the post-ready stall
-    window.EJS_ready=function(){ status('Starting game…'); };
+    window.EJS_ready=function(){ status('Starting game…');
+      try{ var cv=document.querySelector('#game canvas');
+        if(cv){ if(!cv.width||cv.width<2) cv.width=window.innerWidth||390; if(!cv.height||cv.height<2) cv.height=window.innerHeight||844; cv.style.width='100%'; cv.style.height='100%'; }
+        window.dispatchEvent(new Event('resize'));
+      }catch(e){} };
     window.EJS_onGameStart=function(){ status(''); };   // running — clear the status
     // Show + size the container, let layout settle a couple of frames, THEN load
     // EmulatorJS (so the canvas has real dimensions before the core starts).
