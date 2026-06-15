@@ -100,6 +100,16 @@
   for(var i=0;i<buf32.length;i++) buf32[i]=0xFF000000;
   function status(m){ document.getElementById('status').textContent=m||''; }
 
+  // If the inlined emulator core didn't arrive intact (e.g. an incomplete
+  // update), say so plainly instead of dying silently and leaving Load ROM dead.
+  if(typeof jsnes==='undefined' || !jsnes.NES){
+    document.body.classList.remove('playing');
+    status('Emulator core didn’t load — the app likely updated incompletely. Delete this app and re-install it from the gallery.');
+    var fb0=document.getElementById('file');
+    if(fb0) fb0.addEventListener('change', function(){ status('Please delete and re-install the app first — the emulator core is missing.'); });
+    return;
+  }
+
   // --- Audio: ring buffer fed by jsnes, drained by a ScriptProcessor. The
   //     native .playback session (set by MyLLMos) makes WebAudio audible. ---
   var AC=window.AudioContext||window.webkitAudioContext;
