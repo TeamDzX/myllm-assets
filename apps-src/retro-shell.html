@@ -137,7 +137,7 @@
     s.style.color=color; s.style.whiteSpace='pre-wrap'; s.style.padding='0 16px';
     try{ s.textContent=('· '+Array.prototype.slice.call(args).map(str).join(' ')).slice(0,300); }catch(e){} }
   if(window.console){
-    ['log','info','warn'].forEach(function(fn){ if(console[fn]){ var o=console[fn]; console[fn]=function(){ roll('#9aa0b4',arguments); return o.apply(console,arguments); }; } });
+    ['warn'].forEach(function(fn){ if(console[fn]){ var o=console[fn]; console[fn]=function(){ roll('#d8b06a',arguments); return o.apply(console,arguments); }; } });
     if(console.error){ var _ce=console.error; console.error=function(){ roll('#ff8a8a',arguments); return _ce.apply(console,arguments); }; }
   }
   // Worker errors never reach window.onerror — capture them explicitly.
@@ -191,10 +191,11 @@
     window.EJS_gameUrl=url;
     window.EJS_gameName=name.replace(/\.[^.]+$/,'');
     window.EJS_pathtodata=DATA;
-    window.EJS_DEBUG_XX=true;   // verbose logging so the progress trail shows where it stalls
-    // Show + size the container, let layout settle a frame, THEN load EmulatorJS
-    // (its own "Play" button starts the core once the canvas is sized — avoids
-    // "Could not get screen dimension" from auto-starting into a 0-size canvas).
+    window.EJS_startOnLoaded=true;                 // auto-start; canvas is sized by now
+    window.EJS_ready=function(){ status('Starting game…'); };
+    window.EJS_onGameStart=function(){ status(''); };   // running — clear the status
+    // Show + size the container, let layout settle a couple of frames, THEN load
+    // EmulatorJS (so the canvas has real dimensions before the core starts).
     document.getElementById('start').style.display='none';
     var g=document.getElementById('game'); g.style.display='block';
     requestAnimationFrame(function(){ requestAnimationFrame(function(){
