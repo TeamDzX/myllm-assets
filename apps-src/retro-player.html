@@ -148,15 +148,16 @@
     function fire(){ if(!canv.size) return; var es=[]; canv.forEach(function(t){ es.push(entry(t)); });
       try{ if(window.console&&console.log) console.log('RO-fire '+es[0].contentRect.width+'x'+es[0].contentRect.height); }catch(e){}
       try{ cb(es, wrap); }catch(e){ try{ if(console&&console.log) console.log('RO-cb-err '+((e&&e.message)||e)); }catch(_){} } }
-    window.addEventListener('resize', fire, false);
+    var _rt; window.addEventListener('resize', function(){ clearTimeout(_rt); _rt=setTimeout(fire,120); }, false);
     wrap={
       observe:function(t,o){ try{ ro.observe(t,o); }catch(e){}
         if(t&&t.tagName==='CANVAS'){ canv.add(t);
           try{ if(console&&console.log) console.log('RO-observe-canvas'); }catch(_){}
-          fire();                                 // SYNC — beat the core's in-callMain dimension check
-          Promise.resolve().then(fire);           // microtask
-          try{ requestAnimationFrame(fire); }catch(_){}
-          setTimeout(fire,0); setTimeout(fire,60); setTimeout(fire,250); setTimeout(fire,800);
+          // ASYNC ONLY: firing synchronously here calls a wasm export while the
+          // core's callMain is still on the stack -> emscripten re-entrancy ->
+          // FREEZE. setTimeout(0) runs after the stack unwinds (how a real
+          // ResizeObserver fires anyway). A few staggered tries ensure delivery.
+          setTimeout(fire,0); setTimeout(fire,150); setTimeout(fire,500);
         } },
       unobserve:function(t){ try{ ro.unobserve(t); }catch(e){} canv['delete'](t); },
       disconnect:function(){ try{ ro.disconnect(); }catch(e){} canv.clear(); }
