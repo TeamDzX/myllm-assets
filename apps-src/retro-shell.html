@@ -20,6 +20,12 @@
   #game{ position:fixed; top:0; left:0; right:0; bottom:0; width:100vw; height:100vh; display:none; background:#000; }
   #status{ position:fixed; bottom:14px; left:0; right:0; text-align:center; color:#aab0c4; font-size:13px; pointer-events:none; }
   @media (min-width:768px){ #start{ max-width:560px; margin:0 auto; } }
+  /* EmulatorJS canvas needs a real CSS box — we don't load emulator.min.css, so
+     give .ejs_canvas + its wrappers a full-viewport size (the ResizeObserver
+     reads the canvas's CSS content box). Keep aspect via object-fit. */
+  #game .ejs_parent, #game .ejs_game, #game .ejs_canvas_parent{ display:block !important; width:100%; height:100%; }
+  #game canvas.ejs_canvas{ display:block !important; width:100vw !important; height:100vh !important;
+    object-fit:contain; image-rendering:pixelated; background:#000; }
 </style>
 </head>
 <body>
@@ -118,6 +124,39 @@
     try{ Object.defineProperty(window,'screen',{value:sc,configurable:true}); }catch(e){ try{ window.screen=sc; }catch(e2){} }
   }
 }catch(e){} })();
+</script>
+<script>
+/* WORKFLOW-VERIFIED FIX (decompiled the real mGBA core): the core reads canvas
+   size ONLY from a ResizeObserver on Module.canvas (.ejs_canvas), via
+   entry.devicePixelContentBoxSize / contentRect — the canvas CSS box. EmulatorJS
+   gives the canvas no CSS size and attaches it AFTER callMain, so that box is 0
+   at observe time -> "[EMSCRIPTEN]: Could not get screen dimensions!" + black.
+   Wrap ResizeObserver so observing a <canvas> immediately (and on resize)
+   delivers a viewport-sized entry, defeating the detached/zero-box +
+   deferred-layout race. Only canvases are synthesised; other observers pass through. */
+(function(){
+  var Native=window.ResizeObserver; if(!Native) return;
+  function vw(){ return Math.max(1, window.innerWidth||document.documentElement.clientWidth||320); }
+  function vh(){ return Math.max(1, window.innerHeight||document.documentElement.clientHeight||480); }
+  function entry(t){ var w=vw(),h=vh(),d=window.devicePixelRatio||1,
+      r={x:0,y:0,top:0,left:0,right:w,bottom:h,width:w,height:h};
+    return { target:t, contentRect:r,
+      borderBoxSize:[{inlineSize:w,blockSize:h}], contentBoxSize:[{inlineSize:w,blockSize:h}],
+      devicePixelContentBoxSize:[{inlineSize:Math.round(w*d),blockSize:Math.round(h*d)}] }; }
+  function Patched(cb){
+    var ro=new Native(cb), canv=new Set();
+    function fire(){ if(!canv.size) return; var es=[]; canv.forEach(function(t){ es.push(entry(t)); }); try{ cb(es, this); }catch(e){} }
+    window.addEventListener('resize', fire, false);
+    return {
+      observe:function(t,o){ try{ ro.observe(t,o); }catch(e){} if(t&&t.tagName==='CANVAS'){ canv.add(t); Promise.resolve().then(fire); } },
+      unobserve:function(t){ try{ ro.unobserve(t); }catch(e){} canv['delete'](t); },
+      disconnect:function(){ try{ ro.disconnect(); }catch(e){} canv.clear(); }
+    };
+  }
+  Patched.prototype=Native.prototype;
+  window.ResizeObserver=Patched;
+  if(typeof window.resizeTo!=='function'){ try{ window.resizeTo=function(){}; }catch(e){} }
+})();
 </script>
 <script>/*__FFLATE__*/</script>
 <script>
