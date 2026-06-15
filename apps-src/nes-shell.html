@@ -61,14 +61,14 @@
 <div class="top">
   <h1>8-Bit Player</h1>
   <span class="sp"></span>
-  <label class="load">Load ROM<input id="file" type="file" accept=".nes,application/octet-stream"></label>
+  <label class="load">Load ROM<input id="file" type="file" accept=".nes,.zip,application/zip,application/octet-stream"></label>
 </div>
 
 <div class="screen-wrap">
   <canvas id="screen" width="256" height="240"></canvas>
   <div class="hint">
     <b>Bring your own ROM</b>
-    <div>Tap <b>Load ROM</b> and pick a <b>.nes</b> file you own.<br>No games are included — this is just the player.</div>
+    <div>Tap <b>Load ROM</b> and pick a <b>.nes</b> (or a <b>.zip</b> containing one) you own.<br>No games are included — this is just the player.</div>
   </div>
 </div>
 <div class="status" id="status"></div>
@@ -91,6 +91,7 @@
 </div>
 
 <script>/*__JSNES__*/</script>
+<script>/*__FFLATE__*/</script>
 <script>
 (function(){
   var SW=256, SH=240;
@@ -154,7 +155,21 @@
     var f=e.target.files && e.target.files[0]; if(!f) return;
     resumeAudio(); status('Loading '+f.name+'…');
     var rd=new FileReader();
-    rd.onload=function(ev){ startROM(toBinary(new Uint8Array(ev.target.result))); };
+    rd.onload=function(ev){
+      try{
+        var bytes=new Uint8Array(ev.target.result);
+        // ZIP? (local-file-header magic "PK\x03\x04") — extract the first .nes.
+        if(bytes.length>4 && bytes[0]===0x50 && bytes[1]===0x4B && (bytes[2]===0x03||bytes[2]===0x05||bytes[2]===0x07)){
+          if(!window.fflate || !fflate.unzipSync){ status('Couldn’t unzip — load the .nes directly.'); return; }
+          var entries=fflate.unzipSync(bytes), romName=null;
+          for(var nm in entries){ if(/\.nes$/i.test(nm)){ romName=nm; break; } }
+          if(!romName){ status('No .nes ROM found inside that .zip.'); return; }
+          bytes=entries[romName];
+          status('Loaded '+romName.split('/').pop()+'…');
+        }
+        startROM(toBinary(bytes));
+      }catch(err){ status('Couldn’t read that file: '+((err&&err.message)||err)); }
+    };
     rd.onerror=function(){ status('Couldn’t read that file.'); };
     rd.readAsArrayBuffer(f);
   });

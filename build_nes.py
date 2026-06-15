@@ -11,20 +11,24 @@ import json, os, sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 SHELL = os.path.join(HERE, 'apps-src', 'nes-shell.html')
 JSNES = os.path.join(HERE, 'apps-src', 'jsnes.min.js')
+FFLATE = os.path.join(HERE, 'apps-src', 'fflate.min.js')
 OUT   = os.path.join(HERE, 'apps-src', 'nes-emulator.html')
 WRAP  = os.path.join(HERE, 'apps-src', 'nes-emulator.myllmapp')
 MANIFEST = os.path.join(HERE, 'apps.json')
 RAWBASE = 'https://raw.githubusercontent.com/TeamDzX/myllm-assets/main'
-VERSION = 4
+VERSION = 5
 
 shell = open(SHELL, encoding='utf-8').read()
 jsnes = open(JSNES, encoding='utf-8').read()
-if '</script>' in jsnes:
-    sys.exit('jsnes contains a literal </script> — cannot inline safely')
-if '/*__JSNES__*/' not in shell:
-    sys.exit('shell is missing the /*__JSNES__*/ placeholder')
+fflate = open(FFLATE, encoding='utf-8').read()
+for lib, name in ((jsnes, 'jsnes'), (fflate, 'fflate')):
+    if '</script>' in lib:
+        sys.exit(name + ' contains a literal </script> — cannot inline safely')
+for ph in ('/*__JSNES__*/', '/*__FFLATE__*/'):
+    if ph not in shell:
+        sys.exit('shell is missing the ' + ph + ' placeholder')
 
-html = shell.replace('/*__JSNES__*/', jsnes)
+html = shell.replace('/*__JSNES__*/', jsnes).replace('/*__FFLATE__*/', fflate)
 open(OUT, 'w', encoding='utf-8').write(html)
 json.dump({"name":"8-Bit Player", "html":html, "kind":"html",
            "iconSymbol":"gamecontroller.fill", "iconColor":"pink"},
