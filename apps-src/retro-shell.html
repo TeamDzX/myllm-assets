@@ -137,9 +137,13 @@
     s.style.color=color; s.style.whiteSpace='pre-wrap'; s.style.padding='0 16px';
     try{ s.textContent=('· '+Array.prototype.slice.call(args).map(str).join(' ')).slice(0,300); }catch(e){} }
   if(window.console){
-    ['warn'].forEach(function(fn){ if(console[fn]){ var o=console[fn]; console[fn]=function(){ roll('#d8b06a',arguments); return o.apply(console,arguments); }; } });
+    ['log','info','warn'].forEach(function(fn){ if(console[fn]){ var o=console[fn]; console[fn]=function(){ roll('#9aa0b4',arguments); return o.apply(console,arguments); }; } });
     if(console.error){ var _ce=console.error; console.error=function(){ roll('#ff8a8a',arguments); return _ce.apply(console,arguments); }; }
   }
+  // Black-after-ready usually means WebGL didn't give a context — catch that.
+  if(window.HTMLCanvasElement){ var _gc=HTMLCanvasElement.prototype.getContext;
+    try{ HTMLCanvasElement.prototype.getContext=function(type){ var c=_gc.apply(this,arguments);
+      if(/webgl/i.test(String(type)) && !c){ shown=false; showErr('NO-WEBGL', String(type)+' unavailable'); } return c; }; }catch(e){} }
   // Worker errors never reach window.onerror — capture them explicitly.
   if(window.Worker){ var OW=window.Worker;
     try{ var NW=function(u,o){ var w=new OW(u,o); try{ w.addEventListener('error',function(e){ shown=false; showErr('WORKER', (e&&(e.message||e.filename))||String(u)); }); }catch(_){} return w; };
@@ -192,6 +196,7 @@
     window.EJS_gameName=name.replace(/\.[^.]+$/,'');
     window.EJS_pathtodata=DATA;
     window.EJS_startOnLoaded=true;                 // auto-start; canvas is sized by now
+    window.EJS_DEBUG_XX=true;                       // verbose: trail shows the post-ready stall
     window.EJS_ready=function(){ status('Starting game…'); };
     window.EJS_onGameStart=function(){ status(''); };   // running — clear the status
     // Show + size the container, let layout settle a couple of frames, THEN load
