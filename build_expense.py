@@ -19,7 +19,7 @@ OUT  = os.path.join(HERE, 'apps-src', 'expense-tracker.html')
 WRAP = os.path.join(HERE, 'apps-src', 'expense-tracker.myllmapp')
 MANIFEST = os.path.join(HERE, 'apps.json')
 RAWBASE = 'https://raw.githubusercontent.com/TeamDzX/myllm-assets/main'
-VERSION = 1
+VERSION = 2
 
 # --- Apps Script the user deploys to their OWN sheet (implements the contract
 #     the app already speaks: POST appends a row; ?action=getExpenses reads;
@@ -250,6 +250,14 @@ def main():
     html = sub1(r"\$\('clearDataBtn'\)\.addEventListener\('click', \(\) => \{",
                 "$('clearDataBtn').addEventListener('click', async () => {", html)
     html = sub1(r"if \(confirm\('Clear all saved suggestions\?'\)\) \{", "if (await uiConfirm('Clear all saved suggestions?')) {", html)
+    # 3b. Guard the sheet calls when no URL is configured yet — otherwise the
+    #     load-time fetch hits an empty/relative URL, gets HTML back, and
+    #     JSON.parse throws "unexpected token <" (fires in the gallery preview
+    #     and on every launch before setup).
+    html = sub1(r'async function fetchExpensesFromWebApp\(\) \{',
+                "async function fetchExpensesFromWebApp() {\n            if (!WEBAPP_URL) { try { var _l = storage.get('expenses', []); if (Array.isArray(_l)) expenses = _l; } catch(e){} if (typeof updateSummary==='function') updateSummary(); if (typeof renderExpensesList==='function') renderExpensesList(); return; }", html)
+    html = sub1(r'async function syncExpenseToWebApp\(expense\) \{',
+                "async function syncExpenseToWebApp(expense) {\n            if (!WEBAPP_URL) { if (typeof showToast==='function') showToast('Add your Google Sheet in Settings first', 'error'); return false; }", html)
     # 4. Inject the connect-your-sheet panel before "Data Management".
     html = sub1(r'(<div style="padding-top: 16px; margin-top: 16px; border-top: 1px solid var\(--border\);">\s*<div class="form-label" style="margin-bottom: 8px;">Data Management</div>)',
                 settings_block() + r'\1', html)
@@ -281,7 +289,7 @@ def main():
         "iconSymbol":"creditcard.fill", "iconColor":"green",
         "version":VERSION, "featured":True, "requiresAI":False,
         "banner":RAWBASE+"/apps/expense-tracker.jpg",
-        "html":RAWBASE+"/apps-src/expense-tracker.html",
+        "html":RAWBASE+"/apps-src/expense-tracker.html?v=%d" % VERSION,
         "json":RAWBASE+"/apps-src/expense-tracker.myllmapp",
         "sizeKB":max(1, round(len(html.encode('utf-8'))/1024)), "category":"Productivity",
     }

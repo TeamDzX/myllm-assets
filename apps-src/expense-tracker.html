@@ -2157,6 +2157,7 @@ function doPost(e){
         // GOOGLE SHEETS SYNC
         // ============================================
         async function syncExpenseToWebApp(expense) {
+            if (!WEBAPP_URL) { if (typeof showToast==='function') showToast('Add your Google Sheet in Settings first', 'error'); return false; }
             try {
                 const names = getUserNames();
                 const data = {
@@ -2183,6 +2184,7 @@ function doPost(e){
         }
 
         async function fetchExpensesFromWebApp() {
+            if (!WEBAPP_URL) { try { var _l = storage.get('expenses', []); if (Array.isArray(_l)) expenses = _l; } catch(e){} if (typeof updateSummary==='function') updateSummary(); if (typeof renderExpensesList==='function') renderExpensesList(); return; }
             try {
                 showToast('Loading expenses...', 'info');
 
