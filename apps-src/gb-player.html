@@ -128,7 +128,12 @@
   var AC=window.AudioContext||window.webkitAudioContext;
   var actx=AC?new AC():null, RATE=actx?actx.sampleRate:44100;
   var AUDIO_LATENCY=0.1, startSec=0;
+  var audioEvents=0, audioPeak=0, audioSched=0;   // TEMP diagnostics
   function scheduleAudio(view, frames){           // view = Uint8Array over the wasm audio buffer
+    audioEvents++;
+    // peak deviation from centre (128) over this buffer — >0 means real samples
+    var pk=0, kn=frames*2; for(var k=0;k<kn;k++){ var d=view[k]-128; if(d<0)d=-d; if(d>pk)pk=d; }
+    audioPeak=pk;
     if(!actx || actx.state!=='running') return;   // wait for a gesture-driven resume
     var now=actx.currentTime;
     startSec = startSec || (now+AUDIO_LATENCY);
@@ -137,7 +142,7 @@
     var c0=buf.getChannelData(0), c1=buf.getChannelData(1);
     for(var i=0;i<frames;i++){ c0[i]=view[2*i]/255; c1[i]=view[2*i+1]/255; }
     var src=actx.createBufferSource(); src.buffer=buf; src.connect(actx.destination);
-    src.start(startSec); startSec += frames/RATE;
+    src.start(startSec); startSec += frames/RATE; audioSched++;
   }
   var audioUnlocked=false;
   function resumeAudio(){
@@ -246,6 +251,13 @@
     }catch(e){ running=false; status('Emulation stopped: '+((e&&e.message)||e)); return; }
     requestAnimationFrame(loop);
   }
+
+  // TEMP audio diagnostic — read this back: state / events / peak% / scheduled / unlocked.
+  setInterval(function(){
+    if(!running) return;
+    var pct=Math.round(audioPeak/127*100);
+    status('🔊 '+(actx?actx.state:'none')+' · ev'+audioEvents+' · peak'+pct+'% · sch'+audioSched+' · '+(audioUnlocked?'unlock':'lock'));
+  }, 1000);
 
   function startROM(bytes){
     if(!core){ status('Still starting up — tap Load ROM again in a moment.'); return; }
