@@ -153,8 +153,16 @@
   // --- Controls (touch + mouse + keyboard) ---
   function bind(el){
     var b=BTN[el.getAttribute('data-btn')];
-    function dn(e){ if(e.cancelable) e.preventDefault(); resumeAudio(); if(b!=null) nes.buttonDown(1,b); el.classList.add('on'); }
-    function up(e){ if(e&&e.cancelable) e.preventDefault(); if(b!=null) nes.buttonUp(1,b); el.classList.remove('on'); }
+    var downAt=0, relT=null;
+    function dn(e){ if(e.cancelable) e.preventDefault(); resumeAudio();
+      if(relT){ clearTimeout(relT); relT=null; }
+      if(b!=null) nes.buttonDown(1,b); el.classList.add('on'); downAt=Date.now(); }
+    // Minimum hold: a fast tap/click can fire down+up inside one emulator frame,
+    // so the press is never seen. Keep it held ~90ms (≈5 frames) before release.
+    function up(e){ if(e&&e.cancelable) e.preventDefault(); el.classList.remove('on');
+      var rel=function(){ relT=null; if(b!=null) nes.buttonUp(1,b); };
+      var held=Date.now()-downAt, MIN=90;
+      if(held>=MIN){ rel(); } else { if(relT) clearTimeout(relT); relT=setTimeout(rel, MIN-held); } }
     el.addEventListener('touchstart',dn,{passive:false});
     el.addEventListener('touchend',up,{passive:false});
     el.addEventListener('touchcancel',up,{passive:false});
