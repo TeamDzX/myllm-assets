@@ -16,7 +16,7 @@ OUT  = os.path.join(HERE, 'apps-src', 'hanyu.html')
 WRAP = os.path.join(HERE, 'apps-src', 'hanyu.myllmapp')
 MANIFEST = os.path.join(HERE, 'apps.json')
 APPSTORE = 'https://apps.apple.com/us/app/hanyu-learn-chinese/id6760541929'
-VERSION  = 8  # bump on every adapted change; also cache-busts the html URL
+VERSION  = 9  # bump on every adapted change; also cache-busts the html URL
 
 # --- HEAD shim: injected right after <body>, before any app script runs ---
 HEAD = r'''
@@ -27,6 +27,27 @@ HEAD = r'''
    and the messages list scrollable. Neutralise the app's conflicting rules. */
 body.keyboard-open .chat-input-area{position:static !important;bottom:auto !important;}
 body.keyboard-open .chat-messages{padding-bottom:12px !important;}
+/* MyLLMos: correct the hanyu-v3 chat tab. The v3 layer makes #chatTab a flex
+   column (good) but leaves .chat-window-tab non-flex (so .chat-messages doesn't
+   actually become the scroller — it overflows and the whole page scrolls, and
+   the header detaches) and leaves the input position:fixed (floating behind the
+   bottom nav). Force a clean single flex column: header pinned, .chat-messages
+   the only scroller, input in normal flow at the bottom. */
+body.hanyu-v3 #chatTab .chat-window-tab{
+  display:flex !important; flex-direction:column !important;
+  flex:1 1 auto !important; min-height:0 !important;
+  height:auto !important; max-height:none !important; overflow:hidden !important;
+}
+body.hanyu-v3 #chatTab .chat-header{ flex:0 0 auto !important; }
+body.hanyu-v3 #chatTab .chat-messages{
+  flex:1 1 auto !important; min-height:0 !important;
+  overflow-y:auto !important; -webkit-overflow-scrolling:touch !important;
+  padding-bottom:14px !important;
+}
+body.hanyu-v3 #chatTab .chat-input-area{
+  position:relative !important; bottom:auto !important; left:auto !important; right:auto !important;
+  z-index:auto !important; flex:0 0 auto !important;
+}
 </style>
 <script>
 /* === MyLLMos compatibility layer (auto-injected; do not edit the app above) === */
@@ -109,14 +130,19 @@ body.keyboard-open .chat-messages{padding-bottom:12px !important;}
   (function(){
     var vv = window.visualViewport; if(!vv) return;
     var active=false;
+    // In the v3 layout #chatTab owns the height (calc(100dvh-…) !important); in
+    // the old layout it's .chat-window-tab. Resize whichever applies, using an
+    // important inline style so it overrides the !important CSS height.
+    function target(){ return document.querySelector('body.hanyu-v3 #chatTab') || document.querySelector('.chat-window-tab'); }
     function sizeWin(){
-      var win=document.querySelector('.chat-window-tab'); if(!win) return;
-      var top=win.getBoundingClientRect().top; if(!(top>0 && top<320)) top=90;
-      var h=Math.round(vv.height - top - 8); if(h<200) h=200;
-      win.style.height=h+'px'; win.style.maxHeight=h+'px';
+      var win=target(); if(!win) return;
+      var top=win.getBoundingClientRect().top; if(!(top>=0 && top<320)) top=90;
+      var h=Math.round(vv.height - top - 6); if(h<200) h=200;
+      win.style.setProperty('height', h+'px', 'important');
+      win.style.setProperty('max-height', h+'px', 'important');
       var msgs=document.querySelector('.chat-messages'); if(msgs) msgs.scrollTop=msgs.scrollHeight;
     }
-    function reset(){ var win=document.querySelector('.chat-window-tab'); if(win){ win.style.height=''; win.style.maxHeight=''; } }
+    function reset(){ var win=target(); if(win){ win.style.removeProperty('height'); win.style.removeProperty('max-height'); } }
     function onVV(){ if(active) sizeWin(); }
     document.addEventListener('focusin', function(e){
       if(e.target && e.target.id==='chatInput'){ active=true; sizeWin(); vv.addEventListener('resize',onVV); vv.addEventListener('scroll',onVV); setTimeout(sizeWin,250); setTimeout(sizeWin,550); }
