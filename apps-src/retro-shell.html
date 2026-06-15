@@ -116,11 +116,18 @@
   // null-origin feature EmulatorJS is tripping on (localStorage / IndexedDB /
   // Worker / WASM). Shows the first error/rejection/console.error on screen.
   var shown=false;
+  function str(x){
+    if(x==null) return String(x);
+    if(typeof x==='string') return x;
+    if(x instanceof Error || (x && typeof x.message==='string')){ var ln=x.stack?(String(x.stack).split('\n')[1]||'').trim():''; return (x.name||'Error')+': '+x.message+(ln?(' @'+ln):''); }
+    if(typeof x==='object'){ try{ return JSON.stringify(x); }catch(e){ try{ return '{'+Object.keys(x).slice(0,8).join(',')+'}'; }catch(e2){ return '[object]'; } } }
+    return String(x);
+  }
   function showErr(tag, m){
     if(shown) return; shown=true;
     var s=document.getElementById('status');
     if(s){ s.style.color='#ff8a8a'; s.style.whiteSpace='pre-wrap'; s.style.padding='0 16px';
-      s.textContent=(tag+': '+String((m&&m.message)||m)).slice(0,260); }
+      s.textContent=(tag+': '+str(m)).slice(0,300); }
   }
   window.addEventListener('error', function(ev){ showErr('ERR', (ev&&(ev.message||(ev.error&&ev.error.message)))||'script error'); });
   window.addEventListener('unhandledrejection', function(ev){ showErr('REJECT', (ev&&ev.reason)||'promise rejected'); });
@@ -128,7 +135,7 @@
   // stalls. Fatal errors (above) latch red; logs roll in grey, last line wins.
   function roll(color, args){ if(shown) return; var s=document.getElementById('status'); if(!s) return;
     s.style.color=color; s.style.whiteSpace='pre-wrap'; s.style.padding='0 16px';
-    try{ s.textContent=('· '+Array.prototype.slice.call(args).map(function(x){return (x&&x.message)||x;}).join(' ')).slice(0,240); }catch(e){} }
+    try{ s.textContent=('· '+Array.prototype.slice.call(args).map(str).join(' ')).slice(0,300); }catch(e){} }
   if(window.console){
     ['log','info','warn'].forEach(function(fn){ if(console[fn]){ var o=console[fn]; console[fn]=function(){ roll('#9aa0b4',arguments); return o.apply(console,arguments); }; } });
     if(console.error){ var _ce=console.error; console.error=function(){ roll('#ff8a8a',arguments); return _ce.apply(console,arguments); }; }
