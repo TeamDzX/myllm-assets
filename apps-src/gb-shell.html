@@ -146,7 +146,7 @@
   }
   function GBCore(Module, sampleRate){
     this.m=Module; this.sampleRate=sampleRate|0; this.audioFrames=AUDIO_FRAMES;
-    this.e=0; this.romPtr=0; this.romSize=0; this._romCopy=null;
+    this.e=0; this.romPtr=0; this.romSize=0; this._romCopy=null; this.joypadBufferPtr=0;
     this._fbPtr=0; this._fbSize=0; this._auPtr=0; this._auCapBytes=0; this._audioOut=[];
   }
   GBCore.create=function(wasmBytes, sampleRate){
@@ -157,6 +157,7 @@
   };
   GBCore.prototype._destroyEmu=function(){
     if(this.e){ this.m._emulator_delete(this.e); this.e=0; }
+    if(this.joypadBufferPtr){ this.m._joypad_delete(this.joypadBufferPtr); this.joypadBufferPtr=0; }
     if(this.romPtr){ this.m._free(this.romPtr); this.romPtr=0; }
     this._audioOut.length=0;
   };
@@ -169,6 +170,12 @@
     var e=this.m._emulator_new_simple(ptr, size, this.sampleRate, this.audioFrames, CGB_COLOR_CURVE_GAMBATTE);
     if(e===0){ this.m._free(ptr); throw new Error('Invalid or unsupported ROM'); }
     this.e=e; this.romPtr=ptr; this.romSize=size; this._romCopy=rom.slice();
+    // CRITICAL: emulator_new_simple does NOT wire up joypad reading. binjgb reads
+    // input through a callback that copies the s_buttons state (written by
+    // _set_joyp_*) into the emulator each poll. Install the default callback (with
+    // a JoypadBuffer) or all button presses are silently ignored. (binjgb demo.js.)
+    this.joypadBufferPtr=this.m._joypad_new();
+    this.m._emulator_set_default_joypad_callback(e, this.joypadBufferPtr);
     this._fbPtr=this.m._get_frame_buffer_ptr(e);
     this._fbSize=this.m._get_frame_buffer_size(e);        // == 92160
     this._auPtr=this.m._get_audio_buffer_ptr(e);
