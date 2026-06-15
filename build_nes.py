@@ -16,7 +16,7 @@ OUT   = os.path.join(HERE, 'apps-src', 'nes-emulator.html')
 WRAP  = os.path.join(HERE, 'apps-src', 'nes-emulator.myllmapp')
 MANIFEST = os.path.join(HERE, 'apps.json')
 RAWBASE = 'https://raw.githubusercontent.com/TeamDzX/myllm-assets/main'
-VERSION = 5
+VERSION = 6
 
 shell = open(SHELL, encoding='utf-8').read()
 jsnes = open(JSNES, encoding='utf-8').read()

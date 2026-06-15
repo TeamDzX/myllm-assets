@@ -112,25 +112,41 @@
     return;
   }
 
-  // --- Audio: ring buffer fed by jsnes, drained by a ScriptProcessor. The
-  //     native .playback session (set by MyLLMos) makes WebAudio audible. ---
+  // --- Audio: jsnes delivers samples one at a time (onAudioSample); accumulate
+  //     them into CHUNK-sized stereo AudioBuffers scheduled back-to-back on the
+  //     timeline. ScriptProcessorNode is unreliable/silent on iOS WKWebView;
+  //     scheduled BufferSources are robust. Audible output also needs the native
+  //     AVAudioSession in .playback (MyLLMos), independent of this JS. ---
   var AC=window.AudioContext||window.webkitAudioContext;
   var actx=AC?new AC():null, RATE=actx?actx.sampleRate:44100;
-  var RB=8192, aL=new Float32Array(RB), aR=new Float32Array(RB), aw=0, ar=0;
-  function audioPush(l,r){ aL[aw]=l; aR[aw]=r; aw=(aw+1)%RB; }
-  if(actx){
-    var sp=actx.createScriptProcessor(1024,0,2);
-    sp.onaudioprocess=function(e){
-      var l=e.outputBuffer.getChannelData(0), r=e.outputBuffer.getChannelData(1);
-      for(var i=0;i<l.length;i++){
-        if(ar!==aw){ l[i]=aL[ar]; r[i]=aR[ar]; ar=(ar+1)%RB; } else { l[i]=0; r[i]=0; }
-      }
-    };
-    sp.connect(actx.destination);
+  var AUDIO_LATENCY=0.1, startSec=0;
+  var CHUNK=2048, accL=new Float32Array(CHUNK), accR=new Float32Array(CHUNK), accN=0;
+  function scheduleChunk(){            // accL/accR are full (CHUNK samples, jsnes floats [-1,1])
+    if(!actx || actx.state!=='running'){ accN=0; return; }
+    var now=actx.currentTime;
+    startSec = startSec || (now+AUDIO_LATENCY);
+    if(startSec < now){ startSec = now+AUDIO_LATENCY; accN=0; return; }  // underrun -> resync, drop
+    var buf=actx.createBuffer(2, CHUNK, RATE);
+    buf.getChannelData(0).set(accL); buf.getChannelData(1).set(accR);
+    var src=actx.createBufferSource(); src.buffer=buf; src.connect(actx.destination);
+    src.start(startSec); startSec += CHUNK/RATE; accN=0;
   }
-  function resumeAudio(){ try{ if(actx && actx.state==='suspended') actx.resume(); }catch(e){} }
+  function audioPush(l,r){ accL[accN]=l; accR[accN]=r; if(++accN>=CHUNK) scheduleChunk(); }
+  var audioUnlocked=false;
+  function resumeAudio(){
+    try{
+      if(actx && actx.state!=='running') actx.resume();
+      if(actx && !audioUnlocked){       // iOS WebAudio unlock: play one silent sample
+        var b=actx.createBuffer(1,1,RATE), s=actx.createBufferSource();
+        s.buffer=b; s.connect(actx.destination); s.start(0); audioUnlocked=true;
+      }
+    }catch(e){}
+  }
+  ['touchstart','mousedown','keydown'].forEach(function(ev){ document.addEventListener(ev, resumeAudio, {passive:true}); });
 
+  var renderThisFrame=true;
   function renderFrame(fb){
+    if(!renderThisFrame) return;       // skip intermediate frames when catching up
     for(var i=0;i<fb.length;i++) buf32[i]=0xFF000000 | fb[i];
     img.data.set(buf8); ctx.putImageData(img,0,0);
   }
@@ -142,14 +158,25 @@
     A:jsnes.Controller.BUTTON_A, B:jsnes.Controller.BUTTON_B,
     SELECT:jsnes.Controller.BUTTON_SELECT, START:jsnes.Controller.BUTTON_START };
 
-  var running=false;
-  function loop(){ if(!running) return; try{ nes.frame(); }catch(e){ running=false; status('Emulation stopped: '+(e.message||e)); return; } requestAnimationFrame(loop); }
+  // Drive jsnes by REAL elapsed wall time (not a fixed frame/rAF), so audio is
+  // produced at real-time (scheduler stays in window) and speed is correct on any
+  // display refresh rate. Render only the last frame of a catch-up batch.
+  var NES_FPS=60.0988, MAX_UPDATE_SEC=5/60, lastSec=0, frameAccum=0, running=false;
+  function loop(ts){ if(!running) return;
+    var nowTs=(ts||0)/1000;
+    var deltaSec=Math.max(nowTs-(lastSec||nowTs), 0); lastSec=nowTs;
+    frameAccum += Math.min(deltaSec, MAX_UPDATE_SEC) * NES_FPS;
+    var n=frameAccum|0; frameAccum-=n; if(n>4) n=4;
+    try{ for(var i=0;i<n;i++){ renderThisFrame=(i===n-1); nes.frame(); } }
+    catch(e){ running=false; status('Emulation stopped: '+(e.message||e)); return; }
+    requestAnimationFrame(loop);
+  }
 
   function toBinary(u8){ var CH=0x8000, out=[]; for(var i=0;i<u8.length;i+=CH){ out.push(String.fromCharCode.apply(null, u8.subarray(i,i+CH))); } return out.join(''); }
   function startROM(binary){
     try{ nes.loadROM(binary); }catch(e){ status('That doesn’t look like a valid .nes ROM.'); return; }
     running=true; resumeAudio(); document.body.classList.add('playing'); status('');
-    requestAnimationFrame(loop);
+    lastSec=0; frameAccum=0; requestAnimationFrame(loop);
   }
 
   document.getElementById('file').addEventListener('change', function(e){
@@ -205,7 +232,7 @@
   // Pause the loop when the app is backgrounded; resume on return.
   document.addEventListener('visibilitychange', function(){
     if(document.visibilityState==='hidden'){ running=false; }
-    else if(nes && document.body.classList.contains('playing') && !running){ running=true; requestAnimationFrame(loop); }
+    else if(nes && document.body.classList.contains('playing') && !running){ running=true; lastSec=0; requestAnimationFrame(loop); }
   });
 })();
 </script>
