@@ -144,14 +144,24 @@
       borderBoxSize:[{inlineSize:w,blockSize:h}], contentBoxSize:[{inlineSize:w,blockSize:h}],
       devicePixelContentBoxSize:[{inlineSize:Math.round(w*d),blockSize:Math.round(h*d)}] }; }
   function Patched(cb){
-    var ro=new Native(cb), canv=new Set();
-    function fire(){ if(!canv.size) return; var es=[]; canv.forEach(function(t){ es.push(entry(t)); }); try{ cb(es, this); }catch(e){} }
+    var ro=new Native(cb), canv=new Set(), wrap;
+    function fire(){ if(!canv.size) return; var es=[]; canv.forEach(function(t){ es.push(entry(t)); });
+      try{ if(window.console&&console.log) console.log('RO-fire '+es[0].contentRect.width+'x'+es[0].contentRect.height); }catch(e){}
+      try{ cb(es, wrap); }catch(e){ try{ if(console&&console.log) console.log('RO-cb-err '+((e&&e.message)||e)); }catch(_){} } }
     window.addEventListener('resize', fire, false);
-    return {
-      observe:function(t,o){ try{ ro.observe(t,o); }catch(e){} if(t&&t.tagName==='CANVAS'){ canv.add(t); Promise.resolve().then(fire); } },
+    wrap={
+      observe:function(t,o){ try{ ro.observe(t,o); }catch(e){}
+        if(t&&t.tagName==='CANVAS'){ canv.add(t);
+          try{ if(console&&console.log) console.log('RO-observe-canvas'); }catch(_){}
+          fire();                                 // SYNC — beat the core's in-callMain dimension check
+          Promise.resolve().then(fire);           // microtask
+          try{ requestAnimationFrame(fire); }catch(_){}
+          setTimeout(fire,0); setTimeout(fire,60); setTimeout(fire,250); setTimeout(fire,800);
+        } },
       unobserve:function(t){ try{ ro.unobserve(t); }catch(e){} canv['delete'](t); },
       disconnect:function(){ try{ ro.disconnect(); }catch(e){} canv.clear(); }
     };
+    return wrap;
   }
   Patched.prototype=Native.prototype;
   window.ResizeObserver=Patched;
