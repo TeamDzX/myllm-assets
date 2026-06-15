@@ -34,6 +34,31 @@
 <div id="game"></div>
 <div id="status"></div>
 
+<script>
+/* MyLLMos: localStorage/sessionStorage THROW on the sandbox's null origin, which
+   halts EmulatorJS during init. Provide synchronous in-memory shims first. */
+(function(){
+  function mem(){
+    var M={}, api={
+      getItem:function(k){k=String(k);return Object.prototype.hasOwnProperty.call(M,k)?M[k]:null;},
+      setItem:function(k,v){M[String(k)]=String(v);},
+      removeItem:function(k){delete M[String(k)];},
+      clear:function(){for(var k in M){if(Object.prototype.hasOwnProperty.call(M,k))delete M[k];}},
+      key:function(i){return Object.keys(M)[i]||null;}
+    };
+    Object.defineProperty(api,'length',{get:function(){return Object.keys(M).length;}});
+    return api;
+  }
+  function broken(name){ try{ var s=window[name]; s.getItem('__t'); s.setItem('__t','1'); s.removeItem('__t'); return false; }catch(e){ return true; } }
+  ['localStorage','sessionStorage'].forEach(function(name){
+    if(broken(name)){
+      var shim=mem();
+      try{ Object.defineProperty(window,name,{value:shim,configurable:true}); }
+      catch(e){ try{ window[name]=shim; }catch(e2){} }
+    }
+  });
+})();
+</script>
 <script>/*__FFLATE__*/</script>
 <script>
 (function(){
