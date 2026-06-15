@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Retro Player</title>
+<style>
+  html,body{ margin:0; height:100%; background:#0c0d12; color:#eef0f6;
+    font-family:var(--myllm-font,-apple-system,system-ui,'Segoe UI',Roboto,sans-serif); overflow:hidden; }
+  *{ -webkit-tap-highlight-color:transparent; }
+  #start{ position:fixed; inset:0; display:flex; flex-direction:column; align-items:center;
+    justify-content:center; text-align:center; padding:28px; gap:16px; }
+  #start h1{ font-size:28px; margin:0; font-weight:800; }
+  #start .sub{ color:#aab0c4; font-size:15px; line-height:1.55; max-width:360px; }
+  .load{ font:inherit; font-weight:700; font-size:17px; color:#fff;
+    background:var(--myllm-accent,#e0457b); border:0; border-radius:14px; padding:15px 24px; cursor:pointer; }
+  .load input{ display:none; }
+  .sys{ color:#7a8194; font-size:12px; max-width:360px; line-height:1.5; }
+  .note{ color:#6b7081; font-size:11.5px; max-width:340px; line-height:1.5; }
+  #game{ position:fixed; inset:0; display:none; background:#000; }
+  #status{ position:fixed; bottom:14px; left:0; right:0; text-align:center; color:#aab0c4; font-size:13px; pointer-events:none; }
+  @media (min-width:768px){ #start{ max-width:560px; margin:0 auto; } }
+</style>
+</head>
+<body>
+<div id="start">
+  <h1>🎮 Retro Player</h1>
+  <div class="sub">Bring your own game. Load a ROM you own and play it right here — NES, SNES, Game Boy / Color, GBA, and Sega Genesis.</div>
+  <label class="load">Load a game<input id="file" type="file"
+    accept=".nes,.fds,.sfc,.smc,.gb,.gbc,.gba,.md,.smd,.gen,.bin,.sms,.gg,.a26,.zip,application/zip,application/octet-stream"></label>
+  <div class="sys">Supports <b>.nes</b> · <b>.sfc/.smc</b> · <b>.gb/.gbc</b> · <b>.gba</b> · <b>.md/.smd/.gen</b> · <b>.sms/.gg</b> — or a <b>.zip</b> containing one.</div>
+  <div class="note">No games are included — this is just the player. The first time you load a system it downloads that console's core, so it needs an internet connection.</div>
+</div>
+<div id="game"></div>
+<div id="status"></div>
+
+<script>/*__FFLATE__*/</script>
+<script>
+(function(){
+  var DATA='https://cdn.emulatorjs.org/stable/data/';
+  function status(m){ document.getElementById('status').textContent=m||''; }
+
+  // Map a ROM extension to an EmulatorJS core.
+  function coreFor(ext){
+    ext=(ext||'').toLowerCase();
+    if(ext==='nes'||ext==='fds') return 'nes';
+    if(ext==='sfc'||ext==='smc') return 'snes';
+    if(ext==='gb'||ext==='gbc') return 'gb';
+    if(ext==='gba') return 'gba';
+    if(ext==='md'||ext==='smd'||ext==='gen'||ext==='bin') return 'segaMD';
+    if(ext==='sms') return 'segaMS';
+    if(ext==='gg') return 'segaGG';
+    if(ext==='a26') return 'atari2600';
+    return null;
+  }
+  function isZip(b){ return b.length>4 && b[0]===0x50 && b[1]===0x4B && (b[2]===0x03||b[2]===0x05||b[2]===0x07); }
+
+  document.getElementById('file').addEventListener('change', function(e){
+    var f=e.target.files&&e.target.files[0]; if(!f) return;
+    status('Reading '+f.name+'…');
+    var rd=new FileReader();
+    rd.onerror=function(){ status('Couldn’t read that file.'); };
+    rd.onload=function(ev){
+      try{
+        var bytes=new Uint8Array(ev.target.result), name=f.name, ext=name.split('.').pop();
+        if(isZip(bytes)){
+          if(!window.fflate||!fflate.unzipSync){ status('Couldn’t unzip that file — load the raw ROM.'); return; }
+          var entries=fflate.unzipSync(bytes), found=null;
+          for(var nm in entries){ var ie=nm.split('.').pop().toLowerCase(); if(coreFor(ie)){ found=nm; bytes=entries[nm]; ext=ie; break; } }
+          if(!found){ status('No supported ROM found inside that .zip.'); return; }
+          name=found.split('/').pop();
+        }
+        var core=coreFor(ext);
+        if(!core){ status('Unsupported file type: .'+ext); return; }
+        launch(core, bytes, name);
+      }catch(err){ status('Error: '+((err&&err.message)||err)); }
+    };
+    rd.readAsArrayBuffer(f);
+  });
+
+  function launch(core, bytes, name){
+    status('Loading the '+core.toUpperCase()+' core…');
+    var url=URL.createObjectURL(new Blob([bytes], {type:'application/octet-stream'}));
+    window.EJS_player='#game';
+    window.EJS_core=core;
+    window.EJS_gameUrl=url;
+    window.EJS_gameName=name.replace(/\.[^.]+$/,'');
+    window.EJS_pathtodata=DATA;
+    window.EJS_startOnLoaded=true;
+    document.getElementById('start').style.display='none';
+    document.getElementById('game').style.display='block';
+    var s=document.createElement('script');
+    s.src=DATA+'loader.js';
+    s.onerror=function(){
+      status('Couldn’t load the emulator — check your internet connection and try again.');
+      document.getElementById('start').style.display='flex';
+      document.getElementById('game').style.display='none';
+    };
+    document.body.appendChild(s);
+  }
+})();
+</script>
+</body>
+</html>

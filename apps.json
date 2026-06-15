@@ -1072,6 +1072,30 @@
       "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/nes-emulator.myllmapp",
       "sizeKB": 143,
       "category": "Games"
+    },
+    {
+      "id": "retro-player",
+      "name": "Retro Player",
+      "emoji": "🎮",
+      "tagline": "Your own retro games — many systems",
+      "description": "A bring-your-own-ROM player for classic consoles — NES, SNES, Game Boy / Color, Game Boy Advance, and Sega Genesis. Load a ROM file (or a .zip) you legally own and play with on-screen controls, sound, and save states. No games are included; this is just the player. The first time you load a system it downloads that console's core, so it needs internet.",
+      "tags": [
+        "games",
+        "retro",
+        "emulator",
+        "snes",
+        "game boy"
+      ],
+      "iconSymbol": "gamecontroller.fill",
+      "iconColor": "indigo",
+      "version": 1,
+      "featured": false,
+      "requiresAI": false,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/retro-player.jpg",
+      "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/retro-player.html?v=1",
+      "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/retro-player.myllmapp",
+      "sizeKB": 37,
+      "category": "Games"
     }
   ]
 }
