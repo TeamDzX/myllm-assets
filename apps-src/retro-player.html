@@ -20,12 +20,16 @@
   #game{ position:fixed; top:0; left:0; right:0; bottom:0; width:100vw; height:100vh; display:none; background:#000; }
   #status{ position:fixed; bottom:14px; left:0; right:0; text-align:center; color:#aab0c4; font-size:13px; pointer-events:none; }
   @media (min-width:768px){ #start{ max-width:560px; margin:0 auto; } }
-  /* EmulatorJS canvas needs a real CSS box — we don't load emulator.min.css, so
-     give .ejs_canvas + its wrappers a full-viewport size (the ResizeObserver
-     reads the canvas's CSS content box). Keep aspect via object-fit. */
-  #game .ejs_parent, #game .ejs_game, #game .ejs_canvas_parent{ display:block !important; width:100%; height:100%; }
-  #game canvas.ejs_canvas{ display:block !important; width:100vw !important; height:100vh !important;
-    object-fit:contain; image-rendering:pixelated; background:#000; }
+  /* EmulatorJS writes NO sizing on the canvas or its ancestors — it relies on
+     emulator.css, which we don't load. Pin the WHOLE ancestor chain so no box
+     collapses to 0 (which hides an otherwise-correct frame), and z-order the
+     menu/overlays so they never paint opaquely over the canvas. */
+  #game .ejs_parent, #game .ejs_game, #game .ejs_canvas_parent{
+    position:absolute; inset:0; width:100%; height:100%; display:block !important; background:#000; }
+  #game canvas.ejs_canvas{ position:absolute; inset:0; width:100% !important; height:100% !important;
+    object-fit:contain; image-rendering:pixelated; background:#000;
+    display:block !important; visibility:visible !important; opacity:1 !important; }
+  #game .ejs_menu_bar, #game .ejs_volume_parent, #game .ejs_popup{ z-index:10; }
 </style>
 </head>
 <body>
@@ -138,11 +142,18 @@
   var Native=window.ResizeObserver; if(!Native) return;
   function vw(){ return Math.max(1, window.innerWidth||document.documentElement.clientWidth||320); }
   function vh(){ return Math.max(1, window.innerHeight||document.documentElement.clientHeight||480); }
-  function entry(t){ var w=vw(),h=vh(),d=window.devicePixelRatio||1,
-      r={x:0,y:0,top:0,left:0,right:w,bottom:h,width:w,height:h};
+  function entry(t){ var w=vw(), h=vh();
+    // Prefer the canvas's REAL on-screen box so the core's GL viewport matches
+    // what's actually displayed; fall back to the viewport before layout settles.
+    try{ var br=t&&t.getBoundingClientRect&&t.getBoundingClientRect();
+      if(br&&br.width>1&&br.height>1){ w=Math.round(br.width); h=Math.round(br.height); } }catch(e){}
+    var r={x:0,y:0,top:0,left:0,right:w,bottom:h,width:w,height:h};
+    // CSS-pixel boxes ONLY — deliberately NO devicePixelContentBoxSize. RetroArch's
+    // emscripten platform reads that property verbatim and Safari/WKWebView
+    // mishandles it (renders to the wrong region -> black). Without it, the core
+    // derives its own device buffer from the CSS content box (the safe path).
     return { target:t, contentRect:r,
-      borderBoxSize:[{inlineSize:w,blockSize:h}], contentBoxSize:[{inlineSize:w,blockSize:h}],
-      devicePixelContentBoxSize:[{inlineSize:Math.round(w*d),blockSize:Math.round(h*d)}] }; }
+      borderBoxSize:[{inlineSize:w,blockSize:h}], contentBoxSize:[{inlineSize:w,blockSize:h}] }; }
   function Patched(cb){
     var ro=new Native(cb), canv=new Set(), wrap;
     function fire(){ if(!canv.size) return; var es=[]; canv.forEach(function(t){ es.push(entry(t)); });
@@ -258,10 +269,25 @@
     window.EJS_gameUrl=url;
     window.EJS_gameName=name.replace(/\.[^.]+$/,'');
     window.EJS_pathtodata=DATA;
+    window.EJS_language='en-US';                    // skip the cross-origin locale fetch (fails on null origin)
     window.EJS_startOnLoaded=true;                 // auto-start; canvas is sized by now
     window.EJS_DEBUG_XX=true;                       // verbose: trail shows the post-ready stall
     window.EJS_ready=function(){ status('Starting game…'); };
     window.EJS_onGameStart=function(){ status(''); };   // running — clear the status
+    // iOS WKWebView gates vsync-driven painting + the AudioContext behind a TRUSTED
+    // gesture; EJS_startOnLoaded's programmatic auto-click doesn't qualify, so the
+    // render loop can sit stalled on a black canvas. Poke resumeMainLoop + audio on
+    // the user's real touches (idempotent / harmless once it's already running).
+    (function(){
+      function poke(){ var e=window.EJS_emulator; if(!e||!e.Module) return;
+        try{ e.Module.resumeMainLoop && e.Module.resumeMainLoop(); }catch(_){}
+        try{ var AL=e.Module.AL, c=AL&&AL.currentCtx,
+          ac=(c&&c.audioCtx)||(c&&c.sources&&c.sources[0]&&c.sources[0].gain&&c.sources[0].gain.context);
+          ac&&ac.resume&&ac.resume(); }catch(_){}
+      }
+      document.addEventListener('touchend', poke, false);
+      document.addEventListener('click', poke, false);
+    })();
     // Show + size the container, let layout settle a couple of frames, THEN load
     // EmulatorJS (so the canvas has real dimensions before the core starts).
     document.getElementById('start').style.display='none';
@@ -277,8 +303,9 @@
         var cv=document.querySelector('canvas.ejs_canvas')||document.querySelector('#game canvas');
         if(!cv) return;
         if(!cv.id) cv.id='canvas';
-        if(!cv.width || cv.width<2) cv.width=window.innerWidth||640;
-        if(!cv.height || cv.height<2) cv.height=window.innerHeight||480;
+        // Do NOT write cv.width/height here — the corrected ResizeObserver entry is
+        // the single source of truth for the drawing buffer; writing CSS-px values
+        // here fights it (3x conflict) and can wedge a wrong-sized buffer.
       }
       var mo; try{ mo=new MutationObserver(fix); mo.observe(document.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['width','height','class']}); }catch(e){}
       var pi=setInterval(fix, 16);
