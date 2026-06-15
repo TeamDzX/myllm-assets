@@ -1096,6 +1096,31 @@
       "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/retro-player.myllmapp",
       "sizeKB": 52,
       "category": "Games"
+    },
+    {
+      "id": "gb-player",
+      "name": "Pocket Player",
+      "emoji": "🎮",
+      "tagline": "Play your own handheld games — in colour",
+      "description": "A bring-your-own-ROM player for classic 8-bit handheld games — both the original grey handheld (.gb) and the Color handheld (.gbc), rendered in full colour. Load a ROM file (or a .zip) you legally own and play with on-screen controls — runs entirely on your device, no internet needed. No games are included; this is just the player.",
+      "tags": [
+        "games",
+        "retro",
+        "emulator",
+        "game boy",
+        "handheld",
+        "color"
+      ],
+      "iconSymbol": "gamecontroller.fill",
+      "iconColor": "green",
+      "version": 1,
+      "featured": false,
+      "requiresAI": false,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/gb-player.jpg",
+      "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/gb-player.html?v=1",
+      "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/gb-player.myllmapp",
+      "sizeKB": 176,
+      "category": "Games"
     }
   ]
 }
