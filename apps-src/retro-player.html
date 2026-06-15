@@ -17,7 +17,7 @@
   .load input{ display:none; }
   .sys{ color:#7a8194; font-size:12px; max-width:360px; line-height:1.5; }
   .note{ color:#6b7081; font-size:11.5px; max-width:340px; line-height:1.5; }
-  #game{ position:fixed; inset:0; display:none; background:#000; }
+  #game{ position:fixed; top:0; left:0; right:0; bottom:0; width:100vw; height:100vh; display:none; background:#000; }
   #status{ position:fixed; bottom:14px; left:0; right:0; text-align:center; color:#aab0c4; font-size:13px; pointer-events:none; }
   @media (min-width:768px){ #start{ max-width:560px; margin:0 auto; } }
 </style>
@@ -184,18 +184,22 @@
     window.EJS_gameUrl=url;
     window.EJS_gameName=name.replace(/\.[^.]+$/,'');
     window.EJS_pathtodata=DATA;
-    window.EJS_startOnLoaded=true;
     window.EJS_DEBUG_XX=true;   // verbose logging so the progress trail shows where it stalls
+    // Show + size the container, let layout settle a frame, THEN load EmulatorJS
+    // (its own "Play" button starts the core once the canvas is sized — avoids
+    // "Could not get screen dimension" from auto-starting into a 0-size canvas).
     document.getElementById('start').style.display='none';
-    document.getElementById('game').style.display='block';
-    var s=document.createElement('script');
-    s.src=DATA+'loader.js';
-    s.onerror=function(){
-      status('Couldn’t load the emulator — check your internet connection and try again.');
-      document.getElementById('start').style.display='flex';
-      document.getElementById('game').style.display='none';
-    };
-    document.body.appendChild(s);
+    var g=document.getElementById('game'); g.style.display='block';
+    requestAnimationFrame(function(){ requestAnimationFrame(function(){
+      var s=document.createElement('script');
+      s.src=DATA+'loader.js';
+      s.onerror=function(){
+        status('Couldn’t load the emulator — check your internet connection and try again.');
+        document.getElementById('start').style.display='flex';
+        document.getElementById('game').style.display='none';
+      };
+      document.body.appendChild(s);
+    }); });
   }
 })();
 </script>
