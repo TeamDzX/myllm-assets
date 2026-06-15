@@ -75,6 +75,16 @@
     opacity:0; transition:opacity .2s, transform .2s; pointer-events:none; max-width:80%;
   }
   .toast.show{ opacity:1; transform:translateX(-50%); }
+
+  /* iPad / large screens: a centred, comfortable column instead of full-width
+     rows (which look stretched) or a tiny stamp. Scales type up a touch. */
+  @media (min-width: 768px){
+    body{ max-width: 740px; margin-inline: auto; padding-left:24px; padding-right:24px; }
+    h1{ font-size:30px; }
+    .label{ font-size:19px; }
+    input[type=text]{ font-size:18px; padding:14px 16px; }
+    .btn{ font-size:18px; }
+  }
 </style>
 </head>
 <body>
