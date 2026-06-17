@@ -145,7 +145,22 @@ var LESSONS=[
   goal:"Build a profile card: a styled box with a heading, an image, a short bio, and a button that does something when tapped.",
   starter:'<style>\n  .card{max-width:280px;margin:auto;background:#fff;border:1px solid #eee;border-radius:16px;padding:20px;text-align:center;font-family:-apple-system,system-ui,sans-serif;box-shadow:0 6px 20px rgba(0,0,0,.08)}\n  .card img{width:84px;height:84px;border-radius:50%;object-fit:cover}\n  .card h2{margin:12px 0 2px}\n  .card p{color:#666;font-size:14px;margin:0 0 14px}\n  .card button{background:#0a84ff;color:#fff;border:0;padding:10px 18px;border-radius:10px;font-size:15px}\n</style>\n<div class="card">\n  <img src="https://picsum.photos/170" alt="avatar">\n  <h2>Alex</h2>\n  <p id="bio">Learning to build for the web.</p>\n  <button onclick="document.getElementById(\'bio\').textContent=\'👋 Thanks for visiting!\'">Say hi</button>\n</div>',
   hint:"Aim for at least four of: a heading, an image, a paragraph, a button, and box styling (padding / border-radius).",
-  check:function(c,d){var n=0;if(d.querySelector("h1,h2,h3"))n++;if(d.querySelector("img[src]"))n++;if(d.querySelector("p"))n++;if(d.querySelector("button"))n++;if(/border-radius\s*:/i.test(c)||/padding\s*:/i.test(c))n++;return n>=4}}
+  check:function(c,d){var n=0;if(d.querySelector("h1,h2,h3"))n++;if(d.querySelector("img[src]"))n++;if(d.querySelector("p"))n++;if(d.querySelector("button"))n++;if(/border-radius\s*:/i.test(c)||/padding\s*:/i.test(c))n++;return n>=4}},
+ {t:"Grid layout",teach:"display: grid arranges items into rows AND columns. grid-template-columns sets the columns — try repeat(3, 1fr) for three equal ones — and gap spaces them out.",
+  goal:"Make a grid with 3 columns and several boxes.",
+  starter:'<style>\n  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}\n  .grid div{background:#5e5ce6;color:#fff;padding:18px;border-radius:10px;text-align:center}\n</style>\n<div class="grid">\n  <div>1</div><div>2</div><div>3</div>\n  <div>4</div><div>5</div><div>6</div>\n</div>',
+  hint:"Put display:grid and grid-template-columns:repeat(3,1fr) on a container with several children.",
+  check:function(c,d){var w=frame.contentWindow,els=d.body.querySelectorAll("*");for(var i=0;i<els.length;i++){try{if(w.getComputedStyle(els[i]).display==="grid"&&els[i].children.length>=2)return true}catch(e){}}return false}},
+ {t:"Transitions & hover",teach:"transition makes a style change animate smoothly instead of snapping. Pair it with :hover (in a <style> block) so an element reacts when pointed at or tapped.",
+  goal:"Make an element that smoothly changes on hover, using transition.",
+  starter:'<style>\n  .btn{display:inline-block;background:#0a84ff;color:#fff;padding:12px 20px;border-radius:10px;\n       transition:transform .25s ease, background .25s}\n  .btn:hover{transform:scale(1.08);background:#5e5ce6}\n</style>\n<div class="btn">Hover or tap me</div>',
+  hint:"Add transition: transform .25s to an element, then a .name:hover { transform: scale(1.1) } rule.",
+  check:function(c){return /transition\s*:/i.test(c)&&/:hover/i.test(c)}},
+ {t:"Capstone: photo gallery",teach:"A second project! Combine grid for the layout with transition + :hover so the pictures zoom smoothly. Swap in your own image URLs and sizes.",
+  goal:"Build a photo gallery: a grid of at least 3 images that zoom smoothly on hover.",
+  starter:'<style>\n  .gallery{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;max-width:360px;margin:auto}\n  .gallery img{width:100%;height:120px;object-fit:cover;border-radius:12px;\n               transition:transform .25s ease, box-shadow .25s}\n  .gallery img:hover{transform:scale(1.06);box-shadow:0 8px 20px rgba(0,0,0,.2)}\n</style>\n<div class="gallery">\n  <img src="https://picsum.photos/seed/a/300/200" alt="">\n  <img src="https://picsum.photos/seed/b/300/200" alt="">\n  <img src="https://picsum.photos/seed/c/300/200" alt="">\n  <img src="https://picsum.photos/seed/d/300/200" alt="">\n</div>',
+  hint:"Aim for a grid container, 3+ images, and a transition (plus a :hover for the zoom).",
+  check:function(c,d){var n=0;if(/grid-template|display\s*:\s*grid/i.test(c))n++;if(d.querySelectorAll("img[src]").length>=3)n++;if(/transition\s*:/i.test(c))n++;if(/:hover/i.test(c))n++;return n>=3}}
 ];
 
 var state={idx:0,done:{},code:{}},frame,editor,renderT,saveT,busy=false;
