@@ -130,7 +130,22 @@ var LESSONS=[
   goal:"Use a <script> with a variable that sets some text.",
   starter:'<h2 id="t"></h2>\n<script>\n  var name = "Coder";\n  document.querySelector("#t").textContent = "Hi, " + name;\n<\/script>',
   hint:"Inside <script>, make a variable and use document.querySelector(...).textContent = ...",
-  check:function(c,d){return /<script[\s\S]*(var|let|const)\s/i.test(c)&&!!d.querySelector("#t")}}
+  check:function(c,d){return /<script[\s\S]*(var|let|const)\s/i.test(c)&&!!d.querySelector("#t")}},
+ {t:"Flexbox layout",teach:"display: flex lays a box's children in a row. gap spaces them; justify-content positions them along the row; align-items across it.",
+  goal:"Make a flex row with at least 2 boxes inside.",
+  starter:'<div style="display:flex; gap:10px; justify-content:center">\n  <div style="background:#0a84ff;color:#fff;padding:16px;border-radius:10px">A</div>\n  <div style="background:#34c759;color:#fff;padding:16px;border-radius:10px">B</div>\n  <div style="background:#ff9500;color:#fff;padding:16px;border-radius:10px">C</div>\n</div>',
+  hint:"Put display:flex on a container, then give it 2+ child <div>s. gap adds space between them.",
+  check:function(c,d){var w=frame.contentWindow,els=d.body.querySelectorAll("*");for(var i=0;i<els.length;i++){try{if(w.getComputedStyle(els[i]).display==="flex"&&els[i].children.length>=2)return true}catch(e){}}return false}},
+ {t:"Forms & inputs",teach:"Forms collect what people type. <input> is a single line — set its type and a placeholder. Add a <button> to submit.",
+  goal:"Make a text input and a button.",
+  starter:'<input type="text" placeholder="Your name">\n<button>Submit</button>',
+  hint:"Add an <input ...> and a <button>…</button>.",
+  check:function(c,d){return !!d.querySelector("input,textarea,select")&&!!d.querySelector("button,input[type=submit]")}},
+ {t:"Capstone: profile card",teach:"Time to combine everything — a <style> block with classes, an image, a heading, text, and a button with JavaScript. Make it your own!",
+  goal:"Build a profile card: a styled box with a heading, an image, a short bio, and a button that does something when tapped.",
+  starter:'<style>\n  .card{max-width:280px;margin:auto;background:#fff;border:1px solid #eee;border-radius:16px;padding:20px;text-align:center;font-family:-apple-system,system-ui,sans-serif;box-shadow:0 6px 20px rgba(0,0,0,.08)}\n  .card img{width:84px;height:84px;border-radius:50%;object-fit:cover}\n  .card h2{margin:12px 0 2px}\n  .card p{color:#666;font-size:14px;margin:0 0 14px}\n  .card button{background:#0a84ff;color:#fff;border:0;padding:10px 18px;border-radius:10px;font-size:15px}\n</style>\n<div class="card">\n  <img src="https://picsum.photos/170" alt="avatar">\n  <h2>Alex</h2>\n  <p id="bio">Learning to build for the web.</p>\n  <button onclick="document.getElementById(\'bio\').textContent=\'👋 Thanks for visiting!\'">Say hi</button>\n</div>',
+  hint:"Aim for at least four of: a heading, an image, a paragraph, a button, and box styling (padding / border-radius).",
+  check:function(c,d){var n=0;if(d.querySelector("h1,h2,h3"))n++;if(d.querySelector("img[src]"))n++;if(d.querySelector("p"))n++;if(d.querySelector("button"))n++;if(/border-radius\s*:/i.test(c)||/padding\s*:/i.test(c))n++;return n>=4}}
 ];
 
 var state={idx:0,done:{},code:{}},frame,editor,renderT,saveT,busy=false;
