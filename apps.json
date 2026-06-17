@@ -205,6 +205,94 @@
       "category": "Creative"
     },
     {
+      "id": "art-studio",
+      "name": "Art Studio",
+      "emoji": "🎨",
+      "tagline": "Generative art, endless",
+      "description": "A generative art studio: pick a style (flow fields, swarms, blooms), nudge a few sliders and a colour palette, and tap New for an endless stream of one-of-a-kind artwork — then save your favourites straight to Photos. No two are ever the same.",
+      "tags": [
+        "art",
+        "creative",
+        "saves data"
+      ],
+      "category": "Creative",
+      "iconSymbol": "paintpalette.fill",
+      "iconColor": "pink",
+      "version": 1,
+      "featured": true,
+      "requiresAI": false,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/art-studio.jpg",
+      "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/art-studio.html",
+      "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/art-studio.myllmapp",
+      "sizeKB": 9
+    },
+    {
+      "id": "beat-maker",
+      "name": "Beat Maker",
+      "emoji": "🥁",
+      "tagline": "Make a beat, tap to play",
+      "description": "A pocket drum machine: tap the step grid to lay down kicks, snares, hats and claps, set the tempo and hit play — built-in synth drums, a demo beat and a Random button to spark ideas. Your pattern saves automatically.",
+      "tags": [
+        "music",
+        "creative",
+        "saves data"
+      ],
+      "category": "Creative",
+      "iconSymbol": "music.note",
+      "iconColor": "purple",
+      "version": 1,
+      "featured": true,
+      "requiresAI": false,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/beat-maker.jpg",
+      "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/beat-maker.html",
+      "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/beat-maker.myllmapp",
+      "sizeKB": 9
+    },
+    {
+      "id": "story-studio",
+      "name": "Story Studio",
+      "emoji": "✍️",
+      "tagline": "Write with your AI",
+      "description": "A creative-writing partner powered by your own on-device AI: give it a spark and a vibe, then steer the story with Continue, Plot twist, New character, New scene and Describe. Edit freely, share the result; your draft saves on-device. Needs the latest MyLLM with “Allow apps to use the AI” enabled in Settings.",
+      "tags": [
+        "AI-powered",
+        "creative",
+        "saves data"
+      ],
+      "category": "Creative",
+      "iconSymbol": "books.vertical.fill",
+      "iconColor": "indigo",
+      "version": 1,
+      "featured": true,
+      "requiresAI": true,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/story-studio.jpg",
+      "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/story-studio.html",
+      "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/story-studio.myllmapp",
+      "sizeKB": 8
+    },
+    {
+      "id": "mandala-maker",
+      "name": "Mandala Maker",
+      "emoji": "🌸",
+      "tagline": "Symmetry drawing, meditative",
+      "description": "Draw one stroke and watch it bloom into a perfect mandala — adjustable symmetry, mirror mode, colours and brush size, with undo and save-to-Photos. Calming, hypnotic, and your last mandala is waiting when you come back.",
+      "tags": [
+        "art",
+        "creative",
+        "saves data"
+      ],
+      "category": "Creative",
+      "iconSymbol": "circle.hexagongrid.fill",
+      "iconColor": "teal",
+      "version": 1,
+      "featured": false,
+      "requiresAI": false,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/mandala-maker.jpg",
+      "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/mandala-maker.html",
+      "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/mandala-maker.myllmapp",
+      "sizeKB": 7
+    },
+    {
       "id": "snake",
       "name": "Snake",
       "emoji": "🐍",

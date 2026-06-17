@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Mandala Maker</title>
+<style>
+:root{
+  color-scheme:light dark;
+  --bg:var(--myllm-bg,#f2f2f7);--surface:var(--myllm-surface,#fff);
+  --text:var(--myllm-text,#111);--muted:var(--myllm-muted,#6b6b72);
+  --accent:var(--myllm-accent,#0b5ed7);--border:var(--myllm-border,rgba(120,120,128,.25));
+  --radius:var(--myllm-radius,14px);--font:var(--myllm-font,-apple-system,system-ui,sans-serif);
+}
+@media(prefers-color-scheme:dark){:root{--bg:var(--myllm-bg,#000);--surface:var(--myllm-surface,#1c1c1e);--text:var(--myllm-text,#eee);--muted:var(--myllm-muted,#98989f)}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:var(--font);background:var(--bg);color:var(--text);overscroll-behavior:none}
+.stage{display:flex;justify-content:center;padding:12px 12px 0}
+canvas{width:100%;max-width:440px;aspect-ratio:1;border-radius:var(--radius);touch-action:none;box-shadow:0 6px 24px rgba(0,0,0,.18)}
+.panel{max-width:440px;margin:0 auto;padding:12px 14px 28px}
+label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin:8px 0 3px;text-transform:uppercase;letter-spacing:.03em}
+.lbl{display:flex;justify-content:space-between}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.colors{display:flex;gap:8px;flex-wrap:wrap}
+.sw{width:30px;height:30px;border-radius:50%;border:2px solid transparent;cursor:pointer}
+.sw.on{border-color:var(--text);transform:scale(1.12)}
+.toggles{display:flex;gap:8px;margin-top:10px}
+.toggles button{flex:1;border:1px solid var(--border);background:var(--surface);color:var(--text);border-radius:10px;padding:10px;font:inherit;font-weight:600;font-size:13px;cursor:pointer}
+.toggles button.on{background:var(--accent);color:#fff;border-color:transparent}
+.actions{display:flex;gap:8px;margin-top:14px}
+.actions button{flex:1;border:0;border-radius:11px;padding:13px;font:inherit;font-weight:700;font-size:14px;cursor:pointer}
+.ghost{background:var(--surface);border:1px solid var(--border);color:var(--text)}
+.primary{background:var(--accent);color:#fff}
+#toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(20px);background:rgba(0,0,0,.85);color:#fff;padding:10px 18px;border-radius:999px;font-size:14px;opacity:0;transition:.25s;pointer-events:none;z-index:50}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+<div class="stage"><canvas id="c" width="1000" height="1000"></canvas></div>
+<div class="panel">
+  <div class="lbl"><label>Symmetry</label><span id="symv" style="font-size:12px;color:var(--muted)">12</span></div>
+  <input type="range" id="sym" min="3" max="24" value="12">
+  <div class="lbl"><label>Brush</label></div>
+  <input type="range" id="brush" min="1" max="40" value="6">
+  <label>Colour</label>
+  <div class="colors" id="colors"></div>
+  <div class="toggles">
+    <button id="mirror" class="on">Mirror ✓</button>
+    <button id="bg">Dark canvas</button>
+  </div>
+  <div class="actions">
+    <button class="ghost" id="undo">↶ Undo</button>
+    <button class="ghost" id="clear">Clear</button>
+    <button class="ghost" id="share">Share</button>
+    <button class="primary" id="save">Save</button>
+  </div>
+</div>
+<div id="toast"></div>
+<script>
+var cv=document.getElementById('c'),ctx=cv.getContext('2d'),W=1000,H=1000;
+var COLORS=["#ff3b30","#ff9500","#ffcc00","#34c759","#00c7be","#0a84ff","#5e5ce6","#bf5af2","#ff2d92","#ffffff","#000000"];
+var color="#0a84ff",sym=12,brush=6,mirror=true,darkBg=true;
+var drawing=false,last=null,undoStack=[];
+function haptic(k){if(window.myllmHaptic)try{myllmHaptic(k)}catch(e){}}
+function toast(t){var e=document.getElementById('toast');e.textContent=t;e.classList.add('show');clearTimeout(e._t);e._t=setTimeout(function(){e.classList.remove('show')},1600)}
+
+function fillBg(){ctx.fillStyle=darkBg?'#0b0b10':'#ffffff';ctx.fillRect(0,0,W,H)}
+function rot(dx,dy,a){var c=Math.cos(a),s=Math.sin(a);return[dx*c-dy*s,dx*s+dy*c]}
+function seg(p,q){
+  var cx=W/2,cy=H/2;
+  ctx.strokeStyle=color;ctx.lineWidth=brush;ctx.lineCap='round';ctx.lineJoin='round';
+  var pdx=p.x-cx,pdy=p.y-cy,qdx=q.x-cx,qdy=q.y-cy;
+  for(var k=0;k<sym;k++){
+    var a=k*2*Math.PI/sym,p1=rot(pdx,pdy,a),q1=rot(qdx,qdy,a);
+    ctx.beginPath();ctx.moveTo(cx+p1[0],cy+p1[1]);ctx.lineTo(cx+q1[0],cy+q1[1]);ctx.stroke();
+    if(mirror){var p2=rot(pdx,-pdy,a),q2=rot(qdx,-qdy,a);
+      ctx.beginPath();ctx.moveTo(cx+p2[0],cy+p2[1]);ctx.lineTo(cx+q2[0],cy+q2[1]);ctx.stroke();}
+  }
+}
+function pos(e){var r=cv.getBoundingClientRect();return{x:(e.clientX-r.left)/r.width*W,y:(e.clientY-r.top)/r.height*H}}
+function pushUndo(){try{undoStack.push(cv.toDataURL('image/png'));if(undoStack.length>8)undoStack.shift()}catch(e){}}
+
+cv.addEventListener('pointerdown',function(e){e.preventDefault();pushUndo();drawing=true;last=pos(e);seg(last,last);cv.setPointerCapture(e.pointerId);haptic('selection')});
+cv.addEventListener('pointermove',function(e){if(!drawing)return;e.preventDefault();var p=pos(e);seg(last,p);last=p});
+function endStroke(){if(!drawing)return;drawing=false;persist()}
+cv.addEventListener('pointerup',endStroke);
+cv.addEventListener('pointercancel',endStroke);
+cv.addEventListener('pointerleave',endStroke);
+
+function buildColors(){
+  var c=document.getElementById('colors');c.innerHTML='';
+  COLORS.forEach(function(col){var b=document.createElement('button');b.className='sw'+(col===color?' on':'');b.style.background=col;
+    b.onclick=function(){color=col;haptic('selection');buildColors()};c.appendChild(b)});
+}
+document.getElementById('sym').oninput=function(){sym=+this.value;document.getElementById('symv').textContent=sym};
+document.getElementById('brush').oninput=function(){brush=+this.value};
+document.getElementById('mirror').onclick=function(){mirror=!mirror;this.classList.toggle('on',mirror);this.textContent=mirror?'Mirror ✓':'Mirror';haptic('selection')};
+document.getElementById('bg').onclick=function(){darkBg=!darkBg;this.textContent=darkBg?'Dark canvas':'Light canvas';fillBg();undoStack=[];persist();haptic('warning');toast('Fresh '+(darkBg?'dark':'light')+' canvas')};
+document.getElementById('undo').onclick=function(){if(!undoStack.length){toast('Nothing to undo');return}var d=undoStack.pop();var im=new Image();im.onload=function(){ctx.clearRect(0,0,W,H);ctx.drawImage(im,0,0);persist()};im.src=d;haptic('light')};
+document.getElementById('clear').onclick=function(){pushUndo();fillBg();persist();haptic('warning');toast('Cleared')};
+document.getElementById('save').onclick=function(){haptic('success');if(!window.myllmSaveImage){toast('Update MyLLM to save to Photos');return}myllmSaveImage(cv.toDataURL('image/png')).then(function(){toast('Saved to Photos ✓')}).catch(function(){toast('Couldn’t save (check Photos permission)')})};
+document.getElementById('share').onclick=function(){haptic('light');if(window.myllmShare)myllmShare('Made a mandala in MyLLM 🌸')};
+
+function persist(){
+  if(!window.myllmStorage)return;
+  try{var d=cv.toDataURL('image/jpeg',0.5);if(d.length<900000)myllmStorage.setItem('mandala',d);}catch(e){}
+}
+function load(){
+  buildColors();fillBg();
+  if(!window.myllmStorage)return;
+  myllmStorage.getItem('mandala').then(function(v){
+    if(v){var im=new Image();im.onload=function(){ctx.drawImage(im,0,0)};im.src=v}
+  });
+}
+load();
+</script>
+</body>
+</html>

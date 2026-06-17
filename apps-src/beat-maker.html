@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Beat Maker</title>
+<style>
+:root{
+  color-scheme:light dark;
+  --bg:var(--myllm-bg,#f2f2f7);--surface:var(--myllm-surface,#fff);
+  --text:var(--myllm-text,#111);--muted:var(--myllm-muted,#6b6b72);
+  --accent:var(--myllm-accent,#0b5ed7);--border:var(--myllm-border,rgba(120,120,128,.25));
+  --radius:var(--myllm-radius,14px);--font:var(--myllm-font,-apple-system,system-ui,sans-serif);
+  --cell:#d8d8de;
+}
+@media(prefers-color-scheme:dark){:root{--bg:var(--myllm-bg,#000);--surface:var(--myllm-surface,#1c1c1e);--text:var(--myllm-text,#eee);--muted:var(--myllm-muted,#98989f);--cell:#3a3a3c}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:var(--font);background:var(--bg);color:var(--text);overscroll-behavior:none}
+.head{position:sticky;top:0;background:var(--bg);padding:12px 16px;border-bottom:1px solid var(--border);z-index:5}
+.head h1{margin:0 0 10px;font-size:20px;font-weight:700}
+.transport{display:flex;align-items:center;gap:12px}
+#play{width:54px;height:54px;border-radius:50%;border:0;background:var(--accent);color:#fff;font-size:22px;cursor:pointer;flex:none}
+.bpm{flex:1}
+.bpm label{font-size:12px;font-weight:600;color:var(--muted);display:flex;justify-content:space-between}
+.bpm input{width:100%;accent-color:var(--accent)}
+.tools{display:flex;gap:8px}
+.tools button{border:0;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:9px;padding:9px 12px;font:inherit;font-weight:600;font-size:13px;cursor:pointer}
+.grid{padding:12px 10px 30px;overflow-x:auto}
+.track{display:flex;align-items:center;gap:6px;margin-bottom:7px}
+.name{flex:none;width:62px;font-size:12px;font-weight:700;color:var(--muted);text-align:right;padding-right:4px}
+.steps{display:flex;gap:4px}
+.cell{width:30px;height:30px;border-radius:7px;background:var(--cell);border:0;cursor:pointer;flex:none;transition:transform .05s}
+.cell.g{margin-left:8px}
+.cell.on{background:var(--accent)}
+.cell.play{outline:2px solid var(--text);outline-offset:1px}
+.cell:active{transform:scale(.88)}
+.hint{color:var(--muted);font-size:13px;text-align:center;padding:6px 16px 0}
+</style>
+</head>
+<body>
+<div class="head">
+  <h1>🥁 Beat Maker</h1>
+  <div class="transport">
+    <button id="play">▶</button>
+    <div class="bpm"><label><span>Tempo</span><span id="bpmv">110 BPM</span></label><input type="range" id="bpm" min="60" max="180" value="110"></div>
+  </div>
+  <div class="tools" style="margin-top:10px">
+    <button id="clear">Clear</button>
+    <button id="rand">Random</button>
+    <button id="demo">Demo beat</button>
+  </div>
+</div>
+<div class="grid" id="grid"></div>
+<div class="hint">Tap the squares to make a beat. It saves automatically.</div>
+<script>
+var STEPS=16;
+var KITS=[
+  {name:"Kick", make:kick},
+  {name:"Snare",make:snare},
+  {name:"Hat",  make:hat},
+  {name:"Open", make:openhat},
+  {name:"Clap", make:clap},
+  {name:"Tom",  make:tom}
+];
+var pattern=KITS.map(function(){return new Array(STEPS).fill(false)});
+var bpm=110,playing=false,curStep=0,nextTime=0,timer=null,actx=null,noiseBuf=null;
+function haptic(k){if(window.myllmHaptic)try{myllmHaptic(k)}catch(e){}}
+
+function ac(){
+  if(!actx){actx=new (window.AudioContext||window.webkitAudioContext)();
+    var len=actx.sampleRate*0.5,b=actx.createBuffer(1,len,actx.sampleRate),d=b.getChannelData(0);
+    for(var i=0;i<len;i++)d[i]=Math.random()*2-1;noiseBuf=b;}
+  return actx;
+}
+function noise(){var s=ac().createBufferSource();s.buffer=noiseBuf;return s}
+function env(g,t,a,dcy,peak){g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(peak,t+a);g.gain.exponentialRampToValueAtTime(0.0001,t+a+dcy)}
+
+function kick(t){var c=ac(),o=c.createOscillator(),g=c.createGain();o.frequency.setValueAtTime(150,t);o.frequency.exponentialRampToValueAtTime(45,t+0.13);env(g,t,0.001,0.32,1);o.connect(g).connect(c.destination);o.start(t);o.stop(t+0.36)}
+function snare(t){var c=ac(),n=noise(),nf=c.createBiquadFilter(),ng=c.createGain();nf.type='highpass';nf.frequency.value=1500;env(ng,t,0.001,0.18,0.7);n.connect(nf).connect(ng).connect(c.destination);n.start(t);n.stop(t+0.2);var o=c.createOscillator(),g=c.createGain();o.type='triangle';o.frequency.setValueAtTime(180,t);env(g,t,0.001,0.12,0.4);o.connect(g).connect(c.destination);o.start(t);o.stop(t+0.14)}
+function hat(t){var c=ac(),n=noise(),f=c.createBiquadFilter(),g=c.createGain();f.type='highpass';f.frequency.value=8000;env(g,t,0.001,0.04,0.4);n.connect(f).connect(g).connect(c.destination);n.start(t);n.stop(t+0.06)}
+function openhat(t){var c=ac(),n=noise(),f=c.createBiquadFilter(),g=c.createGain();f.type='highpass';f.frequency.value=7000;env(g,t,0.001,0.3,0.35);n.connect(f).connect(g).connect(c.destination);n.start(t);n.stop(t+0.34)}
+function clap(t){var c=ac();for(var k=0;k<3;k++){var n=noise(),f=c.createBiquadFilter(),g=c.createGain();f.type='bandpass';f.frequency.value=1200;env(g,t+k*0.012,0.001,0.12,0.5);n.connect(f).connect(g).connect(c.destination);n.start(t+k*0.012);n.stop(t+k*0.012+0.13)}}
+function tom(t){var c=ac(),o=c.createOscillator(),g=c.createGain();o.type='sine';o.frequency.setValueAtTime(220,t);o.frequency.exponentialRampToValueAtTime(90,t+0.2);env(g,t,0.001,0.28,0.8);o.connect(g).connect(c.destination);o.start(t);o.stop(t+0.32)}
+
+function stepTime(){return 60/bpm/4}
+function schedule(){
+  var c=ac();
+  while(nextTime<c.currentTime+0.12){
+    var s=curStep;
+    KITS.forEach(function(k,r){if(pattern[r][s])k.make(nextTime)});
+    var when=nextTime,drawStep=s;
+    requestAnimationFrame(function fr(){if(c.currentTime>=when){highlight(drawStep)}else if(playing)requestAnimationFrame(fr)});
+    nextTime+=stepTime();curStep=(curStep+1)%STEPS;
+  }
+}
+function highlight(s){
+  document.querySelectorAll('.cell.play').forEach(function(e){e.classList.remove('play')});
+  for(var r=0;r<KITS.length;r++){var el=document.getElementById('c'+r+'_'+s);if(el)el.classList.add('play')}
+}
+function start(){
+  ac().resume();playing=true;document.getElementById('play').textContent='■';
+  curStep=0;nextTime=ac().currentTime+0.05;timer=setInterval(schedule,25);haptic('medium');
+}
+function stop(){
+  playing=false;document.getElementById('play').textContent='▶';clearInterval(timer);timer=null;
+  document.querySelectorAll('.cell.play').forEach(function(e){e.classList.remove('play')});
+}
+document.getElementById('play').onclick=function(){playing?stop():start()};
+document.getElementById('bpm').oninput=function(){bpm=+this.value;document.getElementById('bpmv').value=bpm+' BPM';document.getElementById('bpmv').textContent=bpm+' BPM'};
+document.getElementById('bpm').onchange=save;
+document.getElementById('clear').onclick=function(){pattern=KITS.map(function(){return new Array(STEPS).fill(false)});render();save();haptic('warning')};
+document.getElementById('rand').onclick=function(){pattern=KITS.map(function(r,i){return Array.from({length:STEPS},function(){return Math.random()<(i===0?0.28:i===2?0.4:0.18)})});render();save();haptic('light')};
+document.getElementById('demo').onclick=function(){loadDemo();render();save();haptic('success')};
+
+function loadDemo(){
+  pattern=KITS.map(function(){return new Array(STEPS).fill(false)});
+  [0,8].forEach(function(i){pattern[0][i]=true}); // kick
+  pattern[0][10]=true;
+  [4,12].forEach(function(i){pattern[1][i]=true}); // snare
+  for(var i=0;i<16;i+=2)pattern[2][i]=true; // hats
+  pattern[3][14]=true; // open
+}
+
+function render(){
+  var g=document.getElementById('grid');g.innerHTML='';
+  KITS.forEach(function(k,r){
+    var t=document.createElement('div');t.className='track';
+    var n=document.createElement('div');n.className='name';n.textContent=k.name;t.appendChild(n);
+    var s=document.createElement('div');s.className='steps';
+    for(var i=0;i<STEPS;i++){
+      var b=document.createElement('button');
+      b.className='cell'+(pattern[r][i]?' on':'')+((i%4===0&&i>0)?' g':'');
+      b.id='c'+r+'_'+i;
+      (function(rr,ii,btn){btn.onclick=function(){
+        pattern[rr][ii]=!pattern[rr][ii];btn.classList.toggle('on');haptic('selection');save();
+        if(pattern[rr][ii]&&!playing)KITS[rr].make(ac().currentTime+0.01);
+      }})(r,i,b);
+      s.appendChild(b);
+    }
+    t.appendChild(s);g.appendChild(t);
+  });
+}
+function save(){if(window.myllmStorage)myllmStorage.setItem('beat',JSON.stringify({pattern:pattern,bpm:bpm}))}
+function load(){
+  if(!window.myllmStorage){loadDemo();render();return}
+  myllmStorage.getItem('beat').then(function(v){
+    if(v){try{var d=JSON.parse(v);if(d.pattern)pattern=d.pattern;if(d.bpm){bpm=d.bpm;document.getElementById('bpm').value=bpm;document.getElementById('bpmv').textContent=bpm+' BPM'}}catch(e){}}
+    else loadDemo();
+    render();
+  });
+}
+load();
+</script>
+</body>
+</html>
