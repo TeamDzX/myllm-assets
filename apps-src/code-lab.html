@@ -41,6 +41,9 @@ iframe{width:100%;height:200px;border:1px solid var(--border);border-radius:11px
 .nav{display:flex;justify-content:space-between;margin-top:14px}
 .nav button{border:0;background:none;color:var(--accent);font:inherit;font-weight:600;font-size:15px;cursor:pointer;padding:8px}
 .nav button:disabled{opacity:.35}
+.nav button.go{background:var(--accent);color:#fff;border-radius:10px;padding:10px 18px;animation:pulse 1.3s ease-in-out 2}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+@media(prefers-reduced-motion:reduce){.nav button.go{animation:none}}
 #fb{margin-top:10px;padding:11px 13px;border-radius:10px;font-size:14px;display:none}
 #fb.ok{display:block;background:rgba(52,199,89,.15);color:#1f8c42}
 #fb.no{display:block;background:rgba(255,159,10,.15);color:#9a6400}
@@ -168,11 +171,14 @@ var state={idx:0,done:{},code:{}},frame,editor,renderT,saveT,busy=false;
 function haptic(k){if(window.myllmHaptic)try{myllmHaptic(k)}catch(e){}}
 function $(i){return document.getElementById(i)}
 function wrap(code){return '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{font-family:-apple-system,system-ui,sans-serif;margin:0;padding:14px;color:#111;background:#fff;line-height:1.5}</style></head><body>'+code+'</body></html>'}
-function render(){
-  if(!frame)return;
-  try{var d=frame.contentDocument||frame.contentWindow.document;d.open();d.write(wrap(editor.value));d.close()}catch(e){}
+// Render the current code into the preview iframe and return the exact
+// document we wrote to — check() reads THIS so validation can never race a
+// stale document reference.
+function renderTo(){
+  if(!frame)return null;
+  try{var d=frame.contentDocument||frame.contentWindow.document;d.open();d.write(wrap(editor.value));d.close();return d}catch(e){return null}
 }
-function previewDoc(){try{return frame.contentDocument||frame.contentWindow.document}catch(e){return document.implementation.createHTMLDocument('')}}
+function render(){renderTo();}
 
 function bar(){var n=Object.keys(state.done).length;$('bar').style.width=(n/LESSONS.length*100)+'%'}
 
@@ -201,18 +207,28 @@ function load(i){
   render();bar();save();
   editor.addEventListener('input',function(){state.code[state.idx]=editor.value;clearTimeout(renderT);renderT=setTimeout(render,180);clearTimeout(saveT);saveT=setTimeout(save,500)});
   $('checkBtn').onclick=check;
-  $('resetBtn').onclick=function(){editor.value=LESSONS[state.idx].starter;state.code[state.idx]=editor.value;render();fb('','');haptic('light')};
+  $('resetBtn').onclick=function(){editor.value=LESSONS[state.idx].starter;state.code[state.idx]=editor.value;render();fb('','');$('nextBtn').classList.remove('go');haptic('light')};
   $('prevBtn').onclick=function(){if(state.idx>0){haptic('selection');load(state.idx-1)}};
   $('prevBtn').disabled=(i===0);
+  var last=(i>=LESSONS.length-1);
+  $('nextBtn').textContent=last?'Finish 🎉':'Next →';
   $('nextBtn').onclick=function(){haptic('selection');if(state.idx<LESSONS.length-1)load(state.idx+1);else finish()};
+  if(state.done[i])$('nextBtn').classList.add('go');
   if(window.myllmAsk){$('explainBtn').onclick=explain;$('helpBtn').onclick=help}
-  fb(state.done[i]?'ok':'', state.done[i]?'Completed ✓':'');
+  fb(state.done[i]?'ok':'', state.done[i]?('Completed ✓ — tap '+(last?'Finish 🎉':'Next →')):'');
 }
 function fb(kind,msg){var e=$('fb');if(!e)return;e.className=kind||'';e.textContent=msg||'';if(!kind)e.style.display='none'}
 function check(){
-  render();var ok=false;try{ok=LESSONS[state.idx].check(editor.value,previewDoc())}catch(e){ok=false}
-  if(ok){state.done[state.idx]=true;fb('ok','Nice — that works! Tap Next →');haptic('success');bar();save()}
-  else{fb('no','Not quite. '+LESSONS[state.idx].hint);haptic('warning')}
+  var d=renderTo();var ok=false;try{ok=!!(d&&LESSONS[state.idx].check(editor.value,d))}catch(e){ok=false}
+  var last=state.idx>=LESSONS.length-1;
+  if(ok){
+    state.done[state.idx]=true;bar();save();haptic('success');
+    fb('ok','✓ Great — that works! Edit it to experiment, or tap '+(last?'Finish 🎉':'Next →')+' to continue.');
+    $('nextBtn').classList.add('go');
+  } else {
+    $('nextBtn').classList.remove('go');
+    fb('no','Not quite yet — '+LESSONS[state.idx].hint);haptic('warning');
+  }
 }
 
 var SYS="You are a friendly, encouraging coding tutor for absolute beginners learning HTML, CSS and JavaScript. Keep every answer to 2-3 short, plain sentences. Be concrete and kind. Never lecture.";
