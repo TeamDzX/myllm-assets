@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Headlines</title>
+<style>
+:root{
+  color-scheme:light dark;
+  --bg:var(--myllm-bg,#f2f2f7);
+  --surface:var(--myllm-surface,#fff);
+  --text:var(--myllm-text,#111);
+  --muted:var(--myllm-muted,#6b6b72);
+  --accent:var(--myllm-accent,#0b5ed7);
+  --border:var(--myllm-border,rgba(120,120,128,.22));
+  --radius:var(--myllm-radius,14px);
+  --font:var(--myllm-font,-apple-system,system-ui,sans-serif);
+}
+@media(prefers-color-scheme:dark){
+  :root{--bg:var(--myllm-bg,#000);--surface:var(--myllm-surface,#1c1c1e);--text:var(--myllm-text,#eee);--muted:var(--myllm-muted,#98989f)}
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:var(--font);background:var(--bg);color:var(--text);-webkit-text-size-adjust:100%}
+.head{position:sticky;top:0;z-index:10;background:var(--bg);padding:12px 0 0;border-bottom:1px solid var(--border)}
+.head h1{font-size:20px;font-weight:700;margin:0 16px 10px}
+#tabs{display:flex;gap:6px;overflow-x:auto;padding:0 16px 12px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+#tabs::-webkit-scrollbar{display:none}
+.tab{flex:none;border:0;padding:8px 14px;border-radius:999px;background:var(--surface);color:var(--muted);font:inherit;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap;border:1px solid var(--border)}
+.tab.on{background:var(--accent);color:#fff;border-color:transparent}
+#status{padding:40px 24px;text-align:center;color:var(--muted);font-size:15px;line-height:1.5}
+.wrap{padding:14px 16px 28px;max-width:780px;margin:0 auto}
+a.card,a.hero{display:block;text-decoration:none;color:inherit;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;-webkit-tap-highlight-color:transparent}
+a.hero{margin-bottom:16px}
+.thumb{width:100%;background:linear-gradient(135deg,var(--accent),#7b5cff);position:relative;display:flex;align-items:center;justify-content:center}
+.hero .thumb{aspect-ratio:16/9}
+.card .thumb{aspect-ratio:16/10}
+.thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.thumb .ph{font-size:34px;opacity:.85}
+.body{padding:13px 15px}
+.hero .body h2{font-size:20px;line-height:1.3;margin:0 0 8px;font-weight:700}
+.hero .excerpt{font-size:14px;line-height:1.5;color:var(--muted);margin:0}
+.card .body h3{font-size:16px;line-height:1.35;margin:0;font-weight:600}
+.meta{font-size:12px;font-weight:600;letter-spacing:.02em;color:var(--accent);margin-bottom:7px;text-transform:uppercase}
+.card .meta{margin-bottom:6px}
+#grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+#more{display:block;margin:22px auto 0;padding:11px 22px;background:var(--accent);color:#fff;border:0;border-radius:10px;font:inherit;font-size:15px;font-weight:600;cursor:pointer}
+#more[disabled]{opacity:.5}
+@media(prefers-reduced-motion:no-preference){a.card,a.hero{transition:transform .12s ease}a.card:active,a.hero:active{transform:scale(.985)}}
+</style>
+</head>
+<body>
+
+<div class="head">
+  <h1>🗞️ Headlines</h1>
+  <div id="tabs"></div>
+</div>
+
+<div id="status"></div>
+<div class="wrap">
+  <div id="hero"></div>
+  <div id="grid"></div>
+  <button id="more" style="display:none">Load more</button>
+</div>
+
+<script>
+var TOPICS=[
+  {name:"Top",          src:"BBC",          url:"https://feeds.bbci.co.uk/news/rss.xml"},
+  {name:"World",        src:"BBC",          url:"https://feeds.bbci.co.uk/news/world/rss.xml"},
+  {name:"UK",           src:"BBC",          url:"https://feeds.bbci.co.uk/news/uk/rss.xml"},
+  {name:"Business",     src:"BBC",          url:"https://feeds.bbci.co.uk/news/business/rss.xml"},
+  {name:"Technology",   src:"Ars Technica", url:"https://feeds.arstechnica.com/arstechnica/index"},
+  {name:"Science",      src:"BBC",          url:"https://feeds.bbci.co.uk/news/science_and_environment/rss.xml"},
+  {name:"Health",       src:"BBC",          url:"https://feeds.bbci.co.uk/news/health/rss.xml"},
+  {name:"Politics",     src:"BBC",          url:"https://feeds.bbci.co.uk/news/politics/rss.xml"},
+  {name:"Entertainment",src:"BBC",          url:"https://feeds.bbci.co.uk/news/entertainment_and_arts/rss.xml"},
+  {name:"Sport",        src:"BBC",          url:"https://feeds.bbci.co.uk/sport/rss.xml"},
+  {name:"Environment",  src:"The Guardian", url:"https://www.theguardian.com/environment/rss"},
+  {name:"Football",     src:"The Guardian", url:"https://www.theguardian.com/football/rss"},
+  {name:"Film",         src:"The Guardian", url:"https://www.theguardian.com/film/rss"},
+  {name:"Music",        src:"The Guardian", url:"https://www.theguardian.com/music/rss"},
+  {name:"Games",        src:"The Guardian", url:"https://www.theguardian.com/games/rss"},
+  {name:"Food",         src:"The Guardian", url:"https://www.theguardian.com/food/rss"},
+  {name:"Travel",       src:"The Guardian", url:"https://www.theguardian.com/travel/rss"},
+  {name:"Books",        src:"The Guardian", url:"https://www.theguardian.com/books/rss"}
+];
+
+var PAGE=8, active=0, shown=0, articles=[], cache={};
+function el(i){return document.getElementById(i)}
+function setStatus(t){var s=el('status');s.style.display=t?'block':'none';s.textContent=t||''}
+function haptic(k){if(window.myllmHaptic)try{myllmHaptic(k)}catch(e){}}
+
+function buildTabs(){
+  var T=el('tabs');T.innerHTML='';
+  TOPICS.forEach(function(t,i){
+    var b=document.createElement('button');
+    b.className='tab'+(i===active?' on':'');
+    b.textContent=t.name;
+    b.onclick=function(){
+      haptic('selection');
+      if(i===active){delete cache[TOPICS[i].url]} // tap active tab to refresh
+      active=i;
+      buildTabs();
+      load();
+      window.scrollTo(0,0);
+    };
+    T.appendChild(b);
+  });
+}
+
+function load(){
+  var t=TOPICS[active];
+  el('hero').innerHTML='';el('grid').innerHTML='';el('more').style.display='none';
+  shown=0;
+  if(cache[t.url]){articles=cache[t.url];setStatus('');paint();return}
+  if(!window.myllmFetch){setStatus('Headlines needs network access — update MyLLM and turn on “Allow apps to use the network” in Settings → MyLLMos Apps.');return}
+  setStatus('Loading '+t.name+'…');
+  myllmFetch(t.url,{headers:{Accept:'application/rss+xml,application/atom+xml,application/xml,text/xml'}})
+    .then(function(r){
+      if(!r||!r.ok)throw new Error('feed returned '+((r&&r.status)||'no response'));
+      var items=parse(r.body);
+      if(!items.length)throw new Error('no stories found');
+      articles=items;cache[t.url]=items;setStatus('');paint();
+    })
+    .catch(function(e){setStatus('Couldn’t load '+t.name+': '+e.message+'\nTap the topic again to retry.')});
+}
+
+function parse(xml){
+  var doc=new DOMParser().parseFromString(xml,'text/xml');
+  var nodes=doc.getElementsByTagName('item');
+  var atom=false;
+  if(!nodes.length){nodes=doc.getElementsByTagName('entry');atom=true}
+  var out=[];
+  for(var i=0;i<nodes.length;i++){
+    var n=nodes[i];
+    var title=text(n,'title');
+    if(!title)continue;
+    var link=text(n,'link');
+    if(atom||!link){
+      var ls=n.getElementsByTagName('link');
+      for(var k=0;k<ls.length;k++){var h=ls[k].getAttribute('href');if(h){link=h;if((ls[k].getAttribute('rel')||'alternate')==='alternate')break}}
+    }
+    var desc=text(n,'description')||text(n,'summary')||text(n,'content');
+    out.push({
+      title:title,
+      link:link,
+      date:text(n,'pubDate')||text(n,'updated')||text(n,'published')||text(n,'date'),
+      excerpt:strip(desc),
+      image:imageOf(n,desc)
+    });
+  }
+  return out;
+}
+
+function text(node,tag){var e=node.getElementsByTagName(tag)[0];return e?e.textContent.trim():''}
+
+// Pull the best image: media:content/thumbnail (largest), then enclosure,
+// then the first <img> embedded in the description HTML.
+function imageOf(node,descHtml){
+  var best=null,bestW=-1;
+  function consider(url,w,type){
+    if(!url)return;
+    if(type&&type.indexOf('image')===-1&&type!=='image'&&!/\.(jpe?g|png|webp|gif)(\?|$)/i.test(url))return;
+    w=parseInt(w)||0;
+    if(w>bestW){best=url;bestW=w}
+  }
+  ['media:content','media:thumbnail'].forEach(function(tag){
+    var els=node.getElementsByTagName(tag);
+    for(var i=0;i<els.length;i++)consider(els[i].getAttribute('url'),els[i].getAttribute('width'),els[i].getAttribute('type')||els[i].getAttribute('medium'));
+  });
+  if(!best){
+    var enc=node.getElementsByTagName('enclosure');
+    for(var j=0;j<enc.length;j++)consider(enc[j].getAttribute('url'),enc[j].getAttribute('width'),enc[j].getAttribute('type'));
+  }
+  if(!best&&descHtml){var m=descHtml.match(/<img[^>]+src=["']([^"']+)["']/i);if(m)best=m[1]}
+  return best;
+}
+
+function strip(html){
+  if(!html)return'';
+  var d=document.createElement('div');d.innerHTML=html;
+  var t=(d.textContent||'').replace(/\s+/g,' ').trim();
+  return t.length>200?t.slice(0,200)+'…':t;
+}
+function ago(d){
+  if(!d)return'';var t=new Date(d);if(isNaN(t))return'';
+  var s=Math.round((Date.now()-t)/1000);
+  if(s<60)return'just now';
+  if(s<3600)return Math.round(s/60)+'m ago';
+  if(s<86400)return Math.round(s/3600)+'h ago';
+  return Math.round(s/86400)+'d ago';
+}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function thumb(a){
+  if(a.image)return '<div class="thumb"><img loading="lazy" src="'+esc(a.image)+'" onerror="this.style.display=\'none\';this.parentNode.innerHTML=\'<span class=&quot;ph&quot;>🗞️</span>\'"></div>';
+  return '<div class="thumb"><span class="ph">🗞️</span></div>';
+}
+function metaLine(a){var src=TOPICS[active].src,t=ago(a.date);return esc(src)+(t?' • '+t:'')}
+
+function paint(){
+  var hero=articles[0];
+  el('hero').innerHTML=hero?(
+    '<a class="hero" href="'+esc(hero.link||'#')+'" target="_blank" rel="noopener">'+
+      thumb(hero)+
+      '<div class="body"><div class="meta">'+metaLine(hero)+'</div>'+
+      '<h2>'+esc(hero.title)+'</h2>'+
+      (hero.excerpt?'<p class="excerpt">'+esc(hero.excerpt)+'</p>':'')+
+      '</div></a>'
+  ):'';
+  shown=1;
+  el('grid').innerHTML='';
+  more();
+}
+function more(){
+  var slice=articles.slice(shown,shown+PAGE),frag=document.createDocumentFragment();
+  slice.forEach(function(a){
+    var card=document.createElement('a');
+    card.className='card';card.href=a.link||'#';card.target='_blank';card.rel='noopener';
+    card.innerHTML=thumb(a)+'<div class="body"><div class="meta">'+metaLine(a)+'</div><h3>'+esc(a.title)+'</h3></div>';
+    card.addEventListener('click',function(){haptic('light')});
+    frag.appendChild(card);
+  });
+  el('grid').appendChild(frag);
+  shown+=slice.length;
+  var b=el('more');
+  if(shown>=articles.length){b.style.display='none'}
+  else{b.style.display='block';b.disabled=false;b.textContent='Load more'}
+}
+el('more').onclick=function(){haptic('selection');more()};
+
+buildTabs();
+load();
+</script>
+</body>
+</html>

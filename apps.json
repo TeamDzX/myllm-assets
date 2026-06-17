@@ -1,5 +1,5 @@
 {
-  "updated": "2026-06-14",
+  "updated": "2026-06-17",
   "categories": [
     "Students",
     "Productivity",
@@ -329,6 +329,27 @@
       "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/news-feed.html",
       "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/news-feed.myllmapp",
       "sizeKB": 8
+    },
+    {
+      "id": "rss-dashboard",
+      "name": "Headlines",
+      "emoji": "🗞️",
+      "tagline": "A visual news wall, by topic",
+      "description": "A magazine-style news reader: a big lead story plus a grid of headline cards with images, across 18 topics — Top, World, UK, Business, Technology, Science, Health, Politics, Sport, Entertainment and more, from the BBC, The Guardian and Ars Technica. Tap the active topic again to refresh; tap any story to read it. No account, no tracking. Needs app network access (on by default in Settings).",
+      "tags": [
+        "news",
+        "network"
+      ],
+      "category": "News & Web",
+      "iconSymbol": "square.grid.2x2.fill",
+      "iconColor": "purple",
+      "version": 1,
+      "featured": false,
+      "requiresAI": false,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/rss-dashboard.jpg",
+      "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/rss-dashboard.html",
+      "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/rss-dashboard.myllmapp",
+      "sizeKB": 11
     },
     {
       "id": "reader",
