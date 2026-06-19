@@ -1316,6 +1316,28 @@
       "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/chess.html",
       "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/chess.myllmapp",
       "sizeKB": 66
+    },
+    {
+      "id": "draughts",
+      "name": "Draughts",
+      "emoji": "🔴",
+      "tagline": "Checkers vs the computer",
+      "description": "Play draughts (checkers) against the computer: three difficulty levels, forced captures, multi-jump chains, kings, and tap-to-move with highlighted moves. Pieces you must capture with are ringed. Undo and resume — your game saves on-device. No account, fully offline.",
+      "tags": [
+        "game",
+        "board",
+        "checkers"
+      ],
+      "category": "Games",
+      "iconSymbol": "circle.grid.3x3.fill",
+      "iconColor": "red",
+      "version": 1,
+      "featured": false,
+      "requiresAI": false,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/draughts.jpg",
+      "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/draughts.html",
+      "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/draughts.myllmapp",
+      "sizeKB": 13
     }
   ]
 }
