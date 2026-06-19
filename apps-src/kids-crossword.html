@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Picture Crossword</title>
+<style>
+:root{
+  color-scheme:light dark;
+  --bg:var(--myllm-bg,#f2f2f7);--surface:var(--myllm-surface,#fff);
+  --text:var(--myllm-text,#111);--muted:var(--myllm-muted,#6b6b72);
+  --accent:var(--myllm-accent,#ff8c42);--border:var(--myllm-border,rgba(120,120,128,.3));
+  --font:var(--myllm-font,-apple-system,system-ui,sans-serif);
+  --cell:#fff;--sel:#ffe08a;--word:#dcefff;--ok:#bdf0c4;
+}
+@media(prefers-color-scheme:dark){:root{--bg:var(--myllm-bg,#000);--surface:var(--myllm-surface,#1c1c1e);--text:var(--myllm-text,#eee);--muted:var(--myllm-muted,#98989f);--cell:#26262b;--word:#1d3a57;--ok:#1f5a2b}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+body{margin:0;font-family:var(--font);background:var(--bg);color:var(--text)}
+.wrap{max-width:440px;margin:0 auto;padding:10px 14px 18px;text-align:center}
+.bar{display:flex;gap:8px;justify-content:center;margin-bottom:10px}
+.bar button{border:0;background:var(--surface);border:1px solid var(--border);color:var(--accent);border-radius:12px;padding:9px 14px;font:inherit;font-weight:700;font-size:14px;cursor:pointer}
+.grid{display:grid;gap:4px;width:100%;max-width:300px;margin:0 auto;aspect-ratio:1}
+.cell{position:relative;border:2px solid var(--border);background:var(--cell);color:var(--text);font:inherit;font-weight:800;font-size:min(13vw,46px);border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0}
+.cell.word{background:var(--word)}
+.cell.sel{background:var(--sel);border-color:var(--accent)}
+.cell.ok{background:var(--ok)}
+.cell .n{position:absolute;top:2px;left:4px;font-size:12px;font-weight:700;color:var(--muted)}
+.clueWrap{margin:14px 0}
+.clueTitle{font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin:10px 0 6px}
+.tiles{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.tile{border:2px solid var(--border);background:var(--surface);border-radius:14px;padding:4px;cursor:pointer;width:62px}
+.tile.on{border-color:var(--accent)}
+.tile img{width:100%;height:50px;object-fit:contain;display:block;border-radius:8px}
+.tile .lab{font-size:11px;font-weight:700;color:var(--muted);margin-top:2px}
+.tile.solved{background:var(--ok)}
+.kb{display:flex;flex-direction:column;gap:6px;margin-top:14px}
+.kbrow{display:flex;gap:5px;justify-content:center}
+.key{flex:1;max-width:32px;height:48px;border:0;border-radius:9px;background:var(--surface);border:1px solid var(--border);color:var(--text);font:inherit;font-weight:700;font-size:18px;cursor:pointer}
+.key.wide{max-width:60px;font-size:13px}
+.key:active{background:var(--accent);color:#fff}
+.win{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:40}
+.win.show{display:flex}
+.winB{background:var(--bg);border-radius:22px;padding:28px 26px;max-width:300px}
+.winB .big{font-size:64px}
+.winB h2{margin:6px 0 4px;font-size:24px}
+.winB p{color:var(--muted);margin:0 0 16px}
+.winB button{width:100%;border:0;background:var(--accent);color:#fff;border-radius:14px;padding:13px;font:inherit;font-weight:800;font-size:16px;cursor:pointer}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="bar"><button id="prevP">‹</button><button id="clearBtn">Start over</button><button id="nextP">Next ›</button></div>
+  <div class="grid" id="grid"></div>
+  <div class="clueWrap">
+    <div class="clueTitle">Across →</div><div class="tiles" id="acrossTiles"></div>
+    <div class="clueTitle">Down ↓</div><div class="tiles" id="downTiles"></div>
+  </div>
+  <div class="kb" id="kb"></div>
+</div>
+<div class="win" id="win"><div class="winB"><div class="big">🎉</div><h2>You did it!</h2><p id="winSub">Great job!</p><button id="winBtn">Next puzzle →</button></div></div>
+
+<script>
+var IMG="https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/kids/";
+var PUZZLES=[
+ {id:"kid1",name:"Cap, Ape, Tea",rows:["CAP","APE","TEA"]},
+ {id:"kid2",name:"Pig, Ice, Gem",rows:["PIG","ICE","GEM"]}
+];
+var P=null,curPuz=0,N=0,user=[],nums=[],entries=[],cur=null,dir='A',solved=false;
+function $(i){return document.getElementById(i)}
+function haptic(k){if(window.myllmHaptic)try{myllmHaptic(k)}catch(e){}}
+function wordOf(e){return e.cells.map(function(x){return P.rows[x[0]][x[1]]}).join('')}
+function imgOf(e){return IMG+wordOf(e).toLowerCase()+'.jpg'}
+
+function build(){
+  N=P.rows.length;
+  user=P.rows.map(function(row){return row.split('').map(function(){return ''})});
+  nums=P.rows.map(function(row){return row.split('').map(function(){return 0})});
+  entries=[];var n=0;
+  for(var r=0;r<N;r++)for(var c=0;c<N;c++){
+    var sa=(c===0)&&true, sd=(r===0)&&true; // 3x3 no blocks: starts at edges
+    sa=(c===0)&&c+1<N; sd=(r===0)&&r+1<N;
+    if(sa||sd){n++;nums[r][c]=n;
+      if(sa){var a=[];for(var cc=0;cc<N;cc++)a.push([r,cc]);entries.push({num:n,dir:'A',cells:a})}
+      if(sd){var d=[];for(var rr=0;rr<N;rr++)d.push([rr,c]);entries.push({num:n,dir:'D',cells:d})}
+    }
+  }
+}
+function entryAt(r,c,d){return entries.find(function(e){return e.dir===d&&e.cells.some(function(x){return x[0]===r&&x[1]===c})})}
+function curEntry(){return cur?entryAt(cur[0],cur[1],dir):null}
+function entryDone(e){return e.cells.every(function(x){return user[x[0]][x[1]]===P.rows[x[0]][x[1]]})}
+
+function render(){
+  var g=$('grid');g.style.gridTemplateColumns='repeat('+N+',1fr)';g.innerHTML='';
+  var ce=curEntry();
+  for(var r=0;r<N;r++)for(var c=0;c<N;c++){
+    var b=document.createElement('button');b.className='cell';
+    if(ce&&ce.cells.some(function(x){return x[0]===r&&x[1]===c}))b.className+=' word';
+    if(user[r][c]&&user[r][c]===P.rows[r][c])b.className+=' ok';
+    if(cur&&cur[0]===r&&cur[1]===c)b.className+=' sel';
+    if(nums[r][c]){var s=document.createElement('span');s.className='n';s.textContent=nums[r][c];b.appendChild(s)}
+    b.appendChild(document.createTextNode(user[r][c]||''));
+    (function(rr,cc){b.onclick=function(){onCell(rr,cc)}})(r,c);
+    g.appendChild(b);
+  }
+  tiles();
+}
+function tiles(){
+  ['A','D'].forEach(function(d){
+    var box=$(d==='A'?'acrossTiles':'downTiles');box.innerHTML='';
+    entries.filter(function(e){return e.dir===d}).forEach(function(e){
+      var t=document.createElement('button');t.className='tile'+(curEntry()===e?' on':'')+(entryDone(e)?' solved':'');
+      t.innerHTML='<img src="'+imgOf(e)+'" alt=""><div class="lab">'+e.num+(d==='A'?' →':' ↓')+'</div>';
+      t.onclick=function(){cur=e.cells[0];dir=d;haptic('selection');render()};
+      box.appendChild(t);
+    });
+  });
+}
+function onCell(r,c){
+  if(cur&&cur[0]===r&&cur[1]===c){dir=dir==='A'?'D':'A'}
+  else cur=[r,c];
+  haptic('selection');render();
+}
+function type(ch){
+  if(!cur||solved)return;user[cur[0]][cur[1]]=ch;haptic('light');
+  var e=curEntry();if(e){var i=e.cells.findIndex(function(x){return x[0]===cur[0]&&x[1]===cur[1]});if(i+1<e.cells.length)cur=e.cells[i+1]}
+  render();save();checkWin();
+}
+function backspace(){
+  if(!cur||solved)return;haptic('light');
+  if(user[cur[0]][cur[1]])user[cur[0]][cur[1]]='';
+  else{var e=curEntry();if(e){var i=e.cells.findIndex(function(x){return x[0]===cur[0]&&x[1]===cur[1]});if(i>0){cur=e.cells[i-1];user[cur[0]][cur[1]]=''}}}
+  render();save();
+}
+function checkWin(){
+  for(var r=0;r<N;r++)for(var c=0;c<N;c++)if(user[r][c]!==P.rows[r][c])return;
+  solved=true;save();haptic('success');$('winSub').textContent='You solved '+P.name+'!';$('win').classList.add('show');
+}
+function clearAll(){user=P.rows.map(function(row){return row.split('').map(function(){return ''})});solved=false;render();save();haptic('warning')}
+
+function buildKB(){
+  var rows=['QWERTYUIOP','ASDFGHJKL','ZXCVBNM'],KB=$('kb');KB.innerHTML='';
+  rows.forEach(function(row,ri){
+    var d=document.createElement('div');d.className='kbrow';
+    row.split('').forEach(function(ch){var k=document.createElement('button');k.className='key';k.textContent=ch;k.onclick=function(){type(ch)};d.appendChild(k)});
+    if(ri===2){var del=document.createElement('button');del.className='key wide';del.textContent='⌫';del.onclick=backspace;d.appendChild(del)}
+    KB.appendChild(d);
+  });
+}
+
+function loadPuzzle(i){
+  curPuz=(i+PUZZLES.length)%PUZZLES.length;P=PUZZLES[curPuz];solved=false;build();
+  if(window.myllmStorage){
+    myllmStorage.getItem('kid_'+P.id).then(function(v){
+      if(v)try{var s=JSON.parse(v);if(s.user)user=s.user;if(s.solved)solved=s.solved}catch(e){}
+      cur=entries[0].cells[0];dir='A';render();saveCur();
+    });
+  }else{cur=entries[0].cells[0];dir='A';render();saveCur()}
+}
+function save(){if(window.myllmStorage&&P)myllmStorage.setItem('kid_'+P.id,JSON.stringify({user:user,solved:solved}))}
+function saveCur(){if(window.myllmStorage)myllmStorage.setItem('kid_last',String(curPuz))}
+
+$('clearBtn').onclick=clearAll;
+$('prevP').onclick=function(){$('win').classList.remove('show');loadPuzzle(curPuz-1)};
+$('nextP').onclick=function(){$('win').classList.remove('show');loadPuzzle(curPuz+1)};
+$('winBtn').onclick=function(){$('win').classList.remove('show');loadPuzzle(curPuz+1)};
+buildKB();
+if(window.myllmStorage){myllmStorage.getItem('kid_last').then(function(v){loadPuzzle(v?(+v||0):0)})}
+else loadPuzzle(0);
+</script>
+</body>
+</html>
