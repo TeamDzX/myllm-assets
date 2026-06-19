@@ -188,18 +188,22 @@ function onTap(r,c){
 }
 
 function doPlayer(fr,fc,tr,tc){
-  var capturing=Math.abs(tr-fr)===2;
-  var cap=capturing?[(fr+tr)/2,(fc+tc)/2]:null;
-  history.push({board:clone(board),turn:turn}); // snapshot before move (only push once per full turn)
-  if(midJump)history.pop(); // keep only the pre-turn snapshot
-  var res=applyMoveTo(board,fr,fc,tr,tc,cap);
-  board=res.board;haptic(capturing?'medium':'light');
-  if(capturing&&!res.promoted&&jumpsFrom(board,tr,tc).length){
-    sel=[tr,tc];midJump=true;render();return; // continue multi-jump
-  }
-  sel=null;midJump=false;turn='b';render();save();updateStatus();
-  if(checkOver())return;
-  aiTurn();
+  try{
+    var capturing=Math.abs(tr-fr)===2;
+    var cap=capturing?[(fr+tr)/2,(fc+tc)/2]:null;
+    var moved=board[fr][fc];
+    history.push({board:clone(board),turn:turn}); // snapshot before move (only push once per full turn)
+    if(midJump)history.pop(); // keep only the pre-turn snapshot
+    var res=applyMoveTo(board,fr,fc,tr,tc,cap);
+    board=res.board;haptic(capturing?'medium':'light');
+    dbg('applied "'+moved+'": '+fr+','+fc+'→'+board[fr][fc]+' | '+tr+','+tc+'→'+board[tr][tc]);
+    if(capturing&&!res.promoted&&jumpsFrom(board,tr,tc).length){
+      sel=[tr,tc];midJump=true;render();return; // continue multi-jump
+    }
+    sel=null;midJump=false;turn='b';render();save();updateStatus();
+    if(checkOver())return;
+    aiTurn();
+  }catch(err){dbg('ERROR: '+err.message)}
 }
 
 function aiTurn(){
