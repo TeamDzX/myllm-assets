@@ -50,6 +50,7 @@ body{margin:0;font-family:var(--font);background:var(--bg);color:var(--text)}
   <div class="status"><span id="statusText">Your move</span><span class="think" id="think"></span></div>
   <div class="board" id="board"></div>
   <div class="count"><span id="cRed">You: 12</span><span id="cBlack">Computer: 12</span></div>
+  <div id="dbg" style="font-size:11px;color:var(--muted);text-align:center;padding:7px 0;min-height:14px"></div>
   <div class="controls">
     <button class="primary" id="newBtn">New game</button>
     <button id="undoBtn">Undo</button>
@@ -149,7 +150,7 @@ function render(){
       if(playerTurn()&&!thinking&&isRed(p)&&forced()&&jumpsFrom(board,r,c).length&&!midJump)d.classList.add('must');
       d.appendChild(pc);
     }
-    (function(rr,cc){d.onclick=function(){onTap(rr,cc)}})(r,c);
+    (function(rr,cc){var h=function(e){if(e&&e.preventDefault)e.preventDefault();handleTap(rr,cc)};d.addEventListener('pointerup',h);d.addEventListener('click',h)})(r,c);
     B.appendChild(d);
   }
   updateCounts();
@@ -163,20 +164,27 @@ function forced(){return sideHasCapture(board,true)}
 function playerTurn(){return turn==='r'}
 var turn='r';
 
+var _ltKey='',_ltT=0;
+function handleTap(r,c){ // dedupe the pointerup+click pair on the same square
+  var k=r+'_'+c,now=Date.now();
+  if(k===_ltKey&&now-_ltT<500)return;
+  _ltKey=k;_ltT=now;onTap(r,c);
+}
+function dbg(m){var e=$('dbg');if(e)e.textContent=m}
 function onTap(r,c){
-  if(thinking||turn!=='r')return;
+  if(thinking||turn!=='r'){dbg('tap '+r+','+c+' ignored (turn='+turn+(thinking?', thinking':'')+')');return}
   var p=board[r][c];
   // tapping a target?
   if(sel){
     var t=highlightTargets().find(function(x){return x[0]===r&&x[1]===c});
-    if(t){doPlayer(sel[0],sel[1],r,c);return}
+    if(t){dbg('move '+sel[0]+','+sel[1]+' → '+r+','+c);doPlayer(sel[0],sel[1],r,c);return}
   }
-  if(midJump)return; // must continue the jump with the selected piece
+  if(midJump){dbg('continue the jump');return} // must continue the jump with the selected piece
   // (re)select own piece
   if(p&&isRed(p)){
-    if(forced()&&jumpsFrom(board,r,c).length===0){haptic('warning');return} // must pick a capturing piece
-    sel=[r,c];haptic('selection');render();
-  }else{sel=null;render()}
+    if(forced()&&jumpsFrom(board,r,c).length===0){dbg('must capture with a ringed piece');haptic('warning');return}
+    sel=[r,c];haptic('selection');render();dbg('selected '+r+','+c+' — '+highlightTargets().length+' move(s)');
+  }else{sel=null;render();dbg('tapped '+r+','+c+' ('+(p||'empty')+') — nothing to do')}
 }
 
 function doPlayer(fr,fc,tr,tc){
