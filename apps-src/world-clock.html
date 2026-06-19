@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>World Clock</title>
+<style>
+:root{
+  color-scheme:light dark;
+  --bg:var(--myllm-bg,#f2f2f7);--surface:var(--myllm-surface,#fff);
+  --text:var(--myllm-text,#111);--muted:var(--myllm-muted,#6b6b72);
+  --accent:var(--myllm-accent,#0b5ed7);--border:var(--myllm-border,rgba(120,120,128,.25));
+  --radius:var(--myllm-radius,14px);--font:var(--myllm-font,-apple-system,system-ui,sans-serif);
+}
+@media(prefers-color-scheme:dark){:root{--bg:var(--myllm-bg,#000);--surface:var(--myllm-surface,#1c1c1e);--text:var(--myllm-text,#eee);--muted:var(--myllm-muted,#98989f)}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:var(--font);background:var(--bg);color:var(--text)}
+.wrap{max-width:620px;margin:0 auto;padding:14px}
+.bar{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.bar .sp{flex:1}
+.bar button{border:0;background:var(--surface);border:1px solid var(--border);color:var(--accent);border-radius:10px;padding:9px 13px;font:inherit;font-weight:600;font-size:14px;cursor:pointer}
+.local{background:var(--accent);color:#fff;border-radius:var(--radius);padding:16px 18px;margin-bottom:14px}
+.local .l{font-size:13px;font-weight:600;opacity:.85}
+.local .t{font-size:40px;font-weight:700;letter-spacing:.5px;line-height:1.1;font-variant-numeric:tabular-nums}
+.local .d{font-size:14px;opacity:.9;margin-top:2px}
+.clock{display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:13px 15px;margin-bottom:9px}
+.clock .glyph{font-size:22px;flex:none}
+.clock .info{flex:1;min-width:0}
+.clock .city{font-size:16px;font-weight:600}
+.clock .sub{font-size:12px;color:var(--muted);margin-top:1px}
+.clock .time{font-size:26px;font-weight:700;font-variant-numeric:tabular-nums}
+.clock .x{color:#ff453a;font-size:20px;padding:4px 6px;cursor:pointer;display:none}
+.editing .clock .x{display:block}
+.empty{color:var(--muted);text-align:center;padding:30px 16px;font-size:15px}
+/* picker */
+.sheet{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:flex-end;z-index:30}
+.sheet.show{display:flex}
+.sheetB{background:var(--bg);width:100%;max-height:82%;display:flex;flex-direction:column;border-radius:18px 18px 0 0;overflow:hidden}
+.sheetH{padding:14px 16px 10px;border-bottom:1px solid var(--border)}
+.sheetH input{width:100%;padding:11px 13px;border:1px solid var(--border);border-radius:10px;font:inherit;font-size:16px;background:var(--surface);color:var(--text)}
+.sheetL{overflow:auto;padding:6px 10px 24px}
+.pi{display:flex;justify-content:space-between;align-items:center;padding:12px;border-bottom:1px solid var(--border);cursor:pointer}
+.pi .c{font-size:15px;font-weight:600}.pi .k{font-size:12px;color:var(--muted)}
+.pi .o{font-size:13px;color:var(--accent);font-weight:600}
+.pi.dim{opacity:.4}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="bar">
+    <div class="sp"></div>
+    <button id="edit">Edit</button>
+    <button id="add">＋ Add city</button>
+  </div>
+  <div class="local" id="local"></div>
+  <div id="clocks"></div>
+  <div class="empty" id="empty" style="display:none">Tap “＋ Add city” to add clocks from around the world.</div>
+</div>
+
+<div class="sheet" id="sheet"><div class="sheetB">
+  <div class="sheetH"><input id="search" placeholder="Search a city…" autocapitalize="words" autocorrect="off"></div>
+  <div class="sheetL" id="pick"></div>
+</div></div>
+
+<script>
+var CITIES=[
+ ["Honolulu","USA","Pacific/Honolulu"],["Anchorage","USA","America/Anchorage"],["Los Angeles","USA","America/Los_Angeles"],
+ ["Denver","USA","America/Denver"],["Chicago","USA","America/Chicago"],["New York","USA","America/New_York"],
+ ["Toronto","Canada","America/Toronto"],["Mexico City","Mexico","America/Mexico_City"],["Bogotá","Colombia","America/Bogota"],
+ ["São Paulo","Brazil","America/Sao_Paulo"],["Buenos Aires","Argentina","America/Argentina/Buenos_Aires"],
+ ["Reykjavik","Iceland","Atlantic/Reykjavik"],["London","UK","Europe/London"],["Dublin","Ireland","Europe/Dublin"],
+ ["Lisbon","Portugal","Europe/Lisbon"],["Madrid","Spain","Europe/Madrid"],["Paris","France","Europe/Paris"],
+ ["Berlin","Germany","Europe/Berlin"],["Rome","Italy","Europe/Rome"],["Amsterdam","Netherlands","Europe/Amsterdam"],
+ ["Zurich","Switzerland","Europe/Zurich"],["Stockholm","Sweden","Europe/Stockholm"],["Athens","Greece","Europe/Athens"],
+ ["Istanbul","Turkey","Europe/Istanbul"],["Moscow","Russia","Europe/Moscow"],["Cairo","Egypt","Africa/Cairo"],
+ ["Lagos","Nigeria","Africa/Lagos"],["Johannesburg","South Africa","Africa/Johannesburg"],["Nairobi","Kenya","Africa/Nairobi"],
+ ["Dubai","UAE","Asia/Dubai"],["Tehran","Iran","Asia/Tehran"],["Karachi","Pakistan","Asia/Karachi"],
+ ["Mumbai","India","Asia/Kolkata"],["Delhi","India","Asia/Kolkata"],["Dhaka","Bangladesh","Asia/Dhaka"],
+ ["Bangkok","Thailand","Asia/Bangkok"],["Jakarta","Indonesia","Asia/Jakarta"],["Singapore","Singapore","Asia/Singapore"],
+ ["Hong Kong","China","Asia/Hong_Kong"],["Shanghai","China","Asia/Shanghai"],["Taipei","Taiwan","Asia/Taipei"],
+ ["Seoul","South Korea","Asia/Seoul"],["Tokyo","Japan","Asia/Tokyo"],["Sydney","Australia","Australia/Sydney"],
+ ["Melbourne","Australia","Australia/Melbourne"],["Perth","Australia","Australia/Perth"],["Auckland","New Zealand","Pacific/Auckland"]
+];
+var saved=["Europe/London","America/New_York","Asia/Tokyo","Australia/Sydney"];
+function $(i){return document.getElementById(i)}
+function haptic(k){if(window.myllmHaptic)try{myllmHaptic(k)}catch(e){}}
+function cityFor(z){for(var i=0;i<CITIES.length;i++)if(CITIES[i][2]===z)return CITIES[i];return [z.split('/').pop().replace(/_/g,' '),'',z]}
+
+function zoneOffMin(z){
+  try{
+    var p=new Intl.DateTimeFormat('en-US',{timeZone:z,timeZoneName:'shortOffset'}).formatToParts(new Date());
+    var s=(p.find(function(x){return x.type==='timeZoneName'})||{}).value||'GMT';
+    var m=s.match(/GMT([+-])(\d{1,2})(?::?(\d{2}))?/);
+    if(!m)return 0;return (m[1]==='-'?-1:1)*(parseInt(m[2])*60+(m[3]?parseInt(m[3]):0));
+  }catch(e){return 0}
+}
+function fmtTime(z){return new Intl.DateTimeFormat([],{timeZone:z,hour:'2-digit',minute:'2-digit',hour12:false}).format(new Date())}
+function fmtSec(z){return new Intl.DateTimeFormat([],{timeZone:z,second:'2-digit'}).format(new Date())}
+function fmtDate(z){return new Intl.DateTimeFormat([],{timeZone:z,weekday:'short',day:'numeric',month:'short'}).format(new Date())}
+function dayKey(z){return new Intl.DateTimeFormat('en-CA',{timeZone:z,year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date())}
+function relLabel(z){
+  var loc=dayKey(Intl.DateTimeFormat().resolvedOptions().timeZone),here=dayKey(z);
+  if(here===loc)return 'Today';
+  return here>loc?'Tomorrow':'Yesterday';
+}
+function relOff(z){
+  var local=-new Date().getTimezoneOffset();
+  var diff=(zoneOffMin(z)-local)/60;
+  if(diff===0)return 'same time';
+  var h=Math.floor(Math.abs(diff)),mm=Math.round((Math.abs(diff)-h)*60);
+  return (diff>0?'+':'−')+h+(mm?(':'+(mm<10?'0':'')+mm):'')+'h';
+}
+function isDay(z){var h=parseInt(new Intl.DateTimeFormat('en-US',{timeZone:z,hour:'2-digit',hour12:false}).format(new Date()));return h>=6&&h<19}
+
+function tick(){
+  var lz=Intl.DateTimeFormat().resolvedOptions().timeZone;
+  $('local').innerHTML='<div class="l">'+cityFor(lz)[0]+' · your time</div><div class="t">'+fmtTime(lz)+'<span style="font-size:20px;opacity:.7">:'+fmtSec(lz)+'</span></div><div class="d">'+fmtDate(lz)+'</div>';
+  saved.forEach(function(z){
+    var el=document.getElementById('t-'+cssId(z));if(!el)return;
+    el.querySelector('.time').textContent=fmtTime(z);
+    el.querySelector('.glyph').textContent=isDay(z)?'☀️':'🌙';
+    el.querySelector('.sub').textContent=relLabel(z)+', '+relOff(z)+' · '+fmtDate(z);
+  });
+}
+function cssId(z){return z.replace(/[^\w]/g,'_')}
+function render(){
+  var box=$('clocks');box.innerHTML='';
+  $('empty').style.display=saved.length?'none':'block';
+  saved.forEach(function(z){
+    var c=cityFor(z),row=document.createElement('div');row.className='clock';row.id='t-'+cssId(z);
+    row.innerHTML='<span class="glyph">☀️</span><div class="info"><div class="city">'+esc(c[0])+'</div><div class="sub"></div></div><div class="time">--:--</div><span class="x">✕</span>';
+    row.querySelector('.x').onclick=function(){saved=saved.filter(function(x){return x!==z});save();render();tick();haptic('warning')};
+    box.appendChild(row);
+  });
+  tick();
+}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+
+$('edit').onclick=function(){document.body.classList.toggle('editing');this.textContent=document.body.classList.contains('editing')?'Done':'Edit';haptic('selection')};
+$('add').onclick=function(){$('search').value='';renderPick('');$('sheet').classList.add('show');setTimeout(function(){$('search').focus()},100);haptic('selection')};
+$('sheet').onclick=function(e){if(e.target===$('sheet'))$('sheet').classList.remove('show')};
+$('search').addEventListener('input',function(){renderPick(this.value)});
+function renderPick(q){
+  q=(q||'').toLowerCase().trim();
+  var L=$('pick');L.innerHTML='';
+  CITIES.filter(function(c){return !q||c[0].toLowerCase().indexOf(q)>=0||c[1].toLowerCase().indexOf(q)>=0}).forEach(function(c){
+    var has=saved.indexOf(c[2])>=0,d=document.createElement('div');d.className='pi'+(has?' dim':'');
+    d.innerHTML='<div><div class="c">'+esc(c[0])+'</div><div class="k">'+esc(c[1])+'</div></div><div class="o">'+(has?'Added':relOff(c[2]))+'</div>';
+    d.onclick=function(){if(has)return;saved.push(c[2]);save();render();$('sheet').classList.remove('show');haptic('success')};
+    L.appendChild(d);
+  });
+}
+
+function save(){if(window.myllmStorage)myllmStorage.setItem('worldclock',JSON.stringify(saved))}
+function load(){
+  if(!window.myllmStorage){render();start();return}
+  myllmStorage.getItem('worldclock').then(function(v){if(v)try{var a=JSON.parse(v);if(Array.isArray(a))saved=a}catch(e){}render();start()});
+}
+function start(){tick();setInterval(tick,1000)}
+load();
+</script>
+</body>
+</html>

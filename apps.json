@@ -1250,6 +1250,50 @@
       "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/stretch.html",
       "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/stretch.myllmapp",
       "sizeKB": 19
+    },
+    {
+      "id": "world-clock",
+      "name": "World Clock",
+      "emoji": "🌍",
+      "tagline": "Times around the world",
+      "description": "See the current time in cities around the world at a glance — add any of 45+ cities, with live seconds, the day/night at each, the date, and how far ahead or behind your own time they are. Your list is saved on-device. No account, no network.",
+      "tags": [
+        "utility",
+        "clock",
+        "saves data"
+      ],
+      "category": "Utilities",
+      "iconSymbol": "globe.europe.africa.fill",
+      "iconColor": "teal",
+      "version": 1,
+      "featured": false,
+      "requiresAI": false,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/world-clock.jpg",
+      "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/world-clock.html",
+      "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/world-clock.myllmapp",
+      "sizeKB": 10
+    },
+    {
+      "id": "date-calculator",
+      "name": "Date Calculator",
+      "emoji": "📅",
+      "tagline": "Add, subtract & compare dates",
+      "description": "Two tools in one: add or subtract years, months, weeks and days from any date to find the result (calendar-aware, with month-end clamping) — and find the exact difference between two dates in years, months and days, plus the total day and week count. Fast, offline, no account.",
+      "tags": [
+        "utility",
+        "calculator",
+        "dates"
+      ],
+      "category": "Utilities",
+      "iconSymbol": "calendar.badge.plus",
+      "iconColor": "orange",
+      "version": 1,
+      "featured": false,
+      "requiresAI": false,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/date-calculator.jpg",
+      "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/date-calculator.html",
+      "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/date-calculator.myllmapp",
+      "sizeKB": 8
     }
   ]
 }
