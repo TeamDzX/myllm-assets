@@ -50,7 +50,6 @@ body{margin:0;font-family:var(--font);background:var(--bg);color:var(--text)}
   <div class="status"><span id="statusText">Your move</span><span class="think" id="think"></span></div>
   <div class="board" id="board"></div>
   <div class="count"><span id="cRed">You: 12</span><span id="cBlack">Computer: 12</span></div>
-  <div id="dbg" style="font-size:11px;color:var(--muted);text-align:center;padding:7px 0;min-height:14px"></div>
   <div class="controls">
     <button class="primary" id="newBtn">New game</button>
     <button id="undoBtn">Undo</button>
@@ -62,7 +61,7 @@ body{margin:0;font-family:var(--font);background:var(--bg);color:var(--text)}
 
 <script>
 var N=8, INF=1e9;
-var board=[], sel=null, midJump=false, depth=5, thinking=false, history=[];
+var board=[], sel=null, midJump=false, depth=5, thinking=false, undoStack=[];
 function $(i){return document.getElementById(i)}
 function haptic(k){if(window.myllmHaptic)try{myllmHaptic(k)}catch(e){}}
 function inB(r,c){return r>=0&&r<8&&c>=0&&c<8}
@@ -170,40 +169,33 @@ function handleTap(r,c){ // dedupe the pointerup+click pair on the same square
   if(k===_ltKey&&now-_ltT<500)return;
   _ltKey=k;_ltT=now;onTap(r,c);
 }
-function dbg(m){var e=$('dbg');if(e)e.textContent=m}
 function onTap(r,c){
-  if(thinking||turn!=='r'){dbg('tap '+r+','+c+' ignored (turn='+turn+(thinking?', thinking':'')+')');return}
+  if(thinking||turn!=='r')return;
   var p=board[r][c];
-  // tapping a target?
   if(sel){
     var t=highlightTargets().find(function(x){return x[0]===r&&x[1]===c});
-    if(t){dbg('move '+sel[0]+','+sel[1]+' → '+r+','+c);doPlayer(sel[0],sel[1],r,c);return}
+    if(t){doPlayer(sel[0],sel[1],r,c);return}
   }
-  if(midJump){dbg('continue the jump');return} // must continue the jump with the selected piece
-  // (re)select own piece
+  if(midJump)return; // must continue the current jump
   if(p&&isRed(p)){
-    if(forced()&&jumpsFrom(board,r,c).length===0){dbg('must capture with a ringed piece');haptic('warning');return}
-    sel=[r,c];haptic('selection');render();dbg('selected '+r+','+c+' — '+highlightTargets().length+' move(s)');
-  }else{sel=null;render();dbg('tapped '+r+','+c+' ('+(p||'empty')+') — nothing to do')}
+    if(forced()&&jumpsFrom(board,r,c).length===0){haptic('warning');return} // must pick a capturing piece
+    sel=[r,c];haptic('selection');render();
+  }else{sel=null;render()}
 }
 
 function doPlayer(fr,fc,tr,tc){
-  try{
-    var capturing=Math.abs(tr-fr)===2;
-    var cap=capturing?[(fr+tr)/2,(fc+tc)/2]:null;
-    var moved=board[fr][fc];
-    history.push({board:clone(board),turn:turn}); // snapshot before move (only push once per full turn)
-    if(midJump)history.pop(); // keep only the pre-turn snapshot
-    var res=applyMoveTo(board,fr,fc,tr,tc,cap);
-    board=res.board;haptic(capturing?'medium':'light');
-    dbg('applied "'+moved+'": '+fr+','+fc+'→'+board[fr][fc]+' | '+tr+','+tc+'→'+board[tr][tc]);
-    if(capturing&&!res.promoted&&jumpsFrom(board,tr,tc).length){
-      sel=[tr,tc];midJump=true;render();return; // continue multi-jump
-    }
-    sel=null;midJump=false;turn='b';render();save();updateStatus();
-    if(checkOver())return;
-    aiTurn();
-  }catch(err){dbg('ERROR: '+err.message)}
+  var capturing=Math.abs(tr-fr)===2;
+  var cap=capturing?[(fr+tr)/2,(fc+tc)/2]:null;
+  undoStack.push({board:clone(board),turn:turn}); // snapshot before this turn
+  if(midJump)undoStack.pop();                     // one snapshot per full turn
+  var res=applyMoveTo(board,fr,fc,tr,tc,cap);
+  board=res.board;haptic(capturing?'medium':'light');
+  if(capturing&&!res.promoted&&jumpsFrom(board,tr,tc).length){
+    sel=[tr,tc];midJump=true;render();return; // continue multi-jump
+  }
+  sel=null;midJump=false;turn='b';render();save();updateStatus();
+  if(checkOver())return;
+  aiTurn();
 }
 
 function aiTurn(){
@@ -266,9 +258,9 @@ function checkOver(){ // checks the side whose turn it now is
 }
 function over(t,p){$('overT').textContent=t;$('overP').textContent=p;$('sheet').classList.add('show');haptic(t.indexOf('win!')>=0?'success':'warning')}
 
-$('newBtn').onclick=function(){init();turn='r';sel=null;midJump=false;thinking=false;history=[];$('sheet').classList.remove('show');render();save();updateStatus();haptic('light')};
+$('newBtn').onclick=function(){init();turn='r';sel=null;midJump=false;thinking=false;undoStack=[];$('sheet').classList.remove('show');render();save();updateStatus();haptic('light')};
 $('overBtn').onclick=function(){$('newBtn').onclick()};
-$('undoBtn').onclick=function(){if(thinking||!history.length)return;var h=history.pop();board=h.board;turn='r';sel=null;midJump=false;render();save();updateStatus();haptic('light')};
+$('undoBtn').onclick=function(){if(thinking||!undoStack.length)return;var h=undoStack.pop();board=h.board;turn='r';sel=null;midJump=false;render();save();updateStatus();haptic('light')};
 Array.prototype.forEach.call($('diffSeg').children,function(b){b.onclick=function(){depth=+b.dataset.d;Array.prototype.forEach.call($('diffSeg').children,function(x){x.classList.remove('on')});b.classList.add('on');save();haptic('selection')}});
 
 function save(){if(window.myllmStorage)myllmStorage.setItem('draughts',JSON.stringify({board:board,turn:turn,depth:depth}))}
