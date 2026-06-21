@@ -1,0 +1,137 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<style>:root{color-scheme:light dark}
+*{box-sizing:border-box}
+body{font-family:var(--myllm-font,-apple-system,system-ui,sans-serif);margin:0;padding:16px;background:var(--myllm-bg,#f2f2f7);color:var(--myllm-text,#111)}
+h1{font-size:22px;margin:0 0 2px;display:flex;align-items:center;gap:8px}
+.sub{font-size:13px;color:var(--myllm-muted,#8a8a8e);margin:0 0 14px}
+#map{height:190px;border-radius:var(--myllm-radius,14px);margin-bottom:14px;display:none;background:#dfe3e8}
+.row{display:flex;gap:8px;margin-bottom:10px}
+input{flex:1;padding:12px;border:1px solid var(--myllm-border,#d1d1d6);border-radius:12px;font-size:16px;background:var(--myllm-surface,#fff);color:var(--myllm-text,#111)}
+button{border:0;background:var(--myllm-accent,#0a84ff);color:#fff;border-radius:12px;padding:0 16px;font-size:15px;font-weight:600}
+.chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;margin-bottom:8px;-webkit-overflow-scrolling:touch}
+.chip{flex:0 0 auto;background:var(--myllm-surface,#fff);border:1px solid var(--myllm-border,#d1d1d6);color:var(--myllm-text,#111);border-radius:999px;padding:8px 14px;font-size:14px;font-weight:600}
+.card{background:var(--myllm-surface,#fff);border-radius:14px;padding:12px 14px;margin-bottom:10px}
+.card .top{display:flex;align-items:baseline;gap:8px}
+.card .name{font-size:16px;font-weight:600;flex:1}
+.card .dist{font-size:13px;color:var(--myllm-accent,#0a84ff);font-weight:600;white-space:nowrap}
+.card .addr{font-size:13px;color:var(--myllm-muted,#8a8a8e);margin:4px 0 8px}
+.card .acts{display:flex;gap:8px}
+.card .acts a,.card .acts button{font-size:13px;font-weight:600;text-decoration:none;background:rgba(10,132,255,.12);color:var(--myllm-accent,#0a84ff);border-radius:9px;padding:7px 12px;display:inline-block}
+.note{text-align:center;color:var(--myllm-muted,#8a8a8e);font-size:14px;margin-top:26px;line-height:1.5;padding:0 10px}
+.spin{text-align:center;color:var(--myllm-muted,#8a8a8e);margin-top:24px}
+@media(min-width:768px){body{max-width:780px;margin-left:auto;margin-right:auto}#map{height:260px}}
+</style></head><body>
+<h1>📍 Near Me</h1>
+<p class="sub" id="here">Finding your location…</p>
+<div id="map"></div>
+<div class="chips" id="chips"></div>
+<div class="row"><input id="q" placeholder="Search places…"><button onclick="go()">Go</button></div>
+<div id="results"><p class="spin">…</p></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+// Defensive bridge access — degrade gracefully if the host is older or the
+// "Allow apps to use your location" setting is off.
+var LOC = window.myllmLocation || null;
+var haptic = window.myllmHaptic || function(){};
+var here = null;           // {latitude, longitude, address}
+var map = null, layer = null;
+var CATS = [
+  {label:'☕ Coffee', q:'coffee'}, {label:'🍽 Food', q:'restaurant'},
+  {label:'🛒 Groceries', q:'supermarket'}, {label:'💊 Pharmacy', q:'pharmacy'},
+  {label:'🏧 ATM', q:'atm'}, {label:'⛽ Petrol', q:'petrol station'},
+  {label:'🅿️ Parking', q:'parking'}, {label:'🍺 Bars', q:'bar'},
+  {label:'🏨 Hotels', q:'hotel'}, {label:'🏞 Parks', q:'park'}
+];
+
+function el(id){return document.getElementById(id)}
+
+function dist(m){
+  if(m==null) return '';
+  if(m<1000) return Math.round(m)+' m';
+  return (m/1000).toFixed(m<10000?1:0)+' km';
+}
+
+function chips(){
+  var c=el('chips');
+  CATS.forEach(function(cat){
+    var b=document.createElement('button');b.className='chip';b.textContent=cat.label;
+    b.onclick=function(){haptic('selection');el('q').value=cat.q;go()};
+    c.appendChild(b);
+  });
+}
+
+function ensureMap(){
+  if(map||typeof L==='undefined'||!here) return;
+  el('map').style.display='block';
+  map=L.map('map',{attributionControl:false,zoomControl:false}).setView([here.latitude,here.longitude],14);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(map);
+  L.circleMarker([here.latitude,here.longitude],{radius:7,color:'#fff',weight:2,fillColor:'#0a84ff',fillOpacity:1}).addTo(map);
+}
+
+function plot(places){
+  if(!map) return;
+  if(layer) map.removeLayer(layer);
+  layer=L.layerGroup().addTo(map);
+  var pts=[[here.latitude,here.longitude]];
+  places.forEach(function(p){
+    L.circleMarker([p.latitude,p.longitude],{radius:6,color:'#fff',weight:2,fillColor:'#ff3b30',fillOpacity:1})
+      .bindPopup(p.name).addTo(layer);
+    pts.push([p.latitude,p.longitude]);
+  });
+  if(pts.length>1) try{map.fitBounds(pts,{padding:[28,28],maxZoom:16})}catch(e){}
+}
+
+function render(places){
+  var R=el('results');R.innerHTML='';
+  if(!places.length){R.innerHTML='<p class="note">No places found. Try another search.</p>';return}
+  places.forEach(function(p){
+    var d=document.createElement('div');d.className='card';
+    var dest=p.latitude+','+p.longitude;
+    d.innerHTML='<div class="top"><div class="name"></div><div class="dist">'+dist(p.distance)+'</div></div>'+
+      '<div class="addr"></div>'+
+      '<div class="acts"><a href="https://maps.apple.com/?daddr='+dest+'&dirflg=w">Directions</a>'+
+      '<button class="sh">Share</button></div>';
+    d.querySelector('.name').textContent=(p.category?'':'')+p.name;
+    d.querySelector('.addr').textContent=p.address||'';
+    d.querySelector('.sh').onclick=function(){haptic('light');
+      if(window.myllmShare) myllmShare(p.name+(p.address?' — '+p.address:'')+'\nhttps://maps.apple.com/?q='+dest)};
+    R.appendChild(d);
+  });
+}
+
+function go(){
+  var q=el('q').value.trim();
+  if(!q||!LOC) return;
+  haptic('light');
+  el('results').innerHTML='<p class="spin">Searching…</p>';
+  var opts=here?{}:{near:el('q').dataset.near||''};
+  LOC.search(q,opts).then(function(list){
+    list=list||[];
+    list.sort(function(a,b){return (a.distance||1e12)-(b.distance||1e12)});
+    render(list);plot(list);
+  }).catch(function(e){
+    el('results').innerHTML='<p class="note">'+(e&&e.message?e.message:'Search failed')+'</p>';
+  });
+}
+
+function start(){
+  chips();
+  if(!LOC){
+    el('here').textContent='Location unavailable';
+    el('results').innerHTML='<p class="note">This needs the latest MyLLM with <b>Settings → Allow apps to use your location</b> turned on. You can still search by typing a place name and a category.</p>';
+    return;
+  }
+  LOC.current().then(function(p){
+    here=p;
+    el('here').textContent=p.address?('Near '+p.address):'Got your location';
+    ensureMap();
+    el('results').innerHTML='<p class="note">Pick a category above or search to see what\'s nearby.</p>';
+  }).catch(function(e){
+    el('here').textContent='Location off';
+    el('results').innerHTML='<p class="note">'+(e&&e.message?e.message:'Couldn\'t get your location')+'<br>Turn on <b>Settings → Allow apps to use your location</b>, then reopen.</p>';
+  });
+}
+start();
+</script></body></html>

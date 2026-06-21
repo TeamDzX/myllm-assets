@@ -1,0 +1,103 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<style>:root{color-scheme:light dark}
+*{box-sizing:border-box}
+body{font-family:var(--myllm-font,-apple-system,system-ui,sans-serif);margin:0;padding:16px;background:var(--myllm-bg,#f2f2f7);color:var(--myllm-text,#111)}
+h1{font-size:22px;margin:0 0 2px}
+.sub{font-size:13px;color:var(--myllm-muted,#8a8a8e);margin:0 0 16px}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:18px}
+.tile{background:var(--myllm-surface,#fff);border:1px solid var(--myllm-border,#e3e3e8);border-radius:16px;padding:18px 12px;text-align:center;font-size:15px;font-weight:600;color:var(--myllm-text,#111)}
+.tile .ic{font-size:30px;display:block;margin-bottom:6px}
+.tile.on{background:var(--myllm-accent,#0a84ff);color:#fff;border-color:transparent}
+.card{background:var(--myllm-surface,#fff);border-radius:14px;padding:12px 14px;margin-bottom:10px}
+.card.first{outline:2px solid var(--myllm-accent,#0a84ff)}
+.card .top{display:flex;align-items:baseline;gap:8px}
+.card .name{font-size:16px;font-weight:600;flex:1}
+.card .dist{font-size:13px;color:var(--myllm-accent,#0a84ff);font-weight:700;white-space:nowrap}
+.card .addr{font-size:13px;color:var(--myllm-muted,#8a8a8e);margin:4px 0 8px}
+.card a{font-size:13px;font-weight:600;text-decoration:none;background:rgba(10,132,255,.12);color:var(--myllm-accent,#0a84ff);border-radius:9px;padding:7px 12px;display:inline-block}
+.note{text-align:center;color:var(--myllm-muted,#8a8a8e);font-size:14px;margin-top:8px;line-height:1.5;padding:0 6px}
+@media(min-width:768px){body{max-width:780px;margin-left:auto;margin-right:auto}.grid{grid-template-columns:repeat(4,1fr)}}
+</style></head><body>
+<h1>🧭 Essentials Finder</h1>
+<p class="sub" id="here">Finding your location…</p>
+<div class="grid" id="grid"></div>
+<div id="results"></div>
+
+<script>
+var LOC = window.myllmLocation || null;
+var haptic = window.myllmHaptic || function(){};
+var here = null;
+var KINDS = [
+  {ic:"💊", label:"Pharmacy", q:"pharmacy"},
+  {ic:"🏧", label:"ATM", q:"atm"},
+  {ic:"🏥", label:"Hospital", q:"hospital"},
+  {ic:"⛽", label:"Petrol", q:"petrol station"},
+  {ic:"🛒", label:"Supermarket", q:"supermarket"},
+  {ic:"🚓", label:"Police", q:"police station"},
+  {ic:"🚻", label:"Toilets", q:"public toilet"},
+  {ic:"🏨", label:"Hotel", q:"hotel"}
+];
+
+function el(id){return document.getElementById(id)}
+
+function dist(m){
+  if(m==null) return "";
+  if(m<1000) return Math.round(m)+" m";
+  return (m/1000).toFixed(m<10000?1:0)+" km";
+}
+
+function tiles(){
+  var g=el("grid");
+  KINDS.forEach(function(k){
+    var b=document.createElement("button");b.className="tile";
+    b.innerHTML='<span class="ic">'+k.ic+'</span>'+k.label;
+    b.onclick=function(){
+      haptic("selection");
+      [].forEach.call(g.children,function(c){c.classList.remove("on")});
+      b.classList.add("on");
+      find(k);
+    };
+    g.appendChild(b);
+  });
+}
+
+function find(k){
+  if(!LOC) return;
+  el("results").innerHTML='<p class="note">Finding the nearest '+k.label.toLowerCase()+'…</p>';
+  LOC.search(k.q,{limit:5}).then(function(list){
+    list=(list||[]).sort(function(a,b){return (a.distance||1e12)-(b.distance||1e12)});
+    if(!list.length){el("results").innerHTML='<p class="note">Nothing found nearby.</p>';return}
+    var R=el("results");R.innerHTML="";
+    list.forEach(function(p,i){
+      var d=document.createElement("div");d.className="card"+(i===0?" first":"");
+      var dest=p.latitude+","+p.longitude;
+      d.innerHTML='<div class="top"><div class="name"></div><div class="dist">'+dist(p.distance)+'</div></div>'+
+        '<div class="addr"></div>'+
+        '<a href="https://maps.apple.com/?daddr='+dest+'">Directions</a>';
+      d.querySelector(".name").textContent=p.name;
+      d.querySelector(".addr").textContent=p.address||"";
+      R.appendChild(d);
+    });
+  }).catch(function(e){
+    el("results").innerHTML='<p class="note">'+(e&&e.message?e.message:"Search failed")+'</p>';
+  });
+}
+
+function start(){
+  tiles();
+  if(!LOC){
+    el("here").textContent="Location unavailable";
+    el("results").innerHTML='<p class="note">This needs the latest MyLLM with <b>Settings → Allow apps to use your location</b> turned on.</p>';
+    return;
+  }
+  el("results").innerHTML='<p class="note">Tap what you need — it finds the nearest, with directions.</p>';
+  LOC.current().then(function(p){
+    here=p;
+    el("here").textContent=p.address?("Near "+p.address):"Got your location";
+  }).catch(function(e){
+    el("here").textContent="Location off";
+    el("results").innerHTML='<p class="note">'+(e&&e.message?e.message:"Couldn’t get your location")+'<br>Turn on <b>Settings → Allow apps to use your location</b>, then reopen.</p>';
+  });
+}
+start();
+</script></body></html>

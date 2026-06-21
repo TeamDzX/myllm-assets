@@ -1,5 +1,5 @@
 {
-  "updated": "2026-06-19",
+  "updated": "2026-06-21",
   "categories": [
     "Students",
     "Productivity",
@@ -15,6 +15,75 @@
     "Utilities"
   ],
   "apps": [
+    {
+      "id": "essentials-finder",
+      "name": "Essentials Finder",
+      "emoji": "🧭",
+      "tagline": "The nearest of everything",
+      "description": "One-tap buttons for the nearest pharmacy, ATM, hospital, petrol, supermarket, police, public toilet or hotel — sorted by distance with directions. Built for when you're travelling or somewhere unfamiliar and just need the closest thing, fast. On-device via Apple Maps, no account or API key. Needs the latest MyLLM with “Allow apps to use your location” enabled in Settings.",
+      "tags": [
+        "location",
+        "travel",
+        "essentials",
+        "nearby"
+      ],
+      "iconSymbol": "cross.case.fill",
+      "iconColor": "red",
+      "version": 1,
+      "featured": true,
+      "requiresAI": false,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/essentials-finder.jpg",
+      "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/essentials-finder.html",
+      "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/essentials-finder.myllmapp",
+      "sizeKB": 5,
+      "category": "Utilities"
+    },
+    {
+      "id": "day-out-planner",
+      "name": "Day Out Planner",
+      "emoji": "🗺️",
+      "tagline": "An itinerary from a vibe",
+      "description": "Tell it a mood — “rainy day with kids”, “date night”, “foodie crawl” — and your own AI turns it into a route of real places around you, in visiting order, each with distance and one-tap directions. Then share the plan. Combines your location with on-device AI; works with simple presets if AI is off. Needs the latest MyLLM with “Allow apps to use your location” (and ideally “Allow apps to use the AI”) enabled in Settings.",
+      "tags": [
+        "AI-powered",
+        "location",
+        "travel",
+        "planner"
+      ],
+      "iconSymbol": "map.fill",
+      "iconColor": "orange",
+      "version": 1,
+      "featured": true,
+      "requiresAI": true,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/day-out-planner.jpg",
+      "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/day-out-planner.html",
+      "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/day-out-planner.myllmapp",
+      "sizeKB": 8,
+      "category": "Utilities"
+    },
+    {
+      "id": "near-me",
+      "name": "Near Me",
+      "emoji": "📍",
+      "tagline": "Find what's around you",
+      "description": "A local explorer powered by your phone's location: see your area on a live map, tap a category (coffee, food, pharmacy, ATM, petrol, parking, hotels…) or search, and get distance-sorted places with one-tap directions and share. All on-device via Apple Maps — no account, no API key. Needs the latest MyLLM with “Allow apps to use your location” enabled in Settings.",
+      "tags": [
+        "location",
+        "maps",
+        "nearby",
+        "travel"
+      ],
+      "iconSymbol": "location.fill",
+      "iconColor": "blue",
+      "version": 1,
+      "featured": true,
+      "requiresAI": false,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/near-me.jpg",
+      "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/near-me.html",
+      "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/near-me.myllmapp",
+      "sizeKB": 7,
+      "category": "Utilities"
+    },
     {
       "id": "expense-tracker",
       "name": "Expense Tracker",

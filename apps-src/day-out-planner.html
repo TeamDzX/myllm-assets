@@ -1,0 +1,146 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<style>:root{color-scheme:light dark}
+*{box-sizing:border-box}
+body{font-family:var(--myllm-font,-apple-system,system-ui,sans-serif);margin:0;padding:16px;background:var(--myllm-bg,#f2f2f7);color:var(--myllm-text,#111)}
+h1{font-size:22px;margin:0 0 2px}
+.sub{font-size:13px;color:var(--myllm-muted,#8a8a8e);margin:0 0 14px}
+.row{display:flex;gap:8px;margin-bottom:10px}
+input{flex:1;padding:12px;border:1px solid var(--myllm-border,#d1d1d6);border-radius:12px;font-size:16px;background:var(--myllm-surface,#fff);color:var(--myllm-text,#111)}
+button.go{border:0;background:var(--myllm-accent,#0a84ff);color:#fff;border-radius:12px;padding:0 18px;font-size:15px;font-weight:700}
+.chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;margin-bottom:6px;-webkit-overflow-scrolling:touch}
+.chip{flex:0 0 auto;background:var(--myllm-surface,#fff);border:1px solid var(--myllm-border,#d1d1d6);color:var(--myllm-text,#111);border-radius:999px;padding:8px 13px;font-size:14px}
+.step{background:var(--myllm-surface,#fff);border-radius:14px;padding:12px 14px;margin-bottom:10px;display:flex;gap:12px;align-items:flex-start}
+.step .n{width:26px;height:26px;border-radius:50%;background:var(--myllm-accent,#0a84ff);color:#fff;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px}
+.step .body{flex:1}
+.step .name{font-size:16px;font-weight:600}
+.step .meta{font-size:13px;color:var(--myllm-muted,#8a8a8e);margin:2px 0 8px}
+.step .dist{color:var(--myllm-accent,#0a84ff);font-weight:600}
+.step a{font-size:13px;font-weight:600;text-decoration:none;background:rgba(10,132,255,.12);color:var(--myllm-accent,#0a84ff);border-radius:9px;padding:6px 11px;display:inline-block}
+.note{text-align:center;color:var(--myllm-muted,#8a8a8e);font-size:14px;margin-top:20px;line-height:1.5;padding:0 8px}
+@media(min-width:768px){body{max-width:780px;margin-left:auto;margin-right:auto}}
+</style></head><body>
+<h1>🗺 Day Out Planner</h1>
+<p class="sub" id="here">Finding your location…</p>
+<div class="chips" id="chips"></div>
+<div class="row"><input id="vibe" placeholder="A vibe… e.g. rainy day with kids"><button class="go" onclick="plan()">Plan</button></div>
+<div id="out"></div>
+
+<script>
+var LOC = window.myllmLocation || null;
+var ASK = window.myllmAsk || null;
+var haptic = window.myllmHaptic || function(){};
+var here = null;
+var IDEAS = ["rainy day with kids","date night","lazy Sunday","tourist for a day","active outdoors","foodie crawl"];
+
+function el(id){return document.getElementById(id)}
+function dist(m){ if(m==null)return ""; return m<1000?Math.round(m)+" m":(m/1000).toFixed(m<10000?1:0)+" km"; }
+
+function emojiFor(q){
+  q=q.toLowerCase();
+  var map=[["coffee","☕"],["cafe","☕"],["breakfast","🥐"],["brunch","🥞"],["restaurant","🍽"],["pizza","🍕"],
+    ["bar","🍺"],["pub","🍺"],["park","🌳"],["museum","🏛"],["gallery","🖼"],["cinema","🎬"],["movie","🎬"],
+    ["beach","🏖"],["shop","🛍"],["book","📚"],["ice cream","🍦"],["dessert","🍰"],["garden","🌷"],
+    ["playground","🛝"],["zoo","🦁"],["aquarium","🐠"],["bowling","🎳"],["gym","💪"],["viewpoint","🌄"]];
+  for(var i=0;i<map.length;i++){ if(q.indexOf(map[i][0])>=0) return map[i][1]; }
+  return "📍";
+}
+
+function chips(){
+  var c=el("chips");
+  IDEAS.forEach(function(v){
+    var b=document.createElement("button");b.className="chip";b.textContent=v;
+    b.onclick=function(){haptic("selection");el("vibe").value=v;plan()};
+    c.appendChild(b);
+  });
+}
+
+function parseQueries(text){
+  // Pull the first JSON array out of the model reply, tolerating code fences.
+  try{
+    var s=text.indexOf("["), e=text.lastIndexOf("]");
+    if(s>=0&&e>s){ var arr=JSON.parse(text.slice(s,e+1)); if(Array.isArray(arr)) return arr.map(String).slice(0,6); }
+  }catch(err){}
+  return null;
+}
+
+function plan(){
+  var vibe=el("vibe").value.trim();
+  if(!vibe) return;
+  if(!LOC){ el("out").innerHTML='<p class="note">This needs the latest MyLLM with <b>Allow apps to use your location</b> on.</p>'; return; }
+  haptic("light");
+  el("out").innerHTML='<p class="note">Planning your day…</p>';
+
+  getQueries(vibe).then(function(queries){
+    if(!queries||!queries.length){ el("out").innerHTML='<p class="note">Couldn’t plan that one — try another vibe.</p>'; return; }
+    // Resolve each step to its nearest real place, in order.
+    var jobs=queries.map(function(q){
+      return LOC.search(q,{limit:1}).then(function(list){
+        var p=(list&&list[0])||null; return p?{q:q,place:p}:null;
+      }).catch(function(){return null});
+    });
+    Promise.all(jobs).then(function(steps){
+      steps=steps.filter(Boolean);
+      if(!steps.length){ el("out").innerHTML='<p class="note">No matching places nearby for that idea.</p>'; return; }
+      render(steps);
+    });
+  });
+}
+
+function getQueries(vibe){
+  if(!ASK){
+    return Promise.resolve(presets(vibe));
+  }
+  var prompt='Plan a short local outing for this vibe: "'+vibe+'". Reply with ONLY a JSON array of 3 to 5 short place search queries (Apple-Maps style, e.g. ["coffee shop","park","museum","pizza restaurant"]) in a sensible visiting order. No prose.';
+  return ASK(prompt,{system:"You output only compact JSON arrays of place search strings. No commentary."})
+    .then(function(reply){ return parseQueries(reply)||presets(vibe); })
+    .catch(function(){ return presets(vibe); });
+}
+
+function presets(vibe){
+  vibe=vibe.toLowerCase();
+  if(vibe.indexOf("kid")>=0) return ["cafe","playground","family restaurant","ice cream"];
+  if(vibe.indexOf("date")>=0||vibe.indexOf("romantic")>=0) return ["coffee shop","park","restaurant","bar"];
+  if(vibe.indexOf("outdoor")>=0||vibe.indexOf("active")>=0) return ["park","viewpoint","cafe"];
+  if(vibe.indexOf("food")>=0) return ["bakery","restaurant","dessert","bar"];
+  return ["coffee shop","park","restaurant","museum"];
+}
+
+function render(steps){
+  var O=el("out");O.innerHTML="";
+  var share=[];
+  steps.forEach(function(st,i){
+    var p=st.place, dest=p.latitude+","+p.longitude;
+    var d=document.createElement("div");d.className="step";
+    d.innerHTML='<div class="n">'+(i+1)+'</div><div class="body">'+
+      '<div class="name">'+emojiFor(st.q)+' </div>'+
+      '<div class="meta"><span class="dist">'+dist(p.distance)+'</span> · </div>'+
+      '<a href="https://maps.apple.com/?daddr='+dest+'">Directions</a></div>';
+    d.querySelector(".name").appendChild(document.createTextNode(p.name));
+    d.querySelector(".meta").appendChild(document.createTextNode(p.address||st.q));
+    O.appendChild(d);
+    share.push((i+1)+". "+p.name+(p.address?" ("+p.address+")":""));
+  });
+  if(window.myllmShare){
+    var sb=document.createElement("button");sb.className="go";sb.style.width="100%";sb.style.padding="12px";sb.textContent="Share this plan";
+    sb.onclick=function(){haptic("light");myllmShare("My day out:\n"+share.join("\n"))};
+    O.appendChild(sb);
+  }
+}
+
+function start(){
+  chips();
+  if(!LOC){
+    el("here").textContent="Location unavailable";
+    el("out").innerHTML='<p class="note">This needs the latest MyLLM with <b>Settings → Allow apps to use your location</b> on (and <b>Allow apps to use the AI</b> for smarter plans).</p>';
+    return;
+  }
+  el("out").innerHTML='<p class="note">Pick a vibe or type your own, and I’ll build a route from places around you.</p>';
+  LOC.current().then(function(p){
+    here=p; el("here").textContent=p.address?("Around "+p.address):"Got your location";
+  }).catch(function(e){
+    el("here").textContent="Location off";
+    el("out").innerHTML='<p class="note">'+(e&&e.message?e.message:"Couldn’t get your location")+'<br>Turn on <b>Settings → Allow apps to use your location</b>, then reopen.</p>';
+  });
+}
+start();
+</script></body></html>
