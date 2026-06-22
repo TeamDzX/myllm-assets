@@ -21,10 +21,13 @@ body{margin:0;font-family:var(--font);background:var(--bg);color:var(--text)}
 .stars{font-size:18px;font-weight:800;color:var(--accent)}
 .top .sp{flex:1}
 .top button{border:0;background:var(--surface);border:1px solid var(--border);color:var(--accent);border-radius:12px;padding:9px 14px;font:inherit;font-weight:700;font-size:14px;cursor:pointer}
+.modeseg{display:flex;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:3px;width:200px;margin:2px auto 0}
+.modeseg button{flex:1;border:0;background:none;color:var(--muted);font:inherit;font-weight:700;font-size:14px;padding:8px;border-radius:9px;cursor:pointer}
+.modeseg button.on{background:var(--accent);color:#fff}
 .pic{flex:none;margin:6px auto 2px;width:62%;max-width:240px;aspect-ratio:1;background:var(--surface);border:2px solid var(--border);border-radius:24px;display:flex;align-items:center;justify-content:center;overflow:hidden}
 .pic img{width:100%;height:100%;object-fit:contain}
-.boxes{display:flex;gap:10px;justify-content:center;margin:18px 0}
-.box{width:64px;height:64px;border:3px solid var(--border);border-radius:16px;background:var(--box);display:flex;align-items:center;justify-content:center;font-size:34px;font-weight:800;cursor:pointer}
+.boxes{display:flex;gap:8px;justify-content:center;margin:18px auto;max-width:100%}
+.box{flex:1 1 0;max-width:64px;aspect-ratio:1;border:3px solid var(--border);border-radius:16px;background:var(--box);display:flex;align-items:center;justify-content:center;font-size:min(8.5vw,32px);font-weight:800;cursor:pointer}
 .box.filled{border-color:var(--accent)}
 .box.ok{border-color:var(--ok);background:var(--ok);color:#fff}
 .box.bad{border-color:#ff3b30;animation:shake .4s}
@@ -46,6 +49,7 @@ body{margin:0;font-family:var(--font);background:var(--bg);color:var(--text)}
 <div class="wrap">
   <div class="top"><span class="stars" id="stars">⭐ 0</span><span class="sp"></span>
     <button id="hintBtn">💡 Hint</button><button id="skipBtn">Skip ›</button></div>
+  <div class="modeseg" id="modeseg"><button data-m="little" class="on">Little words</button><button data-m="big">Big words</button></div>
   <div class="pic"><img id="pic" alt=""></div>
   <div class="boxes" id="boxes"></div>
   <div class="cheer" id="cheer"></div>
@@ -56,7 +60,10 @@ body{margin:0;font-family:var(--font);background:var(--bg);color:var(--text)}
 
 <script>
 var IMG="https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/kids/";
-var WORDS=["CAT","DOG","PIG","COW","SUN","BEE","BUS","CAR","HAT","FOX","OWL","CAP","CUP","BAT"];
+var WORDS_LITTLE=["CAT","DOG","PIG","COW","SUN","BEE","BUS","CAR","HAT","FOX","OWL","CAP","CUP","BAT"];
+var WORDS_BIG=["FISH","STAR","FROG","DUCK","CAKE","MOON","TREE","BEAR","APPLE","TRAIN","ROBOT","SNAKE","TIGER","HOUSE"];
+var mode="little";
+function WORDS(){return mode==="big"?WORDS_BIG:WORDS_LITTLE}
 var order=[],qi=0,word="",bank=[],used=[],placed=[],stars=0,locked=false;
 function $(i){return document.getElementById(i)}
 function haptic(k){if(window.myllmHaptic)try{myllmHaptic(k)}catch(e){}}
@@ -129,14 +136,14 @@ $('hintBtn').onclick=function(){
 $('skipBtn').onclick=function(){if(locked)return;haptic('selection');next()};
 $('winBtn').onclick=function(){$('win').classList.remove('show');start(true)};
 
-function save(){if(window.myllmStorage)myllmStorage.setItem('spellpic',JSON.stringify({stars:stars,qi:qi}))}
+function save(){if(window.myllmStorage)myllmStorage.setItem('spellpic',JSON.stringify({stars:stars,mode:mode}))}
+function setModeUI(){Array.prototype.forEach.call(document.querySelectorAll('#modeseg button'),function(x){x.classList.toggle('on',x.dataset.m===mode)})}
+Array.prototype.forEach.call(document.querySelectorAll('#modeseg button'),function(b){b.onclick=function(){if(mode===b.dataset.m)return;mode=b.dataset.m;setModeUI();haptic('selection');start(false)}});
 function start(fresh){
-  order=shuffle(WORDS);qi=0;if(fresh)stars=0;$('stars').textContent='⭐ '+stars;loadWord();save();
+  order=shuffle(WORDS());qi=0;if(fresh)stars=0;$('stars').textContent='⭐ '+stars;loadWord();save();
 }
-// light persistence of the star count only
-if(window.myllmStorage){myllmStorage.getItem('spellpic').then(function(v){if(v)try{stars=JSON.parse(v).stars||0}catch(e){}; $('stars').textContent='⭐ '+stars; start(false)})}
-else start(false);
-// save stars whenever they change
+if(window.myllmStorage){myllmStorage.getItem('spellpic').then(function(v){if(v)try{var s=JSON.parse(v);stars=s.stars||0;if(s.mode)mode=s.mode}catch(e){}; $('stars').textContent='⭐ '+stars; setModeUI(); start(false)})}
+else{setModeUI();start(false)}
 setInterval(save,4000);
 </script>
 </body>
