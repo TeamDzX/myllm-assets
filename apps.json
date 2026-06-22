@@ -16,6 +16,29 @@
   ],
   "apps": [
     {
+      "id": "trivia-night",
+      "name": "Trivia Night",
+      "emoji": "🧠",
+      "tagline": "A fresh AI quiz on any topic",
+      "description": "Pick any topic and your own AI writes a 5-question quiz — multiple choice, instant scoring, an interesting fact after each answer, and your best score saved. Endless quizzes generated on demand. Needs the latest MyLLM with “Allow apps to use the AI” enabled in Settings.",
+      "tags": [
+        "AI-powered",
+        "quiz",
+        "games",
+        "saves data"
+      ],
+      "iconSymbol": "brain.head.profile",
+      "iconColor": "purple",
+      "version": 1,
+      "featured": true,
+      "requiresAI": true,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/trivia-night.jpg",
+      "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/trivia-night.html",
+      "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/trivia-night.myllmapp",
+      "sizeKB": 6,
+      "category": "Games"
+    },
+    {
       "id": "essentials-finder",
       "name": "Essentials Finder",
       "emoji": "🧭",

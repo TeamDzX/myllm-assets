@@ -1,0 +1,115 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<style>:root{color-scheme:light dark}
+*{box-sizing:border-box}
+body{font-family:var(--myllm-font,-apple-system,system-ui,sans-serif);margin:0;padding:16px;background:var(--myllm-bg,#f2f2f7);color:var(--myllm-text,#111)}
+h1{font-size:22px;margin:0 0 2px}
+.sub{font-size:13px;color:var(--myllm-muted,#8a8a8e);margin:0 0 14px}
+label{font-size:13px;font-weight:600;display:block;margin:10px 0 4px}
+input,select{width:100%;padding:11px;border:1px solid var(--myllm-border,#d1d1d6);border-radius:12px;font-size:16px;background:var(--myllm-surface,#fff);color:var(--myllm-text,#111)}
+button.go{width:100%;border:0;background:var(--myllm-accent,#0a84ff);color:#fff;border-radius:12px;padding:13px;font-size:16px;font-weight:700;margin-top:14px}
+button.go:disabled{opacity:.5}
+.bar{display:flex;justify-content:space-between;font-size:13px;color:var(--myllm-muted,#8a8a8e);margin-bottom:10px}
+.q{background:var(--myllm-surface,#fff);border-radius:16px;padding:16px;margin-top:6px}
+.q h2{font-size:18px;line-height:1.35;margin:0 0 14px}
+.opt{display:block;width:100%;text-align:left;border:1px solid var(--myllm-border,#d1d1d6);background:var(--myllm-bg,#f7f7fa);color:var(--myllm-text,#111);border-radius:12px;padding:13px;font-size:16px;margin-bottom:9px}
+.opt.correct{background:#34c759;border-color:#34c759;color:#fff}
+.opt.wrong{background:#ff3b30;border-color:#ff3b30;color:#fff}
+.opt:disabled{opacity:1}
+.fact{font-size:14px;color:var(--myllm-muted,#8a8a8e);margin:8px 2px 0;line-height:1.45}
+.note{color:var(--myllm-muted,#8a8a8e);font-size:14px;text-align:center;margin-top:18px;line-height:1.5}
+.big{font-size:46px;font-weight:800;text-align:center;margin:8px 0}
+@media(min-width:768px){body{max-width:720px;margin-left:auto;margin-right:auto}}
+</style></head><body>
+<h1>🧠 Trivia Night</h1>
+<p class="sub">Pick any topic — your AI writes a fresh quiz every time.</p>
+<div id="app"></div>
+
+<script>
+var ASK = window.myllmAsk || null;
+var store = window.myllmStorage || {getItem:function(){return Promise.resolve(null)},setItem:function(){return Promise.resolve()}};
+var haptic = window.myllmHaptic || function(){};
+var qs = [], idx = 0, score = 0;
+
+function el(id){return document.getElementById(id)}
+
+function setup(){
+  el('app').innerHTML =
+    '<label>Topic</label><input id="topic" placeholder="90s movies, space, football…">'+
+    '<label>Difficulty</label><select id="diff"><option>Easy</option><option selected>Medium</option><option>Hard</option></select>'+
+    '<button class="go" id="goBtn" onclick="start()">Start quiz</button>'+
+    '<p class="note" id="best"></p>';
+  store.getItem('bestScore').then(function(v){ if(v) el('best').textContent='🏆 Best: '+v+'/5'; });
+}
+
+function start(){
+  var topic = el('topic').value.trim();
+  if(!topic){ el('topic').focus(); return; }
+  if(!ASK){ el('app').innerHTML='<p class="note">This app needs the latest MyLLM with <b>Settings → Allow apps to use the AI</b> turned on.</p>'; return; }
+  haptic('light');
+  el('goBtn').disabled=true; el('goBtn').textContent='Building quiz…';
+  var diff = el('diff').value;
+  var prompt = 'Create a fun '+diff+'-difficulty trivia quiz of 5 questions about "'+topic+'". '+
+    'Reply with ONLY a JSON array, no prose. Each item: '+
+    '{"q":"question","options":["a","b","c","d"],"answer":0,"fact":"one-sentence interesting fact"}. '+
+    '"answer" is the 0-based index of the correct option.';
+  ASK(prompt, {system:'You output only valid compact JSON arrays. No markdown, no commentary.'})
+    .then(function(reply){
+      var data = parse(reply);
+      if(!data || !data.length){ throw new Error('Could not build a quiz — try another topic.'); }
+      qs = data; idx = 0; score = 0; showQ();
+    })
+    .catch(function(e){ el('app').innerHTML='<p class="note">'+(e&&e.message?e.message:'Something went wrong')+'</p><button class="go" onclick="setup()">Try again</button>'; });
+}
+
+function parse(text){
+  try{ var s=text.indexOf('['), e=text.lastIndexOf(']'); if(s>=0&&e>s){ var arr=JSON.parse(text.slice(s,e+1)); return Array.isArray(arr)?arr.filter(valid).slice(0,5):null; } }catch(err){}
+  return null;
+}
+function valid(q){ return q && q.q && Array.isArray(q.options) && q.options.length>=2 && typeof q.answer==='number'; }
+
+function showQ(){
+  var q = qs[idx];
+  var h = '<div class="bar"><span>Question '+(idx+1)+' of '+qs.length+'</span><span>Score: '+score+'</span></div>';
+  h += '<div class="q"><h2></h2><div id="opts"></div><div class="fact" id="fact"></div></div>';
+  el('app').innerHTML = h;
+  el('app').querySelector('h2').textContent = q.q;
+  var opts = el('opts');
+  q.options.forEach(function(opt, i){
+    var b = document.createElement('button'); b.className='opt'; b.textContent = opt;
+    b.onclick = function(){ answer(i, b); };
+    opts.appendChild(b);
+  });
+}
+
+function answer(i, btn){
+  var q = qs[idx];
+  var buttons = el('opts').querySelectorAll('.opt');
+  buttons.forEach(function(b,j){ b.disabled=true; if(j===q.answer) b.classList.add('correct'); });
+  if(i===q.answer){ score++; haptic('success'); }
+  else { btn.classList.add('wrong'); haptic('error'); }
+  if(q.fact) el('fact').textContent = '💡 '+q.fact;
+  var next = document.createElement('button'); next.className='go';
+  next.textContent = (idx === qs.length-1) ? 'See results' : 'Next question';
+  next.onclick = function(){ idx++; if(idx<qs.length) showQ(); else finish(); };
+  el('app').querySelector('.q').appendChild(next);
+}
+
+function finish(){
+  haptic(score>=4?'success':'light');
+  store.getItem('bestScore').then(function(v){
+    var best = Math.max(parseInt(v||'0',10), score);
+    store.setItem('bestScore', String(best));
+    var msg = score===5?'Perfect! 🎉':score>=3?'Nicely done! 👏':'Good try! 🙂';
+    var h = '<div class="q" style="text-align:center"><h2>'+msg+'</h2>'+
+      '<div class="big">'+score+'/'+qs.length+'</div>'+
+      '<p class="note">🏆 Best: '+best+'/5</p>'+
+      '<button class="go" onclick="setup()">Play again</button>'+
+      (window.myllmShare?'<button class="go" style="background:rgba(10,132,255,.14);color:var(--myllm-accent,#0a84ff)" id="sh">Share my score</button>':'')+
+      '</div>';
+    el('app').innerHTML = h;
+    var sh = el('sh'); if(sh) sh.onclick=function(){ window.myllmShare('I scored '+score+'/5 on Trivia Night! 🧠'); };
+  });
+}
+
+setup();
+</script></body></html>
