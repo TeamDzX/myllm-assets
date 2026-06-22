@@ -16,6 +16,72 @@
   ],
   "apps": [
     {
+      "id": "fridge-chef",
+      "name": "Fridge Chef",
+      "emoji": "🍳",
+      "tagline": "Recipes from a photo of your fridge",
+      "description": "Snap what is in your fridge and get recipe ideas from the ingredients it spots — powered by your camera and your AI. Needs the latest MyLLM with “Allow apps to use the AI” enabled.",
+      "tags": [
+        "AI-powered",
+        "camera",
+        "food"
+      ],
+      "iconSymbol": "fork.knife",
+      "iconColor": "orange",
+      "version": 1,
+      "featured": false,
+      "requiresAI": true,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/fridge-chef.jpg",
+      "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/fridge-chef.html",
+      "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/fridge-chef.myllmapp",
+      "sizeKB": 3,
+      "category": "Food & Cooking"
+    },
+    {
+      "id": "plant-doctor",
+      "name": "Plant Doctor",
+      "emoji": "🌿",
+      "tagline": "Identify and diagnose plants by photo",
+      "description": "Point your camera at a plant to identify it or diagnose problems, with quick care tips — all through your own AI. Needs the latest MyLLM with “Allow apps to use the AI” enabled.",
+      "tags": [
+        "AI-powered",
+        "camera",
+        "plants"
+      ],
+      "iconSymbol": "leaf.fill",
+      "iconColor": "green",
+      "version": 1,
+      "featured": true,
+      "requiresAI": true,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/plant-doctor.jpg",
+      "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/plant-doctor.html",
+      "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/plant-doctor.myllmapp",
+      "sizeKB": 3,
+      "category": "Home & Garden"
+    },
+    {
+      "id": "colouring-pages",
+      "name": "Colouring Page Maker",
+      "emoji": "🖍️",
+      "tagline": "Printable pages to colour, from a prompt",
+      "description": "Describe anything and your AI draws a black-and-white colouring page you can save and print. Needs the latest MyLLM with “Allow apps to use the AI” enabled and an image server configured.",
+      "tags": [
+        "AI-powered",
+        "kids",
+        "creative"
+      ],
+      "iconSymbol": "paintpalette.fill",
+      "iconColor": "pink",
+      "version": 1,
+      "featured": true,
+      "requiresAI": true,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/colouring-pages.jpg",
+      "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/colouring-pages.html",
+      "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/colouring-pages.myllmapp",
+      "sizeKB": 4,
+      "category": "Creative"
+    },
+    {
       "id": "trivia-night",
       "name": "Trivia Night",
       "emoji": "🧠",

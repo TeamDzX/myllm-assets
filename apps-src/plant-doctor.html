@@ -1,0 +1,59 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<style>:root{color-scheme:light dark}
+*{box-sizing:border-box}
+body{font-family:var(--myllm-font,-apple-system,system-ui,sans-serif);margin:0;padding:16px;background:var(--myllm-bg,#f2f2f7);color:var(--myllm-text,#111)}
+h1{font-size:22px;margin:0 0 2px}
+.sub{font-size:13px;color:var(--myllm-muted,#8a8a8e);margin:0 0 16px}
+.tile{width:100%;border:0;border-radius:16px;padding:18px;font-size:17px;font-weight:700;color:#fff;margin-bottom:12px;text-align:left}
+.tile span{font-size:26px;margin-right:10px;vertical-align:middle}
+.id{background:linear-gradient(135deg,#34c759,#248a3d)}
+.dx{background:linear-gradient(135deg,#0a84ff,#0060df)}
+.answer{background:var(--myllm-surface,#fff);border-radius:16px;padding:16px;margin-top:8px}
+.answer h2{font-size:17px;margin:0 0 8px}
+.answer p{font-size:16px;line-height:1.55;white-space:pre-wrap;margin:0}
+.answer button{margin-top:14px;width:100%;border:0;border-radius:10px;padding:11px;font-size:14px;font-weight:600;background:rgba(52,199,89,.16);color:#248a3d}
+.note{color:var(--myllm-muted,#8a8a8e);font-size:14px;text-align:center;margin-top:18px;line-height:1.5;padding:0 6px}
+@media(min-width:768px){body{max-width:680px;margin-left:auto;margin-right:auto}}
+</style></head><body>
+<h1>🌿 Plant Doctor</h1>
+<p class="sub">Point your camera at a plant — get an ID or a diagnosis.</p>
+<div id="home">
+  <button class="tile id" onclick="ask('identify')"><span>🔍</span>Identify a plant</button>
+  <button class="tile dx" onclick="ask('diagnose')"><span>🩺</span>What's wrong with my plant?</button>
+  <p class="note" id="hint">Uses your camera and your AI, privately on your device. Needs the latest MyLLM with “Allow apps to use the AI” on.</p>
+</div>
+<div id="out"></div>
+
+<script>
+var VISION = window.myllmVision || null;
+var haptic = window.myllmHaptic || function(){};
+
+var PROMPTS = {
+  identify: 'You are an expert botanist. Identify the plant in this photo. Reply concisely with: common name, scientific name, and 3 short care tips (light, water, one thing to watch for). If the image is not a plant, say so politely.',
+  diagnose: 'You are a plant-care expert. Examine this plant photo and diagnose likely problems (pests, over/under-watering, light, nutrients, disease). Give the 2-3 most likely causes, each with a short fix. Be concise and practical.'
+};
+
+function el(id){return document.getElementById(id)}
+
+function ask(mode){
+  if(!VISION){ el('hint').textContent='This needs the latest MyLLM with “Allow apps to use the AI” enabled in Settings.'; return; }
+  haptic('light');
+  VISION(PROMPTS[mode]).then(function(answer){
+    if(answer == null) return; // cancelled
+    show(mode === 'identify' ? 'Plant ID' : 'Diagnosis', answer);
+  }).catch(function(e){
+    show('Hmm', (e && e.message) ? e.message : 'Something went wrong.');
+  });
+}
+
+function show(title, text){
+  el('home').style.display='none';
+  var d = document.createElement('div'); d.className='answer';
+  d.innerHTML='<h2></h2><p></p><button>← Check another plant</button>';
+  d.querySelector('h2').textContent = '🌿 ' + title;
+  d.querySelector('p').textContent = text;
+  d.querySelector('button').onclick = function(){ el('out').innerHTML=''; el('home').style.display='block'; };
+  el('out').innerHTML=''; el('out').appendChild(d);
+  window.scrollTo(0,0);
+}
+</script></body></html>

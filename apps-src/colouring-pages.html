@@ -1,0 +1,72 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<style>:root{color-scheme:light dark}
+*{box-sizing:border-box}
+body{font-family:var(--myllm-font,-apple-system,system-ui,sans-serif);margin:0;padding:16px;background:var(--myllm-bg,#f2f2f7);color:var(--myllm-text,#111)}
+h1{font-size:22px;margin:0 0 2px}
+.sub{font-size:13px;color:var(--myllm-muted,#8a8a8e);margin:0 0 14px}
+input{width:100%;padding:12px;border:1px solid var(--myllm-border,#d1d1d6);border-radius:12px;font-size:16px;background:var(--myllm-surface,#fff);color:var(--myllm-text,#111)}
+button.go{width:100%;border:0;background:var(--myllm-accent,#0a84ff);color:#fff;border-radius:12px;padding:13px;font-size:16px;font-weight:700;margin-top:12px}
+button.go:disabled{opacity:.5}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:10px 0 4px;-webkit-overflow-scrolling:touch}
+.chip{flex:0 0 auto;background:var(--myllm-surface,#fff);border:1px solid var(--myllm-border,#d1d1d6);color:var(--myllm-text,#111);border-radius:999px;padding:8px 13px;font-size:14px}
+.page{margin-top:16px;background:#fff;border-radius:16px;padding:8px;border:1px solid var(--myllm-border,#e3e3e8)}
+.page img{width:100%;border-radius:10px;display:block}
+.acts{display:flex;gap:8px;margin-top:10px}
+.acts button{flex:1;border:0;border-radius:10px;padding:11px;font-size:14px;font-weight:600;background:rgba(10,132,255,.14);color:var(--myllm-accent,#0a84ff)}
+.note{color:var(--myllm-muted,#8a8a8e);font-size:14px;text-align:center;margin-top:18px;line-height:1.5;padding:0 6px}
+@media(min-width:768px){body{max-width:680px;margin-left:auto;margin-right:auto}}
+</style></head><body>
+<h1>🖍️ Colouring Page Maker</h1>
+<p class="sub">Describe anything and get a printable black-and-white page to colour in.</p>
+<input id="what" placeholder="A friendly dinosaur in a jungle">
+<div class="chips" id="chips"></div>
+<button class="go" id="goBtn" onclick="make()">Make my page</button>
+<div id="out"></div>
+
+<script>
+var GEN = window.myllmGenerateImage || null;
+var haptic = window.myllmHaptic || function(){};
+var lastUrl = null;
+var IDEAS = ["a friendly dinosaur","a unicorn in a meadow","a race car","a butterfly garden","a space rocket","an underwater reef","a cosy cottage","a dragon"];
+
+function el(id){return document.getElementById(id)}
+
+function chips(){
+  var c = el('chips');
+  IDEAS.forEach(function(t){
+    var b=document.createElement('button'); b.className='chip'; b.textContent=t;
+    b.onclick=function(){ haptic('selection'); el('what').value=t; make(); };
+    c.appendChild(b);
+  });
+}
+
+function make(){
+  var what = el('what').value.trim();
+  if(!what){ el('what').focus(); return; }
+  if(!GEN){ el('out').innerHTML='<p class="note">This app needs the latest MyLLM with <b>Settings → Allow apps to use the AI</b> turned on and an image server configured.</p>'; return; }
+  haptic('light');
+  el('goBtn').disabled=true; el('goBtn').textContent='Drawing… (~30s)';
+  el('out').innerHTML='<p class="note">🖍️ Drawing your colouring page…</p>';
+  var prompt = 'Black and white line-art colouring book page of '+what+'. Bold clean black outlines on a pure white background, no shading, no grey, no colour, simple and friendly, suitable for a child to colour in.';
+  GEN(prompt, {aspect:'portrait'})
+    .then(function(url){
+      lastUrl = url;
+      var div=document.createElement('div'); div.className='page';
+      div.innerHTML='<img alt="colouring page"><div class="acts">'+
+        '<button id="saveB">💾 Save to Photos</button><button id="againB">🔄 Another</button></div>';
+      div.querySelector('img').src=url;
+      el('out').innerHTML=''; el('out').appendChild(div);
+      el('saveB').onclick=savePage; el('againB').onclick=make;
+    })
+    .catch(function(e){ el('out').innerHTML='<p class="note">'+(e&&e.message?e.message:'Could not make the page')+'</p>'; })
+    .then(function(){ el('goBtn').disabled=false; el('goBtn').textContent='Make my page'; });
+}
+
+function savePage(){
+  if(!lastUrl || !window.myllmSaveImage) return;
+  haptic('success');
+  window.myllmSaveImage(lastUrl).catch(function(){});
+}
+
+chips();
+</script></body></html>
