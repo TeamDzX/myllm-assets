@@ -16,6 +16,29 @@
   ],
   "apps": [
     {
+      "id": "receipt-logger",
+      "name": "Receipt Logger",
+      "emoji": "🧾",
+      "tagline": "Scan receipts, auto-tally your spending",
+      "description": "Scan a receipt and your AI reads the merchant and total, keeping a running tally you can share. Tap to remove any entry. Needs the latest MyLLM with document scanning and “Allow apps to use the AI” enabled.",
+      "tags": [
+        "AI-powered",
+        "scan",
+        "expenses",
+        "productivity"
+      ],
+      "iconSymbol": "doc.text.viewfinder",
+      "iconColor": "teal",
+      "version": 1,
+      "featured": false,
+      "requiresAI": true,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/receipt-logger.jpg",
+      "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/receipt-logger.html",
+      "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/receipt-logger.myllmapp",
+      "sizeKB": 6,
+      "category": "Productivity"
+    },
+    {
       "id": "fridge-chef",
       "name": "Fridge Chef",
       "emoji": "🍳",

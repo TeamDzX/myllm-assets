@@ -1,0 +1,89 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<style>:root{color-scheme:light dark}
+*{box-sizing:border-box}
+body{font-family:var(--myllm-font,-apple-system,system-ui,sans-serif);margin:0;padding:16px;background:var(--myllm-bg,#f2f2f7);color:var(--myllm-text,#111)}
+h1{font-size:22px;margin:0 0 2px}
+.sub{font-size:13px;color:var(--myllm-muted,#8a8a8e);margin:0 0 14px}
+.total{background:var(--myllm-surface,#fff);border-radius:16px;padding:16px;text-align:center;margin-bottom:12px}
+.total .n{font-size:34px;font-weight:800}
+.total .l{font-size:13px;color:var(--myllm-muted,#8a8a8e)}
+button.go{width:100%;border:0;background:var(--myllm-accent,#0a84ff);color:#fff;border-radius:12px;padding:14px;font-size:16px;font-weight:700}
+button.go:disabled{opacity:.5}
+.row{background:var(--myllm-surface,#fff);border-radius:12px;padding:12px 14px;margin-top:8px;display:flex;align-items:center;gap:10px}
+.row .m{flex:1}
+.row .m b{font-size:15px}
+.row .m span{display:block;font-size:12px;color:var(--myllm-muted,#8a8a8e)}
+.row .amt{font-weight:700;font-size:15px}
+.row .del{background:none;border:0;color:#ff453a;font-size:18px;padding:4px 6px}
+.note{color:var(--myllm-muted,#8a8a8e);font-size:14px;text-align:center;margin-top:18px;line-height:1.5;padding:0 6px}
+.bar{display:flex;gap:8px;margin-top:12px}
+.bar button{flex:1;border:0;border-radius:10px;padding:10px;font-size:13px;font-weight:600;background:rgba(10,132,255,.14);color:var(--myllm-accent,#0a84ff)}
+@media(min-width:768px){body{max-width:680px;margin-left:auto;margin-right:auto}}
+</style></head><body>
+<h1>🧾 Receipt Logger</h1>
+<p class="sub">Scan a receipt — it reads the total and keeps a running tally.</p>
+<div class="total"><div class="n" id="sum">—</div><div class="l" id="count">No receipts yet</div></div>
+<button class="go" id="goBtn" onclick="scan()">📸 Scan a receipt</button>
+<div id="list"></div>
+<div class="bar" id="bar" style="display:none"><button id="shareB">Share summary</button><button id="clearB">Clear all</button></div>
+<p class="note" id="hint">Scanning and reading happen on your device. Needs the latest MyLLM with “Allow apps to use the AI” enabled.</p>
+
+<script>
+var SCAN = window.myllmScan || null;
+var ASK = window.myllmAsk || null;
+var store = window.myllmStorage || {getItem:function(){return Promise.resolve(null)},setItem:function(){return Promise.resolve()}};
+var haptic = window.myllmHaptic || function(){};
+var items = [];
+
+function el(id){return document.getElementById(id)}
+
+function scan(){
+  if(!SCAN){ el('hint').textContent='This needs the latest MyLLM with document scanning (v3.6+) and “Allow apps to use the AI” on.'; return; }
+  haptic('light');
+  el('goBtn').disabled=true; el('goBtn').textContent='Scanning…';
+  SCAN().then(function(text){
+    if(!text){ return; } // cancelled / nothing found
+    el('goBtn').textContent='Reading…';
+    return extract(text).then(function(rec){
+      items.unshift(rec); save(); render(); haptic('success');
+    });
+  }).catch(function(e){ el('hint').textContent=(e&&e.message)?e.message:'Scan failed'; })
+    .then(function(){ el('goBtn').disabled=false; el('goBtn').textContent='📸 Scan a receipt'; });
+}
+
+function extract(text){
+  if(!ASK){ return Promise.resolve({merchant:'Receipt', total:null, currency:'', date:'', raw:text}); }
+  var prompt='From this receipt text, extract JSON ONLY: {"merchant":string,"date":string,"total":number,"currency":string(symbol like £ or $)}. '+
+    'If a field is unknown use "" (or 0 for total). Receipt text:\n'+text.slice(0,1500);
+  return ASK(prompt,{system:'You output only one compact JSON object, no prose.'}).then(function(reply){
+    try{ var s=reply.indexOf('{'),e=reply.lastIndexOf('}'); var o=JSON.parse(reply.slice(s,e+1));
+      return {merchant:o.merchant||'Receipt', total:(typeof o.total==='number'?o.total:parseFloat(o.total)||null), currency:o.currency||'', date:o.date||'', raw:text}; }
+    catch(err){ return {merchant:'Receipt', total:null, currency:'', date:'', raw:text}; }
+  }).catch(function(){ return {merchant:'Receipt', total:null, currency:'', date:'', raw:text}; });
+}
+
+function render(){
+  var L=el('list'); L.innerHTML='';
+  var cur='', sum=0, n=0;
+  items.forEach(function(it,i){
+    if(typeof it.total==='number'){ sum+=it.total; n++; if(it.currency) cur=it.currency; }
+    var d=document.createElement('div'); d.className='row';
+    d.innerHTML='<div class="m"><b></b><span></span></div><div class="amt"></div><button class="del">✕</button>';
+    d.querySelector('b').textContent=it.merchant||'Receipt';
+    d.querySelector('.m span').textContent=it.date||'';
+    d.querySelector('.amt').textContent=(typeof it.total==='number')?((it.currency||'')+it.total.toFixed(2)):'—';
+    d.querySelector('.del').onclick=function(){ items.splice(i,1); save(); render(); };
+    L.appendChild(d);
+  });
+  el('sum').textContent = n? (cur+sum.toFixed(2)) : '—';
+  el('count').textContent = items.length? (items.length+' receipt'+(items.length>1?'s':'')+(n<items.length?' ('+(items.length-n)+' unread)':'')) : 'No receipts yet';
+  el('bar').style.display = items.length? 'flex':'none';
+  el('shareB').onclick=function(){ if(window.myllmShare) window.myllmShare('Receipts total: '+(cur+sum.toFixed(2))+' across '+n+' receipts.'); };
+  el('clearB').onclick=function(){ items=[]; save(); render(); };
+}
+
+function save(){ store.setItem('receipts', JSON.stringify(items.slice(0,200))); }
+function load(){ return store.getItem('receipts').then(function(v){ try{return v?JSON.parse(v):[]}catch(e){return []} }); }
+
+load().then(function(v){ items=v; render(); });
+</script></body></html>
