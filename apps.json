@@ -1,5 +1,5 @@
 {
-  "updated": "2026-06-21",
+  "updated": "2026-06-22",
   "categories": [
     "Students",
     "Productivity",
@@ -1432,25 +1432,25 @@
     },
     {
       "id": "kids-crossword",
-      "name": "Picture Crossword",
-      "emoji": "🧩",
-      "tagline": "First crosswords, with pictures",
-      "description": "A gentle first crossword for young children: big squares and picture clues instead of words. Tap a picture, then tap the letters to spell what you see \\u2014 a cat, an ape, a pig! Squares turn green when they're right, with a happy cheer when you finish. No reading needed, no timer, no account.",
+      "name": "Spell the Picture",
+      "emoji": "🔤",
+      "tagline": "Tap the letters to spell what you see",
+      "description": "A gentle spelling game for young children: see a picture (a cat, a dog, a sun…) and tap the big letter tiles to spell the word into the boxes. Just the right letters, no reading needed, a friendly hint when stuck, and a star for every word. 14 simple words, fully offline.",
       "tags": [
         "kids",
         "learning",
         "word"
       ],
       "category": "Kids & Sensory",
-      "iconSymbol": "puzzlepiece.fill",
+      "iconSymbol": "textformat.abc",
       "iconColor": "orange",
-      "version": 1,
+      "version": 2,
       "featured": true,
       "requiresAI": false,
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/kids-crossword.jpg",
-      "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/kids-crossword.html",
-      "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/kids-crossword.myllmapp",
-      "sizeKB": 9
+      "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/kids-crossword.html?v=2",
+      "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/kids-crossword.myllmapp?v=2",
+      "sizeKB": 7
     }
   ]
 }
