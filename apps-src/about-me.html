@@ -1,0 +1,100 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<style>:root{color-scheme:light dark}
+*{box-sizing:border-box}
+body{font-family:var(--myllm-font,-apple-system,system-ui,sans-serif);margin:0;padding:16px;background:var(--myllm-bg,#f2f2f7);color:var(--myllm-text,#111)}
+h1{font-size:22px;margin:0 0 2px}
+.sub{font-size:13px;color:var(--myllm-muted,#8a8a8e);margin:0 0 14px;line-height:1.45}
+label{font-size:13px;font-weight:600;display:block;margin:10px 0 4px}
+input,select{width:100%;padding:11px;border:1px solid var(--myllm-border,#d1d1d6);border-radius:12px;font-size:16px;background:var(--myllm-surface,#fff);color:var(--myllm-text,#111)}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:8px 0 4px;-webkit-overflow-scrolling:touch}
+.chip{flex:0 0 auto;background:var(--myllm-surface,#fff);border:1px solid var(--myllm-border,#d1d1d6);color:var(--myllm-text,#111);border-radius:999px;padding:8px 13px;font-size:14px}
+button.go{width:100%;border:0;background:var(--myllm-accent,#0a84ff);color:#fff;border-radius:12px;padding:13px;font-size:16px;font-weight:700;margin-top:12px}
+button.go:disabled{opacity:.5}
+.saved{margin-top:22px}
+.saved h3{font-size:14px;color:var(--myllm-muted,#8a8a8e);margin:0 0 8px}
+.row{background:var(--myllm-surface,#fff);border-radius:12px;padding:11px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px}
+.row .f{flex:1;font-size:15px}
+.row .c{font-size:11px;color:var(--myllm-muted,#8a8a8e);text-transform:capitalize}
+.row .del{border:0;background:none;color:#ff453a;font-size:18px}
+.note{color:var(--myllm-muted,#8a8a8e);font-size:13px;text-align:center;margin-top:16px;line-height:1.5;padding:0 6px}
+@media(min-width:768px){body{max-width:680px;margin-left:auto;margin-right:auto}}
+</style></head><body>
+<h1>🙋 About Me</h1>
+<p class="sub">Tell MyLLM lasting facts about you, so it personalises every chat. These are saved privately on your device — this app can add and remove them, but can't read anything else.</p>
+
+<div class="chips" id="chips"></div>
+<label>Tell MyLLM to remember…</label>
+<input id="fact" placeholder="e.g. I'm vegetarian">
+<label>Category</label>
+<select id="cat">
+  <option value="preference" selected>Preference</option>
+  <option value="personal">Personal</option>
+  <option value="work">Work</option>
+  <option value="health">Health</option>
+  <option value="general">General</option>
+</select>
+<button class="go" id="goBtn" onclick="remember()">Remember this</button>
+
+<div class="saved" id="savedWrap" style="display:none">
+  <h3>Saved here</h3>
+  <div id="saved"></div>
+</div>
+<p class="note" id="hint">Needs the latest MyLLM with “Allow apps to use your memory” enabled in Settings.</p>
+
+<script>
+var MEM = window.myllmMemory || null;
+var store = window.myllmStorage || {getItem:function(){return Promise.resolve(null)},setItem:function(){return Promise.resolve()}};
+var haptic = window.myllmHaptic || function(){};
+var saved = []; // {fact, cat} the app added (write-only API can't read existing memories)
+var IDEAS = ["I'm vegetarian","Prefer concise answers","I use UK English","I'm learning Spanish","I have a peanut allergy","I work in design"];
+
+function el(id){return document.getElementById(id)}
+
+function chips(){
+  var c = el('chips');
+  IDEAS.forEach(function(t){
+    var b=document.createElement('button'); b.className='chip'; b.textContent=t;
+    b.onclick=function(){ haptic('selection'); el('fact').value=t; };
+    c.appendChild(b);
+  });
+}
+
+function remember(){
+  var fact = el('fact').value.trim();
+  if(!fact) { el('fact').focus(); return; }
+  if(!MEM){ el('hint').textContent='This needs the latest MyLLM (v3.7+) with “Allow apps to use your memory” enabled in Settings.'; return; }
+  var cat = el('cat').value;
+  haptic('light');
+  el('goBtn').disabled = true;
+  MEM.remember(fact, cat).then(function(){
+    saved.unshift({ fact: fact, cat: cat });
+    persist(); render(); el('fact').value=''; haptic('success');
+  }).catch(function(e){ el('hint').textContent=(e&&e.message)?e.message:'Could not save that.'; })
+    .then(function(){ el('goBtn').disabled=false; });
+}
+
+function forget(i){
+  var item = saved[i]; if(!item || !MEM) return;
+  MEM.forget(item.fact).then(function(){ saved.splice(i,1); persist(); render(); haptic('warning'); });
+}
+
+function render(){
+  var wrap = el('savedWrap'), list = el('saved');
+  if(!saved.length){ wrap.style.display='none'; return; }
+  wrap.style.display='block'; list.innerHTML='';
+  saved.forEach(function(it, i){
+    var d=document.createElement('div'); d.className='row';
+    d.innerHTML='<div class="f"><div></div><div class="c"></div></div><button class="del">✕</button>';
+    d.querySelector('.f div').textContent = it.fact;
+    d.querySelector('.c').textContent = it.cat;
+    d.querySelector('.del').onclick = function(){ forget(i); };
+    list.appendChild(d);
+  });
+}
+
+function persist(){ store.setItem('aboutme', JSON.stringify(saved.slice(0,100))); }
+function load(){ return store.getItem('aboutme').then(function(v){ try{return v?JSON.parse(v):[]}catch(e){return []} }); }
+
+chips();
+load().then(function(v){ saved=v; render(); });
+</script></body></html>

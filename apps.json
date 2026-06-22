@@ -16,6 +16,50 @@
   ],
   "apps": [
     {
+      "id": "about-me",
+      "name": "About Me",
+      "emoji": "🙋",
+      "tagline": "Teach MyLLM about you",
+      "description": "Tell MyLLM lasting facts about you — diet, preferences, how you like answers — so it personalises every chat. Saved privately on-device; this app can add and remove them but cannot read anything else. Needs the latest MyLLM with “Allow apps to use your memory” enabled.",
+      "tags": [
+        "personalisation",
+        "memory",
+        "preferences"
+      ],
+      "iconSymbol": "person.crop.circle.fill",
+      "iconColor": "pink",
+      "version": 1,
+      "featured": false,
+      "requiresAI": false,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/about-me.jpg",
+      "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/about-me.html",
+      "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/about-me.myllmapp",
+      "sizeKB": 4,
+      "category": "Productivity"
+    },
+    {
+      "id": "voice-journal",
+      "name": "Voice Journal",
+      "emoji": "🎙️",
+      "tagline": "Speak it, it writes itself",
+      "description": "Speak your thoughts and they are transcribed on your device and saved as dated entries you can revisit, share or delete. Private — nothing is sent anywhere. Needs the latest MyLLM with “Allow apps to use the microphone” enabled.",
+      "tags": [
+        "voice",
+        "journal",
+        "wellbeing"
+      ],
+      "iconSymbol": "mic.fill",
+      "iconColor": "indigo",
+      "version": 1,
+      "featured": false,
+      "requiresAI": false,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/voice-journal.jpg",
+      "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/voice-journal.html",
+      "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/voice-journal.myllmapp",
+      "sizeKB": 4,
+      "category": "Health & Wellbeing"
+    },
+    {
       "id": "receipt-logger",
       "name": "Receipt Logger",
       "emoji": "🧾",

@@ -1,0 +1,64 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<style>:root{color-scheme:light dark}
+*{box-sizing:border-box}
+body{font-family:var(--myllm-font,-apple-system,system-ui,sans-serif);margin:0;padding:16px;background:var(--myllm-bg,#f2f2f7);color:var(--myllm-text,#111)}
+h1{font-size:22px;margin:0 0 2px}
+.sub{font-size:13px;color:var(--myllm-muted,#8a8a8e);margin:0 0 16px}
+button.go{width:100%;border:0;background:var(--myllm-accent,#0a84ff);color:#fff;border-radius:14px;padding:16px;font-size:17px;font-weight:700}
+button.go span{font-size:22px;margin-right:8px;vertical-align:middle}
+.entry{background:var(--myllm-surface,#fff);border-radius:14px;padding:14px;margin-top:10px}
+.entry .d{font-size:12px;color:var(--myllm-muted,#8a8a8e);margin-bottom:4px}
+.entry p{margin:0;font-size:15px;line-height:1.5;white-space:pre-wrap}
+.entry p.clamp{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.entry .acts{display:flex;gap:14px;margin-top:10px}
+.entry .acts button{border:0;background:none;font-size:13px;font-weight:600;color:var(--myllm-accent,#0a84ff);padding:0}
+.entry .acts button.del{color:#ff453a}
+.note{color:var(--myllm-muted,#8a8a8e);font-size:14px;text-align:center;margin-top:20px;line-height:1.5;padding:0 8px}
+@media(min-width:768px){body{max-width:720px;margin-left:auto;margin-right:auto}}
+</style></head><body>
+<h1>🎙️ Voice Journal</h1>
+<p class="sub">Speak your thoughts — they're transcribed on your device and saved.</p>
+<button class="go" onclick="record()"><span>🎙️</span>New entry</button>
+<div id="list"></div>
+<p class="note" id="hint">Recording and transcription happen privately on your device. Needs the latest MyLLM with microphone access allowed for apps.</p>
+
+<script>
+var TRANSCRIBE = window.myllmTranscribe || null;
+var store = window.myllmStorage || {getItem:function(){return Promise.resolve(null)},setItem:function(){return Promise.resolve()}};
+var haptic = window.myllmHaptic || function(){};
+var entries = [];
+
+function el(id){return document.getElementById(id)}
+
+function record(){
+  if(!TRANSCRIBE){ el('hint').textContent='This needs the latest MyLLM (v3.7+) with “Allow apps to use the microphone” enabled in Settings.'; return; }
+  haptic('light');
+  TRANSCRIBE().then(function(text){
+    if(!text){ return; } // cancelled / nothing heard
+    entries.unshift({ text: text, at: Date.now() });
+    save(); render(); haptic('success');
+  }).catch(function(e){ el('hint').textContent=(e&&e.message)?e.message:'Recording failed'; });
+}
+
+function render(){
+  var L = el('list'); L.innerHTML='';
+  if(!entries.length){ el('hint').style.display='block'; return; }
+  el('hint').style.display='none';
+  entries.forEach(function(it, i){
+    var d = document.createElement('div'); d.className='entry';
+    d.innerHTML='<div class="d"></div><p class="clamp"></p>'+
+      '<div class="acts"><button class="more">Show more</button><button class="sh">Share</button><button class="del">Delete</button></div>';
+    d.querySelector('.d').textContent = new Date(it.at).toLocaleString();
+    var p = d.querySelector('p'); p.textContent = it.text;
+    d.querySelector('.more').onclick = function(){ p.classList.toggle('clamp'); this.textContent = p.classList.contains('clamp')?'Show more':'Show less'; };
+    d.querySelector('.sh').onclick = function(){ if(window.myllmShare) myllmShare(it.text); haptic('light'); };
+    d.querySelector('.del').onclick = function(){ entries.splice(i,1); save(); render(); haptic('warning'); };
+    L.appendChild(d);
+  });
+}
+
+function save(){ store.setItem('entries', JSON.stringify(entries.slice(0,200))); }
+function load(){ return store.getItem('entries').then(function(v){ try{return v?JSON.parse(v):[]}catch(e){return []} }); }
+
+load().then(function(v){ entries=v; render(); });
+</script></body></html>
