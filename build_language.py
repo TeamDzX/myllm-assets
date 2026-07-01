@@ -24,7 +24,7 @@ TEMPLATE = r"""<!doctype html><html lang="__CODE__"><head><meta charset="utf-8">
 <style>:root{color-scheme:light dark;--ac:__ACCENT__;--ac2:__ACCENT2__}
 *{box-sizing:border-box}
 body{font-family:-apple-system,system-ui,sans-serif;margin:0;padding:0 0 96px;background:#f2f2f7;color:#111;-webkit-tap-highlight-color:transparent}
-@media(prefers-color-scheme:dark){body{background:#000;color:#eee}.card,.deck,.chip,.panel,input,.vrow{background:#1c1c1e}.chip{border-color:#3a3a3c}input{color:#eee;border-color:#3a3a3c}.tabbar{background:rgba(20,20,22,.86)}.thumb{background:#2c2c2e}}
+@media(prefers-color-scheme:dark){body{background:#000;color:#eee}.card,.deck,.chip,.panel,input,.vrow{background:#1c1c1e}.chip{border-color:#3a3a3c}input{color:#eee;border-color:#3a3a3c}.tabbar{background:rgba(20,20,22,.86)}.thumb{background:#2c2c2e}.body .w{color:#fff}.body .en{color:#c7c7cc}.body .tap{color:#8a8a8e}}
 header{padding:18px 18px 8px;display:flex;align-items:center;gap:12px}
 header .fl{font-size:34px}
 header h1{font-size:22px;margin:0}
@@ -40,9 +40,9 @@ h2{font-size:14px;letter-spacing:.02em;text-transform:uppercase;opacity:.5;margi
 .card .img{width:100%;aspect-ratio:3/2;object-fit:cover;display:block;background:#e5e5ea}
 .ph{width:100%;aspect-ratio:3/2;display:flex;align-items:center;justify-content:center;font-size:60px;background:linear-gradient(135deg,var(--ac),var(--ac2));color:#fff}
 .body{padding:16px 18px;text-align:center;min-height:104px;display:flex;flex-direction:column;justify-content:center}
-.body .w{font-size:26px;font-weight:700;line-height:1.2}
-.body .en{font-size:15px;opacity:.62;margin-top:4px}
-.body .tap{font-size:13px;opacity:.4}
+.body .w{font-size:30px;font-weight:800;line-height:1.2;color:#000;letter-spacing:-.01em}
+.body .en{font-size:16px;font-weight:600;color:#3a3a3c;margin-top:5px}
+.body .tap{font-size:13px;color:#8a8a8e}
 .hidden{display:none}
 .nav{display:flex;align-items:center;justify-content:space-between;margin-top:12px}
 .nav button{border:0;background:#e5e5ea;color:inherit;border-radius:12px;padding:11px 20px;font-size:15px;font-weight:600}
