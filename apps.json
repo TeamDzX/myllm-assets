@@ -373,6 +373,72 @@
       "category": "Students"
     },
     {
+      "id": "action-items",
+      "name": "Action Items",
+      "emoji": "✅",
+      "tagline": "Meeting notes → owned actions",
+      "description": "Turn messy meeting notes into a clean checklist: paste your notes and your own on-device AI pulls out every action item with its owner and due date. Add items by hand too, tick them off, and everything is saved on-device. The note-extraction needs the latest MyLLM with “Allow apps to use the AI” enabled in Settings; manual items work offline.",
+      "tags": [
+        "AI-powered",
+        "productivity",
+        "saves data"
+      ],
+      "iconSymbol": "checklist",
+      "iconColor": "blue",
+      "version": 1,
+      "featured": false,
+      "requiresAI": false,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/action-items.jpg",
+      "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/action-items.html",
+      "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/action-items.myllmapp",
+      "sizeKB": 8,
+      "category": "Productivity"
+    },
+    {
+      "id": "sprint-planner",
+      "name": "Sprint Planner",
+      "emoji": "🏃",
+      "tagline": "Backlog, points & velocity",
+      "description": "Plan agile sprints on-device: capture a backlog with story points, pull items into the current sprint, tick them off, then complete the sprint to bank your velocity and see your running average. No account — everything is saved locally and works fully offline.",
+      "tags": [
+        "productivity",
+        "offline",
+        "saves data"
+      ],
+      "iconSymbol": "figure.run",
+      "iconColor": "indigo",
+      "version": 1,
+      "featured": false,
+      "requiresAI": false,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/sprint-planner.jpg",
+      "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/sprint-planner.html",
+      "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/sprint-planner.myllmapp",
+      "sizeKB": 8,
+      "category": "Productivity"
+    },
+    {
+      "id": "risk-decision-log",
+      "name": "Risk & Decision Log",
+      "emoji": "🛡️",
+      "tagline": "The project paper-trail",
+      "description": "Keep a clean project paper-trail: log risks with a likelihood × impact score that auto-ranks and colour-codes them, and record key decisions with their rationale and date. Fully on-device, no account, works offline.",
+      "tags": [
+        "productivity",
+        "offline",
+        "saves data"
+      ],
+      "iconSymbol": "shield.lefthalf.filled",
+      "iconColor": "orange",
+      "version": 1,
+      "featured": false,
+      "requiresAI": false,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/risk-decision-log.jpg",
+      "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/risk-decision-log.html",
+      "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/risk-decision-log.myllmapp",
+      "sizeKB": 7,
+      "category": "Productivity"
+    },
+    {
       "id": "quick-todo",
       "name": "Quick Todo",
       "emoji": "✅",

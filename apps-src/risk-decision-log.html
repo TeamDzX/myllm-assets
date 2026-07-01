@@ -1,0 +1,117 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Risk &amp; Decision Log</title>
+<style>:root{color-scheme:light dark;--ac:#ff9500}
+*{box-sizing:border-box}
+body{font-family:-apple-system,system-ui,sans-serif;margin:0;padding:18px 16px calc(28px + env(safe-area-inset-bottom));background:#f2f2f7;color:#111;-webkit-tap-highlight-color:transparent;max-width:820px;margin-left:auto;margin-right:auto}
+@media(prefers-color-scheme:dark){body{background:#000;color:#eee}.card,input,textarea,.seg{background:#1c1c1e}input,textarea{color:#eee;border-color:#3a3a3c}.seg{background:#1c1c1e}.seg button{color:#eee}}
+h1{font-size:22px;margin:0 0 12px}
+.seg{display:flex;background:#e4e4ea;border-radius:12px;padding:3px;margin-bottom:16px}
+.seg button{flex:1;border:0;background:none;padding:9px 0;font-size:14px;font-weight:600;border-radius:9px;color:#333}
+.seg button.on{background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+@media(prefers-color-scheme:dark){.seg{background:#2c2c2e}.seg button.on{background:#48484a}}
+input,textarea{width:100%;padding:12px;border:1px solid #d1d1d6;border-radius:12px;font-size:15px;background:#fff;font-family:inherit}
+textarea{min-height:64px;resize:vertical;margin-top:8px}
+label{font-size:12px;text-transform:uppercase;letter-spacing:.03em;opacity:.55;display:block;margin:12px 2px 6px}
+.pills{display:flex;gap:6px}
+.pills button{flex:1;border:1px solid #d1d1d6;background:#fff;border-radius:9px;padding:9px 0;font-weight:700;font-size:15px;color:inherit}
+.pills button.on{background:var(--ac);color:#fff;border-color:transparent}
+.act{border:0;background:var(--ac);color:#fff;border-radius:12px;padding:13px 16px;width:100%;font-size:15px;font-weight:600;margin-top:14px}
+.card{background:#fff;border-radius:14px;padding:13px 14px;margin-bottom:9px;box-shadow:0 1px 2px rgba(0,0,0,.05)}
+.card .top{display:flex;align-items:center;gap:9px}
+.card .ti{flex:1;font-size:16px;font-weight:600;line-height:1.3}
+.score{flex:0 0 auto;min-width:34px;height:34px;padding:0 8px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;font-size:15px}
+.score.lo{background:#34c759}.score.md{background:#ff9500}.score.hi{background:#ff3b30}
+.card .li{font-size:12px;opacity:.6;margin-top:5px}
+.card .rat{font-size:14px;line-height:1.5;margin-top:6px;white-space:pre-wrap}
+.card .dt{font-size:12px;opacity:.5;margin-top:6px}
+.del{background:none;color:#ff453a;font-size:16px;padding:2px 4px}
+.empty{opacity:.5;text-align:center;margin:26px 0;font-size:14px}
+.section{display:none}.section.on{display:block}
+h2{font-size:14px;text-transform:uppercase;letter-spacing:.02em;opacity:.55;margin:22px 2px 8px}
+</style></head><body>
+<h1>🛡️ Risk &amp; Decision Log</h1>
+<div class="seg">
+  <button class="on" id="tRisk" onclick="tab('risk')">Risks</button>
+  <button id="tDec" onclick="tab('dec')">Decisions</button>
+</div>
+
+<!-- RISKS -->
+<div class="section on" id="s-risk">
+  <input id="rTitle" placeholder="Risk — e.g. Key vendor may slip the deadline">
+  <label>Likelihood</label><div class="pills" id="rLike"></div>
+  <label>Impact</label><div class="pills" id="rImp"></div>
+  <textarea id="rMit" placeholder="Mitigation / owner (optional)…"></textarea>
+  <button class="act" onclick="addRisk()">Log risk</button>
+  <h2>Risk register</h2>
+  <div id="riskList"></div>
+</div>
+
+<!-- DECISIONS -->
+<div class="section" id="s-dec">
+  <input id="dTitle" placeholder="Decision — e.g. Go with Postgres over Mongo">
+  <textarea id="dRat" placeholder="Rationale / context / who decided…"></textarea>
+  <button class="act" onclick="addDecision()">Log decision</button>
+  <h2>Decision record</h2>
+  <div id="decList"></div>
+</div>
+
+<script>
+var store=window.myllmStorage||{getItem:function(){return Promise.resolve(null)},setItem:function(){return Promise.resolve()}};
+var risks=[], decisions=[], like=3, imp=3, seed=5551;
+function el(i){return document.getElementById(i)}
+function haptic(k){if(window.myllmHaptic)myllmHaptic(k||'light')}
+function uid(){seed=(seed*9301+49297)%233280;return 'r'+seed}
+function save(){store.setItem('rdlog',JSON.stringify({risks:risks,decisions:decisions}))}
+function esc(s){return (s+'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+
+function tab(t){
+  el('s-risk').classList.toggle('on',t==='risk');el('s-dec').classList.toggle('on',t==='dec');
+  el('tRisk').classList.toggle('on',t==='risk');el('tDec').classList.toggle('on',t==='dec');haptic('selection');
+}
+function pillRow(id,cur,setter){
+  var p=el(id);p.innerHTML='';
+  for(var v=1;v<=5;v++){(function(v){var b=document.createElement('button');b.className=v===cur()?'on':'';b.textContent=v;
+    b.onclick=function(){setter(v);haptic('selection')};p.appendChild(b)})(v)}
+}
+function refreshPills(){pillRow('rLike',function(){return like},function(v){like=v;refreshPills()});
+  pillRow('rImp',function(){return imp},function(v){imp=v;refreshPills()});}
+
+function band(s){return s<=6?'lo':(s<=12?'md':'hi')}
+function addRisk(){
+  var t=el('rTitle').value.trim();if(!t)return;
+  risks.push({id:uid(),title:t,like:like,imp:imp,mit:el('rMit').value.trim()});
+  el('rTitle').value='';el('rMit').value='';like=3;imp=3;refreshPills();save();render();haptic('success');
+}
+function addDecision(){
+  var t=el('dTitle').value.trim();if(!t)return;
+  var d=new Date();
+  var date=d.toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'});
+  decisions.unshift({id:uid(),title:t,rat:el('dRat').value.trim(),date:date});
+  el('dTitle').value='';el('dRat').value='';save();render();haptic('success');
+}
+function delRisk(id){risks=risks.filter(function(x){return x.id!==id});save();render();haptic('light')}
+function delDec(id){decisions=decisions.filter(function(x){return x.id!==id});save();render();haptic('light')}
+
+function render(){
+  var L=el('riskList');L.innerHTML='';
+  var sorted=risks.slice().sort(function(a,b){return (b.like*b.imp)-(a.like*a.imp)});
+  if(!sorted.length)L.innerHTML='<div class="empty">No risks logged yet.</div>';
+  sorted.forEach(function(r){
+    var s=r.like*r.imp;var d=document.createElement('div');d.className='card';
+    d.innerHTML='<div class="top"><div class="score '+band(s)+'">'+s+'</div><div class="ti">'+esc(r.title)+'</div><button class="del">✕</button></div>'+
+      '<div class="li">Likelihood '+r.like+' × Impact '+r.imp+'</div>'+
+      (r.mit?'<div class="rat">'+esc(r.mit)+'</div>':'');
+    d.querySelector('.del').onclick=function(){delRisk(r.id)};L.appendChild(d);
+  });
+  var D=el('decList');D.innerHTML='';
+  if(!decisions.length)D.innerHTML='<div class="empty">No decisions logged yet.</div>';
+  decisions.forEach(function(dc){
+    var d=document.createElement('div');d.className='card';
+    d.innerHTML='<div class="top"><div class="ti">'+esc(dc.title)+'</div><button class="del">✕</button></div>'+
+      (dc.rat?'<div class="rat">'+esc(dc.rat)+'</div>':'')+'<div class="dt">📌 '+esc(dc.date)+'</div>';
+    d.querySelector('.del').onclick=function(){delDec(dc.id)};D.appendChild(d);
+  });
+}
+refreshPills();
+store.getItem('rdlog').then(function(v){if(v){try{var o=JSON.parse(v);risks=o.risks||[];decisions=o.decisions||[]}catch(e){}}render()});
+</script></body></html>

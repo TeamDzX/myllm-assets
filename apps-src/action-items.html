@@ -1,0 +1,123 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Action Items</title>
+<style>:root{color-scheme:light dark;--ac:#0a84ff}
+*{box-sizing:border-box}
+body{font-family:-apple-system,system-ui,sans-serif;margin:0;padding:18px 16px calc(28px + env(safe-area-inset-bottom));background:#f2f2f7;color:#111;-webkit-tap-highlight-color:transparent;max-width:820px;margin-left:auto;margin-right:auto}
+@media(prefers-color-scheme:dark){body{background:#000;color:#eee}.item,textarea,input,.seg{background:#1c1c1e}textarea,input{color:#eee;border-color:#3a3a3c}.seg{border-color:#2c2c2e}}
+h1{font-size:22px;margin:0 0 3px}
+.sub{font-size:13px;opacity:.6;margin:0 0 14px}
+textarea{width:100%;min-height:96px;padding:12px;border:1px solid #d1d1d6;border-radius:12px;font-size:15px;background:#fff;font-family:inherit;resize:vertical}
+.rowb{display:flex;gap:8px;margin-top:8px}
+button{border:0;border-radius:12px;font-size:15px;font-weight:600}
+.act{background:var(--ac);color:#fff;padding:12px 16px}
+.act:disabled{opacity:.45}
+.ghost{background:#e5e5ea;color:inherit;padding:12px 16px}
+@media(prefers-color-scheme:dark){.ghost{background:#2c2c2e}}
+#status{font-size:13px;opacity:.65;min-height:18px;margin:8px 2px}
+h2{font-size:14px;text-transform:uppercase;letter-spacing:.02em;opacity:.5;margin:20px 2px 8px;display:flex;justify-content:space-between;align-items:center}
+h2 button{background:none;color:var(--ac);font-size:13px;padding:2px}
+.item{background:#fff;border-radius:14px;padding:12px 14px;margin-bottom:8px;display:flex;gap:11px;align-items:flex-start;box-shadow:0 1px 2px rgba(0,0,0,.05)}
+.item .ck{flex:0 0 auto;width:24px;height:24px;border-radius:50%;border:2px solid #c7c7cc;margin-top:1px;display:flex;align-items:center;justify-content:center;font-size:15px;color:#fff}
+.item.done .ck{background:var(--ac);border-color:var(--ac)}
+.item.done .tx{opacity:.45;text-decoration:line-through}
+.item .body{flex:1;min-width:0}
+.item .tx{font-size:16px;line-height:1.35}
+.meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:5px}
+.tag{font-size:12px;font-weight:600;padding:3px 9px;border-radius:8px;background:rgba(10,132,255,.12);color:var(--ac)}
+.tag.due{background:rgba(255,149,0,.16);color:#c86800}
+.tag.owner{background:rgba(52,199,89,.16);color:#248a3d}
+.del{background:none;color:#ff453a;font-size:17px;padding:2px 4px;flex:0 0 auto}
+.add{display:flex;gap:8px;margin-top:6px}
+.add input{flex:1;min-width:0;padding:11px;border:1px solid #d1d1d6;border-radius:12px;font-size:15px;background:#fff}
+.empty{opacity:.5;text-align:center;margin:26px 0;font-size:14px}
+</style></head><body>
+<style>
+@keyframes myllmAiSpin{to{transform:rotate(360deg)}}
+.myllm-ai-busy{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(18px);z-index:99999;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;display:flex;align-items:center;gap:10px;background:rgba(28,28,30,.96);color:#fff;border-radius:999px;padding:10px 16px 10px 14px;box-shadow:0 6px 22px rgba(0,0,0,.4);font-size:14px;font-weight:600;max-width:92%}
+.myllm-ai-busy.on{opacity:1;transform:translateX(-50%) translateY(0)}
+.myllm-ai-cog{font-size:18px;animation:myllmAiSpin 2.4s linear infinite;filter:drop-shadow(0 0 5px rgba(124,92,255,.85))}
+.myllm-ai-busy small{font-weight:400;opacity:.6}
+</style>
+<script>
+(function(){if(window.__myllmAiWrap||typeof window.myllmAsk!=='function')return;window.__myllmAiWrap=true;
+var orig=window.myllmAsk,depth=0,node=null;
+function ensure(){if(node)return;node=document.createElement('div');node.className='myllm-ai-busy';
+node.innerHTML='<span class="myllm-ai-cog">⚙️</span><span>AI is thinking… <small>privately, on your device</small></span>';
+(document.body||document.documentElement).appendChild(node);}
+function show(){ensure();depth++;node.classList.add('on');}
+function hide(){depth=Math.max(0,depth-1);if(depth===0&&node)node.classList.remove('on');}
+window.myllmAsk=function(){show();var p;try{p=orig.apply(this,arguments);}catch(e){hide();throw e;}
+return Promise.resolve(p).then(function(r){hide();return r;},function(e){hide();throw e;});};})();
+</script>
+
+<h1>✅ Action Items</h1>
+<p class="sub">Paste meeting notes — your AI pulls out the actions, owners &amp; due dates.</p>
+<textarea id="notes" placeholder="Paste or type meeting notes here…"></textarea>
+<div class="rowb">
+  <button class="act" id="ext" onclick="extract()">Extract action items</button>
+  <button class="ghost" onclick="document.getElementById('notes').value=''">Clear</button>
+</div>
+<div id="status"></div>
+
+<h2>Action items <button onclick="clearDone()">Clear done</button></h2>
+<div class="add">
+  <input id="manual" placeholder="Add an item manually…">
+  <button class="act" onclick="addManual()">Add</button>
+</div>
+<div id="list"></div>
+
+<script>
+var store=window.myllmStorage||{getItem:function(){return Promise.resolve(null)},setItem:function(){return Promise.resolve()}};
+var items=[];
+function el(i){return document.getElementById(i)}
+function haptic(k){if(window.myllmHaptic)myllmHaptic(k||'light')}
+function save(){store.setItem('items',JSON.stringify(items))}
+function uid(){seed=(seed*9301+49297)%233280;return 't'+seed+(items.length)}
+var seed=1234;
+
+function extract(){
+  var notes=el('notes').value.trim();
+  if(!notes){el('status').textContent='Paste some notes first.';return}
+  if(!window.myllmAsk){el('status').textContent='This needs the latest MyLLM with “Allow apps to use the AI” enabled in Settings.';return}
+  el('ext').disabled=true;el('status').textContent='Reading the notes…';
+  myllmAsk('From these meeting notes, extract every action item. Reply with ONLY a JSON array like '+
+    '[{"task":"what to do","owner":"person or empty string","due":"due date/time or empty string"}] and nothing else. Notes:\n'+notes)
+  .then(function(reply){
+    var s=reply.indexOf('['),e=reply.lastIndexOf(']');
+    if(s<0||e<=s)throw new Error('no items came back');
+    var got=JSON.parse(reply.slice(s,e+1)).filter(function(x){return x&&x.task});
+    if(!got.length)throw new Error('no action items found');
+    got.forEach(function(g){items.unshift({id:uid(),task:g.task,owner:(g.owner||'').trim(),due:(g.due||'').trim(),done:false})});
+    save();render();el('status').textContent='Added '+got.length+' item'+(got.length>1?'s':'')+'.';haptic('success');
+  }).catch(function(err){el('status').textContent='Could not extract: '+err.message})
+  .then(function(){el('ext').disabled=false});
+}
+function addManual(){
+  var v=el('manual').value.trim();if(!v)return;
+  items.unshift({id:uid(),task:v,owner:'',due:'',done:false});el('manual').value='';save();render();haptic('light');
+}
+function toggle(id){var it=items.filter(function(x){return x.id===id})[0];if(it){it.done=!it.done;save();render();haptic('selection')}}
+function del(id){items=items.filter(function(x){return x.id!==id});save();render();haptic('light')}
+function clearDone(){items=items.filter(function(x){return !x.done});save();render();haptic('light')}
+function render(){
+  var L=el('list');L.innerHTML='';
+  if(!items.length){L.innerHTML='<div class="empty">No action items yet.</div>';return}
+  items.forEach(function(it){
+    var d=document.createElement('div');d.className='item'+(it.done?' done':'');
+    var meta='';
+    if(it.owner)meta+='<span class="tag owner">👤 '+esc(it.owner)+'</span>';
+    if(it.due)meta+='<span class="tag due">📅 '+esc(it.due)+'</span>';
+    d.innerHTML='<div class="ck">'+(it.done?'✓':'')+'</div>'+
+      '<div class="body"><div class="tx">'+esc(it.task)+'</div>'+(meta?'<div class="meta">'+meta+'</div>':'')+'</div>'+
+      '<button class="del">✕</button>';
+    d.querySelector('.ck').onclick=function(){toggle(it.id)};
+    d.querySelector('.tx').onclick=function(){toggle(it.id)};
+    d.querySelector('.del').onclick=function(){del(it.id)};
+    L.appendChild(d);
+  });
+}
+function esc(s){return (s+'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+el('manual').addEventListener('keydown',function(e){if(e.key==='Enter')addManual()});
+store.getItem('items').then(function(v){if(v){try{items=JSON.parse(v)}catch(e){}}render();
+  if(!window.myllmAsk)el('status').textContent='Tip: manual add works offline; note-extraction needs AI enabled.';});
+</script></body></html>
