@@ -176,7 +176,7 @@
       "name": "Essentials Finder",
       "emoji": "🧭",
       "tagline": "The nearest of everything",
-      "description": "One-tap buttons for the nearest pharmacy, ATM, hospital, petrol, supermarket, police, public toilet or hotel — sorted by distance with directions. Built for when you're travelling or somewhere unfamiliar and just need the closest thing, fast. On-device via Apple Maps, no account or API key. Needs the latest MyLLM with “Allow apps to use your location” enabled in Settings.",
+      "description": "One-tap buttons for the nearest pharmacy, ATM, hospital, petrol, EV charger, supermarket, police, public toilet or hotel — sorted by distance with directions. Built for when you're travelling or somewhere unfamiliar and just need the closest thing, fast. On-device via Apple Maps, no account or API key. Needs the latest MyLLM with “Allow apps to use your location” enabled in Settings.",
       "tags": [
         "location",
         "travel",
@@ -185,7 +185,7 @@
       ],
       "iconSymbol": "cross.case.fill",
       "iconColor": "red",
-      "version": 1,
+      "version": 2,
       "featured": true,
       "requiresAI": false,
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/essentials-finder.jpg",
@@ -304,6 +304,72 @@
       "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/language-lab.html",
       "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/language-lab.myllmapp",
       "sizeKB": 8,
+      "category": "Students"
+    },
+    {
+      "id": "learn-spanish",
+      "name": "Learn Spanish",
+      "emoji": "🇪🇸",
+      "tagline": "Picture flashcards + AI tutor",
+      "description": "Learn Spanish with illustrated picture flashcards across 10 everyday topics (158 words, each with a photo) — browse and search the vocabulary, then use your own on-device AI to generate phrase lessons on any topic and explain any grammar point. Flashcards and vocabulary work offline; the AI phrase and grammar tabs need the latest MyLLM with “Allow apps to use the AI” enabled in Settings.",
+      "tags": [
+        "learning",
+        "AI-powered",
+        "offline"
+      ],
+      "iconSymbol": "character.bubble.fill",
+      "iconColor": "red",
+      "version": 1,
+      "featured": false,
+      "requiresAI": false,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/learn-spanish.jpg",
+      "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/learn-spanish.html",
+      "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/learn-spanish.myllmapp",
+      "sizeKB": 22,
+      "category": "Students"
+    },
+    {
+      "id": "learn-french",
+      "name": "Learn French",
+      "emoji": "🇫🇷",
+      "tagline": "Picture flashcards + AI tutor",
+      "description": "Learn French with illustrated picture flashcards across 10 everyday topics (158 words, each with a photo) — browse and search the vocabulary, then use your own on-device AI to generate phrase lessons on any topic and explain any grammar point. Flashcards and vocabulary work offline; the AI phrase and grammar tabs need the latest MyLLM with “Allow apps to use the AI” enabled in Settings.",
+      "tags": [
+        "learning",
+        "AI-powered",
+        "offline"
+      ],
+      "iconSymbol": "character.bubble.fill",
+      "iconColor": "blue",
+      "version": 1,
+      "featured": false,
+      "requiresAI": false,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/learn-french.jpg",
+      "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/learn-french.html",
+      "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/learn-french.myllmapp",
+      "sizeKB": 22,
+      "category": "Students"
+    },
+    {
+      "id": "learn-german",
+      "name": "Learn German",
+      "emoji": "🇩🇪",
+      "tagline": "Picture flashcards + AI tutor",
+      "description": "Learn German with illustrated picture flashcards across 10 everyday topics (158 words, each with a photo) — browse and search the vocabulary, then use your own on-device AI to generate phrase lessons on any topic and explain any grammar point. Flashcards and vocabulary work offline; the AI phrase and grammar tabs need the latest MyLLM with “Allow apps to use the AI” enabled in Settings.",
+      "tags": [
+        "learning",
+        "AI-powered",
+        "offline"
+      ],
+      "iconSymbol": "character.bubble.fill",
+      "iconColor": "orange",
+      "version": 1,
+      "featured": false,
+      "requiresAI": false,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/learn-german.jpg",
+      "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/learn-german.html",
+      "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/learn-german.myllmapp",
+      "sizeKB": 22,
       "category": "Students"
     },
     {
