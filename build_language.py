@@ -292,7 +292,9 @@ def build(langfile):
 
     slug = "learn-" + lp["name"].lower()
     open(os.path.join(HERE, "apps-src", slug + ".html"), "w").write(html)
-    json.dump({"name": "Learn " + lp["name"], "html": html},
+    # Full .myllmapp bundle schema so a standalone import (no manifest) still gets its icon.
+    json.dump({"name": "Learn " + lp["name"], "kind": "html",
+               "iconSymbol": "character.bubble.fill", "iconColor": lp["iconColor"], "html": html},
               open(os.path.join(HERE, "apps-src", slug + ".myllmapp"), "w"), ensure_ascii=False)
 
     ncards = sum(len(d["cards"]) for d in decks)
