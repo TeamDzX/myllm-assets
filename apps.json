@@ -16,6 +16,30 @@
   ],
   "apps": [
     {
+      "id": "welcome-to-myllmos",
+      "name": "Welcome to MyLLMos",
+      "emoji": "👋",
+      "tagline": "Build apps by chatting",
+      "description": "New here? A two-minute swipe-through of the MyLLMos idea: describe an app in chat, watch MyLLM build it, tap it to run it, save it to your springboard — and it's yours forever. Ends with ready-to-try prompts so your first app is one message away.",
+      "tags": [
+        "welcome",
+        "getting started",
+        "tutorial",
+        "showcase",
+        "offline"
+      ],
+      "iconSymbol": "hand.wave.fill",
+      "iconColor": "mint",
+      "version": 1,
+      "featured": true,
+      "requiresAI": false,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/welcome-to-myllmos.jpg",
+      "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/welcome-to-myllmos.html",
+      "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/welcome-to-myllmos.myllmapp",
+      "sizeKB": 395,
+      "category": "Utilities"
+    },
+    {
       "id": "about-me",
       "name": "About Me",
       "emoji": "🙋",
