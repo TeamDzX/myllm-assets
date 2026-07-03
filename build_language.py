@@ -10,13 +10,14 @@ from github.com/TeamDzX/hanyu-packs, relabelled in the target language.
     -> prints the apps.json manifest entry to paste/merge
 
 Data sources (already in repo):
-  /tmp/langbuild/catalog_en.json   deck meta (icon, grad, imgBase, English words)
+  langpacks/catalog_en.json        deck meta (imgBase, English words)
   langpacks/<code>.json            target-language words aligned to each deck
 """
 import sys, os, json, base64
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-CATALOG = json.load(open("/tmp/langbuild/catalog_en.json"))
+_CAT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "langpacks", "catalog_en.json")
+CATALOG = json.load(open(_CAT))
 CAT_BY_ID = {d["id"]: d for d in CATALOG}
 
 TEMPLATE = r"""<!doctype html><html lang="__CODE__"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
