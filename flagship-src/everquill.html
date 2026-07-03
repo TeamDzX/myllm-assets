@@ -1,0 +1,408 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Everquill</title>
+<style>
+:root{
+  color-scheme:dark;
+  --bg:#12101a;--panel:rgba(24,21,34,.86);--panel-solid:#1b1826;--ink:#eae4d6;--mut:#9a92a8;
+  --gold:#c9a45c;--gold-soft:rgba(201,164,92,.16);--line:rgba(201,164,92,.22);
+  --hp:#c95c5c;--danger:#d07a63;
+}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%}
+body{font-family:-apple-system,system-ui,sans-serif;background:var(--bg);color:var(--ink);-webkit-tap-highlight-color:transparent}
+.serif{font-family:ui-serif,"New York",Georgia,serif}
+#backdrop{position:fixed;inset:0;z-index:0;background:var(--bg)}
+#backdrop img{width:100%;height:100%;object-fit:cover;opacity:.42;display:block;transition:opacity 1.2s}
+#backdrop::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(18,16,26,.25),rgba(18,16,26,.92) 78%)}
+.screen{position:relative;z-index:1;min-height:100dvh;display:none;flex-direction:column;padding:calc(18px + env(safe-area-inset-top)) 18px calc(20px + env(safe-area-inset-bottom))}
+.screen.on{display:flex}
+.center{align-items:center;justify-content:center;text-align:center}
+/* title */
+.cover{width:min(74vw,300px);border-radius:18px;box-shadow:0 22px 60px -18px rgba(0,0,0,.8);border:1px solid var(--line)}
+h1.logo{font-size:44px;font-weight:700;letter-spacing:.04em;margin:22px 0 4px;color:var(--gold);text-shadow:0 2px 24px rgba(201,164,92,.35)}
+.tagline{color:var(--mut);font-size:15px;font-style:italic}
+.menu{width:100%;max-width:340px;display:flex;flex-direction:column;gap:10px;margin-top:30px}
+.btn{border:1px solid var(--line);border-radius:14px;padding:15px 18px;font-size:16px;font-weight:650;background:var(--gold-soft);color:var(--gold);width:100%}
+.btn.primary{background:var(--gold);color:#241d10;border-color:transparent}
+.btn.quiet{background:none;color:var(--mut);border-color:rgba(255,255,255,.12);font-weight:550}
+.btn:disabled{opacity:.4}
+.smallnote{font-size:12.5px;color:var(--mut);margin-top:18px;line-height:1.5;max-width:300px}
+/* setup */
+h2.set{font-size:24px;margin:8px 0 18px;text-align:center;color:var(--gold)}
+.glabel{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--mut);margin:18px 2px 8px;font-weight:600}
+.genres{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.genre{position:relative;border-radius:14px;overflow:hidden;border:2px solid transparent;padding:0;background:none;text-align:left}
+.genre img{width:100%;aspect-ratio:16/10;object-fit:cover;display:block}
+.genre span{position:absolute;left:10px;bottom:8px;font-size:14.5px;font-weight:700;color:#f2ecdd;text-shadow:0 1px 8px rgba(0,0,0,.9)}
+.genre.on{border-color:var(--gold)}
+input[type=text]{width:100%;padding:13px 14px;border:1px solid var(--line);border-radius:13px;background:var(--panel-solid);color:var(--ink);font-size:16px;outline:none}
+.traits{display:flex;gap:8px;flex-wrap:wrap}
+.trait{border:1.5px solid var(--line);background:none;color:var(--mut);border-radius:999px;padding:8px 14px;font-size:13.5px;font-weight:600}
+.trait.on{color:var(--gold);border-color:var(--gold)}
+/* play */
+.hud{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:10px;padding:10px 0;margin:-6px 0 4px}
+.hearts{display:flex;gap:3px}
+.hearts svg{width:19px;height:19px;color:var(--hp)}
+.hearts svg.off{opacity:.22}
+.hudname{font-size:13.5px;font-weight:700;color:var(--gold);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hudspace{flex:1}
+.iconbtn{border:1px solid var(--line);background:var(--panel);border-radius:11px;width:38px;height:38px;display:flex;align-items:center;justify-content:center;color:var(--mut);flex:0 0 auto}
+.iconbtn svg{width:19px;height:19px}
+.inv{display:flex;gap:7px;overflow-x:auto;padding:2px 0 8px;scrollbar-width:none}
+.inv::-webkit-scrollbar{display:none}
+.item{flex:0 0 auto;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:999px;padding:6px 12px;font-size:12.5px}
+#story{flex:1;display:flex;flex-direction:column;gap:12px;padding-bottom:8px}
+.scene{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:15px 17px;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.scene .txt{font-size:16.5px;line-height:1.62}
+.scene.action{background:none;border:0;padding:2px 6px;color:var(--gold);font-size:13.5px;font-style:italic;text-align:right}
+.scene img.art{width:100%;border-radius:11px;margin-top:12px;display:block}
+.caret{display:inline-block;width:2px;height:1em;background:var(--gold);vertical-align:-2px;animation:blink 1s step-end infinite}
+@keyframes blink{50%{opacity:0}}
+@media(prefers-reduced-motion:reduce){.caret{animation:none}}
+.choices{display:flex;flex-direction:column;gap:9px;margin-top:6px}
+.choice{border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:13px;padding:13px 15px;font-size:15px;text-align:left;line-height:1.4}
+.choice:active{background:var(--gold-soft)}
+.custrow{display:flex;gap:8px;margin-top:9px}
+.custrow input{flex:1}
+.custrow .go{border:0;border-radius:13px;background:var(--gold);color:#241d10;font-weight:700;padding:0 18px;font-size:15px}
+#status{min-height:20px;font-size:13px;color:var(--mut);text-align:center;padding:6px 0}
+/* death / victory */
+.endcard{border:1px solid var(--gold);border-radius:18px;background:var(--panel);padding:22px;text-align:center}
+.endcard h3{color:var(--gold);font-size:22px;margin-bottom:8px}
+.endcard p{color:var(--mut);font-size:14.5px;line-height:1.5}
+/* sheet */
+.scrim{position:fixed;inset:0;background:rgba(5,4,10,.6);display:none;align-items:flex-end;z-index:60}
+.scrim.on{display:flex}
+.sheet{background:var(--panel-solid);border-radius:20px 20px 0 0;width:100%;padding:20px 20px calc(24px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:10px}
+.sheet h3{color:var(--gold);font-size:17px;margin-bottom:4px}
+.fadein{animation:fi .5s ease}
+@keyframes fi{from{opacity:0;transform:translateY(10px)}to{opacity:1}}
+@media(prefers-reduced-motion:reduce){.fadein{animation:none}}
+</style></head><body>
+<style>
+@keyframes myllmAiSpin{to{transform:rotate(360deg)}}
+.myllm-ai-busy{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(18px);z-index:99999;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;display:flex;align-items:center;gap:10px;background:rgba(28,28,30,.96);color:#fff;border-radius:999px;padding:10px 16px 10px 14px;box-shadow:0 6px 22px rgba(0,0,0,.4);font-family:-apple-system,system-ui,sans-serif;font-size:14px;font-weight:600;max-width:92%}
+.myllm-ai-busy.on{opacity:1;transform:translateX(-50%) translateY(0)}
+.myllm-ai-cog{font-size:18px;line-height:1;animation:myllmAiSpin 2.4s linear infinite;filter:drop-shadow(0 0 5px rgba(124,92,255,.85))}
+.myllm-ai-busy small{font-weight:400;opacity:.6}
+</style>
+<script>
+(function(){if(window.__myllmAiWrap||typeof window.myllmAsk!=='function')return;window.__myllmAiWrap=true;
+var orig=window.myllmAsk,depth=0,node=null;
+function ensure(){if(node)return;node=document.createElement('div');node.className='myllm-ai-busy';
+node.innerHTML='<span class="myllm-ai-cog">⚙️</span><span>The quill writes… <small>privately, on your device</small></span>';
+(document.body||document.documentElement).appendChild(node);}
+function show(){ensure();depth++;node.classList.add('on');}
+function hide(){depth=Math.max(0,depth-1);if(depth===0&&node)node.classList.remove('on');}
+window.myllmAsk=function(){show();var p;try{p=orig.apply(this,arguments);}catch(e){hide();throw e;}
+return Promise.resolve(p).then(function(r){hide();return r;},function(e){hide();throw e;});};})();
+</script>
+
+<div id="backdrop"><img id="bdImg" alt=""></div>
+
+<!-- TITLE -->
+<div class="screen center on" id="sc-title">
+  <img class="cover" src="%%ART_COVER%%" alt="">
+  <h1 class="logo serif">Everquill</h1>
+  <div class="tagline serif">Every story ever told — and none of them twice</div>
+  <div class="menu">
+    <button class="btn primary" id="continueBtn" style="display:none" onclick="resumeGame()">Continue your tale</button>
+    <button class="btn" onclick="showSetup()">Begin a new adventure</button>
+    <button class="btn quiet" id="exportBtn" style="display:none" onclick="exportStory()">Share the story so far</button>
+  </div>
+  <p class="smallnote" id="titleNote">Your own AI is the storyteller — every adventure is written for you alone, on your device.</p>
+</div>
+
+<!-- SETUP -->
+<div class="screen" id="sc-setup">
+  <h2 class="set serif">Choose your tale</h2>
+  <div class="glabel">World</div>
+  <div class="genres" id="genres"></div>
+  <div class="glabel">Your name</div>
+  <input type="text" id="heroName" maxlength="24" placeholder="What are you called?">
+  <div class="glabel">Your nature</div>
+  <div class="traits" id="traits"></div>
+  <div style="height:22px"></div>
+  <button class="btn primary" onclick="startGame()">Open the book</button>
+  <div style="height:8px"></div>
+  <button class="btn quiet" onclick="showScreen('title')">Back</button>
+</div>
+
+<!-- PLAY -->
+<div class="screen" id="sc-play">
+  <div class="hud">
+    <span class="hudname" id="hudName"></span>
+    <div class="hearts" id="hearts"></div>
+    <div class="hudspace"></div>
+    <button class="iconbtn" id="illusBtn" style="display:none" onclick="illustrate()" aria-label="Illustrate scene"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5"/><circle cx="9" cy="10" r="1.6"/><path d="M4.5 17l4.5-4.5 3 3 3.5-3.5 4 4"/></svg></button>
+    <button class="iconbtn" onclick="openMenu()" aria-label="Menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+  </div>
+  <div class="inv" id="inv"></div>
+  <div id="story"></div>
+  <div id="status"></div>
+  <div class="choices" id="choices"></div>
+  <div class="custrow" id="custrow">
+    <input type="text" id="custAct" maxlength="120" placeholder="Or do something else…">
+    <button class="go" onclick="customAct()">Do</button>
+  </div>
+</div>
+
+<div class="scrim" id="scrim" onclick="if(event.target===this)closeMenu()"><div class="sheet" id="sheet"></div></div>
+
+<script>
+"use strict";
+var store = window.myllmStorage || {
+  getItem:function(k){ try{return Promise.resolve(localStorage.getItem(k));}catch(e){return Promise.resolve(null);} },
+  setItem:function(k,v){ try{localStorage.setItem(k,v);}catch(e){} return Promise.resolve(); }
+};
+function el(i){ return document.getElementById(i); }
+function haptic(k){ if(window.myllmHaptic) try{ myllmHaptic(k||'light'); }catch(e){} }
+
+var GENRES = {
+  fantasy:{ name:"High Fantasy", art:"%%ART_FANTASY%%", open:"mist-wreathed kingdoms, old magic and older debts",
+    world:"a high-fantasy realm of misty kingdoms, ancient magic and dangerous bargains" },
+  scifi:{ name:"Deep Space", art:"%%ART_SCIFI%%", open:"derelict stations, strange signals and colder silences",
+    world:"a hard science-fiction setting of derelict space stations, alien signals and failing life support" },
+  mystery:{ name:"Gaslight Mystery", art:"%%ART_MYSTERY%%", open:"fog, gaslight and a truth someone is paying to bury",
+    world:"a Victorian gaslight mystery of fog-bound streets, secrets and a crime that goes deeper than it looks" },
+  pirate:{ name:"High Seas", art:"%%ART_PIRATE%%", open:"storm sunsets, cursed gold and a crew you can half trust",
+    world:"a pirate adventure of storm-tossed seas, cursed treasure and mutinous crews" }
+};
+var TRAITS = ["Brave","Cunning","Kind","Reckless","Curious","Lucky"];
+
+var G = null;          // {genre,hero,trait,hp,inv[],log:[{a,s,img}],summary,over}
+var busy = false;
+
+/* ---------- screens ---------- */
+function showScreen(s){
+  document.querySelectorAll('.screen').forEach(function(x){ x.classList.remove('on'); });
+  el('sc-'+s).classList.add('on'); window.scrollTo(0,0);
+}
+function setBackdrop(genre){
+  var img=el('bdImg');
+  if(genre){ img.src=GENRES[genre].art; img.style.opacity=.42; } else { img.style.opacity=0; }
+}
+
+/* ---------- setup ---------- */
+var selGenre="fantasy", selTrait="Curious";
+function buildSetup(){
+  var g=el('genres'); g.innerHTML='';
+  Object.keys(GENRES).forEach(function(k){
+    var b=document.createElement('button'); b.className='genre'+(k===selGenre?' on':'');
+    b.innerHTML='<img src="'+GENRES[k].art+'" alt=""><span>'+GENRES[k].name+'</span>';
+    b.onclick=function(){ selGenre=k; buildSetup(); setBackdrop(k); haptic('selection'); };
+    g.appendChild(b);
+  });
+  var t=el('traits'); t.innerHTML='';
+  TRAITS.forEach(function(tr){
+    var b=document.createElement('button'); b.className='trait'+(tr===selTrait?' on':''); b.textContent=tr;
+    b.onclick=function(){ selTrait=tr; buildSetup(); haptic('selection'); };
+    t.appendChild(b);
+  });
+}
+function showSetup(){
+  if(!window.myllmAsk){
+    el('titleNote').textContent='Everquill needs the latest MyLLM with “Allow apps to use the AI” enabled in Settings — your model is the storyteller.';
+    haptic('warning'); return;
+  }
+  buildSetup(); setBackdrop(selGenre); showScreen('setup');
+}
+
+/* ---------- engine ---------- */
+function turnPrompt(action){
+  var recent = G.log.slice(-3).map(function(x){ return (x.a && x.a!=='BEGIN' ? 'Player: '+x.a+'\n' : '')+'Scene: '+x.s; }).join('\n');
+  return 'You are the game master of an interactive adventure in '+GENRES[G.genre].world+'. '+
+  'The hero is '+G.hero+', who is '+G.trait.toLowerCase()+'. Health: '+G.hp+'/5. Inventory: '+(G.inv.join(', ')||'nothing')+'.\n'+
+  (G.summary? 'Story so far: '+G.summary+'\n' : '')+
+  (recent? 'Recent events:\n'+recent+'\n' : '')+
+  'Player action: '+action+'\n\n'+
+  'Continue the story. Reply with ONLY this JSON object, nothing else:\n'+
+  '{"scene":"2 to 4 vivid sentences in second person present tense","choices":["short action","short action","short action"],"health_change":0,"item_gained":null,"item_lost":null,"game_over":false,"victory":false}\n'+
+  'Rules: health_change is an integer from -2 to 1 (damage only when the fiction earns it). item_gained/item_lost are short item names or null. Set game_over true only on death (health would reach 0) or on victory=true when the quest truly resolves. Keep the tone cinematic but concise.';
+}
+function parseTurn(reply){
+  var s=reply.indexOf('{'), e=reply.lastIndexOf('}');
+  if(s<0||e<=s) throw new Error('no JSON');
+  var o=JSON.parse(reply.slice(s,e+1).replace(/[\u0000-\u001F]+/g,' '));
+  if(typeof o.scene!=='string'||!o.scene.trim()) throw new Error('no scene');
+  if(!Array.isArray(o.choices)) o.choices=[];
+  o.choices=o.choices.filter(function(c){return typeof c==='string'&&c.trim();}).slice(0,3);
+  o.health_change=Math.max(-2,Math.min(1,parseInt(o.health_change||0,10)||0));
+  return o;
+}
+function doTurn(action){
+  if(busy||!G||G.over) return;
+  busy=true; el('status').textContent=''; el('choices').innerHTML='';
+  if(action!=='BEGIN') addAction(action);
+  var p=turnPrompt(action);
+  myllmAsk(p).then(function(r){ return parseTurn(r||''); })
+  .catch(function(){ // one strict retry — small models sometimes chat first
+    return myllmAsk(p+'\n\nIMPORTANT: reply with ONLY the raw JSON object, no other words.').then(function(r){ return parseTurn(r||''); });
+  })
+  .then(function(o){ applyTurn(action,o); })
+  .catch(function(e){
+    el('status').textContent='The quill faltered ('+e.message+') — try again.';
+    if(action!=='BEGIN') rebuildChoices(lastChoices);
+    else el('choices').innerHTML='<button class="choice" onclick="doTurn(\'BEGIN\')">Open the book again</button>';
+  })
+  .then(function(){ busy=false; });
+}
+var lastChoices=[];
+function applyTurn(action,o){
+  G.hp=Math.max(0,Math.min(5,G.hp+o.health_change));
+  if(o.item_gained&&typeof o.item_gained==='string'&&G.inv.length<8&&G.inv.indexOf(o.item_gained)<0) G.inv.push(o.item_gained);
+  if(o.item_lost) G.inv=G.inv.filter(function(x){ return x.toLowerCase()!==String(o.item_lost).toLowerCase(); });
+  var dead=G.hp<=0;
+  var over=!!o.game_over||dead;
+  G.log.push({ a:action, s:o.scene });
+  // rolling summary: one clause per turn, capped
+  var first=o.scene.split(/(?<=[.!?])\s/)[0]||o.scene;
+  G.summary=(G.summary? G.summary+' ' : '')+first.slice(0,110);
+  if(G.summary.length>1100) G.summary=G.summary.slice(G.summary.length-1100);
+  G.over=over; G.won=over&&!!o.victory&&!dead;
+  save();
+  addScene(o.scene, function(){
+    renderHUD();
+    if(o.health_change<0) haptic('warning'); else if(o.item_gained) haptic('success');
+    if(G.over) showEnd(); else { lastChoices=o.choices.length?o.choices:["Press on","Look around","Rest a moment"]; rebuildChoices(lastChoices); }
+  });
+}
+function rebuildChoices(cs){
+  var box=el('choices'); box.innerHTML='';
+  cs.forEach(function(c){
+    var b=document.createElement('button'); b.className='choice fadein'; b.textContent=c;
+    b.onclick=function(){ haptic('selection'); doTurn(c); };
+    box.appendChild(b);
+  });
+  el('custrow').style.display='flex';
+  el('custAct').value='';
+}
+function customAct(){
+  var v=el('custAct').value.trim(); if(!v||busy) return; doTurn(v);
+}
+function showEnd(){
+  el('custrow').style.display='none';
+  var c=document.createElement('div'); c.className='endcard fadein';
+  c.innerHTML= G.won
+    ? '<h3 class="serif">Your tale is told</h3><p>'+esc(G.hero)+' prevailed. The quill rests — until the next story calls.</p>'
+    : '<h3 class="serif">Here ends the tale</h3><p>Every great story costs something. '+esc(G.hero)+'’s ended here — but the quill never runs dry.</p>';
+  var b=document.createElement('button'); b.className='btn primary'; b.style.marginTop='14px'; b.textContent='Begin a new adventure';
+  b.onclick=function(){ G=null; save(); showSetup(); };
+  c.appendChild(b);
+  var s=document.createElement('button'); s.className='btn quiet'; s.style.marginTop='8px'; s.textContent='Share this story';
+  s.onclick=exportStory; c.appendChild(s);
+  el('story').appendChild(c); scrollDown();
+}
+
+/* ---------- story rendering ---------- */
+function esc(t){ var d=document.createElement('div'); d.textContent=t; return d.innerHTML; }
+function addAction(a){
+  var d=document.createElement('div'); d.className='scene action serif'; d.textContent='— '+a;
+  el('story').appendChild(d); scrollDown();
+}
+var typing=false;
+function addScene(text,done){
+  var d=document.createElement('div'); d.className='scene fadein';
+  var t=document.createElement('div'); t.className='txt serif'; d.appendChild(t);
+  el('story').appendChild(d);
+  var still=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(still){ t.textContent=text; scrollDown(); done&&done(); return; }
+  var i=0; typing=true;
+  var caret=document.createElement('span'); caret.className='caret'; t.appendChild(caret);
+  (function tick(){
+    var step=2+Math.floor(text.length/120);
+    i=Math.min(text.length,i+step);
+    t.firstChild&&t.removeChild(t.firstChild);
+    t.textContent=text.slice(0,i); if(i<text.length) t.appendChild(caret);
+    scrollDown();
+    if(i<text.length){ setTimeout(tick,28); } else { typing=false; done&&done(); }
+  })();
+}
+function scrollDown(){ window.scrollTo(0,document.body.scrollHeight); }
+function renderHUD(){
+  el('hudName').textContent=G.hero+' · '+GENRES[G.genre].name;
+  var h=el('hearts'); h.innerHTML='';
+  for(var i=0;i<5;i++){
+    h.innerHTML+='<svg viewBox="0 0 24 24" fill="currentColor" class="'+(i<G.hp?'':'off')+'"><path d="M12 20.5s-7.5-4.7-9.3-9.2C1.5 8.2 3.6 5 6.8 5c2 0 3.6 1 4.4 2.6.8-1.6 2.4-2.6 4.4-2.6 3.2 0 5.3 3.2 4.1 6.3-1.8 4.5-9.3 9.2-9.3 9.2z"/></svg>';
+  }
+  var inv=el('inv'); inv.innerHTML='';
+  G.inv.forEach(function(it){ var s=document.createElement('span'); s.className='item'; s.textContent=it; inv.appendChild(s); });
+  el('illusBtn').style.display = window.myllmGenerateImage ? 'flex':'none';
+}
+
+/* ---------- illustrate (optional image server) ---------- */
+function illustrate(){
+  if(!window.myllmGenerateImage||!G||!G.log.length||busy) return;
+  var last=G.log[G.log.length-1];
+  var d=el('story').lastElementChild;
+  el('status').textContent='Painting the scene…';
+  myllmGenerateImage('painterly '+GENRES[G.genre].name.toLowerCase()+' adventure scene: '+last.s.slice(0,220)+', atmospheric, cinematic, no text',{aspect:'landscape'})
+  .then(function(url){
+    if(!url) throw new Error('no image');
+    var img=document.createElement('img'); img.className='art fadein'; img.src=url; img.alt='';
+    (d&&d.classList.contains('scene')? d : el('story')).appendChild(img);
+    el('status').textContent=''; haptic('success'); scrollDown();
+  })
+  .catch(function(e){ el('status').textContent='No painting today: '+e.message; });
+}
+
+/* ---------- save / resume / export ---------- */
+function save(){ store.setItem('everquill.save', G? JSON.stringify(G) : ''); }
+function startGame(){
+  var name=el('heroName').value.trim()||'The Stranger';
+  G={ genre:selGenre, hero:name, trait:selTrait, hp:5, inv:[], log:[], summary:'', over:false, won:false };
+  save(); setBackdrop(G.genre); showScreen('play');
+  el('story').innerHTML=''; renderHUD();
+  el('status').textContent='';
+  doTurn('BEGIN');
+  haptic('success');
+}
+function resumeGame(){
+  if(!G) return;
+  setBackdrop(G.genre); showScreen('play');
+  el('story').innerHTML=''; renderHUD();
+  G.log.slice(-6).forEach(function(x){
+    if(x.a&&x.a!=='BEGIN') addAction(x.a);
+    var d=document.createElement('div'); d.className='scene';
+    var t=document.createElement('div'); t.className='txt serif'; t.textContent=x.s; d.appendChild(t);
+    el('story').appendChild(d);
+  });
+  if(G.over) showEnd(); else if(G.log.length){ rebuildChoices(lastChoices.length?lastChoices:["Press on","Look around","Take stock"]); }
+  else doTurn('BEGIN');
+  scrollDown();
+}
+function exportStory(){
+  if(!G||!G.log.length) return;
+  var txt='EVERQUILL — '+G.hero+' ('+GENRES[G.genre].name+')\n\n'+
+    G.log.map(function(x){ return (x.a&&x.a!=='BEGIN'? '> '+x.a+'\n':'')+x.s; }).join('\n\n')+
+    '\n\n— written by my own AI, privately, in MyLLM';
+  if(window.myllmShare){ try{ myllmShare(txt); return; }catch(e){} }
+  var ta=document.createElement('textarea'); ta.value=txt; document.body.appendChild(ta);
+  ta.select(); try{ document.execCommand('copy'); el('status').textContent='Story copied.'; }catch(e){}
+  document.body.removeChild(ta);
+}
+
+/* ---------- menu ---------- */
+function openMenu(){
+  var s=el('sheet');
+  s.innerHTML='<h3 class="serif">The quill pauses</h3>'+
+   '<button class="btn" onclick="closeMenu();exportStory()">Share the story so far</button>'+
+   '<button class="btn quiet" onclick="closeMenu();showScreen(\'title\');setBackdrop(null);refreshTitle()">Back to the title</button>'+
+   '<button class="btn quiet" style="border-color:var(--danger);color:var(--danger)" onclick="abandon()">Abandon this tale</button>';
+  el('scrim').classList.add('on');
+}
+function closeMenu(){ el('scrim').classList.remove('on'); }
+function abandon(){ G=null; save(); closeMenu(); refreshTitle(); setBackdrop(null); showScreen('title'); }
+
+/* ---------- init ---------- */
+function refreshTitle(){
+  el('continueBtn').style.display = (G&&G.log.length&&!G.over)? 'block':'none';
+  el('exportBtn').style.display  = (G&&G.log.length)? 'block':'none';
+}
+el('custAct').addEventListener('keydown',function(e){ if(e.key==='Enter') customAct(); });
+store.getItem('everquill.save').then(function(v){
+  if(v){ try{ var g=JSON.parse(v); if(g&&g.log) G=g; }catch(e){} }
+  refreshTitle();
+});
+</script>
+</body></html>

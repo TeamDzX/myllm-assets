@@ -40,6 +40,54 @@
       "category": "Utilities"
     },
     {
+      "id": "reflect",
+      "name": "Reflect",
+      "emoji": "🌅",
+      "tagline": "Your private AI journal",
+      "description": "A journal that stays yours: write a line a day, log your mood, and watch a month of feeling take shape — nothing ever leaves your device. Your own AI reads your week and reflects back what it notices: a pattern, something to celebrate, one gentle suggestion. Daily writing prompts (or ask the AI for one made just for you), streaks, search, and \"on this day\" memories. Journaling, moods and insights all work fully offline; the AI reflection needs \"Allow apps to use the AI\" in Settings.",
+      "tags": [
+        "journal",
+        "AI-powered",
+        "offline",
+        "wellbeing"
+      ],
+      "iconSymbol": "book.closed.fill",
+      "iconColor": "teal",
+      "version": 1,
+      "featured": true,
+      "requiresAI": false,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/reflect.jpg",
+      "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/reflect.html",
+      "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/reflect.myllmapp",
+      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/icons/reflect.jpg",
+      "sizeKB": 43,
+      "category": "Health & Wellbeing"
+    },
+    {
+      "id": "everquill",
+      "name": "Everquill",
+      "emoji": "🪶",
+      "tagline": "Endless AI adventure",
+      "description": "Your own AI is the storyteller. Choose a world — high fantasy, deep space, gaslight mystery or the high seas — name your hero, and the quill writes an adventure that has never been told before, one scene at a time. Pick a path or type anything; track your health and inventory; survive to the end and share the finished tale. If your server can paint, tap the brush to illustrate any scene. Requires \"Allow apps to use the AI\" in Settings — every word is written privately, on your device.",
+      "tags": [
+        "game",
+        "AI-powered",
+        "adventure",
+        "story"
+      ],
+      "iconSymbol": "wand.and.stars",
+      "iconColor": "purple",
+      "version": 1,
+      "featured": true,
+      "requiresAI": true,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/everquill.jpg",
+      "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/everquill.html",
+      "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/everquill.myllmapp",
+      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/icons/everquill.jpg",
+      "sizeKB": 312,
+      "category": "Games"
+    },
+    {
       "id": "about-me",
       "name": "About Me",
       "emoji": "🙋",
