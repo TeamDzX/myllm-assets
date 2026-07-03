@@ -1,22 +1,383 @@
 {
-  "code": "es",
-  "name": "Spanish",
-  "native": "Español",
-  "flag": "🇪🇸",
-  "accent": "#c60b1e",
-  "accent2": "#ffc400",
-  "iconColor": "red",
-  "hello": "¡Hola!",
-  "decks": {
-    "fruits":     ["la manzana","el plátano","la naranja","las uvas","la sandía","la fresa","el melocotón","la pera","el mango","la piña","la cereza","el limón","el coco","el arándano","el pomelo"],
-    "vegetables": ["el tomate","la patata","la zanahoria","el repollo chino","el pepino","la berenjena","la cebolla","el champiñón","el maíz","el chile","las espinacas","la calabaza","el pimiento verde","el ajo","las judías verdes"],
-    "food":       ["el arroz","los fideos","el pan","la fruta","la manzana","el plátano","la naranja","las verduras","la carne","el pollo","la carne de res","el pescado","el agua","el té","el café","la leche","el zumo"],
-    "drinks":     ["el agua","el té","el café","la leche","el zumo","la cola","la cerveza","el vino tinto","la leche de soja","el té con leche","el refresco","el agua mineral","el agua de coco","el chocolate caliente","la limonada"],
-    "family":     ["la familia","el padre","la madre","el hermano mayor","el hermano menor","la hermana mayor","la hermana menor","el abuelo paterno","la abuela paterna","el abuelo materno","la abuela materna","el marido","la esposa","el hijo","la hija"],
-    "body":       ["la cabeza","la cara","el ojo","la oreja","la nariz","la boca","el diente","la lengua","el cuello","el hombro","el brazo","la mano","el dedo","la pierna","el pie","el corazón","el estómago","la espalda"],
-    "clothing":   ["la camisa","los pantalones","la falda","el abrigo","los zapatos","el sombrero","los calcetines","los guantes","la bufanda","el jersey","el vestido","los vaqueros","el traje","la sudadera con capucha","las gafas"],
-    "transport":  ["el avión","el tren","el tren de alta velocidad","el metro","el autobús","el taxi","la bicicleta","el coche","la motocicleta","el barco","el aeropuerto","la estación","el billete","el visado","el equipaje","el guía turístico","viajar","el mapa"],
-    "home":       ["la cama","la mesa","la silla","el sofá","la puerta","la ventana","la lámpara","el frigorífico","el televisor","el espejo","el reloj","la estantería","la cocina","el dormitorio","el baño"],
-    "town":       ["la escuela","el hospital","el banco","el parque","el supermercado","el restaurante","la biblioteca","el cine","la oficina de correos","la estación de tren","el aeropuerto","la tienda","el hotel","el edificio de oficinas","la plaza"]
+ "code": "es",
+ "name": "Spanish",
+ "native": "Español",
+ "flag": "🇪🇸",
+ "accent": "#c60b1e",
+ "accent2": "#ffc400",
+ "iconColor": "red",
+ "hello": "¡Hola!",
+ "decks": {
+  "fruits": [
+   "la manzana",
+   "el plátano",
+   "la naranja",
+   "las uvas",
+   "la sandía",
+   "la fresa",
+   "el melocotón",
+   "la pera",
+   "el mango",
+   "la piña",
+   "la cereza",
+   "el limón",
+   "el coco",
+   "el arándano",
+   "el pomelo"
+  ],
+  "vegetables": [
+   "el tomate",
+   "la patata",
+   "la zanahoria",
+   "el repollo chino",
+   "el pepino",
+   "la berenjena",
+   "la cebolla",
+   "el champiñón",
+   "el maíz",
+   "el chile",
+   "las espinacas",
+   "la calabaza",
+   "el pimiento verde",
+   "el ajo",
+   "las judías verdes"
+  ],
+  "food": [
+   "el arroz",
+   "los fideos",
+   "el pan",
+   "la fruta",
+   "la manzana",
+   "el plátano",
+   "la naranja",
+   "las verduras",
+   "la carne",
+   "el pollo",
+   "la carne de res",
+   "el pescado",
+   "el agua",
+   "el té",
+   "el café",
+   "la leche",
+   "el zumo"
+  ],
+  "drinks": [
+   "el agua",
+   "el té",
+   "el café",
+   "la leche",
+   "el zumo",
+   "la cola",
+   "la cerveza",
+   "el vino tinto",
+   "la leche de soja",
+   "el té con leche",
+   "el refresco",
+   "el agua mineral",
+   "el agua de coco",
+   "el chocolate caliente",
+   "la limonada"
+  ],
+  "family": [
+   "la familia",
+   "el padre",
+   "la madre",
+   "el hermano mayor",
+   "el hermano menor",
+   "la hermana mayor",
+   "la hermana menor",
+   "el abuelo paterno",
+   "la abuela paterna",
+   "el abuelo materno",
+   "la abuela materna",
+   "el marido",
+   "la esposa",
+   "el hijo",
+   "la hija"
+  ],
+  "body": [
+   "la cabeza",
+   "la cara",
+   "el ojo",
+   "la oreja",
+   "la nariz",
+   "la boca",
+   "el diente",
+   "la lengua",
+   "el cuello",
+   "el hombro",
+   "el brazo",
+   "la mano",
+   "el dedo",
+   "la pierna",
+   "el pie",
+   "el corazón",
+   "el estómago",
+   "la espalda"
+  ],
+  "clothing": [
+   "la camisa",
+   "los pantalones",
+   "la falda",
+   "el abrigo",
+   "los zapatos",
+   "el sombrero",
+   "los calcetines",
+   "los guantes",
+   "la bufanda",
+   "el jersey",
+   "el vestido",
+   "los vaqueros",
+   "el traje",
+   "la sudadera con capucha",
+   "las gafas"
+  ],
+  "transport": [
+   "el avión",
+   "el tren",
+   "el tren de alta velocidad",
+   "el metro",
+   "el autobús",
+   "el taxi",
+   "la bicicleta",
+   "el coche",
+   "la motocicleta",
+   "el barco",
+   "el aeropuerto",
+   "la estación",
+   "el billete",
+   "el visado",
+   "el equipaje",
+   "el guía turístico",
+   "viajar",
+   "el mapa"
+  ],
+  "home": [
+   "la cama",
+   "la mesa",
+   "la silla",
+   "el sofá",
+   "la puerta",
+   "la ventana",
+   "la lámpara",
+   "el frigorífico",
+   "el televisor",
+   "el espejo",
+   "el reloj",
+   "la estantería",
+   "la cocina",
+   "el dormitorio",
+   "el baño"
+  ],
+  "town": [
+   "la escuela",
+   "el hospital",
+   "el banco",
+   "el parque",
+   "el supermercado",
+   "el restaurante",
+   "la biblioteca",
+   "el cine",
+   "la oficina de correos",
+   "la estación de tren",
+   "el aeropuerto",
+   "la tienda",
+   "el hotel",
+   "el edificio de oficinas",
+   "la plaza"
+  ]
+ },
+ "starterPhrases": [
+  {
+   "topic": "Greetings & basics",
+   "items": [
+    {
+     "t": "Hola",
+     "p": "OH-lah",
+     "n": "Hello"
+    },
+    {
+     "t": "Buenos días",
+     "p": "BWEH-nohs DEE-ahs",
+     "n": "Good morning"
+    },
+    {
+     "t": "Por favor",
+     "p": "por fah-BOR",
+     "n": "Please"
+    },
+    {
+     "t": "Gracias",
+     "p": "GRAH-syahs",
+     "n": "Thank you"
+    },
+    {
+     "t": "De nada",
+     "p": "deh NAH-dah",
+     "n": "You're welcome"
+    },
+    {
+     "t": "¿Cómo estás?",
+     "p": "KOH-moh ess-TAHS",
+     "n": "How are you?"
+    },
+    {
+     "t": "Me llamo…",
+     "p": "meh YAH-moh",
+     "n": "My name is…"
+    },
+    {
+     "t": "Hasta luego",
+     "p": "AHS-tah LWEH-goh",
+     "n": "See you later"
+    }
+   ]
+  },
+  {
+   "topic": "Eating out",
+   "items": [
+    {
+     "t": "Una mesa para dos, por favor",
+     "p": "OO-nah MEH-sah PAH-rah dohs",
+     "n": "A table for two, please"
+    },
+    {
+     "t": "¿Qué me recomienda?",
+     "p": "keh meh reh-koh-MYEN-dah",
+     "n": "What do you recommend?"
+    },
+    {
+     "t": "Quiero un café, por favor",
+     "p": "KYEH-roh oon kah-FEH",
+     "n": "I'd like a coffee, please"
+    },
+    {
+     "t": "Soy vegetariano",
+     "p": "soy beh-heh-tah-RYAH-noh",
+     "n": "I'm vegetarian"
+    },
+    {
+     "t": "¡Qué rico!",
+     "p": "keh REE-koh",
+     "n": "How delicious!"
+    },
+    {
+     "t": "Agua sin gas, por favor",
+     "p": "AH-gwah seen gahs",
+     "n": "Still water, please"
+    },
+    {
+     "t": "¿Tienen menú en inglés?",
+     "p": "TYEH-nen meh-NOO en een-GLEHS",
+     "n": "Do you have an English menu?"
+    },
+    {
+     "t": "La cuenta, por favor",
+     "p": "lah KWEN-tah",
+     "n": "The bill, please"
+    }
+   ]
+  },
+  {
+   "topic": "Getting around",
+   "items": [
+    {
+     "t": "¿Dónde está el baño?",
+     "p": "DON-deh ess-TAH el BAH-nyoh",
+     "n": "Where is the bathroom?"
+    },
+    {
+     "t": "¿Cuánto cuesta?",
+     "p": "KWAN-toh KWES-tah",
+     "n": "How much does it cost?"
+    },
+    {
+     "t": "¿Dónde está la estación?",
+     "p": "DON-deh ess-TAH lah ess-tah-SYON",
+     "n": "Where is the station?"
+    },
+    {
+     "t": "Un billete a Madrid, por favor",
+     "p": "oon bee-YEH-teh ah mah-DREED",
+     "n": "A ticket to Madrid, please"
+    },
+    {
+     "t": "¿Habla inglés?",
+     "p": "AH-blah een-GLEHS",
+     "n": "Do you speak English?"
+    },
+    {
+     "t": "No entiendo",
+     "p": "noh en-TYEN-doh",
+     "n": "I don't understand"
+    },
+    {
+     "t": "¿Puede ayudarme?",
+     "p": "PWEH-deh ah-yoo-DAR-meh",
+     "n": "Can you help me?"
+    },
+    {
+     "t": "A la izquierda / a la derecha",
+     "p": "ah lah ees-KYER-dah / deh-REH-chah",
+     "n": "To the left / to the right"
+    }
+   ]
   }
+ ],
+ "starterGrammar": [
+  {
+   "title": "Gender & articles",
+   "rule": "Every noun is masculine or feminine: el (m) / la (f), plural los / las. Most -o words are masculine, most -a words feminine.",
+   "ex": [
+    [
+     "el libro",
+     "the book"
+    ],
+    [
+     "la casa",
+     "the house"
+    ],
+    [
+     "los amigos",
+     "the friends"
+    ]
+   ]
+  },
+  {
+   "title": "Ser vs estar",
+   "rule": "Both mean “to be”. Use ser for what something is (identity, origin); use estar for how or where it is (feelings, states, location).",
+   "ex": [
+    [
+     "Soy inglés.",
+     "I am English. (ser)"
+    ],
+    [
+     "Estoy cansado.",
+     "I am tired. (estar)"
+    ],
+    [
+     "El café está frío.",
+     "The coffee is cold. (estar)"
+    ]
+   ]
+  },
+  {
+   "title": "Present tense: -ar verbs",
+   "rule": "Drop -ar and add -o, -as, -a, -amos, -áis, -an. Same person endings work for most verbs.",
+   "ex": [
+    [
+     "hablo",
+     "I speak"
+    ],
+    [
+     "hablas",
+     "you speak"
+    ],
+    [
+     "hablamos",
+     "we speak"
+    ]
+   ]
+  }
+ ]
 }
