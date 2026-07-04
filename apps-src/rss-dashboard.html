@@ -35,7 +35,9 @@ a.hero{margin-bottom:16px}
 .card .thumb{aspect-ratio:16/10}
 .thumb img{width:100%;height:100%;object-fit:cover;display:block}
 .thumb .ph{font-size:34px;opacity:.85}
-.body{padding:13px 15px}
+.body{position:relative;padding:13px 15px 26px}
+.lean{position:absolute;right:14px;bottom:12px;width:36px;height:4px;border-radius:2px;background:linear-gradient(90deg,#3b6fd4,#8e8e93 50%,#c0392b);opacity:.85}
+.lean i{position:absolute;top:50%;transform:translate(-50%,-50%);width:9px;height:9px;border-radius:50%;background:var(--surface);border:2px solid var(--text)}
 .hero .body h2{font-size:20px;line-height:1.3;margin:0 0 8px;font-weight:700}
 .hero .excerpt{font-size:14px;line-height:1.5;color:var(--muted);margin:0}
 .card .body h3{font-size:16px;line-height:1.35;margin:0;font-weight:600}
@@ -194,6 +196,15 @@ function thumb(a){
 }
 function metaLine(a){var src=TOPICS[active].src,t=ago(a.date);return esc(src)+(t?' • '+t:'')}
 
+// Political lean of the outlet (per AllSides/MBFC-style source ratings),
+// shown as a dot on a left–right spectrum bar. 0 = left, 100 = right.
+var LEAN={"BBC":{pos:50,label:"Centre"},"The Guardian":{pos:28,label:"Left-leaning"},"Ars Technica":{pos:40,label:"Centre-left"}};
+function leanBadge(){
+  var l=LEAN[TOPICS[active].src];
+  if(!l)return'';
+  return '<span class="lean" role="img" title="Political lean: '+l.label+'" aria-label="Political lean: '+l.label+'"><i style="left:'+l.pos+'%"></i></span>';
+}
+
 function paint(){
   var hero=articles[0];
   el('hero').innerHTML=hero?(
@@ -202,6 +213,7 @@ function paint(){
       '<div class="body"><div class="meta">'+metaLine(hero)+'</div>'+
       '<h2>'+esc(hero.title)+'</h2>'+
       (hero.excerpt?'<p class="excerpt">'+esc(hero.excerpt)+'</p>':'')+
+      leanBadge()+
       '</div></a>'
   ):'';
   shown=1;
@@ -213,7 +225,7 @@ function more(){
   slice.forEach(function(a){
     var card=document.createElement('a');
     card.className='card';card.href=a.link||'#';card.target='_blank';card.rel='noopener';
-    card.innerHTML=thumb(a)+'<div class="body"><div class="meta">'+metaLine(a)+'</div><h3>'+esc(a.title)+'</h3></div>';
+    card.innerHTML=thumb(a)+'<div class="body"><div class="meta">'+metaLine(a)+'</div><h3>'+esc(a.title)+'</h3>'+leanBadge()+'</div>';
     card.addEventListener('click',function(){haptic('light')});
     frag.appendChild(card);
   });
