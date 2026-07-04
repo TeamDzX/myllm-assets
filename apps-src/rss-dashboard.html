@@ -50,8 +50,11 @@ a.hero{margin-bottom:16px}
 .sh-sum .sh-wait{color:var(--muted);font-size:13px}
 .sh-body{overflow-y:auto;padding:0 16px 20px;-webkit-overflow-scrolling:touch}
 .sh-load,.sh-empty{padding:26px 0;text-align:center;color:var(--muted);font-size:14px;line-height:1.5}
-a.cvg{display:block;text-decoration:none;color:inherit;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:11px 13px;margin-bottom:9px}
-.cvg-src{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.02em;color:var(--accent);margin-bottom:5px}
+a.cvg{display:flex;gap:11px;align-items:center;text-decoration:none;color:inherit;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:10px;margin-bottom:9px}
+.cvg .tmb{flex:none;width:62px;height:62px;border-radius:9px;overflow:hidden;background:linear-gradient(135deg,var(--accent),#7b5cff);display:flex;align-items:center;justify-content:center;font-size:22px}
+.cvg .tmb img{width:100%;height:100%;object-fit:cover;display:block}
+.cvg .cbody{display:block;min-width:0}
+.cvg-src{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.02em;color:var(--accent);margin-bottom:4px}
 .cvg-src .when{font-weight:600;color:var(--muted);text-transform:none;letter-spacing:0;margin-left:auto}
 .cvg h4{margin:0;font-size:14px;line-height:1.4;font-weight:600}
 .mini{position:relative;width:26px;height:3px;border-radius:2px;background:linear-gradient(90deg,#3b6fd4,#8e8e93 50%,#c0392b);flex:none}
@@ -228,51 +231,39 @@ function wireLean(root,article){
   if(b)b.onclick=function(e){e.preventDefault();e.stopPropagation();openCoverage(article)};
 }
 
-// Lean positions for outlets that may appear in cross-channel search results.
-var OUTLET_LEAN={
-  "bbc":50,"bbc news":50,"the guardian":28,"guardian":28,"ars technica":40,
-  "reuters":50,"associated press":48,"ap news":48,"afp":50,
-  "sky news":48,"itv news":50,"itv":50,"channel 4 news":38,"channel 4":38,
-  "the independent":30,"independent":30,"daily mirror":28,"mirror":28,"metro":45,
-  "the sunday times":58,"the times":58,"los angeles times":30,"times":58,
-  "the telegraph":70,"daily telegraph":70,"telegraph":70,
-  "daily mail":72,"mail online":72,"the sun":70,"daily express":72,"express":72,"gb news":75,
-  "financial times":48,"the economist":52,"evening standard":50,"the i paper":45,"inews":45,
-  "cnn":30,"msnbc":20,"nbc news":38,"abc news":40,"cbs news":42,"npr":38,"pbs":42,
-  "the new york times":32,"new york times":32,"the washington post":32,"washington post":32,
-  "usa today":45,"bloomberg":45,"axios":45,"politico":45,"time":38,"newsweek":48,
-  "the wall street journal":58,"wall street journal":58,"new york post":70,"fox news":78,
-  "washington examiner":70,"national review":72,"breitbart":85,"the daily wire":80,
-  "huffpost":25,"vox":25,"vice":25,"the daily beast":25,"rolling stone":25,
-  "al jazeera english":40,"al jazeera":40,"euronews":48,"dw":45,"france 24":45,
-  "the verge":35,"wired":38,"techcrunch":45,"engadget":40,"cnbc":48,"business insider":40,
-  "forbes":55,"yahoo news":40,"the spectator":70,"the atlantic":30,"new statesman":25
-};
-var OUTLET_KEYS=Object.keys(OUTLET_LEAN).sort(function(a,b){return b.length-a.length});
-function leanOf(name){
-  if(!name)return null;
-  var k=name.toLowerCase().trim();
-  if(OUTLET_LEAN.hasOwnProperty(k))return OUTLET_LEAN[k];
-  for(var i=0;i<OUTLET_KEYS.length;i++){if(k.indexOf(OUTLET_KEYS[i])>-1)return OUTLET_LEAN[OUTLET_KEYS[i]]}
-  return null;
-}
+// Fixed panel of channels across the spectrum (left → right). Each entry's own
+// RSS feed supplies the story match AND its thumbnail. Feeds land in the shared
+// session `cache` (per-feed cache); matched results are cached per story below.
+var SPECTRUM=[
+  {src:"Daily Mirror",   pos:28,url:"https://www.mirror.co.uk/news/rss.xml"},
+  {src:"The Guardian",   pos:28,url:"https://www.theguardian.com/uk/rss"},
+  {src:"The Independent",pos:30,url:"https://www.independent.co.uk/news/rss"},
+  {src:"Al Jazeera",     pos:40,url:"https://www.aljazeera.com/xml/rss/all.xml"},
+  {src:"Sky News",       pos:48,url:"https://feeds.skynews.com/feeds/rss/home.xml"},
+  {src:"BBC",            pos:50,url:"https://feeds.bbci.co.uk/news/rss.xml"},
+  {src:"The Sun",        pos:70,url:"https://www.thesun.co.uk/news/feed/"},
+  {src:"New York Post",  pos:70,url:"https://nypost.com/feed/"},
+  {src:"Daily Express",  pos:72,url:"https://www.express.co.uk/posts/rss/1"},
+  {src:"GB News",        pos:75,url:"https://www.gbnews.com/feeds/politics.rss"},
+  {src:"Fox News",       pos:78,url:"https://moxie.foxnews.com/google-publisher/latest.xml"}
+];
 function miniBar(pos){return pos==null?'':'<span class="mini"><i style="left:'+pos+'%"></i></span>'}
 
-function parseCoverage(xml){
-  var doc=new DOMParser().parseFromString(xml,'text/xml');
-  var nodes=doc.getElementsByTagName('item'),out=[];
-  for(var i=0;i<nodes.length;i++){
-    var n=nodes[i],title=text(n,'title');
-    if(!title)continue;
-    var src=text(n,'source');
-    var cut=title.lastIndexOf(' - ');
-    if(src&&cut>-1&&title.slice(cut+3).toLowerCase()===src.toLowerCase())title=title.slice(0,cut);
-    out.push({title:title,link:text(n,'link'),date:text(n,'pubDate'),source:src});
-  }
-  return out;
+var STOP={'this':1,'that':1,'with':1,'from':1,'have':1,'will':1,'after':1,'over':1,'into':1,'says':1,'said':1,'what':1,'when':1,'where':1,'while':1,'been':1,'were':1,'they':1,'their':1,'them':1,'there':1,'about':1,'more':1,'than':1,'against':1,'amid':1,'could':1,'would':1,'should':1,'year':1,'years':1,'week':1,'today':1,'first':1,'last':1,'live':1,'news':1,'your':1,'just':1,'like':1,'make':1,'take':1,'takes':1,'before':1,'being':1,'between':1,'during':1,'under':1,'because':1,'reveals':1,'revealed':1,'still':1,'down':1,'back':1};
+function kws(t){return String(t||'').toLowerCase().replace(/[^a-z0-9\s]/g,' ').split(/\s+/).filter(function(w){return w.length>3&&!STOP[w]})}
+
+function getFeed(url){
+  if(cache[url])return Promise.resolve(cache[url]);
+  return myllmFetch(url,{headers:{Accept:'application/rss+xml,application/atom+xml,application/xml,text/xml'}})
+    .then(function(r){
+      if(!r||!r.ok)throw new Error('feed');
+      var items=parse(r.body);
+      cache[url]=items;
+      return items;
+    });
 }
 
-var ovlNode=null;
+var ovlNode=null,covCache={}; // per-story coverage cache: link → {items,summary}
 function closeCoverage(){if(ovlNode){ovlNode.parentNode.removeChild(ovlNode);ovlNode=null;document.body.style.overflow=''}}
 function openCoverage(a){
   haptic('selection');
@@ -282,52 +273,74 @@ function openCoverage(a){
     '<div class="sh-head"><div class="sh-t">Across the spectrum</div><button class="sh-x" aria-label="Close">✕</button></div>'+
     '<div class="sh-story">'+esc(a.title)+'</div>'+
     '<div class="sh-sum" id="shSum" style="display:none"></div>'+
-    '<div class="sh-body" id="shBody"><div class="sh-load">Searching other channels…</div></div></div>';
+    '<div class="sh-body" id="shBody"><div class="sh-load">Checking channels across the spectrum…</div></div></div>';
   ovl.addEventListener('click',function(e){if(e.target===ovl)closeCoverage()});
   document.body.appendChild(ovl);
   ovl.querySelector('.sh-x').onclick=closeCoverage;
   document.body.style.overflow='hidden';
   var body=ovl.querySelector('#shBody');
+  var key=a.link||a.title;
+  if(covCache[key]){renderCoverage(a,covCache[key],ovl);return}
   if(!window.myllmFetch){body.innerHTML='<div class="sh-empty">Network access is off — enable it in Settings → MyLLMos Apps.</div>';return}
-  var q=a.title.replace(/[“”"‘’']/g,'').split(/\s+/).slice(0,10).join(' ');
-  myllmFetch('https://news.google.com/rss/search?q='+encodeURIComponent(q)+'&hl=en-GB&gl=GB&ceid=GB:en',
-             {headers:{Accept:'application/rss+xml,application/xml,text/xml'}})
-    .then(function(r){
-      if(!r||!r.ok)throw new Error('search returned '+((r&&r.status)||'no response'));
-      var cur=TOPICS[active].src.toLowerCase(),seen={},items=[];
-      parseCoverage(r.body).forEach(function(it){
-        if(!it.source)return;
-        var s=it.source.toLowerCase();
-        if(s.indexOf(cur)>-1||cur.indexOf(s)>-1)return; // different channels only
-        if(seen[s])return;
-        seen[s]=1;items.push(it);
+  var cur=TOPICS[active].src.toLowerCase();
+  var panel=SPECTRUM.filter(function(s){var n=s.src.toLowerCase();return n.indexOf(cur)===-1&&cur.indexOf(n)===-1});
+  Promise.all(panel.map(function(s){
+    return getFeed(s.url).then(function(items){return{s:s,items:items}},function(){return null});
+  })).then(function(feeds){
+    if(!ovlNode)return;
+    var want=kws(a.title),matched=[];
+    feeds.forEach(function(f){
+      if(!f)return;
+      var best=null,bestScore=1; // need ≥2 shared keywords to count as the same story
+      f.items.forEach(function(it){
+        var seen={},score=0;
+        kws(it.title+' '+(it.excerpt||'')).forEach(function(w){seen[w]=1});
+        want.forEach(function(w){if(seen[w]){score++;seen[w]=0}});
+        if(score>bestScore){bestScore=score;best=it}
       });
-      items=items.slice(0,8);
-      if(!ovlNode)return;
-      if(!items.length){body.innerHTML='<div class="sh-empty">No other channels covering this story yet.</div>';return}
-      body.innerHTML=items.map(function(it){
-        var t=ago(it.date);
-        return '<a class="cvg" href="'+esc(it.link||'#')+'" target="_blank" rel="noopener">'+
-          '<div class="cvg-src">'+miniBar(leanOf(it.source))+'<span>'+esc(it.source)+'</span>'+(t?'<span class="when">'+t+'</span>':'')+'</div>'+
-          '<h4>'+esc(it.title)+'</h4></a>';
-      }).join('');
-      summarize(a,items,ovl);
-    })
-    .catch(function(e){if(ovlNode)body.innerHTML='<div class="sh-empty">Couldn’t search coverage: '+esc(e.message)+'\nTap the dot again to retry.</div>'});
+      if(best)matched.push({s:f.s,it:best});
+    });
+    matched.sort(function(x,y){return x.s.pos-y.s.pos}); // left → right
+    covCache[key]={items:matched,summary:null};
+    renderCoverage(a,covCache[key],ovl);
+  });
 }
-function summarize(a,items,ovl){
+function renderCoverage(a,entry,ovl){
+  var body=ovl.querySelector('#shBody');
+  if(!entry.items.length){
+    body.innerHTML='<div class="sh-empty">None of the other channels on the panel are carrying this story right now.</div>';
+    return;
+  }
+  body.innerHTML=entry.items.map(function(m){
+    var t=ago(m.it.date);
+    var tmb=m.it.image
+      ?'<span class="tmb"><img loading="lazy" src="'+esc(m.it.image)+'" onerror="this.parentNode.innerHTML=\'📰\'"></span>'
+      :'<span class="tmb">📰</span>';
+    return '<a class="cvg" href="'+esc(m.it.link||'#')+'" target="_blank" rel="noopener">'+tmb+
+      '<span class="cbody"><span class="cvg-src">'+miniBar(m.s.pos)+'<span>'+esc(m.s.src)+'</span>'+(t?'<span class="when">'+t+'</span>':'')+'</span>'+
+      '<h4>'+esc(m.it.title)+'</h4></span></a>';
+  }).join('');
+  if(entry.summary){showSummary(ovl,entry.summary)}
+  else summarize(a,entry,ovl);
+}
+function showSummary(ovl,text){
+  var sum=ovl.querySelector('#shSum');
+  sum.style.display='block';
+  sum.innerHTML='<b>AI summary</b>'+esc(text).replace(/\n+/g,'<br>');
+}
+function summarize(a,entry,ovl){
   if(!window.myllmAsk)return;
   var sum=ovl.querySelector('#shSum');
   sum.style.display='block';
   sum.innerHTML='<b>AI summary</b><span class="sh-wait">Reading the coverage…</span>';
-  var lines=items.map(function(it){return '- "'+it.title+'" ('+it.source+')'}).join('\n');
+  var lines=entry.items.map(function(m){return '- "'+m.it.title+'" ('+m.s.src+')'}).join('\n');
   var p='Different news channels are covering the same story.\nOriginal headline: "'+a.title+'" ('+TOPICS[active].src+')\nOther channels:\n'+lines+
         '\n\nIn 2-3 short sentences, neutrally summarise the story and note briefly whether the channels frame it differently. Plain text only, no lists, no preamble.';
   myllmAsk(p).then(function(r){
-    if(!ovlNode)return;
     r=String(r||'').trim();
-    if(!r){sum.style.display='none';return}
-    sum.innerHTML='<b>AI summary</b>'+esc(r).replace(/\n+/g,'<br>');
+    if(r)entry.summary=r; // cached with the story
+    if(!ovlNode)return;
+    if(r)showSummary(ovl,r);else sum.style.display='none';
   }).catch(function(){if(ovlNode)sum.style.display='none'});
 }
 
