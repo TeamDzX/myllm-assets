@@ -144,7 +144,11 @@ function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').repl
 function openDetail(i){
   di=i;var s=list[i];
   $('library').style.display='none';$('detail').style.display='block';window.scrollTo(0,0);
-  $('dimg').src=IMG+s.id+'.jpg';$('dimg').alt=s.name;
+  // Animated illustration when available: looping WebP in a plain <img> —
+  // autoplays, no video element, so iOS never shows player chrome on it.
+  var d=$('dimg');d.alt=s.name;
+  d.onerror=function(){this.onerror=null;this.src=IMG+s.id+'.jpg'};
+  d.src=IMG+s.id+'.webp';
   $('dname').textContent=s.name;
   $('dbadges').innerHTML='<span class="badge t">'+esc(s.target)+'</span><span class="badge">⏱ '+esc(s.hold)+'</span><span class="badge">'+esc(s.level)+'</span>';
   $('dbenefit').textContent=s.benefit;
