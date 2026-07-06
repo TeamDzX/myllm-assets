@@ -150,6 +150,7 @@ var STARTER_PHRASES=__STARTERP_JSON__;
 var GRAMMAR_BASICS=__STARTERG_JSON__;
 var PH_ICON='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5"/><circle cx="9" cy="10" r="1.6"/><path d="M4.5 17l4.5-4.5 3 3 3.5-3.5 4 4"/></svg>';
 function phFallback(img){var d=document.createElement('div');d.className='ph';d.innerHTML=PH_ICON;img.parentNode.replaceChild(d,img);}
+function imgFallback(img){var j=img.getAttribute('data-jpg');if(j){img.removeAttribute('data-jpg');img.src=j;}else phFallback(img);}
 var store=window.myllmStorage||{getItem:function(){return Promise.resolve(null)},setItem:function(){return Promise.resolve()}};
 function el(i){return document.getElementById(i)}
 function haptic(k){if(window.myllmHaptic)myllmHaptic(k||'light')}
@@ -176,8 +177,9 @@ function fcShuffle(){for(var i=order.length-1;i>0;i--){var j=Math.floor((i+1)*fr
 var _s=0.4142;function fract(){_s=(_s*9301+49297)%233280/233280;return _s;} /* stable pseudo-shuffle, no Math.random needed */
 function renderCard(){
   var d=DECKS[deckIdx],c=d.cards[order[cardIdx]],iw=el('fcImgWrap');
-  var url=d.imgBase+order[cardIdx]+'.jpg';
-  iw.innerHTML='<img class="img" src="'+url+'" alt="" onerror="phFallback(this)">';
+  /* animated WebP loop when one exists (autoplays in <img>, no player chrome), else the JPG, else placeholder */
+  var base=d.imgBase+order[cardIdx];
+  iw.innerHTML='<img class="img" src="'+base+'.webp" alt="" data-jpg="'+base+'.jpg" onerror="imgFallback(this)">';
   el('fcW').textContent=c.w;el('fcE').textContent=c.en;
   el('fcW').classList.toggle('hidden',!showBack);el('fcE').classList.toggle('hidden',!showBack);
   el('fcTap').classList.toggle('hidden',showBack);
