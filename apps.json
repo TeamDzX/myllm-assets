@@ -1,5 +1,5 @@
 {
-  "updated": "2026-07-06",
+  "updated": "2026-07-10",
   "categories": [
     "Students",
     "Productivity",
@@ -1915,6 +1915,116 @@
       "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/kids-crossword.myllmapp?v=3",
       "sizeKB": 8,
       "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/icons/kids-crossword.jpg"
+    },
+    {
+      "id": "subscription-tracker",
+      "name": "Subscription Tracker",
+      "emoji": "💳",
+      "tagline": "Know what you really pay",
+      "description": "Every subscription in one place: what it costs, when it renews, and what it all adds up to per month and per year. Renewal countdowns, pause instead of delete, and a category breakdown that shows where the money goes. An optional AI audit spots overlapping services and suggests what to cancel or switch to yearly billing. Fully offline — your money stays your business. For the AI audit, enable AI in Settings.",
+      "tags": [
+        "productivity",
+        "money",
+        "subscriptions",
+        "budgeting",
+        "saves data",
+        "offline",
+        "AI-powered"
+      ],
+      "category": "Productivity",
+      "iconSymbol": "repeat.circle.fill",
+      "iconColor": "indigo",
+      "version": 1,
+      "featured": false,
+      "requiresAI": false,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/subscription-tracker.jpg",
+      "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/subscription-tracker.html",
+      "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/subscription-tracker.myllmapp",
+      "sizeKB": 19,
+      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/icons/subscription-tracker.jpg"
+    },
+    {
+      "id": "packing-planner",
+      "name": "Packing Planner",
+      "emoji": "🧳",
+      "tagline": "Never forget the charger",
+      "description": "Tell it where you're going and for how long — it checks your trip's real forecast and builds a packing checklist that fits: the right number of socks, rain or heat extras when the weather calls for them, and AI-suggested destination-specific items a generic list would miss, like the right plug adapter. Tick things off as you pack, add your own items, and share the list. Works without AI too. For smart extras, enable AI in Settings.",
+      "tags": [
+        "travel",
+        "packing",
+        "checklist",
+        "holiday",
+        "weather",
+        "network",
+        "saves data",
+        "AI-powered"
+      ],
+      "category": "Utilities",
+      "iconSymbol": "suitcase.fill",
+      "iconColor": "orange",
+      "version": 1,
+      "featured": false,
+      "requiresAI": false,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/packing-planner.jpg",
+      "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/packing-planner.html",
+      "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/packing-planner.myllmapp",
+      "sizeKB": 20,
+      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/icons/packing-planner.jpg"
+    },
+    {
+      "id": "sky-tonight",
+      "name": "Sky Tonight",
+      "emoji": "🌌",
+      "tagline": "What's up there tonight",
+      "description": "Real astronomy for your exact spot: sunset and darkness times, tonight's moon phase, and which planets are out this evening — with compass directions so you know where to look — plus a live Space Station tracker. All the sky maths runs inside the app, so it works offline once you've set a location. An optional AI guide turns tonight's facts into a friendly three-sentence stargazing plan. For the guide, enable AI in Settings.",
+      "tags": [
+        "astronomy",
+        "stars",
+        "planets",
+        "moon",
+        "space",
+        "location",
+        "offline",
+        "AI-powered"
+      ],
+      "category": "Astrology",
+      "iconSymbol": "moon.stars.fill",
+      "iconColor": "cyan",
+      "version": 1,
+      "featured": false,
+      "requiresAI": false,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/sky-tonight.jpg",
+      "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/sky-tonight.html",
+      "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/sky-tonight.myllmapp",
+      "sizeKB": 26,
+      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/icons/sky-tonight.jpg"
+    },
+    {
+      "id": "guitar-tuner",
+      "name": "Guitar Tuner",
+      "emoji": "🎸",
+      "tagline": "Tune up, then keep time",
+      "description": "A proper chromatic tuner that listens through the microphone: a smooth cents needle, the note you're on, and your nearest string highlighted — accurate to about a cent across all six strings. Five tunings built in (Standard, Drop D, half-step down, DADGAD, Open G) plus A4 calibration, and every string plays a reference tone if you'd rather tune by ear. A tap-tempo metronome with accented beats rides along for practice. Fully offline.",
+      "tags": [
+        "music",
+        "guitar",
+        "tuner",
+        "metronome",
+        "practice",
+        "microphone",
+        "offline"
+      ],
+      "category": "Creative",
+      "iconSymbol": "tuningfork",
+      "iconColor": "teal",
+      "version": 1,
+      "featured": false,
+      "requiresAI": false,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/guitar-tuner.jpg",
+      "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/guitar-tuner.html",
+      "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/guitar-tuner.myllmapp",
+      "sizeKB": 16,
+      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/icons/guitar-tuner.jpg"
     }
   ]
 }

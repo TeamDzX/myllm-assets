@@ -1,0 +1,541 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sky Tonight</title>
+<style>
+  :root { color-scheme: dark; }
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  /* deliberately always-dark: it's a night-sky app */
+  body{
+    font-family:var(--myllm-font,-apple-system,system-ui,sans-serif);
+    background:#070b1a;
+    color:#eef1fb;
+    max-width:820px; margin:0 auto; min-height:100dvh;
+    padding:16px 16px calc(40px + env(safe-area-inset-bottom));
+    position:relative;
+  }
+  .stars, .stars2{
+    position:fixed; inset:0; pointer-events:none; z-index:0;
+  }
+  .stars{ background:
+    radial-gradient(1px 1px at 12% 22%, #fff 50%, transparent 51%),
+    radial-gradient(1px 1px at 78% 12%, #fff 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 55% 34%, #dfe6ff 50%, transparent 51%),
+    radial-gradient(1px 1px at 31% 64%, #fff 50%, transparent 51%),
+    radial-gradient(1px 1px at 88% 52%, #cfd8ff 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 67% 78%, #fff 50%, transparent 51%),
+    radial-gradient(1px 1px at 8% 86%, #dfe6ff 50%, transparent 51%),
+    radial-gradient(1px 1px at 42% 8%, #fff 50%, transparent 51%),
+    radial-gradient(1px 1px at 94% 88%, #fff 50%, transparent 51%),
+    linear-gradient(180deg, #0b1230 0%, #070b1a 55%, #0a0d20 100%);
+  }
+  .stars2{ opacity:.7; animation: twinkle 4.2s ease-in-out infinite alternate; background:
+    radial-gradient(1px 1px at 22% 42%, #fff 50%, transparent 51%),
+    radial-gradient(1px 1px at 62% 18%, #fff 50%, transparent 51%),
+    radial-gradient(1px 1px at 82% 68%, #fff 50%, transparent 51%),
+    radial-gradient(1px 1px at 18% 12%, #fff 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 48% 88%, #fff 50%, transparent 51%);
+  }
+  @keyframes twinkle{ from{opacity:.25} to{opacity:.85} }
+  @media (prefers-reduced-motion: reduce){ .stars2{ animation:none; } }
+  body > *:not(.stars):not(.stars2){ position:relative; z-index:1; }
+
+  h1{ font-size:22px; font-weight:800; letter-spacing:-0.02em; margin:6px 2px 4px; }
+  .where{ font-size:13px; color:#9aa5c9; margin:0 2px 14px; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .where button{ border:1px solid rgba(255,255,255,.18); background:rgba(255,255,255,.07); color:#cdd6f5; border-radius:99px; padding:4px 11px; font-size:12px; font-weight:650; }
+
+  .card{
+    background:rgba(255,255,255,.06);
+    border:1px solid rgba(255,255,255,.11);
+    -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px);
+    border-radius:18px; padding:14px 15px; margin-bottom:12px;
+  }
+  .card h2{ font-size:12px; font-weight:800; letter-spacing:.09em; text-transform:uppercase; color:#8fa0d6; margin-bottom:10px; }
+  .bigrow{ display:flex; align-items:center; gap:14px; }
+  .bigrow .glyph{ font-size:44px; line-height:1; }
+  .bigrow b{ display:block; font-size:18px; font-weight:800; }
+  .bigrow small{ font-size:13px; color:#9aa5c9; line-height:1.45; display:block; }
+  .kv{ display:flex; justify-content:space-between; padding:7px 0; border-bottom:1px solid rgba(255,255,255,.08); font-size:14.5px; }
+  .kv:last-child{ border-bottom:none; }
+  .kv span{ color:#9aa5c9; }
+  .kv b{ font-weight:700; }
+
+  .planet{ display:flex; align-items:center; gap:12px; padding:9px 0; border-bottom:1px solid rgba(255,255,255,.08); }
+  .planet:last-child{ border-bottom:none; }
+  .planet .p{ font-size:24px; width:32px; text-align:center; }
+  .planet b{ display:block; font-size:15px; font-weight:750; }
+  .planet small{ font-size:12.5px; color:#9aa5c9; line-height:1.4; display:block; }
+  .dirchip{ margin-left:auto; flex-shrink:0; background:rgba(120,160,255,.16); border:1px solid rgba(120,160,255,.3); color:#b9caff; font-size:12px; font-weight:750; border-radius:99px; padding:4px 10px; }
+  .nope{ font-size:14px; color:#9aa5c9; line-height:1.5; }
+
+  .iss{ display:flex; align-items:center; gap:12px; }
+  .iss .sat{ font-size:34px; }
+  .iss b{ display:block; font-size:15px; font-weight:750; }
+  .iss small{ font-size:13px; color:#9aa5c9; line-height:1.45; display:block; }
+  .pulse{ display:inline-block; width:8px; height:8px; border-radius:50%; background:#30d158; margin-right:6px; animation:pulse 1.6s ease-in-out infinite; }
+  @keyframes pulse{ 0%,100%{opacity:.4} 50%{opacity:1} }
+
+  .aibtn{
+    width:100%; border:1px solid rgba(150,130,255,.4); background:rgba(140,110,255,.14);
+    color:#d4c9ff; border-radius:14px; padding:13px; font-size:15px; font-weight:700; margin-bottom:12px;
+  }
+  .aiout{ font-size:14.5px; line-height:1.55; white-space:pre-wrap; }
+
+  .setup label{ display:block; font-size:11.5px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; color:#8fa0d6; margin:4px 0 6px; }
+  .setup .row{ display:flex; gap:8px; }
+  .setup input{
+    flex:1; font-size:16px; padding:11px 12px; border-radius:12px;
+    border:1px solid rgba(255,255,255,.18); background:rgba(255,255,255,.08); color:#eef1fb;
+  }
+  .setup input::placeholder{ color:#7a86ad; }
+  .setup button{
+    border:none; border-radius:12px; padding:0 16px; font-size:15px; font-weight:700;
+    background:var(--myllm-accent,#0a84ff); color:#fff;
+  }
+  .setup .note{ font-size:12.5px; color:#9aa5c9; margin-top:8px; line-height:1.45; }
+</style>
+</head>
+<body>
+<div class="stars"></div><div class="stars2"></div>
+
+<h1>🌌 Sky Tonight</h1>
+<div class="where" id="where"></div>
+
+<div id="app"></div>
+
+<!-- AI thinking pill (house convention) -->
+<style>
+@keyframes myllmAiSpin{to{transform:rotate(360deg)}}
+.myllm-ai-busy{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(18px);z-index:99999;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;display:flex;align-items:center;gap:10px;background:rgba(28,28,30,.96);color:#fff;border-radius:999px;padding:10px 16px 10px 14px;box-shadow:0 6px 22px rgba(0,0,0,.4);font-size:14px;font-weight:600;max-width:92%}
+.myllm-ai-busy.on{opacity:1;transform:translateX(-50%) translateY(0)}
+.myllm-ai-cog{font-size:18px;animation:myllmAiSpin 2.4s linear infinite;filter:drop-shadow(0 0 5px rgba(124,92,255,.85))}
+.myllm-ai-busy small{font-weight:400;opacity:.6}
+</style>
+<script>
+(function(){if(window.__myllmAiWrap||typeof window.myllmAsk!=='function')return;window.__myllmAiWrap=true;
+var orig=window.myllmAsk,depth=0,node=null;
+function ensure(){if(node)return;node=document.createElement('div');node.className='myllm-ai-busy';
+node.innerHTML='<span class="myllm-ai-cog">⚙️</span><span>AI is thinking… <small>privately, on your device</small></span>';
+(document.body||document.documentElement).appendChild(node);}
+function show(){ensure();depth++;node.classList.add('on');}
+function hide(){depth=Math.max(0,depth-1);if(depth===0&&node)node.classList.remove('on');}
+window.myllmAsk=function(){show();var p;try{p=orig.apply(this,arguments);}catch(e){hide();throw e;}
+return Promise.resolve(p).then(function(r){hide();return r;},function(e){hide();throw e;});};})();
+</script>
+
+<script>
+/* ============================================================
+   Ephemeris: low-precision Keplerian elements (Paul Schlyter,
+   "How to compute planetary positions") — good to a fraction of
+   a degree for the planets, ~1-2° for the Moon. Plenty for
+   "what's up tonight and which way do I look".
+   All angles in degrees internally; helpers wrap trig.
+   ============================================================ */
+var D2R = Math.PI/180, R2D = 180/Math.PI;
+function sind(x){ return Math.sin(x*D2R); }
+function cosd(x){ return Math.cos(x*D2R); }
+function tand(x){ return Math.tan(x*D2R); }
+function asind(x){ return R2D*Math.asin(Math.max(-1,Math.min(1,x))); }
+function atan2d(y,x){ return R2D*Math.atan2(y,x); }
+function rev(x){ x = x % 360; return x < 0 ? x + 360 : x; }
+
+/* day number: d = 0.0 at 1999-12-31 00:00 UT (Schlyter's epoch, "2000 Jan 0.0") */
+function dayNum(date){
+  return date.getTime()/86400000 - 10956.0;
+}
+
+function kepler(M, e){
+  var E = M + e*R2D*sind(M)*(1 + e*cosd(M));
+  for (var i=0;i<8;i++){
+    var dE = (E - e*R2D*sind(E) - M) / (1 - e*cosd(E));
+    E -= dE;
+    if (Math.abs(dE) < 1e-6) break;
+  }
+  return E;
+}
+
+/* orbital elements at day d — [N,i,w,a,e,M] */
+var ELEMENTS = {
+  sun:     function(d){ return [0, 0, 282.9404+4.70935e-5*d, 1.000000, 0.016709-1.151e-9*d, 356.0470+0.9856002585*d]; },
+  moon:    function(d){ return [125.1228-0.0529538083*d, 5.1454, 318.0634+0.1643573223*d, 60.2666, 0.054900, 115.3654+13.0649929509*d]; },
+  mercury: function(d){ return [48.3313+3.24587e-5*d, 7.0047+5.00e-8*d, 29.1241+1.01444e-5*d, 0.387098, 0.205635+5.59e-10*d, 168.6562+4.0923344368*d]; },
+  venus:   function(d){ return [76.6799+2.46590e-5*d, 3.3946+2.75e-8*d, 54.8910+1.38374e-5*d, 0.723330, 0.006773-1.302e-9*d, 48.0052+1.6021302244*d]; },
+  mars:    function(d){ return [49.5574+2.11081e-5*d, 1.8497-1.78e-8*d, 286.5016+2.92961e-5*d, 1.523688, 0.093405+2.516e-9*d, 18.6021+0.5240207766*d]; },
+  jupiter: function(d){ return [100.4542+2.76854e-5*d, 1.3030-1.557e-7*d, 273.8777+1.64505e-5*d, 5.20256, 0.048498+4.469e-9*d, 19.8950+0.0830853001*d]; },
+  saturn:  function(d){ return [113.6634+2.38980e-5*d, 2.4886-1.081e-7*d, 339.3939+2.97661e-5*d, 9.55475, 0.055546-9.499e-9*d, 316.9670+0.0334442282*d]; }
+};
+
+/* heliocentric ecliptic rectangular coords (AU) of a planet (or the
+   Moon's GEOcentric coords in Earth radii — same math, different centre) */
+function bodyEcl(which, d){
+  var el = ELEMENTS[which](d);
+  var N=rev(el[0]), inc=el[1], w=rev(el[2]), a=el[3], e=el[4], M=rev(el[5]);
+  var E = kepler(M, e);
+  var xv = a*(cosd(E)-e), yv = a*Math.sqrt(1-e*e)*sind(E);
+  var v = rev(atan2d(yv,xv)), r = Math.sqrt(xv*xv+yv*yv);
+  return {
+    x: r*(cosd(N)*cosd(v+w) - sind(N)*sind(v+w)*cosd(inc)),
+    y: r*(sind(N)*cosd(v+w) + cosd(N)*sind(v+w)*cosd(inc)),
+    z: r*sind(v+w)*sind(inc),
+    r: r, v: v, w: w, N: N, M: M
+  };
+}
+
+/* Sun geocentric ecliptic longitude + rectangular coords */
+function sunPos(d){
+  var el = ELEMENTS.sun(d);
+  var w=rev(el[2]), e=el[4], M=rev(el[5]);
+  var E = kepler(M, e);
+  var xv = cosd(E)-e, yv = Math.sqrt(1-e*e)*sind(E);
+  var v = rev(atan2d(yv,xv)), r = Math.sqrt(xv*xv+yv*yv);
+  var lon = rev(v + w);
+  return {lon:lon, r:r, x:r*cosd(lon), y:r*sind(lon), M:M, w:w};
+}
+
+/* Moon geocentric ecliptic lon/lat with the main perturbation terms */
+function moonPos(d){
+  var m = bodyEcl("moon", d);
+  var s = sunPos(d);
+  var lon = rev(atan2d(m.y, m.x));
+  var lat = atan2d(m.z, Math.sqrt(m.x*m.x + m.y*m.y));
+  var Ms = s.M, Mm = rev(ELEMENTS.moon(d)[5]);
+  var Nm = rev(ELEMENTS.moon(d)[0]);
+  var ws = s.w, wm = rev(ELEMENTS.moon(d)[2]);
+  var Ls = rev(Ms + ws), Lm = rev(Mm + wm + Nm);
+  var D = rev(Lm - Ls), F = rev(Lm - Nm);
+  lon += -1.274*sind(Mm - 2*D)   /* evection */
+       + 0.658*sind(2*D)         /* variation */
+       - 0.186*sind(Ms)          /* yearly equation */
+       - 0.059*sind(2*Mm - 2*D)
+       - 0.057*sind(Mm - 2*D + Ms)
+       + 0.053*sind(Mm + 2*D);
+  lat += -0.173*sind(F - 2*D)
+       - 0.055*sind(Mm - F - 2*D);
+  return {lon:rev(lon), lat:lat, dist:m.r};
+}
+
+/* geocentric RA/Dec of a planet */
+function planetRaDec(which, d){
+  var p = bodyEcl(which, d);
+  var s = sunPos(d);
+  var xg = p.x + s.x, yg = p.y + s.y, zg = p.z;
+  var ecl = 23.4393 - 3.563e-7*d;
+  var xe = xg, ye = yg*cosd(ecl) - zg*sind(ecl), ze = yg*sind(ecl) + zg*cosd(ecl);
+  return {ra: rev(atan2d(ye,xe)), dec: atan2d(ze, Math.sqrt(xe*xe+ye*ye)),
+          dist: Math.sqrt(xg*xg+yg*yg+zg*zg)};
+}
+function eclToRaDec(lon, lat, d){
+  var ecl = 23.4393 - 3.563e-7*d;
+  var x = cosd(lon)*cosd(lat), y = sind(lon)*cosd(lat), z = sind(lat);
+  var xe = x, ye = y*cosd(ecl) - z*sind(ecl), ze = y*sind(ecl) + z*cosd(ecl);
+  return {ra: rev(atan2d(ye,xe)), dec: atan2d(ze, Math.sqrt(xe*xe+ye*ye))};
+}
+
+/* local sidereal time (deg) at date + observer longitude */
+function lst(date, lonDeg){
+  var d = dayNum(date);
+  var s = sunPos(d);
+  var gmst0 = rev(s.M + s.w + 180);
+  var utH = (d - Math.floor(d)) * 24;   /* hours since 0h UT (d's epoch is a 0h UT boundary) */
+  return rev(gmst0 + utH*15 + lonDeg);
+}
+
+/* alt/az (deg; az 0=N, 90=E) of an RA/Dec for observer at date */
+function altAz(ra, dec, date, latDeg, lonDeg){
+  var ha = rev(lst(date, lonDeg) - ra);
+  var alt = asind(sind(latDeg)*sind(dec) + cosd(latDeg)*cosd(dec)*cosd(ha));
+  var az = rev(atan2d(sind(ha), cosd(ha)*sind(latDeg) - tand(dec)*cosd(latDeg)) + 180);
+  return {alt:alt, az:az};
+}
+function compass(az){
+  var pts = ["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"];
+  return pts[Math.round(az/22.5) % 16];
+}
+
+/* sun event (rise/set/dusk) — h = altitude threshold (-0.833 set, -6 civil, -18 astro).
+   Returns a Date or null (never rises/sets). dir=+1 evening, -1 morning. */
+function sunEvent(dateLocalMidday, latDeg, lonDeg, h, dir){
+  var d = dayNum(dateLocalMidday);
+  var s = sunPos(d);
+  var rd = eclToRaDec(s.lon, 0, d);
+  var gmst0 = rev(s.M + s.w + 180);
+  var transitUT = rev(rd.ra - gmst0 - lonDeg) / 15;   /* hours UT */
+  var cosLHA = (sind(h) - sind(latDeg)*sind(rd.dec)) / (cosd(latDeg)*cosd(rd.dec));
+  if (cosLHA > 1 || cosLHA < -1) return null;
+  var lha = R2D*Math.acos(cosLHA) / 15;               /* hours */
+  var ut = transitUT + dir*lha;
+  var base = new Date(dateLocalMidday);
+  base.setUTCHours(0,0,0,0);
+  return new Date(base.getTime() + ut*3600000);
+}
+
+/* moon phase from sun-moon elongation */
+function moonPhase(d){
+  var s = sunPos(d), m = moonPos(d);
+  var elong = rev(m.lon - s.lon);
+  var illum = (1 - cosd(elong)) / 2;
+  var names = [["New Moon","🌑"],["Waxing Crescent","🌒"],["First Quarter","🌓"],["Waxing Gibbous","🌔"],
+               ["Full Moon","🌕"],["Waning Gibbous","🌖"],["Last Quarter","🌗"],["Waning Crescent","🌘"]];
+  var idx;
+  if (elong < 22.5 || elong >= 337.5) idx = 0;
+  else idx = Math.floor((elong + 22.5) / 45);
+  return {elong:elong, illum:illum, name:names[idx][0], emoji:names[idx][1], lon:m.lon, lat:m.lat};
+}
+/* next date (from today) when elongation crosses target (0=new,180=full) */
+function nextPhase(dateFrom, target){
+  var d0 = dayNum(dateFrom);
+  function delta(d){ return rev(rev(moonPos(d).lon - sunPos(d).lon) - target + 180) - 180; }
+  var prev = delta(d0);
+  for (var i = 1; i <= 31; i++){
+    var cur = delta(d0 + i);
+    if (prev < 0 && cur >= 0){
+      var lo = d0 + i - 1, hi = d0 + i;
+      for (var k = 0; k < 20; k++){
+        var mid = (lo + hi) / 2;
+        if (delta(mid) < 0) lo = mid; else hi = mid;
+      }
+      return new Date((lo + 10957.5) * 86400000);
+    }
+    prev = cur;
+  }
+  return null;
+}
+
+/* ============================================================ UI */
+var store = window.myllmStorage || {getItem:function(){return Promise.resolve(null)}, setItem:function(){return Promise.resolve()}};
+function haptic(k){ if(window.myllmHaptic){ try{ myllmHaptic(k||'light'); }catch(_){} } }
+var NET = window.myllmFetch || null;
+var LOC = window.myllmLocation || null;
+var ASK = window.myllmAsk || null;
+
+var obs = null;   /* {lat, lon, label} */
+var issTimer = null;
+var facts = "";   /* plain-text summary for the AI */
+
+function el(id){ return document.getElementById(id); }
+function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+function fmtTime(dt){
+  return dt ? dt.toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"}) : "—";
+}
+function fmtDate(dt){
+  return dt ? dt.toLocaleDateString([], {weekday:"short", day:"numeric", month:"short"}) : "—";
+}
+
+var PLANETS = [
+  {id:"mercury", name:"Mercury", glyph:"🪐", note:"small and shy — needs a clear horizon"},
+  {id:"venus",   name:"Venus",   glyph:"✨", note:"unmissably brilliant"},
+  {id:"mars",    name:"Mars",    glyph:"🔴", note:"a steady reddish point"},
+  {id:"jupiter", name:"Jupiter", glyph:"🟠", note:"very bright — outshines every star"},
+  {id:"saturn",  name:"Saturn",  glyph:"🪐", note:"calm golden glow; rings need a telescope"}
+];
+
+function renderSky(){
+  var now = new Date();
+  var midday = new Date(now); midday.setHours(12,0,0,0);
+  var sunset  = sunEvent(midday, obs.lat, obs.lon, -0.833, +1);
+  var sunrise = sunEvent(midday, obs.lat, obs.lon, -0.833, -1);
+  var dusk    = sunEvent(midday, obs.lat, obs.lon, -6, +1);
+  var dark    = sunEvent(midday, obs.lat, obs.lon, -18, +1);
+
+  /* observation moment: 75 min after sunset (or now, if later) */
+  var evening = sunset ? new Date(sunset.getTime() + 75*60000) : new Date(midday.getTime() + 10*3600000);
+  if (now > evening && now.getHours() >= 18) evening = now;
+  var dEve = dayNum(evening);
+
+  var ph = moonPhase(dEve);
+  var moonRd = eclToRaDec(ph.lon, ph.lat, dEve);
+  var moonAA = altAz(moonRd.ra, moonRd.dec, evening, obs.lat, obs.lon);
+  var nextFull = nextPhase(now, 180), nextNew = nextPhase(now, 0);
+
+  var evenersHtml = "", morningHtml = "", evenNames = [], mornNames = [];
+  PLANETS.forEach(function(p){
+    var rd = planetRaDec(p.id, dEve);
+    var aa = altAz(rd.ra, rd.dec, evening, obs.lat, obs.lon);
+    if (aa.alt > 3){
+      var howHigh = aa.alt < 10 ? "very low — needs a flat horizon" : Math.round(aa.alt) + "° up";
+      evenNames.push(p.name + (aa.alt < 10 ? " low in the " : " in the ") + compass(aa.az));
+      evenersHtml += '<div class="planet"><div class="p">' + p.glyph + '</div><div><b>' + p.name + '</b>' +
+        '<small>' + p.note + ' · ' + howHigh + '</small></div>' +
+        '<span class="dirchip">' + compass(aa.az) + '</span></div>';
+    }
+  });
+  if (sunrise){
+    var predawn = new Date(sunrise.getTime() - 75*60000);
+    /* tomorrow's pre-dawn */
+    predawn = new Date(predawn.getTime() + 86400000);
+    var dMorn = dayNum(predawn);
+    PLANETS.forEach(function(p){
+      var rd = planetRaDec(p.id, dMorn);
+      var aa = altAz(rd.ra, rd.dec, predawn, obs.lat, obs.lon);
+      if (aa.alt > 5){
+        mornNames.push(p.name + " in the " + compass(aa.az));
+        morningHtml += '<div class="planet"><div class="p">' + p.glyph + '</div><div><b>' + p.name + '</b>' +
+          '<small>' + p.note + ' · ' + Math.round(aa.alt) + '° up before dawn</small></div>' +
+          '<span class="dirchip">' + compass(aa.az) + '</span></div>';
+      }
+    });
+  }
+
+  var moonLine = moonAA.alt > 0
+    ? "Up now-ish after sunset — look " + compass(moonAA.az) + "."
+    : "Below the horizon in the early evening.";
+
+  facts = "Location: " + obs.label + ". Sunset " + fmtTime(sunset) + ", civil dusk " + fmtTime(dusk) +
+    (dark ? ", fully dark by " + fmtTime(dark) : ", never fully dark tonight") + ". " +
+    "Moon: " + ph.name + ", " + Math.round(ph.illum*100) + "% lit. " +
+    (evenNames.length ? "Evening planets: " + evenNames.join(", ") + ". " : "No bright planets in the evening sky. ") +
+    (mornNames.length ? "Pre-dawn planets: " + mornNames.join(", ") + "." : "");
+
+  var h = "";
+  h += '<div class="card"><h2>The Sun · tonight</h2>' +
+    '<div class="kv"><span>Sunset</span><b>' + fmtTime(sunset) + '</b></div>' +
+    '<div class="kv"><span>Civil dusk</span><b>' + fmtTime(dusk) + '</b></div>' +
+    '<div class="kv"><span>Properly dark</span><b>' + (dark ? fmtTime(dark) : "not tonight — bright summer nights") + '</b></div>' +
+    '<div class="kv"><span>Sunrise</span><b>' + fmtTime(sunrise) + '</b></div></div>';
+
+  h += '<div class="card"><h2>The Moon</h2><div class="bigrow"><div class="glyph">' + ph.emoji + '</div>' +
+    '<div><b>' + ph.name + ' · ' + Math.round(ph.illum*100) + '% lit</b>' +
+    '<small>' + moonLine + '</small>' +
+    '<small>Full: ' + fmtDate(nextFull) + ' · New: ' + fmtDate(nextNew) + '</small></div></div></div>';
+
+  h += '<div class="card"><h2>Planets this evening</h2>' +
+    (evenersHtml || '<p class="nope">No bright planets above the horizon in the early evening — check the pre-dawn sky below.</p>') + '</div>';
+
+  if (morningHtml) h += '<div class="card"><h2>Before sunrise</h2>' + morningHtml + '</div>';
+
+  h += '<div class="card"><h2>ISS · live</h2><div class="iss" id="issbox"><div class="sat">🛰️</div>' +
+    '<div><b id="issline">' + (NET ? "Finding the Space Station…" : "Needs network access") + '</b>' +
+    '<small id="isssub">' + (NET ? "" : "Turn on app network access in Settings to track it.") + '</small></div></div></div>';
+
+  if (ASK) h += '<button class="aibtn" id="aibtn" onclick="skyStory()">✨ Tonight at a glance</button>' +
+    '<div class="card" id="aicard" style="display:none"><h2>Your guide</h2><div class="aiout" id="aiout"></div></div>';
+
+  el("app").innerHTML = h;
+  el("where").innerHTML = '📍 ' + esc(obs.label) +
+    ' <button onclick="changeLoc()">Change</button>';
+
+  if (NET){ pollIss(); if (!issTimer) issTimer = setInterval(pollIss, 12000); }
+}
+
+/* ---------- ISS ---------- */
+function gcDist(lat1, lon1, lat2, lon2){
+  var a = sind((lat2-lat1)/2), b = sind((lon2-lon1)/2);
+  var s = a*a + cosd(lat1)*cosd(lat2)*b*b;
+  return 2 * 6371 * Math.asin(Math.sqrt(s));
+}
+function pollIss(){
+  if (!NET || !obs) return;
+  NET("https://api.wheretheiss.at/v1/satellites/25544").then(function(r){
+    var j = JSON.parse(r.body);
+    var line = el("issline"), sub = el("isssub");
+    if (!line) return;
+    var km = Math.round(gcDist(obs.lat, obs.lon, j.latitude, j.longitude));
+    var ns = j.latitude >= 0 ? "N" : "S", ew = j.longitude >= 0 ? "E" : "W";
+    line.innerHTML = '<span class="pulse"></span>' + km.toLocaleString() + " km from you";
+    var vis = j.visibility === "daylight" ? "in daylight (not visible)" :
+              j.visibility === "eclipsed" ? "in Earth's shadow" : "potentially visible";
+    sub.textContent = "Now over " + Math.abs(j.latitude).toFixed(0) + "°" + ns + " " +
+      Math.abs(j.longitude).toFixed(0) + "°" + ew + " at 27,500 km/h — currently " + vis +
+      ". It laps the Earth every 92 minutes.";
+  }).catch(function(){
+    var line = el("issline");
+    if (line) line.textContent = "Couldn't reach the ISS tracker";
+  });
+}
+
+/* ---------- AI ---------- */
+function skyStory(){
+  if (!ASK) return;
+  haptic("light");
+  var btn = el("aibtn"); if (btn) btn.disabled = true;
+  ASK("Facts about tonight's sky at my location: " + facts +
+    " Write a warm, friendly 3-4 sentence stargazing guide for a beginner stepping outside tonight: what to look for first, where to look, and one delightful detail. Plain text, no markdown, no invented facts.",
+    {system:"You are a friendly astronomy guide. Use ONLY the provided facts; do not invent sky events. Plain text."})
+  .then(function(r){
+    el("aiout").textContent = String(r).trim();
+    el("aicard").style.display = "block";
+    if (btn) btn.disabled = false;
+    haptic("success");
+  }).catch(function(){
+    if (btn) btn.disabled = false;
+  });
+}
+
+/* ---------- location ---------- */
+function setupUI(msg){
+  if (issTimer){ clearInterval(issTimer); issTimer = null; }
+  el("where").innerHTML = "";
+  el("app").innerHTML =
+    '<div class="card setup"><h2>Where are you watching from?</h2>' +
+    '<label>City or place</label>' +
+    '<div class="row"><input id="q" placeholder="e.g. Bristol" onkeydown="if(event.key===\'Enter\')findPlace()">' +
+    '<button onclick="findPlace()">Go</button></div>' +
+    (LOC ? '<div style="margin-top:10px"><button style="width:100%;border-radius:12px;padding:12px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.08);color:#eef1fb;font-size:15px;font-weight:650" onclick="useGps()">📍 Use my location</button></div>' : "") +
+    '<p class="note" id="setupnote">' + (msg || "Your location is only used on this device, to point you at the right bit of sky.") + '</p></div>';
+}
+function useGps(){
+  haptic("light");
+  el("setupnote").textContent = "Locating…";
+  LOC.current().then(function(p){
+    obs = {lat:p.latitude, lon:p.longitude, label:(p.address || "Your location")};
+    store.setItem("obs", JSON.stringify(obs));
+    renderSky(); haptic("success");
+  }).catch(function(e){
+    el("setupnote").textContent = (e && e.message ? e.message + " — " : "") + "Try typing a place instead.";
+  });
+}
+function findPlace(){
+  var q = (el("q").value || "").trim();
+  if (!q) return;
+  haptic("light");
+  /* accept a raw "lat, lon" pair */
+  var m = q.match(/^\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*$/);
+  if (m){
+    obs = {lat:parseFloat(m[1]), lon:parseFloat(m[2]), label:"Lat " + m[1] + ", Lon " + m[2]};
+    store.setItem("obs", JSON.stringify(obs));
+    renderSky(); return;
+  }
+  el("setupnote").textContent = "Searching…";
+  var done = function(lat, lon, label){
+    obs = {lat:lat, lon:lon, label:label};
+    store.setItem("obs", JSON.stringify(obs));
+    renderSky(); haptic("success");
+  };
+  if (LOC && LOC.search){
+    LOC.search(q, {limit:1}).then(function(res){
+      if (res && res.length) done(res[0].latitude, res[0].longitude, res[0].name || q);
+      else throw new Error("none");
+    }).catch(function(){ geoFallback(q, done); });
+  } else geoFallback(q, done);
+}
+function geoFallback(q, done){
+  if (!NET){ el("setupnote").textContent = "Couldn't find that — try \"lat, lon\" (e.g. 51.45, -2.59)."; return; }
+  NET("https://geocoding-api.open-meteo.com/v1/search?count=1&name=" + encodeURIComponent(q)).then(function(r){
+    var j = JSON.parse(r.body);
+    if (j.results && j.results.length){
+      var p = j.results[0];
+      done(p.latitude, p.longitude, p.name + (p.country_code ? ", " + p.country_code : ""));
+    } else el("setupnote").textContent = "Couldn't find that place — try another spelling.";
+  }).catch(function(){
+    el("setupnote").textContent = "Couldn't search just now — try \"lat, lon\" instead.";
+  });
+}
+function changeLoc(){ haptic("light"); setupUI(); }
+
+/* ---------- boot ---------- */
+store.getItem("obs").then(function(v){
+  if (v){ try{ obs = JSON.parse(v); }catch(e){} }
+  if (obs && typeof obs.lat === "number") renderSky();
+  else if (LOC){
+    LOC.current().then(function(p){
+      obs = {lat:p.latitude, lon:p.longitude, label:(p.address || "Your location")};
+      store.setItem("obs", JSON.stringify(obs));
+      renderSky();
+    }).catch(function(){ setupUI(); });
+  } else setupUI();
+});
+</script>
+</body>
+</html>

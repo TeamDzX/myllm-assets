@@ -1,0 +1,509 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Guitar Tuner</title>
+<style>
+  :root { color-scheme: light dark; }
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body{
+    font-family:var(--myllm-font,-apple-system,system-ui,sans-serif);
+    background:var(--myllm-bg,#f2f2f7);
+    color:var(--myllm-text,#111);
+    max-width:820px; margin:0 auto;
+    padding:16px 16px calc(40px + env(safe-area-inset-bottom));
+  }
+  h1{ font-size:22px; font-weight:800; letter-spacing:-0.02em; margin:6px 2px 14px; }
+
+  .seg{ display:flex; background:var(--myllm-surface,#fff); border:1px solid var(--myllm-border,#e3e3e8); border-radius:14px; padding:3px; margin-bottom:14px; }
+  .seg button{
+    flex:1; border:none; background:none; color:var(--myllm-muted,#8a8a8e);
+    border-radius:11px; padding:10px; font-size:15px; font-weight:700;
+  }
+  .seg button.on{ background:var(--myllm-accent,#0a84ff); color:#fff; }
+
+  .card{
+    background:var(--myllm-surface,#fff); border:1px solid var(--myllm-border,#e3e3e8);
+    border-radius:16px; padding:14px; margin-bottom:12px;
+  }
+
+  /* ---- tuner dial ---- */
+  .dial{ position:relative; height:170px; overflow:hidden; margin-bottom:4px; }
+  .arc{
+    position:absolute; left:50%; bottom:0; transform:translateX(-50%);
+    width:280px; height:140px;
+    border-radius:280px 280px 0 0;
+    border:2px solid var(--myllm-border,#e3e3e8); border-bottom:none;
+  }
+  .tick{ position:absolute; left:50%; bottom:0; width:2px; height:140px; transform-origin:50% 100%; }
+  .tick i{ position:absolute; top:0; left:0; width:2px; height:10px; background:var(--myllm-border,#c9c9cf); }
+  .tick.mid i{ height:16px; background:#30d158; width:3px; }
+  .needle{
+    position:absolute; left:50%; bottom:0; width:4px; height:126px; margin-left:-2px;
+    transform-origin:50% 100%; border-radius:4px;
+    background:var(--myllm-accent,#0a84ff);
+    transition:transform .12s ease-out, background .12s;
+  }
+  .needle.good{ background:#30d158; }
+  .hub{ position:absolute; left:50%; bottom:-9px; width:18px; height:18px; margin-left:-9px; border-radius:50%; background:var(--myllm-accent,#0a84ff); }
+  .hub.good{ background:#30d158; }
+
+  .readout{ text-align:center; margin-bottom:6px; }
+  .note{ font-size:56px; font-weight:800; letter-spacing:-0.02em; line-height:1.05; }
+  .note sup{ font-size:24px; }
+  .cents{ font-size:15px; font-weight:650; color:var(--myllm-muted,#8a8a8e); min-height:22px; }
+  .cents.good{ color:#30d158; }
+  .freq{ font-size:12.5px; color:var(--myllm-muted,#8a8a8e); min-height:18px; }
+  .listenmsg{ text-align:center; font-size:13.5px; color:var(--myllm-muted,#8a8a8e); line-height:1.5; padding:6px 8px 2px; }
+  .micbtn{
+    display:block; margin:8px auto 2px; border:none; border-radius:99px; padding:12px 22px;
+    font-size:15px; font-weight:700; background:var(--myllm-accent,#0a84ff); color:#fff;
+  }
+
+  /* ---- strings ---- */
+  .strings{ display:flex; gap:8px; justify-content:center; margin-top:10px; }
+  .str{
+    flex:1; max-width:64px; aspect-ratio:0.86; border-radius:14px;
+    border:1px solid var(--myllm-border,#e3e3e8); background:var(--myllm-bg,#f2f2f7);
+    color:var(--myllm-text,#111);
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px;
+  }
+  .str b{ font-size:19px; font-weight:800; }
+  .str small{ font-size:10px; color:var(--myllm-muted,#8a8a8e); }
+  .str.near{ border-color:var(--myllm-accent,#0a84ff); background:rgba(10,132,255,.1); }
+  .str.good{ border-color:#30d158; background:rgba(48,209,88,.12); }
+  .str.playing{ border-color:#ff9500; background:rgba(255,149,0,.12); }
+  .strhint{ text-align:center; font-size:12px; color:var(--myllm-muted,#8a8a8e); margin-top:8px; }
+
+  .optrow{ display:flex; gap:10px; align-items:center; }
+  .optrow label{ font-size:11.5px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; color:var(--myllm-muted,#8a8a8e); }
+  .optrow select{
+    flex:1; font-size:15px; padding:9px 10px; border-radius:11px;
+    border:1px solid var(--myllm-border,#e3e3e8); background:var(--myllm-bg,#f2f2f7); color:var(--myllm-text,#111);
+  }
+  .stepper{ display:flex; align-items:center; gap:2px; }
+  .stepper button{
+    width:34px; height:34px; border-radius:10px; border:1px solid var(--myllm-border,#e3e3e8);
+    background:var(--myllm-bg,#f2f2f7); color:var(--myllm-text,#111); font-size:17px; font-weight:700;
+  }
+  .stepper b{ min-width:64px; text-align:center; font-size:14px; }
+
+  /* ---- metronome ---- */
+  .bpmwrap{ text-align:center; }
+  .bpm{ font-size:64px; font-weight:800; letter-spacing:-0.03em; line-height:1; }
+  .bpm small{ font-size:16px; font-weight:650; color:var(--myllm-muted,#8a8a8e); }
+  input[type=range]{ width:100%; margin:16px 0 6px; accent-color:var(--myllm-accent,#0a84ff); }
+  .beats{ display:flex; gap:8px; justify-content:center; margin:12px 0 4px; }
+  .beat{ width:16px; height:16px; border-radius:50%; background:var(--myllm-border,#d4d4da); transition:transform .08s, background .08s; }
+  .beat.hit{ background:var(--myllm-accent,#0a84ff); transform:scale(1.45); }
+  .beat.hit.acc{ background:#ff9500; }
+  .mrow{ display:flex; gap:10px; margin-top:14px; }
+  .mrow button{
+    flex:1; border:none; border-radius:14px; padding:15px; font-size:16px; font-weight:750;
+  }
+  .playbtn{ background:var(--myllm-accent,#0a84ff); color:#fff; }
+  .playbtn.on{ background:#ff3b30; }
+  .tapbtn{ background:var(--myllm-bg,#f2f2f7); color:var(--myllm-text,#111); border:1px solid var(--myllm-border,#e3e3e8) !important; }
+  .sig{ display:flex; gap:7px; justify-content:center; margin-top:12px; }
+  .sig button{
+    width:42px; height:36px; border-radius:10px; border:1px solid var(--myllm-border,#e3e3e8);
+    background:var(--myllm-bg,#f2f2f7); color:var(--myllm-text,#111); font-size:14px; font-weight:700;
+  }
+  .sig button.on{ background:var(--myllm-accent,#0a84ff); border-color:var(--myllm-accent,#0a84ff); color:#fff; }
+</style>
+</head>
+<body>
+
+<h1>🎸 Guitar Tuner</h1>
+
+<div class="seg">
+  <button id="tabTune" class="on" onclick="showTab('tune')">Tuner</button>
+  <button id="tabMetro" onclick="showTab('metro')">Metronome</button>
+</div>
+
+<div id="paneTune">
+  <div class="card">
+    <div class="dial" id="dial">
+      <div class="arc"></div>
+      <div class="needle" id="needle" style="transform:rotate(0deg)"></div>
+      <div class="hub" id="hub"></div>
+    </div>
+    <div class="readout">
+      <div class="note" id="note">—</div>
+      <div class="cents" id="cents"></div>
+      <div class="freq" id="freq"></div>
+    </div>
+    <div class="listenmsg" id="micmsg">The tuner listens through your microphone.</div>
+    <button class="micbtn" id="micbtn" onclick="startMic()">Start tuning</button>
+  </div>
+
+  <div class="card">
+    <div class="strings" id="strings"></div>
+    <div class="strhint">Tap a string to hear its reference tone.</div>
+  </div>
+
+  <div class="card">
+    <div class="optrow">
+      <label>Tuning</label>
+      <select id="preset" onchange="setPreset()"></select>
+      <div class="stepper">
+        <button onclick="calib(-1)">−</button>
+        <b id="a4">A4 440 Hz</b>
+        <button onclick="calib(1)">+</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="paneMetro" style="display:none">
+  <div class="card bpmwrap">
+    <div class="bpm"><span id="bpmval">100</span> <small>BPM</small></div>
+    <input type="range" id="bpmslider" min="30" max="240" value="100" oninput="setBpm(parseInt(this.value,10))">
+    <div class="beats" id="beats"></div>
+    <div class="sig" id="sig"></div>
+    <div class="mrow">
+      <button class="tapbtn" onclick="tapTempo()">Tap tempo</button>
+      <button class="playbtn" id="playbtn" onclick="toggleMetro()">Start</button>
+    </div>
+  </div>
+</div>
+
+<script>
+var store = window.myllmStorage || {getItem:function(){return Promise.resolve(null)}, setItem:function(){return Promise.resolve()}};
+function haptic(k){ if(window.myllmHaptic){ try{ myllmHaptic(k||'light'); }catch(_){} } }
+function el(id){ return document.getElementById(id); }
+
+var NOTE_NAMES = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
+var a4 = 440;
+
+var PRESETS = [
+  {id:"standard", name:"Standard (E A D G B E)", midi:[40,45,50,55,59,64]},
+  {id:"dropd",    name:"Drop D (D A D G B E)",   midi:[38,45,50,55,59,64]},
+  {id:"halfdown", name:"Half step down",          midi:[39,44,49,54,58,63]},
+  {id:"dadgad",   name:"DADGAD",                  midi:[38,45,50,55,57,62]},
+  {id:"openg",    name:"Open G (D G D G B D)",    midi:[38,43,50,55,59,62]}
+];
+var preset = PRESETS[0];
+
+function midiFreq(m){ return a4 * Math.pow(2, (m - 69) / 12); }
+function noteName(m){ return NOTE_NAMES[((m % 12) + 12) % 12]; }
+function octaveOf(m){ return Math.floor(m / 12) - 1; }
+
+/* ================= TUNER ================= */
+var actx = null, analyser = null, micStream = null, rafId = null;
+var buf = null;
+var recent = [];          /* recent detected freqs for median smoothing */
+var lockGood = false;
+
+function ensureCtx(){
+  if (!actx){
+    var AC = window.AudioContext || window.webkitAudioContext;
+    actx = new AC();
+  }
+  if (actx.state === "suspended") actx.resume();
+  return actx;
+}
+
+function startMic(){
+  haptic("light");
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+    el("micmsg").textContent = "Mic isn't available on this version of MyLLM — tune by ear with the reference tones below.";
+    el("micbtn").style.display = "none";
+    return;
+  }
+  el("micmsg").textContent = "Starting…";
+  navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false, noiseSuppression:false, autoGainControl:false}})
+  .then(function(s){
+    micStream = s;
+    var ctx = ensureCtx();
+    var src = ctx.createMediaStreamSource(s);
+    analyser = ctx.createAnalyser();
+    analyser.fftSize = 4096;   /* ~93ms window: low-E needs the longer view for cent accuracy */
+    src.connect(analyser);
+    buf = new Float32Array(analyser.fftSize);
+    el("micbtn").style.display = "none";
+    el("micmsg").textContent = "Play a string…";
+    loop();
+  })
+  .catch(function(){
+    el("micmsg").textContent = "Microphone blocked. Turn on “Allow apps to use the microphone” in Settings → MyLLMos Apps, then reopen — or tune by ear with the reference tones below.";
+  });
+}
+
+/* autocorrelation pitch detector (ACF2+, after Chris Wilson's pitch-detect) */
+function autoCorrelate(b, sampleRate){
+  var SIZE = b.length, rms = 0, i, j;
+  for (i = 0; i < SIZE; i++) rms += b[i]*b[i];
+  rms = Math.sqrt(rms / SIZE);
+  if (rms < 0.008) return -1;
+
+  var r1 = 0, r2 = SIZE - 1, thres = 0.2;
+  for (i = 0; i < SIZE/2; i++) if (Math.abs(b[i]) < thres){ r1 = i; break; }
+  for (i = 1; i < SIZE/2; i++) if (Math.abs(b[SIZE-i]) < thres){ r2 = SIZE - i; break; }
+  b = b.slice(r1, r2);
+  SIZE = b.length;
+  if (SIZE < 400) return -1;
+
+  /* only correlate lags in the guitar's range (55–1600 Hz) — keeps 4096-sample
+     windows cheap enough for realtime */
+  var maxLag = Math.min(SIZE - 1, Math.ceil(sampleRate / 55));
+  var c = new Float32Array(maxLag + 1);
+  for (i = 0; i <= maxLag; i++)
+    for (j = 0; j < SIZE - i; j++)
+      c[i] += b[j] * b[j+i];
+
+  var d = 0; while (d < maxLag && c[d] > c[d+1]) d++;
+  var maxval = -1, maxpos = -1;
+  for (i = d; i <= maxLag; i++){
+    if (c[i] > maxval){ maxval = c[i]; maxpos = i; }
+  }
+  if (maxpos <= 0) return -1;
+  var T0 = maxpos;
+  var x1 = c[T0-1], x2 = c[T0], x3 = c[T0+1] || x2;
+  var a = (x1 + x3 - 2*x2) / 2, bb = (x3 - x1) / 2;
+  if (a) T0 = T0 - bb / (2*a);
+  return sampleRate / T0;
+}
+
+function median(arr){
+  var s = arr.slice().sort(function(a,b){ return a-b; });
+  return s[Math.floor(s.length/2)];
+}
+
+var frameFlip = false;
+function loop(){
+  rafId = requestAnimationFrame(loop);
+  if (!analyser) return;
+  frameFlip = !frameFlip;
+  if (!frameFlip) return;   /* detect at ~30fps — plenty for a needle, half the CPU */
+  analyser.getFloatTimeDomainData(buf);
+  var f = autoCorrelate(buf, actx.sampleRate);
+  if (f > 55 && f < 1600){
+    recent.push(f);
+    if (recent.length > 7) recent.shift();
+    if (recent.length >= 3) showPitch(median(recent));
+  } else {
+    if (recent.length) recent.shift();
+    if (!recent.length) showSilence();
+  }
+}
+
+function showPitch(f){
+  var midiF = 69 + 12 * Math.log(f / a4) / Math.LN2;
+  var nearest = Math.round(midiF);
+  var cents = (midiF - nearest) * 100;
+  el("note").innerHTML = noteName(nearest).replace("#","<sup>♯</sup>") + "<sup>" + octaveOf(nearest) + "</sup>";
+  var good = Math.abs(cents) < 5;
+  el("cents").textContent = good ? "in tune" : (cents > 0 ? "+" : "") + Math.round(cents) + " cents — tune " + (cents > 0 ? "down" : "up");
+  el("cents").className = "cents" + (good ? " good" : "");
+  el("freq").textContent = f.toFixed(1) + " Hz";
+  var deg = Math.max(-45, Math.min(45, cents * 0.9));
+  el("needle").style.transform = "rotate(" + deg + "deg)";
+  el("needle").className = "needle" + (good ? " good" : "");
+  el("hub").className = "hub" + (good ? " good" : "");
+  if (good && !lockGood){ lockGood = true; haptic("success"); }
+  if (!good) lockGood = false;
+
+  /* highlight nearest target string */
+  var bestI = -1, bestD = 1e9;
+  preset.midi.forEach(function(m, i){
+    var d = Math.abs(Math.log(f / midiFreq(m)));
+    if (d < bestD){ bestD = d; bestI = i; }
+  });
+  renderStrings(bestI, good);
+}
+function showSilence(){
+  el("note").textContent = "—";
+  el("cents").textContent = "";
+  el("cents").className = "cents";
+  el("freq").textContent = "";
+  el("needle").style.transform = "rotate(0deg)";
+  el("needle").className = "needle";
+  el("hub").className = "hub";
+  lockGood = false;
+  renderStrings(-1, false);
+}
+
+/* ---- strings + reference tones ---- */
+var playingI = -1, toneNodes = null;
+
+function renderStrings(nearI, good){
+  el("strings").innerHTML = preset.midi.map(function(m, i){
+    var cls = i === playingI ? " playing" : (i === nearI ? (good ? " good" : " near") : "");
+    return '<button class="str' + cls + '" onclick="playRef(' + i + ')"><b>' + noteName(m) + '</b><small>' +
+      midiFreq(m).toFixed(1) + '</small></button>';
+  }).join("");
+}
+
+function playRef(i){
+  haptic("selection");
+  stopTone();
+  var ctx = ensureCtx();
+  var f = midiFreq(preset.midi[i]);
+  var o1 = ctx.createOscillator(), o2 = ctx.createOscillator(), g = ctx.createGain();
+  o1.type = "triangle"; o1.frequency.value = f;
+  o2.type = "sine"; o2.frequency.value = f * 2;   /* faint octave for a pluckier voice */
+  var g2 = ctx.createGain(); g2.gain.value = 0.18;
+  o1.connect(g); o2.connect(g2); g2.connect(g);
+  g.connect(ctx.destination);
+  var t = ctx.currentTime;
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(0.5, t + 0.02);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + 2.4);
+  o1.start(t); o2.start(t);
+  o1.stop(t + 2.5); o2.stop(t + 2.5);
+  toneNodes = {o1:o1, o2:o2, g:g};
+  playingI = i;
+  renderStrings(-1, false);
+  o1.onended = function(){ if (playingI === i){ playingI = -1; renderStrings(-1, false); } };
+}
+function stopTone(){
+  if (toneNodes){ try{ toneNodes.o1.stop(); toneNodes.o2.stop(); }catch(_){} toneNodes = null; }
+  playingI = -1;
+}
+
+/* ---- options ---- */
+function renderPreset(){
+  el("preset").innerHTML = PRESETS.map(function(p){
+    return '<option value="' + p.id + '"' + (p.id === preset.id ? " selected" : "") + '>' + p.name + '</option>';
+  }).join("");
+  el("a4").textContent = "A4 " + a4 + " Hz";
+  renderStrings(-1, false);
+}
+function setPreset(){
+  var id = el("preset").value;
+  preset = PRESETS.filter(function(p){ return p.id === id; })[0] || PRESETS[0];
+  haptic("selection");
+  store.setItem("tuner", JSON.stringify({preset:preset.id, a4:a4}));
+  renderStrings(-1, false);
+}
+function calib(dir){
+  a4 = Math.max(430, Math.min(450, a4 + dir));
+  el("a4").textContent = "A4 " + a4 + " Hz";
+  haptic("selection");
+  store.setItem("tuner", JSON.stringify({preset:preset.id, a4:a4}));
+  renderStrings(-1, false);
+}
+
+/* ================= METRONOME =================
+   Web Audio lookahead scheduler (25ms timer, 0.12s horizon) */
+var mOn = false, bpm = 100, beatsPerBar = 4, beatIdx = 0, nextT = 0, mTimer = null;
+var taps = [];
+
+function setBpm(v){
+  bpm = Math.max(30, Math.min(240, v));
+  el("bpmval").textContent = bpm;
+  el("bpmslider").value = bpm;
+  store.setItem("metro", JSON.stringify({bpm:bpm, beats:beatsPerBar}));
+}
+function renderSig(){
+  var opts = [1,2,3,4,5,6,7];
+  el("sig").innerHTML = opts.map(function(n){
+    return '<button class="' + (n === beatsPerBar ? "on" : "") + '" onclick="setSig(' + n + ')">' + n + '</button>';
+  }).join("");
+  el("beats").innerHTML = Array.apply(null, Array(beatsPerBar)).map(function(){
+    return '<div class="beat"></div>';
+  }).join("");
+}
+function setSig(n){
+  beatsPerBar = n; beatIdx = 0;
+  haptic("selection"); renderSig();
+  store.setItem("metro", JSON.stringify({bpm:bpm, beats:beatsPerBar}));
+}
+function click(t, accent){
+  var ctx = ensureCtx();
+  var o = ctx.createOscillator(), g = ctx.createGain();
+  o.type = "square";
+  o.frequency.value = accent ? 1400 : 900;
+  o.connect(g); g.connect(ctx.destination);
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(accent ? 0.6 : 0.4, t + 0.002);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + 0.05);
+  o.start(t); o.stop(t + 0.06);
+}
+function scheduler(){
+  var ctx = ensureCtx();
+  while (nextT < ctx.currentTime + 0.12){
+    var accent = (beatIdx % beatsPerBar) === 0;
+    click(nextT, accent);
+    flashBeat(beatIdx % beatsPerBar, accent, (nextT - ctx.currentTime) * 1000);
+    nextT += 60 / bpm;
+    beatIdx++;
+  }
+}
+function flashBeat(i, accent, delayMs){
+  setTimeout(function(){
+    var dots = el("beats").children;
+    for (var k = 0; k < dots.length; k++) dots[k].className = "beat";
+    if (dots[i]) dots[i].className = "beat hit" + (accent ? " acc" : "");
+  }, Math.max(0, delayMs));
+}
+function toggleMetro(){
+  haptic("light");
+  if (mOn){
+    mOn = false;
+    clearInterval(mTimer); mTimer = null;
+    el("playbtn").textContent = "Start"; el("playbtn").className = "playbtn";
+  } else {
+    var ctx = ensureCtx();
+    mOn = true; beatIdx = 0; nextT = ctx.currentTime + 0.08;
+    mTimer = setInterval(scheduler, 25);
+    el("playbtn").textContent = "Stop"; el("playbtn").className = "playbtn on";
+  }
+}
+function tapTempo(){
+  haptic("selection");
+  var now = Date.now();
+  if (taps.length && now - taps[taps.length-1] > 2200) taps = [];
+  taps.push(now);
+  if (taps.length > 5) taps.shift();
+  if (taps.length >= 2){
+    var iv = 0;
+    for (var i = 1; i < taps.length; i++) iv += taps[i] - taps[i-1];
+    iv /= (taps.length - 1);
+    setBpm(Math.round(60000 / iv));
+  }
+}
+
+/* ================= tabs + boot ================= */
+function showTab(which){
+  haptic("selection");
+  el("paneTune").style.display = which === "tune" ? "block" : "none";
+  el("paneMetro").style.display = which === "metro" ? "block" : "none";
+  el("tabTune").className = which === "tune" ? "on" : "";
+  el("tabMetro").className = which === "metro" ? "on" : "";
+  if (which === "metro" && rafId){ /* keep tuner running; it's cheap and users flip back */ }
+}
+
+Promise.all([store.getItem("tuner"), store.getItem("metro")]).then(function(vals){
+  if (vals[0]){ try{
+    var t = JSON.parse(vals[0]);
+    if (t.a4) a4 = t.a4;
+    var p = PRESETS.filter(function(x){ return x.id === t.preset; })[0];
+    if (p) preset = p;
+  }catch(e){} }
+  if (vals[1]){ try{
+    var m = JSON.parse(vals[1]);
+    if (m.bpm) bpm = m.bpm;
+    if (m.beats) beatsPerBar = m.beats;
+  }catch(e){} }
+  setBpm(bpm);
+  renderPreset();
+  renderSig();
+});
+
+/* draw dial ticks */
+(function(){
+  var dial = el("dial");
+  for (var c = -50; c <= 50; c += 10){
+    var t = document.createElement("div");
+    t.className = "tick" + (c === 0 ? " mid" : "");
+    t.style.transform = "rotate(" + (c * 0.9) + "deg)";
+    t.innerHTML = "<i></i>";
+    dial.insertBefore(t, el("needle"));
+  }
+})();
+</script>
+</body>
+</html>

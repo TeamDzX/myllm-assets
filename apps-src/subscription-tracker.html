@@ -1,0 +1,377 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Subscription Tracker</title>
+<style>
+  :root { color-scheme: light dark; }
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body{
+    font-family:var(--myllm-font,-apple-system,system-ui,sans-serif);
+    background:var(--myllm-bg,#f2f2f7);
+    color:var(--myllm-text,#111);
+    max-width:820px; margin:0 auto;
+    padding:16px 16px calc(96px + env(safe-area-inset-bottom));
+  }
+  h1{ font-size:22px; font-weight:800; letter-spacing:-0.02em; margin:6px 2px 14px; display:flex; align-items:center; gap:8px; }
+  h1 select{
+    margin-left:auto; font-size:14px; font-weight:700; border:1px solid var(--myllm-border,#e3e3e8);
+    background:var(--myllm-surface,#fff); color:var(--myllm-text,#111); border-radius:10px; padding:6px 8px;
+  }
+
+  .totals{
+    display:flex; gap:10px; margin-bottom:14px;
+  }
+  .tot{
+    flex:1; background:var(--myllm-surface,#fff); border:1px solid var(--myllm-border,#e3e3e8);
+    border-radius:16px; padding:12px 14px;
+  }
+  .tot small{ display:block; font-size:11px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--myllm-muted,#8a8a8e); margin-bottom:3px; }
+  .tot b{ font-size:22px; font-weight:800; letter-spacing:-0.02em; }
+  .tot span{ font-size:12px; color:var(--myllm-muted,#8a8a8e); }
+
+  .bars{ background:var(--myllm-surface,#fff); border:1px solid var(--myllm-border,#e3e3e8); border-radius:16px; padding:12px 14px; margin-bottom:14px; }
+  .bars small{ font-size:11px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--myllm-muted,#8a8a8e); }
+  .bar{ margin-top:8px; }
+  .bar .lbl{ display:flex; justify-content:space-between; font-size:12.5px; font-weight:600; margin-bottom:3px; }
+  .bar .lbl i{ font-style:normal; color:var(--myllm-muted,#8a8a8e); font-weight:500; }
+  .bar .track{ height:7px; border-radius:99px; background:var(--myllm-bg,#f2f2f7); overflow:hidden; }
+  .bar .fill{ height:100%; border-radius:99px; background:var(--myllm-accent,#0a84ff); }
+
+  .sub{
+    display:flex; align-items:center; gap:12px;
+    background:var(--myllm-surface,#fff); border:1px solid var(--myllm-border,#e3e3e8);
+    border-radius:16px; padding:12px 14px; margin-bottom:10px;
+  }
+  .sub.paused{ opacity:.55; }
+  .sub .dot{ width:38px; height:38px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; background:var(--myllm-bg,#f2f2f7); }
+  .sub .mid{ flex:1; min-width:0; }
+  .sub .mid b{ display:block; font-size:15.5px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .sub .mid small{ font-size:12.5px; color:var(--myllm-muted,#8a8a8e); }
+  .sub .right{ text-align:right; flex-shrink:0; }
+  .sub .right b{ display:block; font-size:15px; font-weight:750; }
+  .sub .right small{ font-size:11.5px; color:var(--myllm-muted,#8a8a8e); }
+  .due{ color:#ff9500 !important; font-weight:700 !important; }
+  .today{ color:#ff3b30 !important; font-weight:700 !important; }
+
+  .empty{ text-align:center; padding:44px 20px; color:var(--myllm-muted,#8a8a8e); font-size:14.5px; line-height:1.5; }
+  .empty .big{ font-size:40px; margin-bottom:10px; }
+
+  .fab{
+    position:fixed; right:18px; bottom:calc(20px + env(safe-area-inset-bottom));
+    width:56px; height:56px; border-radius:50%; border:none;
+    background:var(--myllm-accent,#0a84ff); color:#fff; font-size:28px; font-weight:600; line-height:1;
+    box-shadow:0 8px 24px -6px rgba(10,132,255,.55); z-index:50;
+  }
+  .aibtn{
+    position:fixed; left:18px; bottom:calc(20px + env(safe-area-inset-bottom));
+    height:44px; border-radius:99px; border:1px solid var(--myllm-border,#e3e3e8);
+    background:var(--myllm-surface,#fff); color:var(--myllm-text,#111);
+    font-size:14px; font-weight:650; padding:0 16px; z-index:50; display:flex; align-items:center; gap:7px;
+  }
+
+  /* modal sheet */
+  .veil{ position:fixed; inset:0; background:rgba(0,0,0,.4); z-index:90; display:none; }
+  .veil.on{ display:block; }
+  .sheet{
+    position:fixed; left:0; right:0; bottom:0; z-index:95;
+    background:var(--myllm-surface,#fff); border-radius:22px 22px 0 0;
+    padding:18px 18px calc(24px + env(safe-area-inset-bottom));
+    transform:translateY(105%); transition:transform .28s ease;
+    max-width:820px; margin:0 auto; max-height:86dvh; overflow-y:auto;
+  }
+  .sheet.on{ transform:none; }
+  .sheet h2{ font-size:17px; font-weight:800; margin-bottom:14px; }
+  .sheet label{ display:block; font-size:11.5px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; color:var(--myllm-muted,#8a8a8e); margin:12px 0 5px; }
+  .sheet input, .sheet select{
+    width:100%; font-size:16px; padding:11px 12px; border-radius:12px;
+    border:1px solid var(--myllm-border,#e3e3e8); background:var(--myllm-bg,#f2f2f7); color:var(--myllm-text,#111);
+  }
+  .row2{ display:flex; gap:10px; }
+  .row2 > div{ flex:1; }
+  .chips{ display:flex; flex-wrap:wrap; gap:7px; }
+  .chip{
+    border:1px solid var(--myllm-border,#e3e3e8); background:var(--myllm-bg,#f2f2f7); color:var(--myllm-text,#111);
+    border-radius:99px; padding:7px 13px; font-size:13.5px; font-weight:600;
+  }
+  .chip.on{ background:var(--myllm-accent,#0a84ff); border-color:var(--myllm-accent,#0a84ff); color:#fff; }
+  .actions{ display:flex; gap:10px; margin-top:18px; }
+  .btn{
+    flex:1; border:none; border-radius:14px; padding:14px; font-size:16px; font-weight:700;
+  }
+  .btn.primary{ background:var(--myllm-accent,#0a84ff); color:#fff; }
+  .btn.ghost{ background:var(--myllm-bg,#f2f2f7); color:var(--myllm-text,#111); }
+  .btn.danger{ background:transparent; color:#ff3b30; }
+  .btn:disabled{ opacity:.5; }
+
+  .aiout{
+    background:var(--myllm-surface,#fff); border:1px solid var(--myllm-border,#e3e3e8);
+    border-radius:16px; padding:14px; margin-bottom:14px; font-size:14.5px; line-height:1.5; white-space:pre-wrap; display:none;
+  }
+  .aiout.on{ display:block; }
+  .aiout .x{ float:right; border:none; background:none; color:var(--myllm-muted,#8a8a8e); font-size:16px; padding:0 2px; }
+</style>
+</head>
+<body>
+
+<h1>💳 Subscriptions
+  <select id="cur" onchange="setCur()" aria-label="Currency">
+    <option>£</option><option>$</option><option>€</option><option>¥</option><option>₹</option><option>kr</option><option>zł</option>
+  </select>
+</h1>
+
+<div class="totals">
+  <div class="tot"><small>Per month</small><b id="permo">–</b></div>
+  <div class="tot"><small>Per year</small><b id="peryr">–</b><span id="count"></span></div>
+</div>
+
+<div class="aiout" id="aiout"><button class="x" onclick="hideAi()" aria-label="Dismiss">✕</button><span id="aitext"></span></div>
+
+<div class="bars" id="bars" style="display:none"><small>Where it goes / month</small><div id="barlist"></div></div>
+
+<div id="list"></div>
+
+<button class="aibtn" id="aibtn" onclick="audit()" style="display:none">✨ AI audit</button>
+<button class="fab" onclick="openSheet()" aria-label="Add subscription">+</button>
+
+<div class="veil" id="veil" onclick="closeSheet()"></div>
+<div class="sheet" id="sheet">
+  <h2 id="sheetTitle">New subscription</h2>
+  <label>Name</label>
+  <input id="f_name" placeholder="Netflix, iCloud, gym…" autocomplete="off">
+  <div class="row2">
+    <div><label>Price</label><input id="f_price" inputmode="decimal" placeholder="9.99"></div>
+    <div><label>Billing</label>
+      <select id="f_cycle">
+        <option value="w">Weekly</option>
+        <option value="m" selected>Monthly</option>
+        <option value="q">Every 3 months</option>
+        <option value="y">Yearly</option>
+      </select>
+    </div>
+  </div>
+  <label>Next renewal</label>
+  <input id="f_date" type="date">
+  <label>Category</label>
+  <div class="chips" id="f_cats"></div>
+  <div class="actions">
+    <button class="btn ghost" onclick="closeSheet()">Cancel</button>
+    <button class="btn primary" id="saveBtn" onclick="saveSub()">Save</button>
+  </div>
+  <div class="actions" id="dangerRow" style="display:none">
+    <button class="btn ghost" id="pauseBtn" onclick="togglePause()">Pause</button>
+    <button class="btn danger" id="delBtn" onclick="delSub()">Delete</button>
+  </div>
+</div>
+
+<!-- AI thinking pill (house convention) -->
+<style>
+@keyframes myllmAiSpin{to{transform:rotate(360deg)}}
+.myllm-ai-busy{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(18px);z-index:99999;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;display:flex;align-items:center;gap:10px;background:rgba(28,28,30,.96);color:#fff;border-radius:999px;padding:10px 16px 10px 14px;box-shadow:0 6px 22px rgba(0,0,0,.4);font-size:14px;font-weight:600;max-width:92%}
+.myllm-ai-busy.on{opacity:1;transform:translateX(-50%) translateY(0)}
+.myllm-ai-cog{font-size:18px;animation:myllmAiSpin 2.4s linear infinite;filter:drop-shadow(0 0 5px rgba(124,92,255,.85))}
+.myllm-ai-busy small{font-weight:400;opacity:.6}
+</style>
+<script>
+(function(){if(window.__myllmAiWrap||typeof window.myllmAsk!=='function')return;window.__myllmAiWrap=true;
+var orig=window.myllmAsk,depth=0,node=null;
+function ensure(){if(node)return;node=document.createElement('div');node.className='myllm-ai-busy';
+node.innerHTML='<span class="myllm-ai-cog">⚙️</span><span>AI is thinking… <small>privately, on your device</small></span>';
+(document.body||document.documentElement).appendChild(node);}
+function show(){ensure();depth++;node.classList.add('on');}
+function hide(){depth=Math.max(0,depth-1);if(depth===0&&node)node.classList.remove('on');}
+window.myllmAsk=function(){show();var p;try{p=orig.apply(this,arguments);}catch(e){hide();throw e;}
+return Promise.resolve(p).then(function(r){hide();return r;},function(e){hide();throw e;});};})();
+</script>
+
+<script>
+var store = window.myllmStorage || {getItem:function(){return Promise.resolve(null)}, setItem:function(){return Promise.resolve()}};
+function haptic(k){ if(window.myllmHaptic){ try{ myllmHaptic(k||'light'); }catch(_){} } }
+
+var CATS = [
+  {id:"streaming", name:"Streaming", ico:"📺"},
+  {id:"music",     name:"Music",     ico:"🎵"},
+  {id:"cloud",     name:"Cloud & apps", ico:"☁️"},
+  {id:"fitness",   name:"Fitness",   ico:"💪"},
+  {id:"news",      name:"News & reading", ico:"📰"},
+  {id:"gaming",    name:"Gaming",    ico:"🎮"},
+  {id:"home",      name:"Home & bills", ico:"🏠"},
+  {id:"other",     name:"Other",     ico:"📦"}
+];
+var CYCLES = {w:{name:"weekly", perMonth:52/12, days:7}, m:{name:"monthly", perMonth:1, days:0}, q:{name:"quarterly", perMonth:1/3, days:0}, y:{name:"yearly", perMonth:1/12, days:0}};
+
+var subs = [];
+var currency = "£";
+var editing = null;       // id being edited, or null
+var pickedCat = "other";
+var armDelete = false;
+
+function uid(){ return "s" + Date.now().toString(36) + Math.floor(Math.random()*1e6).toString(36); }
+function el(id){ return document.getElementById(id); }
+function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+function money(n){ return currency + (Math.round(n*100)/100).toFixed(2); }
+
+function save(){ store.setItem("subs", JSON.stringify(subs)); store.setItem("cur", currency); }
+
+/* advance a renewal date until it's today or later */
+function rollForward(s){
+  var d = new Date(s.next + "T12:00:00");
+  var today = new Date(); today.setHours(0,0,0,0);
+  var guard = 0;
+  while (d < today && guard++ < 600){
+    if (s.cycle === "w") d.setDate(d.getDate()+7);
+    else if (s.cycle === "m") d.setMonth(d.getMonth()+1);
+    else if (s.cycle === "q") d.setMonth(d.getMonth()+3);
+    else d.setFullYear(d.getFullYear()+1);
+  }
+  var iso = d.toISOString().slice(0,10);
+  if (iso !== s.next){ s.next = iso; return true; }
+  return false;
+}
+
+function daysUntil(iso){
+  var today = new Date(); today.setHours(0,0,0,0);
+  var d = new Date(iso + "T00:00:00");
+  return Math.round((d - today) / 86400000);
+}
+
+function monthly(s){ return s.price * CYCLES[s.cycle].perMonth; }
+
+function render(){
+  var active = subs.filter(function(s){ return !s.paused; });
+  var mo = active.reduce(function(a,s){ return a + monthly(s); }, 0);
+  el("permo").textContent = subs.length ? money(mo) : "–";
+  el("peryr").textContent = subs.length ? money(mo*12) : "–";
+  el("count").textContent = subs.length ? (" " + active.length + " active") : "";
+  el("aibtn").style.display = (window.myllmAsk && subs.length >= 2) ? "flex" : "none";
+
+  /* category bars */
+  var byCat = {};
+  active.forEach(function(s){ byCat[s.cat] = (byCat[s.cat]||0) + monthly(s); });
+  var keys = Object.keys(byCat).sort(function(a,b){ return byCat[b]-byCat[a]; });
+  if (keys.length >= 2){
+    el("bars").style.display = "block";
+    var max = byCat[keys[0]];
+    el("barlist").innerHTML = keys.map(function(k){
+      var c = CATS.filter(function(x){return x.id===k;})[0] || CATS[CATS.length-1];
+      return '<div class="bar"><div class="lbl"><span>'+c.ico+' '+esc(c.name)+'</span><i>'+money(byCat[k])+'</i></div>'+
+             '<div class="track"><div class="fill" style="width:'+Math.max(6, byCat[k]/max*100)+'%"></div></div></div>';
+    }).join("");
+  } else el("bars").style.display = "none";
+
+  /* list */
+  if (!subs.length){
+    el("list").innerHTML = '<div class="empty"><div class="big">💳</div>Track every subscription in one place.<br>Tap <b>+</b> to add your first — you might be surprised what it all adds up to.</div>';
+    return;
+  }
+  var sorted = subs.slice().sort(function(a,b){
+    if (!!a.paused !== !!b.paused) return a.paused ? 1 : -1;
+    return a.next < b.next ? -1 : 1;
+  });
+  el("list").innerHTML = sorted.map(function(s){
+    var c = CATS.filter(function(x){return x.id===s.cat;})[0] || CATS[CATS.length-1];
+    var d = daysUntil(s.next);
+    var when = s.paused ? "paused" : (d === 0 ? "renews today" : d === 1 ? "renews tomorrow" : "renews in " + d + " days");
+    var cls = s.paused ? "" : (d === 0 ? "today" : d <= 7 ? "due" : "");
+    return '<div class="sub'+(s.paused?' paused':'')+'" onclick="openSheet(\''+s.id+'\')">'+
+      '<div class="dot">'+c.ico+'</div>'+
+      '<div class="mid"><b>'+esc(s.name)+'</b><small class="'+cls+'">'+when+'</small></div>'+
+      '<div class="right"><b>'+money(s.price)+'</b><small>'+CYCLES[s.cycle].name+'</small></div>'+
+    '</div>';
+  }).join("");
+}
+
+/* ---- sheet ---- */
+function renderCats(){
+  el("f_cats").innerHTML = CATS.map(function(c){
+    return '<button class="chip'+(pickedCat===c.id?' on':'')+'" onclick="pickCat(\''+c.id+'\')">'+c.ico+' '+esc(c.name)+'</button>';
+  }).join("");
+}
+function pickCat(id){ pickedCat = id; haptic("selection"); renderCats(); }
+
+function openSheet(id){
+  editing = id || null;
+  armDelete = false;
+  var s = editing ? subs.filter(function(x){return x.id===editing;})[0] : null;
+  el("sheetTitle").textContent = s ? "Edit subscription" : "New subscription";
+  el("f_name").value = s ? s.name : "";
+  el("f_price").value = s ? s.price : "";
+  el("f_cycle").value = s ? s.cycle : "m";
+  el("f_date").value = s ? s.next : new Date(Date.now()+86400000*30).toISOString().slice(0,10);
+  pickedCat = s ? s.cat : "other";
+  el("dangerRow").style.display = s ? "flex" : "none";
+  el("delBtn").textContent = "Delete";
+  el("pauseBtn").textContent = (s && s.paused) ? "Resume" : "Pause";
+  renderCats();
+  el("veil").classList.add("on");
+  el("sheet").classList.add("on");
+  haptic("light");
+}
+function closeSheet(){
+  el("veil").classList.remove("on");
+  el("sheet").classList.remove("on");
+}
+function saveSub(){
+  var name = el("f_name").value.trim();
+  var price = parseFloat(String(el("f_price").value).replace(",", "."));
+  var date = el("f_date").value;
+  if (!name || !(price > 0) || !date){ haptic("light"); el("f_name").focus(); return; }
+  if (editing){
+    var s = subs.filter(function(x){return x.id===editing;})[0];
+    s.name = name; s.price = price; s.cycle = el("f_cycle").value; s.next = date; s.cat = pickedCat;
+    rollForward(s);
+  } else {
+    var ns = {id:uid(), name:name, price:price, cycle:el("f_cycle").value, next:date, cat:pickedCat, paused:false};
+    rollForward(ns);
+    subs.push(ns);
+  }
+  save(); render(); closeSheet(); haptic("success");
+}
+function delSub(){
+  if (!armDelete){ armDelete = true; el("delBtn").textContent = "Really delete?"; haptic("light"); return; }
+  subs = subs.filter(function(x){return x.id!==editing;});
+  save(); render(); closeSheet(); haptic("success");
+}
+function togglePause(){
+  var s = subs.filter(function(x){return x.id===editing;})[0];
+  if (s){ s.paused = !s.paused; save(); render(); }
+  closeSheet(); haptic("selection");
+}
+function setCur(){ currency = el("cur").value; save(); render(); }
+
+/* ---- optional AI audit ---- */
+function audit(){
+  if (!window.myllmAsk) return;
+  haptic("light");
+  var lines = subs.map(function(s){
+    return s.name + ": " + currency + s.price + " " + CYCLES[s.cycle].name + (s.paused ? " (paused)" : "");
+  }).join("; ");
+  var mo = subs.filter(function(s){return !s.paused;}).reduce(function(a,s){return a+monthly(s);},0);
+  var prompt = "My subscriptions: " + lines + ". Total ≈ " + money(mo) + "/month. " +
+    "In under 120 words, give a friendly audit: the yearly total, my biggest costs, any likely overlap (e.g. two music or two TV services), and 1–2 candidates to consider cancelling or switching to yearly billing. Plain text, no markdown.";
+  myllmAsk(prompt, {system:"You are a concise, friendly personal-finance helper. Plain text only."})
+    .then(function(r){
+      el("aitext").textContent = String(r).trim();
+      el("aiout").classList.add("on");
+      haptic("success");
+    })
+    .catch(function(){
+      el("aitext").textContent = "The AI couldn't run just now — try again in a moment.";
+      el("aiout").classList.add("on");
+    });
+}
+function hideAi(){ el("aiout").classList.remove("on"); }
+
+/* ---- boot ---- */
+Promise.all([store.getItem("subs"), store.getItem("cur")]).then(function(vals){
+  if (vals[0]){ try{ subs = JSON.parse(vals[0]) || []; }catch(e){} }
+  if (vals[1]){ currency = vals[1]; el("cur").value = currency; }
+  var changed = false;
+  subs.forEach(function(s){ if (!s.paused && rollForward(s)) changed = true; });
+  if (changed) save();
+  render();
+});
+</script>
+</body>
+</html>

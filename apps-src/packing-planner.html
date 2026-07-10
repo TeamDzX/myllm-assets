@@ -1,0 +1,401 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Packing Planner</title>
+<style>
+  :root { color-scheme: light dark; }
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body{
+    font-family:var(--myllm-font,-apple-system,system-ui,sans-serif);
+    background:var(--myllm-bg,#f2f2f7);
+    color:var(--myllm-text,#111);
+    max-width:820px; margin:0 auto;
+    padding:16px 16px calc(40px + env(safe-area-inset-bottom));
+  }
+  h1{ font-size:22px; font-weight:800; letter-spacing:-0.02em; margin:6px 2px 14px; }
+  .card{
+    background:var(--myllm-surface,#fff); border:1px solid var(--myllm-border,#e3e3e8);
+    border-radius:16px; padding:14px; margin-bottom:12px;
+  }
+  label{ display:block; font-size:11.5px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; color:var(--myllm-muted,#8a8a8e); margin:10px 0 5px; }
+  label:first-child{ margin-top:0; }
+  input, select{
+    width:100%; font-size:16px; padding:11px 12px; border-radius:12px;
+    border:1px solid var(--myllm-border,#e3e3e8); background:var(--myllm-bg,#f2f2f7); color:var(--myllm-text,#111);
+  }
+  .row2{ display:flex; gap:10px; }
+  .row2 > div{ flex:1; }
+  .chips{ display:flex; flex-wrap:wrap; gap:7px; }
+  .chip{
+    border:1px solid var(--myllm-border,#e3e3e8); background:var(--myllm-bg,#f2f2f7); color:var(--myllm-text,#111);
+    border-radius:99px; padding:8px 14px; font-size:14px; font-weight:600;
+  }
+  .chip.on{ background:var(--myllm-accent,#0a84ff); border-color:var(--myllm-accent,#0a84ff); color:#fff; }
+  .go{
+    width:100%; margin-top:14px; border:none; border-radius:14px; padding:15px; font-size:16.5px; font-weight:750;
+    background:var(--myllm-accent,#0a84ff); color:#fff;
+  }
+  .go:disabled{ opacity:.55; }
+  .note{ font-size:13px; color:var(--myllm-muted,#8a8a8e); line-height:1.45; margin-top:8px; }
+
+  /* weather strip */
+  .wx{ display:flex; gap:6px; overflow-x:auto; padding-bottom:4px; scrollbar-width:none; }
+  .wx::-webkit-scrollbar{ display:none; }
+  .day{
+    min-width:64px; text-align:center; background:var(--myllm-bg,#f2f2f7);
+    border-radius:12px; padding:8px 4px;
+  }
+  .day small{ display:block; font-size:10.5px; font-weight:700; color:var(--myllm-muted,#8a8a8e); }
+  .day .i{ font-size:20px; line-height:1.5; }
+  .day b{ font-size:12px; font-weight:700; }
+  .day i{ font-style:normal; font-size:11px; color:var(--myllm-muted,#8a8a8e); }
+  .wxhead{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px; }
+  .wxhead b{ font-size:15px; font-weight:750; }
+  .wxhead span{ font-size:12px; color:var(--myllm-muted,#8a8a8e); }
+
+  /* checklist */
+  .prog{ height:8px; border-radius:99px; background:var(--myllm-bg,#f2f2f7); overflow:hidden; margin:8px 0 2px; }
+  .prog div{ height:100%; border-radius:99px; background:#30d158; transition:width .25s; }
+  .phead{ display:flex; justify-content:space-between; align-items:baseline; }
+  .phead b{ font-size:15px; font-weight:750; }
+  .phead span{ font-size:12.5px; color:var(--myllm-muted,#8a8a8e); }
+  .grp{ margin-top:12px; }
+  .grp > b{ display:block; font-size:13px; font-weight:800; letter-spacing:.02em; margin-bottom:6px; }
+  .it{
+    display:flex; align-items:center; gap:11px; padding:9px 2px;
+    border-bottom:1px solid var(--myllm-border,#e3e3e8); font-size:15.5px;
+  }
+  .it:last-child{ border-bottom:none; }
+  .it .box{
+    width:24px; height:24px; border-radius:8px; border:2px solid var(--myllm-border,#c9c9cf);
+    display:flex; align-items:center; justify-content:center; color:#fff; font-size:14px; flex-shrink:0;
+  }
+  .it.on .box{ background:#30d158; border-color:#30d158; }
+  .it.on span{ text-decoration:line-through; color:var(--myllm-muted,#8a8a8e); }
+  .it .rm{ margin-left:auto; border:none; background:none; color:var(--myllm-muted,#8a8a8e); font-size:15px; padding:4px 6px; }
+  .addrow{ display:flex; gap:8px; margin-top:12px; }
+  .addrow input{ flex:1; }
+  .addrow button{
+    border:none; border-radius:12px; padding:0 16px; font-size:15px; font-weight:700;
+    background:var(--myllm-accent,#0a84ff); color:#fff;
+  }
+  .toolrow{ display:flex; gap:8px; margin-top:14px; }
+  .toolrow button{
+    flex:1; border:1px solid var(--myllm-border,#e3e3e8); border-radius:12px; padding:11px;
+    font-size:14px; font-weight:650; background:var(--myllm-bg,#f2f2f7); color:var(--myllm-text,#111);
+  }
+</style>
+</head>
+<body>
+
+<h1>🧳 Packing Planner</h1>
+
+<div class="card" id="form">
+  <label>Where to?</label>
+  <input id="dest" placeholder="Lisbon, Tokyo, Lake District…" autocomplete="off">
+  <div class="row2">
+    <div><label>First day</label><input id="start" type="date"></div>
+    <div><label>Nights</label><input id="nights" inputmode="numeric" value="4"></div>
+  </div>
+  <label>Trip type</label>
+  <div class="chips" id="types"></div>
+  <button class="go" id="goBtn" onclick="plan()">Pack for this trip</button>
+  <p class="note" id="formNote"></p>
+</div>
+
+<div class="card" id="wxcard" style="display:none">
+  <div class="wxhead"><b id="wxplace"></b><span id="wxsum"></span></div>
+  <div class="wx" id="wxdays"></div>
+</div>
+
+<div class="card" id="listcard" style="display:none">
+  <div class="phead"><b id="listtitle">Your list</b><span id="listcount"></span></div>
+  <div class="prog"><div id="progfill" style="width:0%"></div></div>
+  <div id="groups"></div>
+  <div class="addrow">
+    <input id="newitem" placeholder="Add your own item…" onkeydown="if(event.key==='Enter')addItem()">
+    <button onclick="addItem()">Add</button>
+  </div>
+  <div class="toolrow">
+    <button onclick="shareList()">Share</button>
+    <button onclick="untickAll()">Untick all</button>
+    <button onclick="newTrip()">New trip</button>
+  </div>
+</div>
+
+<!-- AI thinking pill (house convention) -->
+<style>
+@keyframes myllmAiSpin{to{transform:rotate(360deg)}}
+.myllm-ai-busy{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(18px);z-index:99999;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;display:flex;align-items:center;gap:10px;background:rgba(28,28,30,.96);color:#fff;border-radius:999px;padding:10px 16px 10px 14px;box-shadow:0 6px 22px rgba(0,0,0,.4);font-size:14px;font-weight:600;max-width:92%}
+.myllm-ai-busy.on{opacity:1;transform:translateX(-50%) translateY(0)}
+.myllm-ai-cog{font-size:18px;animation:myllmAiSpin 2.4s linear infinite;filter:drop-shadow(0 0 5px rgba(124,92,255,.85))}
+.myllm-ai-busy small{font-weight:400;opacity:.6}
+</style>
+<script>
+(function(){if(window.__myllmAiWrap||typeof window.myllmAsk!=='function')return;window.__myllmAiWrap=true;
+var orig=window.myllmAsk,depth=0,node=null;
+function ensure(){if(node)return;node=document.createElement('div');node.className='myllm-ai-busy';
+node.innerHTML='<span class="myllm-ai-cog">⚙️</span><span>AI is thinking… <small>privately, on your device</small></span>';
+(document.body||document.documentElement).appendChild(node);}
+function show(){ensure();depth++;node.classList.add('on');}
+function hide(){depth=Math.max(0,depth-1);if(depth===0&&node)node.classList.remove('on');}
+window.myllmAsk=function(){show();var p;try{p=orig.apply(this,arguments);}catch(e){hide();throw e;}
+return Promise.resolve(p).then(function(r){hide();return r;},function(e){hide();throw e;});};})();
+</script>
+
+<script>
+var store = window.myllmStorage || {getItem:function(){return Promise.resolve(null)}, setItem:function(){return Promise.resolve()}};
+function haptic(k){ if(window.myllmHaptic){ try{ myllmHaptic(k||'light'); }catch(_){} } }
+var NET = window.myllmFetch || null;
+var ASK = window.myllmAsk || null;
+
+var TYPES = [
+  {id:"city",     name:"🏙️ City break"},
+  {id:"beach",    name:"🏖️ Beach"},
+  {id:"hiking",   name:"🥾 Hiking"},
+  {id:"business", name:"💼 Business"},
+  {id:"winter",   name:"⛷️ Winter"},
+  {id:"family",   name:"👨‍👩‍👧 Family"}
+];
+var WMOJI = [[0,"☀️"],[1,"🌤️"],[2,"⛅"],[3,"☁️"],[45,"🌫️"],[51,"🌦️"],[61,"🌧️"],[71,"🌨️"],[80,"🌧️"],[95,"⛈️"]];
+function wicon(code){
+  var best="☁️";
+  for (var i=0;i<WMOJI.length;i++){ if (code >= WMOJI[i][0]) best = WMOJI[i][1]; }
+  return best;
+}
+
+var trip = null;   // {dest, place, start, nights, type, wx:[{date,tmax,tmin,rain,code}]|null, groups:[{name,items:[{t,qty,on}]}]}
+var picked = "city";
+
+function el(id){ return document.getElementById(id); }
+function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+function save(){ store.setItem("trip", trip ? JSON.stringify(trip) : ""); }
+
+function renderTypes(){
+  el("types").innerHTML = TYPES.map(function(t){
+    return '<button class="chip'+(picked===t.id?' on':'')+'" onclick="pickType(\''+t.id+'\')">'+t.name+'</button>';
+  }).join("");
+}
+function pickType(id){ picked = id; haptic("selection"); renderTypes(); }
+
+/* ---------- deterministic packing engine ---------- */
+function baseList(type, nights, wx){
+  var socks = Math.min(nights + 1, 8);
+  var tops  = Math.min(Math.ceil(nights * 0.8) + 1, 7);
+  var g = [];
+  g.push({name:"Essentials", items:[
+    "Passport / ID", "Phone + charger", "Bank cards & some cash", "Tickets & bookings",
+    "Medication", "Toothbrush & toiletries", "Deodorant"
+  ]});
+  g.push({name:"Clothes", items:[
+    socks + "× socks", socks + "× underwear", tops + "× tops",
+    "2× trousers/shorts", "Comfortable shoes", "Sleepwear", "Light jacket"
+  ]});
+  if (type === "beach") g.push({name:"Beach", items:[
+    "Swimwear ×2", "Beach towel", "Sunglasses", "Sun hat", "Sunscreen", "Flip-flops", "Beach bag", "Book / e-reader"
+  ]});
+  if (type === "hiking") g.push({name:"Hiking", items:[
+    "Hiking boots (wear on travel day)", "Daypack", "Water bottle", "Blister plasters",
+    "Waterproof jacket", "Hiking socks", "Map / offline maps downloaded", "Snacks / trail bars", "Head torch"
+  ]});
+  if (type === "business") g.push({name:"Business", items:[
+    "Laptop + charger", "Smart outfit ×" + Math.min(nights, 3), "Smart shoes", "Notebook & pen", "Business cards", "Presentation on a USB backup"
+  ]});
+  if (type === "winter") g.push({name:"Winter", items:[
+    "Ski jacket & trousers", "Thermal base layers ×2", "Gloves", "Warm hat", "Ski socks ×" + Math.min(nights, 5), "Goggles", "Lip balm & high-SPF sunscreen", "Swimwear (spa/pool)"
+  ]});
+  if (type === "family") g.push({name:"Family", items:[
+    "Kids' clothes (a spare set per day)", "Favourite toy / comforter", "Snacks for the journey", "Wet wipes", "Tablet + downloads", "Kids' medicine", "Pushchair / carrier"
+  ]});
+  if (type === "city") g.push({name:"City", items:[
+    "Day bag", "Comfortable walking shoes", "Power bank", "One smarter outfit", "Reusable water bottle"
+  ]});
+
+  /* weather-driven adds */
+  if (wx && wx.length){
+    var adds = [];
+    var maxT = Math.max.apply(null, wx.map(function(d){return d.tmax;}));
+    var minT = Math.min.apply(null, wx.map(function(d){return d.tmin;}));
+    var wet  = Math.max.apply(null, wx.map(function(d){return d.rain;}));
+    if (wet >= 40) adds.push("Umbrella or rain jacket");
+    if (minT < 8)  adds.push("Warm layers (it drops to " + Math.round(minT) + "°C)");
+    if (maxT >= 24){ adds.push("Sunscreen"); adds.push("Sunglasses"); }
+    if (maxT >= 29) adds.push("Refillable water bottle (it hits " + Math.round(maxT) + "°C)");
+    if (adds.length) g.push({name:"For the forecast", items:adds});
+  }
+  return g.map(function(grp){
+    return {name:grp.name, items:grp.items.map(function(t){ return {t:t, on:false}; })};
+  });
+}
+
+/* ---------- plan flow ---------- */
+function plan(){
+  var dest = el("dest").value.trim();
+  var start = el("start").value;
+  var nights = parseInt(el("nights").value, 10);
+  if (!dest){ el("formNote").textContent = "Where are you off to?"; el("dest").focus(); return; }
+  if (!start){ el("formNote").textContent = "Pick your first day."; return; }
+  if (!(nights > 0)) nights = 3;
+  haptic("light");
+  el("goBtn").disabled = true;
+  el("formNote").textContent = NET ? "Checking the forecast…" : "";
+
+  lookupWeather(dest, start, nights).then(function(res){
+    trip = {
+      dest: dest, place: res.place || dest, start: start, nights: nights, type: picked,
+      wx: res.days, groups: baseList(picked, nights, res.days)
+    };
+    save(); render();
+    el("goBtn").disabled = false;
+    el("formNote").textContent = res.msg || "";
+    haptic("success");
+    smartExtras();
+  });
+}
+
+function lookupWeather(dest, start, nights){
+  if (!NET) return Promise.resolve({days:null, msg:"Weather needs network access — list built from trip type."});
+  var lead = Math.round((new Date(start + "T12:00:00") - new Date()) / 86400000);
+  if (lead > 14) return Promise.resolve({days:null, msg:"Too far ahead for a forecast — I'll add weather items when it's closer."});
+  var gurl = "https://geocoding-api.open-meteo.com/v1/search?count=1&name=" + encodeURIComponent(dest);
+  return NET(gurl).then(function(r){
+    var j = JSON.parse(r.body);
+    if (!j.results || !j.results.length) throw new Error("no place");
+    var p = j.results[0];
+    var days = Math.min(lead + nights + 1, 16);
+    var furl = "https://api.open-meteo.com/v1/forecast?latitude=" + p.latitude + "&longitude=" + p.longitude +
+      "&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,weather_code&forecast_days=" + days + "&timezone=auto";
+    return NET(furl).then(function(fr){
+      var f = JSON.parse(fr.body).daily;
+      var out = [];
+      for (var i = 0; i < f.time.length; i++){
+        if (f.time[i] < start) continue;
+        out.push({date:f.time[i], tmax:f.temperature_2m_max[i], tmin:f.temperature_2m_min[i],
+                  rain:f.precipitation_probability_max[i] || 0, code:f.weather_code[i]});
+      }
+      var name = p.name + (p.country_code ? ", " + p.country_code : "");
+      return {days:(out.length ? out : null), place:name};
+    });
+  }).catch(function(){
+    return {days:null, msg:"Couldn't fetch the forecast — list built from trip type."};
+  });
+}
+
+/* AI extras appended as their own group (optional, graceful) */
+function smartExtras(){
+  if (!ASK || !trip) return;
+  var wxs = trip.wx ? (" Forecast: " + Math.round(Math.min.apply(null, trip.wx.map(function(d){return d.tmin;}))) + "–" +
+    Math.round(Math.max.apply(null, trip.wx.map(function(d){return d.tmax;}))) + "°C, max rain chance " +
+    Math.round(Math.max.apply(null, trip.wx.map(function(d){return d.rain;}))) + "%.") : "";
+  var prompt = 'I\'m going to ' + trip.place + ' for ' + trip.nights + ' nights (' + trip.type + ' trip), starting ' + trip.start + '.' + wxs +
+    ' List 4 to 6 destination-specific packing items a generic list would miss (think: plug adapter type, local etiquette, terrain, insects, payments). ' +
+    'Reply with ONLY a JSON array of short strings, e.g. ["Type-C plug adapter","Mosquito repellent"]. No prose.';
+  ASK(prompt, {system:"You output only compact JSON arrays of short strings. No commentary."})
+    .then(function(reply){
+      var s = String(reply);
+      var a = s.indexOf("["), b = s.lastIndexOf("]");
+      if (a < 0 || b <= a) return;
+      var items;
+      try{ items = JSON.parse(s.slice(a, b + 1)); }catch(e){ return; }
+      if (!items || !items.length || !trip) return;
+      items = items.filter(function(x){ return typeof x === "string" && x.length > 1 && x.length < 90; }).slice(0, 8);
+      if (!items.length) return;
+      trip.groups = trip.groups.filter(function(g){ return g.name !== "Smart extras ✨"; });
+      trip.groups.push({name:"Smart extras ✨", items:items.map(function(t){ return {t:t, on:false}; })});
+      save(); render();
+    })
+    .catch(function(){});
+}
+
+/* ---------- render ---------- */
+function render(){
+  renderTypes();
+  if (!trip){
+    el("wxcard").style.display = "none";
+    el("listcard").style.display = "none";
+    return;
+  }
+  el("dest").value = trip.dest;
+  el("start").value = trip.start;
+  el("nights").value = trip.nights;
+  picked = trip.type; renderTypes();
+
+  if (trip.wx && trip.wx.length){
+    el("wxcard").style.display = "block";
+    el("wxplace").textContent = trip.place;
+    el("wxsum").textContent = "your trip's forecast";
+    el("wxdays").innerHTML = trip.wx.map(function(d){
+      var dt = new Date(d.date + "T12:00:00");
+      var dow = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][dt.getDay()];
+      return '<div class="day"><small>' + dow + '</small><div class="i">' + wicon(d.code) + '</div>' +
+        '<b>' + Math.round(d.tmax) + '°</b> <i>' + Math.round(d.tmin) + '°</i></div>';
+    }).join("");
+  } else el("wxcard").style.display = "none";
+
+  el("listcard").style.display = "block";
+  el("listtitle").textContent = "Packing for " + trip.place;
+  var total = 0, done = 0;
+  trip.groups.forEach(function(g){ g.items.forEach(function(it){ total++; if (it.on) done++; }); });
+  el("listcount").textContent = done + " / " + total + " packed";
+  el("progfill").style.width = (total ? Math.round(done / total * 100) : 0) + "%";
+  el("groups").innerHTML = trip.groups.map(function(g, gi){
+    return '<div class="grp"><b>' + esc(g.name) + '</b>' + g.items.map(function(it, ii){
+      return '<div class="it' + (it.on ? ' on' : '') + '" onclick="toggle(' + gi + ',' + ii + ')">' +
+        '<div class="box">' + (it.on ? '✓' : '') + '</div><span>' + esc(it.t) + '</span>' +
+        '<button class="rm" onclick="event.stopPropagation();removeItem(' + gi + ',' + ii + ')" aria-label="Remove">✕</button></div>';
+    }).join("") + '</div>';
+  }).join("");
+}
+
+function toggle(gi, ii){
+  var it = trip.groups[gi].items[ii];
+  it.on = !it.on;
+  haptic(it.on ? "success" : "light");
+  save(); render();
+}
+function removeItem(gi, ii){
+  trip.groups[gi].items.splice(ii, 1);
+  trip.groups = trip.groups.filter(function(g){ return g.items.length; });
+  haptic("light"); save(); render();
+}
+function addItem(){
+  var v = el("newitem").value.trim();
+  if (!v || !trip) return;
+  var mine = trip.groups.filter(function(g){ return g.name === "My items"; })[0];
+  if (!mine){ mine = {name:"My items", items:[]}; trip.groups.push(mine); }
+  mine.items.push({t:v, on:false});
+  el("newitem").value = "";
+  haptic("success"); save(); render();
+}
+function untickAll(){
+  trip.groups.forEach(function(g){ g.items.forEach(function(it){ it.on = false; }); });
+  haptic("light"); save(); render();
+}
+function newTrip(){
+  trip = null; save(); render();
+  el("dest").value = ""; el("formNote").textContent = "";
+  haptic("light");
+  window.scrollTo(0, 0);
+}
+function shareList(){
+  if (!trip) return;
+  var txt = "Packing list — " + trip.place + " (" + trip.nights + " nights)\n\n" +
+    trip.groups.map(function(g){
+      return g.name + "\n" + g.items.map(function(it){ return (it.on ? "☑ " : "☐ ") + it.t; }).join("\n");
+    }).join("\n\n");
+  if (window.myllmShare){ try{ myllmShare({text:txt}); }catch(_){} }
+  haptic("light");
+}
+
+/* ---------- boot ---------- */
+el("start").value = new Date(Date.now() + 86400000 * 7).toISOString().slice(0, 10);
+renderTypes();
+store.getItem("trip").then(function(v){
+  if (v){ try{ trip = JSON.parse(v) || null; }catch(e){} }
+  render();
+});
+</script>
+</body>
+</html>
