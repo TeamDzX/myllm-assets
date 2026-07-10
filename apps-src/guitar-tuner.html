@@ -213,9 +213,15 @@ function startMic(){
     return;
   }
   el("micmsg").textContent = "Starting…";
-  navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false, noiseSuppression:false, autoGainControl:false}})
+  /* plain constraints (the shape that's proven in this sandbox); the tuning-
+     hostile processing flags are relaxed afterwards, best-effort */
+  navigator.mediaDevices.getUserMedia({audio:true})
   .then(function(s){
     micStream = s;
+    var tr = s.getAudioTracks()[0];
+    if (tr && tr.applyConstraints){
+      tr.applyConstraints({echoCancellation:false, noiseSuppression:false, autoGainControl:false}).catch(function(){});
+    }
     var ctx = ensureCtx();
     var src = ctx.createMediaStreamSource(s);
     analyser = ctx.createAnalyser();
@@ -224,11 +230,30 @@ function startMic(){
     buf = new Float32Array(analyser.fftSize);
     el("micbtn").style.display = "none";
     el("micmsg").textContent = "Play a string…";
+    deadFrames = 0; liveSeen = false;
     loop();
   })
-  .catch(function(){
-    el("micmsg").textContent = "Microphone blocked. Turn on “Allow apps to use the microphone” in Settings → MyLLMos Apps, then reopen — or tune by ear with the reference tones below.";
+  .catch(function(err){
+    var name = err && err.name ? " (" + err.name + ")" : "";
+    el("micmsg").textContent = "Couldn't open the microphone" + name + ". Check “Allow apps to use the microphone” in Settings → MyLLMos Apps, then reopen — or tune by ear with the reference tones below.";
   });
+}
+
+/* Some builds grant the mic but the audio session can't record — the stream
+   then delivers pure silence. Detect that and say so honestly instead of
+   sitting on "Play a string…" forever. */
+var deadFrames = 0, liveSeen = false;
+function watchSignal(maxAbs){
+  if (liveSeen) return;
+  if (maxAbs < 1e-4){
+    deadFrames++;
+    if (deadFrames === 180){   /* ~6s of true zero signal */
+      el("micmsg").textContent = "The mic connected but no sound is reaching it — an app update fixing this is on the way. Meanwhile, tune by ear with the reference tones below.";
+    }
+  } else {
+    liveSeen = true;
+    if (deadFrames >= 180) el("micmsg").textContent = "Play a string…";
+  }
 }
 
 /* autocorrelation pitch detector (ACF2+, after Chris Wilson's pitch-detect) */
@@ -278,6 +303,9 @@ function loop(){
   frameFlip = !frameFlip;
   if (!frameFlip) return;   /* detect at ~30fps — plenty for a needle, half the CPU */
   analyser.getFloatTimeDomainData(buf);
+  var maxAbs = 0;
+  for (var k = 0; k < buf.length; k += 8){ var av = Math.abs(buf[k]); if (av > maxAbs) maxAbs = av; }
+  watchSignal(maxAbs);
   var f = autoCorrelate(buf, actx.sampleRate);
   if (f > 55 && f < 1600){
     recent.push(f);
