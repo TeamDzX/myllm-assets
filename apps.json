@@ -1,5 +1,5 @@
 {
-  "updated": "2026-07-10",
+  "updated": "2026-07-11",
   "categories": [
     "Students",
     "Productivity",
@@ -2025,6 +2025,85 @@
       "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/guitar-tuner.myllmapp?v=2",
       "sizeKB": 16,
       "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/icons/guitar-tuner.jpg"
+    },
+    {
+      "id": "solitaire",
+      "name": "Solitaire",
+      "emoji": "🃏",
+      "tagline": "The classic, done properly",
+      "description": "Klondike solitaire the way it should feel on a phone: tap a card and it flies to the right place — foundations first, then the smartest column move. Unlimited undo, move counter and timer, a gorgeous gold-filigree card back painted for this app, and an automatic finish when the game is won. Saves mid-game, works fully offline.",
+      "tags": [
+        "game",
+        "cards",
+        "solitaire",
+        "klondike",
+        "saves data",
+        "offline"
+      ],
+      "category": "Games",
+      "iconSymbol": "suit.spade.fill",
+      "iconColor": "green",
+      "version": 1,
+      "featured": false,
+      "requiresAI": false,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/solitaire.jpg",
+      "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/solitaire.html",
+      "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/solitaire.myllmapp",
+      "sizeKB": 45,
+      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/icons/solitaire.jpg"
+    },
+    {
+      "id": "jigsaw",
+      "name": "Jigsaw",
+      "emoji": "🧩",
+      "tagline": "Six little paintings to piece together",
+      "description": "Real jigsaw puzzles with proper interlocking pieces, built around six original paintings made just for this app — a lighthouse at sunset, hot-air balloons at dawn, a koi pond, a winter cabin and more. Drag pieces onto the board and feel them snap home. Three sizes from a gentle 12 pieces to a proper 48, a fadeable guide image, and it remembers which puzzles you've finished. Fully offline.",
+      "tags": [
+        "game",
+        "puzzle",
+        "jigsaw",
+        "relaxing",
+        "art",
+        "saves data",
+        "offline"
+      ],
+      "category": "Games",
+      "iconSymbol": "puzzlepiece.fill",
+      "iconColor": "orange",
+      "version": 1,
+      "featured": false,
+      "requiresAI": false,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/jigsaw.jpg",
+      "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/jigsaw.html",
+      "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/jigsaw.myllmapp",
+      "sizeKB": 535,
+      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/icons/jigsaw.jpg"
+    },
+    {
+      "id": "minesweeper",
+      "name": "Minesweeper",
+      "emoji": "💣",
+      "tagline": "Dig carefully",
+      "description": "The logic classic, tuned for touch: tap to dig, long-press (or flip on flag mode) to plant a flag, and your first tap is always safe. Three board sizes, a running mine counter, and best times saved per size. No ads, no timers pushing you — just you against the field. Fully offline.",
+      "tags": [
+        "game",
+        "logic",
+        "minesweeper",
+        "classic",
+        "saves data",
+        "offline"
+      ],
+      "category": "Games",
+      "iconSymbol": "flag.fill",
+      "iconColor": "red",
+      "version": 1,
+      "featured": false,
+      "requiresAI": false,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/minesweeper.jpg",
+      "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/minesweeper.html",
+      "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/minesweeper.myllmapp",
+      "sizeKB": 10,
+      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/icons/minesweeper.jpg"
     }
   ]
 }

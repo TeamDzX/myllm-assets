@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Minesweeper</title>
+<style>
+  :root { color-scheme: light dark; }
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; user-select:none; -webkit-user-select:none; }
+  body{
+    font-family:var(--myllm-font,-apple-system,system-ui,sans-serif);
+    background:var(--myllm-bg,#f2f2f7);
+    color:var(--myllm-text,#111);
+    max-width:600px; margin:0 auto; min-height:100dvh;
+    padding:14px 12px calc(30px + env(safe-area-inset-bottom));
+  }
+  header{ display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+  header b{ font-size:18px; font-weight:800; }
+  .hud{ display:flex; gap:12px; font-size:14px; font-weight:700; font-variant-numeric:tabular-nums; }
+  .sizes{ display:flex; background:var(--myllm-surface,#fff); border:1px solid var(--myllm-border,#e3e3e8); border-radius:12px; padding:3px; margin-bottom:12px; }
+  .sizes button{
+    flex:1; border:none; background:none; color:var(--myllm-muted,#8a8a8e);
+    border-radius:9px; padding:9px; font-size:13.5px; font-weight:700;
+  }
+  .sizes button.on{ background:var(--myllm-accent,#0a84ff); color:#fff; }
+
+  #grid{
+    display:grid; gap:3px;
+    background:var(--myllm-surface,#fff);
+    border:1px solid var(--myllm-border,#e3e3e8);
+    border-radius:14px; padding:8px;
+    touch-action:manipulation;
+  }
+  .sq{
+    aspect-ratio:1; border:none; border-radius:6px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:clamp(11px, 3.6vw, 17px); font-weight:800;
+    background:linear-gradient(180deg, #7fb2e8, #5a95d6);
+    box-shadow:inset 0 -2px 0 rgba(0,0,0,.18);
+    color:transparent;
+    padding:0;
+  }
+  @media (prefers-color-scheme: dark){
+    .sq{ background:linear-gradient(180deg, #3f6ea6, #2d5484); }
+  }
+  .sq.open{
+    background:var(--myllm-bg,#f2f2f7);
+    box-shadow:none; color:inherit;
+  }
+  .sq.open.n1{ color:#0a84ff; } .sq.open.n2{ color:#30a14e; } .sq.open.n3{ color:#ff3b30; }
+  .sq.open.n4{ color:#5e5ce6; } .sq.open.n5{ color:#a2845e; } .sq.open.n6{ color:#30b0c7; }
+  .sq.open.n7{ color:#ff9500; } .sq.open.n8{ color:#8e8e93; }
+  .sq.flag, .sq.boom, .sq.mine{ color:inherit; }
+  .sq.boom{ background:#ff3b30 !important; }
+
+  .toolrow{ display:flex; gap:8px; margin-top:12px; }
+  .toolrow button{
+    flex:1; border:1px solid var(--myllm-border,#e3e3e8); border-radius:12px; padding:12px;
+    font-size:14.5px; font-weight:700; background:var(--myllm-surface,#fff); color:var(--myllm-text,#111);
+  }
+  .toolrow button.flagmode{ background:#ff9500; border-color:#ff9500; color:#fff; }
+  .note{ text-align:center; font-size:12px; color:var(--myllm-muted,#8a8a8e); margin-top:10px; line-height:1.5; }
+  .best{ text-align:center; font-size:12.5px; color:var(--myllm-muted,#8a8a8e); margin-top:6px; }
+
+  #overlay{
+    position:fixed; inset:0; z-index:100; display:none;
+    align-items:center; justify-content:center; flex-direction:column; gap:10px;
+    background:rgba(0,0,0,.55); -webkit-backdrop-filter:blur(4px); backdrop-filter:blur(4px);
+    text-align:center; padding:30px; color:#fff;
+  }
+  #overlay.on{ display:flex; }
+  #overlay .big{ font-size:52px; }
+  #overlay h2{ font-size:24px; font-weight:800; }
+  #overlay p{ font-size:14.5px; opacity:.85; }
+  #overlay button{
+    margin-top:8px; border:none; border-radius:13px; padding:13px 26px;
+    font-size:16px; font-weight:750; background:#fff; color:#111;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <b>💣 Minesweeper</b>
+  <div class="hud"><span id="mines">💣 10</span><span id="clock">⏱ 0</span></div>
+</header>
+
+<div class="sizes" id="sizes"></div>
+<div id="grid"></div>
+
+<div class="toolrow">
+  <button id="flagBtn" onclick="toggleFlagMode()">🚩 Flag mode: off</button>
+  <button onclick="newGame()">New game</button>
+</div>
+<p class="note">Tap to dig · long-press (or flag mode) to plant a flag<br>Your first tap is always safe.</p>
+<p class="best" id="best"></p>
+
+<div id="overlay">
+  <div class="big" id="ovemoji">💥</div>
+  <h2 id="ovtitle">Boom!</h2>
+  <p id="ovtext"></p>
+  <button onclick="newGame()">Play again</button>
+</div>
+
+<script>
+var store = window.myllmStorage || {getItem:function(){return Promise.resolve(null)}, setItem:function(){return Promise.resolve()}};
+function haptic(k){ if(window.myllmHaptic){ try{ myllmHaptic(k||'light'); }catch(_){} } }
+function el(id){ return document.getElementById(id); }
+
+var SIZES = [
+  {id:"s", name:"Small",  cols:9,  rows:9,  mines:10},
+  {id:"m", name:"Medium", cols:11, rows:13, mines:24},
+  {id:"l", name:"Large",  cols:13, rows:16, mines:40}
+];
+var size = SIZES[0];
+var best = {};            /* sizeId -> seconds */
+
+/* board[i] = {mine, open, flag, n} — index = r*cols + c */
+var board = [], started = false, over = false, flagMode = false;
+var flags = 0, opened = 0, startAt = 0, clockId = null;
+var pressTimer = null, pressFired = false;
+
+function idx(r, c){ return r * size.cols + c; }
+function inb(r, c){ return r >= 0 && r < size.rows && c >= 0 && c < size.cols; }
+function neighbours(i){
+  var r = Math.floor(i / size.cols), c = i % size.cols, out = [];
+  for (var dr = -1; dr <= 1; dr++)
+    for (var dc = -1; dc <= 1; dc++)
+      if ((dr || dc) && inb(r + dr, c + dc)) out.push(idx(r + dr, c + dc));
+  return out;
+}
+
+function newGame(){
+  board = [];
+  for (var i = 0; i < size.rows * size.cols; i++) board.push({mine:false, open:false, flag:false, n:0});
+  started = false; over = false; flags = 0; opened = 0;
+  el("overlay").classList.remove("on");
+  el("clock").textContent = "⏱ 0";
+  if (clockId){ clearInterval(clockId); clockId = null; }
+  haptic("light");
+  render();
+}
+
+/* mines are laid AFTER the first tap, keeping it (and its ring) safe */
+function layMines(safe){
+  var forbidden = {}; forbidden[safe] = true;
+  neighbours(safe).forEach(function(n){ forbidden[n] = true; });
+  var laid = 0;
+  while (laid < size.mines){
+    var i = Math.floor(Math.random() * board.length);
+    if (board[i].mine || forbidden[i]) continue;
+    board[i].mine = true; laid++;
+  }
+  for (var j = 0; j < board.length; j++){
+    board[j].n = neighbours(j).filter(function(n){ return board[n].mine; }).length;
+  }
+  started = true;
+  startAt = Date.now();
+  clockId = setInterval(function(){
+    if (!over) el("clock").textContent = "⏱ " + Math.floor((Date.now() - startAt) / 1000);
+  }, 1000);
+}
+
+function dig(i){
+  if (over || board[i].open || board[i].flag) return;
+  if (!started) layMines(i);
+  if (board[i].mine){ return lose(i); }
+  /* flood reveal */
+  var queue = [i];
+  while (queue.length){
+    var q = queue.pop();
+    var sq = board[q];
+    if (sq.open || sq.flag) continue;
+    sq.open = true; opened++;
+    if (sq.n === 0){
+      neighbours(q).forEach(function(n){ if (!board[n].open && !board[n].flag) queue.push(n); });
+    }
+  }
+  haptic("selection");
+  render();
+  if (opened === board.length - size.mines) winGame();
+}
+
+function plantFlag(i){
+  if (over || board[i].open) return;
+  board[i].flag = !board[i].flag;
+  flags += board[i].flag ? 1 : -1;
+  haptic(board[i].flag ? "success" : "light");
+  render();
+}
+
+function tap(i){
+  if (pressFired){ pressFired = false; return; }
+  if (flagMode) plantFlag(i); else dig(i);
+}
+function pressStart(i){
+  pressFired = false;
+  pressTimer = setTimeout(function(){
+    pressFired = true;
+    if (!flagMode) plantFlag(i);
+  }, 420);
+}
+function pressEnd(){
+  if (pressTimer){ clearTimeout(pressTimer); pressTimer = null; }
+}
+
+function toggleFlagMode(){
+  flagMode = !flagMode;
+  var b = el("flagBtn");
+  b.textContent = "🚩 Flag mode: " + (flagMode ? "on" : "off");
+  b.className = flagMode ? "flagmode" : "";
+  haptic("selection");
+}
+
+function lose(hit){
+  over = true;
+  board.forEach(function(sq){ if (sq.mine) sq.open = true; });
+  board[hit]._boom = true;
+  render();
+  haptic("light");
+  el("ovemoji").textContent = "💥";
+  el("ovtitle").textContent = "Boom!";
+  el("ovtext").textContent = "The field keeps its secrets. Another go?";
+  setTimeout(function(){ el("overlay").classList.add("on"); }, 650);
+}
+
+function winGame(){
+  over = true;
+  var secs = Math.floor((Date.now() - startAt) / 1000);
+  var prev = best[size.id];
+  var isRecord = !prev || secs < prev;
+  if (isRecord){ best[size.id] = secs; store.setItem("mines_best", JSON.stringify(best)); }
+  haptic("success");
+  el("ovemoji").textContent = "🏆";
+  el("ovtitle").textContent = "Field cleared!";
+  el("ovtext").textContent = secs + " seconds" + (isRecord ? " — new best time!" : (prev ? " · best " + prev + "s" : ""));
+  setTimeout(function(){ el("overlay").classList.add("on"); }, 350);
+  renderBest();
+}
+
+/* ---------- render ---------- */
+function render(){
+  el("mines").textContent = "💣 " + Math.max(0, size.mines - flags);
+  var g = el("grid");
+  g.style.gridTemplateColumns = "repeat(" + size.cols + ", 1fr)";
+  var h = "";
+  for (var i = 0; i < board.length; i++){
+    var sq = board[i];
+    var cls = "sq", inner = "";
+    if (sq.open){
+      if (sq.mine){ cls += sq._boom ? " boom" : " mine"; inner = "💣"; }
+      else { cls += " open n" + sq.n; inner = sq.n ? sq.n : ""; }
+    } else if (sq.flag){ cls += " flag"; inner = "🚩"; }
+    h += '<button class="' + cls + '"' +
+      ' onclick="tap(' + i + ')"' +
+      ' onpointerdown="pressStart(' + i + ')" onpointerup="pressEnd()" onpointercancel="pressEnd()" onpointerleave="pressEnd()">' +
+      inner + '</button>';
+  }
+  g.innerHTML = h;
+}
+function renderSizes(){
+  el("sizes").innerHTML = SIZES.map(function(s){
+    return '<button class="' + (s.id === size.id ? "on" : "") + '" onclick="setSize(\'' + s.id + '\')">' +
+      s.name + ' · ' + s.mines + '💣</button>';
+  }).join("");
+  renderBest();
+}
+function renderBest(){
+  el("best").textContent = best[size.id] ? ("Best time (" + size.name.toLowerCase() + "): " + best[size.id] + "s") : "";
+}
+function setSize(id){
+  size = SIZES.filter(function(s){ return s.id === id; })[0];
+  haptic("selection");
+  store.setItem("mines_size", id);
+  renderSizes();
+  newGame();
+}
+
+/* ---------- boot ---------- */
+Promise.all([store.getItem("mines_best"), store.getItem("mines_size")]).then(function(vals){
+  if (vals[0]){ try{ best = JSON.parse(vals[0]) || {}; }catch(e){} }
+  if (vals[1]){ var s = SIZES.filter(function(x){ return x.id === vals[1]; })[0]; if (s) size = s; }
+  renderSizes();
+  newGame();
+});
+</script>
+</body>
+</html>
