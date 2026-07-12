@@ -2104,6 +2104,84 @@
       "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/minesweeper.myllmapp",
       "sizeKB": 10,
       "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/icons/minesweeper.jpg"
+    },
+    {
+      "id": "post-studio",
+      "name": "Post Studio",
+      "emoji": "✍️",
+      "tagline": "Write it once, post it anywhere",
+      "description": "A private writing room for your social posts: draft in your own words, then let on-device AI polish the tone (plain, friendly, professional, witty or bold), suggest hashtags, or split long thoughts into a numbered thread that fits each platform's limits — X, Bluesky, Mastodon, Instagram, LinkedIn. Share to any app on your phone with one tap, keep drafts for later. Nothing leaves your device until you hit share. Polish and hashtags need AI — enable AI in Settings; the splitter, drafts and sharing work without it.",
+      "tags": [
+        "social media",
+        "writing",
+        "AI-powered",
+        "creative",
+        "share",
+        "saves data",
+        "offline"
+      ],
+      "category": "Creative",
+      "iconSymbol": "square.and.pencil",
+      "iconColor": "orange",
+      "version": 1,
+      "featured": false,
+      "requiresAI": false,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/post-studio.jpg",
+      "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/post-studio.html",
+      "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/post-studio.myllmapp",
+      "sizeKB": 28,
+      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/icons/post-studio.jpg"
+    },
+    {
+      "id": "bluesky-feed",
+      "name": "Bluesky Feed",
+      "emoji": "🦋",
+      "tagline": "The open sky, in your pocket",
+      "description": "An unofficial, featherweight window onto Bluesky: browse the Discover feed and look up anyone's posts with no account at all, then — if you like — post from your own account using an app password (created in two taps in the official app, stored only on this device, sent only to Bluesky). Every post links out to the real thing. Needs internet access for apps.",
+      "tags": [
+        "social media",
+        "bluesky",
+        "reader",
+        "network",
+        "saves data"
+      ],
+      "category": "News & Web",
+      "iconSymbol": "cloud.fill",
+      "iconColor": "cyan",
+      "version": 1,
+      "featured": false,
+      "requiresAI": false,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/bluesky-feed.jpg",
+      "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/bluesky-feed.html",
+      "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/bluesky-feed.myllmapp",
+      "sizeKB": 25,
+      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/icons/bluesky-feed.jpg"
+    },
+    {
+      "id": "mastodon-feed",
+      "name": "Mastodon Feed",
+      "emoji": "🐘",
+      "tagline": "The fediverse, no strings",
+      "description": "An unofficial pocket reader for Mastodon: see what's trending on any instance and dive into hashtag timelines with no account needed. Paste a personal access token (a one-minute job in your instance's settings) to read your own Home timeline and post — the token stays on this device and is sent only to your chosen instance. Works with mastodon.social out of the box, or point it at your own server. Needs internet access for apps.",
+      "tags": [
+        "social media",
+        "mastodon",
+        "fediverse",
+        "reader",
+        "network",
+        "saves data"
+      ],
+      "category": "News & Web",
+      "iconSymbol": "megaphone.fill",
+      "iconColor": "purple",
+      "version": 1,
+      "featured": false,
+      "requiresAI": false,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/mastodon-feed.jpg",
+      "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/mastodon-feed.html",
+      "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/mastodon-feed.myllmapp",
+      "sizeKB": 25,
+      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/icons/mastodon-feed.jpg"
     }
   ]
 }
