@@ -216,9 +216,24 @@ el:{hello:"yia sas",bye:"andío",yes:"ne",no:"óchi",please:"parakaló",thanks:"
 var lang = LANGS[0];
 var favs = {};       /* "es|hello" -> true */
 
+/* Voice: prefer a native myllmSpeak bridge if one ever ships; today WKWebView's
+   built-in speechSynthesis does the job (same iOS voices underneath). Triggered
+   from a tap, which satisfies the user-gesture requirement. */
+var CAN_SPEAK = !!(window.myllmSpeak || (window.speechSynthesis && window.SpeechSynthesisUtterance));
 function speak(text){
-  if (window.myllmSpeak){ try{ myllmSpeak(text, {lang:lang.tts}); }catch(_){} }
   haptic("selection");
+  if (window.myllmSpeak){
+    try{ myllmSpeak(text, {lang:lang.tts}); return; }catch(_){}
+  }
+  if (window.speechSynthesis){
+    try{
+      speechSynthesis.cancel();
+      var u = new SpeechSynthesisUtterance(text);
+      u.lang = lang.tts;
+      u.rate = 0.9;
+      speechSynthesis.speak(u);
+    }catch(_){}
+  }
 }
 
 function renderLangs(){
@@ -244,7 +259,7 @@ function phraseRow(p){
       '<div class="tr">' + esc(tr) + '</div>' +
       (rom ? '<div class="rom">' + esc(rom) + '</div>' : '') +
     '</div>' +
-    (window.myllmSpeak ? '<button onclick="speak(' + JSON.stringify(tr).replace(/"/g,"&quot;") + ')">🔊</button>' : '') +
+    (CAN_SPEAK ? '<button onclick="speak(' + JSON.stringify(tr).replace(/"/g,"&quot;") + ')">🔊</button>' : '') +
     '<button class="fav' + (favs[fk] ? ' on' : '') + '" onclick="toggleFav(\'' + fk + '\')">' + (favs[fk] ? '⭐' : '☆') + '</button>' +
   '</div>';
 }
@@ -283,7 +298,7 @@ function openBig(o){
   el("bigtr").textContent = o.tr;
   el("bigrom").textContent = o.rom || "";
   el("bigen").textContent = o.en || "";
-  el("bigspeak").style.display = window.myllmSpeak ? "inline-block" : "none";
+  el("bigspeak").style.display = CAN_SPEAK ? "inline-block" : "none";
   el("bigspeak").onclick = function(e){ e.stopPropagation(); speak(bigText); };
   el("bigveil").classList.add("on");
   haptic("light");
@@ -322,7 +337,7 @@ function aiTranslate(){
     el("aitr").textContent = tr;
     el("airom").textContent = rom;
     el("aiout").style.display = "block";
-    el("ainote").textContent = "Tap the translation to show it full-screen." + (window.myllmSpeak ? "" : "");
+    el("ainote").textContent = "Tap the translation to show it full-screen.";
     el("aigo").disabled = false;
     haptic("success");
   })

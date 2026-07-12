@@ -237,7 +237,7 @@ how battle-tested each is across the current 80 apps.)
 | `myllmAsk(prompt)` | on-device LLM | `→Promise<string>`. The core AI bridge. Ask for **strict JSON** and parse defensively (`indexOf('[')…lastIndexOf(']')`). |
 | `myllmFetch(url,opts)` | network GET/POST | Use this instead of `fetch()` — the web view runs at a **null origin**, so `fetch()`/XHR are CORS-dead. (Plain `<img src=https://…>` *does* load, so remote images are fine without the bridge.) |
 | `myllmShare(payload)` | share sheet | text/url/image out |
-| `myllmSpeak(text,{lang})` | text-to-speech | pass a BCP-47 `lang` (e.g. `'es'`). |
+| ~~`myllmSpeak`~~ | **NOT IMPLEMENTED** — listed here in error historically. Use the webview's built-in `speechSynthesis` + `SpeechSynthesisUtterance` (same iOS voices; set `u.lang` to a BCP-47 code; must be triggered from a user tap). |
 | `myllmSaveImage(dataUrl)` | save to Photos | |
 | `myllmIntent(...)` | MyLLMos intent bus | cross-app / chat hand-off |
 | `myllmFiles` | shared folder r/w | list/read/write shared files |
