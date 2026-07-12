@@ -302,7 +302,7 @@ function rescueHeroImage(a,gen){
     if(!m)return;
     a.image=m[1];
     var heroImgHost=document.querySelector('#hero .thumb');
-    if(heroImgHost)heroImgHost.innerHTML='<img loading="lazy" src="'+esc(a.image)+'">';
+    if(heroImgHost)heroImgHost.innerHTML='<img loading="lazy" src="'+esc(a.image)+'" data-orig="'+esc(a.image)+'" onerror="imgFallback(this)">';
   }).catch(function(){});
 }
 
@@ -322,8 +322,32 @@ function ago(d){
 }
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 function thumb(a){
-  if(a.image)return '<div class="thumb"><img loading="lazy" src="'+esc(a.image)+'" onerror="this.style.display=\'none\';this.parentNode.innerHTML=\'<span class=&quot;ph&quot;>🗞️</span>\'"></div>';
+  if(a.image)return '<div class="thumb"><img loading="lazy" src="'+esc(a.image)+'" data-orig="'+esc(a.image)+'" onerror="imgFallback(this)"></div>';
   return '<div class="thumb"><span class="ph">🗞️</span></div>';
+}
+
+// Hotlink rescue: some outlets' CDNs (Japan Times…) 403 any image request
+// whose Referer isn't their own site — a webview <img> can never satisfy
+// that. On error, refetch ONCE through the native bridge with the image's
+// own origin as Referer and swap in a data URL; if that also fails, show
+// the placeholder as before.
+function imgFallback(img){
+  var src=img.getAttribute('data-orig');
+  img.removeAttribute('data-orig');                       // one retry only
+  if(!src||!window.myllmFetch){phImg(img);return}
+  var origin=(src.match(/^https?:\/\/[^\/]+/)||[])[0];
+  if(!origin){phImg(img);return}
+  myllmFetch(src,{headers:{'Referer':origin+'/'}}).then(function(r){
+    var b64=r&&(r.bodyBase64||r.base64);
+    if(r&&r.ok&&b64){
+      var ct=(r.headers&&(r.headers['Content-Type']||r.headers['content-type']))||'image/jpeg';
+      img.src='data:'+ct+';base64,'+b64;
+    }else phImg(img);
+  }).catch(function(){phImg(img)});
+}
+function phImg(img){
+  img.style.display='none';
+  if(img.parentNode)img.parentNode.innerHTML='<span class="ph">🗞️</span>';
 }
 function metaLine(a){var t=ago(a.date);return esc(a.src||'')+(t?' • '+t:'')}
 
