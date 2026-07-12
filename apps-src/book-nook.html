@@ -1,0 +1,372 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Book Nook</title>
+<style>
+  :root { color-scheme: light dark; }
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body{
+    font-family:var(--myllm-font,-apple-system,system-ui,sans-serif);
+    background:var(--myllm-bg,#f2f2f7);
+    color:var(--myllm-text,#111);
+    max-width:640px; margin:0 auto; min-height:100dvh;
+    padding:14px 14px calc(30px + env(safe-area-inset-bottom));
+  }
+  h1{ font-size:22px; font-weight:800; margin:4px 2px 2px; }
+  .statline{ font-size:13px; color:var(--myllm-muted,#8a8a8e); margin:0 2px 12px; }
+
+  .tabs{ display:flex; background:var(--myllm-surface,#fff); border:1px solid var(--myllm-border,#e3e3e8); border-radius:13px; padding:3px; margin-bottom:12px; }
+  .tabs button{
+    flex:1; border:none; background:none; color:var(--myllm-muted,#8a8a8e);
+    border-radius:10px; padding:9px 4px; font-size:13.5px; font-weight:700;
+  }
+  .tabs button.on{ background:#a2653c; color:#fff; }
+
+  .card{
+    background:var(--myllm-surface,#fff); border:1px solid var(--myllm-border,#e3e3e8);
+    border-radius:16px; padding:13px 14px; margin-bottom:10px;
+  }
+  .row{ display:flex; gap:8px; }
+  input{
+    width:100%; font-size:15px; padding:11px 12px; border-radius:12px;
+    border:1px solid var(--myllm-border,#e3e3e8); background:var(--myllm-bg,#f2f2f7); color:var(--myllm-text,#111);
+  }
+  .go{
+    border:none; border-radius:12px; padding:0 16px; font-size:15px; font-weight:700;
+    background:#a2653c; color:#fff; flex:none;
+  }
+  .go:disabled{ opacity:.5; }
+  .hint{ font-size:12.5px; color:var(--myllm-muted,#8a8a8e); margin-top:8px; line-height:1.45; }
+
+  .result{ display:flex; gap:10px; align-items:center; padding:9px 0; border-bottom:1px solid var(--myllm-border,#e3e3e8); }
+  .result:last-child{ border-bottom:none; }
+  .result img, .book .cov{ width:44px; height:64px; object-fit:cover; border-radius:6px; background:#c9b8a4; flex-shrink:0; }
+  .result .t{ flex:1; min-width:0; }
+  .result b{ display:block; font-size:14.5px; }
+  .result small{ color:var(--myllm-muted,#8a8a8e); font-size:12.5px; }
+  .result button{ border:none; border-radius:10px; padding:8px 12px; font-weight:700; font-size:12.5px; background:var(--myllm-bg,#f2f2f7); color:var(--myllm-text,#111); flex:none; }
+
+  .book{
+    display:flex; gap:12px;
+    background:var(--myllm-surface,#fff); border:1px solid var(--myllm-border,#e3e3e8);
+    border-radius:16px; padding:12px 13px; margin-bottom:9px; align-items:center;
+  }
+  .book .cov{ display:flex; align-items:center; justify-content:center; color:#fff; font-weight:800; font-size:15px; text-align:center; padding:2px; }
+  .book .t{ flex:1; min-width:0; }
+  .book b{ display:block; font-size:15px; line-height:1.3; }
+  .book small{ color:var(--myllm-muted,#8a8a8e); font-size:12.5px; display:block; margin-top:1px; }
+  .book .stars{ font-size:13px; margin-top:3px; letter-spacing:1px; }
+  .book .note{ font-size:12.5px; color:var(--myllm-muted,#8a8a8e); font-style:italic; margin-top:2px; }
+  .book .acts{ display:flex; flex-direction:column; gap:6px; flex:none; }
+  .book .acts button{
+    border:none; border-radius:9px; padding:7px 11px; font-size:12px; font-weight:700;
+    background:var(--myllm-bg,#f2f2f7); color:var(--myllm-text,#111);
+  }
+  .empty{ text-align:center; color:var(--myllm-muted,#8a8a8e); font-size:13.5px; padding:26px 14px; line-height:1.6; }
+
+  /* finish sheet */
+  .veil{ position:fixed; inset:0; background:rgba(0,0,0,.4); z-index:90; display:none; }
+  .veil.on{ display:block; }
+  .sheet{
+    position:fixed; left:0; right:0; bottom:0; z-index:95;
+    background:var(--myllm-surface,#fff); border-radius:20px 20px 0 0;
+    padding:18px 18px calc(24px + env(safe-area-inset-bottom));
+    transform:translateY(105%); transition:transform .25s ease;
+    max-width:640px; margin:0 auto;
+  }
+  .sheet.on{ transform:none; }
+  .sheet h3{ font-size:17px; font-weight:800; margin-bottom:4px; }
+  .sheet .bstars{ display:flex; gap:6px; justify-content:center; margin:14px 0; }
+  .sheet .bstars button{ border:none; background:none; font-size:34px; }
+  .sheet .done{ width:100%; border:none; border-radius:13px; padding:13px; font-size:15.5px; font-weight:750; background:#a2653c; color:#fff; margin-top:10px; }
+
+  .recbtn{
+    width:100%; border:1px solid rgba(162,101,60,.45); background:rgba(162,101,60,.12);
+    color:#a2653c; border-radius:14px; padding:13px; font-size:15px; font-weight:700; margin-bottom:10px;
+  }
+  .rec{ padding:9px 0; border-bottom:1px solid var(--myllm-border,#e3e3e8); }
+  .rec:last-child{ border-bottom:none; }
+  .rec b{ font-size:14.5px; }
+  .rec small{ display:block; color:var(--myllm-muted,#8a8a8e); font-size:12.5px; line-height:1.45; margin-top:2px; }
+  .rec .add{ border:none; border-radius:9px; padding:6px 10px; font-size:12px; font-weight:700; background:var(--myllm-bg,#f2f2f7); color:var(--myllm-text,#111); margin-top:6px; }
+</style>
+</head>
+<body>
+
+<h1>📚 Book Nook</h1>
+<p class="statline" id="stats"></p>
+
+<div class="tabs">
+  <button id="tabR" class="on" onclick="showTab('reading')">Reading</button>
+  <button id="tabW" onclick="showTab('want')">Want to read</button>
+  <button id="tabF" onclick="showTab('finished')">Finished</button>
+</div>
+
+<div class="card" id="addcard">
+  <div class="row">
+    <input id="addq" placeholder="Add a book — title or author…" onkeydown="if(event.key==='Enter')searchBooks()">
+    <button class="go" id="addgo" onclick="searchBooks()">Find</button>
+  </div>
+  <div id="results"></div>
+  <p class="hint" id="addhint"></p>
+</div>
+
+<div id="recwrap" style="display:none">
+  <button class="recbtn" onclick="recommend()">✨ What should I read next?</button>
+  <div class="card" id="reccard" style="display:none"><div id="recs"></div></div>
+</div>
+
+<div id="shelf"></div>
+
+<div class="veil" id="veil" onclick="closeSheet()"></div>
+<div class="sheet" id="sheet">
+  <h3 id="fintitle">Finished!</h3>
+  <div class="bstars" id="bstars"></div>
+  <input id="finnote" placeholder="One line to remember it by (optional)">
+  <button class="done" onclick="confirmFinish()">Add to Finished</button>
+</div>
+
+<!-- AI thinking pill (house convention) -->
+<style>
+@keyframes myllmAiSpin{to{transform:rotate(360deg)}}
+.myllm-ai-busy{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(18px);z-index:99999;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;display:flex;align-items:center;gap:10px;background:rgba(28,28,30,.96);color:#fff;border-radius:999px;padding:10px 16px 10px 14px;box-shadow:0 6px 22px rgba(0,0,0,.4);font-size:14px;font-weight:600;max-width:92%}
+.myllm-ai-busy.on{opacity:1;transform:translateX(-50%) translateY(0)}
+.myllm-ai-cog{font-size:18px;animation:myllmAiSpin 2.4s linear infinite;filter:drop-shadow(0 0 5px rgba(124,92,255,.85))}
+.myllm-ai-busy small{font-weight:400;opacity:.6}
+</style>
+<script>
+(function(){if(window.__myllmAiWrap||typeof window.myllmAsk!=='function')return;window.__myllmAiWrap=true;
+var orig=window.myllmAsk,depth=0,node=null;
+function ensure(){if(node)return;node=document.createElement('div');node.className='myllm-ai-busy';
+node.innerHTML='<span class="myllm-ai-cog">⚙️</span><span>AI is thinking… <small>privately, on your device</small></span>';
+(document.body||document.documentElement).appendChild(node);}
+function show(){ensure();depth++;node.classList.add('on');}
+function hide(){depth=Math.max(0,depth-1);if(depth===0&&node)node.classList.remove('on');}
+window.myllmAsk=function(){show();var p;try{p=orig.apply(this,arguments);}catch(e){hide();throw e;}
+return Promise.resolve(p).then(function(r){hide();return r;},function(e){hide();throw e;});};})();
+</script>
+
+<script>
+var store = window.myllmStorage || {getItem:function(){return Promise.resolve(null)}, setItem:function(){return Promise.resolve()}};
+function haptic(k){ if(window.myllmHaptic){ try{ myllmHaptic(k||'light'); }catch(_){} } }
+var NET = window.myllmFetch || null;
+var ASK = window.myllmAsk || null;
+function el(id){ return document.getElementById(id); }
+function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+
+/* book = {id, title, author, cover(url|null), shelf, rating, note, finishedAt} */
+var books = [];
+var tab = "reading";
+var finishing = null, finRating = 0;
+var SPINE_COLORS = ["#a2653c","#5b7d5a","#4a6d8c","#8c5a74","#7a6a4f","#586b78"];
+
+function uid(){ return "b" + Date.now().toString(36) + Math.floor(Math.random()*1e5).toString(36); }
+function save(){ store.setItem("books", JSON.stringify(books)); }
+
+function initials(t){
+  return t.split(/\s+/).slice(0,2).map(function(w){ return (w[0]||"").toUpperCase(); }).join("");
+}
+function coverHTML(b){
+  if (b.cover) return '<img class="cov" src="' + esc(b.cover) + '" alt="" loading="lazy" onerror="this.outerHTML=\'<div class=&quot;cov&quot; style=&quot;background:' + spine(b) + '&quot;>' + esc(initials(b.title)) + '</div>\'">';
+  return '<div class="cov" style="background:' + spine(b) + '">' + esc(initials(b.title)) + '</div>';
+}
+function spine(b){
+  var h = 0; for (var i = 0; i < b.title.length; i++) h = (h * 31 + b.title.charCodeAt(i)) >>> 0;
+  return SPINE_COLORS[h % SPINE_COLORS.length];
+}
+
+function showTab(t){
+  tab = t;
+  haptic("selection");
+  el("tabR").className = t === "reading" ? "on" : "";
+  el("tabW").className = t === "want" ? "on" : "";
+  el("tabF").className = t === "finished" ? "on" : "";
+  render();
+}
+
+/* ---------- stats ---------- */
+function renderStats(){
+  var yr = new Date().getFullYear();
+  var fin = books.filter(function(b){ return b.shelf === "finished"; });
+  var finYr = fin.filter(function(b){ return b.finishedAt && new Date(b.finishedAt).getFullYear() === yr; });
+  var rated = fin.filter(function(b){ return b.rating; });
+  var avg = rated.length ? (rated.reduce(function(a,b){ return a + b.rating; }, 0) / rated.length).toFixed(1) : null;
+  el("stats").textContent = finYr.length + " finished in " + yr +
+    (avg ? " · " + avg + "★ average" : "") +
+    " · " + books.filter(function(b){ return b.shelf === "want"; }).length + " waiting";
+}
+
+/* ---------- add via Open Library (manual fallback built in) ---------- */
+function searchBooks(){
+  var q = el("addq").value.trim();
+  if (!q) return;
+  haptic("light");
+  if (!NET){ offerManual(q, "No internet access for apps — add it by hand:"); return; }
+  el("addgo").disabled = true;
+  el("addhint").textContent = "Searching…";
+  el("results").innerHTML = "";
+  NET("https://openlibrary.org/search.json?limit=5&fields=title,author_name,cover_i&q=" + encodeURIComponent(q))
+  .then(function(r){
+    var j = JSON.parse(r.body);
+    el("addgo").disabled = false;
+    el("addhint").textContent = "";
+    if (!j.docs || !j.docs.length){ offerManual(q, "Nothing found — add it by hand:"); return; }
+    window.__found = j.docs.slice(0,5);
+    el("results").innerHTML = window.__found.map(function(d, i){
+      var cov = d.cover_i ? "https://covers.openlibrary.org/b/id/" + d.cover_i + "-M.jpg" : "";
+      return '<div class="result">' +
+        (cov ? '<img src="' + cov + '" alt="" loading="lazy">' : '<div class="cov" style="background:#c9b8a4"></div>') +
+        '<div class="t"><b>' + esc(d.title) + '</b><small>' + esc((d.author_name || []).slice(0,2).join(", ")) + '</small></div>' +
+        '<button onclick="addFound(' + i + ',\'want\')">Want</button>' +
+        '<button onclick="addFound(' + i + ',\'reading\')">Reading</button>' +
+      '</div>';
+    }).join("");
+  })
+  .catch(function(){
+    el("addgo").disabled = false;
+    offerManual(q, "Search didn't work — add it by hand:");
+  });
+}
+function offerManual(q, msg){
+  el("addhint").textContent = "";
+  window.__manual = q;
+  el("results").innerHTML = '<div class="result"><div class="cov" style="background:#c9b8a4"></div>' +
+    '<div class="t"><b>' + esc(q) + '</b><small>' + esc(msg) + '</small></div>' +
+    '<button onclick="addManual(\'want\')">Want</button>' +
+    '<button onclick="addManual(\'reading\')">Reading</button></div>';
+}
+function addFound(i, shelf){
+  var d = window.__found[i];
+  addBook({title:d.title, author:(d.author_name || [])[0] || "",
+           cover:d.cover_i ? "https://covers.openlibrary.org/b/id/" + d.cover_i + "-M.jpg" : null}, shelf);
+}
+function addManual(shelf){
+  var parts = String(window.__manual).split(/\s+by\s+/i);
+  addBook({title:parts[0], author:parts[1] || "", cover:null}, shelf);
+}
+function addBook(meta, shelf){
+  books.unshift({id:uid(), title:meta.title, author:meta.author, cover:meta.cover,
+                 shelf:shelf, rating:0, note:"", finishedAt:null});
+  el("results").innerHTML = ""; el("addq").value = "";
+  haptic("success");
+  save(); showTab(shelf);
+}
+
+/* ---------- shelf ---------- */
+function render(){
+  renderStats();
+  el("recwrap").style.display =
+    (ASK && books.filter(function(b){ return b.shelf === "finished" && b.rating >= 4; }).length >= 2) ? "block" : "none";
+  var rows = books.filter(function(b){ return b.shelf === tab; });
+  if (!rows.length){
+    var msg = tab === "reading" ? "Nothing on the go. Find a book above — or move one over from Want to read."
+            : tab === "want" ? "Your someday-pile is empty. Lucky you — go browsing."
+            : "Nothing finished yet. The first one's the sweetest.";
+    el("shelf").innerHTML = '<p class="empty">' + msg + '</p>';
+    return;
+  }
+  el("shelf").innerHTML = rows.map(function(b){
+    var acts = "";
+    if (tab === "reading") acts = '<button onclick="openFinish(\'' + b.id + '\')">Finished ✓</button>' +
+                                  '<button onclick="moveBook(\'' + b.id + '\',\'want\')">Pause</button>';
+    else if (tab === "want") acts = '<button onclick="moveBook(\'' + b.id + '\',\'reading\')">Start</button>' +
+                                    '<button onclick="removeBook(\'' + b.id + '\')">✕</button>';
+    else acts = '<button onclick="removeBook(\'' + b.id + '\')">✕</button>';
+    return '<div class="book">' + coverHTML(b) +
+      '<div class="t"><b>' + esc(b.title) + '</b>' +
+      (b.author ? '<small>' + esc(b.author) + '</small>' : '') +
+      (b.rating ? '<div class="stars">' + "★".repeat(b.rating) + "☆".repeat(5 - b.rating) + '</div>' : '') +
+      (b.note ? '<div class="note">“' + esc(b.note) + '”</div>' : '') +
+      '</div><div class="acts">' + acts + '</div></div>';
+  }).join("");
+}
+function moveBook(id, shelf){
+  var b = books.filter(function(x){ return x.id === id; })[0];
+  if (b){ b.shelf = shelf; haptic("selection"); save(); render(); }
+}
+function removeBook(id){
+  books = books.filter(function(x){ return x.id !== id; });
+  haptic("light"); save(); render();
+}
+
+/* ---------- finishing ---------- */
+function openFinish(id){
+  finishing = books.filter(function(x){ return x.id === id; })[0];
+  if (!finishing) return;
+  finRating = 0;
+  el("fintitle").textContent = "Finished “" + finishing.title + "”!";
+  el("finnote").value = "";
+  renderStars();
+  el("veil").classList.add("on"); el("sheet").classList.add("on");
+  haptic("light");
+}
+function renderStars(){
+  el("bstars").innerHTML = [1,2,3,4,5].map(function(n){
+    return '<button onclick="setStar(' + n + ')">' + (n <= finRating ? "★" : "☆") + '</button>';
+  }).join("");
+}
+function setStar(n){ finRating = n; haptic("selection"); renderStars(); }
+function confirmFinish(){
+  if (!finishing) return;
+  finishing.shelf = "finished";
+  finishing.rating = finRating;
+  finishing.note = el("finnote").value.trim();
+  finishing.finishedAt = Date.now();
+  closeSheet();
+  haptic("success");
+  save(); showTab("finished");
+}
+function closeSheet(){
+  el("veil").classList.remove("on"); el("sheet").classList.remove("on");
+  finishing = null;
+}
+
+/* ---------- AI recommendations ---------- */
+function recommend(){
+  if (!ASK) return;
+  haptic("light");
+  var loved = books.filter(function(b){ return b.shelf === "finished" && b.rating >= 4; })
+                   .slice(0, 8)
+                   .map(function(b){ return '"' + b.title + '"' + (b.author ? " by " + b.author : "") + " (" + b.rating + "/5" + (b.note ? ", said: " + b.note : "") + ")"; });
+  var have = books.map(function(b){ return b.title.toLowerCase(); });
+  ASK("Books I loved: " + loved.join("; ") + ".\nSuggest 4 books I haven't mentioned that I'd probably love next. Reply with ONLY a JSON array like " +
+      '[{"title":"...","author":"...","why":"one short sentence"}]. No prose, no markdown.',
+      {system:"You are a well-read, honest book recommender. Output only the JSON array."})
+  .then(function(r){
+    var s = String(r);
+    var a = s.indexOf("["), b = s.lastIndexOf("]");
+    if (a < 0 || b <= a) throw new Error("bad");
+    var recs;
+    try{ recs = JSON.parse(s.slice(a, b + 1)); }catch(e){ throw new Error("bad"); }
+    recs = recs.filter(function(x){ return x && x.title && have.indexOf(String(x.title).toLowerCase()) < 0; }).slice(0, 4);
+    if (!recs.length) throw new Error("bad");
+    window.__recs = recs;
+    el("reccard").style.display = "block";
+    el("recs").innerHTML = recs.map(function(x, i){
+      return '<div class="rec"><b>' + esc(x.title) + '</b>' + (x.author ? ' <small style="display:inline">— ' + esc(x.author) + '</small>' : '') +
+        '<small>' + esc(x.why || "") + '</small>' +
+        '<button class="add" onclick="addRec(' + i + ')">+ Want to read</button></div>';
+    }).join("");
+    haptic("success");
+  })
+  .catch(function(){
+    el("reccard").style.display = "block";
+    el("recs").innerHTML = '<div class="rec"><small>The recommendations didn\'t come through cleanly — tap the button to try again.</small></div>';
+  });
+}
+function addRec(i){
+  var x = window.__recs[i];
+  addBook({title:x.title, author:x.author || "", cover:null}, "want");
+}
+
+/* ---------- boot ---------- */
+store.getItem("books").then(function(v){
+  if (v){ try{ books = JSON.parse(v) || []; }catch(e){} }
+  if (!NET) el("addhint").textContent = "No internet access for apps — you can still add books by hand (type the title, then Find).";
+  render();
+});
+</script>
+</body>
+</html>

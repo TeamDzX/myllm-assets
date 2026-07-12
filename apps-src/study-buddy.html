@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Study Buddy</title>
+<style>
+  :root { color-scheme: light dark; }
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body{
+    font-family:var(--myllm-font,-apple-system,system-ui,sans-serif);
+    background:var(--myllm-bg,#f2f2f7);
+    color:var(--myllm-text,#111);
+    max-width:640px; margin:0 auto; min-height:100dvh;
+    padding:14px 14px calc(30px + env(safe-area-inset-bottom));
+  }
+  h1{ font-size:22px; font-weight:800; margin:4px 2px 2px; }
+  .statline{ font-size:13px; color:var(--myllm-muted,#8a8a8e); margin:0 2px 12px; }
+  .card{
+    background:var(--myllm-surface,#fff); border:1px solid var(--myllm-border,#e3e3e8);
+    border-radius:16px; padding:14px; margin-bottom:12px;
+  }
+  label{ display:block; font-size:11.5px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; color:var(--myllm-muted,#8a8a8e); margin-bottom:7px; }
+  textarea{
+    width:100%; min-height:160px; font-size:15px; line-height:1.5; padding:12px; resize:vertical;
+    border-radius:12px; border:1px solid var(--myllm-border,#e3e3e8);
+    background:var(--myllm-bg,#f2f2f7); color:var(--myllm-text,#111); font-family:inherit;
+  }
+  .go{
+    width:100%; border:none; border-radius:13px; padding:15px; margin-top:12px;
+    font-size:16px; font-weight:750; background:#5e5ce6; color:#fff;
+  }
+  .go:disabled{ opacity:.5; }
+  .hint{ font-size:12.5px; color:var(--myllm-muted,#8a8a8e); margin-top:9px; line-height:1.5; }
+
+  /* quiz */
+  #quiz{ display:none; }
+  .qtop{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px; }
+  .qtop b{ font-size:14px; }
+  .qtop span{ font-size:13px; color:var(--myllm-muted,#8a8a8e); font-variant-numeric:tabular-nums; }
+  .qbar{ height:6px; border-radius:99px; background:var(--myllm-bg,#f2f2f7); overflow:hidden; margin-bottom:14px; }
+  .qbar div{ height:100%; border-radius:99px; background:#5e5ce6; transition:width .25s; }
+  .qtext{ font-size:18px; font-weight:750; line-height:1.4; margin-bottom:14px; }
+  .opt{
+    width:100%; text-align:left; border:1.5px solid var(--myllm-border,#e3e3e8);
+    background:var(--myllm-bg,#f2f2f7); color:var(--myllm-text,#111);
+    border-radius:13px; padding:13px 14px; font-size:15px; font-weight:600; margin-bottom:9px;
+    font-family:inherit; line-height:1.35;
+  }
+  .opt.correct{ border-color:#30a14e; background:rgba(48,161,78,.14); }
+  .opt.wrong{ border-color:#ff3b30; background:rgba(255,59,48,.12); }
+  .opt:disabled{ opacity:.92; }
+  .why{
+    display:none; font-size:13.5px; line-height:1.5; color:var(--myllm-muted,#8a8a8e);
+    background:var(--myllm-bg,#f2f2f7); border-radius:12px; padding:11px 12px; margin-top:4px;
+  }
+  .why.on{ display:block; }
+  .nextbtn{ display:none; }
+  .nextbtn.on{ display:block; }
+
+  /* results */
+  #result{ display:none; text-align:center; }
+  #result .big{ font-size:52px; margin:12px 0 4px; }
+  #result h2{ font-size:24px; font-weight:800; }
+  #result p{ color:var(--myllm-muted,#8a8a8e); font-size:14.5px; margin-top:4px; }
+  .review{ text-align:left; margin-top:14px; }
+  .review .rv{ padding:10px 0; border-bottom:1px solid var(--myllm-border,#e3e3e8); font-size:14px; }
+  .review .rv:last-child{ border-bottom:none; }
+  .review .rv b{ display:block; }
+  .review .rv small{ display:block; color:var(--myllm-muted,#8a8a8e); margin-top:3px; line-height:1.45; }
+  .row2{ display:flex; gap:9px; margin-top:14px; }
+  .row2 .go{ margin-top:0; }
+  .go.ghost{ background:var(--myllm-bg,#f2f2f7); color:var(--myllm-text,#111); border:1px solid var(--myllm-border,#e3e3e8); }
+</style>
+</head>
+<body>
+
+<h1>🎓 Study Buddy</h1>
+<p class="statline" id="stats"></p>
+
+<div id="setup">
+  <div class="card">
+    <label>Your notes — or just a topic</label>
+    <textarea id="notes" placeholder="Paste your revision notes, a textbook passage, vocabulary…&#10;&#10;Or simply type a topic: 'GCSE photosynthesis', 'French passé composé', 'the French Revolution'"></textarea>
+    <button class="go" id="quizBtn" onclick="startQuiz()">Quiz me</button>
+    <p class="hint" id="setuphint">Questions are generated privately, on this device — your notes never leave your phone.</p>
+  </div>
+</div>
+
+<div id="quiz">
+  <div class="card">
+    <div class="qtop"><b id="qnum"></b><span id="qscore"></span></div>
+    <div class="qbar"><div id="qfill"></div></div>
+    <div class="qtext" id="qtext"></div>
+    <div id="opts"></div>
+    <div class="why" id="why"></div>
+    <button class="go nextbtn" id="nextBtn" onclick="nextQ()">Next</button>
+  </div>
+</div>
+
+<div id="result">
+  <div class="card">
+    <div class="big" id="remoji"></div>
+    <h2 id="rtitle"></h2>
+    <p id="rsub"></p>
+    <div class="review" id="review"></div>
+    <div class="row2">
+      <button class="go ghost" onclick="backToNotes()">Edit notes</button>
+      <button class="go" onclick="startQuiz()">Quiz me again</button>
+    </div>
+  </div>
+</div>
+
+<!-- AI thinking pill (house convention) -->
+<style>
+@keyframes myllmAiSpin{to{transform:rotate(360deg)}}
+.myllm-ai-busy{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(18px);z-index:99999;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;display:flex;align-items:center;gap:10px;background:rgba(28,28,30,.96);color:#fff;border-radius:999px;padding:10px 16px 10px 14px;box-shadow:0 6px 22px rgba(0,0,0,.4);font-size:14px;font-weight:600;max-width:92%}
+.myllm-ai-busy.on{opacity:1;transform:translateX(-50%) translateY(0)}
+.myllm-ai-cog{font-size:18px;animation:myllmAiSpin 2.4s linear infinite;filter:drop-shadow(0 0 5px rgba(124,92,255,.85))}
+.myllm-ai-busy small{font-weight:400;opacity:.6}
+</style>
+<script>
+(function(){if(window.__myllmAiWrap||typeof window.myllmAsk!=='function')return;window.__myllmAiWrap=true;
+var orig=window.myllmAsk,depth=0,node=null;
+function ensure(){if(node)return;node=document.createElement('div');node.className='myllm-ai-busy';
+node.innerHTML='<span class="myllm-ai-cog">⚙️</span><span>AI is thinking… <small>privately, on your device</small></span>';
+(document.body||document.documentElement).appendChild(node);}
+function show(){ensure();depth++;node.classList.add('on');}
+function hide(){depth=Math.max(0,depth-1);if(depth===0&&node)node.classList.remove('on');}
+window.myllmAsk=function(){show();var p;try{p=orig.apply(this,arguments);}catch(e){hide();throw e;}
+return Promise.resolve(p).then(function(r){hide();return r;},function(e){hide();throw e;});};})();
+</script>
+
+<script>
+var store = window.myllmStorage || {getItem:function(){return Promise.resolve(null)}, setItem:function(){return Promise.resolve()}};
+function haptic(k){ if(window.myllmHaptic){ try{ myllmHaptic(k||'light'); }catch(_){} } }
+var ASK = window.myllmAsk || null;
+function el(id){ return document.getElementById(id); }
+function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+
+var quiz = [];        /* [{q, options[4], correct, why}] */
+var qi = 0, score = 0, answered = false;
+var wrong = [];       /* review list */
+var lifetime = {asked:0, right:0};
+var askedBefore = []; /* question texts from this session, to avoid repeats on "again" */
+
+function renderStats(){
+  el("stats").textContent = lifetime.asked
+    ? lifetime.right + " / " + lifetime.asked + " lifetime · " + Math.round(lifetime.right / lifetime.asked * 100) + "% right"
+    : "Paste notes, get quizzed, actually remember it.";
+}
+
+/* ---------- generate ---------- */
+function parseQuiz(reply){
+  var s = String(reply);
+  var a = s.indexOf("["), b = s.lastIndexOf("]");
+  if (a < 0 || b <= a) return null;
+  var arr;
+  try{ arr = JSON.parse(s.slice(a, b + 1)); }catch(e){ return null; }
+  if (!Array.isArray(arr)) return null;
+  var clean = arr.filter(function(x){
+    return x && typeof x.q === "string" && Array.isArray(x.options) && x.options.length === 4 &&
+           typeof x.correct === "number" && x.correct >= 0 && x.correct <= 3;
+  }).map(function(x){
+    return {q:x.q, options:x.options.map(String), correct:x.correct, why:String(x.why || "")};
+  });
+  return clean.length >= 3 ? clean.slice(0, 5) : null;
+}
+
+function startQuiz(){
+  var notes = el("notes").value.trim();
+  if (!notes){ el("setuphint").textContent = "Paste some notes or a topic first."; haptic("light"); return; }
+  if (!ASK){ el("setuphint").textContent = "Study Buddy needs AI — enable it in Settings, then come back."; haptic("light"); return; }
+  haptic("light");
+  store.setItem("sb_notes", notes);
+  el("quizBtn").disabled = true;
+  el("setuphint").textContent = "Writing your questions…";
+  var avoid = askedBefore.length ? "\nDo NOT reuse these questions: " + askedBefore.slice(-10).map(function(q){ return '"' + q + '"'; }).join(", ") : "";
+  ASK("Create exactly 5 multiple-choice questions to test understanding of this material. Mix recall and understanding; make wrong options plausible.\n\nMATERIAL:\n" + notes.slice(0, 6000) + avoid +
+      '\n\nReply with ONLY a JSON array, no markdown, exactly this shape:\n[{"q":"…","options":["…","…","…","…"],"correct":0,"why":"one-sentence explanation of the right answer"}]\nThe "correct" field is the index (0-3) of the right option. Vary which position is correct.',
+      {system:"You are an excellent quiz writer. Output only the JSON array — no commentary, no code fences."})
+  .then(function(r){
+    var parsed = parseQuiz(r);
+    el("quizBtn").disabled = false;
+    if (!parsed){
+      el("setuphint").textContent = "The questions didn't come through cleanly — that happens with smaller models. Tap Quiz me to try again.";
+      haptic("light");
+      return;
+    }
+    quiz = parsed;
+    quiz.forEach(function(x){ askedBefore.push(x.q); });
+    qi = 0; score = 0; wrong = [];
+    el("setup").style.display = "none";
+    el("result").style.display = "none";
+    el("quiz").style.display = "block";
+    el("setuphint").textContent = "";
+    haptic("success");
+    showQ();
+    window.scrollTo(0, 0);
+  })
+  .catch(function(){
+    el("quizBtn").disabled = false;
+    el("setuphint").textContent = "The AI couldn't run just now — try again in a moment.";
+  });
+}
+
+/* ---------- play ---------- */
+function showQ(){
+  var x = quiz[qi];
+  answered = false;
+  el("qnum").textContent = "Question " + (qi + 1) + " of " + quiz.length;
+  el("qscore").textContent = score + " right";
+  el("qfill").style.width = (qi / quiz.length * 100) + "%";
+  el("qtext").textContent = x.q;
+  el("why").className = "why";
+  el("nextBtn").className = "go nextbtn";
+  el("nextBtn").textContent = qi === quiz.length - 1 ? "See my score" : "Next";
+  el("opts").innerHTML = x.options.map(function(o, i){
+    return '<button class="opt" id="opt' + i + '" onclick="answer(' + i + ')">' + esc(o) + '</button>';
+  }).join("");
+}
+function answer(i){
+  if (answered) return;
+  answered = true;
+  var x = quiz[qi];
+  lifetime.asked++;
+  for (var k = 0; k < 4; k++){
+    var btn = el("opt" + k);
+    btn.disabled = true;
+    if (k === x.correct) btn.className = "opt correct";
+    else if (k === i) btn.className = "opt wrong";
+  }
+  if (i === x.correct){ score++; haptic("success"); }
+  else { wrong.push(x); haptic("light"); }
+  lifetime.right += (i === x.correct) ? 1 : 0;
+  store.setItem("sb_life", JSON.stringify(lifetime));
+  if (x.why){
+    el("why").textContent = x.why;
+    el("why").className = "why on";
+  }
+  el("qscore").textContent = score + " right";
+  el("nextBtn").className = "go nextbtn on";
+}
+function nextQ(){
+  haptic("selection");
+  if (qi < quiz.length - 1){ qi++; showQ(); window.scrollTo(0, 0); }
+  else finish();
+}
+
+/* ---------- results ---------- */
+function finish(){
+  el("quiz").style.display = "none";
+  el("result").style.display = "block";
+  var pct = Math.round(score / quiz.length * 100);
+  el("remoji").textContent = pct === 100 ? "🏆" : pct >= 60 ? "💪" : "📖";
+  el("rtitle").textContent = score + " out of " + quiz.length;
+  el("rsub").textContent = pct === 100 ? "Perfect — you own this material."
+    : pct >= 60 ? "Solid. One more round and it sticks."
+    : "That's what practice is for — review below, then go again.";
+  el("review").innerHTML = wrong.length
+    ? '<label>Worth another look</label>' + wrong.map(function(x){
+        return '<div class="rv"><b>' + esc(x.q) + '</b><small>✓ ' + esc(x.options[x.correct]) +
+          (x.why ? ' — ' + esc(x.why) : '') + '</small></div>';
+      }).join("")
+    : "";
+  renderStats();
+  haptic(pct >= 60 ? "success" : "light");
+  window.scrollTo(0, 0);
+}
+function backToNotes(){
+  haptic("selection");
+  el("result").style.display = "none";
+  el("quiz").style.display = "none";
+  el("setup").style.display = "block";
+}
+
+/* ---------- boot ---------- */
+Promise.all([store.getItem("sb_notes"), store.getItem("sb_life")]).then(function(v){
+  if (v[0]) el("notes").value = v[0];
+  if (v[1]){ try{ lifetime = JSON.parse(v[1]) || lifetime; }catch(e){} }
+  if (!ASK) el("setuphint").textContent = "Study Buddy needs AI — enable it in Settings to get quizzed.";
+  renderStats();
+});
+</script>
+</body>
+</html>

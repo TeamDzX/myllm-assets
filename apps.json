@@ -2208,6 +2208,87 @@
       "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/submit-app.myllmapp",
       "sizeKB": 8,
       "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/icons/submit-app.jpg"
+    },
+    {
+      "id": "travel-phrasebook",
+      "name": "Travel Phrasebook",
+      "emoji": "🗺️",
+      "tagline": "Speak the language — even offline",
+      "description": "36 hand-picked phrases in 10 languages — Spanish, French, German, Italian, Portuguese, Japanese, Mandarin, Korean, Turkish and Greek — with pronunciation guides for the tricky scripts, spoken aloud for you, and a full-screen mode to show a phrase to a local. And when the phrases run out: type anything and the on-device AI translates it — on a plane, on a mountain, with no signal at all. Star your go-to phrases. The phrasebook works everywhere; the freeform translator needs AI — enable AI in Settings.",
+      "tags": [
+        "travel",
+        "language",
+        "translation",
+        "phrasebook",
+        "AI-powered",
+        "offline",
+        "saves data"
+      ],
+      "category": "Utilities",
+      "iconSymbol": "globe.europe.africa.fill",
+      "iconColor": "teal",
+      "version": 1,
+      "featured": true,
+      "requiresAI": false,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/travel-phrasebook.jpg",
+      "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/travel-phrasebook.html",
+      "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/travel-phrasebook.myllmapp",
+      "sizeKB": 25,
+      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/icons/travel-phrasebook.jpg"
+    },
+    {
+      "id": "book-nook",
+      "name": "Book Nook",
+      "emoji": "📚",
+      "tagline": "Your reading life, on one shelf",
+      "description": "Three shelves — Reading, Want to read, Finished — with real covers found for you (type a title, pick the match), star ratings, a one-line memory of every book you finish, and your year's reading count. Loved a few books? Ask the on-device AI what to read next and get picks with reasons, added to your pile in a tap. Works offline with hand-added books; cover search needs network; recommendations need AI — enable AI in Settings.",
+      "tags": [
+        "books",
+        "reading",
+        "tracker",
+        "AI-powered",
+        "network",
+        "saves data",
+        "offline"
+      ],
+      "category": "Creative",
+      "iconSymbol": "books.vertical.fill",
+      "iconColor": "orange",
+      "version": 1,
+      "featured": false,
+      "requiresAI": false,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/book-nook.jpg",
+      "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/book-nook.html",
+      "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/book-nook.myllmapp",
+      "sizeKB": 17,
+      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/icons/book-nook.jpg"
+    },
+    {
+      "id": "study-buddy",
+      "name": "Study Buddy",
+      "emoji": "🎓",
+      "tagline": "Paste your notes, get quizzed",
+      "description": "The studying app that does the studying part: paste your revision notes — or just name a topic — and the on-device AI writes you a five-question quiz with plausible wrong answers and an explanation for every right one. Wrong answers queue up for review, fresh questions every round, and a lifetime score tracks whether it's sticking. Your notes never leave your phone. Requires AI — enable AI in Settings.",
+      "tags": [
+        "students",
+        "study",
+        "quiz",
+        "revision",
+        "learning",
+        "AI-powered",
+        "saves data"
+      ],
+      "category": "Students",
+      "iconSymbol": "graduationcap.fill",
+      "iconColor": "indigo",
+      "version": 1,
+      "featured": false,
+      "requiresAI": true,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/study-buddy.jpg",
+      "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/study-buddy.html",
+      "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/study-buddy.myllmapp",
+      "sizeKB": 12,
+      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/icons/study-buddy.jpg"
     }
   ]
 }
