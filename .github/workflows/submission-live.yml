@@ -1,0 +1,31 @@
+name: Submission gone live
+
+# When a submission issue is closed as COMPLETED (i.e. the app was merged),
+# tell the submitter the good news with the right links. Closing as
+# "not planned" (declined) posts nothing — that conversation is human.
+on:
+  issues:
+    types: [closed]
+
+permissions:
+  issues: write
+
+jobs:
+  announce:
+    if: >
+      github.event.issue.state_reason == 'completed' &&
+      (contains(github.event.issue.labels.*.name, 'app-submission') || startsWith(github.event.issue.title, '[App]'))
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner, repo: context.repo.repo,
+              issue_number: context.payload.issue.number,
+              body: "🎉 **Your app is live!**\n\n" +
+                "It's now in the MyLLMos App Gallery's **Community** shelf, on iOS and Android, credited to you. " +
+                "Open MyLLM → pull up the springboard → **App Gallery** (pull down to refresh — the gallery updates within about 5 minutes of this message), " +
+                "or browse the web gallery at https://www.opticell-limited.com/myllm-os\n\n" +
+                "Thank you for building something and sharing it. Tell your friends — every install is a one-tap `myllm://` link from the gallery. 🚀"
+            });
