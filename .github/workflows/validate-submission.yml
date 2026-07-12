@@ -1,0 +1,61 @@
+name: Validate app submission
+
+# Runs the same house-rules checks as the in-app "Submit Your App" wizard on
+# every submission issue, and posts the results as a comment. Triage only —
+# a human still reviews and merges every app.
+on:
+  issues:
+    types: [opened, edited]
+
+permissions:
+  issues: write
+
+jobs:
+  validate:
+    if: contains(github.event.issue.labels.*.name, 'app-submission') || startsWith(github.event.issue.title, '[App]')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const body = context.payload.issue.body || "";
+            const m = body.match(/```html\s*\n([\s\S]*?)```/i);
+            const post = (text) => github.rest.issues.createComment({
+              owner: context.repo.owner, repo: context.repo.repo,
+              issue_number: context.payload.issue.number, body: text
+            });
+
+            if (!m || m[1].trim().length < 200) {
+              await post("🤖 **Automated check:** I couldn't find your app's code in this issue. " +
+                "Please paste the complete HTML inside the ```html code fence in the template " +
+                "(from MyLLM: long-press your app → View Code → copy), then edit this issue — I'll re-check automatically.");
+              return;
+            }
+            const code = m[1];
+            const kb = Math.round(code.length / 1024);
+            const checks = [];
+            const add = (ok, name, note) => checks.push({ok, name, note});
+
+            add(/<html|<body|<!doctype/i.test(code), "Complete HTML document", kb + " KB");
+            add(kb <= 600, "Under 600 KB", kb > 600 ? "trim embedded assets" : "");
+            add(!/<script[^>]+src\s*=/i.test(code), "No remote scripts",
+                "reviewed apps must not load code from URLs — inline everything");
+            add(!/<iframe[^>]+src\s*=\s*["']https?:/i.test(code), "No remote iframes", "");
+            add(!/localStorage|sessionStorage/.test(code), "Uses myllmStorage (not localStorage)",
+                "localStorage doesn't persist in the MyLLMos sandbox");
+            add(!/\b(alert|confirm|prompt)\s*\(/.test(code), "No alert/confirm/prompt",
+                "these silently no-op in the sandbox");
+            add(!(/\bfetch\s*\(/.test(code) && !/myllmFetch/.test(code)), "No raw fetch()",
+                "use myllmFetch — browser fetch is CORS-dead in the sandbox");
+
+            const bridges = [...new Set(code.match(/myllm[A-Z][a-zA-Z]+/g) || [])];
+            const failed = checks.filter(c => !c.ok);
+            const lines = checks.map(c =>
+              (c.ok ? "✅" : "❌") + " " + c.name + (c.note && !c.ok ? " — " + c.note : ""));
+
+            await post("🤖 **Automated check** (same rules as the in-app wizard):\n\n" +
+              lines.join("\n") +
+              "\n\n**Bridges used:** " + (bridges.length ? bridges.join(", ") : "none — fully self-contained") +
+              "\n\n" + (failed.length
+                ? "⚠️ **" + failed.length + " check(s) failing.** Fix and edit this issue — I'll re-check. A human reviews once everything is green."
+                : "🎉 **All checks pass.** A human will now review the app itself — expect a reply here within a few days."));
