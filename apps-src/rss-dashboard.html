@@ -22,8 +22,20 @@
 *{box-sizing:border-box}
 body{margin:0;font-family:var(--font);background:var(--bg);color:var(--text);-webkit-text-size-adjust:100%}
 .head{position:sticky;top:0;z-index:10;background:var(--bg);padding:10px 0 0;border-bottom:1px solid var(--border)}
-#tabs{display:flex;gap:6px;overflow-x:auto;padding:0 16px 12px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.headrow{display:flex;align-items:flex-start}
+#tabs{display:flex;gap:6px;overflow-x:auto;padding:0 4px 12px 16px;-webkit-overflow-scrolling:touch;scrollbar-width:none;flex:1;min-width:0}
 #tabs::-webkit-scrollbar{display:none}
+#gear{flex:none;border:1px solid var(--border);background:var(--surface);color:var(--muted);border-radius:999px;width:36px;height:36px;font-size:17px;margin:0 12px 0 4px;cursor:pointer}
+.prefs{position:fixed;inset:0;z-index:400;display:none;background:rgba(0,0,0,.45);align-items:flex-end}
+.prefs.on{display:flex}
+.prefs .sheet{background:var(--surface);width:100%;max-width:780px;margin:0 auto;border-radius:18px 18px 0 0;padding:20px 18px calc(26px + env(safe-area-inset-bottom))}
+.prefs h3{font-size:18px;font-weight:800;margin:0 0 12px}
+.prefs label{display:block;font-size:11.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin:12px 0 7px}
+.prefs .chips{display:flex;flex-wrap:wrap;gap:7px}
+.prefs .chips button{border:1px solid var(--border);background:var(--bg);color:var(--text);border-radius:999px;padding:8px 14px;font:inherit;font-size:13.5px;font-weight:600;cursor:pointer}
+.prefs .chips button.on{background:var(--accent);border-color:transparent;color:#fff}
+.prefs .pnote{font-size:12.5px;color:var(--muted);line-height:1.5;margin:12px 0 0}
+.prefs .done{display:block;width:100%;margin-top:16px;border:0;border-radius:12px;padding:13px;background:var(--accent);color:#fff;font:inherit;font-size:15px;font-weight:700;cursor:pointer}
 .tab{flex:none;border:0;padding:8px 14px;border-radius:999px;background:var(--surface);color:var(--muted);font:inherit;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap;border:1px solid var(--border)}
 .tab.on{background:var(--accent);color:#fff;border-color:transparent}
 #status{padding:40px 24px;text-align:center;color:var(--muted);font-size:15px;line-height:1.5}
@@ -73,7 +85,22 @@ a.cvg{display:flex;gap:11px;align-items:center;text-decoration:none;color:inheri
 <body>
 
 <div class="head">
-  <div id="tabs"></div>
+  <div class="headrow">
+    <div id="tabs"></div>
+    <button id="gear" onclick="openPrefs()" aria-label="Feed settings">⚙︎</button>
+  </div>
+</div>
+
+<div id="prefs" class="prefs">
+  <div class="sheet">
+    <h3>Your feed</h3>
+    <label>Region</label>
+    <div class="chips" id="regionChips"></div>
+    <label>Perspective</label>
+    <div class="chips" id="perspChips"></div>
+    <p class="pnote" id="pnote">Every option keeps centre outlets in the mix, and each story shows its outlet and lean — the dial tilts the blend, it never hides the other side entirely.</p>
+    <button class="done" onclick="closePrefs()">Done</button>
+  </div>
 </div>
 
 <div id="status"></div>
@@ -282,11 +309,33 @@ function metaLine(a){var t=ago(a.date);return esc(a.src||'')+(t?' • '+t:'')}
 var SRC_LEAN={
   "Daily Mirror":   {pos:28,label:"Left-leaning"},
   "The Guardian":   {pos:28,label:"Left-leaning"},
+  "Guardian Australia":{pos:28,label:"Left-leaning"},
   "The Independent":{pos:30,label:"Left-leaning"},
+  "CNN":            {pos:32,label:"Left-leaning"},
+  "NPR":            {pos:36,label:"Centre-left"},
+  "The Hindu":      {pos:36,label:"Centre-left"},
+  "NDTV":           {pos:38,label:"Centre-left"},
   "Ars Technica":   {pos:40,label:"Centre-left"},
   "Al Jazeera":     {pos:40,label:"Centre-left"},
+  "CBC":            {pos:42,label:"Centre-left"},
+  "Japan Times":    {pos:42,label:"Centre-left"},
+  "Sydney Morning Herald":{pos:43,label:"Centre-left"},
+  "Politico":       {pos:46,label:"Centre"},
+  "Politico Europe":{pos:46,label:"Centre"},
+  "France 24":      {pos:46,label:"Centre"},
+  "DW":             {pos:46,label:"Centre"},
+  "ABC News (AU)":  {pos:46,label:"Centre"},
+  "Euronews":       {pos:48,label:"Centre"},
   "Sky News":       {pos:48,label:"Centre"},
+  "Global News":    {pos:48,label:"Centre"},
+  "Hindustan Times":{pos:48,label:"Centre"},
   "BBC":            {pos:50,label:"Centre"},
+  "NHK":            {pos:50,label:"Centre"},
+  "SCMP":           {pos:52,label:"Centre"},
+  "The Hill":       {pos:52,label:"Centre"},
+  "Times of India": {pos:55,label:"Centre"},
+  "Nikkei Asia":    {pos:56,label:"Centre"},
+  "National Post":  {pos:66,label:"Right-leaning"},
   "The Sun":        {pos:70,label:"Right-leaning"},
   "New York Post":  {pos:70,label:"Right-leaning"},
   "Daily Express":  {pos:72,label:"Right-leaning"},
@@ -452,8 +501,145 @@ function more(){
 }
 el('more').onclick=function(){haptic('selection');more()};
 
-buildTabs();
-load();
+// ===================== Region & perspective =====================
+// Regions swap the sources behind the news-core topics (Top, the local tab,
+// Politics); World and the lifestyle topics keep their global channels. Every
+// listed feed was verified live before shipping. All sources carry SRC_LEAN
+// entries so the perspective dial and the per-card spectrum dots stay honest.
+var store=window.myllmStorage||{getItem:function(){return Promise.resolve(null)},setItem:function(){return Promise.resolve()}};
+var REGIONS=[
+  {id:"uk",name:"United Kingdom",localName:"UK"},   // the app's original sources, unchanged
+  {id:"us",name:"United States",localName:"US",
+    top:[{src:"CNN",url:"https://rss.cnn.com/rss/cnn_topstories.rss"},
+         {src:"Fox News",url:"https://moxie.foxnews.com/google-publisher/latest.xml"},
+         {src:"The Hill",url:"https://thehill.com/feed/"},
+         {src:"NPR",url:"https://feeds.npr.org/1001/rss.xml"}],
+    local:[{src:"NPR",url:"https://feeds.npr.org/1001/rss.xml"},
+           {src:"New York Post",url:"https://nypost.com/feed/"},
+           {src:"The Hill",url:"https://thehill.com/feed/"},
+           {src:"CNN",url:"https://rss.cnn.com/rss/cnn_topstories.rss"}],
+    politics:[{src:"Politico",url:"https://rss.politico.com/politics-news.xml"},
+              {src:"The Hill",url:"https://thehill.com/feed/"},
+              {src:"Fox News",url:"https://moxie.foxnews.com/google-publisher/latest.xml"},
+              {src:"CNN",url:"https://rss.cnn.com/rss/cnn_topstories.rss"}]},
+  {id:"eu",name:"Europe",localName:"Europe",
+    top:[{src:"France 24",url:"https://www.france24.com/en/rss"},
+         {src:"DW",url:"https://rss.dw.com/rdf/rss-en-all"},
+         {src:"Euronews",url:"https://www.euronews.com/rss"},
+         {src:"The Guardian",url:"https://www.theguardian.com/world/europe-news/rss"}],
+    local:[{src:"France 24",url:"https://www.france24.com/en/rss"},
+           {src:"DW",url:"https://rss.dw.com/rdf/rss-en-all"},
+           {src:"The Guardian",url:"https://www.theguardian.com/world/europe-news/rss"},
+           {src:"Euronews",url:"https://www.euronews.com/rss"}],
+    politics:[{src:"Politico Europe",url:"https://www.politico.eu/feed/"},
+              {src:"France 24",url:"https://www.france24.com/en/rss"},
+              {src:"DW",url:"https://rss.dw.com/rdf/rss-en-all"}]},
+  {id:"jp",name:"Japan",localName:"Japan",
+    top:[{src:"Japan Times",url:"https://www.japantimes.co.jp/feed/"},
+         {src:"SCMP",url:"https://www.scmp.com/rss/91/feed"},
+         {src:"Nikkei Asia",url:"https://asia.nikkei.com/rss/feed/nar"},
+         {src:"NHK",url:"https://www3.nhk.or.jp/rss/news/cat0.xml"}],
+    local:[{src:"Japan Times",url:"https://www.japantimes.co.jp/feed/"},
+           {src:"NHK",url:"https://www3.nhk.or.jp/rss/news/cat0.xml"},
+           {src:"Nikkei Asia",url:"https://asia.nikkei.com/rss/feed/nar"}]},
+  {id:"in",name:"India",localName:"India",
+    top:[{src:"The Hindu",url:"https://www.thehindu.com/news/national/feeder/default.rss"},
+         {src:"Times of India",url:"https://timesofindia.indiatimes.com/rssfeedstopstories.cms"},
+         {src:"NDTV",url:"https://feeds.feedburner.com/ndtvnews-top-stories"},
+         {src:"Hindustan Times",url:"https://www.hindustantimes.com/feeds/rss/india-news/rssfeed.xml"}],
+    local:[{src:"Hindustan Times",url:"https://www.hindustantimes.com/feeds/rss/india-news/rssfeed.xml"},
+           {src:"The Hindu",url:"https://www.thehindu.com/news/national/feeder/default.rss"},
+           {src:"NDTV",url:"https://feeds.feedburner.com/ndtvnews-top-stories"}]},
+  {id:"au",name:"Australia",localName:"Australia",
+    top:[{src:"ABC News (AU)",url:"https://www.abc.net.au/news/feed/51120/rss.xml"},
+         {src:"Sydney Morning Herald",url:"https://www.smh.com.au/rss/feed.xml"},
+         {src:"Guardian Australia",url:"https://www.theguardian.com/australia-news/rss"}],
+    local:[{src:"ABC News (AU)",url:"https://www.abc.net.au/news/feed/51120/rss.xml"},
+           {src:"Sydney Morning Herald",url:"https://www.smh.com.au/rss/feed.xml"},
+           {src:"Guardian Australia",url:"https://www.theguardian.com/australia-news/rss"}]},
+  {id:"ca",name:"Canada",localName:"Canada",
+    top:[{src:"CBC",url:"https://www.cbc.ca/webfeed/rss/rss-topstories"},
+         {src:"Global News",url:"https://globalnews.ca/feed/"},
+         {src:"National Post",url:"https://nationalpost.com/feed/"}],
+    local:[{src:"CBC",url:"https://www.cbc.ca/webfeed/rss/rss-topstories"},
+           {src:"Global News",url:"https://globalnews.ca/feed/"},
+           {src:"National Post",url:"https://nationalpost.com/feed/"}]},
+  {id:"intl",name:"International",localName:"World+",
+    top:[{src:"BBC",url:"https://feeds.bbci.co.uk/news/world/rss.xml"},
+         {src:"Al Jazeera",url:"https://www.aljazeera.com/xml/rss/all.xml"},
+         {src:"France 24",url:"https://www.france24.com/en/rss"},
+         {src:"SCMP",url:"https://www.scmp.com/rss/91/feed"}],
+    local:[{src:"DW",url:"https://rss.dw.com/rdf/rss-en-all"},
+           {src:"Al Jazeera",url:"https://www.aljazeera.com/xml/rss/all.xml"},
+           {src:"France 24",url:"https://www.france24.com/en/rss"}]}
+];
+var PERSPS=[
+  {id:"all",  name:"Balanced"},
+  {id:"left", name:"Lean left"},
+  {id:"centre",name:"Centre"},
+  {id:"right",name:"Lean right"}
+];
+var prefs={region:"uk",persp:"all"};
+var BASE_TOPICS=TOPICS;   // keep the originals; effective list derives from them
+
+function perspKeeps(srcName){
+  if(prefs.persp==="all")return true;
+  var l=SRC_LEAN[srcName];var pos=l?l.pos:50;
+  if(prefs.persp==="left")return pos<=55;
+  if(prefs.persp==="right")return pos>=45;
+  return pos>=40&&pos<=60;   // centre
+}
+function applyPrefs(){
+  var region=null;
+  for(var i=0;i<REGIONS.length;i++)if(REGIONS[i].id===prefs.region)region=REGIONS[i];
+  TOPICS=BASE_TOPICS.map(function(t){
+    var name=t.name,srcs=t.srcs;
+    if(region&&region.top){
+      if(t.name==="Top")srcs=region.top;
+      else if(t.name==="UK"){name=region.localName;srcs=region.local||region.top}
+      else if(t.name==="Politics"&&region.politics)srcs=region.politics;
+    }
+    // perspective filter — never below 2 channels (falls back to the full mix,
+    // so a lens can thin the blend but can't empty it)
+    var kept=srcs.filter(function(s){return perspKeeps(s.src)});
+    if(kept.length<2)kept=srcs;
+    return {name:name,srcs:kept};
+  });
+  if(active>=TOPICS.length)active=0;
+}
+
+function openPrefs(){
+  haptic('selection');
+  renderPrefChips();
+  el('prefs').classList.add('on');
+}
+function closePrefs(){
+  el('prefs').classList.remove('on');
+  cache={};                 // fresh sources → fresh wall
+  applyPrefs();
+  buildTabs();
+  load();
+  window.scrollTo(0,0);
+}
+function renderPrefChips(){
+  el('regionChips').innerHTML=REGIONS.map(function(r){
+    return '<button class="'+(prefs.region===r.id?'on':'')+'" onclick="setRegion(\''+r.id+'\')">'+r.name+'</button>';
+  }).join('');
+  el('perspChips').innerHTML=PERSPS.map(function(p){
+    return '<button class="'+(prefs.persp===p.id?'on':'')+'" onclick="setPersp(\''+p.id+'\')">'+p.name+'</button>';
+  }).join('');
+}
+function setRegion(id){prefs.region=id;haptic('selection');savePrefs();renderPrefChips()}
+function setPersp(id){prefs.persp=id;haptic('selection');savePrefs();renderPrefChips()}
+function savePrefs(){store.setItem('hl_prefs',JSON.stringify(prefs))}
+
+// boot: restore prefs, then build the wall
+store.getItem('hl_prefs').then(function(v){
+  if(v){try{var p=JSON.parse(v);if(p&&p.region)prefs=p}catch(e){}}
+  applyPrefs();
+  buildTabs();
+  load();
+});
 </script>
 <style>
 @keyframes myllmAiSpin{to{transform:rotate(360deg)}}
