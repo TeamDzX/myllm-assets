@@ -248,12 +248,16 @@ function parse(xml){
       for(var k=0;k<ls.length;k++){var h=ls[k].getAttribute('href');if(h){link=h;if((ls[k].getAttribute('rel')||'alternate')==='alternate')break}}
     }
     var desc=text(n,'description')||text(n,'summary')||text(n,'content');
+    // WordPress-family feeds (NY Post, The Hill, Japan Times, Hindustan
+    // Times, Global News…) carry their images in content:encoded, not the
+    // description — scan it too or whole regions render as placeholders.
+    var bodyHtml=text(n,'content:encoded');
     out.push({
       title:title,
       link:link,
       date:text(n,'pubDate')||text(n,'updated')||text(n,'published')||text(n,'date'),
-      excerpt:strip(desc),
-      image:imageOf(n,desc)
+      excerpt:strip(desc||bodyHtml),
+      image:imageOf(n,desc,bodyHtml)
     });
   }
   return out;
@@ -262,8 +266,8 @@ function parse(xml){
 function text(node,tag){var e=node.getElementsByTagName(tag)[0];return e?e.textContent.trim():''}
 
 // Pull the best image: media:content/thumbnail (largest), then enclosure,
-// then the first <img> embedded in the description HTML.
-function imageOf(node,descHtml){
+// then the first <img> embedded in the description or content:encoded HTML.
+function imageOf(node,descHtml,bodyHtml){
   var best=null,bestW=-1;
   function consider(url,w,type){
     if(!url)return;
@@ -280,7 +284,26 @@ function imageOf(node,descHtml){
     for(var j=0;j<enc.length;j++)consider(enc[j].getAttribute('url'),enc[j].getAttribute('width'),enc[j].getAttribute('type'));
   }
   if(!best&&descHtml){var m=descHtml.match(/<img[^>]+src=["']([^"']+)["']/i);if(m)best=m[1]}
+  if(!best&&bodyHtml){var m2=bodyHtml.match(/<img[^>]+src=["']([^"']+)["']/i);if(m2)best=m2[1]}
   return best;
+}
+
+// Hero rescue: when a topic's lead story has no feed image at all (NPR, DW,
+// Nikkei, NHK feeds ship none), fetch the article page once and use its
+// og:image — one extra request per topic load, only for the showcase slot.
+var heroFetched={};
+function rescueHeroImage(a,gen){
+  if(!a||a.image||!a.link||heroFetched[a.link]||!window.myllmFetch)return;
+  heroFetched[a.link]=true;
+  myllmFetch(a.link).then(function(r){
+    if(gen!==loadGen||!r||!r.body)return;
+    var m=String(r.body).match(/property=["']og:image["'][^>]+content=["']([^"']+)["']/i)
+        ||String(r.body).match(/content=["']([^"']+)["'][^>]+property=["']og:image["']/i);
+    if(!m)return;
+    a.image=m[1];
+    var heroImgHost=document.querySelector('#hero .thumb');
+    if(heroImgHost)heroImgHost.innerHTML='<img loading="lazy" src="'+esc(a.image)+'">';
+  }).catch(function(){});
 }
 
 function strip(html){
@@ -479,6 +502,7 @@ function paint(){
       '</div></a>'
   ):'';
   if(hero)wireLean(el('hero'),hero);
+  if(hero)rescueHeroImage(hero,loadGen);
   shown=1;
   el('grid').innerHTML='';
   more();
