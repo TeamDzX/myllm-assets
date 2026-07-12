@@ -12,7 +12,8 @@
     "Games",
     "Creative",
     "Developer",
-    "Utilities"
+    "Utilities",
+    "Community"
   ],
   "apps": [
     {
@@ -2182,6 +2183,31 @@
       "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/mastodon-feed.myllmapp",
       "sizeKB": 25,
       "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/icons/mastodon-feed.jpg"
+    },
+    {
+      "id": "submit-app",
+      "name": "Submit Your App",
+      "emoji": "🚀",
+      "tagline": "Put your creation in this gallery",
+      "description": "Built something good in MyLLM? Get it into this gallery — on iOS and Android, credited to you. Paste your app's code (long-press it on the springboard → View Code) and this wizard checks the house rules automatically — self-contained code, no remote scripts, sandbox-friendly storage — then packages a submission you can email or attach to a GitHub issue. Every app is human-reviewed before it goes live, gets banner art in the gallery's style, and stays free for everyone.",
+      "tags": [
+        "community",
+        "submit",
+        "developer",
+        "creators",
+        "offline"
+      ],
+      "category": "Community",
+      "iconSymbol": "paperplane.fill",
+      "iconColor": "blue",
+      "version": 1,
+      "featured": false,
+      "requiresAI": false,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/submit-app.jpg",
+      "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/submit-app.html",
+      "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/submit-app.myllmapp",
+      "sizeKB": 8,
+      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/icons/submit-app.jpg"
     }
   ]
 }
