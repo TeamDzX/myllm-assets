@@ -23,9 +23,9 @@
 body{margin:0;font-family:var(--font);background:var(--bg);color:var(--text);-webkit-text-size-adjust:100%}
 .head{position:sticky;top:0;z-index:10;background:var(--bg);padding:10px 0 0;border-bottom:1px solid var(--border)}
 .headrow{display:flex;align-items:flex-start}
-#tabs{display:flex;gap:6px;overflow-x:auto;padding:0 4px 12px 16px;-webkit-overflow-scrolling:touch;scrollbar-width:none;flex:1;min-width:0}
+#tabs{display:flex;gap:6px;overflow-x:auto;padding:0 16px 12px 4px;-webkit-overflow-scrolling:touch;scrollbar-width:none;flex:1;min-width:0}
 #tabs::-webkit-scrollbar{display:none}
-#gear{flex:none;border:1px solid var(--border);background:var(--surface);color:var(--muted);border-radius:999px;width:36px;height:36px;font-size:17px;margin:0 12px 0 4px;cursor:pointer}
+#gear{flex:none;border:1px solid var(--border);background:var(--surface);color:var(--muted);border-radius:999px;width:36px;height:36px;font-size:17px;margin:0 6px 0 16px;cursor:pointer}
 .prefs{position:fixed;inset:0;z-index:400;display:none;background:rgba(0,0,0,.45);align-items:flex-end}
 .prefs.on{display:flex}
 .prefs .sheet{background:var(--surface);width:100%;max-width:780px;margin:0 auto;border-radius:18px 18px 0 0;padding:20px 18px calc(26px + env(safe-area-inset-bottom))}
@@ -86,8 +86,8 @@ a.cvg{display:flex;gap:11px;align-items:center;text-decoration:none;color:inheri
 
 <div class="head">
   <div class="headrow">
-    <div id="tabs"></div>
     <button id="gear" onclick="openPrefs()" aria-label="Feed settings">⚙︎</button>
+    <div id="tabs"></div>
   </div>
 </div>
 
@@ -521,7 +521,26 @@ var REGIONS=[
     politics:[{src:"Politico",url:"https://rss.politico.com/politics-news.xml"},
               {src:"The Hill",url:"https://thehill.com/feed/"},
               {src:"Fox News",url:"https://moxie.foxnews.com/google-publisher/latest.xml"},
-              {src:"CNN",url:"https://rss.cnn.com/rss/cnn_topstories.rss"}]},
+              {src:"CNN",url:"https://rss.cnn.com/rss/cnn_topstories.rss"}],
+    topics:{
+      "Business":[{src:"NPR",url:"https://feeds.npr.org/1006/rss.xml"},
+                  {src:"New York Post",url:"https://nypost.com/business/feed/"},
+                  {src:"BBC",url:"https://feeds.bbci.co.uk/news/business/rss.xml"}],
+      "Technology":[{src:"NPR",url:"https://feeds.npr.org/1019/rss.xml"},
+                    {src:"Fox News",url:"https://moxie.foxnews.com/google-publisher/tech.xml"},
+                    {src:"Ars Technica",url:"https://feeds.arstechnica.com/arstechnica/index"}],
+      "Science":[{src:"NPR",url:"https://feeds.npr.org/1007/rss.xml"},
+                 {src:"Fox News",url:"https://moxie.foxnews.com/google-publisher/science.xml"},
+                 {src:"BBC",url:"https://feeds.bbci.co.uk/news/science_and_environment/rss.xml"}],
+      "Health":[{src:"NPR",url:"https://feeds.npr.org/1128/rss.xml"},
+                {src:"Fox News",url:"https://moxie.foxnews.com/google-publisher/health.xml"},
+                {src:"BBC",url:"https://feeds.bbci.co.uk/news/health/rss.xml"}],
+      "Sport":[{src:"New York Post",url:"https://nypost.com/sports/feed/"},
+               {src:"Fox News",url:"https://moxie.foxnews.com/google-publisher/sports.xml"}],
+      "Entertainment":[{src:"New York Post",url:"https://nypost.com/entertainment/feed/"},
+                       {src:"Fox News",url:"https://moxie.foxnews.com/google-publisher/entertainment.xml"},
+                       {src:"The Guardian",url:"https://www.theguardian.com/culture/rss"}]
+    }},
   {id:"eu",name:"Europe",localName:"Europe",
     top:[{src:"France 24",url:"https://www.france24.com/en/rss"},
          {src:"DW",url:"https://rss.dw.com/rdf/rss-en-all"},
@@ -533,7 +552,12 @@ var REGIONS=[
            {src:"Euronews",url:"https://www.euronews.com/rss"}],
     politics:[{src:"Politico Europe",url:"https://www.politico.eu/feed/"},
               {src:"France 24",url:"https://www.france24.com/en/rss"},
-              {src:"DW",url:"https://rss.dw.com/rdf/rss-en-all"}]},
+              {src:"DW",url:"https://rss.dw.com/rdf/rss-en-all"}],
+    topics:{
+      "Business":[{src:"DW",url:"https://rss.dw.com/rdf/rss-en-bus"},
+                  {src:"BBC",url:"https://feeds.bbci.co.uk/news/business/rss.xml"},
+                  {src:"The Guardian",url:"https://www.theguardian.com/uk/business/rss"}]
+    }},
   {id:"jp",name:"Japan",localName:"Japan",
     top:[{src:"Japan Times",url:"https://www.japantimes.co.jp/feed/"},
          {src:"SCMP",url:"https://www.scmp.com/rss/91/feed"},
@@ -541,7 +565,12 @@ var REGIONS=[
          {src:"NHK",url:"https://www3.nhk.or.jp/rss/news/cat0.xml"}],
     local:[{src:"Japan Times",url:"https://www.japantimes.co.jp/feed/"},
            {src:"NHK",url:"https://www3.nhk.or.jp/rss/news/cat0.xml"},
-           {src:"Nikkei Asia",url:"https://asia.nikkei.com/rss/feed/nar"}]},
+           {src:"Nikkei Asia",url:"https://asia.nikkei.com/rss/feed/nar"}],
+    topics:{
+      "Business":[{src:"Nikkei Asia",url:"https://asia.nikkei.com/rss/feed/nar"},
+                  {src:"SCMP",url:"https://www.scmp.com/rss/92/feed"},
+                  {src:"BBC",url:"https://feeds.bbci.co.uk/news/business/rss.xml"}]
+    }},
   {id:"in",name:"India",localName:"India",
     top:[{src:"The Hindu",url:"https://www.thehindu.com/news/national/feeder/default.rss"},
          {src:"Times of India",url:"https://timesofindia.indiatimes.com/rssfeedstopstories.cms"},
@@ -549,21 +578,46 @@ var REGIONS=[
          {src:"Hindustan Times",url:"https://www.hindustantimes.com/feeds/rss/india-news/rssfeed.xml"}],
     local:[{src:"Hindustan Times",url:"https://www.hindustantimes.com/feeds/rss/india-news/rssfeed.xml"},
            {src:"The Hindu",url:"https://www.thehindu.com/news/national/feeder/default.rss"},
-           {src:"NDTV",url:"https://feeds.feedburner.com/ndtvnews-top-stories"}]},
+           {src:"NDTV",url:"https://feeds.feedburner.com/ndtvnews-top-stories"}],
+    topics:{
+      "Business":[{src:"NDTV",url:"https://feeds.feedburner.com/ndtvprofit-latest"},
+                  {src:"The Hindu",url:"https://www.thehindu.com/business/feeder/default.rss"},
+                  {src:"Times of India",url:"https://timesofindia.indiatimes.com/rssfeeds/1898055.cms"}],
+      "Sport":[{src:"NDTV",url:"https://feeds.feedburner.com/ndtvsports-latest"},
+               {src:"The Hindu",url:"https://www.thehindu.com/sport/feeder/default.rss"}]
+    }},
   {id:"au",name:"Australia",localName:"Australia",
     top:[{src:"ABC News (AU)",url:"https://www.abc.net.au/news/feed/51120/rss.xml"},
          {src:"Sydney Morning Herald",url:"https://www.smh.com.au/rss/feed.xml"},
          {src:"Guardian Australia",url:"https://www.theguardian.com/australia-news/rss"}],
     local:[{src:"ABC News (AU)",url:"https://www.abc.net.au/news/feed/51120/rss.xml"},
            {src:"Sydney Morning Herald",url:"https://www.smh.com.au/rss/feed.xml"},
-           {src:"Guardian Australia",url:"https://www.theguardian.com/australia-news/rss"}]},
+           {src:"Guardian Australia",url:"https://www.theguardian.com/australia-news/rss"}],
+    topics:{
+      "Business":[{src:"Sydney Morning Herald",url:"https://www.smh.com.au/rss/business.xml"},
+                  {src:"BBC",url:"https://feeds.bbci.co.uk/news/business/rss.xml"}],
+      "Sport":[{src:"Sydney Morning Herald",url:"https://www.smh.com.au/rss/sport.xml"},
+               {src:"Guardian Australia",url:"https://www.theguardian.com/au/sport/rss"}]
+    }},
   {id:"ca",name:"Canada",localName:"Canada",
     top:[{src:"CBC",url:"https://www.cbc.ca/webfeed/rss/rss-topstories"},
          {src:"Global News",url:"https://globalnews.ca/feed/"},
          {src:"National Post",url:"https://nationalpost.com/feed/"}],
     local:[{src:"CBC",url:"https://www.cbc.ca/webfeed/rss/rss-topstories"},
            {src:"Global News",url:"https://globalnews.ca/feed/"},
-           {src:"National Post",url:"https://nationalpost.com/feed/"}]},
+           {src:"National Post",url:"https://nationalpost.com/feed/"}],
+    topics:{
+      "Business":[{src:"CBC",url:"https://www.cbc.ca/webfeed/rss/rss-business"},
+                  {src:"BBC",url:"https://feeds.bbci.co.uk/news/business/rss.xml"}],
+      "Technology":[{src:"CBC",url:"https://www.cbc.ca/webfeed/rss/rss-technology"},
+                    {src:"Ars Technica",url:"https://feeds.arstechnica.com/arstechnica/index"}],
+      "Sport":[{src:"CBC",url:"https://www.cbc.ca/webfeed/rss/rss-sports"},
+               {src:"Global News",url:"https://globalnews.ca/sports/feed/"}],
+      "Health":[{src:"CBC",url:"https://www.cbc.ca/webfeed/rss/rss-health"},
+                {src:"BBC",url:"https://feeds.bbci.co.uk/news/health/rss.xml"}],
+      "Entertainment":[{src:"CBC",url:"https://www.cbc.ca/webfeed/rss/rss-arts"},
+                       {src:"The Guardian",url:"https://www.theguardian.com/culture/rss"}]
+    }},
   {id:"intl",name:"International",localName:"World+",
     top:[{src:"BBC",url:"https://feeds.bbci.co.uk/news/world/rss.xml"},
          {src:"Al Jazeera",url:"https://www.aljazeera.com/xml/rss/all.xml"},
@@ -571,7 +625,12 @@ var REGIONS=[
          {src:"SCMP",url:"https://www.scmp.com/rss/91/feed"}],
     local:[{src:"DW",url:"https://rss.dw.com/rdf/rss-en-all"},
            {src:"Al Jazeera",url:"https://www.aljazeera.com/xml/rss/all.xml"},
-           {src:"France 24",url:"https://www.france24.com/en/rss"}]}
+           {src:"France 24",url:"https://www.france24.com/en/rss"}],
+    topics:{
+      "Business":[{src:"DW",url:"https://rss.dw.com/rdf/rss-en-bus"},
+                  {src:"SCMP",url:"https://www.scmp.com/rss/92/feed"},
+                  {src:"BBC",url:"https://feeds.bbci.co.uk/news/business/rss.xml"}]
+    }}
 ];
 var PERSPS=[
   {id:"all",  name:"Balanced"},
@@ -598,6 +657,7 @@ function applyPrefs(){
       if(t.name==="Top")srcs=region.top;
       else if(t.name==="UK"){name=region.localName;srcs=region.local||region.top}
       else if(t.name==="Politics"&&region.politics)srcs=region.politics;
+      else if(region.topics&&region.topics[t.name])srcs=region.topics[t.name];
     }
     // perspective filter — never below 2 channels (falls back to the full mix,
     // so a lens can thin the blend but can't empty it)
