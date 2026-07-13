@@ -288,22 +288,45 @@ function imageOf(node,descHtml,bodyHtml){
   return best;
 }
 
-// Hero rescue: when a topic's lead story has no feed image at all (NPR, DW,
-// Nikkei, NHK feeds ship none), fetch the article page once and use its
-// og:image — one extra request per topic load, only for the showcase slot.
-var heroFetched={};
-function rescueHeroImage(a,gen){
-  if(!a||a.image||!a.link||heroFetched[a.link]||!window.myllmFetch)return;
-  heroFetched[a.link]=true;
-  myllmFetch(a.link).then(function(r){
-    if(gen!==loadGen||!r||!r.body)return;
-    var m=String(r.body).match(/property=["']og:image["'][^>]+content=["']([^"']+)["']/i)
-        ||String(r.body).match(/content=["']([^"']+)["'][^>]+property=["']og:image["']/i);
-    if(!m)return;
-    a.image=m[1];
-    var heroImgHost=document.querySelector('#hero .thumb');
-    if(heroImgHost)heroImgHost.innerHTML='<img loading="lazy" src="'+esc(a.image)+'" data-orig="'+esc(a.image)+'" onerror="imgFallback(this)">';
-  }).catch(function(){});
+// og:image rescue: some outlets' feeds carry NO image data at all (Al Jazeera,
+// NPR, DW, Nikkei, NHK). For rendered cards that lack an image, fetch the
+// article page and use its og:image. Bounded: 2 concurrent, ≤10 article
+// fetches per topic load, results cached per link so tab-hopping is free.
+var ogCache={};                       // link → url | null (null = tried, none)
+var ogInflight=0, ogQueue=[], ogBudget=0;
+function setThumb(node,url){
+  var t=node&&node.querySelector&&node.querySelector('.thumb');
+  if(t)t.innerHTML='<img loading="lazy" src="'+esc(url)+'" data-orig="'+esc(url)+'" onerror="imgFallback(this)">';
+}
+function rescueImage(a,node,gen){
+  if(!a||a.image||!a.link||!window.myllmFetch)return;
+  if(ogCache[a.link]!==undefined){
+    if(ogCache[a.link]){a.image=ogCache[a.link];setThumb(node,a.image)}
+    return;
+  }
+  if(ogBudget<=0)return;
+  ogBudget--;
+  ogQueue.push({a:a,node:node,gen:gen});
+  pumpOg();
+}
+function pumpOg(){
+  if(ogInflight>=2||!ogQueue.length)return;
+  var job=ogQueue.shift();
+  if(job.gen!==loadGen){pumpOg();return}
+  if(ogCache[job.a.link]!==undefined){
+    if(ogCache[job.a.link]){job.a.image=ogCache[job.a.link];setThumb(job.node,job.a.image)}
+    pumpOg();return;
+  }
+  ogInflight++;
+  var done=function(){ogInflight--;pumpOg()};
+  myllmFetch(job.a.link).then(function(r){
+    var body=String(r&&r.body||'');
+    var m=body.match(/property=["']og:image["'][^>]+content=["']([^"']+)["']/i)
+        ||body.match(/content=["']([^"']+)["'][^>]+property=["']og:image["']/i);
+    ogCache[job.a.link]=m?m[1]:null;
+    if(m&&job.gen===loadGen){job.a.image=m[1];setThumb(job.node,m[1])}
+    done();
+  },function(){ogCache[job.a.link]=null;done()});
 }
 
 function strip(html){
@@ -526,7 +549,9 @@ function paint(){
       '</div></a>'
   ):'';
   if(hero)wireLean(el('hero'),hero);
-  if(hero)rescueHeroImage(hero,loadGen);
+  ogBudget=10;                        // fresh rescue allowance per topic load
+  ogQueue=[];
+  if(hero)rescueImage(hero,el('hero'),loadGen);
   shown=1;
   el('grid').innerHTML='';
   more();
@@ -539,6 +564,7 @@ function more(){
     card.innerHTML=thumb(a)+'<div class="body"><div class="meta">'+metaLine(a)+'</div><h3>'+esc(a.title)+'</h3>'+leanBadge(a)+'</div>';
     wireLean(card,a);
     card.addEventListener('click',function(){haptic('light')});
+    if(!a.image)rescueImage(a,card,loadGen);
     frag.appendChild(card);
   });
   el('grid').appendChild(frag);
