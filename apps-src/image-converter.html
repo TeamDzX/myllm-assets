@@ -1,0 +1,347 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Image Converter</title>
+<style>
+  :root { color-scheme: light dark; }
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body{
+    font-family:var(--myllm-font,-apple-system,system-ui,sans-serif);
+    background:var(--myllm-bg,#f2f2f7);
+    color:var(--myllm-text,#111);
+    max-width:600px; margin:0 auto; min-height:100dvh;
+    padding:16px 16px calc(30px + env(safe-area-inset-bottom));
+  }
+  h1{ font-size:22px; font-weight:800; margin:4px 2px 12px; }
+  h2{ font-size:12px; font-weight:800; letter-spacing:.07em; text-transform:uppercase; color:var(--myllm-muted,#8a8a8e); margin:18px 2px 10px; }
+
+  .card{
+    background:var(--myllm-surface,#fff); border:1px solid var(--myllm-border,#e3e3e8);
+    border-radius:18px; padding:14px; margin-bottom:12px;
+  }
+
+  .drop{
+    border:2px dashed var(--myllm-border,#d5d5db); border-radius:18px;
+    padding:26px 16px; text-align:center; background:var(--myllm-surface,#fff); margin-bottom:12px;
+  }
+  .drop .big{ font-size:34px; }
+  .drop p{ font-size:14px; font-weight:650; margin-top:8px; }
+  .drop small{ display:block; font-size:12px; color:var(--myllm-muted,#8a8a8e); margin-top:5px; line-height:1.5; }
+  .drop input{ display:none; }
+
+  .optrow{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:9px 0; border-bottom:1px solid var(--myllm-border,#e3e3e8); }
+  .optrow:last-child{ border-bottom:none; }
+  .optrow label{ font-size:14px; font-weight:650; }
+  .seg{ display:flex; background:var(--myllm-bg,#f2f2f7); border-radius:10px; padding:3px; }
+  .seg button{
+    border:none; background:none; color:var(--myllm-text,#111);
+    border-radius:8px; padding:6px 13px; font-size:13px; font-weight:650;
+  }
+  .seg button.hot{ background:var(--myllm-surface,#fff); box-shadow:0 1px 4px rgba(0,0,0,.12); }
+  input[type=range]{ width:130px; accent-color:var(--myllm-accent,#0a84ff); }
+  .qv{ font-size:12.5px; color:var(--myllm-muted,#8a8a8e); min-width:34px; text-align:right; font-variant-numeric:tabular-nums; }
+
+  .go{
+    width:100%; border:none; border-radius:14px; padding:14px; margin-bottom:12px;
+    font-size:16px; font-weight:750; background:var(--myllm-accent,#0a84ff); color:#fff;
+  }
+  .go:disabled{ opacity:.45; }
+
+  .item{ display:flex; gap:11px; align-items:center; padding:10px 2px; border-bottom:1px solid var(--myllm-border,#e3e3e8); }
+  .item:last-child{ border-bottom:none; }
+  .thumb{ width:54px; height:54px; border-radius:10px; object-fit:cover; background:var(--myllm-bg,#f2f2f7); flex-shrink:0; }
+  .item .info{ flex:1; min-width:0; }
+  .item .nm{ font-size:13.5px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .item .dt{ font-size:11.5px; color:var(--myllm-muted,#8a8a8e); margin-top:2px; line-height:1.45; }
+  .item .dt b.less{ color:#30d158; } .item .dt b.more{ color:#ff9f0a; }
+  .item .err{ font-size:11.5px; color:#ff453a; margin-top:2px; line-height:1.45; }
+  .save{
+    border:1px solid var(--myllm-border,#e3e3e8); background:var(--myllm-bg,#f2f2f7); color:var(--myllm-text,#111);
+    border-radius:10px; padding:9px 13px; font-size:13px; font-weight:650; flex-shrink:0;
+  }
+  .save.done{ color:#30d158; border-color:#30d158; }
+
+  .status{ text-align:center; font-size:13.5px; color:var(--myllm-muted,#8a8a8e); padding:18px 12px; line-height:1.6; }
+  .note{ font-size:12.5px; color:var(--myllm-muted,#8a8a8e); margin:8px 2px; line-height:1.5; }
+  .toast{
+    position:fixed; left:50%; bottom:calc(24px + env(safe-area-inset-bottom)); transform:translateX(-50%) translateY(80px);
+    background:var(--myllm-text,#111); color:var(--myllm-bg,#fff); font-size:13.5px; font-weight:650;
+    padding:11px 18px; border-radius:99px; transition:transform .25s; z-index:9; white-space:nowrap;
+  }
+  .toast.show{ transform:translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<h1>🔄 Image Converter</h1>
+
+<label class="drop" id="drop">
+  <span class="big">🖼️</span>
+  <p id="dropTitle">Choose images to convert</p>
+  <small>HEIC, TIFF, WebP, GIF, BMP, PNG or JPG in — JPG or PNG out.<br>
+  Pick from Photos or browse the Files app. Converting also strips location &amp; EXIF metadata.</small>
+  <input id="file" type="file" accept="image/*,.heic,.heif,.tif,.tiff,.webp,.bmp" multiple>
+</label>
+
+<div class="card" id="opts">
+  <div class="optrow">
+    <label>Convert to</label>
+    <div class="seg" id="fmtSeg">
+      <button class="hot" data-f="jpeg" onclick="setFmt('jpeg')">JPG</button>
+      <button data-f="png" onclick="setFmt('png')">PNG</button>
+    </div>
+  </div>
+  <div class="optrow" id="qRow">
+    <label>Quality</label>
+    <div style="display:flex;align-items:center;gap:8px">
+      <input type="range" id="q" min="30" max="100" value="85" oninput="qLabel()">
+      <span class="qv" id="qv">85%</span>
+    </div>
+  </div>
+  <div class="optrow">
+    <label>Max size</label>
+    <div class="seg" id="szSeg">
+      <button class="hot" data-s="0" onclick="setSize(0)">Original</button>
+      <button data-s="2048" onclick="setSize(2048)">2048px</button>
+      <button data-s="1024" onclick="setSize(1024)">1024px</button>
+    </div>
+  </div>
+</div>
+
+<button class="go" id="go" onclick="convertAll()" disabled>Convert</button>
+
+<div id="outWrap" style="display:none">
+  <h2 id="outTitle">Converted</h2>
+  <div class="card" id="out"></div>
+  <p class="note">Saved images land in Photos (and the MyLLMos photos folder). Re-encoding always removes EXIF data — including GPS location — which is handy before sharing.</p>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+var SAVE = window.myllmSaveImage || null;
+function haptic(k){ if(window.myllmHaptic){ try{ myllmHaptic(k||'light'); }catch(_){} } }
+function el(id){ return document.getElementById(id); }
+function esc(s){ return String(s==null?'':s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+function toast(m){
+  var t = el("toast"); t.textContent = m; t.classList.add("show");
+  clearTimeout(t._t); t._t = setTimeout(function(){ t.classList.remove("show"); }, 2000);
+}
+
+var fmt = "jpeg";        /* 'jpeg' | 'png' */
+var maxSide = 0;         /* 0 = keep original */
+var files = [];          /* picked File objects */
+var results = [];        /* {name,outName,blob,url,w,h,inBytes,outBytes,saved,error} */
+
+/* ---------- pure helpers (node-tested) ---------- */
+
+function fmtBytes(n){
+  if (n == null) return "";
+  if (n < 1024) return n + " B";
+  if (n < 1048576) return (n/1024).toFixed(n < 10240 ? 1 : 0) + " KB";
+  return (n/1048576).toFixed(1) + " MB";
+}
+
+function outName(name, format){
+  var base = String(name || "image").replace(/\.[a-z0-9]+$/i, "");
+  return base + (format === "png" ? ".png" : ".jpg");
+}
+
+function fitSize(w, h, max){
+  if (!max || (w <= max && h <= max)) return {w:w, h:h};
+  var k = max / Math.max(w, h);
+  return {w: Math.max(1, Math.round(w*k)), h: Math.max(1, Math.round(h*k))};
+}
+
+function srcLabel(name, type){
+  var m = String(name||"").match(/\.([a-z0-9]+)$/i);
+  var ext = m ? m[1].toUpperCase() : "";
+  if (ext === "JPEG") ext = "JPG";
+  if (ext) return ext;
+  var t = String(type||"").split("/")[1] || "";
+  return t ? t.toUpperCase() : "image";
+}
+
+function deltaHtml(inB, outB){
+  if (!inB || !outB) return "";
+  var pct = Math.round((outB - inB) / inB * 100);
+  if (pct === 0) return "";
+  return pct < 0 ? ' · <b class="less">' + (-pct) + '% smaller</b>'
+                 : ' · <b class="more">' + pct + '% larger</b>';
+}
+
+/* ---------- UI state ---------- */
+
+function setFmt(f){
+  fmt = f; haptic("selection");
+  var bs = el("fmtSeg").getElementsByTagName("button");
+  for (var i=0;i<bs.length;i++) bs[i].className = bs[i].getAttribute("data-f") === f ? "hot" : "";
+  el("qRow").style.display = f === "jpeg" ? "flex" : "none";
+}
+
+function setSize(s){
+  maxSide = s; haptic("selection");
+  var bs = el("szSeg").getElementsByTagName("button");
+  for (var i=0;i<bs.length;i++) bs[i].className = +bs[i].getAttribute("data-s") === s ? "hot" : "";
+}
+
+function qLabel(){ el("qv").textContent = el("q").value + "%"; }
+
+el("file").addEventListener("change", function(){
+  files = [];
+  for (var i = 0; i < this.files.length; i++) files.push(this.files[i]);
+  el("dropTitle").textContent = files.length
+    ? files.length + (files.length === 1 ? " image selected" : " images selected")
+    : "Choose images to convert";
+  el("go").disabled = !files.length;
+  if (files.length) haptic("light");
+});
+
+/* ---------- conversion ---------- */
+
+function decode(file){
+  return new Promise(function(res, rej){
+    var url = URL.createObjectURL(file);
+    var img = new Image();
+    img.onload = function(){ res({img:img, url:url}); };
+    img.onerror = function(){
+      URL.revokeObjectURL(url);
+      rej(new Error("Couldn't decode this image — the format may need a newer iOS."));
+    };
+    img.src = url;
+  });
+}
+
+function encode(img, w, h, format, quality){
+  return new Promise(function(res, rej){
+    var c = document.createElement("canvas");
+    c.width = w; c.height = h;
+    var ctx = c.getContext("2d");
+    if (format === "jpeg"){ ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, w, h); }  /* flatten alpha */
+    ctx.drawImage(img, 0, 0, w, h);
+    c.toBlob(function(b){
+      if (b) res(b); else rej(new Error("Encoding failed — the image may be too large."));
+    }, "image/" + format, quality);
+  });
+}
+
+function convertOne(file){
+  var q = (+el("q").value) / 100;
+  return decode(file).then(function(d){
+    var natW = d.img.naturalWidth, natH = d.img.naturalHeight;
+    var sz = fitSize(natW, natH, maxSide);
+    return encode(d.img, sz.w, sz.h, fmt, q).then(function(blob){
+      URL.revokeObjectURL(d.url);
+      return {
+        name: file.name, outName: outName(file.name, fmt),
+        blob: blob, url: URL.createObjectURL(blob),
+        w: sz.w, h: sz.h, inBytes: file.size, outBytes: blob.size,
+        srcFmt: srcLabel(file.name, file.type), saved: false, error: null
+      };
+    });
+  }).catch(function(e){
+    return { name: file.name, error: e.message || "Conversion failed.", inBytes: file.size,
+             srcFmt: srcLabel(file.name, file.type) };
+  });
+}
+
+function convertAll(){
+  if (!files.length) return;
+  haptic("medium");
+  el("go").disabled = true;
+  el("outWrap").style.display = "block";
+  el("out").innerHTML = '<p class="status">Converting…</p>';
+  results = [];
+  var chain = Promise.resolve();
+  files.forEach(function(f, i){
+    chain = chain.then(function(){
+      el("out").innerHTML = '<p class="status">Converting ' + (i+1) + ' of ' + files.length + '…</p>';
+      return convertOne(f).then(function(r){ results.push(r); });
+    });
+  });
+  chain.then(function(){
+    renderResults();
+    el("go").disabled = false;
+    var ok = results.filter(function(r){ return !r.error; }).length;
+    haptic(ok ? "success" : "error");
+  });
+}
+
+/* ---------- results ---------- */
+
+function renderResults(){
+  var ok = results.filter(function(r){ return !r.error; }).length;
+  el("outTitle").textContent = "Converted (" + ok + "/" + results.length + ")";
+  var h = "";
+  for (var i = 0; i < results.length; i++){
+    var r = results[i];
+    if (r.error){
+      h += '<div class="item"><div class="thumb"></div><div class="info">' +
+        '<div class="nm">' + esc(r.name) + '</div>' +
+        '<div class="err">' + esc(r.error) + '</div></div></div>';
+      continue;
+    }
+    h += '<div class="item">' +
+      '<img class="thumb" src="' + r.url + '" alt="">' +
+      '<div class="info">' +
+        '<div class="nm">' + esc(r.outName) + '</div>' +
+        '<div class="dt">' + esc(r.srcFmt) + ' → ' + (fmt === "png" ? "PNG" : "JPG") +
+          ' · ' + r.w + '×' + r.h + ' · ' + fmtBytes(r.outBytes) + deltaHtml(r.inBytes, r.outBytes) + '</div>' +
+      '</div>' +
+      '<button class="save' + (r.saved ? ' done' : '') + '" onclick="saveOne(' + i + ')">' +
+        (r.saved ? "✓ Saved" : "Save") + '</button>' +
+    '</div>';
+  }
+  if (ok > 1)
+    h += '<div style="padding-top:11px"><button class="go" style="margin:0" onclick="saveAll()">Save all to Photos</button></div>';
+  el("out").innerHTML = h;
+}
+
+function blobToDataUrl(blob){
+  return new Promise(function(res, rej){
+    var fr = new FileReader();
+    fr.onload = function(){ res(fr.result); };
+    fr.onerror = function(){ rej(new Error("read failed")); };
+    fr.readAsDataURL(blob);
+  });
+}
+
+function saveOne(i){
+  var r = results[i];
+  if (!r || r.error || r.saved) return;
+  if (!SAVE){ toast("Saving needs the MyLLM app"); return; }
+  if (r.outBytes > 10485760){ toast("Over the 10 MB save limit — lower quality or size"); return; }
+  haptic("light");
+  blobToDataUrl(r.blob).then(function(du){
+    return SAVE(du);
+  }).then(function(){
+    r.saved = true; renderResults(); toast("Saved " + r.outName);
+  }).catch(function(e){
+    toast(String(e && e.message || e || "Couldn't save"));
+  });
+}
+
+function saveAll(){
+  var chain = Promise.resolve();
+  results.forEach(function(r, i){
+    if (!r.error && !r.saved) chain = chain.then(function(){ return saveOnePromise(i); });
+  });
+  chain.then(function(){ haptic("success"); });
+}
+
+function saveOnePromise(i){
+  var r = results[i];
+  if (!SAVE || r.outBytes > 10485760) return Promise.resolve();
+  return blobToDataUrl(r.blob).then(function(du){ return SAVE(du); })
+    .then(function(){ r.saved = true; renderResults(); })
+    .catch(function(){});
+}
+
+if (!SAVE)
+  el("outWrap").insertAdjacentHTML("beforebegin",
+    '<p class="note">Heads-up: outside MyLLM there\'s no Photos bridge, so converted images can\'t be saved from this preview.</p>');
+</script>
+</body>
+</html>
