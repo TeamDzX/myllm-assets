@@ -1,0 +1,388 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Internet Radio</title>
+<style>
+  :root { color-scheme: light dark; }
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body{
+    font-family:var(--myllm-font,-apple-system,system-ui,sans-serif);
+    background:var(--myllm-bg,#f2f2f7);
+    color:var(--myllm-text,#111);
+    max-width:600px; margin:0 auto; min-height:100dvh;
+    padding:16px 16px calc(30px + env(safe-area-inset-bottom));
+  }
+  h1{ font-size:22px; font-weight:800; margin:4px 2px 12px; }
+  h2{ font-size:12px; font-weight:800; letter-spacing:.07em; text-transform:uppercase; color:var(--myllm-muted,#8a8a8e); margin:18px 2px 10px; }
+
+  .card{
+    background:var(--myllm-surface,#fff); border:1px solid var(--myllm-border,#e3e3e8);
+    border-radius:18px; padding:14px; margin-bottom:12px;
+  }
+
+  /* Now playing */
+  .np{ display:none; position:sticky; top:8px; z-index:5; box-shadow:0 6px 24px rgba(0,0,0,.10); }
+  .np.on{ display:block; }
+  .np .row{ display:flex; align-items:center; gap:12px; }
+  .np .art{ width:52px; height:52px; border-radius:12px; background:var(--myllm-bg,#f2f2f7); display:flex; align-items:center; justify-content:center; font-size:26px; overflow:hidden; flex-shrink:0; }
+  .np .art img{ width:100%; height:100%; object-fit:cover; }
+  .np .info{ flex:1; min-width:0; }
+  .np .name{ font-size:15.5px; font-weight:750; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .np .meta{ font-size:12px; color:var(--myllm-muted,#8a8a8e); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .np .state{ font-size:12px; font-weight:700; margin-top:2px; }
+  .np .state.live{ color:#30d158; }
+  .np .state.err{ color:#ff453a; }
+  .npbtn{ width:46px; height:46px; border-radius:50%; border:none; flex-shrink:0;
+    background:var(--myllm-accent,#0a84ff); color:#fff; font-size:19px; }
+  .np .sub{ display:flex; align-items:center; gap:7px; margin-top:11px; flex-wrap:wrap; }
+  .np .sub button{
+    border:1px solid var(--myllm-border,#e3e3e8); background:var(--myllm-bg,#f2f2f7);
+    color:var(--myllm-text,#111); border-radius:99px; padding:5px 12px; font-size:12px; font-weight:650;
+  }
+  .np .sub button.hot{ background:var(--myllm-accent,#0a84ff); border-color:var(--myllm-accent,#0a84ff); color:#fff; }
+
+  /* EQ animation */
+  .eq{ display:inline-flex; align-items:flex-end; gap:2px; height:12px; margin-right:5px; vertical-align:-1px; }
+  .eq i{ width:3px; border-radius:2px; background:#30d158; animation:eq 1s ease-in-out infinite; }
+  .eq i:nth-child(2){ animation-delay:.25s; } .eq i:nth-child(3){ animation-delay:.5s; }
+  @keyframes eq{ 0%,100%{height:4px;} 50%{height:12px;} }
+  .paused .eq i{ animation-play-state:paused; height:4px; }
+
+  /* Search + chips */
+  .search{ display:flex; gap:8px; }
+  .search input{
+    flex:1; font-size:16px; padding:11px 12px; border-radius:12px;
+    border:1px solid var(--myllm-border,#e3e3e8); background:var(--myllm-surface,#fff); color:var(--myllm-text,#111);
+  }
+  .search button{ border:none; border-radius:12px; padding:0 16px; font-size:15px; font-weight:700; background:var(--myllm-accent,#0a84ff); color:#fff; }
+  .chips{ display:flex; gap:7px; overflow-x:auto; -webkit-overflow-scrolling:touch; padding:10px 2px 2px; scrollbar-width:none; }
+  .chips::-webkit-scrollbar{ display:none; }
+  .chips button{
+    border:1px solid var(--myllm-border,#e3e3e8); background:var(--myllm-surface,#fff); color:var(--myllm-text,#111);
+    border-radius:99px; padding:7px 14px; font-size:13px; font-weight:650; white-space:nowrap; flex-shrink:0;
+  }
+  .chips button.hot{ background:var(--myllm-accent,#0a84ff); border-color:var(--myllm-accent,#0a84ff); color:#fff; }
+
+  /* Station rows */
+  .st{ display:flex; align-items:center; gap:11px; padding:10px 2px; border-bottom:1px solid var(--myllm-border,#e3e3e8); }
+  .st:last-child{ border-bottom:none; }
+  .st .art{ width:42px; height:42px; border-radius:10px; background:var(--myllm-bg,#f2f2f7); display:flex; align-items:center; justify-content:center; font-size:20px; overflow:hidden; flex-shrink:0; }
+  .st .art img{ width:100%; height:100%; object-fit:cover; }
+  .st .info{ flex:1; min-width:0; }
+  .st .name{ font-size:14.5px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .st .name .eq{ height:10px; } .st .name .eq i{ width:2.5px; }
+  .st .meta{ font-size:11.5px; color:var(--myllm-muted,#8a8a8e); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .st .fav{ border:none; background:none; font-size:19px; padding:8px 4px 8px 10px; flex-shrink:0; color:var(--myllm-muted,#8a8a8e); }
+  .st .fav.on{ color:#ff453a; }
+
+  .status{ text-align:center; font-size:13.5px; color:var(--myllm-muted,#8a8a8e); padding:20px 12px; line-height:1.6; }
+  .note{ font-size:12.5px; color:var(--myllm-muted,#8a8a8e); margin:8px 2px; line-height:1.5; }
+</style>
+</head>
+<body>
+
+<h1>📻 Internet Radio</h1>
+
+<div class="card np paused" id="np">
+  <div class="row">
+    <div class="art" id="npArt">📻</div>
+    <div class="info">
+      <div class="name" id="npName"></div>
+      <div class="meta" id="npMeta"></div>
+      <div class="state" id="npState"></div>
+    </div>
+    <button class="npbtn" id="npBtn" onclick="toggle()">▶</button>
+  </div>
+  <div class="sub">
+    <button id="npFav" onclick="favCurrent()">♥ Favourite</button>
+    <button id="npSleep" onclick="cycleSleep()">Sleep: off</button>
+  </div>
+</div>
+
+<div class="search">
+  <input id="q" type="search" placeholder="Search stations… (name or genre)" autocomplete="off">
+  <button onclick="doSearch()">Go</button>
+</div>
+<div class="chips" id="chips"></div>
+
+<div id="favsWrap" style="display:none">
+  <h2>Favourites</h2>
+  <div class="card" id="favs"></div>
+</div>
+
+<h2 id="listTitle">Popular stations</h2>
+<div class="card" id="list"><p class="status">Tuning the dial…</p></div>
+
+<script>
+var NET = window.myllmFetch || null;
+var store = window.myllmStorage || {getItem:function(){return Promise.resolve(null)}, setItem:function(){return Promise.resolve()}};
+function haptic(k){ if(window.myllmHaptic){ try{ myllmHaptic(k||'light'); }catch(_){} } }
+function el(id){ return document.getElementById(id); }
+function esc(s){ return String(s==null?'':s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+
+var HOSTS = ["de1.api.radio-browser.info", "de2.api.radio-browser.info", "all.api.radio-browser.info"];
+var hostIdx = 0;
+
+/* Verified HTTPS fallback presets — shown if the directory is unreachable */
+var PRESETS = [
+  {stationuuid:"p1", name:"Radio Paradise", url_resolved:"https://stream.radioparadise.com/mp3-192", tags:"eclectic,rock", countrycode:"US", codec:"MP3", bitrate:192, favicon:""},
+  {stationuuid:"p2", name:"Radio Paradise Mellow", url_resolved:"https://stream.radioparadise.com/mellow-192", tags:"chill,mellow", countrycode:"US", codec:"MP3", bitrate:192, favicon:""},
+  {stationuuid:"p3", name:"FIP", url_resolved:"https://icecast.radiofrance.fr/fip-midfi.mp3", tags:"eclectic,jazz", countrycode:"FR", codec:"MP3", bitrate:128, favicon:""},
+  {stationuuid:"p4", name:"France Musique", url_resolved:"https://icecast.radiofrance.fr/francemusique-midfi.mp3", tags:"classical", countrycode:"FR", codec:"MP3", bitrate:128, favicon:""},
+  {stationuuid:"p5", name:"Classic FM", url_resolved:"https://media-ssl.musicradio.com/ClassicFM", tags:"classical", countrycode:"GB", codec:"AAC", bitrate:128, favicon:""},
+  {stationuuid:"p6", name:"KEXP", url_resolved:"https://kexp-mp3-128.streamguys1.com/kexp128.mp3", tags:"indie,alternative", countrycode:"US", codec:"MP3", bitrate:128, favicon:""}
+];
+
+var GENRES = ["Popular","Jazz","Lo-Fi","Classical","News","Rock","Electronic","Chill","80s"];
+var TAG = {"Jazz":"jazz","Lo-Fi":"lofi","Classical":"classical","News":"news","Rock":"rock","Electronic":"electronic","Chill":"chillout","80s":"80s"};
+
+var audio = new Audio();
+audio.preload = "none";
+var current = null;        /* station object now loaded */
+var favs = [];             /* array of station objects */
+var results = [];          /* current list */
+var sleepMins = 0, sleepTimer = null;
+var activeChip = "Popular";
+
+/* ---------- directory ---------- */
+
+function api(path){
+  if (!NET) return Promise.reject(new Error("no net bridge"));
+  var url = "https://" + HOSTS[hostIdx] + path;
+  return NET(url).then(function(r){
+    var j = JSON.parse(r.body);
+    if (!(j instanceof Array)) throw new Error("bad response");
+    return j;
+  }).catch(function(e){
+    if (hostIdx < HOSTS.length - 1){ hostIdx++; return api(path); }
+    throw e;
+  });
+}
+
+function cleanStations(arr){
+  var seen = {}, out = [];
+  for (var i = 0; i < arr.length; i++){
+    var s = arr[i];
+    if (!s.url_resolved || s.url_resolved.indexOf("https://") !== 0) continue;
+    if (seen[s.stationuuid]) continue;
+    seen[s.stationuuid] = 1;
+    out.push(s);
+  }
+  return out;
+}
+
+function fetchList(params, title){
+  el("listTitle").textContent = title;
+  el("list").innerHTML = '<p class="status">Tuning the dial…</p>';
+  api("/json/stations/search?hidebroken=true&is_https=true&order=clickcount&reverse=true&limit=40&" + params)
+    .then(function(arr){
+      results = cleanStations(arr);
+      renderList();
+    })
+    .catch(function(){
+      results = PRESETS.slice();
+      el("listTitle").textContent = "Staff picks (directory offline)";
+      renderList();
+      el("list").insertAdjacentHTML("beforebegin",
+        '<p class="note" id="offnote">Couldn\'t reach the station directory' +
+        (NET ? ' — showing a built-in selection instead.' : ' — this app needs internet access for apps (MyLLMos settings). The built-in stations below may still play.') + '</p>');
+    });
+}
+
+function doSearch(){
+  var q = el("q").value.trim();
+  if (!q) return;
+  setChip(null);
+  fetchList("name=" + encodeURIComponent(q), 'Results for "' + q + '"');
+}
+
+function pickGenre(g){
+  el("q").value = "";
+  setChip(g);
+  if (g === "Popular") fetchList("", "Popular stations");
+  else fetchList("tag=" + encodeURIComponent(TAG[g]), g + " stations");
+}
+
+/* ---------- rendering ---------- */
+
+function metaLine(s){
+  var bits = [];
+  if (s.tags){ var t = String(s.tags).split(",").slice(0,2).join(", "); if (t) bits.push(t); }
+  if (s.countrycode) bits.push(s.countrycode);
+  if (s.bitrate) bits.push(s.bitrate + " kbps");
+  return bits.join(" · ");
+}
+
+function artHtml(s, cls){
+  var fallback = '📻';
+  if (s.favicon && String(s.favicon).indexOf("https://") === 0)
+    return '<div class="art"><img src="' + esc(s.favicon) + '" loading="lazy" onerror="this.parentNode.textContent=\'' + fallback + '\'"></div>';
+  return '<div class="art">' + fallback + '</div>';
+}
+
+function isFav(s){ for (var i=0;i<favs.length;i++) if (favs[i].stationuuid === s.stationuuid) return true; return false; }
+
+function rowHtml(s, idx, listName){
+  var playing = current && current.stationuuid === s.stationuuid;
+  return '<div class="st" data-i="' + idx + '" data-l="' + listName + '">' +
+    artHtml(s) +
+    '<div class="info" onclick="playFrom(\'' + listName + '\',' + idx + ')">' +
+      '<div class="name">' + (playing ? '<span class="eq"><i></i><i></i><i></i></span>' : '') + esc(s.name) + '</div>' +
+      '<div class="meta">' + esc(metaLine(s)) + '</div>' +
+    '</div>' +
+    '<button class="fav' + (isFav(s) ? ' on' : '') + '" onclick="toggleFav(\'' + listName + '\',' + idx + ')">' + (isFav(s) ? '♥' : '♡') + '</button>' +
+  '</div>';
+}
+
+function renderList(){
+  if (!results.length){ el("list").innerHTML = '<p class="status">No stations found — try another search.</p>'; return; }
+  var h = "";
+  for (var i = 0; i < results.length; i++) h += rowHtml(results[i], i, "r");
+  el("list").innerHTML = h;
+}
+
+function renderFavs(){
+  if (!favs.length){ el("favsWrap").style.display = "none"; return; }
+  el("favsWrap").style.display = "block";
+  var h = "";
+  for (var i = 0; i < favs.length; i++) h += rowHtml(favs[i], i, "f");
+  el("favs").innerHTML = h;
+}
+
+function renderChips(){
+  var h = "";
+  for (var i = 0; i < GENRES.length; i++)
+    h += '<button' + (GENRES[i] === activeChip ? ' class="hot"' : '') + ' onclick="pickGenre(\'' + GENRES[i] + '\')">' + GENRES[i] + '</button>';
+  el("chips").innerHTML = h;
+}
+
+function setChip(g){ activeChip = g; renderChips(); }
+
+/* ---------- playback ---------- */
+
+function playFrom(listName, idx){
+  var s = (listName === "f" ? favs : results)[idx];
+  if (!s) return;
+  play(s);
+}
+
+function play(s){
+  haptic("light");
+  current = s;
+  audio.src = s.url_resolved;
+  audio.play();
+  el("np").className = "card np on";
+  el("npName").textContent = s.name;
+  el("npMeta").textContent = metaLine(s);
+  el("npArt").innerHTML = artHtml(s).replace(/^<div class="art">|<\/div>$/g, "");
+  el("npBtn").textContent = "◼";
+  setState("Connecting…", "");
+  updateNpFav();
+  renderList(); renderFavs();
+  store.setItem("radio_last", JSON.stringify(s));
+  /* polite listen ping so the directory's popularity counts stay honest */
+  if (NET && String(s.stationuuid).length > 8)
+    NET("https://" + HOSTS[hostIdx] + "/json/url/" + s.stationuuid).catch(function(){});
+}
+
+function stop(){
+  audio.pause();
+  audio.removeAttribute("src");
+  try { audio.load(); } catch(_){}
+  el("npBtn").textContent = "▶";
+  el("np").classList.add("paused");
+  setState("Stopped", "");
+}
+
+function toggle(){
+  haptic("light");
+  if (!current) return;
+  if (audio.paused) play(current); else stop();
+}
+
+function setState(txt, cls){
+  el("npState").textContent = txt;
+  el("npState").className = "state" + (cls ? " " + cls : "");
+}
+
+audio.addEventListener("waiting", function(){ setState("Buffering…", ""); el("np").classList.add("paused"); });
+audio.addEventListener("playing", function(){ setState("● Live", "live"); el("np").classList.remove("paused"); });
+audio.addEventListener("error", function(){
+  if (!current) return;
+  setState("Station didn't respond — try another", "err");
+  el("npBtn").textContent = "▶";
+  el("np").classList.add("paused");
+});
+
+/* ---------- favourites ---------- */
+
+function slim(s){
+  return {stationuuid:s.stationuuid, name:s.name, url_resolved:s.url_resolved,
+          tags:s.tags, countrycode:s.countrycode, codec:s.codec, bitrate:s.bitrate, favicon:s.favicon};
+}
+
+function toggleFav(listName, idx){
+  var s = (listName === "f" ? favs : results)[idx];
+  if (!s) return;
+  haptic("medium");
+  setFav(s, !isFav(s));
+}
+
+function favCurrent(){ if (current){ haptic("medium"); setFav(current, !isFav(current)); } }
+
+function setFav(s, on){
+  if (on) favs.unshift(slim(s));
+  else favs = favs.filter(function(f){ return f.stationuuid !== s.stationuuid; });
+  store.setItem("radio_favs", JSON.stringify(favs));
+  renderFavs(); renderList(); updateNpFav();
+}
+
+function updateNpFav(){
+  if (!current) return;
+  var on = isFav(current);
+  el("npFav").textContent = on ? "♥ Favourited" : "♡ Favourite";
+  el("npFav").className = on ? "hot" : "";
+}
+
+/* ---------- sleep timer ---------- */
+
+var SLEEPS = [0, 15, 30, 60];
+function cycleSleep(){
+  haptic("light");
+  sleepMins = SLEEPS[(SLEEPS.indexOf(sleepMins) + 1) % SLEEPS.length];
+  if (sleepTimer){ clearTimeout(sleepTimer); sleepTimer = null; }
+  if (sleepMins){
+    sleepTimer = setTimeout(function(){ stop(); sleepMins = 0; el("npSleep").textContent = "Sleep: off"; el("npSleep").className = ""; }, sleepMins * 60000);
+  }
+  el("npSleep").textContent = sleepMins ? "Sleep: " + sleepMins + "m" : "Sleep: off";
+  el("npSleep").className = sleepMins ? "hot" : "";
+}
+
+/* ---------- boot ---------- */
+
+el("q").addEventListener("keydown", function(e){ if (e.key === "Enter"){ doSearch(); this.blur(); } });
+
+renderChips();
+store.getItem("radio_favs").then(function(v){
+  if (v){ try { favs = JSON.parse(v) || []; } catch(_){} }
+  renderFavs();
+});
+store.getItem("radio_last").then(function(v){
+  if (v){ try {
+    var s = JSON.parse(v);
+    current = s;
+    el("np").className = "card np on paused";
+    el("npName").textContent = s.name;
+    el("npMeta").textContent = metaLine(s);
+    el("npArt").innerHTML = artHtml(s).replace(/^<div class="art">|<\/div>$/g, "");
+    el("npBtn").textContent = "▶";
+    setState("Tap to resume", "");
+    updateNpFav();
+  } catch(_){} }
+});
+fetchList("", "Popular stations");
+</script>
+</body>
+</html>
