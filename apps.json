@@ -1,5 +1,5 @@
 {
-  "updated": "2026-07-11",
+  "updated": "2026-07-13",
   "categories": [
     "Students",
     "Productivity",
@@ -2289,6 +2289,84 @@
       "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/study-buddy.myllmapp",
       "sizeKB": 12,
       "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/icons/study-buddy.jpg"
+    },
+    {
+      "id": "air-quality",
+      "name": "Air Quality",
+      "emoji": "🌿",
+      "tagline": "Know what you're breathing",
+      "description": "Live air quality for wherever you are: search any place and get the European AQI at a glance, a breakdown of what's actually in the air (PM2.5, ozone, NO₂ and friends), the next 24 hours as a forecast, and pollen levels for allergy season. Powered by free Open-Meteo data — no account, no tracking, and your saved place stays on your phone.",
+      "tags": [
+        "health",
+        "air quality",
+        "pollen",
+        "environment",
+        "network",
+        "saves data"
+      ],
+      "category": "Health & Wellbeing",
+      "iconSymbol": "leaf.fill",
+      "iconColor": "green",
+      "version": 1,
+      "featured": false,
+      "requiresAI": false,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/air-quality.jpg",
+      "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/air-quality.html",
+      "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/air-quality.myllmapp",
+      "sizeKB": 13,
+      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/icons/air-quality.jpg"
+    },
+    {
+      "id": "birthday-book",
+      "name": "Birthday Book",
+      "emoji": "🎂",
+      "tagline": "Never miss a birthday again",
+      "description": "A little black book for birthdays: add the people you care about and it keeps them sorted by who's next, shows the age they're turning, and counts down the days. When the big day gets close, ask the on-device AI for gift ideas or a card message written just for them — or ignore the AI entirely and use it as a beautifully simple list. Everything stays on your phone.",
+      "tags": [
+        "birthdays",
+        "reminders",
+        "gifts",
+        "family",
+        "AI-powered",
+        "saves data"
+      ],
+      "category": "Productivity",
+      "iconSymbol": "gift.fill",
+      "iconColor": "pink",
+      "version": 1,
+      "featured": false,
+      "requiresAI": false,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/birthday-book.jpg",
+      "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/birthday-book.html",
+      "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/birthday-book.myllmapp",
+      "sizeKB": 13,
+      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/icons/birthday-book.jpg"
+    },
+    {
+      "id": "decibel-meter",
+      "name": "Decibel Meter",
+      "emoji": "📢",
+      "tagline": "How loud is it in here?",
+      "description": "Point your phone at the noise and find out: a live sound-level meter with a big dB readout, peak and average tracking, and a calibration offset if you want to match a reference meter. Handy for checking the office, the gig, or whether the neighbours really are that loud. Uses the microphone only while it's open — nothing is recorded or saved.",
+      "tags": [
+        "utility",
+        "sound",
+        "noise",
+        "microphone",
+        "measure",
+        "offline"
+      ],
+      "category": "Utilities",
+      "iconSymbol": "gauge.with.needle",
+      "iconColor": "red",
+      "version": 1,
+      "featured": false,
+      "requiresAI": false,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/decibel-meter.jpg",
+      "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/decibel-meter.html",
+      "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/decibel-meter.myllmapp",
+      "sizeKB": 8,
+      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/icons/decibel-meter.jpg"
     }
   ]
 }
