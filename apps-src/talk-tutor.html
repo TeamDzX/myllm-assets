@@ -1,0 +1,783 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Talk Tutor</title>
+<style>
+  :root { color-scheme: light dark; }
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body{
+    font-family:var(--myllm-font,-apple-system,system-ui,sans-serif);
+    background:var(--myllm-bg,#f2f2f7);
+    color:var(--myllm-text,#111);
+    max-width:600px; margin:0 auto; min-height:100dvh;
+    padding:14px 14px calc(76px + env(safe-area-inset-bottom));
+  }
+  h1{ font-size:21px; font-weight:800; margin:2px 2px 10px; display:flex; align-items:center; gap:8px; }
+  h1 .flag{ font-size:24px; }
+  h1 small{ font-size:12px; font-weight:650; color:var(--myllm-muted,#8a8a8e); margin-left:auto; }
+  h2{ font-size:12px; font-weight:800; letter-spacing:.07em; text-transform:uppercase; color:var(--myllm-muted,#8a8a8e); margin:16px 2px 9px; }
+
+  .card{ background:var(--myllm-surface,#fff); border:1px solid var(--myllm-border,#e3e3e8); border-radius:18px; padding:14px; margin-bottom:12px; }
+  .status{ text-align:center; font-size:13.5px; color:var(--myllm-muted,#8a8a8e); padding:18px 12px; line-height:1.6; }
+  .note{ font-size:12.5px; color:var(--myllm-muted,#8a8a8e); margin:8px 2px; line-height:1.5; }
+
+  /* Tab bar */
+  .tabs{
+    position:fixed; bottom:0; left:50%; transform:translateX(-50%); width:100%; max-width:600px;
+    display:flex; background:var(--myllm-surface,#fff); border-top:1px solid var(--myllm-border,#e3e3e8);
+    padding:6px 8px calc(6px + env(safe-area-inset-bottom)); z-index:8;
+  }
+  .tabs button{ flex:1; border:none; background:none; color:var(--myllm-muted,#8a8a8e); font-size:10.5px; font-weight:700; padding:5px 0; }
+  .tabs button .ti{ display:block; font-size:21px; margin-bottom:2px; filter:grayscale(1) opacity(.55); }
+  .tabs button.hot{ color:var(--myllm-accent,#0a84ff); }
+  .tabs button.hot .ti{ filter:none; }
+  .tabs button b.badge{ position:absolute; margin-left:14px; margin-top:-4px; background:#ff453a; color:#fff; font-size:10px; border-radius:99px; padding:1px 5px; }
+
+  /* Chips */
+  .chips{ display:flex; gap:7px; overflow-x:auto; -webkit-overflow-scrolling:touch; padding:2px 2px 10px; scrollbar-width:none; }
+  .chips::-webkit-scrollbar{ display:none; }
+  .chips button{ border:1px solid var(--myllm-border,#e3e3e8); background:var(--myllm-surface,#fff); color:var(--myllm-text,#111); border-radius:99px; padding:7px 13px; font-size:13px; font-weight:650; white-space:nowrap; flex-shrink:0; }
+  .chips button.hot{ background:var(--myllm-accent,#0a84ff); border-color:var(--myllm-accent,#0a84ff); color:#fff; }
+
+  /* Chat */
+  #chat{ padding-bottom:4px; }
+  .msg{ max-width:86%; margin-bottom:10px; }
+  .msg .bub{ border-radius:17px; padding:10px 13px; font-size:15.5px; line-height:1.45; }
+  .msg.tutor .bub{ background:var(--myllm-surface,#fff); border:1px solid var(--myllm-border,#e3e3e8); border-bottom-left-radius:6px; }
+  .msg.me{ margin-left:auto; }
+  .msg.me .bub{ background:var(--myllm-accent,#0a84ff); color:#fff; border-bottom-right-radius:6px; }
+  .msg .xtra{ font-size:12.5px; color:var(--myllm-muted,#8a8a8e); line-height:1.45; padding:7px 6px 0; display:none; }
+  .msg.open .xtra{ display:block; }
+  .msg .fix{ font-size:12.5px; line-height:1.45; padding:6px 6px 0; color:#ff9f0a; display:none; }
+  .msg.open .fix{ display:block; }
+  .msg .row{ display:flex; align-items:center; gap:9px; }
+  .msg .spk{ border:none; background:none; font-size:17px; padding:4px; flex-shrink:0; }
+  .typing{ color:var(--myllm-muted,#8a8a8e); font-size:13px; padding:2px 6px 10px; display:none; }
+
+  /* Composer */
+  .composer{ display:flex; gap:8px; margin-top:4px; }
+  .composer input{ flex:1; font-size:16px; padding:11px 13px; border-radius:14px; border:1px solid var(--myllm-border,#e3e3e8); background:var(--myllm-surface,#fff); color:var(--myllm-text,#111); }
+  .composer button{ border:none; border-radius:14px; width:46px; font-size:18px; background:var(--myllm-accent,#0a84ff); color:#fff; flex-shrink:0; }
+  .composer button.alt{ background:var(--myllm-surface,#fff); color:var(--myllm-text,#111); border:1px solid var(--myllm-border,#e3e3e8); }
+  .helprow{ display:flex; gap:7px; margin-top:8px; flex-wrap:wrap; }
+  .helprow button{ border:1px dashed var(--myllm-border,#c9c9cf); background:none; color:var(--myllm-muted,#6a6a6e); border-radius:12px; padding:7px 11px; font-size:12.5px; text-align:left; }
+
+  .tools{ display:flex; gap:7px; align-items:center; margin-bottom:9px; flex-wrap:wrap; }
+  .tools button{ border:1px solid var(--myllm-border,#e3e3e8); background:var(--myllm-surface,#fff); color:var(--myllm-text,#111); border-radius:99px; padding:5px 11px; font-size:12px; font-weight:650; }
+  .tools button.hot{ background:var(--myllm-accent,#0a84ff); border-color:var(--myllm-accent,#0a84ff); color:#fff; }
+
+  /* Practice */
+  .pcard{ text-align:center; padding:22px 16px; }
+  .pcard img{ width:132px; height:132px; border-radius:20px; object-fit:cover; margin-bottom:12px; background:var(--myllm-bg,#f2f2f7); }
+  .pcard .front{ font-size:17px; font-weight:650; color:var(--myllm-muted,#8a8a8e); }
+  .pcard .back{ font-size:27px; font-weight:800; margin-top:8px; display:none; }
+  .pcard.flip .back{ display:block; }
+  .pcard .hintw{ font-size:13px; color:var(--myllm-muted,#8a8a8e); margin-top:9px; display:none; line-height:1.5; }
+  .pcard.flip .hintw{ display:block; }
+  .grades{ display:flex; gap:8px; margin-top:14px; }
+  .grades button{ flex:1; border:none; border-radius:13px; padding:13px 6px; font-size:14px; font-weight:750; color:#fff; }
+  .g-again{ background:#ff453a; } .g-good{ background:var(--myllm-accent,#0a84ff); } .g-easy{ background:#30d158; }
+  .reveal{ width:100%; border:none; border-radius:13px; padding:13px; font-size:15px; font-weight:750; background:var(--myllm-accent,#0a84ff); color:#fff; margin-top:14px; }
+  .prog{ font-size:12px; color:var(--myllm-muted,#8a8a8e); text-align:center; margin-bottom:8px; }
+
+  /* Words */
+  .vrow{ display:flex; align-items:center; gap:11px; padding:9px 2px; border-bottom:1px solid var(--myllm-border,#e3e3e8); }
+  .vrow:last-child{ border-bottom:none; }
+  .vrow img{ width:40px; height:40px; border-radius:9px; object-fit:cover; background:var(--myllm-bg,#f2f2f7); flex-shrink:0; }
+  .vrow .noimg{ width:40px; height:40px; border-radius:9px; background:var(--myllm-bg,#f2f2f7); display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
+  .vrow .vi{ flex:1; min-width:0; }
+  .vrow .w{ font-size:15px; font-weight:700; }
+  .vrow .e{ font-size:12px; color:var(--myllm-muted,#8a8a8e); }
+  .vrow .lvl{ font-size:10.5px; font-weight:800; border-radius:6px; padding:2px 6px; flex-shrink:0; }
+  .lvl.new{ background:rgba(10,132,255,.14); color:var(--myllm-accent,#0a84ff); }
+  .lvl.learning{ background:rgba(255,159,10,.16); color:#ff9f0a; }
+  .lvl.known{ background:rgba(48,209,88,.16); color:#30d158; }
+  .vrow .del{ border:none; background:none; color:var(--myllm-muted,#8a8a8e); font-size:15px; padding:6px; }
+  .packrow{ display:flex; align-items:center; gap:10px; padding:9px 2px; border-bottom:1px solid var(--myllm-border,#e3e3e8); }
+  .packrow:last-child{ border-bottom:none; }
+  .packrow .pi{ flex:1; }
+  .packrow .t{ font-size:14.5px; font-weight:700; }
+  .packrow .c{ font-size:12px; color:var(--myllm-muted,#8a8a8e); }
+  .packrow button{ border:1px solid var(--myllm-border,#e3e3e8); background:var(--myllm-bg,#f2f2f7); color:var(--myllm-text,#111); border-radius:10px; padding:8px 13px; font-size:13px; font-weight:650; }
+  .packrow button.done{ color:#30d158; border-color:#30d158; background:none; }
+  .search{ width:100%; font-size:15px; padding:10px 12px; border-radius:12px; border:1px solid var(--myllm-border,#e3e3e8); background:var(--myllm-surface,#fff); color:var(--myllm-text,#111); margin-bottom:10px; }
+
+  /* Me */
+  .stats{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:9px; }
+  .stat{ background:var(--myllm-bg,#f2f2f7); border-radius:14px; padding:13px 8px; text-align:center; }
+  .stat b{ display:block; font-size:23px; font-variant-numeric:tabular-nums; }
+  .stat span{ font-size:11px; color:var(--myllm-muted,#8a8a8e); font-weight:650; }
+  .optrow{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 0; border-bottom:1px solid var(--myllm-border,#e3e3e8); }
+  .optrow:last-child{ border-bottom:none; }
+  .optrow label{ font-size:14px; font-weight:650; }
+  .seg{ display:flex; background:var(--myllm-bg,#f2f2f7); border-radius:10px; padding:3px; }
+  .seg button{ border:none; background:none; color:var(--myllm-text,#111); border-radius:8px; padding:6px 11px; font-size:12.5px; font-weight:650; }
+  .seg button.hot{ background:var(--myllm-surface,#fff); box-shadow:0 1px 4px rgba(0,0,0,.12); }
+  .switch{ width:46px; height:28px; border-radius:99px; border:none; background:var(--myllm-border,#d5d5db); position:relative; }
+  .switch.on{ background:#30d158; }
+  .switch i{ position:absolute; top:3px; left:3px; width:22px; height:22px; border-radius:50%; background:#fff; transition:left .18s; }
+  .switch.on i{ left:21px; }
+
+  /* Onboarding */
+  .ob{ position:fixed; inset:0; background:var(--myllm-bg,#f2f2f7); z-index:20; overflow-y:auto; padding:26px 20px calc(26px + env(safe-area-inset-bottom)); }
+  .ob .inner{ max-width:420px; margin:0 auto; }
+  .ob h1{ font-size:26px; margin:12px 0 4px; }
+  .ob p.sub{ font-size:14.5px; color:var(--myllm-muted,#8a8a8e); line-height:1.55; margin-bottom:20px; }
+  .langbtn{ display:flex; align-items:center; gap:13px; width:100%; border:2px solid var(--myllm-border,#e3e3e8); background:var(--myllm-surface,#fff); color:var(--myllm-text,#111); border-radius:16px; padding:14px; font-size:16px; font-weight:700; margin-bottom:10px; }
+  .langbtn.hot{ border-color:var(--myllm-accent,#0a84ff); }
+  .langbtn .f{ font-size:27px; }
+  .langbtn small{ display:block; font-size:12px; font-weight:500; color:var(--myllm-muted,#8a8a8e); }
+  .ob .go{ width:100%; border:none; border-radius:15px; padding:15px; font-size:16px; font-weight:750; background:var(--myllm-accent,#0a84ff); color:#fff; margin-top:14px; }
+  .ob .go:disabled{ opacity:.4; }
+
+  .toast{ position:fixed; left:50%; bottom:calc(88px + env(safe-area-inset-bottom)); transform:translateX(-50%) translateY(90px); background:var(--myllm-text,#111); color:var(--myllm-bg,#fff); font-size:13.5px; font-weight:650; padding:11px 18px; border-radius:99px; transition:transform .25s; z-index:22; white-space:nowrap; }
+  .toast.show{ transform:translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<!-- AI busy cog (house convention) -->
+<style>
+.myllm-ai-busy{position:fixed;top:calc(10px + env(safe-area-inset-top));left:50%;transform:translateX(-50%) translateY(-60px);display:flex;gap:8px;align-items:center;background:var(--myllm-surface,#fff);border:1px solid var(--myllm-border,#e3e3e8);border-radius:99px;padding:8px 15px;font-size:13px;font-weight:650;z-index:30;opacity:0;transition:all .25s;box-shadow:0 4px 18px rgba(0,0,0,.14)}
+.myllm-ai-busy.on{opacity:1;transform:translateX(-50%) translateY(0)}
+.myllm-ai-cog{font-size:18px;animation:myllmAiSpin 2.4s linear infinite;filter:drop-shadow(0 0 5px rgba(124,92,255,.85))}
+.myllm-ai-busy small{font-weight:400;opacity:.6}
+@keyframes myllmAiSpin{to{transform:rotate(360deg)}}
+</style>
+<script>
+(function(){if(window.__myllmAiWrap||typeof window.myllmAsk!=='function')return;window.__myllmAiWrap=true;
+var orig=window.myllmAsk,depth=0,node=null;
+function ensure(){if(node)return;node=document.createElement('div');node.className='myllm-ai-busy';
+node.innerHTML='<span class="myllm-ai-cog">⚙️</span><span>AI is thinking… <small>privately, on your device</small></span>';
+(document.body||document.documentElement).appendChild(node);}
+function show(){ensure();depth++;node.classList.add('on');}
+function hide(){depth=Math.max(0,depth-1);if(depth===0&&node)node.classList.remove('on');}
+window.myllmAsk=function(){show();var p;try{p=orig.apply(this,arguments);}catch(e){hide();throw e;}
+return Promise.resolve(p).then(function(r){hide();return r;},function(e){hide();throw e;});};})();
+</script>
+
+<div class="ob" id="ob" style="display:none">
+  <div class="inner">
+    <div style="font-size:44px">🗣️</div>
+    <h1>Talk Tutor</h1>
+    <p class="sub">A patient conversation partner that lives on your phone. Speak, make mistakes, get gently corrected — nobody's listening but you.</p>
+    <div id="obLangs"></div>
+    <h2>Your level</h2>
+    <div class="chips" id="obLevels"></div>
+    <button class="go" id="obGo" onclick="finishOb()" disabled>Start talking</button>
+  </div>
+</div>
+
+<h1><span class="flag" id="hFlag">🗣️</span> Talk Tutor <small id="hStreak"></small></h1>
+
+<!-- TALK -->
+<div class="tab" id="tab-talk">
+  <div class="chips" id="scenarios"></div>
+  <div class="tools">
+    <button id="autoBtn" onclick="toggleAuto()">🔊 Auto-speak</button>
+    <button id="slowBtn" onclick="toggleSlow()">🐢 Slow</button>
+    <button onclick="newChat()">↺ New chat</button>
+  </div>
+  <div id="chat"></div>
+  <div class="typing" id="typing">✍️ …</div>
+  <div id="aiGate" class="card" style="display:none">
+    <p class="status">Conversations need the on-device AI.<br>Enable AI in MyLLM's Settings, then come back — your tutor is waiting.</p>
+  </div>
+  <div class="composer" id="composer">
+    <button class="alt" id="micBtn" onclick="dictate()" style="display:none">🎙️</button>
+    <input id="say" type="text" autocomplete="off" autocapitalize="sentences" placeholder="">
+    <button onclick="send()" id="sendBtn">➤</button>
+  </div>
+  <div class="helprow" id="helps" style="display:none"></div>
+  <p class="note" id="talkHint">Tap any tutor bubble for the English translation. Orange lines are gentle corrections of what you wrote.</p>
+</div>
+
+<!-- PRACTICE -->
+<div class="tab" id="tab-practice" style="display:none">
+  <div class="prog" id="pProg"></div>
+  <div id="pArea"></div>
+</div>
+
+<!-- WORDS -->
+<div class="tab" id="tab-words" style="display:none">
+  <input class="search" id="vq" type="search" placeholder="Search your words…" oninput="renderWords()">
+  <div class="card" id="vlist"></div>
+  <h2>Starter packs <span style="font-weight:500;text-transform:none;letter-spacing:0">— with pictures</span></h2>
+  <div class="card" id="packs"></div>
+</div>
+
+<!-- ME -->
+<div class="tab" id="tab-me" style="display:none">
+  <div class="card"><div class="stats">
+    <div class="stat"><b id="sStreak">0</b><span>day streak</span></div>
+    <div class="stat"><b id="sMins">0</b><span>minutes</span></div>
+    <div class="stat"><b id="sKnown">0</b><span>words known</span></div>
+  </div></div>
+  <div class="card">
+    <div class="optrow"><label>Language</label><div class="seg" id="meLang"></div></div>
+    <div class="optrow"><label>Level</label><div class="seg" id="meLevel"></div></div>
+    <div class="optrow"><label>Auto-speak replies</label><button class="switch" id="swAuto" onclick="toggleAuto()"><i></i></button></div>
+    <div class="optrow"><label>Slow speech</label><button class="switch" id="swSlow" onclick="toggleSlow()"><i></i></button></div>
+  </div>
+  <p class="note">Everything — your conversations, mistakes and progress — stays on this phone. Switching language keeps each language's words and progress separate.</p>
+</div>
+
+<div class="tabs" id="tabs"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+var ASK = window.myllmAsk || null;
+var TRANSCRIBE = window.myllmTranscribe || null;
+var store = window.myllmStorage || {getItem:function(){return Promise.resolve(null)}, setItem:function(){return Promise.resolve()}};
+function haptic(k){ if(window.myllmHaptic){ try{ myllmHaptic(k||'light'); }catch(_){} } }
+function el(id){ return document.getElementById(id); }
+function esc(s){ return String(s==null?'':s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+function toast(m){ var t=el("toast"); t.textContent=m; t.classList.add("show"); clearTimeout(t._t); t._t=setTimeout(function(){t.classList.remove("show");},2200); }
+function today(){ return new Date().toISOString().slice(0,10); }
+
+var IMG_BASE = "https://raw.githubusercontent.com/TeamDzX/hanyu-packs/main/images/flashcards/";
+var PACKS = {"es":[{"id":"fruits","title":"Fruits","img":"fruits","cards":[{"w":"la manzana","en":"apple","i":0},{"w":"el plátano","en":"banana","i":1},{"w":"la naranja","en":"orange","i":2},{"w":"las uvas","en":"grapes","i":3},{"w":"la sandía","en":"watermelon","i":4},{"w":"la fresa","en":"strawberry","i":5},{"w":"el melocotón","en":"peach","i":6},{"w":"la pera","en":"pear","i":7},{"w":"el mango","en":"mango","i":8},{"w":"la piña","en":"pineapple","i":9},{"w":"la cereza","en":"cherry","i":10},{"w":"el limón","en":"lemon","i":11},{"w":"el coco","en":"coconut","i":12},{"w":"el arándano","en":"blueberry","i":13},{"w":"el pomelo","en":"pomelo","i":14}]},{"id":"vegetables","title":"Vegetables","img":"vegetables","cards":[{"w":"el tomate","en":"tomato","i":0},{"w":"la patata","en":"potato","i":1},{"w":"la zanahoria","en":"carrot","i":2},{"w":"el repollo chino","en":"Chinese cabbage","i":3},{"w":"el pepino","en":"cucumber","i":4},{"w":"la berenjena","en":"eggplant","i":5},{"w":"la cebolla","en":"onion","i":6},{"w":"el champiñón","en":"mushroom","i":7},{"w":"el maíz","en":"corn","i":8},{"w":"el chile","en":"chili pepper","i":9},{"w":"las espinacas","en":"spinach","i":10},{"w":"la calabaza","en":"pumpkin","i":11},{"w":"el pimiento verde","en":"green pepper","i":12},{"w":"el ajo","en":"garlic","i":13},{"w":"las judías verdes","en":"green beans","i":14}]},{"id":"food","title":"Food & Drinks","img":"food","cards":[{"w":"el arroz","en":"rice (cooked)","i":0},{"w":"los fideos","en":"noodles","i":1},{"w":"el pan","en":"bread","i":2},{"w":"la fruta","en":"fruit","i":3},{"w":"la manzana","en":"apple","i":4},{"w":"el plátano","en":"banana","i":5},{"w":"la naranja","en":"orange","i":6},{"w":"las verduras","en":"vegetables","i":7},{"w":"la carne","en":"meat","i":8},{"w":"el pollo","en":"chicken meat","i":9},{"w":"la carne de res","en":"beef","i":10},{"w":"el pescado","en":"fish meat","i":11},{"w":"el agua","en":"water","i":12},{"w":"el té","en":"tea","i":13},{"w":"el café","en":"coffee","i":14},{"w":"la leche","en":"milk","i":15},{"w":"el zumo","en":"juice","i":16}]},{"id":"drinks","title":"Drinks","img":"drinks","cards":[{"w":"el agua","en":"water","i":0},{"w":"el té","en":"tea","i":1},{"w":"el café","en":"coffee","i":2},{"w":"la leche","en":"milk","i":3},{"w":"el zumo","en":"juice","i":4},{"w":"la cola","en":"cola","i":5},{"w":"la cerveza","en":"beer","i":6},{"w":"el vino tinto","en":"red wine","i":7},{"w":"la leche de soja","en":"soy milk","i":8},{"w":"el té con leche","en":"milk tea","i":9},{"w":"el refresco","en":"soda","i":10},{"w":"el agua mineral","en":"mineral water","i":11},{"w":"el agua de coco","en":"coconut water","i":12},{"w":"el chocolate caliente","en":"hot chocolate","i":13},{"w":"la limonada","en":"lemonade","i":14}]},{"id":"family","title":"Family","img":"family","cards":[{"w":"la familia","en":"family","i":0},{"w":"el padre","en":"dad, father","i":1},{"w":"la madre","en":"mom, mother","i":2},{"w":"el hermano mayor","en":"older brother","i":3},{"w":"el hermano menor","en":"younger brother","i":4},{"w":"la hermana mayor","en":"older sister","i":5},{"w":"la hermana menor","en":"younger sister","i":6},{"w":"el abuelo paterno","en":"paternal grandfather","i":7},{"w":"la abuela paterna","en":"paternal grandmother","i":8},{"w":"el abuelo materno","en":"maternal grandfather","i":9},{"w":"la abuela materna","en":"maternal grandmother","i":10},{"w":"el marido","en":"husband","i":11},{"w":"la esposa","en":"wife","i":12},{"w":"el hijo","en":"son","i":13},{"w":"la hija","en":"daughter","i":14}]},{"id":"body","title":"Body Parts","img":"body","cards":[{"w":"la cabeza","en":"head","i":0},{"w":"la cara","en":"face","i":1},{"w":"el ojo","en":"eye","i":2},{"w":"la oreja","en":"ear","i":3},{"w":"la nariz","en":"nose","i":4},{"w":"la boca","en":"mouth","i":5},{"w":"el diente","en":"tooth/teeth","i":6},{"w":"la lengua","en":"tongue","i":7},{"w":"el cuello","en":"neck","i":8},{"w":"el hombro","en":"shoulder","i":9},{"w":"el brazo","en":"arm","i":10},{"w":"la mano","en":"hand","i":11},{"w":"el dedo","en":"finger","i":12},{"w":"la pierna","en":"leg","i":13},{"w":"el pie","en":"foot","i":14},{"w":"el corazón","en":"heart","i":15},{"w":"el estómago","en":"stomach","i":16},{"w":"la espalda","en":"back","i":17}]},{"id":"clothing","title":"Clothing","img":"clothing","cards":[{"w":"la camisa","en":"shirt","i":0},{"w":"los pantalones","en":"trousers","i":1},{"w":"la falda","en":"skirt","i":2},{"w":"el abrigo","en":"coat","i":3},{"w":"los zapatos","en":"shoes","i":4},{"w":"el sombrero","en":"hat","i":5},{"w":"los calcetines","en":"socks","i":6},{"w":"los guantes","en":"gloves","i":7},{"w":"la bufanda","en":"scarf","i":8},{"w":"el jersey","en":"sweater","i":9},{"w":"el vestido","en":"dress","i":10},{"w":"los vaqueros","en":"jeans","i":11},{"w":"el traje","en":"suit","i":12},{"w":"la sudadera con capucha","en":"hoodie","i":13},{"w":"las gafas","en":"glasses","i":14}]},{"id":"transport","title":"Transport","img":"transport","cards":[{"w":"el avión","en":"airplane","i":0},{"w":"el tren","en":"train","i":1},{"w":"el tren de alta velocidad","en":"high-speed rail","i":2},{"w":"el metro","en":"subway, metro","i":3},{"w":"el autobús","en":"public bus","i":4},{"w":"el taxi","en":"taxi","i":5},{"w":"la bicicleta","en":"bicycle","i":6},{"w":"el coche","en":"car, automobile","i":7},{"w":"la motocicleta","en":"motorcycle","i":8},{"w":"el barco","en":"boat, ship","i":9},{"w":"el aeropuerto","en":"airport","i":10},{"w":"la estación","en":"station, stop","i":11},{"w":"el billete","en":"ticket","i":12},{"w":"el visado","en":"visa","i":13},{"w":"el equipaje","en":"luggage","i":14},{"w":"el guía turístico","en":"tour guide","i":15},{"w":"viajar","en":"to travel, tourism","i":16},{"w":"el mapa","en":"map","i":17}]},{"id":"home","title":"House & Home","img":"home","cards":[{"w":"la cama","en":"bed","i":0},{"w":"la mesa","en":"table","i":1},{"w":"la silla","en":"chair","i":2},{"w":"el sofá","en":"sofa","i":3},{"w":"la puerta","en":"door","i":4},{"w":"la ventana","en":"window","i":5},{"w":"la lámpara","en":"lamp","i":6},{"w":"el frigorífico","en":"refrigerator","i":7},{"w":"el televisor","en":"television","i":8},{"w":"el espejo","en":"mirror","i":9},{"w":"el reloj","en":"clock","i":10},{"w":"la estantería","en":"bookshelf","i":11},{"w":"la cocina","en":"kitchen","i":12},{"w":"el dormitorio","en":"bedroom","i":13},{"w":"el baño","en":"bathroom","i":14}]},{"id":"town","title":"Around Town","img":"town","cards":[{"w":"la escuela","en":"school","i":0},{"w":"el hospital","en":"hospital","i":1},{"w":"el banco","en":"bank","i":2},{"w":"el parque","en":"park","i":3},{"w":"el supermercado","en":"supermarket","i":4},{"w":"el restaurante","en":"restaurant","i":5},{"w":"la biblioteca","en":"library","i":6},{"w":"el cine","en":"cinema","i":7},{"w":"la oficina de correos","en":"post office","i":8},{"w":"la estación de tren","en":"train station","i":9},{"w":"el aeropuerto","en":"airport","i":10},{"w":"la tienda","en":"shop","i":11},{"w":"el hotel","en":"hotel","i":12},{"w":"el edificio de oficinas","en":"office building","i":13},{"w":"la plaza","en":"town square","i":14}]}],"fr":[{"id":"fruits","title":"Fruits","img":"fruits","cards":[{"w":"la pomme","en":"apple","i":0},{"w":"la banane","en":"banana","i":1},{"w":"l'orange","en":"orange","i":2},{"w":"les raisins","en":"grapes","i":3},{"w":"la pastèque","en":"watermelon","i":4},{"w":"la fraise","en":"strawberry","i":5},{"w":"la pêche","en":"peach","i":6},{"w":"la poire","en":"pear","i":7},{"w":"la mangue","en":"mango","i":8},{"w":"l'ananas","en":"pineapple","i":9},{"w":"la cerise","en":"cherry","i":10},{"w":"le citron","en":"lemon","i":11},{"w":"la noix de coco","en":"coconut","i":12},{"w":"la myrtille","en":"blueberry","i":13},{"w":"le pomélo","en":"pomelo","i":14}]},{"id":"vegetables","title":"Vegetables","img":"vegetables","cards":[{"w":"la tomate","en":"tomato","i":0},{"w":"la pomme de terre","en":"potato","i":1},{"w":"la carotte","en":"carrot","i":2},{"w":"le chou chinois","en":"Chinese cabbage","i":3},{"w":"le concombre","en":"cucumber","i":4},{"w":"l'aubergine","en":"eggplant","i":5},{"w":"l'oignon","en":"onion","i":6},{"w":"le champignon","en":"mushroom","i":7},{"w":"le maïs","en":"corn","i":8},{"w":"le piment","en":"chili pepper","i":9},{"w":"les épinards","en":"spinach","i":10},{"w":"la citrouille","en":"pumpkin","i":11},{"w":"le poivron vert","en":"green pepper","i":12},{"w":"l'ail","en":"garlic","i":13},{"w":"les haricots verts","en":"green beans","i":14}]},{"id":"food","title":"Food & Drinks","img":"food","cards":[{"w":"le riz","en":"rice (cooked)","i":0},{"w":"les nouilles","en":"noodles","i":1},{"w":"le pain","en":"bread","i":2},{"w":"le fruit","en":"fruit","i":3},{"w":"la pomme","en":"apple","i":4},{"w":"la banane","en":"banana","i":5},{"w":"l'orange","en":"orange","i":6},{"w":"les légumes","en":"vegetables","i":7},{"w":"la viande","en":"meat","i":8},{"w":"le poulet","en":"chicken meat","i":9},{"w":"le bœuf","en":"beef","i":10},{"w":"le poisson","en":"fish meat","i":11},{"w":"l'eau","en":"water","i":12},{"w":"le thé","en":"tea","i":13},{"w":"le café","en":"coffee","i":14},{"w":"le lait","en":"milk","i":15},{"w":"le jus","en":"juice","i":16}]},{"id":"drinks","title":"Drinks","img":"drinks","cards":[{"w":"l'eau","en":"water","i":0},{"w":"le thé","en":"tea","i":1},{"w":"le café","en":"coffee","i":2},{"w":"le lait","en":"milk","i":3},{"w":"le jus","en":"juice","i":4},{"w":"le cola","en":"cola","i":5},{"w":"la bière","en":"beer","i":6},{"w":"le vin rouge","en":"red wine","i":7},{"w":"le lait de soja","en":"soy milk","i":8},{"w":"le thé au lait","en":"milk tea","i":9},{"w":"le soda","en":"soda","i":10},{"w":"l'eau minérale","en":"mineral water","i":11},{"w":"l'eau de coco","en":"coconut water","i":12},{"w":"le chocolat chaud","en":"hot chocolate","i":13},{"w":"la limonade","en":"lemonade","i":14}]},{"id":"family","title":"Family","img":"family","cards":[{"w":"la famille","en":"family","i":0},{"w":"le père","en":"dad, father","i":1},{"w":"la mère","en":"mom, mother","i":2},{"w":"le grand frère","en":"older brother","i":3},{"w":"le petit frère","en":"younger brother","i":4},{"w":"la grande sœur","en":"older sister","i":5},{"w":"la petite sœur","en":"younger sister","i":6},{"w":"le grand-père paternel","en":"paternal grandfather","i":7},{"w":"la grand-mère paternelle","en":"paternal grandmother","i":8},{"w":"le grand-père maternel","en":"maternal grandfather","i":9},{"w":"la grand-mère maternelle","en":"maternal grandmother","i":10},{"w":"le mari","en":"husband","i":11},{"w":"la femme","en":"wife","i":12},{"w":"le fils","en":"son","i":13},{"w":"la fille","en":"daughter","i":14}]},{"id":"body","title":"Body Parts","img":"body","cards":[{"w":"la tête","en":"head","i":0},{"w":"le visage","en":"face","i":1},{"w":"l'œil","en":"eye","i":2},{"w":"l'oreille","en":"ear","i":3},{"w":"le nez","en":"nose","i":4},{"w":"la bouche","en":"mouth","i":5},{"w":"la dent","en":"tooth/teeth","i":6},{"w":"la langue","en":"tongue","i":7},{"w":"le cou","en":"neck","i":8},{"w":"l'épaule","en":"shoulder","i":9},{"w":"le bras","en":"arm","i":10},{"w":"la main","en":"hand","i":11},{"w":"le doigt","en":"finger","i":12},{"w":"la jambe","en":"leg","i":13},{"w":"le pied","en":"foot","i":14},{"w":"le cœur","en":"heart","i":15},{"w":"l'estomac","en":"stomach","i":16},{"w":"le dos","en":"back","i":17}]},{"id":"clothing","title":"Clothing","img":"clothing","cards":[{"w":"la chemise","en":"shirt","i":0},{"w":"le pantalon","en":"trousers","i":1},{"w":"la jupe","en":"skirt","i":2},{"w":"le manteau","en":"coat","i":3},{"w":"les chaussures","en":"shoes","i":4},{"w":"le chapeau","en":"hat","i":5},{"w":"les chaussettes","en":"socks","i":6},{"w":"les gants","en":"gloves","i":7},{"w":"l'écharpe","en":"scarf","i":8},{"w":"le pull","en":"sweater","i":9},{"w":"la robe","en":"dress","i":10},{"w":"le jean","en":"jeans","i":11},{"w":"le costume","en":"suit","i":12},{"w":"le sweat à capuche","en":"hoodie","i":13},{"w":"les lunettes","en":"glasses","i":14}]},{"id":"transport","title":"Transport","img":"transport","cards":[{"w":"l'avion","en":"airplane","i":0},{"w":"le train","en":"train","i":1},{"w":"le TGV","en":"high-speed rail","i":2},{"w":"le métro","en":"subway, metro","i":3},{"w":"le bus","en":"public bus","i":4},{"w":"le taxi","en":"taxi","i":5},{"w":"le vélo","en":"bicycle","i":6},{"w":"la voiture","en":"car, automobile","i":7},{"w":"la moto","en":"motorcycle","i":8},{"w":"le bateau","en":"boat, ship","i":9},{"w":"l'aéroport","en":"airport","i":10},{"w":"la gare","en":"station, stop","i":11},{"w":"le billet","en":"ticket","i":12},{"w":"le visa","en":"visa","i":13},{"w":"les bagages","en":"luggage","i":14},{"w":"le guide touristique","en":"tour guide","i":15},{"w":"voyager","en":"to travel, tourism","i":16},{"w":"la carte","en":"map","i":17}]},{"id":"home","title":"House & Home","img":"home","cards":[{"w":"le lit","en":"bed","i":0},{"w":"la table","en":"table","i":1},{"w":"la chaise","en":"chair","i":2},{"w":"le canapé","en":"sofa","i":3},{"w":"la porte","en":"door","i":4},{"w":"la fenêtre","en":"window","i":5},{"w":"la lampe","en":"lamp","i":6},{"w":"le réfrigérateur","en":"refrigerator","i":7},{"w":"la télévision","en":"television","i":8},{"w":"le miroir","en":"mirror","i":9},{"w":"l'horloge","en":"clock","i":10},{"w":"l'étagère","en":"bookshelf","i":11},{"w":"la cuisine","en":"kitchen","i":12},{"w":"la chambre","en":"bedroom","i":13},{"w":"la salle de bains","en":"bathroom","i":14}]},{"id":"town","title":"Around Town","img":"town","cards":[{"w":"l'école","en":"school","i":0},{"w":"l'hôpital","en":"hospital","i":1},{"w":"la banque","en":"bank","i":2},{"w":"le parc","en":"park","i":3},{"w":"le supermarché","en":"supermarket","i":4},{"w":"le restaurant","en":"restaurant","i":5},{"w":"la bibliothèque","en":"library","i":6},{"w":"le cinéma","en":"cinema","i":7},{"w":"la poste","en":"post office","i":8},{"w":"la gare","en":"train station","i":9},{"w":"l'aéroport","en":"airport","i":10},{"w":"le magasin","en":"shop","i":11},{"w":"l'hôtel","en":"hotel","i":12},{"w":"l'immeuble de bureaux","en":"office building","i":13},{"w":"la place","en":"town square","i":14}]}],"de":[{"id":"fruits","title":"Fruits","img":"fruits","cards":[{"w":"der Apfel","en":"apple","i":0},{"w":"die Banane","en":"banana","i":1},{"w":"die Orange","en":"orange","i":2},{"w":"die Trauben","en":"grapes","i":3},{"w":"die Wassermelone","en":"watermelon","i":4},{"w":"die Erdbeere","en":"strawberry","i":5},{"w":"der Pfirsich","en":"peach","i":6},{"w":"die Birne","en":"pear","i":7},{"w":"die Mango","en":"mango","i":8},{"w":"die Ananas","en":"pineapple","i":9},{"w":"die Kirsche","en":"cherry","i":10},{"w":"die Zitrone","en":"lemon","i":11},{"w":"die Kokosnuss","en":"coconut","i":12},{"w":"die Blaubeere","en":"blueberry","i":13},{"w":"die Pomelo","en":"pomelo","i":14}]},{"id":"vegetables","title":"Vegetables","img":"vegetables","cards":[{"w":"die Tomate","en":"tomato","i":0},{"w":"die Kartoffel","en":"potato","i":1},{"w":"die Karotte","en":"carrot","i":2},{"w":"der Chinakohl","en":"Chinese cabbage","i":3},{"w":"die Gurke","en":"cucumber","i":4},{"w":"die Aubergine","en":"eggplant","i":5},{"w":"die Zwiebel","en":"onion","i":6},{"w":"der Pilz","en":"mushroom","i":7},{"w":"der Mais","en":"corn","i":8},{"w":"die Chilischote","en":"chili pepper","i":9},{"w":"der Spinat","en":"spinach","i":10},{"w":"der Kürbis","en":"pumpkin","i":11},{"w":"die grüne Paprika","en":"green pepper","i":12},{"w":"der Knoblauch","en":"garlic","i":13},{"w":"die grünen Bohnen","en":"green beans","i":14}]},{"id":"food","title":"Food & Drinks","img":"food","cards":[{"w":"der Reis","en":"rice (cooked)","i":0},{"w":"die Nudeln","en":"noodles","i":1},{"w":"das Brot","en":"bread","i":2},{"w":"das Obst","en":"fruit","i":3},{"w":"der Apfel","en":"apple","i":4},{"w":"die Banane","en":"banana","i":5},{"w":"die Orange","en":"orange","i":6},{"w":"das Gemüse","en":"vegetables","i":7},{"w":"das Fleisch","en":"meat","i":8},{"w":"das Hähnchen","en":"chicken meat","i":9},{"w":"das Rindfleisch","en":"beef","i":10},{"w":"der Fisch","en":"fish meat","i":11},{"w":"das Wasser","en":"water","i":12},{"w":"der Tee","en":"tea","i":13},{"w":"der Kaffee","en":"coffee","i":14},{"w":"die Milch","en":"milk","i":15},{"w":"der Saft","en":"juice","i":16}]},{"id":"drinks","title":"Drinks","img":"drinks","cards":[{"w":"das Wasser","en":"water","i":0},{"w":"der Tee","en":"tea","i":1},{"w":"der Kaffee","en":"coffee","i":2},{"w":"die Milch","en":"milk","i":3},{"w":"der Saft","en":"juice","i":4},{"w":"die Cola","en":"cola","i":5},{"w":"das Bier","en":"beer","i":6},{"w":"der Rotwein","en":"red wine","i":7},{"w":"die Sojamilch","en":"soy milk","i":8},{"w":"der Milchtee","en":"milk tea","i":9},{"w":"die Limo","en":"soda","i":10},{"w":"das Mineralwasser","en":"mineral water","i":11},{"w":"das Kokoswasser","en":"coconut water","i":12},{"w":"die heiße Schokolade","en":"hot chocolate","i":13},{"w":"die Limonade","en":"lemonade","i":14}]},{"id":"family","title":"Family","img":"family","cards":[{"w":"die Familie","en":"family","i":0},{"w":"der Vater","en":"dad, father","i":1},{"w":"die Mutter","en":"mom, mother","i":2},{"w":"der große Bruder","en":"older brother","i":3},{"w":"der kleine Bruder","en":"younger brother","i":4},{"w":"die große Schwester","en":"older sister","i":5},{"w":"die kleine Schwester","en":"younger sister","i":6},{"w":"der Großvater väterlicherseits","en":"paternal grandfather","i":7},{"w":"die Großmutter väterlicherseits","en":"paternal grandmother","i":8},{"w":"der Großvater mütterlicherseits","en":"maternal grandfather","i":9},{"w":"die Großmutter mütterlicherseits","en":"maternal grandmother","i":10},{"w":"der Ehemann","en":"husband","i":11},{"w":"die Ehefrau","en":"wife","i":12},{"w":"der Sohn","en":"son","i":13},{"w":"die Tochter","en":"daughter","i":14}]},{"id":"body","title":"Body Parts","img":"body","cards":[{"w":"der Kopf","en":"head","i":0},{"w":"das Gesicht","en":"face","i":1},{"w":"das Auge","en":"eye","i":2},{"w":"das Ohr","en":"ear","i":3},{"w":"die Nase","en":"nose","i":4},{"w":"der Mund","en":"mouth","i":5},{"w":"der Zahn","en":"tooth/teeth","i":6},{"w":"die Zunge","en":"tongue","i":7},{"w":"der Hals","en":"neck","i":8},{"w":"die Schulter","en":"shoulder","i":9},{"w":"der Arm","en":"arm","i":10},{"w":"die Hand","en":"hand","i":11},{"w":"der Finger","en":"finger","i":12},{"w":"das Bein","en":"leg","i":13},{"w":"der Fuß","en":"foot","i":14},{"w":"das Herz","en":"heart","i":15},{"w":"der Magen","en":"stomach","i":16},{"w":"der Rücken","en":"back","i":17}]},{"id":"clothing","title":"Clothing","img":"clothing","cards":[{"w":"das Hemd","en":"shirt","i":0},{"w":"die Hose","en":"trousers","i":1},{"w":"der Rock","en":"skirt","i":2},{"w":"der Mantel","en":"coat","i":3},{"w":"die Schuhe","en":"shoes","i":4},{"w":"der Hut","en":"hat","i":5},{"w":"die Socken","en":"socks","i":6},{"w":"die Handschuhe","en":"gloves","i":7},{"w":"der Schal","en":"scarf","i":8},{"w":"der Pullover","en":"sweater","i":9},{"w":"das Kleid","en":"dress","i":10},{"w":"die Jeans","en":"jeans","i":11},{"w":"der Anzug","en":"suit","i":12},{"w":"der Kapuzenpullover","en":"hoodie","i":13},{"w":"die Brille","en":"glasses","i":14}]},{"id":"transport","title":"Transport","img":"transport","cards":[{"w":"das Flugzeug","en":"airplane","i":0},{"w":"der Zug","en":"train","i":1},{"w":"der Hochgeschwindigkeitszug","en":"high-speed rail","i":2},{"w":"die U-Bahn","en":"subway, metro","i":3},{"w":"der Bus","en":"public bus","i":4},{"w":"das Taxi","en":"taxi","i":5},{"w":"das Fahrrad","en":"bicycle","i":6},{"w":"das Auto","en":"car, automobile","i":7},{"w":"das Motorrad","en":"motorcycle","i":8},{"w":"das Boot","en":"boat, ship","i":9},{"w":"der Flughafen","en":"airport","i":10},{"w":"die Haltestelle","en":"station, stop","i":11},{"w":"die Fahrkarte","en":"ticket","i":12},{"w":"das Visum","en":"visa","i":13},{"w":"das Gepäck","en":"luggage","i":14},{"w":"der Reiseführer","en":"tour guide","i":15},{"w":"reisen","en":"to travel, tourism","i":16},{"w":"die Karte","en":"map","i":17}]},{"id":"home","title":"House & Home","img":"home","cards":[{"w":"das Bett","en":"bed","i":0},{"w":"der Tisch","en":"table","i":1},{"w":"der Stuhl","en":"chair","i":2},{"w":"das Sofa","en":"sofa","i":3},{"w":"die Tür","en":"door","i":4},{"w":"das Fenster","en":"window","i":5},{"w":"die Lampe","en":"lamp","i":6},{"w":"der Kühlschrank","en":"refrigerator","i":7},{"w":"der Fernseher","en":"television","i":8},{"w":"der Spiegel","en":"mirror","i":9},{"w":"die Uhr","en":"clock","i":10},{"w":"das Bücherregal","en":"bookshelf","i":11},{"w":"die Küche","en":"kitchen","i":12},{"w":"das Schlafzimmer","en":"bedroom","i":13},{"w":"das Badezimmer","en":"bathroom","i":14}]},{"id":"town","title":"Around Town","img":"town","cards":[{"w":"die Schule","en":"school","i":0},{"w":"das Krankenhaus","en":"hospital","i":1},{"w":"die Bank","en":"bank","i":2},{"w":"der Park","en":"park","i":3},{"w":"der Supermarkt","en":"supermarket","i":4},{"w":"das Restaurant","en":"restaurant","i":5},{"w":"die Bibliothek","en":"library","i":6},{"w":"das Kino","en":"cinema","i":7},{"w":"die Post","en":"post office","i":8},{"w":"der Bahnhof","en":"train station","i":9},{"w":"der Flughafen","en":"airport","i":10},{"w":"das Geschäft","en":"shop","i":11},{"w":"das Hotel","en":"hotel","i":12},{"w":"das Bürogebäude","en":"office building","i":13},{"w":"der Marktplatz","en":"town square","i":14}]}]};
+
+var LANGS = {
+  es: {name:"Spanish", flag:"🇪🇸", tts:"es-ES", tutor:"Sofía",
+       greet:"¡Hola! Soy Sofía. ¿Cómo estás hoy?", greetEn:"Hi! I'm Sofía. How are you today?"},
+  fr: {name:"French", flag:"🇫🇷", tts:"fr-FR", tutor:"Léa",
+       greet:"Salut ! Moi, c'est Léa. Comment ça va aujourd'hui ?", greetEn:"Hi! I'm Léa. How's it going today?"},
+  de: {name:"German", flag:"🇩🇪", tts:"de-DE", tutor:"Max",
+       greet:"Hallo! Ich bin Max. Wie geht's dir heute?", greetEn:"Hello! I'm Max. How are you today?"}
+};
+var LEVELS = {
+  beginner:     {label:"Beginner",     rule:"Use very short, simple sentences and only common everyday words. One idea per sentence."},
+  intermediate: {label:"Intermediate", rule:"Use natural everyday conversational language, still fairly simple."},
+  advanced:     {label:"Advanced",     rule:"Speak naturally like a native, idioms welcome."}
+};
+var SCENARIOS = [
+  {id:"free",   label:"💬 Free chat",  role:"Chat naturally about everyday life. Ask the student questions to keep them talking."},
+  {id:"cafe",   label:"☕ At a café",   role:"You are a friendly waiter in a café. The student is a customer ordering."},
+  {id:"dirs",   label:"🗺️ Directions", role:"You are a friendly local. The student is a tourist asking their way around."},
+  {id:"shop",   label:"🛍️ Shopping",   role:"You are a shop assistant in a clothes shop. The student is browsing and buying."},
+  {id:"hotel",  label:"🏨 Hotel",      role:"You are a hotel receptionist. The student is checking in and asking about the hotel."},
+  {id:"meet",   label:"👋 New friend", role:"You are someone the student just met at a party. Get to know each other."},
+  {id:"doctor", label:"🩺 Doctor",     role:"You are a kind doctor. The student is describing how they feel."},
+  {id:"work",   label:"💼 Interview",  role:"You are a friendly interviewer. The student is interviewing for a job they like."}
+];
+
+/* ---------- state ---------- */
+var S = null;          /* settings: {lang, level, auto, slow, micNoted} */
+var vocab = [];        /* [{w,en,lang,img?,ease,ivl,due,reps}] */
+var hist = [];         /* [{who:'t'|'m', txt, en?, fix?}] current chat (per lang) */
+var stats = null;      /* {streak, lastDay, mins, lastTs} */
+var scenario = SCENARIOS[0];
+var busy = false;
+var pQueue = [], pCard = null;
+
+/* ---------- pure helpers ---------- */
+
+function parseTutor(raw){
+  var out = {fix:null, say:"", en:null, word:null};
+  var lines = String(raw||"").split(/\n+/);
+  for (var i=0;i<lines.length;i++){
+    var m = lines[i].match(/^\s*\**\s*(FIX|SAY|EN|WORD)\s*\**\s*[:：]\s*(.+)$/i);
+    if (!m) continue;
+    var v = m[2].replace(/\*+/g,"").trim();
+    var k = m[1].toUpperCase();
+    if (k==="FIX" && !/^(OK|✓|-)\.?$/i.test(v)) out.fix = v;
+    else if (k==="SAY") out.say = out.say ? out.say+" "+v : v;
+    else if (k==="EN") out.en = v;
+    else if (k==="WORD"){
+      var p = v.split("|");
+      if (p.length>=2 && p[0].trim() && p[1].trim()) out.word = {w:p[0].trim(), en:p[1].trim()};
+    }
+  }
+  if (!out.say){
+    /* model ignored the format — treat the whole reply as speech, strip stray labels */
+    out.say = String(raw||"").replace(/^\s*(FIX|SAY|EN|WORD)\s*[:：]/gim,"").replace(/\*+/g,"").trim();
+    out.fix = null; out.en = null; out.word = null;
+  }
+  return out;
+}
+
+function srsGrade(card, grade){
+  /* SM-2 lite. grade: 0 again, 1 good, 2 easy */
+  if (grade === 0){
+    card.ivl = 0; card.ease = Math.max(1.3, (card.ease||2.5) - 0.2);
+  } else {
+    var e = card.ease || 2.5;
+    if (card.ivl === 0) card.ivl = grade === 2 ? 2 : 1;
+    else card.ivl = Math.max(card.ivl + 1, Math.round(card.ivl * e * (grade === 2 ? 1.3 : 1)));
+    if (grade === 2) card.ease = e + 0.1;
+  }
+  card.reps = (card.reps||0) + 1;
+  var d = new Date(); d.setDate(d.getDate() + card.ivl);
+  card.due = d.toISOString().slice(0,10);
+  return card;
+}
+
+function wordLevel(c){ return c.ivl >= 21 ? "known" : (c.reps > 0 ? "learning" : "new"); }
+function dueCards(){ var t = today(); return vocab.filter(function(c){ return c.lang === S.lang && c.due <= t; }); }
+function langWords(){ return vocab.filter(function(c){ return c.lang === S.lang; }); }
+function hasWord(w){ w = w.toLowerCase(); return langWords().some(function(c){ return c.w.toLowerCase() === w; }); }
+
+function buildPrompt(userMsg){
+  var L = LANGS[S.lang], lv = LEVELS[S.level];
+  var p = "You are " + L.tutor + ", a warm, encouraging " + L.name + " tutor. " + scenario.role +
+    "\nStudent level: " + lv.label + ". " + lv.rule +
+    "\nAlways stay in " + L.name + " for SAY. Never break character.\n" +
+    "Reply in EXACTLY this format, one item per line and nothing else:\n" +
+    "FIX: corrected version of the student's message if it had mistakes, otherwise OK\n" +
+    "SAY: your reply in " + L.name + " (1-2 short sentences, end with a question when natural)\n" +
+    "EN: English translation of SAY\n" +
+    "WORD: one useful " + L.name + " word or phrase from this exchange|its English meaning\n\n" +
+    "Conversation so far:\n";
+  var recent = hist.slice(-10);
+  for (var i=0;i<recent.length;i++)
+    p += (recent[i].who === "t" ? L.tutor : "Student") + ": " + recent[i].txt + "\n";
+  p += "Student: " + userMsg + "\n";
+  return p;
+}
+
+/* ---------- speech ---------- */
+
+var CAN_SPEAK = !!(window.speechSynthesis && window.SpeechSynthesisUtterance);
+var spokeOnce = false;
+function speak(text){
+  if (!CAN_SPEAK || !text) return;
+  try{
+    speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance(text);
+    u.lang = LANGS[S.lang].tts;
+    u.rate = S.slow ? 0.68 : 0.92;
+    speechSynthesis.speak(u);
+    spokeOnce = true;
+  }catch(_){}
+}
+function primeSpeech(){
+  /* unlock speechSynthesis inside the user gesture before async work */
+  if (spokeOnce || !CAN_SPEAK) return;
+  try{ var u = new SpeechSynthesisUtterance(" "); u.volume = 0; speechSynthesis.speak(u); }catch(_){}
+}
+
+/* ---------- persistence ---------- */
+
+function saveAll(){
+  store.setItem("tt_set", JSON.stringify(S));
+  store.setItem("tt_vocab", JSON.stringify(vocab));
+  store.setItem("tt_stats", JSON.stringify(stats));
+  store.setItem("tt_hist_" + S.lang, JSON.stringify(hist.slice(-40)));
+}
+
+function tickActivity(){
+  var now = Date.now();
+  if (stats.lastTs && now - stats.lastTs < 120000) stats.mins += (now - stats.lastTs) / 60000;
+  stats.lastTs = now;
+  var t = today();
+  if (stats.lastDay !== t){
+    var y = new Date(); y.setDate(y.getDate()-1);
+    stats.streak = (stats.lastDay === y.toISOString().slice(0,10)) ? stats.streak + 1 : 1;
+    stats.lastDay = t;
+  }
+  el("hStreak").textContent = "🔥 " + stats.streak;
+}
+
+/* ---------- chat ---------- */
+
+function pushMsg(m){ hist.push(m); renderMsg(m, hist.length-1); }
+
+function renderMsg(m, idx){
+  var d = document.createElement("div");
+  d.className = "msg " + (m.who === "t" ? "tutor" : "me");
+  if (m.who === "t"){
+    d.innerHTML = '<div class="row"><div class="bub">' + esc(m.txt) + '</div>' +
+      (CAN_SPEAK ? '<button class="spk" onclick="event.stopPropagation();speakIdx('+idx+')">🔊</button>' : '') + '</div>' +
+      (m.en ? '<div class="xtra">' + esc(m.en) + '</div>' : '');
+    d.onclick = function(){ if (m.en) d.classList.toggle("open"); };
+  } else {
+    d.innerHTML = '<div class="bub">' + esc(m.txt) + '</div>' +
+      (m.fix ? '<div class="fix">✏️ ' + esc(m.fix) + '</div>' : '');
+    if (m.fix){ d.classList.add("open"); }
+  }
+  el("chat").appendChild(d);
+  d.scrollIntoView({block:"end"});
+}
+
+function renderChat(){
+  el("chat").innerHTML = "";
+  for (var i=0;i<hist.length;i++) renderMsg(hist[i], i);
+}
+
+function speakIdx(i){ haptic("selection"); if (hist[i]) speak(hist[i].txt); }
+
+function greet(){
+  var L = LANGS[S.lang];
+  pushMsg({who:"t", txt:L.greet, en:L.greetEn});
+  saveAll();
+}
+
+function newChat(){
+  haptic("light");
+  hist = [];
+  el("chat").innerHTML = "";
+  el("helps").style.display = "none";
+  if (scenario.id === "free") greet();
+  else openScenario();
+}
+
+function pickScenario(id){
+  scenario = SCENARIOS.filter(function(s){ return s.id === id; })[0] || SCENARIOS[0];
+  renderScenarios();
+  hist = [];
+  el("chat").innerHTML = "";
+  if (scenario.id === "free"){ greet(); return; }
+  openScenario();
+}
+
+function openScenario(){
+  if (!ASK){ greet(); return; }
+  var L = LANGS[S.lang], lv = LEVELS[S.level];
+  var p = "You are " + L.tutor + ", a " + L.name + " tutor. " + scenario.role +
+    "\nStudent level: " + lv.label + ". " + lv.rule +
+    "\nOpen the role-play with your first line in " + L.name + ".\nReply in EXACTLY this format:\n" +
+    "SAY: your opening line in " + L.name + " (1-2 short sentences)\nEN: English translation";
+  askTutor(p, true);
+}
+
+function send(){
+  var t = el("say").value.trim();
+  if (!t || busy) return;
+  if (!ASK){ el("aiGate").style.display = "block"; return; }
+  haptic("light");
+  primeSpeech();
+  el("say").value = "";
+  el("helps").style.display = "none";
+  var mine = {who:"m", txt:t};
+  pushMsg(mine);
+  tickActivity();
+  askTutor(buildPrompt(t), false, mine);
+}
+
+function askTutor(prompt, opening, mine){
+  busy = true;
+  el("typing").style.display = "block";
+  el("sendBtn").disabled = true;
+  ASK(prompt).then(function(raw){
+    var r = parseTutor(raw);
+    if (mine && r.fix && r.fix.toLowerCase() !== mine.txt.toLowerCase()){
+      mine.fix = r.fix;
+      renderChat();
+    }
+    pushMsg({who:"t", txt:r.say, en:r.en});
+    if (S.auto) speak(r.say);
+    if (r.word && !hasWord(r.word.w)){
+      vocab.push({w:r.word.w, en:r.word.en, lang:S.lang, ease:2.5, ivl:0, due:today(), reps:0});
+      toast("📖 " + r.word.w + " added to your words");
+      updateBadge();
+    }
+    saveAll();
+  }).catch(function(){
+    pushMsg({who:"t", txt:"…", en:"The AI didn't answer — try again in a moment."});
+  }).then(function(){
+    busy = false;
+    el("typing").style.display = "none";
+    el("sendBtn").disabled = false;
+  });
+}
+
+function help(){
+  if (!ASK || busy) return;
+  haptic("light");
+  var L = LANGS[S.lang];
+  var last = "";
+  for (var i=hist.length-1;i>=0;i--) if (hist[i].who==="t"){ last = hist[i].txt; break; }
+  var p = "A " + LEVELS[S.level].label + " student of " + L.name + " must reply to: \"" + last + "\"\n" +
+    "Give exactly 2 different example replies they could send, in " + L.name + ", one per line, format:\n" +
+    "1: first reply|English meaning\n2: second reply|English meaning";
+  ASK(p).then(function(raw){
+    var opts = [];
+    String(raw||"").split(/\n+/).forEach(function(l){
+      var m = l.match(/^\s*\d\s*[:.)]\s*(.+)$/);
+      if (m){ var pr = m[1].split("|"); opts.push({t:pr[0].replace(/\*+/g,"").trim(), e:(pr[1]||"").trim()}); }
+    });
+    if (!opts.length) return;
+    var h = el("helps"); h.innerHTML = ""; h.style.display = "flex";
+    opts.slice(0,2).forEach(function(o){
+      var b = document.createElement("button");
+      b.textContent = o.t + (o.e ? " — " + o.e : "");
+      b.onclick = function(){ el("say").value = o.t; h.style.display = "none"; };
+      h.appendChild(b);
+    });
+  }).catch(function(){});
+}
+
+function dictate(){
+  if (!TRANSCRIBE || busy) return;
+  haptic("light");
+  var go = function(){
+    TRANSCRIBE().then(function(text){
+      if (text) el("say").value = text;
+    }).catch(function(){});
+  };
+  if (!S.micNoted){
+    S.micNoted = true; saveAll();
+    toast("Heads-up: dictation follows your phone's language for now");
+    setTimeout(go, 1400);
+  } else go();
+}
+
+/* ---------- practice ---------- */
+
+function startPractice(){
+  pQueue = dueCards();
+  renderPractice();
+}
+
+function renderPractice(){
+  updateBadge();
+  var area = el("pArea");
+  if (!pQueue.length){
+    var w = langWords();
+    area.innerHTML = '<div class="card"><p class="status">' +
+      (w.length ? "All caught up — nothing due to review. 🎉<br>Chat with " + LANGS[S.lang].tutor + " to collect new words, or add a starter pack." :
+        "No words yet. Chat with " + LANGS[S.lang].tutor + " — useful words are collected automatically — or add a starter pack in Words.") +
+      '</p></div>';
+    el("pProg").textContent = "";
+    return;
+  }
+  pCard = pQueue[0];
+  el("pProg").textContent = pQueue.length + " to review";
+  var img = pCard.img != null ?
+    '<img src="' + IMG_BASE + pCard.img + '.webp" onerror="this.onerror=null;this.src=this.src.replace(\'.webp\',\'.jpg\')" alt="">' : "";
+  area.innerHTML = '<div class="card pcard" id="pc">' + img +
+    '<div class="front">' + esc(pCard.en) + '</div>' +
+    '<div class="back">' + esc(pCard.w) +
+      (CAN_SPEAK ? ' <button class="spk" style="border:none;background:none;font-size:17px" onclick="speak(\'' + esc(pCard.w).replace(/'/g,"\\'") + '\')">🔊</button>' : '') + '</div>' +
+    '<div class="hintw" id="pEx"></div>' +
+    '<button class="reveal" id="pReveal" onclick="flipCard()">Show answer</button>' +
+    '<div class="grades" id="pGrades" style="display:none">' +
+      '<button class="g-again" onclick="grade(0)">Again</button>' +
+      '<button class="g-good" onclick="grade(1)">Good</button>' +
+      '<button class="g-easy" onclick="grade(2)">Easy</button></div>' +
+    (ASK ? '<p class="note" style="text-align:center"><a href="#" onclick="exampleFor();return false" style="color:var(--myllm-muted,#8a8a8e)">✨ use it in a sentence</a></p>' : '') +
+    '</div>';
+}
+
+function flipCard(){
+  haptic("selection");
+  el("pc").classList.add("flip");
+  el("pReveal").style.display = "none";
+  el("pGrades").style.display = "flex";
+  if (S.auto) speak(pCard.w);
+}
+
+function grade(g){
+  haptic(g === 0 ? "warning" : "success");
+  srsGrade(pCard, g);
+  tickActivity();
+  if (g === 0){ pQueue.push(pQueue.shift()); }  /* failed card comes back this session */
+  else pQueue.shift();
+  saveAll();
+  renderPractice();
+}
+
+function exampleFor(){
+  if (!ASK || !pCard) return;
+  var L = LANGS[S.lang];
+  ASK("Write one short simple " + L.name + " sentence using \"" + pCard.w + "\" (" + pCard.en + "), for a " +
+      LEVELS[S.level].label + " learner. Format:\nSAY: the sentence\nEN: English translation")
+    .then(function(raw){
+      var r = parseTutor(raw);
+      if (r.say) el("pEx").innerHTML = esc(r.say) + (r.en ? '<br><span style="opacity:.75">' + esc(r.en) + "</span>" : "");
+    }).catch(function(){});
+}
+
+/* ---------- words ---------- */
+
+function renderWords(){
+  var q = (el("vq").value||"").toLowerCase().trim();
+  var w = langWords().filter(function(c){
+    return !q || c.w.toLowerCase().indexOf(q) >= 0 || c.en.toLowerCase().indexOf(q) >= 0;
+  });
+  if (!w.length){
+    el("vlist").innerHTML = '<p class="status">' + (q ? "No matches." : "Words you meet in conversation land here automatically.") + '</p>';
+  } else {
+    w.sort(function(a,b){ return a.w.localeCompare(b.w); });
+    var h = "";
+    for (var i=0;i<w.length;i++){
+      var c = w[i], lv = wordLevel(c);
+      var im = c.img != null ?
+        '<img loading="lazy" src="' + IMG_BASE + c.img + '.jpg" onerror="this.style.visibility=\'hidden\'" alt="">' :
+        '<div class="noimg">💬</div>';
+      h += '<div class="vrow">' + im +
+        '<div class="vi"><div class="w">' + esc(c.w) + '</div><div class="e">' + esc(c.en) + '</div></div>' +
+        '<span class="lvl ' + lv + '">' + lv + '</span>' +
+        '<button class="del" onclick="delWord(\'' + esc(c.w).replace(/'/g,"\\'") + '\')">✕</button></div>';
+    }
+    el("vlist").innerHTML = h;
+  }
+  renderPacks();
+}
+
+function delWord(w){
+  vocab = vocab.filter(function(c){ return !(c.lang === S.lang && c.w === w); });
+  saveAll(); renderWords(); updateBadge();
+}
+
+function renderPacks(){
+  var decks = PACKS[S.lang] || [];
+  var h = "";
+  for (var i=0;i<decks.length;i++){
+    var d = decks[i];
+    var added = d.cards.every(function(c){ return hasWord(c.w); });
+    h += '<div class="packrow"><div class="pi"><div class="t">' + esc(d.title) + '</div>' +
+      '<div class="c">' + d.cards.length + ' words with pictures</div></div>' +
+      '<button ' + (added ? 'class="done">✓ Added' : 'onclick="addPack(' + i + ')">+ Add') + '</button></div>';
+  }
+  el("packs").innerHTML = h || '<p class="status">No packs for this language yet.</p>';
+}
+
+function addPack(i){
+  haptic("success");
+  var d = (PACKS[S.lang]||[])[i];
+  if (!d) return;
+  var n = 0;
+  d.cards.forEach(function(c){
+    if (hasWord(c.w)) return;
+    vocab.push({w:c.w, en:c.en, lang:S.lang, img:d.img + "/" + c.i, ease:2.5, ivl:0, due:today(), reps:0});
+    n++;
+  });
+  saveAll(); renderWords(); updateBadge();
+  toast("Added " + n + " words — see Practice");
+}
+
+/* ---------- tabs & settings ---------- */
+
+var TABS = [
+  {id:"talk", icon:"💬", label:"Talk"},
+  {id:"practice", icon:"🃏", label:"Practice"},
+  {id:"words", icon:"📖", label:"Words"},
+  {id:"me", icon:"🔥", label:"Me"}
+];
+var tab = "talk";
+
+function renderTabs(){
+  var due = S ? dueCards().length : 0;
+  el("tabs").innerHTML = TABS.map(function(t){
+    return '<button ' + (t.id === tab ? 'class="hot"' : '') + ' onclick="go(\'' + t.id + '\')">' +
+      '<span class="ti">' + t.icon + '</span>' + t.label +
+      (t.id === "practice" && due ? '<b class="badge">' + due + '</b>' : '') + '</button>';
+  }).join("");
+}
+
+function go(t){
+  haptic("selection");
+  tab = t;
+  TABS.forEach(function(x){ el("tab-" + x.id).style.display = x.id === t ? "block" : "none"; });
+  renderTabs();
+  if (t === "practice") startPractice();
+  if (t === "words") renderWords();
+  if (t === "me") renderMe();
+}
+
+function updateBadge(){ renderTabs(); }
+
+function renderScenarios(){
+  el("scenarios").innerHTML = SCENARIOS.map(function(s){
+    return '<button ' + (s.id === scenario.id ? 'class="hot"' : '') + ' onclick="pickScenario(\'' + s.id + '\')">' + s.label + '</button>';
+  }).join("");
+}
+
+function toggleAuto(){ S.auto = !S.auto; saveAll(); syncToggles(); haptic("selection"); }
+function toggleSlow(){ S.slow = !S.slow; saveAll(); syncToggles(); haptic("selection"); }
+function syncToggles(){
+  el("autoBtn").className = S.auto ? "hot" : "";
+  el("slowBtn").className = S.slow ? "hot" : "";
+  el("swAuto").className = "switch" + (S.auto ? " on" : "");
+  el("swSlow").className = "switch" + (S.slow ? " on" : "");
+}
+
+function renderMe(){
+  el("sStreak").textContent = stats.streak;
+  el("sMins").textContent = Math.round(stats.mins);
+  el("sKnown").textContent = langWords().filter(function(c){ return wordLevel(c) === "known"; }).length;
+  el("meLang").innerHTML = Object.keys(LANGS).map(function(k){
+    return '<button ' + (k === S.lang ? 'class="hot"' : '') + ' onclick="setLang(\'' + k + '\')">' + LANGS[k].flag + '</button>';
+  }).join("");
+  el("meLevel").innerHTML = Object.keys(LEVELS).map(function(k){
+    return '<button ' + (k === S.level ? 'class="hot"' : '') + ' onclick="setLevel(\'' + k + '\')">' + LEVELS[k].label + '</button>';
+  }).join("");
+  syncToggles();
+}
+
+function setLang(k){
+  if (k === S.lang){ return; }
+  S.lang = k; haptic("selection");
+  el("hFlag").textContent = LANGS[k].flag;
+  el("say").placeholder = "Write in " + LANGS[k].name + " or English…";
+  store.getItem("tt_hist_" + k).then(function(v){
+    hist = [];
+    if (v){ try{ hist = JSON.parse(v) || []; }catch(_){} }
+    renderChat();
+    if (!hist.length){ scenario = SCENARIOS[0]; greet(); }
+    renderScenarios();
+  });
+  saveAll(); renderMe(); updateBadge();
+}
+
+function setLevel(k){ S.level = k; haptic("selection"); saveAll(); renderMe(); }
+
+/* ---------- onboarding & boot ---------- */
+
+var obLang = null, obLevel = "beginner";
+function renderOb(){
+  el("obLangs").innerHTML = Object.keys(LANGS).map(function(k){
+    var L = LANGS[k];
+    return '<button class="langbtn' + (k === obLang ? ' hot' : '') + '" onclick="obPick(\'' + k + '\')">' +
+      '<span class="f">' + L.flag + '</span><span>' + L.name + '<small>with ' + L.tutor + '</small></span></button>';
+  }).join("");
+  el("obLevels").innerHTML = Object.keys(LEVELS).map(function(k){
+    return '<button ' + (k === obLevel ? 'class="hot"' : '') + ' onclick="obLvl(\'' + k + '\')">' + LEVELS[k].label + '</button>';
+  }).join("");
+  el("obGo").disabled = !obLang;
+}
+function obPick(k){ obLang = k; haptic("selection"); renderOb(); }
+function obLvl(k){ obLevel = k; haptic("selection"); renderOb(); }
+function finishOb(){
+  haptic("success");
+  S = {lang:obLang, level:obLevel, auto:true, slow:false, micNoted:false};
+  el("ob").style.display = "none";
+  boot2();
+  saveAll();
+}
+
+function boot2(){
+  el("hFlag").textContent = LANGS[S.lang].flag;
+  el("say").placeholder = "Write in " + LANGS[S.lang].name + " or English…";
+  el("hStreak").textContent = stats.streak ? "🔥 " + stats.streak : "";
+  if (TRANSCRIBE) el("micBtn").style.display = "block";
+  if (!ASK){ el("aiGate").style.display = "block"; el("talkHint").style.display = "none"; }
+  renderScenarios(); renderTabs(); syncToggles();
+  store.getItem("tt_hist_" + S.lang).then(function(v){
+    if (v){ try{ hist = JSON.parse(v) || []; }catch(_){} }
+    if (hist.length) renderChat(); else greet();
+  });
+}
+
+el("say").addEventListener("keydown", function(e){ if (e.key === "Enter") send(); });
+/* long-press send = help suggestions; also double-tap */
+el("sendBtn").addEventListener("dblclick", function(e){ e.preventDefault(); help(); });
+var pressT = null;
+el("sendBtn").addEventListener("touchstart", function(){ pressT = setTimeout(help, 550); });
+el("sendBtn").addEventListener("touchend", function(){ clearTimeout(pressT); });
+
+Promise.all([store.getItem("tt_set"), store.getItem("tt_vocab"), store.getItem("tt_stats")]).then(function(vs){
+  try{ S = vs[0] ? JSON.parse(vs[0]) : null; }catch(_){ S = null; }
+  try{ vocab = vs[1] ? JSON.parse(vs[1]) || [] : []; }catch(_){ vocab = []; }
+  try{ stats = vs[2] ? JSON.parse(vs[2]) : null; }catch(_){ stats = null; }
+  if (!stats) stats = {streak:0, lastDay:null, mins:0, lastTs:0};
+  if (S && LANGS[S.lang]) boot2();
+  else { el("ob").style.display = "block"; renderOb(); }
+});
+</script>
+</body>
+</html>
