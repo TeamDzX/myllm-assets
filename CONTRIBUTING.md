@@ -36,6 +36,9 @@ Open an issue using the **App submission** template (or a PR adding
 5. **Own it**: only submit code and assets you have the right to publish.
    No trademark-infringing names or art. Credit any libraries you inlined.
 6. **Family-friendly** by default; nothing illegal, hateful, or deceptive.
+7. **Agree to the [Gallery Terms](GALLERY-TERMS.md)** — the full version of
+   rules 5–6 plus the licence you grant us (you keep ownership, we host and
+   distribute), how takedowns work, and what users are promised.
 
 ## What happens next
 

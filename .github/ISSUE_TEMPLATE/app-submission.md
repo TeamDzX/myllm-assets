@@ -27,5 +27,5 @@ Submit Your App wizard in the gallery, which packages this for you):
 
 ```
 
-*By submitting you confirm you have the right to publish this code and are
-happy for it to be distributed free in the MyLLMos gallery, credited to you.*
+**Agreement** (required):
+- [ ] I have read the [Gallery Terms](../../blob/main/GALLERY-TERMS.md) and agree to them — in short: this code and its assets are mine to publish, I grant Opticell the licence in §4 to host and distribute the app (I keep ownership), and it meets the content standards in §3.
