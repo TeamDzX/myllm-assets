@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Comic Booth</title>
+<title>Comic Box</title>
 <style>
   :root { color-scheme: light dark; }
   * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
@@ -71,7 +71,7 @@ window.myllmAsk=function(){show();var p;try{p=orig.apply(this,arguments);}catch(
 return Promise.resolve(p).then(function(r){hide();return r;},function(e){hide();throw e;});};})();
 </script>
 
-<h1>💥 Comic Booth</h1>
+<h1>💥 Comic Box</h1>
 
 <div id="setup">
   <h2>You are…</h2>
@@ -88,7 +88,7 @@ return Promise.resolve(p).then(function(r){hide();return r;},function(e){hide();
   <div id="strip"></div>
   <div class="typing" id="typing">✏️ drawing the next panel…</div>
   <div id="aiGate" class="card" style="display:none">
-    <p class="status">Comic Booth needs the on-device AI to act the other character.<br>Enable AI in MyLLM's Settings and come back.</p>
+    <p class="status">Comic Box needs the on-device AI to act the other character.<br>Enable AI in MyLLM's Settings and come back.</p>
   </div>
   <div class="composer">
     <input id="say" type="text" autocomplete="off" placeholder="Say something…">
