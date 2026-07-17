@@ -222,6 +222,60 @@ function wrapText(text, maxChars){
 
 function capText(t){ t = String(t||"").trim(); return t.length > 170 ? t.slice(0,167) + "…" : t; }
 
+function mulberry32(a){
+  return function(){
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    var t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+function hashStr(s){
+  var h = 9; s = String(s||"");
+  for (var i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 387420489);
+  return h >>> 0;
+}
+
+/* The "camera": picks a shot and per-character placement for a panel.
+   Pure + seeded so a strip re-renders identically after reload/export.
+   spec: {h: char height as panel fraction, edge: inset from own side
+   (negative = cropped off-frame), center: absolute left-edge fraction
+   (solo panels), yShift: push-down fraction of h (waist-up crops),
+   rot: degrees}. */
+function panelLayout(seed, hasL, hasR, iL, iR){
+  var rng = mulberry32(seed || 1);
+  var hi = Math.max(iL || 0, iR || 0);
+  var j = function(a, b){ return a + rng() * (b - a); };
+  var rotScale = hi >= 8 ? 1 : hi >= 5 ? 0.55 : 0.2;
+  var shots = hi >= 7 ? ["close","close","dramatic","medium"]
+                      : ["medium","medium","wide","close"];
+  var both = hasL && hasR;
+  var shot = shots[Math.floor(rng() * shots.length)];
+  if (!both && shot === "dramatic") shot = "close";
+  var out = { shot: shot };
+  function base(kind){
+    if (kind === "wide")  return { h: j(0.48,0.56), edge: j(0.10,0.18), yShift: 0,    rot: j(-1.5,1.5)*rotScale };
+    if (kind === "close") return { h: j(0.80,0.92), edge: j(0.00,0.06), yShift: 0.13, rot: j(-2.5,2.5)*rotScale };
+    return               { h: j(0.58,0.68), edge: j(0.03,0.10), yShift: 0.02, rot: j(-2,2)*rotScale };
+  }
+  if (both){
+    if (shot === "dramatic"){
+      var lBig = (iL || 0) >= (iR || 0);
+      var big   = { h: j(0.88,0.98), edge: j(-0.05,0.02), yShift: 0.16, rot: j(-2,2)*rotScale };
+      var small = { h: j(0.45,0.55), edge: j(0.06,0.14),  yShift: 0,    rot: j(-1,1)*rotScale };
+      out.L = lBig ? big : small;
+      out.R = lBig ? small : big;
+    } else {
+      out.L = base(shot); out.R = base(shot);
+    }
+  } else {
+    var solo = base(shot);
+    solo.center = j(0.16, 0.62 - solo.h * 0.35);   // wander the frame, roughly on-screen
+    out[hasL ? "L" : "R"] = solo;
+  }
+  return out;
+}
+
 /* ---------- art ---------- */
 
 function loadImg(src){
@@ -327,20 +381,26 @@ function renderPanel(ex){
                   bg.naturalWidth*sc, bg.naturalHeight*sc);
     var idx = 1;
     var heads = {};
-    var drawChar = function(pose, side, inten){
-      var zoom = inten >= 7 ? 1.28 : 1.0;
-      var h = PANEL_H * 0.62 * zoom;
+    var seed = ex.s != null ? ex.s : hashStr((ex.u || "") + "|" + (ex.a || ""));
+    var layout = panelLayout(seed, ex.u != null, ex.a != null, ex.ui || 0, ex.ai_ || 0);
+    var drawChar = function(pose, side, spec){
+      var h = PANEL_H * spec.h;
       var w = h * pose.width / pose.height;
-      var y = PANEL_H - h + (zoom > 1 ? h * 0.12 : 0);
-      var x = side === "L" ? PANEL_W*0.06 : PANEL_W*0.94 - w;
+      var x = spec.center != null ? PANEL_W * spec.center
+            : side === "L" ? PANEL_W * spec.edge
+            : PANEL_W * (1 - spec.edge) - w;
+      var y = PANEL_H - h + h * (spec.yShift || 0);
+      var cx = x + w/2, cy = y + h/2;
       ctx.save();
-      if (side === "L"){ ctx.translate(x + w, 0); ctx.scale(-1, 1); ctx.drawImage(pose, 0, y, w, h); }
-      else ctx.drawImage(pose, x, y, w, h);
+      ctx.translate(cx, cy);
+      if (spec.rot) ctx.rotate(spec.rot * Math.PI / 180);
+      if (side === "L") ctx.scale(-1, 1);
+      ctx.drawImage(pose, -w/2, -h/2, w, h);
       ctx.restore();
-      heads[side] = { x: x + w/2, y: y + h*0.08 };
+      heads[side] = { x: cx, y: Math.max(120, y + h * 0.08) };
     };
-    if (ex.u != null){ drawChar(ims[idx], "L", ex.ui||3); idx++; }
-    if (ex.a != null){ drawChar(ims[idx], "R", ex.ai_||3); }
+    if (ex.u != null){ drawChar(ims[idx], "L", layout.L); idx++; }
+    if (ex.a != null){ drawChar(ims[idx], "R", layout.R); }
     /* balloons: left speaker first (reading order), then right below it */
     var top = 12;
     if (ex.u != null){
@@ -413,7 +473,8 @@ function send(){
   ASK(stagePrompt(t)).then(function(raw){
     var r = parseStage(raw);
     var ex = { u:t, ue:r.me||"neutral", ui:intensity(t),
-               a:capText(r.say||"…"), ae:r.emo||"neutral", ai_:intensity(r.say) };
+               a:capText(r.say||"…"), ae:r.emo||"neutral", ai_:intensity(r.say),
+               s:(Math.random()*4294967296)>>>0 };
     S.ex.push(ex);
     if (S.ex.length > 24){
       while (S.ex.length > 24) S.ex.shift();
@@ -444,8 +505,10 @@ function improv(){
     var chain = Promise.resolve();
     lines.slice(0, 6).forEach(function(l){
       var ex = l.who === "A"
-        ? { u:capText(l.text), ue:l.emo, ui:intensity(l.text), a:null, ae:null, ai_:0 }
-        : { u:null, ue:null, ui:0, a:capText(l.text), ae:l.emo, ai_:intensity(l.text) };
+        ? { u:capText(l.text), ue:l.emo, ui:intensity(l.text), a:null, ae:null, ai_:0,
+            s:(Math.random()*4294967296)>>>0 }
+        : { u:null, ue:null, ui:0, a:capText(l.text), ae:l.emo, ai_:intensity(l.text),
+            s:(Math.random()*4294967296)>>>0 };
       S.ex.push(ex);
       chain = chain.then(function(){ return appendPanel(ex); });
     });
