@@ -347,8 +347,12 @@ function chatterMood(){
 function ambientTick(now, rng){
   if (!S || !S.hatched || transient) return null;
   var gap = now - lastAmbient;
-  if (gap < 40000) return null;
-  if (rng() > Math.min(0.85, (gap - 40000) / 110000)) return null;
+  /* Dreams come easier than chatter: a sleeping pet dreams within ~30-60s and
+     roughly every minute after; awake mutterings stay rarer (~1.5-2.5 min). */
+  var minGap = S.sleeping ? 22000 : 40000;
+  var ramp   = S.sleeping ? 45000 : 110000;
+  if (gap < minGap) return null;
+  if (rng() > Math.min(0.9, (gap - minGap) / ramp)) return null;
   lastAmbient = now;
   if (S.sleeping){
     bubble(DREAMS[Math.floor(rng() * DREAMS.length)], 5600, true);
@@ -371,7 +375,10 @@ function ambientTick(now, rng){
   return "chatter";
 }
 
-setInterval(function(){ ambientTick(Date.now(), Math.random); }, 12000);
+setInterval(function(){ ambientTick(Date.now(), Math.random); }, 9000);
+/* Opening the app onto a sleeping pet shouldn't mean a long wait for the
+   first dream — start the clock most of the way there. */
+lastAmbient = Date.now() - 15000;
 
 el("say").addEventListener("keydown", function(e){ if (e.key === "Enter") talk(); });
 el("stage").addEventListener("click", stageTap);
