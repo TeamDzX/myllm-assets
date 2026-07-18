@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mochi</title>
+<style>
+  :root { color-scheme: light; }
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body{
+    font-family:var(--myllm-font,-apple-system,system-ui,sans-serif);
+    background:linear-gradient(180deg,#fdf6ec 0%,#f7ede0 100%);
+    color:#4a4238;
+    max-width:600px; margin:0 auto; min-height:100dvh;
+    padding:14px 14px calc(24px + env(safe-area-inset-bottom));
+    display:flex; flex-direction:column;
+  }
+  .top{ display:flex; align-items:baseline; justify-content:space-between; margin:2px 4px 6px; }
+  h1{ font-size:20px; font-weight:800; }
+  .age{ font-size:12.5px; color:#a89a88; font-weight:650; }
+
+  .bars{ display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:8px; margin-bottom:10px; }
+  .bar{ background:#fffdf8; border:1.5px solid #eadfce; border-radius:12px; padding:7px 9px; }
+  .bar small{ font-size:10.5px; font-weight:750; color:#a89a88; display:flex; justify-content:space-between; }
+  .bar .track{ height:7px; border-radius:99px; background:#f1e7d6; margin-top:5px; overflow:hidden; }
+  .bar .fill{ height:100%; border-radius:99px; background:#8fd3a8; transition:width .6s, background .6s; }
+  .bar .fill.low{ background:#f2a65e; } .bar .fill.crit{ background:#e8806e; }
+
+  .stage{ position:relative; flex:1; min-height:280px; display:flex; align-items:center; justify-content:center; }
+  .stage img{ width:min(78vw,340px); height:auto; border-radius:26px; }
+  .stage.sleeping img{ filter:brightness(.82) saturate(.85); }
+  .bubble{
+    position:absolute; top:2px; left:50%; transform:translateX(-50%) translateY(-6px);
+    max-width:88%; background:#fffdf8; border:2px solid #eadfce; border-radius:16px;
+    padding:10px 14px; font-size:14.5px; line-height:1.45; opacity:0;
+    transition:opacity .3s, transform .3s; pointer-events:none;
+  }
+  .bubble.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+  .bubble::after{
+    content:""; position:absolute; bottom:-9px; left:50%; margin-left:-7px;
+    border:7px solid transparent; border-top-color:#eadfce; border-bottom:none;
+  }
+  .hint{ text-align:center; font-size:13px; color:#a89a88; margin:4px 0 8px; min-height:18px; }
+
+  .actions{ display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:9px; margin-bottom:10px; }
+  .actions button{
+    border:2px solid #eadfce; background:#fffdf8; color:#4a4238;
+    border-radius:15px; padding:11px 4px 9px; font-size:12px; font-weight:750;
+  }
+  .actions button .ico{ display:block; font-size:22px; margin-bottom:2px; }
+  .actions button:disabled{ opacity:.4; }
+
+  .chatrow{ display:flex; gap:8px; }
+  .chatrow input{
+    flex:1; font-size:16px; padding:11px 13px; border-radius:14px;
+    border:2px solid #eadfce; background:#fffdf8; color:#4a4238;
+  }
+  .chatrow button{ border:none; border-radius:14px; width:46px; font-size:17px; background:#8fd3a8; color:#fff; }
+
+  .namer{ position:fixed; inset:0; background:rgba(74,66,56,.35); display:none; align-items:center; justify-content:center; z-index:9; }
+  .namer.show{ display:flex; }
+  .namecard{ background:#fffdf8; border-radius:22px; padding:22px; width:min(84vw,340px); text-align:center; }
+  .namecard h2{ font-size:19px; margin-bottom:6px; }
+  .namecard p{ font-size:13.5px; color:#a89a88; margin-bottom:14px; line-height:1.5; }
+  .namecard input{ width:100%; font-size:17px; text-align:center; padding:11px; border-radius:13px; border:2px solid #eadfce; background:#fdf6ec; color:#4a4238; }
+  .namecard button{ width:100%; border:none; border-radius:13px; padding:13px; margin-top:12px; font-size:15px; font-weight:750; background:#8fd3a8; color:#fff; }
+</style>
+</head>
+<body>
+
+<div class="top">
+  <h1 id="title">🥚 A little egg</h1>
+  <span class="age" id="age"></span>
+</div>
+
+<div class="bars" id="bars" style="display:none">
+  <div class="bar"><small>🍙 Food <span id="vHunger"></span></small><div class="track"><div class="fill" id="bHunger"></div></div></div>
+  <div class="bar"><small>💖 Happy <span id="vHappy"></span></small><div class="track"><div class="fill" id="bHappy"></div></div></div>
+  <div class="bar"><small>⚡ Energy <span id="vEnergy"></span></small><div class="track"><div class="fill" id="bEnergy"></div></div></div>
+  <div class="bar"><small>🫧 Clean <span id="vClean"></span></small><div class="track"><div class="fill" id="bClean"></div></div></div>
+</div>
+
+<div class="stage" id="stage">
+  <div class="bubble" id="bubble"></div>
+  <img id="pet" src="" alt="Your pet">
+</div>
+<p class="hint" id="hint"></p>
+
+<div class="actions" id="actions" style="display:none">
+  <button onclick="feed()"><span class="ico">🍙</span>Feed</button>
+  <button onclick="play()" id="playBtn"><span class="ico">⚽</span>Play</button>
+  <button onclick="bath()"><span class="ico">🫧</span>Bath</button>
+  <button onclick="toggleSleep()" id="sleepBtn"><span class="ico">🌙</span>Sleep</button>
+</div>
+
+<div class="chatrow" id="chatrow" style="display:none">
+  <input id="say" type="text" autocomplete="off" placeholder="Say something…">
+  <button onclick="talk()">💬</button>
+</div>
+
+<div class="namer" id="namer">
+  <div class="namecard">
+    <h2>It hatched! 🐣</h2>
+    <p>A tiny mochi blinks up at you.<br>What will you call it?</p>
+    <input id="nameInput" maxlength="16" placeholder="Mochi">
+    <button onclick="setName()">That's the one</button>
+  </div>
+</div>
+
+<script>
+var ASK = window.myllmAsk || null;
+var store = window.myllmStorage || {getItem:function(){return Promise.resolve(null)}, setItem:function(){return Promise.resolve()}};
+function haptic(k){ if(window.myllmHaptic){ try{ myllmHaptic(k||'light'); }catch(_){} } }
+function el(id){ return document.getElementById(id); }
+function esc(s){ return String(s==null?'':s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+var ART = "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/mochi/";
+var ANIM = { egg:"anim_egg.webp", hatch:"anim_hatch.webp", idle:"anim_idle.webp",
+             happy:"anim_happy.webp", eat:"anim_eat.webp", sleep:"anim_sleep.webp",
+             sad:"anim_sad.webp", bath:"anim_bath.webp", play:"anim_play.webp" };
+
+/* ---------- state ---------- */
+var S = null;    /* {name, hatched, tapCount, born, last, hunger, happy, energy, clean, sleeping} */
+var transient = null, transientTimer = null;
+var HOUR = 3600000;
+
+function fresh(){
+  return { name:null, hatched:false, tapCount:0, born:Date.now(), last:Date.now(),
+           hunger:80, happy:80, energy:90, clean:90, sleeping:false };
+}
+
+/* Kind decay: stats drift down over real time but floor at 12 — Mochi can get
+   hungry and mopey, never worse. While sleeping, energy recovers instead. */
+function applyDecay(){
+  var now = Date.now();
+  var hrs = Math.min(72, (now - S.last) / HOUR);
+  if (hrs <= 0){ S.last = now; return; }
+  var floor = function(v){ return Math.max(12, v); };
+  S.hunger = floor(S.hunger - hrs * 6);
+  S.clean  = floor(S.clean  - hrs * 3);
+  if (S.sleeping){
+    S.energy = Math.min(100, S.energy + hrs * 18);
+    S.happy  = floor(S.happy - hrs * 2);
+    if (S.energy >= 100) S.sleeping = false;   /* fully rested — woke up on its own */
+  } else {
+    S.energy = floor(S.energy - hrs * 4);
+    S.happy  = floor(S.happy - hrs * 4);
+  }
+  S.last = now;
+}
+
+function mood(){
+  if (!S.hatched) return "egg";
+  if (transient) return transient;
+  if (S.sleeping) return "sleep";
+  if (S.hunger < 30 || S.happy < 30 || S.clean < 25 || S.energy < 20) return "sad";
+  return "idle";
+}
+
+function moodHint(){
+  if (!S.hatched) return "Tap the egg…";
+  if (S.sleeping) return esc(S.name) + " is snoozing. Tap to wake gently.";
+  if (S.hunger < 30) return esc(S.name) + " is peckish… 🍙";
+  if (S.clean < 25) return esc(S.name) + " could use a bath. 🫧";
+  if (S.energy < 20) return esc(S.name) + " is sleepy. 🌙";
+  if (S.happy < 30) return esc(S.name) + " wants to play! ⚽";
+  return "";
+}
+
+function save(){ store.setItem("mochi_state", JSON.stringify(S)); }
+
+/* ---------- rendering ---------- */
+function render(){
+  var m = mood();
+  el("pet").src = ART + ANIM[m];
+  el("stage").className = "stage" + (S.sleeping && !transient ? " sleeping" : "");
+  el("hint").textContent = moodHint();
+  if (S.hatched){
+    el("title").textContent = "🐣 " + S.name;
+    var days = Math.max(1, Math.ceil((Date.now() - S.born) / 86400000));
+    el("age").textContent = "Day " + days + " together";
+    el("bars").style.display = "grid";
+    el("actions").style.display = "grid";
+    el("chatrow").style.display = "flex";
+    bar("Hunger", S.hunger); bar("Happy", S.happy); bar("Energy", S.energy); bar("Clean", S.clean);
+    el("sleepBtn").innerHTML = S.sleeping ? '<span class="ico">☀️</span>Wake' : '<span class="ico">🌙</span>Sleep';
+    el("playBtn").disabled = S.sleeping;
+  }
+}
+
+function bar(key, v){
+  v = Math.round(v);
+  var f = el("b" + key);
+  f.style.width = v + "%";
+  f.className = "fill" + (v < 25 ? " crit" : v < 45 ? " low" : "");
+  el("v" + key).textContent = v;
+}
+
+function pulse(anim, ms){
+  transient = anim;
+  clearTimeout(transientTimer);
+  transientTimer = setTimeout(function(){ transient = null; render(); save(); }, ms || 5200);
+  render();
+}
+
+function bubble(text, ms){
+  var b = el("bubble");
+  b.textContent = text;
+  b.classList.add("show");
+  clearTimeout(b._t);
+  b._t = setTimeout(function(){ b.classList.remove("show"); }, ms || 4200);
+}
+
+/* ---------- actions ---------- */
+function feed(){
+  if (S.sleeping){ bubble("Shh — " + S.name + " is sleeping."); return; }
+  haptic("light");
+  S.hunger = Math.min(100, S.hunger + 32);
+  S.happy = Math.min(100, S.happy + 4);
+  pulse("eat", 5600); save();
+}
+function play(){
+  if (S.sleeping) return;
+  haptic("light");
+  S.happy = Math.min(100, S.happy + 26);
+  S.energy = Math.max(5, S.energy - 10);
+  S.hunger = Math.max(12, S.hunger - 5);
+  pulse("play", 5600); save();
+}
+function bath(){
+  if (S.sleeping){ bubble("Bathtime after nap time."); return; }
+  haptic("light");
+  S.clean = 100;
+  pulse("bath", 5600); save();
+}
+function toggleSleep(){
+  haptic("selection");
+  if (S.sleeping){
+    S.sleeping = false;
+    S.happy = Math.min(100, S.happy + 6);
+    pulse("happy", 3800);
+  } else {
+    S.sleeping = true;
+    transient = null;
+  }
+  render(); save();
+}
+
+/* ---------- egg & hatching ---------- */
+function stageTap(){
+  if (!S.hatched){
+    S.tapCount++;
+    haptic(S.tapCount >= 3 ? "success" : "light");
+    if (S.tapCount >= 3){
+      S.hatched = true;
+      transient = "hatch";
+      el("pet").src = ART + ANIM.hatch;
+      setTimeout(function(){ el("namer").classList.add("show"); }, 2600);
+    } else {
+      el("hint").textContent = S.tapCount === 1 ? "It wobbled!" : "Something's moving in there…";
+      var p = el("pet");
+      p.style.transition = "transform .12s";
+      p.style.transform = "rotate(" + (S.tapCount % 2 ? 4 : -4) + "deg)";
+      setTimeout(function(){ p.style.transform = ""; }, 140);
+    }
+    save();
+    return;
+  }
+  if (S.sleeping){ toggleSleep(); return; }
+  haptic("light");
+  S.happy = Math.min(100, S.happy + 2);
+  pulse("happy", 3000);
+  save();
+}
+
+function setName(){
+  var n = el("nameInput").value.trim() || "Mochi";
+  S.name = n.slice(0, 16);
+  S.born = Date.now();
+  el("namer").classList.remove("show");
+  haptic("success");
+  transient = null;
+  render(); save();
+  bubble("Hello! I'm " + esc(S.name) + "! 🌱", 5000);
+}
+
+/* ---------- talking (the MyLLM twist) ---------- */
+var CANNED = ["mochi mochi! 🌱","*happy wiggle*","(◕ᴗ◕)","*bounces softly*","squeak!","*does a tiny spin*"];
+
+function talk(){
+  var t = el("say").value.trim();
+  if (!t || !S.hatched) return;
+  el("say").value = "";
+  haptic("light");
+  if (S.sleeping){ bubble("…zzz…"); return; }
+  if (!ASK){
+    bubble(CANNED[Math.floor(Math.random() * CANNED.length)]);
+    S.happy = Math.min(100, S.happy + 3); render(); save();
+    return;
+  }
+  var vibe = S.hunger < 30 ? "hungry" : S.happy < 30 ? "a bit lonely" : S.energy < 20 ? "sleepy" : "happy and playful";
+  var p = "You are " + S.name + ", a tiny newly-hatched pet blob creature. You are currently feeling " + vibe + ".\n" +
+    "Your owner says: \"" + t + "\"\n" +
+    "Reply as " + S.name + " in ONE short, sweet sentence (max 12 words). Babyish, adorable, warm. " +
+    "You may use one emoji. Never break character, never mention being an AI.";
+  ASK(p).then(function(r){
+    var line = String(r||"").split("\n")[0].replace(/^["']|["']$/g, "").trim();
+    if (!line || line.length > 120) line = CANNED[0];
+    bubble(line, 5200);
+    S.happy = Math.min(100, S.happy + 5);
+    pulse("happy", 3600); save();
+  }).catch(function(){
+    bubble(CANNED[Math.floor(Math.random() * CANNED.length)]);
+  });
+}
+
+el("say").addEventListener("keydown", function(e){ if (e.key === "Enter") talk(); });
+el("stage").addEventListener("click", stageTap);
+
+/* ---------- boot ---------- */
+(function boot(){
+  /* preload all loops so mood switches are instant */
+  Object.keys(ANIM).forEach(function(k){ new Image().src = ART + ANIM[k]; });
+  store.getItem("mochi_state").then(function(v){
+    if (v){ try { S = JSON.parse(v); } catch(_){} }
+    if (!S || typeof S.hunger !== "number") S = fresh();
+    applyDecay();
+    /* a returning owner gets a welcome-back, not a guilt trip */
+    render(); save();
+    setInterval(function(){ applyDecay(); render(); save(); }, 30000);
+  });
+})();
+</script>
+</body>
+</html>
