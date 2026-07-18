@@ -132,8 +132,8 @@
   .ob .go{ width:100%; border:none; border-radius:15px; padding:15px; font-size:16px; font-weight:750; background:var(--myllm-accent,#0a84ff); color:#fff; margin-top:14px; }
   .ob .go:disabled{ opacity:.4; }
 
-  .toast{ position:fixed; left:50%; bottom:calc(88px + env(safe-area-inset-bottom)); transform:translateX(-50%) translateY(90px); background:var(--myllm-text,#111); color:var(--myllm-bg,#fff); font-size:13.5px; font-weight:650; padding:11px 18px; border-radius:99px; transition:transform .25s; z-index:22; white-space:nowrap; }
-  .toast.show{ transform:translateX(-50%) translateY(0); }
+  .toast{ position:fixed; left:50%; bottom:calc(88px + env(safe-area-inset-bottom)); transform:translateX(-50%) translateY(20px); background:var(--myllm-text,#111); color:var(--myllm-bg,#fff); font-size:13.5px; font-weight:650; padding:11px 18px; border-radius:99px; transition:transform .25s, opacity .25s; z-index:22; white-space:nowrap; opacity:0; visibility:hidden; pointer-events:none; }
+  .toast.show{ transform:translateX(-50%) translateY(0); opacity:1; visibility:visible; }
 </style>
 </head>
 <body>
@@ -342,12 +342,45 @@ function buildPrompt(userMsg){
 
 var CAN_SPEAK = !!(window.speechSynthesis && window.SpeechSynthesisUtterance);
 var spokeOnce = false;
+
+/* Tutor-appropriate voices: iOS's default voice per language is often the
+   wrong gender for our personas (Léa kept getting Thomas). Prefer known
+   voices matching each tutor, then any enhanced voice, then anything in the
+   right language. Names checked case-insensitively as substrings. */
+var VOICE_PREF = { es: ["mónica","monica","paulina","marisol"],
+                   fr: ["amélie","amelie","audrey","aurélie","aurelie","marie","chantal"],
+                   de: ["markus","viktor","yannick","martin"] };
+var voiceCache = {};
+function pickVoice(langKey){
+  if (voiceCache[langKey] !== undefined) return voiceCache[langKey];
+  var tts = LANGS[langKey].tts;
+  var all = [];
+  try { all = speechSynthesis.getVoices() || []; } catch(_){}
+  var inLang = all.filter(function(v){ return (v.lang||"").replace("_","-").indexOf(tts.slice(0,2)) === 0; });
+  if (!inLang.length){ voiceCache[langKey] = null; return null; }
+  var prefs = VOICE_PREF[langKey] || [];
+  var byName = null;
+  for (var i = 0; i < prefs.length && !byName; i++){
+    byName = inLang.filter(function(v){ return (v.name||"").toLowerCase().indexOf(prefs[i]) >= 0; })
+                   .sort(function(a,b){ return (b.localService?0:0) + ((b.name.indexOf("Enhanced")>=0||b.name.indexOf("Premium")>=0)?-1:0) - (((a.name.indexOf("Enhanced")>=0||a.name.indexOf("Premium")>=0))?-1:0); })[0] || null;
+  }
+  var enhanced = inLang.filter(function(v){ return /enhanced|premium/i.test(v.name); })[0];
+  var exact = inLang.filter(function(v){ return (v.lang||"").replace("_","-") === tts; })[0];
+  voiceCache[langKey] = byName || enhanced || exact || inLang[0];
+  return voiceCache[langKey];
+}
+if (CAN_SPEAK){
+  try { speechSynthesis.onvoiceschanged = function(){ voiceCache = {}; }; } catch(_){}
+}
+
 function speak(text){
   if (!CAN_SPEAK || !text) return;
   try{
     speechSynthesis.cancel();
     var u = new SpeechSynthesisUtterance(text);
     u.lang = LANGS[S.lang].tts;
+    var v = pickVoice(S.lang);
+    if (v) u.voice = v;
     u.rate = S.slow ? 0.68 : 0.92;
     speechSynthesis.speak(u);
     spokeOnce = true;
@@ -514,14 +547,16 @@ function dictate(){
   if (!TRANSCRIBE || busy) return;
   haptic("light");
   var go = function(){
-    TRANSCRIBE().then(function(text){
+    /* MyLLM 4.2+ transcribes in the tutor's language; older builds silently
+       ignore the option and use the phone language. */
+    TRANSCRIBE({lang: LANGS[S.lang].tts}).then(function(text){
       if (text) el("say").value = text;
     }).catch(function(){});
   };
   if (!S.micNoted){
     S.micNoted = true; saveAll();
-    toast("Heads-up: dictation follows your phone's language for now");
-    setTimeout(go, 1400);
+    toast("Speak in " + LANGS[S.lang].name + "! 🎙");
+    setTimeout(go, 1200);
   } else go();
 }
 
