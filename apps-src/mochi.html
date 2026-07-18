@@ -40,6 +40,17 @@
     content:""; position:absolute; bottom:-9px; left:50%; margin-left:-7px;
     border:7px solid transparent; border-top-color:#eadfce; border-bottom:none;
   }
+  .bubble.dream{
+    background:#f4f1fb; border-color:#ddd6f0; border-style:dashed;
+    font-style:italic; color:#7a6f95; border-radius:22px;
+  }
+  .bubble.dream::after{ display:none; }
+  .bubble.dream::before{
+    content:""; position:absolute; bottom:-16px; left:50%; margin-left:-14px;
+    width:10px; height:10px; border-radius:50%; background:#f4f1fb;
+    border:2px dashed #ddd6f0;
+    box-shadow:16px 8px 0 -3px #f4f1fb, 16px 8px 0 -1px #ddd6f0;
+  }
   .hint{ text-align:center; font-size:13px; color:#a89a88; margin:4px 0 8px; min-height:18px; }
 
   .actions{ display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:9px; margin-bottom:10px; }
@@ -203,10 +214,10 @@ function pulse(anim, ms){
   render();
 }
 
-function bubble(text, ms){
+function bubble(text, ms, dreamy){
   var b = el("bubble");
   b.textContent = text;
-  b.classList.add("show");
+  b.className = "bubble show" + (dreamy ? " dream" : "");
   clearTimeout(b._t);
   b._t = setTimeout(function(){ b.classList.remove("show"); }, ms || 4200);
 }
@@ -313,6 +324,54 @@ function talk(){
     bubble(CANNED[Math.floor(Math.random() * CANNED.length)]);
   });
 }
+
+/* ---------- ambient life: idle mutterings & dreams ---------- */
+var CHATTER = {
+  happy:  ["mochi mochi~ 🌱","*hums a tiny song*","today is a good day!","*wiggles contentedly*","(◕ᴗ◕)♪","*watches a dust mote float by*"],
+  hungry: ["*tummy rumbles softly*","...thinking about buns...","is it snack time? 🍙","*sniffs the air hopefully*"],
+  lonely: ["*looks up at you*","play with me? 🥺","*rolls the ball hopefully*","*little sigh*"],
+  sleepy: ["*yawns a tiny yawn*","...eyelids heavy...","*blinks slowly* 🌙","five more minutes of awake..."]
+};
+var DREAMS = ["💭 🍙🍙🍙✨","💭 bouncing on clouds…","💭 ⚽🌈","💭 a mountain of buns…","💭 🫧🐟🫧","💭 swimming in warm milk…","💭 🌙⭐️ tiny star friends…","💭 the great bun in the sky…"];
+var lastAmbient = Date.now();
+
+function chatterMood(){
+  if (S.hunger < 35) return "hungry";
+  if (S.energy < 30) return "sleepy";
+  if (S.happy < 40) return "lonely";
+  return "happy";
+}
+
+/* Ambient tick — rng + now injectable so it's testable.
+   Returns what it did: null | "dream" | "chatter" | "ai" */
+function ambientTick(now, rng){
+  if (!S || !S.hatched || transient) return null;
+  var gap = now - lastAmbient;
+  if (gap < 40000) return null;
+  if (rng() > Math.min(0.85, (gap - 40000) / 110000)) return null;
+  lastAmbient = now;
+  if (S.sleeping){
+    bubble(DREAMS[Math.floor(rng() * DREAMS.length)], 5600, true);
+    return "dream";
+  }
+  var pool = CHATTER[chatterMood()];
+  if (ASK && rng() < 0.3){
+    var vibe = chatterMood();
+    ASK("You are " + S.name + ", a tiny pet blob creature feeling " + vibe + ". " +
+        "Say ONE spontaneous cute little thought, max 9 words, babyish, may use one emoji. " +
+        "Just the thought, nothing else.")
+      .then(function(r){
+        var line = String(r||"").split("\n")[0].replace(/^["']|["']$/g, "").trim();
+        bubble(line && line.length <= 90 ? line : pool[0], 5200);
+      })
+      .catch(function(){ bubble(pool[Math.floor(rng() * pool.length)], 5200); });
+    return "ai";
+  }
+  bubble(pool[Math.floor(rng() * pool.length)], 5200);
+  return "chatter";
+}
+
+setInterval(function(){ ambientTick(Date.now(), Math.random); }, 12000);
 
 el("say").addEventListener("keydown", function(e){ if (e.key === "Enter") talk(); });
 el("stage").addEventListener("click", stageTap);
