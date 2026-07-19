@@ -35,7 +35,10 @@
     padding:10px 14px; font-size:14.5px; line-height:1.45; opacity:0;
     transition:opacity .3s, transform .3s; pointer-events:none;
   }
-  .bubble.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+  .bubble.show{ opacity:1; transform:translateX(-50%) translateY(0); animation:bpop .38s cubic-bezier(.34,1.56,.64,1); }
+  @keyframes bpop{ 0%{ transform:translateX(-50%) translateY(6px) scale(.82); } 70%{ transform:translateX(-50%) translateY(-2px) scale(1.04); } 100%{ transform:translateX(-50%) translateY(0) scale(1); } }
+  .bubble.dream.show{ animation:bdrift 5.5s ease-in-out both; }
+  @keyframes bdrift{ 0%{ opacity:0; transform:translateX(-50%) translateY(10px) scale(.85); } 12%{ opacity:1; transform:translateX(-50%) translateY(0) scale(1); } 88%{ opacity:1; transform:translateX(-50%) translateY(-10px) rotate(1.5deg); } 100%{ opacity:0; transform:translateX(-50%) translateY(-18px); } }
   .bubble::after{
     content:""; position:absolute; bottom:-9px; left:50%; margin-left:-7px;
     border:7px solid transparent; border-top-color:#eadfce; border-bottom:none;
@@ -68,6 +71,23 @@
   }
   .chatrow button{ border:none; border-radius:14px; width:46px; font-size:17px; background:#8fd3a8; color:#fff; }
 
+  /* walk mode */
+  .walkview{ position:fixed; inset:0; background:linear-gradient(180deg,#fdf6ec 0%,#f3ecdd 100%); display:none; flex-direction:column; z-index:8; }
+  .walkview.show{ display:flex; }
+  .walkview .sky{ flex:1; }
+  .walkscene{ position:relative; height:62%; overflow:hidden; }
+  .walktrack{ position:absolute; bottom:0; left:0; height:100%; display:flex; width:max-content; animation:scroll 26s linear infinite; }
+  .walktrack img{ height:100%; width:auto; display:block; }
+  .walktrack img.flip{ transform:scaleX(-1); }
+  @keyframes scroll{ from{ transform:translateX(0); } to{ transform:translateX(-50%); } }
+  .walker{ position:absolute; left:50%; bottom:6%; transform:translateX(-50%); width:min(46vw,210px); animation:bob 0.62s ease-in-out infinite alternate; }
+  @keyframes bob{ from{ transform:translateX(-50%) translateY(0) rotate(-1.2deg); } to{ transform:translateX(-50%) translateY(-7px) rotate(1.2deg); } }
+  .walker img{ width:100%; border-radius:22px; }
+  .wbubble-wrap{ position:absolute; top:8px; left:0; right:0; display:flex; justify-content:center; }
+  .walkhud{ display:flex; justify-content:space-between; align-items:center; padding:14px 16px calc(16px + env(safe-area-inset-bottom)); }
+  .walkhud .steps{ font-size:13px; color:#a89a88; font-weight:700; }
+  .walkhud button{ border:2px solid #eadfce; background:#fffdf8; color:#4a4238; border-radius:14px; padding:11px 18px; font-size:14px; font-weight:750; }
+
   .namer{ position:fixed; inset:0; background:rgba(74,66,56,.35); display:none; align-items:center; justify-content:center; z-index:9; }
   .namer.show{ display:flex; }
   .namecard{ background:#fffdf8; border-radius:22px; padding:22px; width:min(84vw,340px); text-align:center; }
@@ -97,11 +117,25 @@
 </div>
 <p class="hint" id="hint"></p>
 
-<div class="actions" id="actions" style="display:none">
+<div class="actions" id="actions" style="display:none; grid-template-columns:repeat(5,1fr);">
   <button onclick="feed()"><span class="ico">🍙</span>Feed</button>
   <button onclick="play()" id="playBtn"><span class="ico">⚽</span>Play</button>
   <button onclick="bath()"><span class="ico">🫧</span>Bath</button>
+  <button onclick="startWalk()" id="walkBtn"><span class="ico">🌼</span>Walk</button>
   <button onclick="toggleSleep()" id="sleepBtn"><span class="ico">🌙</span>Sleep</button>
+</div>
+
+<div class="walkview" id="walkview">
+  <div class="sky"></div>
+  <div class="walkscene">
+    <div class="walktrack" id="walktrack"></div>
+    <div class="wbubble-wrap"><div class="bubble" id="wbubble" style="position:relative; top:0;"></div></div>
+    <div class="walker"><img id="walkpet" alt=""></div>
+  </div>
+  <div class="walkhud">
+    <span class="steps" id="walksteps"></span>
+    <button onclick="endWalk(false)">🏠 Head home</button>
+  </div>
 </div>
 
 <div class="chatrow" id="chatrow" style="display:none">
@@ -126,9 +160,10 @@ function el(id){ return document.getElementById(id); }
 function esc(s){ return String(s==null?'':s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
 
 var ART = "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/mochi/";
-var ANIM = { egg:"anim_egg.webp", hatch:"anim_hatch.webp", idle:"anim_idle.webp",
+var ANIM = { egg:"anim_egg.webp", hatch:"anim_hatch.webp", idle:"anim_idle2.webp",
              happy:"anim_happy.webp", eat:"anim_eat.webp", sleep:"anim_sleep.webp",
-             sad:"anim_sad.webp", bath:"anim_bath.webp", play:"anim_play.webp" };
+             sad:"anim_sad.webp", bath:"anim_bath.webp", play:"anim_play.webp",
+             walk:"anim_walk.webp", pet:"anim_pet.webp" };
 
 /* ---------- state ---------- */
 var S = null;    /* {name, hatched, tapCount, born, last, hunger, happy, energy, clean, sleeping} */
@@ -215,9 +250,10 @@ function pulse(anim, ms){
 }
 
 function bubble(text, ms, dreamy){
-  var b = el("bubble");
+  var b = el(walking ? "wbubble" : "bubble");
   b.textContent = text;
   b.className = "bubble show" + (dreamy ? " dream" : "");
+  if (!dreamy && !walking) b.style.left = (42 + Math.random() * 16) + "%";
   clearTimeout(b._t);
   b._t = setTimeout(function(){ b.classList.remove("show"); }, ms || 4200);
 }
@@ -280,7 +316,7 @@ function stageTap(){
   if (S.sleeping){ toggleSleep(); return; }
   haptic("light");
   S.happy = Math.min(100, S.happy + 2);
-  pulse("happy", 3000);
+  pulse("pet", 3400);          /* heart-eyes: being petted */
   save();
 }
 
@@ -323,6 +359,71 @@ function talk(){
   }).catch(function(){
     bubble(CANNED[Math.floor(Math.random() * CANNED.length)]);
   });
+}
+
+/* ---------- walk mode ---------- */
+var walking = false, walkTimer = null, walkStart = 0, lastFind = 0, findCount = 0;
+var FINDS = [
+  {e:"🌼", t:"found a little flower!"}, {e:"🦋", t:"a butterfly friend!"},
+  {e:"🍄", t:"ooh, a tiny mushroom!"}, {e:"✨", t:"something sparkly!"},
+  {e:"🐌", t:"met a slow friend."}, {e:"🍀", t:"a lucky clover!"},
+  {e:"🍙", t:"A WILD BUN!! nom.", rare:true}
+];
+
+function startWalk(){
+  if (walking || !S.hatched) return;
+  if (S.sleeping){ bubble("Wake " + esc(S.name) + " up first. 🌙"); return; }
+  if (S.energy < 25){ bubble(esc(S.name) + " is too tired for a walk right now. 🌙"); return; }
+  haptic("success");
+  walking = true; walkStart = Date.now(); lastFind = Date.now(); findCount = 0;
+  var track = el("walktrack");
+  if (!track.childElementCount){
+    /* palindrome tiling: strip + mirrored strip, scrolled 50% = seamless loop */
+    track.innerHTML = '<img src="' + ART + 'walk_bg.jpg" alt="">' +
+                      '<img class="flip" src="' + ART + 'walk_bg.jpg" alt="">' +
+                      '<img src="' + ART + 'walk_bg.jpg" alt="">' +
+                      '<img class="flip" src="' + ART + 'walk_bg.jpg" alt="">';
+  }
+  el("walkpet").src = ART + ANIM.walk;
+  el("walkview").classList.add("show");
+  el("walksteps").textContent = "";
+  walkTimer = setInterval(walkTick, 5000);
+  bubble("*waddle waddle*", 3200);
+}
+
+function walkTick(){
+  S.energy = Math.max(12, S.energy - 0.45);
+  S.happy = Math.min(100, S.happy + 0.35);
+  var mins = Math.floor((Date.now() - walkStart) / 60000);
+  el("walksteps").textContent = mins < 1 ? "out for a stroll…" : mins + " min stroll · " + findCount + " finds";
+  if (S.energy <= 20){ endWalk(true); return; }
+  maybeFind(Date.now(), Math.random);
+  save();
+}
+
+function maybeFind(now, rng){
+  if (now - lastFind < 16000) return null;
+  if (rng() > 0.4) return null;
+  lastFind = now;
+  var pool = FINDS.filter(function(f){ return !f.rare || rng() < 0.18; });
+  var f = pool[Math.floor(rng() * pool.length)];
+  findCount++;
+  S.happy = Math.min(100, S.happy + (f.rare ? 8 : 3));
+  if (f.rare) S.hunger = Math.min(100, S.hunger + 10);
+  haptic(f.rare ? "success" : "light");
+  bubble(f.e + " " + f.t, 4200);
+  return f;
+}
+
+function endWalk(tired){
+  if (!walking) return;
+  walking = false;
+  clearInterval(walkTimer); walkTimer = null;
+  el("walkview").classList.remove("show");
+  haptic("selection");
+  render(); save();
+  bubble(tired ? esc(S.name) + " got sleepy on the walk… 🥱" :
+         "That was lovely! " + (findCount ? findCount + " treasures found." : "🌱"), 4600);
 }
 
 /* ---------- ambient life: idle mutterings & dreams ---------- */
