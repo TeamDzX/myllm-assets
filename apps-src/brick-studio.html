@@ -1,0 +1,543 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Brick Studio</title>
+<style>
+  :root { color-scheme: light; }
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body{
+    font-family:var(--myllm-font,-apple-system,system-ui,sans-serif);
+    background:linear-gradient(180deg,#f6f3ff 0%,#eef4ff 100%);
+    color:#3a3550;
+    max-width:600px; margin:0 auto; min-height:100dvh;
+    padding:12px 12px calc(20px + env(safe-area-inset-bottom));
+    display:flex; flex-direction:column; gap:10px;
+  }
+  .top{ display:flex; align-items:center; justify-content:space-between; padding:0 4px; }
+  h1{ font-size:20px; font-weight:800; }
+  .top .steps{ font-size:12.5px; font-weight:700; color:#8d87a8; }
+
+  .board{ position:relative; background:#fffdf6; border:2px solid #e6e1f2; border-radius:20px; overflow:hidden; }
+  canvas{ display:block; width:100%; touch-action:manipulation; }
+  .banner-msg{
+    position:absolute; top:10px; left:50%; transform:translateX(-50%) translateY(-60px);
+    background:#3a3550; color:#fff; font-size:13px; font-weight:650; padding:9px 16px;
+    border-radius:99px; transition:transform .3s, opacity .3s; opacity:0; white-space:nowrap; max-width:92%;
+    overflow:hidden; text-overflow:ellipsis;
+  }
+  .banner-msg.show{ transform:translateX(-50%) translateY(0); opacity:1; }
+
+  .row{ display:flex; gap:7px; align-items:center; overflow-x:auto; scrollbar-width:none; padding:2px; }
+  .row::-webkit-scrollbar{ display:none; }
+  .swatch{ width:34px; height:34px; border-radius:11px; border:3px solid transparent; flex-shrink:0; }
+  .swatch.on{ border-color:#3a3550; }
+  .tool{
+    border:2px solid #e6e1f2; background:#fff; color:#3a3550; border-radius:13px;
+    padding:9px 12px; font-size:12.5px; font-weight:750; flex-shrink:0;
+  }
+  .tool.on{ background:#3a3550; color:#fff; border-color:#3a3550; }
+  .tool.warn{ color:#d05555; border-color:#f0c8c8; }
+  .brickbtn{ display:flex; align-items:center; gap:5px; }
+  .brickbtn .mini{ display:inline-block; background:#b9b2d8; border-radius:3px; }
+
+  .ai{ display:flex; gap:8px; }
+  .ai button{
+    flex:1; border:none; border-radius:14px; padding:12px 8px; font-size:13.5px; font-weight:750;
+    background:linear-gradient(135deg,#7c5cff,#5c8aff); color:#fff;
+  }
+  .ai button.ghost{ background:#fff; color:#3a3550; border:2px solid #e6e1f2; }
+
+  .sheet{ position:fixed; inset:0; background:rgba(58,53,80,.4); display:none; align-items:flex-end; z-index:9; }
+  .sheet.show{ display:flex; }
+  .sheetcard{ background:#fff; border-radius:22px 22px 0 0; padding:20px 18px calc(22px + env(safe-area-inset-bottom)); width:100%; max-width:600px; margin:0 auto; }
+  .sheetcard h2{ font-size:17px; margin-bottom:10px; }
+  .sheetcard input{ width:100%; font-size:16px; padding:12px; border-radius:13px; border:2px solid #e6e1f2; background:#f8f6ff; color:#3a3550; }
+  .sheetcard .go{ width:100%; border:none; border-radius:13px; padding:13px; margin-top:11px; font-size:15px; font-weight:750; background:linear-gradient(135deg,#7c5cff,#5c8aff); color:#fff; }
+  .sheetcard .cancel{ width:100%; border:none; background:none; color:#8d87a8; padding:11px; margin-top:4px; font-size:14px; font-weight:650; }
+  .ideas{ margin-top:8px; }
+  .ideas button{ width:100%; text-align:left; border:2px solid #e6e1f2; background:#f8f6ff; color:#3a3550; border-radius:13px; padding:11px 13px; font-size:14px; font-weight:650; margin-top:7px; }
+  .sheetnote{ font-size:12.5px; color:#8d87a8; line-height:1.5; margin-top:8px; }
+</style>
+</head>
+<body>
+
+<!-- AI busy cog (house convention) -->
+<style>
+.myllm-ai-busy{position:fixed;top:calc(10px + env(safe-area-inset-top));left:50%;transform:translateX(-50%) translateY(-60px);display:flex;gap:8px;align-items:center;background:#fff;border:1px solid #e6e1f2;border-radius:99px;padding:8px 15px;font-size:13px;font-weight:650;z-index:30;opacity:0;transition:all .25s;box-shadow:0 4px 18px rgba(0,0,0,.14)}
+.myllm-ai-busy.on{opacity:1;transform:translateX(-50%) translateY(0)}
+.myllm-ai-cog{font-size:18px;animation:myllmAiSpin 2.4s linear infinite;filter:drop-shadow(0 0 5px rgba(124,92,255,.85))}
+.myllm-ai-busy small{font-weight:400;opacity:.6}
+@keyframes myllmAiSpin{to{transform:rotate(360deg)}}
+</style>
+<script>
+(function(){if(window.__myllmAiWrap||typeof window.myllmAsk!=='function')return;window.__myllmAiWrap=true;
+var orig=window.myllmAsk,depth=0,node=null;
+function ensure(){if(node)return;node=document.createElement('div');node.className='myllm-ai-busy';
+node.innerHTML='<span class="myllm-ai-cog">⚙️</span><span>AI is thinking… <small>privately, on your device</small></span>';
+(document.body||document.documentElement).appendChild(node);}
+function show(){ensure();depth++;node.classList.add('on');}
+function hide(){depth=Math.max(0,depth-1);if(depth===0&&node)node.classList.remove('on');}
+window.myllmAsk=function(){show();var p;try{p=orig.apply(this,arguments);}catch(e){hide();throw e;}
+return Promise.resolve(p).then(function(r){hide();return r;},function(e){hide();throw e;});};})();
+</script>
+
+<div class="top">
+  <h1>🧱 Brick Studio</h1>
+  <span class="steps" id="stepInfo"></span>
+</div>
+
+<div class="board">
+  <canvas id="cv"></canvas>
+  <div class="banner-msg" id="msg"></div>
+</div>
+
+<div class="row" id="palette"></div>
+
+<div class="row" id="tools">
+  <button class="tool on" id="sz-1x1" onclick="setSize(1,1)"><span class="brickbtn"><span class="mini" style="width:10px;height:10px"></span>1×1</span></button>
+  <button class="tool" id="sz-1x2" onclick="setSize(1,2)"><span class="brickbtn"><span class="mini" style="width:10px;height:18px"></span>1×2</span></button>
+  <button class="tool" id="sz-2x2" onclick="setSize(2,2)"><span class="brickbtn"><span class="mini" style="width:18px;height:18px"></span>2×2</span></button>
+  <button class="tool" id="sz-2x4" onclick="setSize(2,4)"><span class="brickbtn"><span class="mini" style="width:18px;height:30px"></span>2×4</span></button>
+  <button class="tool" onclick="rotateSize()">↻ Rotate</button>
+  <button class="tool" id="eraseBtn" onclick="toggleErase()">🧽 Erase</button>
+  <button class="tool" onclick="undo()">↩︎ Undo</button>
+  <button class="tool warn" id="clearBtn" onclick="clearAll()">🗑 New</button>
+  <button class="tool" onclick="saveRender()">📸 Save</button>
+</div>
+
+<div class="ai">
+  <button onclick="openBuildSheet()">✨ Build for me</button>
+  <button class="ghost" id="visionBtn" onclick="whatCanWeBuild()">📷 What can we build?</button>
+</div>
+
+<div class="sheet" id="buildSheet">
+  <div class="sheetcard">
+    <h2>What shall we build? ✨</h2>
+    <input id="buildPrompt" placeholder="a little duck… a rocket… a house" autocomplete="off">
+    <button class="go" onclick="aiBuild()">Build it, brick by brick</button>
+    <button class="cancel" onclick="closeSheets()">Cancel</button>
+  </div>
+</div>
+
+<div class="sheet" id="ideaSheet">
+  <div class="sheetcard">
+    <h2>We could build… 🧱</h2>
+    <div class="ideas" id="ideaList"></div>
+    <p class="sheetnote" id="ideaNote"></p>
+    <button class="cancel" onclick="closeSheets()">Cancel</button>
+  </div>
+</div>
+
+<script>
+var ASK = window.myllmAsk || null;
+var VISION = window.myllmVision || null;
+var SAVE = window.myllmSaveImage || null;
+var store = window.myllmStorage || {getItem:function(){return Promise.resolve(null)}, setItem:function(){return Promise.resolve()}};
+function haptic(k){ if(window.myllmHaptic){ try{ myllmHaptic(k||'light'); }catch(_){} } }
+function el(id){ return document.getElementById(id); }
+
+/* ---------- world ---------- */
+var GW = 10, GD = 10, MAXH = 14;
+var COLORS = {
+  red:"#e05252", orange:"#f2913d", yellow:"#f2c53d", green:"#5cb85f",
+  mint:"#79d0a6", blue:"#4f86e0", purple:"#8b6cd9", white:"#f2f0ea"
+};
+var COLOR_KEYS = Object.keys(COLORS);
+var SIZES = [[1,1],[1,2],[2,1],[2,2],[2,4],[4,2]];
+
+var bricks = [];          /* {x,z,y,w,d,c} — y computed by gravity */
+var sel = { c:"red", w:1, d:1, erase:false };
+var undoStack = [];
+var plan = null;          /* {name, list:[...], i} during AI step-through */
+var planTimer = null;
+
+/* ---------- pure engine (node-tested) ---------- */
+function inBounds(x, z, w, d){ return x >= 0 && z >= 0 && w >= 1 && d >= 1 && x + w <= GW && z + d <= GD; }
+
+function topAt(x, z){
+  var t = 0;
+  for (var i = 0; i < bricks.length; i++){
+    var b = bricks[i];
+    if (x >= b.x && x < b.x + b.w && z >= b.z && z < b.z + b.d)
+      t = Math.max(t, b.y + 1);
+  }
+  return t;
+}
+
+function placeY(x, z, w, d){
+  var y = 0;
+  for (var dx = 0; dx < w; dx++)
+    for (var dz = 0; dz < d; dz++)
+      y = Math.max(y, topAt(x + dx, z + dz));
+  return y;
+}
+
+function addBrick(x, z, w, d, c){
+  if (!inBounds(x, z, w, d) || !COLORS[c]) return null;
+  var y = placeY(x, z, w, d);
+  if (y >= MAXH) return null;
+  var b = { x:x, z:z, y:y, w:w, d:d, c:c };
+  bricks.push(b);
+  return b;
+}
+
+function removeTopAt(x, z){
+  var best = -1, bestY = -1;
+  for (var i = 0; i < bricks.length; i++){
+    var b = bricks[i];
+    if (x >= b.x && x < b.x + b.w && z >= b.z && z < b.z + b.d && b.y > bestY){
+      bestY = b.y; best = i;
+    }
+  }
+  if (best < 0) return null;
+  return bricks.splice(best, 1)[0];
+}
+
+/* AI plan contract:
+   NAME: duck
+   BRICK: x z WxD color      (one per line, build order; y is gravity-computed)
+   Forgiving parse: clamp coords into bounds, snap unknown sizes to nearest,
+   skip unknown colors, cap at 60 bricks. */
+function parsePlan(raw){
+  var name = null, list = [];
+  String(raw||"").split(/\n+/).forEach(function(line){
+    var nm = line.match(/^\s*\**\s*NAME\s*\**\s*[:：]\s*(.+)$/i);
+    if (nm){ name = nm[1].replace(/\*+/g,"").trim().slice(0, 30); return; }
+    var m = line.match(/^\s*\**\s*BRICK\s*\**\s*[:：]\s*(\d+)\s+(\d+)\s+(\d+)\s*[xX×]\s*(\d+)\s+([a-z]+)\s*$/i);
+    if (!m || list.length >= 60) return;
+    var x = +m[1], z = +m[2], w = +m[3], d = +m[4], c = m[5].toLowerCase();
+    if (!COLORS[c]) return;
+    var ok = SIZES.some(function(s){ return s[0] === w && s[1] === d; });
+    if (!ok){
+      w = Math.min(4, Math.max(1, w)); d = Math.min(4, Math.max(1, d));
+      if (w > 2 && d > 2){ w = 2; d = 2; }
+      if (w === 3){ w = 2; } if (d === 3){ d = 2; }
+    }
+    x = Math.min(GW - w, Math.max(0, x));
+    z = Math.min(GD - d, Math.max(0, z));
+    list.push({ x:x, z:z, w:w, d:d, c:c });
+  });
+  return { name: name || "something wonderful", list: list };
+}
+
+/* ---------- iso rendering ---------- */
+var TW = 46, TH = 23, BH = 26;   /* tile width/height, brick visual height */
+var cv, ctx, DPR = 1, ox = 0, oy = 0;
+
+function shade(hex, f){
+  var n = parseInt(hex.slice(1), 16);
+  var r = Math.min(255, Math.max(0, ((n >> 16) & 255) * f | 0));
+  var g = Math.min(255, Math.max(0, ((n >> 8) & 255) * f | 0));
+  var b = Math.min(255, Math.max(0, (n & 255) * f | 0));
+  return "rgb(" + r + "," + g + "," + b + ")";
+}
+
+function isoX(x, z){ return ox + (x - z) * TW / 2; }
+function isoY(x, z, y){ return oy + (x + z) * TH / 2 - y * (BH * 0.62); }
+
+function draw(){
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  ctx.save(); ctx.scale(DPR, DPR);
+  /* ground */
+  for (var z = 0; z < GD; z++)
+    for (var x = 0; x < GW; x++){
+      diamond(x, z, 0, "#efeafb", "#e2dbf4");
+    }
+  /* bricks: painter's order */
+  var sorted = bricks.slice().sort(function(a, b){
+    return (a.y - b.y) || ((a.x + a.z) - (b.x + b.z));
+  });
+  for (var i = 0; i < sorted.length; i++) drawBrick(sorted[i]);
+  ctx.restore();
+}
+
+function diamond(x, z, y, fill, stroke){
+  ctx.beginPath();
+  ctx.moveTo(isoX(x, z), isoY(x, z, y));
+  ctx.lineTo(isoX(x + 1, z), isoY(x + 1, z, y));
+  ctx.lineTo(isoX(x + 1, z + 1), isoY(x + 1, z + 1, y));
+  ctx.lineTo(isoX(x, z + 1), isoY(x, z + 1, y));
+  ctx.closePath();
+  ctx.fillStyle = fill; ctx.fill();
+  if (stroke){ ctx.strokeStyle = stroke; ctx.lineWidth = 1; ctx.stroke(); }
+}
+
+function drawBrick(b){
+  var base = COLORS[b.c];
+  var topY = b.y + 1;
+  /* left face */
+  ctx.beginPath();
+  ctx.moveTo(isoX(b.x, b.z + b.d), isoY(b.x, b.z + b.d, topY));
+  ctx.lineTo(isoX(b.x + b.w, b.z + b.d), isoY(b.x + b.w, b.z + b.d, topY));
+  ctx.lineTo(isoX(b.x + b.w, b.z + b.d), isoY(b.x + b.w, b.z + b.d, b.y));
+  ctx.lineTo(isoX(b.x, b.z + b.d), isoY(b.x, b.z + b.d, b.y));
+  ctx.closePath(); ctx.fillStyle = shade(base, 0.72); ctx.fill();
+  /* right face */
+  ctx.beginPath();
+  ctx.moveTo(isoX(b.x + b.w, b.z), isoY(b.x + b.w, b.z, topY));
+  ctx.lineTo(isoX(b.x + b.w, b.z + b.d), isoY(b.x + b.w, b.z + b.d, topY));
+  ctx.lineTo(isoX(b.x + b.w, b.z + b.d), isoY(b.x + b.w, b.z + b.d, b.y));
+  ctx.lineTo(isoX(b.x + b.w, b.z), isoY(b.x + b.w, b.z, b.y));
+  ctx.closePath(); ctx.fillStyle = shade(base, 0.86); ctx.fill();
+  /* top face */
+  ctx.beginPath();
+  ctx.moveTo(isoX(b.x, b.z), isoY(b.x, b.z, topY));
+  ctx.lineTo(isoX(b.x + b.w, b.z), isoY(b.x + b.w, b.z, topY));
+  ctx.lineTo(isoX(b.x + b.w, b.z + b.d), isoY(b.x + b.w, b.z + b.d, topY));
+  ctx.lineTo(isoX(b.x, b.z + b.d), isoY(b.x, b.z + b.d, topY));
+  ctx.closePath(); ctx.fillStyle = base; ctx.fill();
+  ctx.strokeStyle = shade(base, 0.68); ctx.lineWidth = 1.2; ctx.stroke();
+  /* studs */
+  ctx.fillStyle = shade(base, 1.12);
+  for (var sx = 0; sx < b.w; sx++)
+    for (var sz = 0; sz < b.d; sz++){
+      var cxp = (isoX(b.x + sx, b.z + sz) + isoX(b.x + sx + 1, b.z + sz + 1)) / 2;
+      var cyp = (isoY(b.x + sx, b.z + sz, topY) + isoY(b.x + sx + 1, b.z + sz + 1, topY)) / 2;
+      ctx.beginPath();
+      ctx.ellipse(cxp, cyp, TW * 0.16, TH * 0.16, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+}
+
+/* column hit-test: walk columns near the tap, prefer the visually nearest
+   (largest x+z wins because it draws in front). Pure-ish for testing. */
+function columnFromPoint(px, py){
+  var best = null, bestKey = -1;
+  for (var z = 0; z < GD; z++)
+    for (var x = 0; x < GW; x++){
+      var y = topAt(x, z);
+      var cx = (isoX(x, z) + isoX(x + 1, z + 1)) / 2;
+      var cyTop = (isoY(x, z, y) + isoY(x + 1, z + 1, y)) / 2;
+      var dx = px - cx, dy = py - cyTop;
+      if (Math.abs(dx) <= TW * 0.5 && Math.abs(dy) <= TH * 0.75){
+        var key = x + z + y * 100;
+        if (key > bestKey){ bestKey = key; best = { x:x, z:z }; }
+      }
+    }
+  return best;
+}
+
+/* ---------- interaction ---------- */
+function setSize(w, d){
+  sel.w = w; sel.d = d; sel.erase = false;
+  haptic("selection"); syncTools();
+}
+function rotateSize(){ var t = sel.w; sel.w = sel.d; sel.d = t; haptic("selection"); syncTools(); }
+function toggleErase(){ sel.erase = !sel.erase; haptic("selection"); syncTools(); }
+
+function syncTools(){
+  ["1x1","1x2","2x2","2x4"].forEach(function(k){
+    var b = el("sz-" + k);
+    var m = k.split("x");
+    b.className = "tool" + ((!sel.erase && ((sel.w == m[0] && sel.d == m[1]) || (sel.w == m[1] && sel.d == m[0]))) ? " on" : "");
+  });
+  el("eraseBtn").className = "tool" + (sel.erase ? " on" : "");
+  renderPalette();
+}
+
+function renderPalette(){
+  el("palette").innerHTML = COLOR_KEYS.map(function(c){
+    return '<button class="swatch' + (sel.c === c && !sel.erase ? ' on' : '') + '" style="background:' + COLORS[c] + '" onclick="pickColor(\'' + c + '\')"></button>';
+  }).join("");
+}
+function pickColor(c){ sel.c = c; sel.erase = false; haptic("selection"); syncTools(); }
+
+function tapAt(px, py){
+  if (plan) return;                     /* watch the AI build, then play */
+  var col = columnFromPoint(px, py);
+  if (!col) return;
+  if (sel.erase){
+    var r = removeTopAt(col.x, col.z);
+    if (r){ haptic("light"); pushUndo({ op:"remove", brick:r }); draw(); persist(); }
+    return;
+  }
+  var x = Math.min(GW - sel.w, col.x), z = Math.min(GD - sel.d, col.z);
+  var b = addBrick(x, z, sel.w, sel.d, sel.c);
+  if (b){ haptic("light"); pushUndo({ op:"add", brick:b }); draw(); persist(); }
+  else msg("No room there — try another spot");
+}
+
+function pushUndo(step){ undoStack.push(step); if (undoStack.length > 80) undoStack.shift(); }
+
+function undo(){
+  var s = undoStack.pop();
+  if (!s) return;
+  haptic("selection");
+  if (s.op === "add"){ var i = bricks.indexOf(s.brick); if (i >= 0) bricks.splice(i, 1); }
+  else bricks.push(s.brick);
+  draw(); persist();
+}
+
+var clearArmed = false;
+function clearAll(){
+  if (!clearArmed){
+    clearArmed = true; el("clearBtn").textContent = "Sure?";
+    setTimeout(function(){ clearArmed = false; el("clearBtn").textContent = "🗑 New"; }, 2400);
+    return;
+  }
+  clearArmed = false; el("clearBtn").textContent = "🗑 New";
+  haptic("warning");
+  stopPlan(); bricks = []; undoStack = []; draw(); persist();
+  el("stepInfo").textContent = "";
+}
+
+function msg(text, ms){
+  var m = el("msg");
+  m.textContent = text; m.classList.add("show");
+  clearTimeout(m._t); m._t = setTimeout(function(){ m.classList.remove("show"); }, ms || 2600);
+}
+
+/* ---------- AI: build for me ---------- */
+function openBuildSheet(){
+  if (!ASK){ msg("Building together needs AI — enable it in MyLLM Settings"); return; }
+  el("buildSheet").classList.add("show");
+  setTimeout(function(){ el("buildPrompt").focus(); }, 250);
+}
+function closeSheets(){
+  el("buildSheet").classList.remove("show");
+  el("ideaSheet").classList.remove("show");
+}
+
+function aiBuild(subject){
+  var want = subject || el("buildPrompt").value.trim();
+  if (!want) return;
+  closeSheets();
+  haptic("medium");
+  var p = "Design a cute simple toy-brick model of: " + want + "\n" +
+    "Grid: 10x10 studs (x and z from 0 to 9). Bricks stack automatically — list them bottom layer first.\n" +
+    "Allowed sizes: 1x1, 1x2, 2x1, 2x2, 2x4, 4x2. Allowed colors: " + COLOR_KEYS.join(", ") + ".\n" +
+    "Use 8 to 30 bricks. Make it recognisable and chunky, centred near the middle.\n" +
+    "Reply in EXACTLY this format, nothing else:\n" +
+    "NAME: what you built\n" +
+    "BRICK: x z WxD color\n" +
+    "BRICK: x z WxD color\n(one line per brick, in build order)";
+  ASK(p).then(function(raw){
+    var parsed = parsePlan(raw);
+    if (parsed.list.length < 3){ msg("The AI's plan was too wobbly — try again!"); return; }
+    startPlan(parsed);
+  }).catch(function(){ msg("The AI is napping — try again in a moment"); });
+}
+
+function startPlan(parsed){
+  stopPlan();
+  bricks = []; undoStack = [];
+  plan = { name: parsed.name, list: parsed.list, i: 0 };
+  draw();
+  msg("Building " + plan.name + "…", 3200);
+  planTimer = setInterval(stepPlan, 640);
+}
+
+function stepPlan(){
+  if (!plan) return;
+  if (plan.i >= plan.list.length){ finishPlan(); return; }
+  var s = plan.list[plan.i++];
+  addBrick(s.x, s.z, s.w, s.d, s.c);
+  haptic("light");
+  el("stepInfo").textContent = "Brick " + plan.i + " of " + plan.list.length;
+  draw();
+}
+
+function finishPlan(){
+  var name = plan ? plan.name : "";
+  stopPlan();
+  haptic("success");
+  el("stepInfo").textContent = "";
+  msg("Ta-da! One " + name + " 🎉 — now make it yours", 4200);
+  persist();
+}
+
+function stopPlan(){
+  if (planTimer){ clearInterval(planTimer); planTimer = null; }
+  plan = null;
+}
+
+/* ---------- AI: what can we build (camera) ---------- */
+function whatCanWeBuild(){
+  if (!VISION || !ASK){
+    msg(VISION ? "Needs AI enabled in MyLLM Settings" : "Camera ideas need the MyLLM app with vision");
+    return;
+  }
+  haptic("light");
+  VISION("Look at these toy building bricks. Briefly list roughly what you see: the main colours and an idea of how many bricks (a few / a pile / lots).")
+    .then(function(seen){
+      var p = "A child has these toy bricks: " + String(seen).slice(0, 300) + "\n" +
+        "Suggest exactly 3 simple, fun things they could build with them. " +
+        "Reply as 3 lines, each: IDEA: name|one short encouraging sentence";
+      return ASK(p);
+    })
+    .then(function(raw){
+      var ideas = [];
+      String(raw||"").split(/\n+/).forEach(function(l){
+        var m = l.match(/^\s*\**\s*IDEA\s*\**\s*[:：]\s*([^|]+)\|(.+)$/i);
+        if (m) ideas.push({ name: m[1].trim().slice(0, 28), why: m[2].trim().slice(0, 90) });
+      });
+      if (!ideas.length){ msg("Hmm, no ideas came — try again!"); return; }
+      el("ideaList").innerHTML = ideas.slice(0, 3).map(function(i, idx){
+        return '<button onclick="buildIdea(' + idx + ')"><b>' + i.name + '</b><br><span style="font-weight:500;color:#8d87a8">' + i.why + '</span></button>';
+      }).join("");
+      window.__ideas = ideas;
+      el("ideaNote").textContent = "Tap one and we'll build it on screen — then copy it with your real bricks!";
+      el("ideaSheet").classList.add("show");
+    })
+    .catch(function(){ msg("Couldn't peek at the bricks — try again"); });
+}
+
+function buildIdea(i){
+  var idea = (window.__ideas || [])[i];
+  closeSheets();
+  if (idea) aiBuild(idea.name);
+}
+
+/* ---------- save & persist ---------- */
+function saveRender(){
+  if (!bricks.length){ msg("Nothing built yet!"); return; }
+  if (!SAVE){ msg("Saving needs the MyLLM app"); return; }
+  haptic("medium");
+  var du = cv.toDataURL("image/png");
+  SAVE(du).then(function(){ msg("Saved to Photos 🧱✨"); haptic("success"); })
+    .catch(function(e){ msg(String(e && e.message || "Couldn't save")); });
+}
+
+function persist(){
+  store.setItem("bricks_v1", JSON.stringify({ bricks: bricks.map(function(b){
+    return [b.x, b.z, b.y, b.w, b.d, b.c];
+  })}));
+}
+
+/* ---------- boot ---------- */
+function fit(){
+  DPR = window.devicePixelRatio || 1;
+  var w = el("cv").parentNode.clientWidth || 360;
+  var h = Math.min(430, Math.max(320, window.innerHeight * 0.44));
+  cv.width = w * DPR; cv.height = h * DPR;
+  cv.style.height = h + "px";
+  ox = w / 2; oy = h - GD * TH / 2 - GW * TH / 2 - 24 + (GW + GD) * TH / 4 - 96;
+  /* center the diamond: top corner at (ox, oy) */
+  oy = Math.max(40, (h - (GW + GD) * TH / 2) / 2 + 40);
+  draw();
+}
+
+(function boot(){
+  cv = el("cv"); ctx = cv.getContext("2d");
+  renderPalette(); syncTools();
+  cv.addEventListener("click", function(e){
+    var r = cv.getBoundingClientRect();
+    tapAt(e.clientX - r.left, e.clientY - r.top);
+  });
+  window.addEventListener("resize", fit);
+  store.getItem("bricks_v1").then(function(v){
+    if (v){ try{
+      var d = JSON.parse(v);
+      (d.bricks || []).forEach(function(a){
+        bricks.push({ x:a[0], z:a[1], y:a[2], w:a[3], d:a[4], c:a[5] });
+      });
+    }catch(_){} }
+    fit();
+  });
+  if (!VISION) el("visionBtn").style.opacity = 0.55;
+})();
+</script>
+</body>
+</html>
