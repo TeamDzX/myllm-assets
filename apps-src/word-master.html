@@ -2,14 +2,16 @@
 <style>:root{color-scheme:light dark}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
 html,body{margin:0;height:100%}
-body{font-family:-apple-system,system-ui,sans-serif;background:#f2f2f7;color:#111;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:10px;gap:8px;height:100vh}
+body{font-family:-apple-system,system-ui,sans-serif;background:#f2f2f7;color:#111;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:8px 10px calc(6px + env(safe-area-inset-bottom));gap:6px;height:100dvh;overflow:hidden}
 @media(prefers-color-scheme:dark){body{background:#000;color:#eee}.tile{border-color:#3a3a3c}.key{background:#52525a}}
 .top{display:flex;justify-content:space-between;align-items:center;width:min(96vw,420px)}
 h1{font-size:18px;margin:0}
 .top button{border:0;background:#e5e5ea;color:#111;border-radius:8px;padding:7px 11px;font-size:13px;font-weight:600}
 @media(prefers-color-scheme:dark){.top button{background:#1c1c1e;color:#eee}}
 #msg{font-size:14px;font-weight:600;min-height:18px;text-align:center}
-.board{display:grid;grid-template-rows:repeat(6,1fr);gap:5px;width:min(72vw,310px);aspect-ratio:5/6}
+/* Sized by BOTH axes: never wider than the phone, never taller than what's
+   left after the header, message line, and keyboard — so the page can't scroll. */
+.board{display:grid;grid-template-rows:repeat(6,1fr);gap:5px;width:min(72vw,310px,calc((100dvh - 300px)*0.8333));aspect-ratio:5/6}
 .row{display:grid;grid-template-columns:repeat(5,1fr);gap:5px}
 .tile{border:2px solid #d1d1d6;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:min(7vw,30px);font-weight:700;text-transform:uppercase}
 .tile.fill{border-color:#9a9a9f}
@@ -20,12 +22,12 @@ h1{font-size:18px;margin:0}
 .row.shake{animation:shake .4s}@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
 .kb{display:flex;flex-direction:column;gap:6px;width:min(98vw,500px);padding-bottom:4px}
 .krow{display:flex;gap:5px;justify-content:center}
-.key{flex:1;max-width:42px;border:0;background:#cfcfd6;color:#111;border-radius:7px;height:52px;font-size:15px;font-weight:600;text-transform:uppercase}
+.key{flex:1;max-width:42px;border:0;background:#cfcfd6;color:#111;border-radius:7px;height:clamp(40px,5.8dvh,52px);font-size:15px;font-weight:600;text-transform:uppercase}
 .key.wide{max-width:64px;font-size:12px}
 .key.g{background:#30d158;color:#fff}.key.y{background:#ffd60a;color:#fff}.key.x{background:#6b6b72;color:#fff}
 @media(prefers-color-scheme:dark){.key{background:#52525a;color:#eee}}
 .stats{font-size:12px;opacity:.7}
-@media(min-width:768px){.top{width:min(96vw,520px)}.board{width:min(72vw,420px)}.tile{font-size:min(7vw,40px)}.kb{width:min(98vw,560px)}.key{max-width:52px;height:60px;font-size:18px}.key.wide{max-width:80px;font-size:14px}}
+@media(min-width:768px){.top{width:min(96vw,520px)}.board{width:min(72vw,420px,calc((100dvh - 320px)*0.8333))}.tile{font-size:min(7vw,40px)}.kb{width:min(98vw,560px)}.key{max-width:52px;height:clamp(44px,6dvh,60px);font-size:18px}.key.wide{max-width:80px;font-size:14px}}
 </style></head><body>
 <div class="top"><h1>🟩 Word Master</h1><span class="stats" id="stats"></span><button onclick="newGame()">New</button></div>
 <div id="msg"></div>
