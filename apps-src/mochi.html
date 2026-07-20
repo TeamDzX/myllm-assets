@@ -82,7 +82,7 @@
   @keyframes scroll{ from{ transform:translateX(0); } to{ transform:translateX(-50%); } }
   .walker{ position:absolute; left:50%; bottom:6%; transform:translateX(-50%); width:min(46vw,210px); animation:bob 0.62s ease-in-out infinite alternate; }
   @keyframes bob{ from{ transform:translateX(-50%) translateY(0) rotate(-1.2deg); } to{ transform:translateX(-50%) translateY(-7px) rotate(1.2deg); } }
-  .walker img{ width:100%; border-radius:22px; }
+  .walker img{ width:100%; }
   .wbubble-wrap{ position:absolute; top:8px; left:0; right:0; display:flex; justify-content:center; }
   .walkhud{ display:flex; justify-content:space-between; align-items:center; padding:14px 16px calc(16px + env(safe-area-inset-bottom)); }
   .walkhud .steps{ font-size:13px; color:#a89a88; font-weight:700; }
@@ -384,7 +384,7 @@ function startWalk(){
                       '<img src="' + ART + 'walk_bg.jpg" alt="">' +
                       '<img class="flip" src="' + ART + 'walk_bg.jpg" alt="">';
   }
-  el("walkpet").src = ART + ANIM.walk;
+  el("walkpet").src = ART + "anim_walk_t.webp";   /* alpha-keyed: Mochi IS in the meadow */
   el("walkview").classList.add("show");
   el("walksteps").textContent = "";
   walkTimer = setInterval(walkTick, 5000);
