@@ -100,7 +100,8 @@ return Promise.resolve(p).then(function(r){hide();return r;},function(e){hide();
   <button class="tool" id="sz-1x2" onclick="setSize(1,2)"><span class="brickbtn"><span class="mini" style="width:10px;height:18px"></span>1×2</span></button>
   <button class="tool" id="sz-2x2" onclick="setSize(2,2)"><span class="brickbtn"><span class="mini" style="width:18px;height:18px"></span>2×2</span></button>
   <button class="tool" id="sz-2x4" onclick="setSize(2,4)"><span class="brickbtn"><span class="mini" style="width:18px;height:30px"></span>2×4</span></button>
-  <button class="tool" onclick="rotateSize()">↻ Rotate</button>
+  <button class="tool" id="rotBtn" onclick="rotateSize()">↻ 1×1</button>
+  <button class="tool" onclick="rotateView()">🔄 View</button>
   <button class="tool" id="eraseBtn" onclick="toggleErase()">🧽 Erase</button>
   <button class="tool" onclick="undo()">↩︎ Undo</button>
   <button class="tool warn" id="clearBtn" onclick="clearAll()">🗑 New</button>
@@ -117,6 +118,16 @@ return Promise.resolve(p).then(function(r){hide();return r;},function(e){hide();
     <h2>What shall we build? ✨</h2>
     <input id="buildPrompt" placeholder="a little duck… a rocket… a house" autocomplete="off">
     <button class="go" onclick="aiBuild()">Build it, brick by brick</button>
+    <button class="cancel" onclick="closeSheets()">Cancel</button>
+  </div>
+</div>
+
+<div class="sheet" id="partsSheet">
+  <div class="sheetcard">
+    <h2 id="partsTitle">You'll need… 🧱</h2>
+    <div class="ideas" id="partsList" style="max-height:38vh;overflow-y:auto"></div>
+    <p class="sheetnote">Gather these (or improvise!) — then watch it come together brick by brick and copy along.</p>
+    <button class="go" onclick="beginAssembly()">Start building</button>
     <button class="cancel" onclick="closeSheets()">Cancel</button>
   </div>
 </div>
@@ -151,6 +162,7 @@ var bricks = [];          /* {x,z,y,w,d,c} — y computed by gravity */
 var sel = { c:"red", w:1, d:1, erase:false };
 var undoStack = [];
 var plan = null;          /* {name, list:[...], i} during AI step-through */
+var pendingPlan = null;   /* parsed plan awaiting "Start building" on the parts sheet */
 var planTimer = null;
 
 /* ---------- pure engine (node-tested) ---------- */
@@ -225,6 +237,21 @@ function parsePlan(raw){
 /* ---------- iso rendering ---------- */
 var TW = 46, TH = 23, BH = 26;   /* tile width/height, brick visual height */
 var cv, ctx, DPR = 1, ox = 0, oy = 0;
+var viewRot = 0;                 /* 0-3: spin the whole board 90° at a time */
+
+/* world rect → view rect under the current rotation (board is square) */
+function mapRect(x, z, w, d){
+  if (viewRot === 1) return { x: z,             z: GW - x - w, w: d, d: w };
+  if (viewRot === 2) return { x: GW - x - w,    z: GD - z - d, w: w, d: d };
+  if (viewRot === 3) return { x: GD - z - d,    z: x,          w: d, d: w };
+  return { x: x, z: z, w: w, d: d };
+}
+function rotateView(){
+  viewRot = (viewRot + 1) % 4;
+  haptic("selection");
+  msg("View " + (viewRot * 90) + "°");
+  draw();
+}
 
 function shade(hex, f){
   var n = parseInt(hex.slice(1), 16);
@@ -246,10 +273,13 @@ function draw(){
       diamond(x, z, 0, "#efeafb", "#e2dbf4");
     }
   /* bricks: painter's order */
-  var sorted = bricks.slice().sort(function(a, b){
+  var mapped = bricks.map(function(b){
+    var m = mapRect(b.x, b.z, b.w, b.d);
+    return { x: m.x, z: m.z, w: m.w, d: m.d, y: b.y, c: b.c };
+  }).sort(function(a, b){
     return (a.y - b.y) || ((a.x + a.z) - (b.x + b.z));
   });
-  for (var i = 0; i < sorted.length; i++) drawBrick(sorted[i]);
+  for (var i = 0; i < mapped.length; i++) drawBrick(mapped[i]);
   ctx.restore();
 }
 
@@ -308,11 +338,12 @@ function columnFromPoint(px, py){
   for (var z = 0; z < GD; z++)
     for (var x = 0; x < GW; x++){
       var y = topAt(x, z);
-      var cx = (isoX(x, z) + isoX(x + 1, z + 1)) / 2;
-      var cyTop = (isoY(x, z, y) + isoY(x + 1, z + 1, y)) / 2;
+      var m = mapRect(x, z, 1, 1);
+      var cx = (isoX(m.x, m.z) + isoX(m.x + 1, m.z + 1)) / 2;
+      var cyTop = (isoY(m.x, m.z, y) + isoY(m.x + 1, m.z + 1, y)) / 2;
       var dx = px - cx, dy = py - cyTop;
       if (Math.abs(dx) <= TW * 0.5 && Math.abs(dy) <= TH * 0.75){
-        var key = x + z + y * 100;
+        var key = m.x + m.z + y * 100;
         if (key > bestKey){ bestKey = key; best = { x:x, z:z }; }
       }
     }
@@ -324,7 +355,12 @@ function setSize(w, d){
   sel.w = w; sel.d = d; sel.erase = false;
   haptic("selection"); syncTools();
 }
-function rotateSize(){ var t = sel.w; sel.w = sel.d; sel.d = t; haptic("selection"); syncTools(); }
+function rotateSize(){
+  var t = sel.w; sel.w = sel.d; sel.d = t;
+  haptic("selection"); syncTools();
+  if (sel.w === sel.d) msg("A " + sel.w + "×" + sel.d + " is the same both ways 🙂");
+  else msg("Now placing " + sel.w + "×" + sel.d);
+}
 function toggleErase(){ sel.erase = !sel.erase; haptic("selection"); syncTools(); }
 
 function syncTools(){
@@ -334,6 +370,7 @@ function syncTools(){
     b.className = "tool" + ((!sel.erase && ((sel.w == m[0] && sel.d == m[1]) || (sel.w == m[1] && sel.d == m[0]))) ? " on" : "");
   });
   el("eraseBtn").className = "tool" + (sel.erase ? " on" : "");
+  el("rotBtn").textContent = "↻ " + sel.w + "×" + sel.d;
   renderPalette();
 }
 
@@ -370,14 +407,19 @@ function undo(){
   draw(); persist();
 }
 
-var clearArmed = false;
+var clearArmed = false, clearTimer = null;
 function clearAll(){
   if (!clearArmed){
-    clearArmed = true; el("clearBtn").textContent = "Sure?";
-    setTimeout(function(){ clearArmed = false; el("clearBtn").textContent = "🗑 New"; }, 2400);
+    clearArmed = true;
+    el("clearBtn").textContent = "Tap again to clear!";
+    msg("Tap 🗑 again to clear the board");
+    clearTimeout(clearTimer);
+    clearTimer = setTimeout(function(){ clearArmed = false; el("clearBtn").textContent = "🗑 New"; }, 5000);
     return;
   }
+  clearTimeout(clearTimer);
   clearArmed = false; el("clearBtn").textContent = "🗑 New";
+  msg("Fresh board! 🧱");
   haptic("warning");
   stopPlan(); bricks = []; undoStack = []; draw(); persist();
   el("stepInfo").textContent = "";
@@ -398,6 +440,21 @@ function openBuildSheet(){
 function closeSheets(){
   el("buildSheet").classList.remove("show");
   el("ideaSheet").classList.remove("show");
+  el("partsSheet").classList.remove("show");
+}
+
+/* Aggregate a plan into a shopping list: count per size+color, biggest first. */
+function computeParts(list){
+  var agg = {};
+  list.forEach(function(s){
+    var w = Math.max(s.w, s.d), d = Math.min(s.w, s.d);   /* 2x4 == 4x2 */
+    var key = w + "x" + d + "|" + s.c;
+    agg[key] = (agg[key] || 0) + 1;
+  });
+  return Object.keys(agg).map(function(k){
+    var m = k.split("|");
+    return { size: m[0].replace("x", "×"), c: m[1], count: agg[k] };
+  }).sort(function(a, b){ return b.count - a.count; });
 }
 
 function aiBuild(subject){
@@ -416,8 +473,22 @@ function aiBuild(subject){
   ASK(p).then(function(raw){
     var parsed = parsePlan(raw);
     if (parsed.list.length < 3){ msg("The AI's plan was too wobbly — try again!"); return; }
-    startPlan(parsed);
+    pendingPlan = parsed;
+    var parts = computeParts(parsed.list);
+    el("partsTitle").textContent = "To build " + parsed.name + " you'll need…";
+    el("partsList").innerHTML = parts.map(function(pt){
+      return '<button style="pointer-events:none"><span style="display:inline-block;width:16px;height:16px;border-radius:5px;vertical-align:-3px;margin-right:8px;background:' + COLORS[pt.c] + '"></span><b>' + pt.count + '×</b> ' + pt.c + ' ' + pt.size + '</button>';
+    }).join("");
+    el("partsSheet").classList.add("show");
   }).catch(function(){ msg("The AI is napping — try again in a moment"); });
+}
+
+function beginAssembly(){
+  if (!pendingPlan) return;
+  closeSheets();
+  haptic("medium");
+  startPlan(pendingPlan);
+  pendingPlan = null;
 }
 
 function startPlan(parsed){
