@@ -95,15 +95,19 @@ return Promise.resolve(p).then(function(r){hide();return r;},function(e){hide();
 
 <div class="row" id="palette"></div>
 
-<div class="row" id="tools">
+<div class="row" id="sizesRow">
   <button class="tool on" id="sz-1x1" onclick="setSize(1,1)"><span class="brickbtn"><span class="mini" style="width:10px;height:10px"></span>1×1</span></button>
   <button class="tool" id="sz-1x2" onclick="setSize(1,2)"><span class="brickbtn"><span class="mini" style="width:10px;height:18px"></span>1×2</span></button>
   <button class="tool" id="sz-2x2" onclick="setSize(2,2)"><span class="brickbtn"><span class="mini" style="width:18px;height:18px"></span>2×2</span></button>
   <button class="tool" id="sz-2x4" onclick="setSize(2,4)"><span class="brickbtn"><span class="mini" style="width:18px;height:30px"></span>2×4</span></button>
   <button class="tool" id="rotBtn" onclick="rotateSize()">↻ 1×1</button>
+</div>
+
+<div class="row" id="toolsRow">
   <button class="tool" onclick="rotateView()">🔄 View</button>
   <button class="tool" id="eraseBtn" onclick="toggleErase()">🧽 Erase</button>
   <button class="tool" onclick="undo()">↩︎ Undo</button>
+  <button class="tool" onclick="showParts()">📋 Parts</button>
   <button class="tool warn" id="clearBtn" onclick="clearAll()">🗑 New</button>
   <button class="tool" onclick="saveRender()">📸 Save</button>
 </div>
@@ -127,8 +131,8 @@ return Promise.resolve(p).then(function(r){hide();return r;},function(e){hide();
     <h2 id="partsTitle">You'll need… 🧱</h2>
     <div class="ideas" id="partsList" style="max-height:38vh;overflow-y:auto"></div>
     <p class="sheetnote">Gather these (or improvise!) — then watch it come together brick by brick and copy along.</p>
-    <button class="go" onclick="beginAssembly()">Start building</button>
-    <button class="cancel" onclick="closeSheets()">Cancel</button>
+    <button class="go" id="partsGo" onclick="beginAssembly()">Start building</button>
+    <button class="cancel" onclick="closeSheets()">Close</button>
   </div>
 </div>
 
@@ -163,6 +167,7 @@ var sel = { c:"red", w:1, d:1, erase:false };
 var undoStack = [];
 var plan = null;          /* {name, list:[...], i} during AI step-through */
 var pendingPlan = null;   /* parsed plan awaiting "Start building" on the parts sheet */
+var lastPlan = null;      /* most recent AI plan — so 📋 Parts can recall its list */
 var planTimer = null;
 
 /* ---------- pure engine (node-tested) ---------- */
@@ -474,12 +479,7 @@ function aiBuild(subject){
     var parsed = parsePlan(raw);
     if (parsed.list.length < 3){ msg("The AI's plan was too wobbly — try again!"); return; }
     pendingPlan = parsed;
-    var parts = computeParts(parsed.list);
-    el("partsTitle").textContent = "To build " + parsed.name + " you'll need…";
-    el("partsList").innerHTML = parts.map(function(pt){
-      return '<button style="pointer-events:none"><span style="display:inline-block;width:16px;height:16px;border-radius:5px;vertical-align:-3px;margin-right:8px;background:' + COLORS[pt.c] + '"></span><b>' + pt.count + '×</b> ' + pt.c + ' ' + pt.size + '</button>';
-    }).join("");
-    el("partsSheet").classList.add("show");
+    renderPartsSheet(parsed.list, "To build " + parsed.name + " you'll need…", true);
   }).catch(function(){ msg("The AI is napping — try again in a moment"); });
 }
 
@@ -487,8 +487,31 @@ function beginAssembly(){
   if (!pendingPlan) return;
   closeSheets();
   haptic("medium");
+  lastPlan = pendingPlan;
   startPlan(pendingPlan);
   pendingPlan = null;
+}
+
+/* 📋 Parts: the pending plan's list if one is waiting, else the last AI plan,
+   else an inventory of whatever is on the board right now. */
+function showParts(){
+  haptic("selection");
+  var source, title, isPending = false;
+  if (pendingPlan){ source = pendingPlan.list; title = "To build " + pendingPlan.name + " you'll need…"; isPending = true; }
+  else if (lastPlan){ source = lastPlan.list; title = "Parts for " + lastPlan.name; }
+  else if (bricks.length){ source = bricks; title = "Bricks in your build"; }
+  else { msg("Nothing to list yet — build something!"); return; }
+  renderPartsSheet(source, title, isPending);
+}
+
+function renderPartsSheet(list, title, showStart){
+  var parts = computeParts(list);
+  el("partsTitle").textContent = title;
+  el("partsList").innerHTML = parts.map(function(pt){
+    return '<button style="pointer-events:none"><span style="display:inline-block;width:16px;height:16px;border-radius:5px;vertical-align:-3px;margin-right:8px;background:' + COLORS[pt.c] + '"></span><b>' + pt.count + '×</b> ' + pt.c + ' ' + pt.size + '</button>';
+  }).join("") + '<p class="sheetnote" style="text-align:right">' + list.length + ' bricks total</p>';
+  el("partsGo").style.display = showStart ? "block" : "none";
+  el("partsSheet").classList.add("show");
 }
 
 function startPlan(parsed){
