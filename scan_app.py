@@ -85,8 +85,11 @@ RULES = [
      re.compile(r"\bnavigator\.(?:userAgent|platform|plugins|hardwareConcurrency|deviceMemory|languages)\b|\bcanvas[^;]{0,40}toDataURL"),
      "Device/fingerprinting signals — check it isn't tracking the user."),
     (BLOCK, "crypto-mining",
-     re.compile(r"coinhive|cryptonight|\bminer\b|CoinImp|webminepool|hashrate", re.I),
-     "Cryptocurrency-mining signature — banned by the content policy."),
+     # Specific miner-library signatures only — NOT the bare word "miner", which
+     # appears in ordinary dictionaries (word games etc.).
+     re.compile(r"coinhive|coin-hive|authedmine|cryptonight|coinimp|webminepool|"
+                r"jsecoin|crypto-?loot|deepminer|minero\.cc|hashrate", re.I),
+     "Cryptocurrency-mining library signature — banned by the content policy."),
 
     # --- obfuscation (hiding what the code does) ---
     (REVIEW, "b64-decode-heavy",
