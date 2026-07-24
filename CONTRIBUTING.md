@@ -40,12 +40,22 @@ Open an issue using the **App submission** template (or a PR adding
    rules 5–6 plus the licence you grant us (you keep ownership, we host and
    distribute), how takedowns work, and what users are promised.
 
+## Check it yourself first
+
+Run the submission scanner on your file before you send it — it's the same
+mechanical gate we run, and it catches most rejections in one go:
+
+```
+python3 scan_app.py apps-src/<your-slug>.html
+```
+
+Fix every **BLOCK** (they're all violations of "one self-contained file that
+can't change after review") and be ready to explain any **REVIEW** items.
+
 ## What happens next
 
-We run your app on a device, read the code, and if it's a fit: we generate
-banner art in the gallery's house style, credit you in the description, and
-merge — it appears in every MyLLM user's gallery within minutes. If something
-needs fixing we'll say exactly what in the issue thread.
-
-Maintainer review notes live in `GALLERY_HANDOVER.md` §12 (the checklist) —
-submissions are checked against the same list.
+We run the scanner, run your app on a device, and read the code (the reviewer
+process is in `GALLERY-REVIEW.md`). If it's a fit we generate banner art in the
+gallery's house style, credit you, and merge — it appears in every MyLLM user's
+gallery within minutes. If something needs fixing we'll say exactly what in the
+issue thread. Any later update from you is reviewed again as a new submission.
