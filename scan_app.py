@@ -143,11 +143,26 @@ def scan(path):
     return findings
 
 
+# Review-approved exceptions to a SPECIFIC finding, keyed by filename → the
+# waived finding name(s). Scoped on purpose: only the named finding is excused,
+# so any OTHER block in that file still fails, and a future change that adds a
+# new issue is NOT masked. First-party only — community apps get no exceptions.
+# Rationale for each is in GALLERY-REVIEW.md "Documented exceptions".
+EXCEPTIONS = {
+    "retro-player.html": {"dynamic-script"},   # EmulatorJS runtime from cdn.emulatorjs.org
+    "retro-shell.html":  {"dynamic-script"},
+}
+
+
 def report(path, findings):
     size_kb = round(os.path.getsize(path) / 1024) if os.path.exists(path) else 0
     print(f"\n=== {path}  ({size_kb} KB) ===")
     if size_kb > 600:
         findings[REVIEW].insert(0, ("size", 0, f"{size_kb} KB > 600 KB guideline"))
+    # peel off any documented, scoped exceptions before counting real blocks
+    allowed = EXCEPTIONS.get(os.path.basename(path), set())
+    waived = [f for f in findings[BLOCK] if f[0] in allowed]
+    findings[BLOCK] = [f for f in findings[BLOCK] if f[0] not in allowed]
     n_block = len(findings[BLOCK])
     for sev in (BLOCK, REVIEW, INFO):
         items = findings[sev]
@@ -167,7 +182,19 @@ def report(path, findings):
             times = f", {g['count']} occurrences" if g["count"] > 1 else ""
             detail = f"  ·  {g['snip']}" if name in ("remote-image", "bridges") else ""
             print(f"    - {name}  ({where}{times}){detail}")
-    verdict = "BLOCK" if n_block else ("REVIEW" if findings[REVIEW] else "PASS")
+    if waived:
+        names = sorted({f[0] for f in waived})
+        print(f"  EXCEPTION ({len(names)} — documented, GALLERY-REVIEW.md):")
+        for name in names:
+            print(f"    - {name}  (accepted first-party exception)")
+    if n_block:
+        verdict = "BLOCK"
+    elif waived:
+        verdict = "PASS · documented exception"
+    elif findings[REVIEW]:
+        verdict = "REVIEW"
+    else:
+        verdict = "PASS"
     print(f"  VERDICT: {verdict}" + (f"  ({n_block} blocking)" if n_block else ""))
     return n_block
 

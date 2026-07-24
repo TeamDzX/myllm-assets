@@ -74,11 +74,35 @@ scan still gets the human pass below.
 - To pull an app: remove it from `apps.json`. Installed copies are local; a future
   build can also stop offering it.
 
-## First-party debt (do not ignore)
+## First-party status
 
-Our own **Hanyu**, **Near Me**, and **Expense** apps currently load external CDN
-JavaScript (hanzi-writer, Leaflet, moment) and so **fail this scanner's `BLOCK`
-rule** — meaning even first-party trust doesn't cover them, because they delegate
-to code we don't control. Bundle/self-host those libraries so every first-party
-app also passes `scan_app.py`. Until then, they are the one place the "swapped
-later" risk is live in our own catalogue.
+Every first-party app that used to load external code is now self-contained:
+
+- **Near Me** — Leaflet vendored in `libs/` and inlined (`bundle_libs.py`).
+- **Expense** — dropped Google Fonts (→ system font) and unused Font Awesome.
+- **Hanyu** — HanziWriter inlined, Font Awesome subset + inlined, YouTube embeds
+  → tap-to-Safari thumbnails, dynamic CDN fallback removed (`secure_hanyu.py`).
+
+So every served gallery app passes `scan_app.py` **except the two documented
+exceptions below**.
+
+## Documented exceptions
+
+Recorded in `scan_app.py` → `EXCEPTIONS`, **scoped to a single finding** (any
+*other* issue in the same app still blocks, and a future change that adds one is
+not masked):
+
+- **retro-player**, **retro-shell** — the retro-console emulator apps load the
+  **EmulatorJS** runtime from `cdn.emulatorjs.org` (finding: `dynamic-script`).
+  EmulatorJS is architecturally CDN-based — multi-megabyte, per-console cores
+  fetched on demand — so inlining or self-hosting isn't practical. Accepted
+  because: it's a reputable, purpose-built emulator CDN; the code runs in the
+  same sandbox with the same per-app permissions as everything else; and ROMs are
+  user-supplied (we ship none).
+
+**Rules for exceptions**
+- **First-party only.** A *community* submission that loads remote code is a
+  rejection, never an exception — self-containment is mandatory for the tier we
+  don't author.
+- **Scoped + re-reviewed.** The waiver covers one named finding; add nothing to
+  its blast radius, and re-review the app on every change.
