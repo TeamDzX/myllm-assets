@@ -125,6 +125,10 @@
   .chip .thumb .none{ font-size:22px; color:#c9bda9; }
   .chip span{ display:block; font-size:10.5px; font-weight:700; color:#a89a88; margin-top:3px; line-height:1.2; }
   .chip.on span{ color:#5aa87a; }
+  .chip .thumb{ position:relative; }
+  .chip .lock{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:22px; }
+  .chip.locked .thumb img{ opacity:.32; filter:grayscale(1); }
+  .chip.locked span{ color:#c9bda9; }
 
   /* food picker (long-press Feed) */
   .foodmenu{ position:fixed; inset:0; background:rgba(74,66,56,.35); display:none; align-items:flex-end; justify-content:center; z-index:9; }
@@ -272,6 +276,19 @@ var SLOT_ORDER = ["head","eyes","neck"];
 var SLOT_NAME = { head:"On the head", eyes:"Eyes", neck:"Neck" };
 var W = { head:null, eyes:null, neck:null };
 
+/* Milestone unlocks: one accessory per slot is unlocked from the start
+   (beanie/sunglasses/bowtie); the rest are earned by caring for Mochi. Each
+   entry is test(state)->bool + the hint shown while it's still locked. */
+var UNLOCKS = {
+  bucket_hat:    { test:function(s){ return (s.walks||0) >= 1; },        hint:"Go on your first walk 🌼" },
+  flower:        { test:function(s){ return (s.finds||0) >= 10; },       hint:"Find 10 treasures on walks 🌸" },
+  crown:         { test:function(s){ return daysTogether() >= 7; },      hint:"Spend 7 days together 👑" },
+  bow:           { test:function(s){ return !!s.maxHappy; },             hint:"Reach 100% happiness 🎀" },
+  heart_glasses: { test:function(s){ return (s.chats||0) >= 10; },       hint:"Chat with Mochi 10 times 💗" },
+  round_glasses: { test:function(s){ return (s.plays||0) >= 15; },       hint:"Play together 15 times 🤓" },
+  chain:         { test:function(s){ return !!s.choc; },                 hint:"Give Mochi its favourite treat 🍫" }
+};
+
 /* ---------- state ---------- */
 var S = null;    /* {name, hatched, tapCount, born, last, hunger, happy, energy, clean, sleeping} */
 var transient = null, transientTimer = null;
@@ -279,7 +296,8 @@ var HOUR = 3600000;
 
 function fresh(){
   return { name:null, hatched:false, tapCount:0, born:Date.now(), last:Date.now(),
-           hunger:80, happy:80, energy:90, clean:90, sleeping:false, messy:false };
+           hunger:80, happy:80, energy:90, clean:90, sleeping:false, messy:false,
+           walks:0, finds:0, plays:0, chats:0, choc:false, maxHappy:false, unlocked:[] };
 }
 
 /* Kind decay: stats drift down over real time but floor at 12 — Mochi can get
@@ -394,9 +412,10 @@ function feedWith(id){
     S.clean = Math.max(12, S.clean - 28);   /* chocolate = messy face */
     applyMessy();
   }
+  if (f.id === "chocolate") S.choc = true;   /* milestone: favourite treat */
   pulse("eat", 5600);
   bubble(f.fav ? f.emoji + " my favourite!! *munch munch*" : f.emoji + " yum!", 3400);
-  save();
+  checkUnlocks(); save();
 }
 
 /* Toggle the chocolate smudge overlay (idle + walk) when the face is messy. */
@@ -429,7 +448,8 @@ function play(){
   S.happy = Math.min(100, S.happy + 26);
   S.energy = Math.max(5, S.energy - 10);
   S.hunger = Math.max(12, S.hunger - 5);
-  pulse("play", 5600); save();
+  S.plays = (S.plays || 0) + 1;
+  pulse("play", 5600); checkUnlocks(); save();
 }
 function bath(){
   if (S.sleeping){ bubble("Bathtime after nap time."); return; }
@@ -498,6 +518,7 @@ function talk(){
   el("say").value = "";
   haptic("light");
   if (S.sleeping){ bubble("…zzz…"); return; }
+  S.chats = (S.chats || 0) + 1; checkUnlocks();
   if (!ASK){
     bubble(CANNED[Math.floor(Math.random() * CANNED.length)]);
     S.happy = Math.min(100, S.happy + 3); render(); save();
@@ -589,6 +610,7 @@ function startWalk(){
   if (S.energy < 25){ bubble(esc(S.name) + " is too tired for a walk right now. 🌙"); return; }
   haptic("success");
   walking = true; walkStart = Date.now(); lastFind = Date.now(); findCount = 0;
+  S.walks = (S.walks || 0) + 1; checkUnlocks();   /* milestone: first walk */
   buildTrack();
   /* WebKit quirk: percentage-transform keyframes computed against a
      not-yet-loaded (zero-width) strip don't recover — restart the animation
@@ -622,10 +644,12 @@ function maybeFind(now, rng){
   var pool = FINDS.filter(function(f){ return !f.rare || rng() < 0.18; });
   var f = pool[Math.floor(rng() * pool.length)];
   findCount++;
+  S.finds = (S.finds || 0) + 1;                 /* milestone: treasures found */
   S.happy = Math.min(100, S.happy + (f.rare ? 8 : 3));
   if (f.rare) S.hunger = Math.min(100, S.hunger + 10);
   haptic(f.rare ? "success" : "light");
   bubble(f.e + " " + f.t, 4200);
+  checkUnlocks();
   return f;
 }
 
@@ -734,21 +758,62 @@ function applyAccessories(){
   });
 }
 
+function daysTogether(){ return Math.max(1, Math.ceil((Date.now() - (S ? S.born : Date.now())) / 86400000)); }
+function label(id){ var c = CATALOG.filter(function(x){ return x.id === id; })[0]; return c ? c.name : id; }
+
+/* Starters (not in UNLOCKS) are always available; a gated item is available
+   only once its milestone has been reached and recorded in S.unlocked. */
+function isUnlocked(id){
+  if (!(id in UNLOCKS)) return true;
+  return !!(S && S.unlocked && S.unlocked.indexOf(id) >= 0);
+}
+
+/* Award any newly-earned items. silent=true at boot (retroactive, no fanfare);
+   silent=false during play so a fresh unlock is celebrated once. */
+function checkUnlocks(silent){
+  if (!S || !S.hatched) return;
+  if (!S.unlocked) S.unlocked = [];
+  if (S.happy >= 100) S.maxHappy = true;     /* latch: "reached 100 once" */
+  var newly = [];
+  for (var id in UNLOCKS){
+    if (S.unlocked.indexOf(id) < 0 && UNLOCKS[id].test(S)){
+      S.unlocked.push(id);
+      newly.push(id);
+    }
+  }
+  if (newly.length){
+    save();
+    if (el("wardrobe").classList.contains("show")) renderWardrobe();
+    if (!silent){
+      haptic("success");
+      bubble("🎉 Unlocked " + label(newly[0]) + "! It's in the 👒 wardrobe.", 5200);
+    }
+  }
+}
+
 function equip(slot, id){
-  W[slot] = (W[slot] === id) ? null : id;   /* tapping the worn one takes it off */
+  if (id && !isUnlocked(id)){                /* tapped a locked item — show how to earn it */
+    haptic("warning");
+    var u = UNLOCKS[id];
+    bubble("🔒 " + (u ? u.hint : "Locked"), 4200);
+    return;
+  }
+  W[slot] = (W[slot] === id) ? null : id;    /* tapping the worn one takes it off */
   haptic("selection");
   applyAccessories();
   renderWardrobe();
   saveWard();
 }
 
-function chipHTML(slot, id, label, on){
+function chipHTML(slot, id, name, on){
+  var locked = id && !isUnlocked(id);
   var inner = id ? '<img src="' + ACC_BASE + id + '_chip.png" alt="">'
                  : '<span class="none">🚫</span>';
+  if (locked) inner += '<span class="lock">🔒</span>';
   var arg = id ? "'" + id + "'" : "null";
-  return '<button class="chip' + (on ? ' on' : '') +
+  return '<button class="chip' + (on ? ' on' : '') + (locked ? ' locked' : '') +
          '" onclick="equip(\'' + slot + '\',' + arg + ')">' +
-         '<div class="thumb">' + inner + '</div><span>' + esc(label) + '</span></button>';
+         '<div class="thumb">' + inner + '</div><span>' + esc(name) + '</span></button>';
 }
 
 function renderWardrobe(){
@@ -794,8 +859,9 @@ function closeWardrobe(){ el("wardrobe").classList.remove("show"); }
     /* a returning owner gets a welcome-back, not a guilt trip */
     applyAccessories();
     applyMessy();
+    checkUnlocks(true);   /* retroactively grant anything already earned, quietly */
     render(); save();
-    setInterval(function(){ applyDecay(); render(); save(); }, 30000);
+    setInterval(function(){ applyDecay(); checkUnlocks(false); render(); save(); }, 30000);
     /* one-time nudge so people discover the snack picker */
     store.getItem("mochi_food_tip").then(function(seen){
       if (!seen && S && S.hatched){
