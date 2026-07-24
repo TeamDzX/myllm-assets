@@ -29,10 +29,11 @@
   .stage{ position:relative; flex:1; min-height:280px; display:flex; align-items:center; justify-content:center; }
   .petbox{ position:relative; width:min(78vw,340px); }
   .petbox #pet{ width:100%; height:auto; border-radius:26px; display:block; }
-  /* Accessory overlays sit 1:1 over the sprite (placement is baked into each
-     400x400 asset). A gentle bob keeps them feeling attached to the breathing
-     pet rather than pasted on. */
-  .petbox .acc{ position:absolute; inset:0; width:100%; height:100%; pointer-events:none;
+  /* Accessory overlays are taller than the sprite (extra band above the head so
+     hats aren't clipped) and bottom-aligned, so their pet-region maps 1:1 onto
+     the pet and the surplus sits above it. Placement is baked into each asset.
+     A gentle bob keeps them feeling attached to the breathing pet. */
+  .petbox .acc{ position:absolute; left:0; bottom:0; width:100%; height:auto; pointer-events:none;
                 animation:accbob 2.6s ease-in-out infinite alternate; }
   @keyframes accbob{ from{ transform:translateY(0); } to{ transform:translateY(-3px); } }
   .stage.sleeping img{ filter:brightness(.82) saturate(.85); }
@@ -91,8 +92,8 @@
   @keyframes bob{ from{ transform:translateX(-50%) translateY(0) rotate(-1.2deg); } to{ transform:translateX(-50%) translateY(-7px) rotate(1.2deg); } }
   .walker img{ width:100%; }
   /* Walk accessories are children of .walker, so they inherit the waddle bob
-     for free — perfectly synced to the walk without any extra animation. */
-  .walker .wacc{ position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
+     for free — perfectly synced to the walk. Same tall/bottom-aligned overlay. */
+  .walker .wacc{ position:absolute; left:0; bottom:0; width:100%; height:auto; pointer-events:none; }
   .wbubble-wrap{ position:absolute; top:8px; left:0; right:0; display:flex; justify-content:center; }
   .critters{ position:absolute; inset:0; overflow:hidden; pointer-events:none; }
   .critter{ position:absolute; left:-12%; will-change:transform; }
