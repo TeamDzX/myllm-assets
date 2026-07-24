@@ -27,7 +27,14 @@
   .bar .fill.low{ background:#f2a65e; } .bar .fill.crit{ background:#e8806e; }
 
   .stage{ position:relative; flex:1; min-height:280px; display:flex; align-items:center; justify-content:center; }
-  .stage img{ width:min(78vw,340px); height:auto; border-radius:26px; }
+  .petbox{ position:relative; width:min(78vw,340px); }
+  .petbox #pet{ width:100%; height:auto; border-radius:26px; display:block; }
+  /* Accessory overlays sit 1:1 over the sprite (placement is baked into each
+     400x400 asset). A gentle bob keeps them feeling attached to the breathing
+     pet rather than pasted on. */
+  .petbox .acc{ position:absolute; inset:0; width:100%; height:100%; pointer-events:none;
+                animation:accbob 2.6s ease-in-out infinite alternate; }
+  @keyframes accbob{ from{ transform:translateY(0); } to{ transform:translateY(-3px); } }
   .stage.sleeping img{ filter:brightness(.82) saturate(.85); }
   .bubble{
     position:absolute; top:2px; left:50%; transform:translateX(-50%) translateY(-6px);
@@ -83,6 +90,9 @@
   .walker{ position:absolute; left:50%; bottom:6%; transform:translateX(-50%); width:min(46vw,210px); animation:bob 0.62s ease-in-out infinite alternate; z-index:2; }
   @keyframes bob{ from{ transform:translateX(-50%) translateY(0) rotate(-1.2deg); } to{ transform:translateX(-50%) translateY(-7px) rotate(1.2deg); } }
   .walker img{ width:100%; }
+  /* Walk accessories are children of .walker, so they inherit the waddle bob
+     for free — perfectly synced to the walk without any extra animation. */
+  .walker .wacc{ position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
   .wbubble-wrap{ position:absolute; top:8px; left:0; right:0; display:flex; justify-content:center; }
   .critters{ position:absolute; inset:0; overflow:hidden; pointer-events:none; }
   .critter{ position:absolute; left:-12%; will-change:transform; }
@@ -94,6 +104,25 @@
   .walkhud{ display:flex; justify-content:space-between; align-items:center; padding:14px 16px calc(16px + env(safe-area-inset-bottom)); }
   .walkhud .steps{ font-size:13px; color:#a89a88; font-weight:700; }
   .walkhud button{ border:2px solid #eadfce; background:#fffdf8; color:#4a4238; border-radius:14px; padding:11px 18px; font-size:14px; font-weight:750; }
+
+  /* wardrobe (dress-up) sheet */
+  .wardrobe{ position:fixed; inset:0; background:rgba(74,66,56,.35); display:none; align-items:flex-end; justify-content:center; z-index:9; }
+  .wardrobe.show{ display:flex; }
+  .wardcard{ background:#fffdf8; border-radius:22px 22px 0 0; padding:16px 16px calc(18px + env(safe-area-inset-bottom)); width:100%; max-width:600px; max-height:76dvh; overflow-y:auto; }
+  .wardhead{ display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; }
+  .wardhead h2{ font-size:18px; }
+  .wardhead button{ border:none; background:#8fd3a8; color:#fff; border-radius:12px; padding:8px 16px; font-size:14px; font-weight:750; }
+  .wardslot{ margin-top:12px; }
+  .wardslot > small{ font-size:12px; font-weight:750; color:#a89a88; padding-left:2px; }
+  .wardrow{ display:flex; gap:9px; overflow-x:auto; padding:8px 2px 4px; -webkit-overflow-scrolling:touch; }
+  .chip{ flex:0 0 auto; width:70px; text-align:center; background:none; border:none; padding:0; cursor:pointer; }
+  .chip .thumb{ width:66px; height:66px; border-radius:16px; border:2px solid #eadfce; background:#fdf6ec;
+                display:flex; align-items:center; justify-content:center; overflow:hidden; }
+  .chip.on .thumb{ border-color:#8fd3a8; background:#eaf7ef; box-shadow:0 0 0 2px #8fd3a8 inset; }
+  .chip .thumb img{ width:100%; height:100%; object-fit:contain; }
+  .chip .thumb .none{ font-size:22px; color:#c9bda9; }
+  .chip span{ display:block; font-size:10.5px; font-weight:700; color:#a89a88; margin-top:3px; line-height:1.2; }
+  .chip.on span{ color:#5aa87a; }
 
   .namer{ position:fixed; inset:0; background:rgba(74,66,56,.35); display:none; align-items:center; justify-content:center; z-index:9; }
   .namer.show{ display:flex; }
@@ -120,16 +149,22 @@
 
 <div class="stage" id="stage">
   <div class="bubble" id="bubble"></div>
-  <img id="pet" src="" alt="Your pet">
+  <div class="petbox" id="petbox">
+    <img id="pet" src="" alt="Your pet">
+    <img class="acc" id="acc_head" alt="" style="display:none">
+    <img class="acc" id="acc_eyes" alt="" style="display:none">
+    <img class="acc" id="acc_neck" alt="" style="display:none">
+  </div>
 </div>
 <p class="hint" id="hint"></p>
 
-<div class="actions" id="actions" style="display:none; grid-template-columns:repeat(5,1fr);">
+<div class="actions" id="actions" style="display:none; grid-template-columns:repeat(6,1fr);">
   <button onclick="feed()"><span class="ico">🍙</span>Feed</button>
   <button onclick="play()" id="playBtn"><span class="ico">⚽</span>Play</button>
   <button onclick="bath()"><span class="ico">🫧</span>Bath</button>
   <button onclick="startWalk()" id="walkBtn"><span class="ico">🌼</span>Walk</button>
   <button onclick="toggleSleep()" id="sleepBtn"><span class="ico">🌙</span>Sleep</button>
+  <button onclick="openWardrobe()"><span class="ico">👒</span>Style</button>
 </div>
 
 <div class="walkview" id="walkview">
@@ -138,7 +173,12 @@
     <div class="walktrack" id="walktrack"></div>
     <div class="critters" id="critters"></div>
     <div class="wbubble-wrap"><div class="bubble" id="wbubble" style="position:relative; top:0;"></div></div>
-    <div class="walker"><img id="walkpet" alt=""></div>
+    <div class="walker">
+      <img id="walkpet" alt="">
+      <img class="wacc" id="wacc_head" alt="" style="display:none">
+      <img class="wacc" id="wacc_eyes" alt="" style="display:none">
+      <img class="wacc" id="wacc_neck" alt="" style="display:none">
+    </div>
   </div>
   <div class="walkhud">
     <span class="steps" id="walksteps"></span>
@@ -160,6 +200,16 @@
   </div>
 </div>
 
+<div class="wardrobe" id="wardrobe">
+  <div class="wardcard">
+    <div class="wardhead">
+      <h2>Dress up ✨</h2>
+      <button onclick="closeWardrobe()">Done</button>
+    </div>
+    <div id="wardslots"></div>
+  </div>
+</div>
+
 <script>
 var ASK = window.myllmAsk || null;
 var store = window.myllmStorage || {getItem:function(){return Promise.resolve(null)}, setItem:function(){return Promise.resolve()}};
@@ -172,6 +222,27 @@ var ANIM = { egg:"anim_egg.webp", hatch:"anim_hatch.webp", idle:"anim_idle2.webp
              happy:"anim_happy.webp", eat:"anim_eat.webp", sleep:"anim_sleep.webp",
              sad:"anim_sad.webp", bath:"anim_bath.webp", play:"anim_play.webp",
              walk:"anim_walk.webp", pet:"anim_pet.webp" };
+
+/* ---------- wardrobe ---------- */
+/* Accessories are pre-positioned 400x400 overlays: "<id>.png" sits over the
+   idle sprite, "<id>_w.png" over the walk sprite, "<id>_chip.png" is the picker
+   thumbnail. One item per slot; slots stack. */
+var ACC_BASE = ART + "acc/";
+var CATALOG = [
+  { id:"beanie",        slot:"head", label:"Beanie" },
+  { id:"bucket_hat",    slot:"head", label:"Bucket" },
+  { id:"crown",         slot:"head", label:"Crown" },
+  { id:"flower",        slot:"head", label:"Flower" },
+  { id:"bow",           slot:"head", label:"Bow" },
+  { id:"sunglasses",    slot:"eyes", label:"Shades" },
+  { id:"heart_glasses", slot:"eyes", label:"Hearts" },
+  { id:"round_glasses", slot:"eyes", label:"Specs" },
+  { id:"bowtie",        slot:"neck", label:"Bow tie" },
+  { id:"chain",         slot:"neck", label:"Chain" }
+];
+var SLOT_ORDER = ["head","eyes","neck"];
+var SLOT_NAME = { head:"On the head", eyes:"Eyes", neck:"Neck" };
+var W = { head:null, eyes:null, neck:null };
 
 /* ---------- state ---------- */
 var S = null;    /* {name, hatched, tapCount, born, last, hunger, happy, energy, clean, sleeping} */
@@ -549,6 +620,63 @@ lastAmbient = Date.now() - 15000;
 el("say").addEventListener("keydown", function(e){ if (e.key === "Enter") talk(); });
 el("stage").addEventListener("click", stageTap);
 
+/* ---------- wardrobe logic ---------- */
+function saveWard(){ store.setItem("mochi_wardrobe", JSON.stringify(W)); }
+
+/* Point the six overlay <img>s (3 stage + 3 walk) at whatever's equipped, or
+   hide them. Gated on hatched so a bare egg never wears a hat. */
+function applyAccessories(){
+  SLOT_ORDER.forEach(function(slot){
+    var id = (S && S.hatched) ? W[slot] : null;
+    var a = el("acc_" + slot), wa = el("wacc_" + slot);
+    if (id){
+      a.src = ACC_BASE + id + ".png";      a.style.display = "block";
+      wa.src = ACC_BASE + id + "_w.png";   wa.style.display = "block";
+    } else {
+      a.style.display = "none";
+      wa.style.display = "none";
+    }
+  });
+}
+
+function equip(slot, id){
+  W[slot] = (W[slot] === id) ? null : id;   /* tapping the worn one takes it off */
+  haptic("selection");
+  applyAccessories();
+  renderWardrobe();
+  saveWard();
+}
+
+function chipHTML(slot, id, label, on){
+  var inner = id ? '<img src="' + ACC_BASE + id + '_chip.png" alt="">'
+                 : '<span class="none">🚫</span>';
+  var arg = id ? "'" + id + "'" : "null";
+  return '<button class="chip' + (on ? ' on' : '') +
+         '" onclick="equip(\'' + slot + '\',' + arg + ')">' +
+         '<div class="thumb">' + inner + '</div><span>' + esc(label) + '</span></button>';
+}
+
+function renderWardrobe(){
+  var html = "";
+  SLOT_ORDER.forEach(function(slot){
+    html += '<div class="wardslot"><small>' + SLOT_NAME[slot] + '</small><div class="wardrow">';
+    html += chipHTML(slot, null, "None", !W[slot]);
+    CATALOG.filter(function(c){ return c.slot === slot; }).forEach(function(c){
+      html += chipHTML(slot, c.id, c.label, W[slot] === c.id);
+    });
+    html += '</div></div>';
+  });
+  el("wardslots").innerHTML = html;
+}
+
+function openWardrobe(){
+  if (!S || !S.hatched) return;
+  haptic("light");
+  renderWardrobe();
+  el("wardrobe").classList.add("show");
+}
+function closeWardrobe(){ el("wardrobe").classList.remove("show"); }
+
 /* ---------- boot ---------- */
 (function boot(){
   /* preload all loops so mood switches are instant */
@@ -560,7 +688,13 @@ el("stage").addEventListener("click", stageTap);
     if (v){ try { S = JSON.parse(v); } catch(_){} }
     if (!S || typeof S.hunger !== "number") S = fresh();
     applyDecay();
+    return store.getItem("mochi_wardrobe");
+  }).then(function(wv){
+    if (wv){ try { var w = JSON.parse(wv);
+      if (w) W = { head:w.head||null, eyes:w.eyes||null, neck:w.neck||null };
+    } catch(_){} }
     /* a returning owner gets a welcome-back, not a guilt trip */
+    applyAccessories();
     render(); save();
     setInterval(function(){ applyDecay(); render(); save(); }, 30000);
   });
