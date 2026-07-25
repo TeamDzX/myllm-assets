@@ -2552,6 +2552,29 @@
       "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/petra.myllmapp",
       "sizeKB": 37,
       "category": "Students"
+    },
+    {
+      "id": "command-center",
+      "name": "Command Center",
+      "emoji": "🛰️",
+      "tagline": "One private view of all your systems",
+      "description": "A private dashboard for everything you run. Your apps and systems each write a small ‘heartbeat’ — status, metrics, errors — into a shared on-device registry, and Command Center shows them all at a glance, live (green / amber / red). Systems that aren’t on this phone (a home server, a Raspberry Pi, a cron job) can optionally push heartbeats through a Telegram bot that the hub pulls in. Everything stays on your device by default; the Telegram transport is opt-in and clearly leaves your device. Your MyLLM assistant can read the very same registry to answer ‘how is everything doing?’.",
+      "tags": [
+        "developer",
+        "dashboard",
+        "network",
+        "saves data"
+      ],
+      "iconSymbol": "antenna.radiowaves.left.and.right",
+      "iconColor": "blue",
+      "version": 1,
+      "featured": false,
+      "requiresAI": false,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/command-center.jpg",
+      "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/command-center.html",
+      "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/command-center.myllmapp",
+      "sizeKB": 17,
+      "category": "Developer"
     }
   ]
 }
