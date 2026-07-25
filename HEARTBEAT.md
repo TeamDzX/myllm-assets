@@ -60,23 +60,11 @@ async function report(id, status, metrics = {}, errors = []) {
 // report("timer-app", "ok", { runs: 12 });
 ```
 
-## Reporting from outside the phone (optional transport)
+## Can't reach a system directly?
 
-Systems that aren't on the phone push through a transport the Command Center
-pulls in. **Telegram** is the first one: post a message that starts with
-`MYLLM:` followed by the heartbeat JSON, to a bot the hub is watching.
-
-```bash
-curl "https://api.telegram.org/bot<TOKEN>/sendMessage" \
-  -d chat_id=<CHAT_ID> \
-  --data-urlencode 'text=MYLLM:{"id":"greenhouse","status":"ok","metrics":{"humidity":62,"temp":24}}'
-```
-
-The Command Center (Settings → Telegram, opt-in) pulls these via `myllmFetch`
-and writes them into the same registry with `"source": "telegram"`. **This leaves
-your device via Telegram's cloud** — it's off by default, and only for systems
-you can't report on-device. The private cross-device path (trusted circles) will
-be a second transport later; the schema doesn't change.
+Give it a URL with a tunnel — Tailscale, Cloudflare Tunnel, ngrok — and add it as a
+monitor. That keeps everything on-device and avoids routing your data through a
+third-party chat service.
 
 ## Reading it back
 

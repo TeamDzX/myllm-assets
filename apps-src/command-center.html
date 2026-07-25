@@ -151,26 +151,9 @@
       <option value="300">5 minutes</option><option value="900">15 minutes</option>
     </select>
 
-    <div class="note"><b>Telegram (optional transport).</b> Lets systems that aren't on this phone —
-      a greenhouse, a server — push heartbeats to a Telegram bot that this hub then pulls in.
-      <b>Turning this on sends and receives data via Telegram's cloud</b>, so it leaves your device.
-      Off by default; the on-device registry needs none of this.</div>
-
-    <div class="toggle"><span style="font-weight:650">Use Telegram transport</span>
-      <input type="checkbox" id="tgOn" style="width:auto" onchange="saveCfg()"></div>
-    <label>Bot token</label>
-    <input id="tgToken" type="text" autocomplete="off" placeholder="123456:ABC-..." oninput="saveCfg()">
-    <label>Chat / channel ID (optional filter)</label>
-    <input id="tgChat" type="text" autocomplete="off" placeholder="-1001234567890" oninput="saveCfg()">
-    <label>Pull from Telegram every</label>
-    <select id="tgInt" onchange="saveCfg()">
-      <option value="0" selected>Manual only</option><option value="30">30 seconds</option>
-      <option value="60">1 minute</option><option value="300">5 minutes</option>
-    </select>
-    <div class="btnrow" style="margin-top:14px; justify-content:flex-start">
-      <button class="btn sec" onclick="testTelegram()">Test connection</button>
-    </div>
-    <div class="status-line" id="tgStatus"></div>
+    <div class="note"><b>Everything runs on your device.</b> Monitors are polled from this phone;
+      nothing is sent anywhere else. A system just needs a URL (on your network or the internet)
+      that returns JSON — add it in 🌐 Monitors.</div>
   </div>
 </div>
 
@@ -190,10 +173,9 @@
       to the shared file store (private, no network):</div>
     <pre id="exLocal"></pre>
 
-    <div class="note"><b>3. Push over Telegram (optional)</b> — only for a system the phone can't reach.
-      A <b>user</b> account (not a bot) posts a line starting <b>MYLLM:</b> into a chat your reader bot is in.
-      Prefer option 1 where you can — it's simpler:</div>
-    <pre id="exTg"></pre>
+    <div class="note"><b>Can't reach a system?</b> Give it a URL with a tunnel (Tailscale, Cloudflare
+      Tunnel, ngrok…) and add it as a monitor — that's simpler and stays on-device, unlike routing
+      through a chat service.</div>
 
     <div class="note"><b>The heartbeat schema</b> (transport-agnostic — same shape however it arrives):
       <br>• <b>id</b> — unique system name
@@ -214,8 +196,8 @@ function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,
 
 var REG = "system/";                 /* registry folder in the shared store */
 var STALE_MS = 10*60*1000;           /* no heartbeat in 10 min → "stale" */
-var cfg = { refresh:5, collectInt:0, tgOn:false, tgToken:"", tgChat:"", tgInt:0 };
-var refreshTimer=null, tgTimer=null, collectTimer=null;
+var cfg = { refresh:5, collectInt:0 };
+var refreshTimer=null, collectTimer=null;
 
 /* ---------- registry (the single source of truth, on-device) ---------- */
 async function readRegistry(){
@@ -350,54 +332,11 @@ async function submitMonitor(){
 function removeMon(id){ removeMonitor(id).then(function(){ renderMonitors(); render(); haptic('selection'); }); }
 async function pollNow(){ el('mStatus').textContent='Polling…'; var n=await collectAll(); el('mStatus').textContent='Polled '+n+' monitor(s).'; await render(); }
 
-/* ---------- Telegram transport (optional pipe) ---------- */
-function tgUrl(method){ return 'https://api.telegram.org/bot'+cfg.tgToken.trim()+'/'+method; }
-
-async function syncTelegram(){
-  if(!cfg.tgOn || !cfg.tgToken.trim() || !window.myllmFetch) return {added:0};
-  var offset = parseInt(await store.getItem('cc_tg_offset')||'0',10)||0;
-  var r = await myllmFetch(tgUrl('getUpdates')+'?timeout=0&offset='+offset, {});
-  if(!r.ok) throw new Error('Telegram HTTP '+r.status);
-  var data = JSON.parse(r.body);
-  if(!data.ok) throw new Error(data.description||'Telegram error');
-  var added=0, maxId=offset-1;
-  for(var i=0;i<data.result.length;i++){
-    var u=data.result[i]; if(u.update_id>maxId) maxId=u.update_id;
-    var m=u.message||u.channel_post; if(!m||!m.text) continue;
-    if(cfg.tgChat.trim() && String(m.chat && m.chat.id)!==cfg.tgChat.trim()) continue;
-    var txt=m.text.trim();
-    if(txt.indexOf('MYLLM:')!==0) continue;
-    try{
-      var hb=JSON.parse(txt.slice(6).trim());
-      if(!hb.id) continue;
-      hb.source='telegram'; hb.ts=(m.date?m.date*1000:Date.now());
-      await writeHeartbeat(hb); added++;
-    }catch(e){}
-  }
-  if(data.result.length) await store.setItem('cc_tg_offset', String(maxId+1));
-  return {added:added};
-}
-
-async function testTelegram(){
-  el('tgStatus').textContent='Testing…';
-  if(!window.myllmFetch){ el('tgStatus').textContent='Network is off (Settings → Allow apps to use the internet).'; return; }
-  if(!cfg.tgToken.trim()){ el('tgStatus').textContent='Enter a bot token first.'; return; }
-  try{
-    var r=await myllmFetch(tgUrl('getMe'),{});
-    var d=JSON.parse(r.body);
-    el('tgStatus').textContent = d.ok ? ('✓ Connected to @'+d.result.username) : ('✗ '+(d.description||'failed'));
-    haptic(d.ok?'success':'error');
-  }catch(e){ el('tgStatus').textContent='✗ '+e.message; }
-}
-
 /* ---------- actions ---------- */
 async function syncNow(user){
   haptic('light');
   var msg='';
   try{ var n=await collectAll(); if(n) msg += n+' monitor'+(n>1?'s':'')+' polled · '; }catch(e){ msg+='monitors: '+e.message+' · '; }
-  try{
-    if(cfg.tgOn){ var res=await syncTelegram(); if(res.added) msg += res.added+' from Telegram · '; }
-  }catch(e){ msg+='Telegram: '+e.message+' · '; }
   await render();
   el('synced').textContent = msg + 'updated '+new Date().toLocaleTimeString();
 }
@@ -414,13 +353,9 @@ async function writeDemo(){
 async function loadCfg(){
   try{ var c=JSON.parse(await store.getItem('cc_cfg')||'{}'); Object.assign(cfg,c); }catch(e){}
   el('refreshSel').value=String(cfg.refresh); el('collectSel').value=String(cfg.collectInt||0);
-  el('tgOn').checked=!!cfg.tgOn;
-  el('tgToken').value=cfg.tgToken||''; el('tgChat').value=cfg.tgChat||''; el('tgInt').value=String(cfg.tgInt||0);
 }
 function saveCfg(){
   cfg.refresh=parseInt(el('refreshSel').value,10); cfg.collectInt=parseInt(el('collectSel').value,10);
-  cfg.tgOn=el('tgOn').checked;
-  cfg.tgToken=el('tgToken').value; cfg.tgChat=el('tgChat').value; cfg.tgInt=parseInt(el('tgInt').value,10);
   store.setItem('cc_cfg', JSON.stringify(cfg));
   scheduleTimers();
 }
@@ -429,8 +364,6 @@ function scheduleTimers(){
   if(cfg.refresh>0) refreshTimer=setInterval(render, cfg.refresh*1000);
   if(collectTimer) clearInterval(collectTimer); collectTimer=null;
   if(cfg.collectInt>0) collectTimer=setInterval(function(){ collectAll().then(render); }, cfg.collectInt*1000);
-  if(tgTimer) clearInterval(tgTimer); tgTimer=null;
-  if(cfg.tgOn && cfg.tgInt>0) tgTimer=setInterval(function(){ syncNow(false); }, cfg.tgInt*1000);
 }
 function openSettings(){ el('settings').classList.add('show'); }
 function openHelp(){ el('help').classList.add('show'); }
@@ -441,11 +374,6 @@ el('exLocal').textContent =
 'await myllmFiles.write("system/greenhouse.json",\n'+
 '  JSON.stringify({ id:"greenhouse", name:"Greenhouse",\n'+
 '    status:"ok", metrics:{ humidity:62, temp:24 }, errors:[] }));';
-el('exTg').textContent =
-'curl "https://api.telegram.org/bot<TOKEN>/sendMessage" \\\n'+
-'  -d chat_id=<CHAT_ID> \\\n'+
-'  --data-urlencode \'text=MYLLM:{"id":"greenhouse","status":"ok",\n'+
-'    "metrics":{"humidity":62,"temp":24}}\'';
 
 /* ---------- boot ---------- */
 /* The assistant can add a monitor from chat via the add-monitor action. */
@@ -464,7 +392,7 @@ if(window.myllmIntent && myllmIntent.receive){
   scheduleTimers();
   await render();
   var hasMon = (await readCollectors()).length > 0;
-  if(hasMon || cfg.tgOn) syncNow(false);   /* pull once on open */
+  if(hasMon) syncNow(false);   /* pull monitors once on open */
 })();
 </script>
 </body></html>

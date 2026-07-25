@@ -2558,7 +2558,7 @@
       "name": "Command Center",
       "emoji": "🛰️",
       "tagline": "Monitor all your systems, one view",
-      "description": "A private dashboard for everything you run. Your apps and systems each write a small ‘heartbeat’ — status, metrics, errors — into a shared on-device registry, and Command Center shows them all at a glance, live (green / amber / red). Systems that aren’t on this phone (a home server, a Raspberry Pi, a cron job) can optionally push heartbeats through a Telegram bot that the hub pulls in. Everything stays on your device by default; the Telegram transport is opt-in and clearly leaves your device. Your MyLLM assistant can read the very same registry to answer ‘how is everything doing?’.",
+      "description": "A private dashboard for everything you run. Give each system a URL that returns JSON — a small status endpoint in front of a database or service — and Command Center polls it and shows every system live (green / amber / red), turning the JSON into metrics; a system that's down goes red. On-device MyLLMos apps can also write their status directly. Ask the assistant to “monitor X at <url>” to add one from chat, or “how is everything doing?” for a summary. Everything runs on your device.",
       "tags": [
         "developer",
         "dashboard",
@@ -2567,13 +2567,13 @@
       ],
       "iconSymbol": "antenna.radiowaves.left.and.right",
       "iconColor": "blue",
-      "version": 2,
+      "version": 3,
       "featured": false,
       "requiresAI": false,
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/command-center.jpg",
       "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/command-center.html",
       "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/command-center.myllmapp",
-      "sizeKB": 25,
+      "sizeKB": 21,
       "category": "Developer"
     }
   ]
