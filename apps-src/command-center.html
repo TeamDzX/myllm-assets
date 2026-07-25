@@ -67,11 +67,24 @@
   pre{ background:var(--myllm-bg,#f2f2f7); border-radius:10px; padding:11px; font-size:11.5px; overflow-x:auto;
     font-family:ui-monospace,Menlo,monospace; white-space:pre-wrap; word-break:break-word; margin-top:6px; }
   .status-line{ font-size:12.5px; color:var(--myllm-muted,#8a8a8e); margin-top:8px; min-height:16px; }
+  .mon{ display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid var(--myllm-border,#e5e5ea); }
+  .mon-i{ flex:1; min-width:0; }
+  .mon-i b{ display:block; font-size:14.5px; }
+  .mon-i span{ display:block; font-size:11.5px; color:var(--myllm-muted,#8a8a8e); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .mrm{ border:0; background:rgba(255,59,48,.12); color:#ff3b30; border-radius:9px; padding:6px 11px; font-size:12.5px; font-weight:650; }
 </style></head>
 <body>
 
+<!-- Actions the MyLLM assistant can invoke from chat ("add my greenhouse at http://…"). -->
+<script type="application/myllm-actions">
+[{"name":"add-monitor",
+  "description":"Add a URL for Command Center to monitor on the systems dashboard. Use when the user wants MyLLM to keep an eye on a system/service/database that exposes an http(s) endpoint returning JSON.",
+  "parameters":{"name":"a short display name for the system","url":"the http(s) URL that returns the system's status as JSON"}}]
+</script>
+
 <div class="top">
   <h1>🛰️ Command Center</h1>
+  <button class="ib" onclick="openMonitors()" aria-label="Monitors">🌐</button>
   <button class="ib" onclick="openHelp()" aria-label="How to report">?</button>
   <button class="ib" onclick="syncNow(true)" aria-label="Sync">⟳</button>
   <button class="ib" onclick="openSettings()" aria-label="Settings">⚙</button>
@@ -96,6 +109,31 @@
   </div>
 </div>
 
+<!-- Monitors sheet — the URL collectors -->
+<div class="sheet" id="monitors">
+  <div class="sheetcard">
+    <div class="sheethead"><h2>Monitors</h2><button class="x" onclick="closeSheet('monitors')">✕</button></div>
+    <p style="font-size:13px; line-height:1.5; color:var(--myllm-muted,#8a8a8e)">
+      Each monitor is a URL Command Center polls. It should return JSON — e.g. a small status
+      endpoint in front of a database or service. Top-level numbers/text become metrics.</p>
+    <div id="monList" style="margin:10px 0"></div>
+
+    <label>Display name</label>
+    <input id="mName" type="text" autocomplete="off" placeholder="Greenhouse">
+    <label>URL (returns JSON)</label>
+    <input id="mUrl" type="text" autocomplete="off" placeholder="http://greenhouse.local/status">
+    <label>Metrics to show (optional, comma-separated keys)</label>
+    <input id="mMetrics" type="text" autocomplete="off" placeholder="humidity, temp">
+    <label>Auth header (optional, kept private to this app)</label>
+    <input id="mToken" type="text" autocomplete="off" placeholder="Bearer abc123">
+    <div class="btnrow" style="margin-top:14px; justify-content:flex-start">
+      <button class="btn" onclick="submitMonitor()">Add monitor</button>
+      <button class="btn sec" onclick="pollNow()">Poll now</button>
+    </div>
+    <div class="status-line" id="mStatus"></div>
+  </div>
+</div>
+
 <!-- Settings sheet -->
 <div class="sheet" id="settings">
   <div class="sheetcard">
@@ -105,6 +143,12 @@
     <select id="refreshSel" onchange="saveCfg()">
       <option value="3">3 seconds</option><option value="5" selected>5 seconds</option>
       <option value="15">15 seconds</option><option value="0">Manual only</option>
+    </select>
+
+    <label>Poll monitors (URLs) every</label>
+    <select id="collectSel" onchange="saveCfg()">
+      <option value="0" selected>Manual only</option><option value="60">1 minute</option>
+      <option value="300">5 minutes</option><option value="900">15 minutes</option>
     </select>
 
     <div class="note"><b>Telegram (optional transport).</b> Lets systems that aren't on this phone —
@@ -135,15 +179,20 @@
   <div class="sheetcard">
     <div class="sheethead"><h2>How systems report</h2><button class="x" onclick="closeSheet('help')">✕</button></div>
     <p style="font-size:13.5px; line-height:1.5; color:var(--myllm-muted,#8a8a8e)">
-      A system reports by writing one small JSON "heartbeat". The hub reads every heartbeat in the
-      shared registry and shows it below. Two ways in:</p>
+      Command Center shows one card per system. A system's state gets in three ways:</p>
 
-    <div class="note" style="margin-top:14px"><b>On this device</b> — another MyLLMos app writes straight
+    <div class="note" style="margin-top:14px"><b>1. Monitor a URL (the main way)</b> — in 🌐 Monitors, add a
+      URL that returns JSON. Command Center pulls it and turns the top-level fields into metrics. A database
+      or service just needs a small status endpoint in front of it, e.g. <code>GET /status → {"rows":1240,"errors":0}</code>.
+      You can also just ask MyLLM: <b>"monitor the greenhouse at http://…"</b>.</div>
+
+    <div class="note"><b>2. On this device</b> — another MyLLMos app writes straight
       to the shared file store (private, no network):</div>
     <pre id="exLocal"></pre>
 
-    <div class="note"><b>From anywhere</b> — an outside system (Pi, server, cron) posts one line to your
-      Telegram bot. The message must start with <b>MYLLM:</b> followed by the JSON:</div>
+    <div class="note"><b>3. Push over Telegram (optional)</b> — only for a system the phone can't reach.
+      A <b>user</b> account (not a bot) posts a line starting <b>MYLLM:</b> into a chat your reader bot is in.
+      Prefer option 1 where you can — it's simpler:</div>
     <pre id="exTg"></pre>
 
     <div class="note"><b>The heartbeat schema</b> (transport-agnostic — same shape however it arrives):
@@ -165,8 +214,8 @@ function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,
 
 var REG = "system/";                 /* registry folder in the shared store */
 var STALE_MS = 10*60*1000;           /* no heartbeat in 10 min → "stale" */
-var cfg = { refresh:5, tgOn:false, tgToken:"", tgChat:"", tgInt:0 };
-var refreshTimer=null, tgTimer=null;
+var cfg = { refresh:5, collectInt:0, tgOn:false, tgToken:"", tgChat:"", tgInt:0 };
+var refreshTimer=null, tgTimer=null, collectTimer=null;
 
 /* ---------- registry (the single source of truth, on-device) ---------- */
 async function readRegistry(){
@@ -177,6 +226,7 @@ async function readRegistry(){
   for(var i=0;i<list.length;i++){
     var p=list[i].path;
     if(p.indexOf(REG)!==0 || p.slice(-5)!=='.json') continue;
+    if(p.charAt(REG.length)==='_') continue;   /* config files like _collectors.json aren't heartbeats */
     try{
       var t=await files.read(p); if(!t) continue;
       var o=JSON.parse(t);
@@ -227,6 +277,79 @@ async function render(){
   }).join('');
 }
 
+/* ---------- collectors: URLs the hub polls (the main intake) ----------
+   Config lives in the SHARED store (system/_collectors.json) so the MyLLM
+   assistant can add a monitor too; auth tokens stay PRIVATE (per-app storage). */
+var COLLECTORS = "system/_collectors.json";
+async function readCollectors(){ try{ return JSON.parse((files && await files.read(COLLECTORS))||'[]'); }catch(e){ return []; } }
+async function writeCollectors(list){ if(files) await files.write(COLLECTORS, JSON.stringify(list)); }
+async function authMap(){ try{ return JSON.parse(await store.getItem('cc_auth')||'{}'); }catch(e){ return {}; } }
+
+/* Poll one URL → write a heartbeat. Failure becomes an "error" heartbeat so the
+   card turns red rather than silently vanishing. */
+async function collectOne(c){
+  var headers = {};
+  var auth = await authMap(); if(auth[c.id]) headers.Authorization = auth[c.id];
+  try{
+    if(!window.myllmFetch) throw new Error("internet is off for apps");
+    var r = await myllmFetch(c.url, { headers: headers });
+    if(!r.ok) throw new Error("HTTP "+r.status);
+    var data = JSON.parse(r.body);
+    var metrics = {};
+    var keys = (c.metrics && c.metrics.length) ? c.metrics
+      : Object.keys(data).filter(function(k){ var t=typeof data[k]; return t==='number'||t==='string'||t==='boolean'; }).slice(0,8);
+    keys.forEach(function(k){ if(k in data) metrics[k]=data[k]; });
+    var st = data.status; st = (st==='warn'||st==='error'||st==='ok') ? st : 'ok';
+    await writeHeartbeat({ id:c.id, name:c.name||c.id, status:st, metrics:metrics, errors:(data.errors||[]), source:'url' });
+    return true;
+  }catch(e){
+    await writeHeartbeat({ id:c.id, name:c.name||c.id, status:'error', metrics:{}, errors:[String(e.message||e)], source:'url' });
+    return false;
+  }
+}
+async function collectAll(){ var list=await readCollectors(); for(var i=0;i<list.length;i++){ await collectOne(list[i]); } return list.length; }
+
+/* Add a monitor — used by the UI AND by the assistant's add-monitor action. */
+async function addMonitor(name, url, metrics, token){
+  url = String(url||'').trim();
+  if(!/^https?:\/\//i.test(url)) throw new Error("URL must start with http:// or https://");
+  name = String(name||'').trim() || url;
+  var id = (name.toLowerCase().replace(/[^a-z0-9_-]+/g,'-').replace(/^-+|-+$/g,'').slice(0,40)) || ('mon-'+Date.now());
+  var list = (await readCollectors()).filter(function(c){ return c.id!==id; });
+  var c = { id:id, name:name, url:url };
+  if(metrics && metrics.length) c.metrics = metrics;
+  list.push(c);
+  await writeCollectors(list);
+  if(token){ var a=await authMap(); a[id]=token; await store.setItem('cc_auth', JSON.stringify(a)); }
+  await collectOne(c);   /* immediate first reading */
+  return id;
+}
+async function removeMonitor(id){
+  await writeCollectors((await readCollectors()).filter(function(c){ return c.id!==id; }));
+  try{ if(files) await files.remove(REG+id+".json"); }catch(e){}   /* drop its card */
+}
+
+async function renderMonitors(){
+  var list = await readCollectors();
+  el('monList').innerHTML = list.length ? list.map(function(c){
+    return '<div class="mon"><div class="mon-i"><b>'+esc(c.name)+'</b><span>'+esc(c.url)+'</span></div>'
+      + '<button class="mrm" onclick="removeMon(\''+c.id+'\')">Remove</button></div>';
+  }).join('') : '<p class="note">No monitors yet. Add a URL below that returns JSON — e.g. a small status endpoint in front of your database or service. The assistant can add one too: just ask MyLLM to "monitor &lt;name&gt; at &lt;url&gt;".</p>';
+}
+async function openMonitors(){ await renderMonitors(); el('monitors').classList.add('show'); }
+async function submitMonitor(){
+  var metrics = el('mMetrics').value.split(',').map(function(s){return s.trim();}).filter(Boolean);
+  el('mStatus').textContent='Adding…';
+  try{
+    await addMonitor(el('mName').value, el('mUrl').value, metrics, el('mToken').value.trim());
+    el('mName').value=el('mUrl').value=el('mMetrics').value=el('mToken').value='';
+    el('mStatus').textContent='Added and polled once.'; haptic('success');
+    await renderMonitors(); await render();
+  }catch(e){ el('mStatus').textContent='✗ '+e.message; haptic('error'); }
+}
+function removeMon(id){ removeMonitor(id).then(function(){ renderMonitors(); render(); haptic('selection'); }); }
+async function pollNow(){ el('mStatus').textContent='Polling…'; var n=await collectAll(); el('mStatus').textContent='Polled '+n+' monitor(s).'; await render(); }
+
 /* ---------- Telegram transport (optional pipe) ---------- */
 function tgUrl(method){ return 'https://api.telegram.org/bot'+cfg.tgToken.trim()+'/'+method; }
 
@@ -271,9 +394,10 @@ async function testTelegram(){
 async function syncNow(user){
   haptic('light');
   var msg='';
+  try{ var n=await collectAll(); if(n) msg += n+' monitor'+(n>1?'s':'')+' polled · '; }catch(e){ msg+='monitors: '+e.message+' · '; }
   try{
-    if(cfg.tgOn){ var res=await syncTelegram(); msg = res.added? (res.added+' update'+(res.added>1?'s':'')+' from Telegram · '):''; }
-  }catch(e){ msg='Telegram: '+e.message+' · '; }
+    if(cfg.tgOn){ var res=await syncTelegram(); if(res.added) msg += res.added+' from Telegram · '; }
+  }catch(e){ msg+='Telegram: '+e.message+' · '; }
   await render();
   el('synced').textContent = msg + 'updated '+new Date().toLocaleTimeString();
 }
@@ -289,11 +413,13 @@ async function writeDemo(){
 /* ---------- settings persistence ---------- */
 async function loadCfg(){
   try{ var c=JSON.parse(await store.getItem('cc_cfg')||'{}'); Object.assign(cfg,c); }catch(e){}
-  el('refreshSel').value=String(cfg.refresh); el('tgOn').checked=!!cfg.tgOn;
+  el('refreshSel').value=String(cfg.refresh); el('collectSel').value=String(cfg.collectInt||0);
+  el('tgOn').checked=!!cfg.tgOn;
   el('tgToken').value=cfg.tgToken||''; el('tgChat').value=cfg.tgChat||''; el('tgInt').value=String(cfg.tgInt||0);
 }
 function saveCfg(){
-  cfg.refresh=parseInt(el('refreshSel').value,10); cfg.tgOn=el('tgOn').checked;
+  cfg.refresh=parseInt(el('refreshSel').value,10); cfg.collectInt=parseInt(el('collectSel').value,10);
+  cfg.tgOn=el('tgOn').checked;
   cfg.tgToken=el('tgToken').value; cfg.tgChat=el('tgChat').value; cfg.tgInt=parseInt(el('tgInt').value,10);
   store.setItem('cc_cfg', JSON.stringify(cfg));
   scheduleTimers();
@@ -301,6 +427,8 @@ function saveCfg(){
 function scheduleTimers(){
   if(refreshTimer) clearInterval(refreshTimer); refreshTimer=null;
   if(cfg.refresh>0) refreshTimer=setInterval(render, cfg.refresh*1000);
+  if(collectTimer) clearInterval(collectTimer); collectTimer=null;
+  if(cfg.collectInt>0) collectTimer=setInterval(function(){ collectAll().then(render); }, cfg.collectInt*1000);
   if(tgTimer) clearInterval(tgTimer); tgTimer=null;
   if(cfg.tgOn && cfg.tgInt>0) tgTimer=setInterval(function(){ syncNow(false); }, cfg.tgInt*1000);
 }
@@ -320,11 +448,23 @@ el('exTg').textContent =
 '    "metrics":{"humidity":62,"temp":24}}\'';
 
 /* ---------- boot ---------- */
+/* The assistant can add a monitor from chat via the add-monitor action. */
+if(window.myllmIntent && myllmIntent.receive){
+  myllmIntent.receive(function(intent){
+    if(intent && intent.action==='add-monitor' && intent.data && intent.data.url){
+      addMonitor(intent.data.name, intent.data.url).then(function(){
+        renderMonitors(); render(); openMonitors();
+      }).catch(function(){});
+    }
+  });
+}
+
 (async function(){
   await loadCfg();
   scheduleTimers();
   await render();
-  if(cfg.tgOn) syncNow(false);
+  var hasMon = (await readCollectors()).length > 0;
+  if(hasMon || cfg.tgOn) syncNow(false);   /* pull once on open */
 })();
 </script>
 </body></html>

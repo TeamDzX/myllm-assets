@@ -22,6 +22,22 @@ shared file store. Transport-agnostic — the same shape however it arrives.
 The reader stamps `ts` (arrival time). No heartbeat for 10 minutes → shown as
 **stale**. Everything stays on the device unless a transport (below) is enabled.
 
+## Monitor a URL (the main way — Command Center pulls it)
+
+Most systems just expose their state at an HTTP endpoint that returns JSON; a
+database or service needs only a small read-only status endpoint in front of it:
+
+```
+GET http://your-server/status  →  {"status":"ok","rows":1240,"errors":0}
+```
+
+Add it in Command Center → 🌐 Monitors (name + URL; optional metric keys and a
+private auth header). It polls the URL and writes the heartbeat for you — top-level
+numbers/text become metrics. **Or just ask the assistant:** *"monitor the greenhouse
+at http://greenhouse.local/status"* (the `add-monitor` action). The monitor list
+lives in the shared store (`system/_collectors.json`) so the assistant can add to it;
+auth tokens stay private to the app.
+
 ## Reporting from a MyLLMos app (on-device, private)
 
 Two lines — write straight to the shared store:
