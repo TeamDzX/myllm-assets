@@ -21,7 +21,7 @@ CATALOG = json.load(open(_CAT))
 CAT_BY_ID = {d["id"]: d for d in CATALOG}
 
 TEMPLATE = r"""<!doctype html><html lang="__CODE__"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Learn __NAME__</title>
+<title>__TITLE__</title>
 <style>:root{color-scheme:light dark;--ac:__ACCENT__;--ac2:__ACCENT2__}
 *{box-sizing:border-box}
 body{font-family:-apple-system,system-ui,sans-serif;margin:0;padding:0 0 96px;background:#f2f2f7;color:#111;-webkit-tap-highlight-color:transparent}
@@ -95,7 +95,7 @@ window.myllmAsk=function(){show();var p;try{p=orig.apply(this,arguments);}catch(
 return Promise.resolve(p).then(function(r){hide();return r;},function(e){hide();throw e;});};})();
 </script>
 
-<header><img class="fl" src="__EMBLEM__" alt=""><div><h1>Learn __NAME__</h1><div class="nv">__NATIVE__ · picture flashcards</div></div></header>
+<header><img class="fl" src="__EMBLEM__" alt=""><div><h1>__TITLE__</h1><div class="nv">__SUBTITLE__</div></div></header>
 
 <div class="wrap">
   <!-- FLASHCARDS -->
@@ -308,6 +308,10 @@ GRAMMAR_PRESETS = ["Articles & gender","Present tense","Plurals","Adjective agre
 def build(langfile):
     lp = json.load(open(langfile))
     code = lp["code"]
+    # Optional branding overrides (default to the plain "Learn <Name>" app).
+    title = lp.get("appName", "Learn " + lp["name"])
+    subtitle = lp.get("subtitle", lp["native"] + " · picture flashcards")
+    slug = lp.get("slug", "learn-" + lp["name"].lower())
     decks = []
     for deck_id, words in lp["decks"].items():
         meta = CAT_BY_ID[deck_id]
@@ -328,6 +332,8 @@ def build(langfile):
 
     html = (TEMPLATE
             .replace("__CODE__", code)
+            .replace("__TITLE__", title)
+            .replace("__SUBTITLE__", subtitle)
             .replace("__NAME__", lp["name"])
             .replace("__NATIVE__", lp["native"])
             .replace("__EMBLEM__", emblem)
@@ -338,26 +344,27 @@ def build(langfile):
             .replace("__STARTERP_JSON__", json.dumps(lp["starterPhrases"], ensure_ascii=False))
             .replace("__STARTERG_JSON__", json.dumps(lp["starterGrammar"], ensure_ascii=False)))
 
-    slug = "learn-" + lp["name"].lower()
     open(os.path.join(HERE, "apps-src", slug + ".html"), "w").write(html)
+    icon_symbol = lp.get("iconSymbol", "character.bubble.fill")
     # Full .myllmapp bundle schema so a standalone import (no manifest) still gets its icon.
-    json.dump({"name": "Learn " + lp["name"], "kind": "html",
-               "iconSymbol": "character.bubble.fill", "iconColor": lp["iconColor"], "html": html},
+    json.dump({"name": title, "kind": "html",
+               "iconSymbol": icon_symbol, "iconColor": lp["iconColor"], "html": html},
               open(os.path.join(HERE, "apps-src", slug + ".myllmapp"), "w"), ensure_ascii=False)
 
     ncards = sum(len(d["cards"]) for d in decks)
+    default_desc = ("Learn " + lp["name"] + " with illustrated picture flashcards across "
+                    + str(len(decks)) + " everyday topics (" + str(ncards) + " words, each with a photo) — "
+                    "browse and search the vocabulary, learn from built-in starter phrase packs "
+                    "(greetings, eating out, getting around) and grammar basics, then use your own "
+                    "on-device AI to generate phrase lessons on any topic and explain any grammar point. "
+                    "Everything except the AI tutor works offline; AI generation needs the latest MyLLM "
+                    "with “Allow apps to use the AI” enabled in Settings.")
     entry = {
-        "id": slug, "name": "Learn " + lp["name"], "emoji": lp["flag"],
-        "tagline": "Picture flashcards + AI tutor",
-        "description": ("Learn " + lp["name"] + " with illustrated picture flashcards across "
-                        + str(len(decks)) + " everyday topics (" + str(ncards) + " words, each with a photo) — "
-                        "browse and search the vocabulary, learn from built-in starter phrase packs "
-                        "(greetings, eating out, getting around) and grammar basics, then use your own "
-                        "on-device AI to generate phrase lessons on any topic and explain any grammar point. "
-                        "Everything except the AI tutor works offline; AI generation needs the latest MyLLM "
-                        "with “Allow apps to use the AI” enabled in Settings."),
-        "tags": ["learning", "AI-powered", "offline"],
-        "iconSymbol": "character.bubble.fill", "iconColor": lp["iconColor"],
+        "id": slug, "name": title, "emoji": lp["flag"],
+        "tagline": lp.get("tagline", "Picture flashcards + AI tutor"),
+        "description": lp.get("description", default_desc),
+        "tags": lp.get("tags", ["learning", "AI-powered", "offline"]),
+        "iconSymbol": icon_symbol, "iconColor": lp["iconColor"],
         "version": 1, "featured": False, "requiresAI": False,
         "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/" + slug + ".jpg",
         "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/" + slug + ".html",
