@@ -41,6 +41,8 @@ input[type=range]{width:100%;accent-color:var(--accent)}
 @keyframes sp{to{transform:rotate(360deg)}}
 .recdot{display:inline-block;width:9px;height:9px;border-radius:50%;background:#ff3b30;margin-right:5px;animation:bl 1s steps(2) infinite}
 @keyframes bl{50%{opacity:.2}}
+#vrec{position:fixed;top:calc(14px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);z-index:60;display:none;align-items:center;gap:2px;background:rgba(20,10,30,.92);color:#fff;padding:8px 15px;border-radius:999px;font-size:13px;font-weight:700;letter-spacing:.04em;box-shadow:0 6px 20px rgba(0,0,0,.45)}
+#vrec.show{display:flex}
 </style>
 </head>
 <body>
@@ -62,7 +64,14 @@ input[type=range]{width:100%;accent-color:var(--accent)}
     <button id="saveBtn">📷 Save image</button>
     <button id="gifBtn">🎞️ Save GIF</button>
   </div>
+  <label id="clipLbl" style="display:none">🎬 Record a clip to share</label>
+  <div class="actions2" id="videoRow" style="display:none">
+    <button data-s="5">5 sec</button>
+    <button data-s="10">10 sec</button>
+    <button data-s="15">15 sec</button>
+  </div>
 </div>
+<div id="vrec"><span class="recdot"></span>REC <span id="vrecT"></span></div>
 <div id="toast"></div>
 <div id="ov"><div class="spin"></div><div id="ovT">Saving GIF…</div></div>
 <script>
@@ -911,7 +920,7 @@ var PALETTES=[
   ["#02140a","#38b000","#9ef01a","#ccff33","#eafff0"],
   ["#0a0016","#7b2cbf","#c77dff","#e0aaff","#48cae4"]
 ];
-var MODES=["Flow","Swarm","Bloom"];
+var MODES=["Flow","Swarm","Bloom","Vortex","Ripple","Orbit"];
 var state={mode:0,pal:0,density:55,speed:45,trail:55,stroke:28};
 var parts=[],touch=null,paused=false,raf=null,tt=0,sym=8;
 function rnd(){return Math.random()}
@@ -942,20 +951,31 @@ function step(){
   var sp=0.8+state.speed/100*4,turb=state.density/100;
   for(var i=0;i<parts.length;i++){
     var p=parts[i];p.px=p.x;p.py=p.y;
+    var cx0=W/2,cy0=H/2;if(touch){cx0=touch.x;cy0=touch.y}
     if(state.mode===0){ // Flow
       var a=field(p.x,p.y,tt)*Math.PI;
       p.vx=p.vx*0.8+Math.cos(a)*sp;p.vy=p.vy*0.8+Math.sin(a)*sp;
     }else if(state.mode===1){ // Swarm
-      var ax=W/2,ay=H/2;
-      if(touch){ax=touch.x;ay=touch.y}
-      var dx=ax-p.x,dy=ay-p.y,d=Math.sqrt(dx*dx+dy*dy)+0.01;
+      var dx=cx0-p.x,dy=cy0-p.y,d=Math.sqrt(dx*dx+dy*dy)+0.01;
       p.vx=p.vx*0.92+(dx/d)*sp*0.5+(rnd()-0.5)*sp*1.4;
       p.vy=p.vy*0.92+(dy/d)*sp*0.5+(rnd()-0.5)*sp*1.4;
-    }else{ // Bloom: outward radial
+    }else if(state.mode===2){ // Bloom: outward radial (drawn symmetric below)
       p.ang=(p.ang||0)+(rnd()-0.5)*0.04*turb;
       p.vx=Math.cos(p.ang)*(p.spd||1)*sp*0.5;p.vy=Math.sin(p.ang)*(p.spd||1)*sp*0.5;
+    }else if(state.mode===3){ // Vortex: swirl around the centre
+      var vdx=p.x-cx0,vdy=p.y-cy0,vd=Math.sqrt(vdx*vdx+vdy*vdy)+0.01;
+      p.vx=p.vx*0.9+(-vdy/vd)*sp-(vdx/vd)*sp*0.12;
+      p.vy=p.vy*0.9+(vdx/vd)*sp-(vdy/vd)*sp*0.12;
+    }else if(state.mode===4){ // Ripple: travelling radial waves
+      var wdx=p.x-cx0,wdy=p.y-cy0,wd=Math.sqrt(wdx*wdx+wdy*wdy)+0.01,wv=Math.sin(wd*0.05-tt*4);
+      p.vx=p.vx*0.86+(wdx/wd)*wv*sp*0.9;
+      p.vy=p.vy*0.86+(wdy/wd)*wv*sp*0.9;
+    }else{ // Orbit: particles circle at their own radius
+      var odx=p.x-cx0,ody=p.y-cy0,od=Math.sqrt(odx*odx+ody*ody)+0.01,kk=sp*20/(od+40);
+      p.vx=p.vx*0.9+(-ody/od)*kk+(odx/od)*(1-od/380)*sp*0.15;
+      p.vy=p.vy*0.9+(odx/od)*kk+(ody/od)*(1-od/380)*sp*0.15;
     }
-    if(touch&&state.mode!==1){var tdx=touch.x-p.x,tdy=touch.y-p.y,td=Math.sqrt(tdx*tdx+tdy*tdy)+1;if(td<160){p.vx+=tdx/td*sp;p.vy+=tdy/td*sp}}
+    if(touch&&(state.mode===0||state.mode===2)){var tdx=touch.x-p.x,tdy=touch.y-p.y,td=Math.sqrt(tdx*tdx+tdy*tdy)+1;if(td<160){p.vx+=tdx/td*sp;p.vy+=tdy/td*sp}}
     p.x+=p.vx;p.y+=p.vy;p.life--;
     var off=p.x<0||p.x>W||p.y<0||p.y>H||p.life<0;
     if(state.mode===2){
@@ -1014,6 +1034,45 @@ document.getElementById('gifBtn').onclick=function(){
   frames=[];tick=0;recording=true;haptic('medium');
   this.innerHTML='<span class="recdot"></span>Recording…';toast('Recording ~2 seconds…');
 };
+
+// ---- video clip recording (5/10/15s) → share as an mp4 via myllmShareFile ----
+var vidRec=false;
+function pickVideoMime(){var c=['video/mp4;codecs=avc1','video/mp4','video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm'];for(var i=0;i<c.length;i++){try{if(MediaRecorder.isTypeSupported(c[i]))return c[i]}catch(e){}}return ''}
+function videoSupported(){try{return !!(cv.captureStream&&typeof MediaRecorder!=='undefined'&&pickVideoMime())}catch(e){return false}}
+function setVid(on){vidRec=on;document.getElementById('vrec').classList.toggle('show',on);
+  var bs=document.querySelectorAll('#videoRow button');for(var i=0;i<bs.length;i++)bs[i].disabled=on;}
+function fmtT(s){return '0:'+(s<10?'0':'')+s}
+function recordVideo(secs){
+  if(vidRec||recording)return;
+  if(!window.myllmShareFile){toast('Sharing clips needs the latest MyLLM');return}
+  if(paused)togglePlay();
+  var mime=pickVideoMime(),strm;
+  try{strm=cv.captureStream(30)}catch(e){toast('Video capture isn’t available here');return}
+  var chunksV=[],mr;
+  try{mr=mime?new MediaRecorder(strm,{mimeType:mime,videoBitsPerSecond:2600000}):new MediaRecorder(strm)}catch(e){toast('Recorder unavailable');return}
+  mr.ondataavailable=function(e){if(e.data&&e.data.size)chunksV.push(e.data)};
+  mr.onstop=function(){
+    strm.getTracks().forEach(function(t){t.stop()});
+    var m=(mr.mimeType||mime||'video/mp4').split(';')[0];
+    document.getElementById('ovT').textContent='Preparing clip…';document.getElementById('ov').classList.add('show');
+    var fr=new FileReader();
+    fr.onload=function(){
+      document.getElementById('ov').classList.remove('show');
+      myllmShareFile(fr.result,{filename:'Art Studio clip',mime:m})
+        .then(function(){toast('Clip ready — choose where to send it')})
+        .catch(function(){toast('Couldn’t share the clip')});
+    };
+    fr.onerror=function(){document.getElementById('ov').classList.remove('show');toast('Couldn’t prepare the clip')};
+    fr.readAsDataURL(new Blob(chunksV,{type:m}));
+  };
+  setVid(true);haptic('medium');mr.start();
+  var left=secs;document.getElementById('vrecT').textContent=fmtT(left);
+  var iv=setInterval(function(){left=Math.max(0,left-1);document.getElementById('vrecT').textContent=fmtT(left);},1000);
+  setTimeout(function(){clearInterval(iv);try{mr.stop()}catch(e){}setVid(false);},secs*1000);
+}
+(function(){var bs=document.querySelectorAll('#videoRow button');for(var i=0;i<bs.length;i++){(function(b){b.onclick=function(){recordVideo(+b.getAttribute('data-s'))}})(bs[i]);}
+  if(videoSupported()&&window.myllmShareFile){document.getElementById('videoRow').style.display='';document.getElementById('clipLbl').style.display='';}
+})();
 
 // ---- UI ----
 function buildModes(){var m=document.getElementById('modes');m.innerHTML='';MODES.forEach(function(name,i){var b=document.createElement('button');b.className='chip'+(i===state.mode?' on':'');b.textContent=name;b.onclick=function(){state.mode=i;haptic('selection');buildModes();reseed();clearCanvas();save()};m.appendChild(b)})}
