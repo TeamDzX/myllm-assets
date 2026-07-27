@@ -1,25 +1,117 @@
-<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<style>:root{color-scheme:light dark}
-body{font-family:-apple-system,system-ui,sans-serif;margin:0;padding:20px;background:#f2f2f7;color:#111}
-@media(prefers-color-scheme:dark){body{background:#000;color:#eee}.panel,.deck{background:#1c1c1e}input{background:#2c2c2e;color:#eee;border-color:#3a3a3c}.nav button{background:#2c2c2e;color:#eee}}
-h1{font-size:22px;margin:0 0 14px}
-.row{display:flex;gap:8px;margin-bottom:10px}
-input{flex:1;padding:12px;border:1px solid #d1d1d6;border-radius:10px;font-size:16px;background:#fff}
-button{border:0;background:#5e5ce6;color:#fff;border-radius:10px;padding:0 16px;font-size:15px;font-weight:600}
-button:disabled{opacity:.5}
-#status{font-size:13px;opacity:.65;min-height:18px;margin-bottom:10px}
-.panel{background:#fff;border-radius:16px;padding:22px 18px;min-height:150px;display:none;flex-direction:column;justify-content:center;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.1)}
-.panel .side{font-size:11px;letter-spacing:.08em;text-transform:uppercase;opacity:.5;margin-bottom:8px}
-.panel .text{font-size:18px;line-height:1.45}
-.panel .hint{font-size:12px;opacity:.4;margin-top:12px}
-.nav{display:none;align-items:center;justify-content:space-between;margin-top:10px}
-.nav button{background:#e5e5ea;color:#111;padding:9px 18px}
-.nav b{font-size:14px;opacity:.7}
-h2{font-size:15px;margin:20px 0 8px;opacity:.7}
-.deck{background:#fff;border-radius:12px;padding:11px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px}
-.deck span{flex:1;font-size:15px}
-.deck .n{opacity:.5;font-size:13px}
-.deck .del{background:none;color:#ff453a;font-size:16px;padding:4px}
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Flashcard Forge</title>
+<style>
+:root{
+  color-scheme:light dark;
+  --font:var(--myllm-font,-apple-system,system-ui,"Segoe UI",Roboto,sans-serif);
+  --page1:#eef1f8; --page2:#eef6ff;
+  --surface:#ffffff; --surface2:#f3f4fa;
+  --ink:#191c28; --muted:#697083; --faint:#a2a8b8;
+  --border:#e7e9f1;
+  --acc:#635bff; --acc2:#22a7f0; --accSoft:rgba(99,91,255,.12);
+  --radius:16px; --radiusLg:22px;
+  --shadow:0 1px 2px rgba(20,20,50,.05),0 8px 22px -14px rgba(30,40,110,.28);
+  --shadowLg:0 16px 44px -16px rgba(40,50,150,.5);
+}
+@media(prefers-color-scheme:dark){:root{
+  --page1:#0b0d13; --page2:#0d1220;
+  --surface:#181b24; --surface2:#20232f;
+  --ink:#f1f2f7; --muted:#9aa0af; --faint:#666d7d;
+  --border:#282c39; --accSoft:rgba(99,91,255,.22);
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 28px -14px rgba(0,0,0,.7);
+  --shadowLg:0 18px 48px -16px rgba(0,0,0,.85);
+}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:var(--font);margin:0;padding:18px 16px calc(34px + env(safe-area-inset-bottom));
+  background:linear-gradient(180deg,var(--page1),var(--page2));background-attachment:fixed;
+  min-height:100dvh;color:var(--ink);line-height:1.4}
+@media(min-width:768px){body{max-width:720px;margin:0 auto}}
+
+.hero{position:relative;overflow:hidden;border-radius:var(--radiusLg);padding:20px;margin-bottom:16px;
+  background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;box-shadow:var(--shadowLg);
+  display:flex;align-items:center;gap:14px}
+.hero::after{content:"";position:absolute;right:-46px;top:-46px;width:170px;height:170px;border-radius:50%;
+  background:radial-gradient(circle,rgba(255,255,255,.28),transparent 70%);pointer-events:none}
+.hero-badge{width:52px;height:52px;border-radius:16px;background:rgba(255,255,255,.22);
+  display:grid;place-items:center;font-size:28px;flex:0 0 auto}
+.hero h1{font-size:22px;font-weight:800;letter-spacing:-.02em;margin:0}
+.hero p{margin:3px 0 0;font-size:13px;opacity:.92;font-weight:500}
+
+.surface{background:var(--surface);border:1px solid var(--border);border-radius:var(--radiusLg);
+  padding:16px;box-shadow:var(--shadow);margin-bottom:16px}
+.field{display:flex;align-items:center;gap:10px;background:var(--surface2);border:1px solid var(--border);
+  border-radius:13px;padding:0 13px;margin-bottom:10px}
+.field-ic{font-size:16px;opacity:.7;flex:0 0 auto}
+.field input{flex:1;border:0;background:none;padding:13px 0;font-size:16px;color:var(--ink);
+  outline:none;min-width:0;font-family:var(--font)}
+.field input::placeholder{color:var(--faint)}
+.btn-primary{width:100%;border:0;border-radius:14px;padding:14px;font-size:15px;font-weight:700;color:#fff;
+  font-family:var(--font);background:linear-gradient(135deg,var(--acc),var(--acc2));
+  box-shadow:0 8px 20px -8px var(--acc);cursor:pointer;transition:transform .1s,opacity .2s}
+.btn-primary:active{transform:scale(.98)}
+.btn-primary:disabled{opacity:.5;box-shadow:none}
+.chips{display:flex;flex-wrap:wrap;gap:7px;margin:2px 0 12px}
+.chip{border:1px solid var(--border);background:var(--surface);color:var(--muted);border-radius:999px;
+  padding:7px 12px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font);transition:.15s}
+.chip.on{color:var(--acc);border-color:var(--acc);background:var(--accSoft)}
+.status{font-size:13px;color:var(--muted);min-height:18px;margin-top:9px;text-align:center}
+
+/* active-deck header — makes it obvious what you're studying */
+.deck-head{display:flex;align-items:center;gap:12px;margin:2px 2px 14px}
+.deck-head .badge{width:44px;height:44px;border-radius:13px;flex:0 0 auto;display:grid;place-items:center;font-size:22px;
+  color:#fff;background:linear-gradient(135deg,var(--acc),var(--acc2));box-shadow:0 6px 16px -8px var(--acc)}
+.deck-head .dt{font-size:18px;font-weight:750;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.deck-head .dm{font-size:13px;color:var(--muted);margin-top:1px}
+
+/* flip card */
+#study{display:none}
+.card{perspective:1400px;cursor:pointer;margin-bottom:13px}
+.card-inner{position:relative;height:216px;transition:transform .55s cubic-bezier(.2,.75,.2,1);transform-style:preserve-3d}
+.card-inner.flipped{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;
+  border-radius:var(--radiusLg);padding:26px 22px;overflow-y:auto}
+.face.front{background:var(--surface);border:1px solid var(--border);box-shadow:var(--shadowLg)}
+.face.back{background:linear-gradient(150deg,var(--acc),var(--acc2));color:#fff;transform:rotateY(180deg);box-shadow:var(--shadowLg)}
+.face-label{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;opacity:.5;margin-bottom:12px}
+.face.back .face-label{opacity:.85}
+.face-text{font-size:19px;line-height:1.45;font-weight:600}
+.face-tip{position:absolute;bottom:11px;left:0;right:0;font-size:11px;opacity:.4;font-weight:500}
+
+.dots{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin:0 0 14px}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--border);transition:.2s}
+.dot.on{background:var(--acc);transform:scale(1.35)}
+.nav{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:6px}
+.nav button{background:var(--surface);border:1px solid var(--border);color:var(--ink);border-radius:12px;
+  padding:11px 18px;font-weight:650;font-size:14px;cursor:pointer;font-family:var(--font);transition:transform .1s}
+.nav button:active{transform:scale(.97)}
+.nav .count{font-size:13px;color:var(--muted);font-weight:600}
+
+/* saved decks */
+.section{font-size:12px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin:16px 2px 10px}
+.deck{display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--border);
+  border-radius:14px;padding:11px 13px;margin-bottom:8px;box-shadow:var(--shadow);cursor:pointer;transition:border-color .2s,background .2s}
+.deck.on{border-color:var(--acc);background:var(--accSoft)}
+.deck-ic{width:34px;height:34px;border-radius:10px;flex:0 0 auto;display:grid;place-items:center;font-size:17px;
+  background:var(--surface2);border:1px solid var(--border)}
+.deck.on .deck-ic{background:linear-gradient(135deg,var(--acc),var(--acc2));border-color:transparent}
+.deck-mid{flex:1;min-width:0}
+.deck-t{font-size:15px;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.deck-s{font-size:12.5px;color:var(--muted);margin-top:1px;display:flex;align-items:center;gap:7px}
+.now{font-size:10px;font-weight:800;color:#fff;background:var(--acc);border-radius:999px;padding:2px 7px;letter-spacing:.03em;text-transform:uppercase}
+.del{border:0;background:none;color:var(--faint);font-size:15px;padding:6px;cursor:pointer;flex:0 0 auto}
+.del:active{color:#ff453a}
+
+.empty{display:none;text-align:center;padding:30px 20px 10px;color:var(--muted)}
+.empty-emoji{font-size:44px;line-height:1}
+.empty h3{margin:12px 0 5px;font-size:17px;color:var(--ink);font-weight:700}
+.empty p{margin:0 auto;font-size:13.5px;line-height:1.5;max-width:280px}
+
+@media(prefers-reduced-motion:no-preference){
+  .hero,.surface{animation:rise .45s ease backwards}
+  @keyframes rise{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:none}}
+}
+@media(prefers-reduced-motion:reduce){.card-inner{transition:none}}
 </style></head><body>
 <style>
 @keyframes myllmAiSpin{to{transform:rotate(360deg)}}
@@ -27,7 +119,6 @@ h2{font-size:15px;margin:20px 0 8px;opacity:.7}
 .myllm-ai-busy.on{opacity:1;transform:translateX(-50%) translateY(0)}
 .myllm-ai-cog{font-size:18px;line-height:1;animation:myllmAiSpin 2.4s linear infinite;filter:drop-shadow(0 0 5px rgba(124,92,255,.85))}
 .myllm-ai-busy small{font-weight:400;opacity:.6}
-@media(min-width:768px){body{max-width:760px;margin-left:auto;margin-right:auto}}
 </style>
 <script>
 (function(){
@@ -35,7 +126,7 @@ h2{font-size:15px;margin:20px 0 8px;opacity:.7}
   window.__myllmAiWrap=true;
   var orig=window.myllmAsk,depth=0,node=null;
   function ensure(){if(node)return;node=document.createElement('div');node.className='myllm-ai-busy';
-    node.innerHTML='<span class="myllm-ai-cog">\u2699\uFE0F</span><span>AI is thinking\u2026 <small>privately, on your device</small></span>';
+    node.innerHTML='<span class="myllm-ai-cog">⚙️</span><span>AI is thinking… <small>privately, on your device</small></span>';
     (document.body||document.documentElement).appendChild(node);}
   function show(){ensure();depth++;node.classList.add('on');}
   function hide(){depth=Math.max(0,depth-1);if(depth===0&&node)node.classList.remove('on');}
@@ -44,61 +135,153 @@ h2{font-size:15px;margin:20px 0 8px;opacity:.7}
 })();
 </script>
 
-<h1>🧠 Flashcard Forge</h1>
-<div class="row"><input id="topic" placeholder="Topic (e.g. The Tudors, photosynthesis)…"><button id="gen" onclick="gen()">Forge</button></div>
-<div id="status"></div>
-<div class="panel" id="card" onclick="flip()">
-<div class="side" id="side"></div><div class="text" id="text"></div><div class="hint">tap to flip</div>
+<div class="hero">
+  <div class="hero-badge">🧠</div>
+  <div><h1>Flashcard Forge</h1><p>Turn any topic into a study deck in seconds.</p></div>
 </div>
-<div class="nav" id="nav"><button onclick="nav(-1)">‹ Prev</button><b id="count"></b><button onclick="nav(1)">Next ›</button></div>
-<h2 id="decksHead" style="display:none">Saved decks</h2>
-<div id="decks"></div>
+
+<div class="surface">
+  <label class="field"><span class="field-ic">✨</span><input id="topic" placeholder="Topic — e.g. The Tudors, photosynthesis"></label>
+  <div class="chips" id="topicChips"></div>
+  <button class="btn-primary" id="gen" onclick="gen()">Forge deck 🔨</button>
+  <div id="status" class="status"></div>
+</div>
+
+<div class="empty" id="empty">
+  <div class="empty-emoji">🗂️</div>
+  <h3>No decks yet</h3>
+  <p>Type a topic above and your AI tutor forges an 8-card study deck to flip through.</p>
+</div>
+
+<div id="study">
+  <div class="deck-head">
+    <div class="badge">🧠</div>
+    <div style="min-width:0"><div class="dt" id="deckTopic"></div><div class="dm" id="deckMeta"></div></div>
+  </div>
+  <div class="card" onclick="flip()">
+    <div class="card-inner" id="cardInner">
+      <div class="face front"><span class="face-label">Question</span><div class="face-text" id="qText"></div><div class="face-tip">tap to flip</div></div>
+      <div class="face back"><span class="face-label">Answer</span><div class="face-text" id="aText"></div><div class="face-tip">tap to flip back</div></div>
+    </div>
+  </div>
+  <div class="dots" id="dots"></div>
+  <div class="nav">
+    <button onclick="nav(-1)">‹ Prev</button>
+    <span class="count" id="count"></span>
+    <button onclick="nav(1)">Next ›</button>
+  </div>
+</div>
+
+<div id="savedWrap" style="display:none">
+  <div class="section">Saved decks</div>
+  <div id="decks"></div>
+</div>
+
 <script>
+"use strict";
 var store=window.myllmStorage||{getItem:function(){return Promise.resolve(null)},setItem:function(){return Promise.resolve()}};
 var decks=[],cur=-1,idx=0,showA=false;
 function el(i){return document.getElementById(i)}
 function setStatus(t){el('status').textContent=t}
 function save(){store.setItem('decks',JSON.stringify(decks))}
+function haptic(k){if(window.myllmHaptic)try{myllmHaptic(k)}catch(e){}}
+
+var EXAMPLES=['The Tudors','Photosynthesis','French verbs','World capitals','Music theory'];
+function buildChips(){
+  var c=el('topicChips');c.innerHTML='';
+  EXAMPLES.forEach(function(t){
+    var b=document.createElement('button');b.type='button';b.className='chip';b.textContent=t;
+    b.onclick=function(){el('topic').value=t;
+      document.querySelectorAll('.chip').forEach(function(x){x.classList.remove('on')});
+      b.classList.add('on');haptic('selection');};
+    c.appendChild(b);
+  });
+}
+
 function gen(){
-var topic=el('topic').value.trim();if(!topic)return;
-if(!window.myllmAsk){setStatus('This app needs AI access — update MyLLM and enable “Allow apps to use the AI” in Settings.');return}
-el('gen').disabled=true;setStatus('Forging a deck about “'+topic+'”…');
-myllmAsk('Create exactly 8 study flashcards about: '+topic+'. Reply with ONLY a JSON array like [{"q":"short question","a":"concise answer"}] and nothing else.')
-.then(function(reply){
-var s=reply.indexOf('['),e=reply.lastIndexOf(']');
-if(s<0||e<=s)throw new Error('the model did not return a deck');
-var cards=JSON.parse(reply.slice(s,e+1)).filter(function(c){return c&&c.q&&c.a});
-if(!cards.length)throw new Error('the deck came back empty');
-decks.unshift({topic:topic,cards:cards});save();
-el('topic').value='';setStatus('');openDeck(0);renderDecks();
-}).catch(function(err){setStatus('Could not generate: '+err.message)})
-.then(function(){el('gen').disabled=false});
+  var topic=el('topic').value.trim();if(!topic){setStatus('Enter a topic first.');return}
+  if(!window.myllmAsk){setStatus('This app needs AI access — update MyLLM and enable “Allow apps to use the AI” in Settings.');return}
+  el('gen').disabled=true;setStatus('Forging a deck about “'+topic+'”…');
+  myllmAsk('Create exactly 8 study flashcards about: '+topic+'. Reply with ONLY a JSON array like [{"q":"short question","a":"concise answer"}] and nothing else.')
+  .then(function(reply){
+    var s=reply.indexOf('['),e=reply.lastIndexOf(']');
+    if(s<0||e<=s)throw new Error('the model did not return a deck');
+    var cards=JSON.parse(reply.slice(s,e+1)).filter(function(c){return c&&c.q&&c.a});
+    if(!cards.length)throw new Error('the deck came back empty');
+    decks.unshift({topic:topic,cards:cards});save();
+    el('topic').value='';setStatus('');cur=-1;openDeck(0);haptic('success');
+  }).catch(function(err){setStatus('Could not generate: '+err.message)})
+  .then(function(){el('gen').disabled=false});
 }
-function openDeck(i){cur=i;idx=0;showA=false;renderCard()}
-function flip(){showA=!showA;if(window.myllmHaptic)myllmHaptic('light');renderCard()}
-function nav(d){var n=decks[cur].cards.length;idx=(idx+d+n)%n;showA=false;renderCard();if(window.myllmHaptic)myllmHaptic('selection')}
+
+function openDeck(i){
+  if(!decks[i]){el('study').style.display='none';return}
+  cur=i;idx=0;showA=false;
+  renderCard();renderDecks();updateViews();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function flip(){showA=!showA;haptic('light');el('cardInner').classList.toggle('flipped',showA)}
+function nav(d){
+  if(cur<0||!decks[cur])return;
+  var n=decks[cur].cards.length;idx=(idx+d+n)%n;showA=false;
+  renderCard();haptic('selection');
+}
 function renderCard(){
-if(cur<0||!decks[cur]){el('card').style.display='none';el('nav').style.display='none';return}
-var c=decks[cur].cards[idx];
-el('card').style.display='flex';el('nav').style.display='flex';
-el('side').textContent=showA?'Answer':'Question';
-el('text').textContent=showA?c.a:c.q;
-el('count').textContent=(idx+1)+' / '+decks[cur].cards.length;
+  if(cur<0||!decks[cur]){el('study').style.display='none';return}
+  var deck=decks[cur],c=deck.cards[idx];
+  el('study').style.display='block';
+  el('deckTopic').textContent=deck.topic;
+  el('deckMeta').textContent=deck.cards.length+' cards · tap the card to flip';
+  el('qText').textContent=c.q;
+  el('aText').textContent=c.a;
+  el('cardInner').classList.toggle('flipped',showA);
+  el('count').textContent='Card '+(idx+1)+' of '+deck.cards.length;
+  var dd=el('dots');dd.innerHTML='';
+  if(deck.cards.length<=16){
+    deck.cards.forEach(function(_,j){var s=document.createElement('span');s.className='dot'+(j===idx?' on':'');dd.appendChild(s)});
+  }
 }
+
 function renderDecks(){
-var D=el('decks');D.innerHTML='';
-el('decksHead').style.display=decks.length?'block':'none';
-decks.forEach(function(d,i){
-var r=document.createElement('div');r.className='deck';
-var s=document.createElement('span');s.textContent=d.topic;s.onclick=function(){openDeck(i)};
-var n=document.createElement('span');n.className='n';n.textContent=d.cards.length+' cards';
-var x=document.createElement('button');x.className='del';x.textContent='✕';
-x.onclick=function(){decks.splice(i,1);if(cur===i)cur=-1;else if(cur>i)cur--;save();renderDecks();renderCard()};
-r.appendChild(s);r.appendChild(n);r.appendChild(x);D.appendChild(r)})}
+  var D=el('decks');D.innerHTML='';
+  decks.forEach(function(d,i){
+    var active=(i===cur);
+    var r=document.createElement('div');r.className='deck'+(active?' on':'');
+    var ic=document.createElement('div');ic.className='deck-ic';ic.textContent=active?'📖':'🗂️';
+    var mid=document.createElement('div');mid.className='deck-mid';
+    var t=document.createElement('div');t.className='deck-t';t.textContent=d.topic;
+    var s=document.createElement('div');s.className='deck-s';
+    s.innerHTML=(active?'<span class="now">Studying</span>':'')+'<span>'+d.cards.length+' cards</span>';
+    mid.appendChild(t);mid.appendChild(s);
+    var x=document.createElement('button');x.className='del';x.type='button';x.textContent='✕';x.setAttribute('aria-label','Delete deck');
+    x.onclick=function(ev){
+      ev.stopPropagation();
+      decks.splice(i,1);
+      if(cur===i)cur=-1;else if(cur>i)cur--;
+      save();
+      if(decks.length){openDeck(cur<0?0:cur)}else{cur=-1;el('study').style.display='none';renderDecks();updateViews()}
+      haptic('warning');
+    };
+    r.appendChild(ic);r.appendChild(mid);r.appendChild(x);
+    r.onclick=function(){openDeck(i)};
+    D.appendChild(r);
+  });
+  updateViews();
+}
+
+function updateViews(){
+  el('empty').style.display=decks.length?'none':'block';
+  el('savedWrap').style.display=decks.length?'block':'none';
+  if(!decks.length)el('study').style.display='none';
+}
+
 el('topic').addEventListener('keydown',function(e){if(e.key==='Enter')gen()});
+
+buildChips();
 store.getItem('decks').then(function(v){
-if(v)try{decks=JSON.parse(v)}catch(e){}
-renderDecks();if(decks.length)openDeck(0);
-if(!window.myllmAsk)setStatus('Heads-up: this app needs the latest MyLLM with apps-AI enabled.');
+  if(v)try{decks=JSON.parse(v)||[]}catch(e){}
+  renderDecks();
+  if(decks.length)openDeck(0);else updateViews();
+  if(!window.myllmAsk)setStatus('Heads-up: this app needs the latest MyLLM with apps-AI enabled.');
 });
 </script></body></html>
