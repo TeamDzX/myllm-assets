@@ -146,14 +146,14 @@ return Promise.resolve(p).then(function(r){hide();return r;},function(e){hide();
   <div class="panel" id="p-style">
     <div class="lbl">Background</div>
     <div class="row">
-      <button class="btn ghost" style="flex:1" onclick="el('photoIn').click()">Use a photo</button>
+      <button class="btn ghost" style="flex:1" onclick="pickPhoto()">Use a photo</button>
       <button class="btn ghost" style="flex:1" id="aiBgBtn" onclick="aiBackground()">AI background</button>
     </div>
     <input type="file" id="photoIn" accept="image/*" style="display:none" onchange="loadPhoto(this)">
     <p class="hint" id="styleHint"></p>
     <div id="photoCtl" style="display:none">
-      <div class="lbl">Photo zoom — drag the preview to reposition</div>
-      <input type="range" id="pzoom" min="100" max="250" value="100" oninput="S.photoPos.scale=this.value/100;paint()">
+      <div class="lbl">Photo zoom — drag to move, pinch to zoom</div>
+      <input type="range" id="pzoom" min="100" max="400" value="100" oninput="S.photoPos.scale=this.value/100;paint()">
       <div style="height:8px"></div>
       <button class="btn line" onclick="clearPhoto()" style="width:100%">Remove photo</button>
     </div>
@@ -354,14 +354,22 @@ function paint(){
   var cv=el('pv');
   render(cv,Math.round(f.w*sc*dpr),Math.round(f.h*sc*dpr),false);
   cv.style.width=Math.round(f.w*sc)+"px";cv.style.height=Math.round(f.h*sc)+"px";
-  el('stageHint').textContent = S.stickers.length? "drag stickers to place them" : (S.photo&&S.bg.type==="photo"? "drag to reposition your photo":"");
+  el('stageHint').textContent = S.stickers.length? "drag stickers to place them" : (S.photo&&S.bg.type==="photo"? "drag to move · pinch to zoom":"");
 }
 
 /* ---------------- pointer drag ---------------- */
 (function(){
-  var cv=el('pv'),drag=null;
+  var cv=el('pv'),drag=null,pts={},pinch=null;
   function pos(e){var r=cv.getBoundingClientRect();return {x:(e.clientX-r.left)/r.width,y:(e.clientY-r.top)/r.height};}
+  function count(){return Object.keys(pts).length;}
+  function dist(a,b){var dx=a.x-b.x,dy=a.y-b.y;return Math.sqrt(dx*dx+dy*dy);}
+  function twoPts(){var k=Object.keys(pts);return k.length>=2?[pts[k[0]],pts[k[1]]]:null;}
+  function setZoom(s){S.photoPos.scale=Math.min(4,Math.max(1,s));el('pzoom').value=Math.round(S.photoPos.scale*100);}
+  var photoBg=function(){return S.photo&&S.bg.type==="photo";};
   cv.addEventListener("pointerdown",function(e){
+    pts[e.pointerId]={x:e.clientX,y:e.clientY};
+    // A second finger on a photo background starts a pinch-zoom.
+    if(count()>=2&&photoBg()){var t=twoPts();drag=null;pinch={d0:dist(t[0],t[1])||1,s0:S.photoPos.scale};haptic('selection');return;}
     var p=pos(e),f=FORMATS[S.format];
     for(var i=S.stickers.length-1;i>=0;i--){
       var st=S.stickers[i],rx=(st.size*(1/1080))*.75,ry=rx*(f.w/f.h);
@@ -373,15 +381,21 @@ function paint(){
       }
     }
     if(sel){sel=null;el('selCtl').style.display='none';paint();}
-    if(S.photo&&S.bg.type==="photo"){drag={kind:"photo",px:p.x,py:p.y,ox:S.photoPos.x,oy:S.photoPos.y};cv.setPointerCapture(e.pointerId);}
+    if(photoBg()){drag={kind:"photo",px:p.x,py:p.y,ox:S.photoPos.x,oy:S.photoPos.y};cv.setPointerCapture(e.pointerId);}
   });
   cv.addEventListener("pointermove",function(e){
+    if(pts[e.pointerId])pts[e.pointerId]={x:e.clientX,y:e.clientY};
+    if(pinch){var t=twoPts();if(t){setZoom(pinch.s0*(dist(t[0],t[1])/pinch.d0));paint();}return;}
     if(!drag)return;var p=pos(e);
     if(drag.kind==="st"){drag.st.x=Math.min(.98,Math.max(.02,p.x-drag.dx));drag.st.y=Math.min(.98,Math.max(.02,p.y-drag.dy));}
     else {S.photoPos.x=drag.ox+(p.x-drag.px);S.photoPos.y=drag.oy+(p.y-drag.py);}
     paint();
   });
-  ["pointerup","pointercancel"].forEach(function(ev){cv.addEventListener(ev,function(){drag=null;saveDraft();});});
+  ["pointerup","pointercancel"].forEach(function(ev){cv.addEventListener(ev,function(e){
+    delete pts[e.pointerId];
+    if(count()<2)pinch=null;
+    if(count()===0){drag=null;saveDraft();}
+  });});
 })();
 
 /* ---------------- panels ---------------- */
@@ -484,6 +498,28 @@ function deleteSel(){
 }
 
 /* ---------------- photo ---------------- */
+/* Set a fully-loaded Image as the background and reset its position. */
+function setPhoto(im){
+  S.photo=im;S.bg.type='photo';S.photoPos={x:0,y:0,scale:1};el('pzoom').value=100;
+  refreshStyle();buildGrads();paint();saveDraft();haptic('success');
+}
+/* Preferred path: the native picker bridge returns a ready data: URL. Falls back
+   to a plain <input type=file> (used in the web preview, where the bridge is
+   absent) — that input is unreliable inside the MyLLM app, hence the bridge. */
+function pickPhoto(){
+  el('styleHint').textContent='';
+  if(window.myllmPickImage){
+    myllmPickImage({maxDim:2000}).then(function(url){
+      if(!url)return; // user cancelled
+      var im=new Image();
+      im.onload=function(){setPhoto(im);};
+      im.onerror=function(){el('styleHint').textContent='That photo couldn’t be read — try another.';};
+      im.src=url;
+    }).catch(function(){el('styleHint').textContent='Couldn’t open the photo picker.';});
+  } else {
+    el('photoIn').click();
+  }
+}
 function loadPhoto(inp){
   var f=inp.files&&inp.files[0];if(!f)return;
   var url=URL.createObjectURL(f),im=new Image();
@@ -493,11 +529,7 @@ function loadPhoto(inp){
     var c=document.createElement('canvas');c.width=im.width*sc;c.height=im.height*sc;
     c.getContext('2d').drawImage(im,0,0,c.width,c.height);
     var im2=new Image();
-    im2.onload=function(){
-      S.photo=im2;S.bg.type='photo';S.photoPos={x:0,y:0,scale:1};el('pzoom').value=100;
-      refreshStyle();buildGrads();paint();haptic('success');
-      URL.revokeObjectURL(url);
-    };
+    im2.onload=function(){ setPhoto(im2); URL.revokeObjectURL(url); };
     im2.src=c.toDataURL('image/jpeg',.9);
   };
   im.onerror=function(){el('styleHint').textContent='That image couldn’t be read — try another.';};
