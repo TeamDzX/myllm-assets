@@ -1,0 +1,48 @@
+name: Pin jsDelivr to commit
+
+# App payloads (apps-src/*) are served via cdn.jsdelivr.net so installs are
+# counted. The mutable @main ref converges SLOWLY after an update (even a purge
+# can lag minutes-to-hours), so instead we pin each app's manifest URL to the
+# IMMUTABLE commit that last changed the file — jsDelivr serves those instantly
+# and they can never go stale. On every push that changes an app file, re-pin its
+# URLs and commit apps.json back. apps.json is fetched fresh from raw, so the new
+# pin is live at once. (This supersedes the old purge workflow — immutable refs
+# never need purging.)
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps-src/**'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: pin-jsdelivr-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  pin:
+    # Don't act on the workflow's own write-back commits.
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # full history so pin_jsdelivr.py can find last-touch commits
+
+      - name: Re-pin changed app URLs to their commit
+        run: python3 pin_jsdelivr.py --apply
+
+      - name: Commit apps.json back if it changed
+        run: |
+          if git diff --quiet -- apps.json; then
+            echo "No pin changes — nothing to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add apps.json
+          git commit -m "chore: pin gallery URLs to latest commit [skip ci]"
+          git push
+          echo "Re-pinned and pushed updated apps.json."
