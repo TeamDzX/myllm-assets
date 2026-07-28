@@ -19,6 +19,10 @@ html,body{height:100%;overflow:hidden;background:#05060d;font-family:-apple-syst
 .mbarw b{display:block;height:100%;width:100%;background:#8affdc}
 .mult{position:absolute;top:calc(126px + env(safe-area-inset-top));left:16px;display:none;font-size:13px;font-weight:900;color:#ffd23f;text-shadow:0 0 12px rgba(255,210,63,.85);animation:ragepulse .5s infinite}
 .scrapchip{font-size:11px;font-weight:800;color:#ffd23f;margin-top:3px;letter-spacing:.04em}
+.rangeExit{position:fixed;left:16px;top:calc(58px + env(safe-area-inset-top));z-index:6;border:1px solid rgba(255,210,63,.4);background:rgba(10,16,30,.75);color:#ffd23f;font-size:11.5px;font-weight:800;letter-spacing:.06em;border-radius:10px;padding:7px 11px;font-family:inherit;cursor:pointer}
+.rstats{margin-top:18px;width:min(280px,80vw)}
+.rrow{display:flex;justify-content:space-between;font-size:15px;color:#cfe0ff;padding:6px 4px;border-bottom:1px solid rgba(255,255,255,.08)}
+.rrow b{font-variant-numeric:tabular-nums}
 .bossbar{display:none;position:absolute;top:calc(58px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);width:min(340px,84vw);text-align:center}
 .bossname{font-size:11px;font-weight:900;letter-spacing:.22em;color:#ff6b6b;text-shadow:0 0 12px rgba(255,80,80,.7);margin-bottom:4px}
 .bosstrack{height:8px;border-radius:5px;background:rgba(255,255,255,.12);border:1px solid rgba(255,90,90,.4);overflow:hidden}
@@ -108,10 +112,20 @@ html,body{height:100%;overflow:hidden;background:#05060d;font-family:-apple-syst
   <div class="subtitle">Bots are storming the training basement. <b>Tap them to blast them.</b> Chain hits to build rage — and unlock ludicrous guns.</div>
   <button class="big" id="startBtn">Enter the range</button>
   <button class="big alt" id="armBtn">Armory</button>
+  <button class="big alt" id="rangeBtn">🎯 Target Range</button>
   <div class="hstable" id="hsTableStart"></div>
   <div class="best" id="startBest"></div>
   <div class="tiny">A MyLLMos mini-game · everything runs on your device</div>
 </div>
+
+<div class="overlay gover hide" id="rangeend" style="z-index:14">
+  <div class="title" style="font-size:34px;background:linear-gradient(180deg,#ffd23f,#ff8a3d);-webkit-background-clip:text;background-clip:text">DRILL<br>COMPLETE</div>
+  <div class="rstats" id="rstats"></div>
+  <button class="big" id="rAgain">Run it again</button>
+  <button class="big alt" id="rBack">Back to the menu</button>
+</div>
+
+<button class="rangeExit" id="rangeExit" style="display:none">End drill</button>
 
 <div class="overlay gover hide" id="victory" style="z-index:14">
   <div class="title" style="background:linear-gradient(180deg,#8affdc,#ffd23f);-webkit-background-clip:text;background-clip:text">SIGNAL<br>TERMINATED</div>
@@ -465,6 +479,86 @@ function dmgMult(){return 1+0.08*up.dmg;}
 function saveUp(){store.setItem('spacerange.up',JSON.stringify(up));}
 function updScrap(){var e=el('scrapchip');if(e)e.textContent='⚙ '+scrap;var e2=el('scrapbal');if(e2)e2.textContent=scrap;}
 var hitStopT=0,sloMoT=0;
+/* ---- Target Range: a timed marksmanship drill ---- */
+var rangeMode=false,targets=[],drillT=0,rangePts=0,rangeShots=0,rangeHitsN=0,rangeStreak=0,rangeBestStreak=0,rangeBest=0;
+var RBANDS=[{z0:9,z1:12,mult:1},{z0:17,z1:22,mult:2},{z0:29,z1:35,mult:3}];
+function spawnTarget(bi){
+  var b=RBANDS[bi],z=b.z0+Math.random()*(b.z1-b.z0);
+  var lim=Math.min(5,z*0.16);
+  targets.push({x:(Math.random()*2-1)*lim,z:z,mult:b.mult,standH:1.05,hitT:0});
+}
+function startRange(){
+  running=true;paused=false;rangeMode=true;level=1;wave=1;prevWorldIdx=-1;worldFade=1;
+  robots=[];pods=[];shards=[];tracers=[];flashes=[];dmgnums=[];mission=null;
+  targets=[];spawnTarget(0);spawnTarget(0);spawnTarget(1);spawnTarget(1);spawnTarget(2);
+  drillT=60;rangePts=0;rangeShots=0;rangeHitsN=0;rangeStreak=0;rangeBestStreak=0;
+  el('start').classList.add('hide');el('over').classList.add('hide');el('rangeend').classList.add('hide');
+  el('bossbar').style.display='none';el('mline').style.display='none';el('mult').style.display='none';
+  el('wname').textContent='TARGET RANGE';el('wave').textContent='60';
+  el('hp').style.width='100%';el('score').textContent='0';
+  el('rangeExit').style.display='block';
+  updHUD();audio();musicStart();
+  banner('🎯 RANGE DRILL — 60s');haptic('success');
+}
+function updateRange(dt){
+  drillT-=dt;
+  el('wave').textContent=Math.max(0,Math.ceil(drillT));
+  for(var i=0;i<targets.length;i++){var t=targets[i];
+    if(t.hitT>0){t.hitT-=dt;
+      if(t.hitT<=0){ // respawn somewhere else, same band mix
+        var bi=(Math.random()*3)|0;var b=RBANDS[bi],z=b.z0+Math.random()*(b.z1-b.z0);
+        var lim=Math.min(5,z*0.16);
+        t.x=(Math.random()*2-1)*lim;t.z=z;t.mult=b.mult;t.hitT=0;
+      }}}
+  if(drillT<=0)endRange();
+}
+function endRange(){
+  running=false;rangeMode=false;el('rangeExit').style.display='none';
+  musicStop();
+  var acc=rangeShots?Math.round(rangeHitsN/rangeShots*100):0;
+  var isBest=rangePts>rangeBest;
+  if(isBest){rangeBest=rangePts;store.setItem('spacerange.rangebest',String(rangeBest));}
+  el('rstats').innerHTML=
+    '<div class="rrow"><span>Points</span><b style="color:#8affdc">'+rangePts+'</b></div>'+
+    '<div class="rrow"><span>Accuracy</span><b>'+acc+'%  ('+rangeHitsN+'/'+rangeShots+')</b></div>'+
+    '<div class="rrow"><span>Best streak</span><b>x'+rangeBestStreak+'</b></div>'+
+    '<div class="rrow"><span>Range best</span><b style="color:#ffd23f">'+rangeBest+(isBest?' ★ NEW':'')+'</b></div>';
+  el('rangeend').classList.remove('hide');
+  haptic(isBest?'success':'light');
+}
+function rangeShoot(px,py,W){
+  fireFx(px,py,W);
+  cam.recoil=Math.min(0.05,cam.recoil+0.015);
+  cam.shx+=(Math.random()-0.5)*W.shake*DPR;cam.shy+=(Math.random()-0.5)*W.shake*DPR*0.6;
+  sfx('shoot',W);muzzleT=0.12;
+  rangeShots++;
+  var bestHit=null;
+  for(var i=0;i<targets.length;i++){var t=targets[i];
+    if(t.hitT>0)continue;
+    var fy=t.standH+0.55;
+    var pc=projPt([t.x,fy,t.z]);if(!pc)continue;
+    var pe=projPt([t.x+0.55,fy,t.z]);if(!pe)continue;
+    var rw=Math.abs(pe[0]-pc[0]);
+    var d=Math.hypot(pc[0]-px,pc[1]-py);
+    var pts=0;
+    if(d<rw*0.24)pts=100;else if(d<rw*0.55)pts=50;else if(d<=rw)pts=25;
+    if(pts&&(!bestHit||pts*t.mult>bestHit.pts*bestHit.t.mult))bestHit={t:t,pts:pts,pc:pc};
+  }
+  if(bestHit){
+    var t2=bestHit.t,gain=bestHit.pts*t2.mult;
+    rangePts+=gain;rangeHitsN++;rangeStreak++;
+    if(rangeStreak>rangeBestStreak)rangeBestStreak=rangeStreak;
+    el('score').textContent=rangePts;
+    dmgnums.push({x:t2.x,y:t2.standH+1.25,z:t2.z,t:0.8,val:(bestHit.pts===100?'★ ':'')+gain,crit:bestHit.pts===100});
+    flashes.push({x:bestHit.pc[0],y:bestHit.pc[1],t:0.16,r:(bestHit.pts===100?60:38)*DPR,col:bestHit.pts===100?'#ffd23f':W.col});
+    t2.hitT=0.8;
+    if(bestHit.pts===100){sfx('unlock');haptic('heavy');hitStop(0.05);}
+    else{sfx('kill');haptic('medium');}
+    if(rangeStreak>0&&rangeStreak%5===0)banner('🔥 x'+rangeStreak+' STREAK');
+  } else {
+    rangeStreak=0;haptic('light');
+  }
+}
 function hitStop(s){hitStopT=Math.max(hitStopT,s);}
 function sloMo(s){sloMoT=Math.max(sloMoT,s);}
 function BW(){ // blended world during a morph transition
@@ -670,6 +764,7 @@ function screenInfo(r){
 }
 function tryShoot(scrX,scrY){
   if(!running||paused||armoryOpen||victoryOpen)return;
+  if(rangeMode){rangeShoot(scrX*DPR,scrY*DPR,WEAPONS[weaponIdx]);return;}
   var W=WEAPONS[weaponIdx];
   var now=performance.now?performance.now():Date.now();
   var px=scrX*DPR, py=scrY*DPR;
@@ -989,6 +1084,23 @@ function draw(){
       f._vp=vp;f._z=sum/4;faces.push(f);
     }
   }
+  // range targets: post + bullseye face (white/red/gold rings)
+  for(var tg=0;tg<targets.length;tg++){
+    var T=targets[tg],fy=T.standH+0.55,shrink=T.hitT>0?Math.max(0.12,T.hitT/0.8):1;
+    var post=boxFaces(T.x-0.05,0,T.z-0.04,0.1,T.standH,0.08);
+    for(var pf=0;pf<post.length;pf++){var ff=post[pf],vpp=[],smp=0;
+      for(var pv=0;pv<4;pv++){var wv0=toView(ff[pv][0],ff[pv][1],ff[pv][2]);vpp.push(wv0);smp+=wv0[2]}
+      faces.push({_vp:vpp,_z:smp/4,c:[90,96,112],n:ff[4]});
+    }
+    var rings=[[0.55,[235,238,245],4],[0.30,[235,80,70],10],[0.13,[255,210,63],16]];
+    for(var rg=0;rg<rings.length;rg++){
+      var rr=rings[rg][0]*shrink,rc=rings[rg][1],gl=rings[rg][2],zo=T.z-0.001*(rg+1);
+      var q=[[T.x-rr,fy-rr,zo],[T.x+rr,fy-rr,zo],[T.x+rr,fy+rr,zo],[T.x-rr,fy+rr,zo]];
+      var vpq=[],smq=0;
+      for(var qv=0;qv<4;qv++){var wq=toView(q[qv][0],q[qv][1],q[qv][2]);vpq.push(wq);smq+=wq[2]}
+      faces.push({_vp:vpq,_z:smq/4,c:rc,flat:1,glow:gl});
+    }
+  }
   // supply pods: small glowing crates with an emissive icon face
   for(var pd=0;pd<pods.length;pd++){
     var pp2=pods[pd],hcol=pp2.type==='health';
@@ -1179,7 +1291,23 @@ function frame(ts){
   var dt=rdt;
   if(hitStopT>0){hitStopT-=rdt;dt=0;}                    // hit-stop freeze
   else if(sloMoT>0){sloMoT-=rdt;dt=rdt*0.35;}            // slow-mo
-  if(running&&!paused&&!armoryOpen&&!victoryOpen){
+  if(running&&!paused&&!armoryOpen&&!victoryOpen&&rangeMode){
+    updateRange(dt);
+    var Wr=WEAPONS[weaponIdx];fireCool-=dt*1000;
+    if(lastPointer.active&&Wr.fire<=140&&fireCool<=0){fireCool=Wr.fire;var rr2=cv.getBoundingClientRect();rangeShoot((lastPointer.x-rr2.left)*DPR,(lastPointer.y-rr2.top)*DPR,Wr);}
+    // effects still tick in range mode
+    for(var s0=0;s0<shards.length;s0++){var p0=shards[s0];p0.t-=dt;}
+    shards=shards.filter(function(p){return p.t>0});
+    for(var t0=0;t0<tracers.length;t0++)tracers[t0].t-=dt;tracers=tracers.filter(function(x){return x.t>0});
+    for(var f0=0;f0<flashes.length;f0++)flashes[f0].t-=dt;flashes=flashes.filter(function(x){return x.t>0});
+    for(var d0=0;d0<dmgnums.length;d0++){dmgnums[d0].t-=dt;dmgnums[d0].y+=dt*0.9}dmgnums=dmgnums.filter(function(x){return x.t>0});
+    cam.shx*=Math.pow(0.001,dt);cam.shy*=Math.pow(0.001,dt);
+    cam.recoil*=Math.pow(0.0005,dt);
+    if(muzzleT>0)muzzleT-=dt;
+    gunAng+=(targetGunAngle()-gunAng)*Math.min(1,dt*13*(1+0.35*up.steady));
+    gunPitch+=(targetGunPitch()-gunPitch)*Math.min(1,dt*10);
+  }
+  else if(running&&!paused&&!armoryOpen&&!victoryOpen){
     // held autofire for rapid weapons
     var W=WEAPONS[weaponIdx];fireCool-=dt*1000;
     if(lastPointer.active&&W.fire<=140&&fireCool<=0){fireCool=W.fire;var r=cv.getBoundingClientRect();tryShoot(lastPointer.x-r.left,lastPointer.y-r.top)}
@@ -1253,7 +1381,7 @@ function saveScore(){
 }
 
 /* ============================== flow ============================== */
-function startGame(){reset();running=true;paused=false;el('start').classList.add('hide');el('over').classList.add('hide');audio();musicStart();startWave();haptic('success')}
+function startGame(){rangeMode=false;targets=[];el('rangeExit').style.display='none';el('rangeend').classList.add('hide');reset();running=true;paused=false;el('start').classList.add('hide');el('over').classList.add('hide');audio();musicStart();startWave();haptic('success')}
 function victory(){
   running=false;victoryOpen=true;
   el('vstats').innerHTML='Score <b style="color:#8affdc">'+score+'</b> · Wave '+wave+(ngPlus?(' · NG+'+ngPlus):'');
@@ -1283,6 +1411,10 @@ function gameOver(){
 el('startBtn').onclick=startGame;el('againBtn').onclick=startGame;
 el('armBtn').onclick=openArmory;el('armClose').onclick=closeArmory;
 el('vNG').onclick=continueNG;el('vRetire').onclick=retireRun;
+el('rangeBtn').onclick=startRange;
+el('rangeExit').onclick=function(){if(rangeMode)endRange();};
+el('rAgain').onclick=startRange;
+el('rBack').onclick=function(){el('rangeend').classList.add('hide');el('start').classList.remove('hide');targets=[];};
 el('hsSave').onclick=saveScore;
 el('hsName').addEventListener('keydown',function(e){if(e.key==='Enter')saveScore()});
 
@@ -1290,6 +1422,7 @@ store.getItem('spacerange.best').then(function(v){best=parseInt(v||'0',10)||0;el
 store.getItem('spacerange.scores').then(function(v){if(v)try{scores=JSON.parse(v)||[]}catch(e){} renderScores();});
 store.getItem('spacerange.name').then(function(v){if(v)playerName=String(v);});
 store.getItem('spacerange.scrap').then(function(v){scrap=parseInt(v||'0',10)||0;updScrap();});
+store.getItem('spacerange.rangebest').then(function(v){rangeBest=parseInt(v||'0',10)||0;});
 store.getItem('spacerange.up').then(function(v){if(v)try{var u2=JSON.parse(v);for(var k in up)if(u2&&typeof u2[k]==='number')up[k]=Math.max(0,Math.min(9,u2[k]));}catch(e){}});
 store.getItem('spacerange.owned').then(function(v){ownedMax=Math.min(WEAPONS.length-1,parseInt(v||'0',10)||0);
   return store.getItem('spacerange.loadout');}).then(function(l){weaponIdx=Math.min(parseInt(l||'0',10)||0,ownedMax);updHUD();});
