@@ -23,6 +23,18 @@ html,body{height:100%;overflow:hidden;background:#05060d;font-family:-apple-syst
 .rstats{margin-top:18px;width:min(280px,80vw)}
 .rrow{display:flex;justify-content:space-between;font-size:15px;color:#cfe0ff;padding:6px 4px;border-bottom:1px solid rgba(255,255,255,.08)}
 .rrow b{font-variant-numeric:tabular-nums}
+#gunspin{width:min(340px,86vw);height:auto}
+.gdname{font-size:26px;font-weight:900;letter-spacing:.04em;color:#fff;margin-top:2px;text-shadow:0 0 18px rgba(120,220,255,.5)}
+.gdclass{display:inline-block;margin-top:8px;font-size:10.5px;font-weight:900;letter-spacing:.22em;border:1px solid;border-radius:999px;padding:4px 12px}
+.gdspec{margin-top:12px;font-size:13.5px;font-weight:700;color:#8affdc}
+.gdbars{margin-top:14px;width:min(280px,80vw);display:flex;flex-direction:column;gap:7px}
+.gdbar{display:flex;align-items:center;gap:10px}
+.gdbar span{width:58px;text-align:right;font-size:9.5px;font-weight:800;letter-spacing:.12em;color:#6f86b8}
+.gdbar i{flex:1;height:6px;border-radius:4px;background:rgba(255,255,255,.1);overflow:hidden}
+.gdbar b{display:block;height:100%;background:linear-gradient(90deg,#4aa3ff,#8affdc);border-radius:4px}
+.gdlore{margin-top:14px;max-width:300px;font-size:13px;line-height:1.6;color:#9fb8e6;font-style:italic}
+.gdclose{margin-top:10px;pointer-events:auto;background:none;border:0;color:#6f86b8;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;letter-spacing:.04em}
+#gdEquip:disabled{opacity:.55}
 .bossbar{display:none;position:absolute;top:calc(58px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);width:min(340px,84vw);text-align:center}
 .bossname{font-size:11px;font-weight:900;letter-spacing:.22em;color:#ff6b6b;text-shadow:0 0 12px rgba(255,80,80,.7);margin-bottom:4px}
 .bosstrack{height:8px;border-radius:5px;background:rgba(255,255,255,.12);border:1px solid rgba(255,90,90,.4);overflow:hidden}
@@ -116,6 +128,21 @@ html,body{height:100%;overflow:hidden;background:#05060d;font-family:-apple-syst
   <div class="hstable" id="hsTableStart"></div>
   <div class="best" id="startBest"></div>
   <div class="tiny">A MyLLMos mini-game · everything runs on your device</div>
+</div>
+
+<div class="overlay hide" id="gundetail" style="z-index:15;background:rgba(4,7,14,.97)">
+  <canvas id="gunspin" width="340" height="230"></canvas>
+  <div class="gdname" id="gdName"></div>
+  <span class="gdclass" id="gdClass"></span>
+  <div class="gdspec" id="gdSpec"></div>
+  <div class="gdbars">
+    <div class="gdbar"><span>DAMAGE</span><i><b id="gdBarD"></b></i></div>
+    <div class="gdbar"><span>RATE</span><i><b id="gdBarR"></b></i></div>
+    <div class="gdbar"><span>POWER</span><i><b id="gdBarP"></b></i></div>
+  </div>
+  <p class="gdlore" id="gdLore"></p>
+  <button class="big" id="gdEquip">EQUIP</button>
+  <button class="gate-cancel gdclose" id="gdClose">Close</button>
 </div>
 
 <div class="overlay gover hide" id="rangeend" style="z-index:14">
@@ -1318,6 +1345,86 @@ function frame(ts){
 }
 requestAnimationFrame(frame);
 
+/* ---- gun dossiers: class, stats, and where each gun came from ---- */
+var GUNLORE=[
+ {cls:'SIDEARM', pow:20,spec:'Reliable single bolt',lore:'Standard issue for Range cadets since the first bots went rogue. Cheap, honest, and the last thing many warden units ever heard.'},
+ {cls:'RAPID',   pow:35,spec:'Full-auto while held',lore:'Stripped from tunnel-patrol exosuits and re-chambered for plasma. Holds the trigger so you don\'t have to.'},
+ {cls:'SPREAD',  pow:45,spec:'Forks to 3 extra nearby bots',lore:'Born from a Foundry press accident that nobody dared repeat — so they weaponised it instead. Eight molten petals per shell.'},
+ {cls:'PIERCE',  pow:60,spec:'Pierces up to 6 in a line',lore:'Cryo-vault security\'s answer to stacked breach formations: one round, one corridor.'},
+ {cls:'BLAST',   pow:65,spec:'Area blast around impact',lore:'Decommissioned mining ordnance from the deep digs. The safety was never installed.'},
+ {cls:'CHAIN',   pow:70,spec:'Lightning chains to 5 bots',lore:'Wound from a reactor\'s discharge coils after the Tyrant incident. The lightning remembers its way between machines.'},
+ {cls:'HOMING',  pow:75,spec:'6 homing micro-missiles',lore:'Reverse-engineered from Brood Mother larvae pods. The missiles hunt in a pack, and they are always hungry.'},
+ {cls:'GRAVITY', pow:85,spec:'Drags bots into the implosion',lore:'A portal experiment that never closed properly — bottled, stabilised, and given a trigger.'},
+ {cls:'SEISMIC', pow:88,spec:'Slams every grounded bot',lore:'A lava-pit tectonic hammer tuned to the planet\'s own pulse. The floor is the weapon.'},
+ {cls:'TEMPORAL',pow:90,spec:'Freezes every bot for 2.6s',lore:'Salvaged from the Outsider\'s wreck. It doesn\'t slow time — it convinces time to wait.'},
+ {cls:'ORBITAL', pow:95,spec:'Sky-strikes every visible bot',lore:'The Moon relay\'s own defence grid, re-aimed downward. Every bolt is a borrowed sunrise.'},
+ {cls:'SNIPER',  pow:92,spec:'Scope, ×2 crits, pierces 6',lore:'Hand-built by the last Range warden for a shot she never got to take. Finish it for her.'}
+];
+var gdIdx=0,gdRaf=null,gdT=0,gdImgs={};
+function gdImage(i){
+  if(!gdImgs[i]){var im=new Image();im.src=GUNSRC[i];gdImgs[i]=im;}
+  return gdImgs[i];
+}
+function openGunDetail(i){
+  gdIdx=i;
+  var W=WEAPONS[i],L=GUNLORE[i]||{cls:'',pow:50,spec:'',lore:''},owned=i<=ownedMax;
+  el('gdName').textContent=W.name;
+  el('gdClass').textContent=L.cls;
+  el('gdClass').style.color=W.col;el('gdClass').style.borderColor=W.col;
+  el('gdSpec').textContent='◈ '+L.spec;
+  el('gdLore').textContent=L.lore;
+  var rate=Math.min(100,Math.round(1000/W.fire*22));
+  var dmgb=Math.min(100,Math.round(W.dmg/420*100));
+  el('gdBarD').style.width=Math.max(6,dmgb)+'%';
+  el('gdBarR').style.width=Math.max(6,rate)+'%';
+  el('gdBarP').style.width=L.pow+'%';
+  var eb=el('gdEquip');
+  if(owned){eb.textContent=(i===weaponIdx)?'EQUIPPED':'EQUIP';eb.disabled=(i===weaponIdx);
+    eb.onclick=function(){weaponIdx=i;store.setItem('spacerange.loadout',String(i));updHUD();buildArmory();openGunDetail(i);haptic('success');};}
+  else{eb.textContent='UNLOCK AT '+W.unlock+' PTS';eb.disabled=true;eb.onclick=null;}
+  el('gundetail').classList.remove('hide');
+  if(!gdRaf)gdSpin();
+}
+function closeGunDetail(){
+  el('gundetail').classList.add('hide');
+  if(gdRaf){cancelAnimationFrame(gdRaf);gdRaf=null;}
+}
+// canvas turntable: cos-squash rotation + specular sweep + floor reflection
+function gdSpin(){
+  var c=el('gunspin');if(!c){gdRaf=null;return}
+  var x=c.getContext('2d'),Wc=c.width,Hc=c.height;
+  gdT+=0.016;
+  x.clearRect(0,0,Wc,Hc);
+  var im=gdImage(gdIdx);
+  if(im.complete&&im.naturalWidth){
+    var ang=gdT*1.5, cs=Math.cos(ang), flip=cs<0, sq=Math.max(0.08,Math.abs(cs));
+    var dh=Hc*0.52, dw=dh*(im.naturalWidth/im.naturalHeight);
+    if(dw>Wc*0.92){dw=Wc*0.92;dh=dw*(im.naturalHeight/im.naturalWidth);}
+    var cy=Hc*0.42+Math.sin(gdT*2)*4;
+    var col=WEAPONS[gdIdx].col;
+    // reflection first (under)
+    x.save();x.translate(Wc/2,cy+dh*0.78);x.scale((flip?-sq:sq),-1);
+    x.globalAlpha=0.16;x.globalCompositeOperation='screen';
+    x.drawImage(im,-dw/2,-dh/2,dw,dh);
+    x.restore();x.globalAlpha=1;
+    // the gun
+    x.save();x.translate(Wc/2,cy);x.rotate(Math.sin(gdT*0.9)*0.045);
+    x.scale((flip?-sq:sq),1);
+    x.globalCompositeOperation='screen';
+    x.drawImage(im,-dw/2,-dh/2,dw,dh);
+    // specular sweep
+    var gx=((gdT*0.55)%1.6-0.3)*dw;
+    var gr=x.createLinearGradient(gx-dw*0.12,0,gx+dw*0.12,0);
+    gr.addColorStop(0,'rgba(255,255,255,0)');gr.addColorStop(0.5,'rgba(255,255,255,0.15)');gr.addColorStop(1,'rgba(255,255,255,0)');
+    x.fillStyle=gr;x.fillRect(-dw/2,-dh/2,dw,dh);
+    x.restore();
+    // pedestal glow
+    var pg=x.createRadialGradient(Wc/2,cy+dh*0.62,4,Wc/2,cy+dh*0.62,dw*0.5);
+    pg.addColorStop(0,'rgba(120,220,255,0.20)');pg.addColorStop(1,'rgba(0,0,0,0)');
+    x.fillStyle=pg;x.beginPath();x.ellipse(Wc/2,cy+dh*0.62,dw*0.5,14,0,0,7);x.fill();
+  }
+  gdRaf=requestAnimationFrame(gdSpin);
+}
 /* ---- armory: owned guns persist; equip any owned gun ---- */
 var ownedMax=0,armoryOpen=false;
 function openArmory(){armoryOpen=true;buildArmory();el('armory').classList.remove('hide');haptic('selection');}
@@ -1354,9 +1461,9 @@ function buildArmory(){
     var im=document.createElement('img');im.src=GUNSRC[i];im.alt='';
     var an=document.createElement('span');an.className='an';an.textContent=w.name;
     var as=document.createElement('span');as.className='as';
-    as.textContent=owned?(i===weaponIdx?'EQUIPPED':'TAP TO EQUIP'):('UNLOCK AT '+w.unlock);
+    as.textContent=owned?(i===weaponIdx?'EQUIPPED':'VIEW DOSSIER'):('LOCKED — VIEW');
     d.appendChild(im);d.appendChild(an);d.appendChild(as);
-    if(owned)d.onclick=function(){weaponIdx=i;store.setItem('spacerange.loadout',String(i));updHUD();buildArmory();haptic('success');};
+    d.onclick=function(){openGunDetail(i);haptic('selection');};
     g.appendChild(d);
   });
 }
@@ -1412,6 +1519,8 @@ el('startBtn').onclick=startGame;el('againBtn').onclick=startGame;
 el('armBtn').onclick=openArmory;el('armClose').onclick=closeArmory;
 el('vNG').onclick=continueNG;el('vRetire').onclick=retireRun;
 el('rangeBtn').onclick=startRange;
+el('gdClose').onclick=closeGunDetail;
+document.getElementById('gundetail').addEventListener('click',function(e){if(e.target===this)closeGunDetail();});
 el('rangeExit').onclick=function(){if(rangeMode)endRange();};
 el('rAgain').onclick=startRange;
 el('rBack').onclick=function(){el('rangeend').classList.add('hide');el('start').classList.remove('hide');targets=[];};
