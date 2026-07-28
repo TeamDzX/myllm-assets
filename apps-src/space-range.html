@@ -629,7 +629,7 @@ var GUNSRCFP=["data:image/webp;base64,UklGRrBaAABXRUJQVlA4WAoAAAAQAAAA3wEASwEAQU
 var gunImgs=GUNSRCFP.map(function(s){var im=new Image();im.src=s;return im;});
 var muzzleT=0,gunPitch=0;
 /* ---- overheating: powerful guns can't run forever ---- */
-var HEATPER=[4,2,12,16,18,15,18,24,22,20,28,20];   // heat per shot, per gun
+var HEATPER=[3,2,7,9,10,9,10,13,12,11,14,10];   // heat per shot, per gun (tamed)
 var heat=[],overheated=[],ohWarnT=0;
 for(var hz=0;hz<12;hz++){heat.push(0);overheated.push(false);}
 function heatUp(){
@@ -652,8 +652,8 @@ function ohBlocked(){
 function coolGuns(dt){
   for(var i=0;i<heat.length;i++){
     if(heat[i]<=0)continue;
-    heat[i]=Math.max(0,heat[i]-(i===weaponIdx?7:13)*dt);   // holstered guns cool faster
-    if(overheated[i]&&heat[i]<30){
+    heat[i]=Math.max(0,heat[i]-(i===weaponIdx?10:18)*dt);  // holstered guns cool faster
+    if(overheated[i]&&heat[i]<40){
       overheated[i]=false;
       if(i===weaponIdx){banner('✓ '+WEAPONS[i].name.toUpperCase()+' READY');haptic('success');}
     }
