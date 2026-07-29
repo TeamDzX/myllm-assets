@@ -394,10 +394,13 @@ function illustrate(){
 }
 
 /* ---------- save / resume / export ---------- */
-function save(){
-  if(!G){ store.setItem('everquill.save',''); return; }
-  // resume replays only the last 6 scenes, so older illustrations are dropped;
-  // then shed oldest remaining if the save would still crowd the storage budget
+/* Saving: with the shared-files bridge (MyLLM 4.5+) the FULL tale — every scene
+   and every illustration — lives in Everquill/tales/<id>.json (5MB per file vs
+   the ~1MB myllmStorage budget), and myllmStorage keeps a text-only copy as the
+   pointer/fallback. Without the bridge (older builds, or file access off) we
+   fall back to the old behaviour: art on the last 6 scenes only, budget-shed. */
+function taleFile(){ return 'Everquill/tales/'+G.id+'.json'; }
+function legacySave(){
   for(var i=0;i<G.log.length-6;i++) if(G.log[i].img) G.log[i].img=null;
   var json=JSON.stringify(G),guard=0;
   while(json.length>700000&&guard++<12){
@@ -407,6 +410,22 @@ function save(){
     json=JSON.stringify(G);
   }
   store.setItem('everquill.save',json);
+}
+function save(){
+  if(!G){ store.setItem('everquill.save',''); return; }
+  if(!G.id) G.id='t'+Date.now();
+  if(!window.myllmFiles){ legacySave(); return; }
+  var full=JSON.stringify(G),guard=0;
+  while(full.length>4800000&&guard++<40){   // nearing the 5MB per-file cap: shed oldest art
+    var shed=false;
+    for(var j=0;j<G.log.length;j++){ if(G.log[j].img){ G.log[j].img=null; shed=true; break; } }
+    if(!shed) break;
+    full=JSON.stringify(G);
+  }
+  myllmFiles.write(taleFile(), full).then(function(){
+    var lite=JSON.parse(full); lite.log.forEach(function(x){ x.img=null; });
+    store.setItem('everquill.save', JSON.stringify(lite));
+  }).catch(function(){ legacySave(); });   // file access off → keep the old path working
 }
 function startGame(){
   var name=el('heroName').value.trim()||'The Stranger';
@@ -421,11 +440,11 @@ function resumeGame(){
   if(!G) return;
   setBackdrop(G.genre); showScreen('play');
   el('story').innerHTML=''; renderHUD();
-  G.log.slice(-6).forEach(function(x){
+  G.log.forEach(function(x){   // the whole tale comes back, art and all
     if(x.a&&x.a!=='BEGIN') addAction(x.a);
     var d=document.createElement('div'); d.className='scene';
     var t=document.createElement('div'); t.className='txt serif'; t.textContent=x.s; d.appendChild(t);
-    if(x.img){ var im=document.createElement('img'); im.className='art'; im.src=x.img; im.alt=''; d.appendChild(im); }
+    if(x.img){ var im=document.createElement('img'); im.className='art'; im.src=x.img; im.alt=''; im.loading='lazy'; d.appendChild(im); }
     el('story').appendChild(d);
   });
   if(G.over) showEnd(); else if(G.log.length){ rebuildChoices(lastChoices.length?lastChoices:["Press on","Look around","Take stock"]); }
@@ -453,7 +472,10 @@ function openMenu(){
   el('scrim').classList.add('on');
 }
 function closeMenu(){ el('scrim').classList.remove('on'); }
-function abandon(){ G=null; save(); closeMenu(); refreshTitle(); setBackdrop(null); showScreen('title'); }
+function abandon(){
+  if(G&&G.id&&window.myllmFiles){ try{ myllmFiles.remove(taleFile()).catch(function(){}); }catch(e){} }
+  G=null; save(); closeMenu(); refreshTitle(); setBackdrop(null); showScreen('title');
+}
 
 /* ---------- init ---------- */
 function refreshTitle(){
@@ -463,7 +485,12 @@ function refreshTitle(){
 el('custAct').addEventListener('keydown',function(e){ if(e.key==='Enter') customAct(); });
 store.getItem('everquill.save').then(function(v){
   if(v){ try{ var g=JSON.parse(v); if(g&&g.log) G=g; }catch(e){} }
-  refreshTitle();
-});
+  // the storage copy is text-only when the files bridge holds the full tale
+  if(G&&G.id&&window.myllmFiles){
+    return myllmFiles.read('Everquill/tales/'+G.id+'.json').then(function(f){
+      if(f){ try{ var g2=JSON.parse(f); if(g2&&g2.log) G=g2; }catch(e){} }
+    }).catch(function(){});
+  }
+}).then(function(){ refreshTitle(); });
 </script>
 </body></html>
