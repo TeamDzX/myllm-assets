@@ -353,6 +353,25 @@ function renderHUD(){
 }
 
 /* ---------- illustrate (optional image server) ---------- */
+/* Persisting art: a full-size data URL would blow the ~1MB myllmStorage budget
+   fast, so each illustration is re-encoded small (≤900px jpeg) and kept on its
+   log entry; save() sheds the oldest ones when the save grows too big. */
+function shrinkArt(url){
+  return new Promise(function(res){
+    var im=new Image();
+    im.onload=function(){
+      try{
+        var mx=900,sc=Math.min(1,mx/(im.width||mx));
+        var c=document.createElement('canvas');
+        c.width=Math.max(1,Math.round(im.width*sc));c.height=Math.max(1,Math.round(im.height*sc));
+        c.getContext('2d').drawImage(im,0,0,c.width,c.height);
+        res(c.toDataURL('image/jpeg',.62));
+      }catch(e){ res(url.slice(0,10)==='data:image'?url:null); } // tainted canvas → keep data:, drop remote
+    };
+    im.onerror=function(){ res(null); };
+    im.src=url;
+  });
+}
 function illustrate(){
   if(!window.myllmGenerateImage||!G||!G.log.length||busy) return;
   var last=G.log[G.log.length-1];
@@ -365,13 +384,27 @@ function illustrate(){
     var img=document.createElement('img'); img.className='art fadein'; img.src=url; img.alt='';
     (d&&d.classList.contains('scene')? d : el('story')).appendChild(img);
     hide(); toast('✨ Scene illustrated'); haptic('success'); scrollDown();
+    return shrinkArt(url).then(function(small){ if(small){ last.img=small; save(); } });
   })
   .catch(function(e){ hide(); toast('🖌️ Couldn’t paint the scene — try again'); haptic('warning'); })
   .then(function(){ el('illusBtn').disabled=false; });
 }
 
 /* ---------- save / resume / export ---------- */
-function save(){ store.setItem('everquill.save', G? JSON.stringify(G) : ''); }
+function save(){
+  if(!G){ store.setItem('everquill.save',''); return; }
+  // resume replays only the last 6 scenes, so older illustrations are dropped;
+  // then shed oldest remaining if the save would still crowd the storage budget
+  for(var i=0;i<G.log.length-6;i++) if(G.log[i].img) G.log[i].img=null;
+  var json=JSON.stringify(G),guard=0;
+  while(json.length>700000&&guard++<12){
+    var shed=false;
+    for(var j=0;j<G.log.length;j++){ if(G.log[j].img){ G.log[j].img=null; shed=true; break; } }
+    if(!shed) break;
+    json=JSON.stringify(G);
+  }
+  store.setItem('everquill.save',json);
+}
 function startGame(){
   var name=el('heroName').value.trim()||'The Stranger';
   G={ genre:selGenre, hero:name, trait:selTrait, hp:5, inv:[], log:[], summary:'', over:false, won:false };
@@ -389,6 +422,7 @@ function resumeGame(){
     if(x.a&&x.a!=='BEGIN') addAction(x.a);
     var d=document.createElement('div'); d.className='scene';
     var t=document.createElement('div'); t.className='txt serif'; t.textContent=x.s; d.appendChild(t);
+    if(x.img){ var im=document.createElement('img'); im.className='art'; im.src=x.img; im.alt=''; d.appendChild(im); }
     el('story').appendChild(d);
   });
   if(G.over) showEnd(); else if(G.log.length){ rebuildChoices(lastChoices.length?lastChoices:["Press on","Look around","Take stock"]); }
