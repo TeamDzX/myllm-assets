@@ -90,15 +90,39 @@ function dueInfo(due){
   return{txt:'Due '+label,cls:''};
 }
 
+/* Labelled lines, not JSON — small models (Apple Intelligence) echo JSON
+   templates back verbatim. Echoed instructions are rejected and retried. */
+var ECHO=/one short, concrete step|repeat this line|labelled line|the student can do/i;
+function parseSteps(reply){
+  var steps=[],got=false;
+  String(reply||'').split(/\r?\n/).forEach(function(raw){
+    var ln=raw.replace(/\*\*/g,'').trim();
+    var m=ln.match(/^[-*#>\s]*(STEPS?)\s*\d*\s*[::]\s*(.*)$/i);
+    if(!m)return;
+    got=true;var v=m[2].trim();
+    if(v)steps.push(v);
+  });
+  if(!got){ // model answered in the old JSON-array shape — accept it
+    var s=reply.indexOf('['),e=reply.lastIndexOf(']');
+    if(s>=0&&e>s)try{
+      var arr=JSON.parse(reply.slice(s,e+1));
+      if(Array.isArray(arr))steps=arr.filter(function(x){return typeof x==='string'&&x.trim()}).map(function(x){return x.trim()});
+    }catch(e2){}
+  }
+  steps=steps.filter(function(x){return x&&!ECHO.test(x)});
+  if(steps.length<2)throw new Error('no steps returned');
+  return steps;
+}
 function plan(id){
   var i=byId(id);
   if(!window.myllmAsk){setStatus('Step-by-step planning needs AI — enable “Allow apps to use the AI” in Settings.');return}
   setStatus('Breaking “'+i.title+'” into steps…');
-  myllmAsk('Break this school assignment into 3-6 concrete, ordered steps a student can tick off. Assignment: "'+i.title+'"'+(i.subj?(' (subject: '+i.subj+')'):'')+'. Reply with ONLY a JSON array of short step strings, e.g. ["...","..."] and nothing else.')
-  .then(function(reply){
-    var s=reply.indexOf('['),e=reply.lastIndexOf(']');
-    if(s<0||e<=s)throw new Error('no steps returned');
-    var arr=JSON.parse(reply.slice(s,e+1)).filter(function(x){return typeof x==='string'&&x.trim()});
+  var p='Break this school assignment into 3-6 concrete, ordered steps a student can tick off. Assignment: "'+i.title+'"'+(i.subj?(' (subject: '+i.subj+')'):'')+'. Reply with EXACTLY these labelled lines and nothing else:\n'+
+    'STEP: one short, concrete step the student can do (repeat this line for every step, in order)';
+  myllmAsk(p).then(function(r){return parseSteps(r||'')})
+  .catch(function(){return myllmAsk(p+'\nIMPORTANT: fill each labelled line with real content — never repeat the instruction text.')
+    .then(function(r){return parseSteps(r||'')})})
+  .then(function(arr){
     i.steps=arr.map(function(x){return{t:x,done:false}});save();render();setStatus('');
   }).catch(function(err){setStatus('Could not plan: '+err.message)});
 }

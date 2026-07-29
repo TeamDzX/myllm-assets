@@ -324,6 +324,34 @@ function closeSheet(){
 }
 
 /* ---------- AI recommendations ---------- */
+/* Labelled lines, not JSON — small models (Apple Intelligence) echo JSON
+   templates back verbatim. Echoed instructions are rejected and retried. */
+var ECHO = /the book title|author['’]?s name|one short sentence|why i['’]d love it|repeat this line|labelled line/i;
+function parseRecs(reply){
+  var s = String(reply || ""), recs = [], got = false;
+  s.split(/\r?\n/).forEach(function(raw){
+    var ln = raw.replace(/\*\*/g, "").trim();
+    var m = ln.match(/^[-*#>\s]*(BOOKS?)\s*\d*\s*[:：]\s*(.*)$/i);
+    if (!m) return;
+    got = true;
+    var parts = m[2].split("|").map(function(x){ return x.trim(); });
+    if (!parts[0]) return;
+    recs.push({title:parts[0], author:parts[1] || "", why:parts.slice(2).join(" | ")});
+  });
+  if (!got){ // model answered in the old JSON shape — accept it
+    var a = s.indexOf("["), b = s.lastIndexOf("]");
+    if (a >= 0 && b > a) try{
+      var j = JSON.parse(s.slice(a, b + 1));
+      if (Array.isArray(j)) recs = j.filter(function(x){ return x && x.title; })
+        .map(function(x){ return {title:String(x.title), author:x.author ? String(x.author) : "", why:x.why ? String(x.why) : ""}; });
+    }catch(e){}
+  }
+  recs = recs.filter(function(x){
+    return x.title && !ECHO.test(x.title) && !ECHO.test(x.author) && !ECHO.test(x.why);
+  });
+  if (!recs.length) throw new Error("bad");
+  return recs;
+}
 function recommend(){
   if (!ASK) return;
   haptic("light");
@@ -331,16 +359,18 @@ function recommend(){
                    .slice(0, 8)
                    .map(function(b){ return '"' + b.title + '"' + (b.author ? " by " + b.author : "") + " (" + b.rating + "/5" + (b.note ? ", said: " + b.note : "") + ")"; });
   var have = books.map(function(b){ return b.title.toLowerCase(); });
-  ASK("Books I loved: " + loved.join("; ") + ".\nSuggest 4 books I haven't mentioned that I'd probably love next. Reply with ONLY a JSON array like " +
-      '[{"title":"...","author":"...","why":"one short sentence"}]. No prose, no markdown.',
-      {system:"You are a well-read, honest book recommender. Output only the JSON array."})
-  .then(function(r){
-    var s = String(r);
-    var a = s.indexOf("["), b = s.lastIndexOf("]");
-    if (a < 0 || b <= a) throw new Error("bad");
-    var recs;
-    try{ recs = JSON.parse(s.slice(a, b + 1)); }catch(e){ throw new Error("bad"); }
-    recs = recs.filter(function(x){ return x && x.title && have.indexOf(String(x.title).toLowerCase()) < 0; }).slice(0, 4);
+  var p = "Books I loved: " + loved.join("; ") +
+      ".\nSuggest 4 books I haven't mentioned that I'd probably love next. Reply with EXACTLY these labelled lines and nothing else:\n" +
+      "BOOK: the book title | the author's name | one short sentence on why I'd love it — repeat this line for each of the 4 suggestions";
+  var sys = {system:"You are a well-read, honest book recommender."};
+  ASK(p, sys)
+  .then(function(r){ return parseRecs(r); })
+  .catch(function(){
+    return ASK(p + "\nIMPORTANT: fill each labelled line with real content — never repeat the instruction text.", sys)
+      .then(function(r){ return parseRecs(r); });
+  })
+  .then(function(recs){
+    recs = recs.filter(function(x){ return have.indexOf(String(x.title).toLowerCase()) < 0; }).slice(0, 4);
     if (!recs.length) throw new Error("bad");
     window.__recs = recs;
     el("reccard").style.display = "block";

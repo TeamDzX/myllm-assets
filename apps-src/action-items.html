@@ -75,19 +75,46 @@ function save(){store.setItem('items',JSON.stringify(items))}
 function uid(){seed=(seed*9301+49297)%233280;return 't'+seed+(items.length)}
 var seed=1234;
 
+/* Labelled lines, not JSON — small models (Apple Intelligence) echo JSON
+   templates back verbatim. Echoed instructions are rejected and retried. */
+var ECHO=/what needs to be done|who is responsible|when it is due|repeat this line|labelled line|leave blank/i;
+function cleanField(v){v=(v==null?'':String(v)).trim();return /^(none|n\/a|na|-|–|unknown|tbd)$/i.test(v)?'':v}
+function parseItems(reply){
+  var out=[],got=false;
+  String(reply||'').split(/\r?\n/).forEach(function(raw){
+    var ln=raw.replace(/\*\*/g,'').trim();
+    var m=ln.match(/^[-*#>\s]*(ITEMS?|TASKS?|ACTIONS?)\s*\d*\s*[:：]\s*(.*)$/i);
+    if(!m)return;
+    got=true;
+    var parts=m[2].split('|').map(function(p){return p.trim()});
+    var task=parts[0]||'',owner=cleanField(parts[1]),due=cleanField(parts[2]);
+    if(!task||ECHO.test(task)||ECHO.test(owner)||ECHO.test(due))return;
+    out.push({task:task,owner:owner,due:due});
+  });
+  if(!got){ // model answered in the old JSON shape — accept it
+    var s=reply.indexOf('['),e=reply.lastIndexOf(']');
+    if(s>=0&&e>s)try{
+      JSON.parse(reply.slice(s,e+1)).forEach(function(x){
+        if(x&&x.task)out.push({task:String(x.task),owner:cleanField(x.owner),due:cleanField(x.due)});
+      });
+    }catch(e2){}
+  }
+  if(!out.length)throw new Error('no action items came back');
+  return out;
+}
 function extract(){
   var notes=el('notes').value.trim();
   if(!notes){el('status').textContent='Paste some notes first.';return}
   if(!window.myllmAsk){el('status').textContent='This needs the latest MyLLM with “Allow apps to use the AI” enabled in Settings.';return}
   el('ext').disabled=true;el('status').textContent='Reading the notes…';
-  myllmAsk('From these meeting notes, extract every action item. Reply with ONLY a JSON array like '+
-    '[{"task":"what to do","owner":"person or empty string","due":"due date/time or empty string"}] and nothing else. Notes:\n'+notes)
-  .then(function(reply){
-    var s=reply.indexOf('['),e=reply.lastIndexOf(']');
-    if(s<0||e<=s)throw new Error('no items came back');
-    var got=JSON.parse(reply.slice(s,e+1)).filter(function(x){return x&&x.task});
-    if(!got.length)throw new Error('no action items found');
-    got.forEach(function(g){items.unshift({id:uid(),task:g.task,owner:(g.owner||'').trim(),due:(g.due||'').trim(),done:false})});
+  var p='From these meeting notes, extract every action item. Reply with EXACTLY these labelled lines and nothing else:\n'+
+    'ITEM: what needs to be done | who is responsible (or leave blank) | when it is due (or leave blank) — repeat this line for each action item\n'+
+    'Notes:\n'+notes;
+  myllmAsk(p).then(function(r){return parseItems(r||'')})
+  .catch(function(){return myllmAsk(p+'\nIMPORTANT: fill each labelled line with real content — never repeat the instruction text.')
+    .then(function(r){return parseItems(r||'')})})
+  .then(function(got){
+    got.forEach(function(g){items.unshift({id:uid(),task:g.task,owner:g.owner,due:g.due,done:false})});
     save();render();el('status').textContent='Added '+got.length+' item'+(got.length>1?'s':'')+'.';haptic('success');
   }).catch(function(err){el('status').textContent='Could not extract: '+err.message})
   .then(function(){el('ext').disabled=false});

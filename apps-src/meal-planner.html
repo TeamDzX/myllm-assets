@@ -72,16 +72,46 @@ function needAI(){
   return false;
 }
 
+/* Labelled lines, not JSON — small models (Apple Intelligence) echo JSON
+   templates back verbatim. Echoed instructions are rejected and retried. */
+var ECHO=/the breakfast dish|the lunch dish|the dinner dish|repeat this line|labelled line/i;
+function parsePlan(reply){
+  var got=false,byDay={};
+  String(reply||'').split(/\r?\n/).forEach(function(raw){
+    var ln=raw.replace(/\*\*/g,'').trim();
+    var m=ln.match(/^[-*#>\s]*(MONDAY|TUESDAY|WEDNESDAY|THURSDAY|FRIDAY|SATURDAY|SUNDAY)\s*\d*\s*[::]\s*(.*)$/i);
+    if(!m)return;
+    got=true;
+    var day=m[1].charAt(0).toUpperCase()+m[1].slice(1).toLowerCase();
+    var parts=m[2].split('|').map(function(s){return s.trim()});
+    var d={day:day};
+    MEALS.forEach(function(meal,i){var v=parts[i]||'';if(v&&!ECHO.test(v))d[meal]=v});
+    if(d.breakfast||d.lunch||d.dinner)byDay[day]=d;
+  });
+  var days=[];
+  if(got){DAYS.forEach(function(day){if(byDay[day])days.push(byDay[day])});}
+  else{ // model answered in the old JSON shape — accept it
+    var s=reply.indexOf('{'),e=reply.lastIndexOf('}');
+    if(s>=0&&e>s)try{
+      var j=JSON.parse(reply.slice(s,e+1));
+      days=(j.days||[]).filter(function(d){
+        return d&&d.day&&!ECHO.test([d.breakfast,d.lunch,d.dinner].join(' '));
+      });
+    }catch(e2){}
+  }
+  if(days.length<5)throw new Error('the plan came back incomplete');
+  return days;
+}
+
 function generate(){
   if(!needAI())return;
   el('gen').disabled=true;setStatus('Cooking up a week of meals…');
-  myllmAsk(prefsText()+'Create a 7-day meal plan (Monday to Sunday). Reply with ONLY a JSON object exactly like {"days":[{"day":"Monday","breakfast":"...","lunch":"...","dinner":"..."}]} with all 7 days in order and nothing else. Keep each meal under 9 words.')
-  .then(function(reply){
-    var s=reply.indexOf('{'),e=reply.lastIndexOf('}');
-    if(s<0||e<=s)throw new Error('the model did not return a plan');
-    var obj=JSON.parse(reply.slice(s,e+1));
-    var days=(obj.days||[]).filter(function(d){return d&&d.day});
-    if(days.length<5)throw new Error('the plan came back incomplete');
+  var p=prefsText()+'Create a 7-day meal plan (Monday to Sunday). Keep each meal under 9 words. Reply with EXACTLY these labelled lines and nothing else:\n'+
+    DAYS.map(function(d){return d.toUpperCase()+': the breakfast dish | the lunch dish | the dinner dish'}).join('\n');
+  myllmAsk(p).then(function(r){return parsePlan(r||'')})
+  .catch(function(){return myllmAsk(p+'\nIMPORTANT: fill each labelled line with real content — never repeat the instruction text.')
+    .then(function(r){return parsePlan(r||'')})})
+  .then(function(days){
     plan=days;save();render();setStatus('');
     if(window.myllmHaptic)myllmHaptic('success');
   }).catch(function(err){setStatus('Could not plan: '+err.message)})

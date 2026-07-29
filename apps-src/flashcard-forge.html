@@ -198,16 +198,41 @@ function buildChips(){
   });
 }
 
+/* Labelled lines, not JSON — small models (Apple Intelligence) echo JSON
+   templates back verbatim. Echoed instructions are rejected and retried. */
+var ECHO=/question on the front|answer on the back|repeat this line|labelled line/i;
+function parseDeck(reply){
+  var cards=[],got=false;
+  String(reply||'').split(/\r?\n/).forEach(function(raw){
+    var ln=raw.replace(/\*\*/g,'').trim();
+    var m=ln.match(/^[-*#>\s]*(CARDS?)\s*\d*\s*[:：]\s*(.*)$/i);
+    if(!m)return;
+    got=true;
+    var parts=m[2].split('|');
+    var q=(parts[0]||'').trim(),a=parts.slice(1).join('|').trim();
+    if(q&&a)cards.push({q:q,a:a});
+  });
+  if(!got){ // model answered in the old JSON shape — accept it
+    var s=String(reply||'').indexOf('['),e=String(reply||'').lastIndexOf(']');
+    if(s>=0&&e>s)try{
+      var j=JSON.parse(String(reply).slice(s,e+1));
+      if(Array.isArray(j))j.forEach(function(c){if(c&&c.q&&c.a)cards.push({q:String(c.q),a:String(c.a)})});
+    }catch(e2){}
+  }
+  cards=cards.filter(function(c){return !ECHO.test(c.q)&&!ECHO.test(c.a)});
+  if(!cards.length)throw new Error('the model did not return a deck');
+  return cards;
+}
 function gen(){
   var topic=el('topic').value.trim();if(!topic){setStatus('Enter a topic first.');return}
   if(!window.myllmAsk){setStatus('This app needs AI access — update MyLLM and enable “Allow apps to use the AI” in Settings.');return}
   el('gen').disabled=true;setStatus('Forging a deck about “'+topic+'”…');
-  myllmAsk('Create exactly 8 study flashcards about: '+topic+'. Reply with ONLY a JSON array like [{"q":"short question","a":"concise answer"}] and nothing else.')
-  .then(function(reply){
-    var s=reply.indexOf('['),e=reply.lastIndexOf(']');
-    if(s<0||e<=s)throw new Error('the model did not return a deck');
-    var cards=JSON.parse(reply.slice(s,e+1)).filter(function(c){return c&&c.q&&c.a});
-    if(!cards.length)throw new Error('the deck came back empty');
+  var p='Create exactly 8 study flashcards about: '+topic+'. Reply with EXACTLY these labelled lines and nothing else:\n'+
+    'CARD: the question on the front | the answer on the back (repeat this line for all 8 cards)';
+  myllmAsk(p).then(function(r){return parseDeck(r||'')})
+  .catch(function(){return myllmAsk(p+'\nIMPORTANT: fill each labelled line with real content — never repeat the instruction text.')
+    .then(function(r){return parseDeck(r||'')})})
+  .then(function(cards){
     decks.unshift({topic:topic,cards:cards});save();
     el('topic').value='';setStatus('');cur=-1;openDeck(0);haptic('success');
   }).catch(function(err){setStatus('Could not generate: '+err.message)})

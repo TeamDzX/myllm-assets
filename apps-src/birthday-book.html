@@ -239,26 +239,51 @@ function delPerson(){
 }
 
 /* ---------- gift ideas ---------- */
+/* Labelled lines, not JSON — small models (Apple Intelligence) echo JSON
+   templates back verbatim. Echoed instructions are rejected and retried. */
+var ECHO = /one specific gift idea|repeat this line|labelled line|short and concrete/i;
+function parseIdeas(reply){
+  var ideas = [], got = false;
+  String(reply || '').split(/\r?\n/).forEach(function(raw){
+    var ln = raw.replace(/\*\*/g, '').trim();
+    var m = ln.match(/^[-*#>\s]*(IDEAS?)\s*\d*\s*[::]\s*(.*)$/i);
+    if (!m) return;
+    got = true;
+    var v = m[2].trim();
+    if (v) ideas.push(v);
+  });
+  if (!got){ // model answered in the old JSON-array shape — accept it
+    var s = String(reply || '');
+    var a = s.indexOf("["), b = s.lastIndexOf("]");
+    if (a >= 0 && b > a) try{
+      var j = JSON.parse(s.slice(a, b + 1));
+      if (Array.isArray(j)) ideas = j.map(function(x){ return String(x).trim(); });
+    }catch(e){}
+  }
+  ideas = ideas.filter(function(x){ return x && !ECHO.test(x); });
+  if (ideas.length < 2) throw new Error("no real gift ideas came back");
+  return ideas;
+}
 function giftIdeas(){
   if (!ASK || !editing) return;
   var p = people.filter(function(x){ return x.id === editing; })[0];
   if (!p) return;
   haptic("light");
   var age = turningAge(p);
-  ASK("Suggest 5 thoughtful, specific birthday gift ideas for " + p.name +
+  var prompt = "Suggest 5 thoughtful, specific birthday gift ideas for " + p.name +
       (age ? " (turning " + age + ")" : "") +
       (p.notes ? ", who loves: " + p.notes : "") +
-      ". Mix price ranges; at least one should cost nothing but effort. Reply with ONLY a JSON array of 5 short strings, no prose.",
-      {system:"You are a thoughtful gift-picker. Output only the JSON array of 5 strings."})
-  .then(function(r){
-    var s = String(r);
-    var a = s.indexOf("["), b = s.lastIndexOf("]");
-    var ideas = null;
-    if (a >= 0 && b > a){ try{ ideas = JSON.parse(s.slice(a, b + 1)); }catch(e){} }
-    if (!ideas || !ideas.length){
-      el("sheetnote").textContent = "The ideas didn't come through — tap again.";
-      return;
-    }
+      ". Mix price ranges; at least one should cost nothing but effort." +
+      " Reply with EXACTLY these labelled lines and nothing else:\n" +
+      "IDEA: one specific gift idea, short and concrete (repeat this line for each of the 5 ideas)";
+  var sys = {system:"You are a thoughtful gift-picker. Give specific, personal gift ideas."};
+  ASK(prompt, sys)
+  .then(function(r){ return parseIdeas(r); })
+  .catch(function(){
+    return ASK(prompt + "\nIMPORTANT: fill each labelled line with real content — never repeat the instruction text.", sys)
+      .then(function(r){ return parseIdeas(r); });
+  })
+  .then(function(ideas){
     el("ideas").className = "ideas on";
     el("ideas").innerHTML = ideas.slice(0, 5).map(function(x){
       return '<div class="idea">🎁 ' + esc(String(x)) + '</div>';
@@ -266,7 +291,7 @@ function giftIdeas(){
     el("sheetnote").textContent = "";
     haptic("success");
   })
-  .catch(function(){ el("sheetnote").textContent = "The AI couldn't run just now — try again."; });
+  .catch(function(){ el("sheetnote").textContent = "The ideas didn't come through — tap again."; });
 }
 
 /* ---------- boot ---------- */

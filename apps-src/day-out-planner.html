@@ -54,13 +54,27 @@ function chips(){
   });
 }
 
+/* Labelled lines, not JSON — small models (Apple Intelligence) echo JSON
+   templates back verbatim. Echoed instructions are rejected and retried. */
+var ECHO=/place search query|repeat this line|labelled line|visiting order|apple-maps style/i;
 function parseQueries(text){
-  // Pull the first JSON array out of the model reply, tolerating code fences.
-  try{
-    var s=text.indexOf("["), e=text.lastIndexOf("]");
-    if(s>=0&&e>s){ var arr=JSON.parse(text.slice(s,e+1)); if(Array.isArray(arr)) return arr.map(String).slice(0,6); }
-  }catch(err){}
-  return null;
+  var out=[],got=false;
+  String(text||"").split(/\r?\n/).forEach(function(raw){
+    var ln=raw.replace(/\*\*/g,"").trim();
+    var m=ln.match(/^[-*#>\s]*(QUERY|QUERIES|STOP)\s*\d*\s*[:：]\s*(.*)$/i);
+    if(!m)return;
+    got=true;var v=m[2].trim();
+    if(v)out.push(v);
+  });
+  if(!got){ // model answered in the old JSON-array shape — accept it
+    try{
+      var s=text.indexOf("["), e=text.lastIndexOf("]");
+      if(s>=0&&e>s){ var arr=JSON.parse(text.slice(s,e+1)); if(Array.isArray(arr)) out=arr.map(String); }
+    }catch(err){}
+  }
+  out=out.filter(function(x){return x&&!ECHO.test(x)});
+  if(out.length<2) throw new Error("no usable plan");
+  return out.slice(0,6);
 }
 
 function plan(){
@@ -90,9 +104,15 @@ function getQueries(vibe){
   if(!ASK){
     return Promise.resolve(presets(vibe));
   }
-  var prompt='Plan a short local outing for this vibe: "'+vibe+'". Reply with ONLY a JSON array of 3 to 5 short place search queries (Apple-Maps style, e.g. ["coffee shop","park","museum","pizza restaurant"]) in a sensible visiting order. No prose.';
-  return ASK(prompt,{system:"You output only compact JSON arrays of place search strings. No commentary."})
-    .then(function(reply){ return parseQueries(reply)||presets(vibe); })
+  var prompt='Plan a short local outing for this vibe: "'+vibe+'". Reply with EXACTLY these labelled lines and nothing else:\n'+
+    'QUERY: one short place search query, Apple-Maps style — repeat this line for each stop (3 to 5 stops, in a sensible visiting order)';
+  var sys={system:"You plan short local outings as a list of place search queries."};
+  return ASK(prompt,sys)
+    .then(function(reply){ return parseQueries(reply||""); })
+    .catch(function(){
+      return ASK(prompt+'\nIMPORTANT: fill each labelled line with real content — never repeat the instruction text.',sys)
+        .then(function(reply){ return parseQueries(reply||""); });
+    })
     .catch(function(){ return presets(vibe); });
 }
 

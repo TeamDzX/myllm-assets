@@ -151,8 +151,11 @@ function renderStats(){
 }
 
 /* ---------- generate ---------- */
-function parseQuiz(reply){
-  var s = String(reply);
+/* Labelled lines, not JSON — small models (Apple Intelligence) echo JSON
+   templates back verbatim. Echoed instructions are rejected and retried. */
+var ECHO = /the question text|one answer choice|repeat this line|labelled line|number \(1-4\)|of the correct choice|one-sentence explanation|each of the four/i;
+
+function parseQuizJSON(s){ /* legacy fallback: big cloud models may still answer in the old JSON shape */
   var a = s.indexOf("["), b = s.lastIndexOf("]");
   if (a < 0 || b <= a) return null;
   var arr;
@@ -167,6 +170,54 @@ function parseQuiz(reply){
   return clean.length >= 3 ? clean.slice(0, 5) : null;
 }
 
+function resolveAnswer(ans, options){
+  var s = String(ans || "").trim();
+  var m = s.match(/[1-4]/);
+  if (m) return parseInt(m[0], 10) - 1;
+  m = s.match(/^[A-D]\b/i);
+  if (m) return "ABCD".indexOf(m[0].toUpperCase());
+  for (var i = 0; i < options.length; i++)
+    if (options[i].toLowerCase() === s.toLowerCase()) return i;
+  return -1;
+}
+
+function parseQuizReply(reply){
+  var s = String(reply || "");
+  var qs = [], cur = null, lastKey = "";
+  s.split(/\r?\n/).forEach(function(raw){
+    var ln = raw.replace(/\*\*/g, "").trim();
+    var m = ln.match(/^[-*#>\s]*(QUESTION|Q|OPTIONS?|ANSWERS?|WHY)\s*\d*\s*[::]\s*(.*)$/i);
+    if (!m){
+      if (cur && lastKey === "WHY" && ln) cur.why += " " + ln; /* prose may wrap onto the next line */
+      return;
+    }
+    var k = m[1].toUpperCase().replace(/S$/, ""), v = m[2].trim();
+    if (k === "QUESTION") k = "Q";
+    lastKey = k;
+    if (k === "Q"){ cur = {q:v, options:[], correct:-1, why:"", _ans:""}; qs.push(cur); return; }
+    if (!cur) return;
+    if (k === "OPTION"){ v.split("|").forEach(function(o){ o = o.trim(); if (o) cur.options.push(o); }); }
+    else if (k === "ANSWER"){ cur._ans = v; }
+    else if (k === "WHY"){ cur.why = v; }
+  });
+  if (!qs.length){
+    var legacy = parseQuizJSON(s); /* no labelled lines at all — try the old JSON shape */
+    if (legacy) return legacy;
+    throw new Error("no questions found");
+  }
+  var clean = qs.map(function(x){
+    x.options = x.options.filter(function(o){ return o && !ECHO.test(o); }).slice(0, 4);
+    x.correct = resolveAnswer(x._ans, x.options);
+    delete x._ans;
+    x.why = ECHO.test(x.why) ? "" : x.why.trim();
+    return x;
+  }).filter(function(x){
+    return x.q && !ECHO.test(x.q) && x.options.length === 4 && x.correct >= 0 && x.correct <= 3;
+  });
+  if (clean.length < 3) throw new Error("quiz didn't parse");
+  return clean.slice(0, 5);
+}
+
 function startQuiz(){
   var notes = el("notes").value.trim();
   if (!notes){ el("setuphint").textContent = "Paste some notes or a topic first."; haptic("light"); return; }
@@ -176,17 +227,22 @@ function startQuiz(){
   el("quizBtn").disabled = true;
   el("setuphint").textContent = "Writing your questions…";
   var avoid = askedBefore.length ? "\nDo NOT reuse these questions: " + askedBefore.slice(-10).map(function(q){ return '"' + q + '"'; }).join(", ") : "";
-  ASK("Create exactly 5 multiple-choice questions to test understanding of this material. Mix recall and understanding; make wrong options plausible.\n\nMATERIAL:\n" + notes.slice(0, 6000) + avoid +
-      '\n\nReply with ONLY a JSON array, no markdown, exactly this shape:\n[{"q":"…","options":["…","…","…","…"],"correct":0,"why":"one-sentence explanation of the right answer"}]\nThe "correct" field is the index (0-3) of the right option. Vary which position is correct.',
-      {system:"You are an excellent quiz writer. Output only the JSON array — no commentary, no code fences."})
-  .then(function(r){
-    var parsed = parseQuiz(r);
+  var prompt = "Create exactly 5 multiple-choice questions to test understanding of this material. Mix recall and understanding; make wrong options plausible.\n\nMATERIAL:\n" + notes.slice(0, 6000) + avoid +
+      "\n\nReply with EXACTLY these labelled lines and nothing else, repeating the block for each of the 5 questions:\n" +
+      "Q: the question text\n" +
+      "OPTION: one answer choice — repeat this line for each of the four choices\n" +
+      "ANSWER: the number (1-4) of the correct choice\n" +
+      "WHY: a one-sentence explanation of the right answer\n" +
+      "Vary which position is correct.";
+  var sys = {system:"You are an excellent quiz writer. Output only the labelled lines — no commentary, no code fences."};
+  ASK(prompt, sys)
+  .then(function(r){ return parseQuizReply(r); })
+  .catch(function(){
+    return ASK(prompt + "\nIMPORTANT: fill each labelled line with real content — never repeat the instruction text.", sys)
+      .then(function(r){ return parseQuizReply(r); });
+  })
+  .then(function(parsed){
     el("quizBtn").disabled = false;
-    if (!parsed){
-      el("setuphint").textContent = "The questions didn't come through cleanly — that happens with smaller models. Tap Quiz me to try again.";
-      haptic("light");
-      return;
-    }
     quiz = parsed;
     quiz.forEach(function(x){ askedBefore.push(x.q); });
     qi = 0; score = 0; wrong = [];
@@ -200,7 +256,8 @@ function startQuiz(){
   })
   .catch(function(){
     el("quizBtn").disabled = false;
-    el("setuphint").textContent = "The AI couldn't run just now — try again in a moment.";
+    el("setuphint").textContent = "The questions didn't come through cleanly — that happens with smaller models. Tap Quiz me to try again.";
+    haptic("light");
   });
 }
 

@@ -49,22 +49,67 @@ function start(){
   el('goBtn').disabled=true; el('goBtn').textContent='Building quiz…';
   var diff = el('diff').value;
   var prompt = 'Create a fun '+diff+'-difficulty trivia quiz of 5 questions about "'+topic+'". '+
-    'Reply with ONLY a JSON array, no prose. Each item: '+
-    '{"q":"question","options":["a","b","c","d"],"answer":0,"fact":"one-sentence interesting fact"}. '+
-    '"answer" is the 0-based index of the correct option.';
-  ASK(prompt, {system:'You output only valid compact JSON arrays. No markdown, no commentary.'})
-    .then(function(reply){
-      var data = parse(reply);
-      if(!data || !data.length){ throw new Error('Could not build a quiz — try another topic.'); }
-      qs = data; idx = 0; score = 0; showQ();
-    })
+    'Reply with EXACTLY these labelled lines and nothing else, repeating the block of 4 lines for each of the 5 questions:\n'+
+    'Q: the question text\n'+
+    'OPTION: one answer choice — repeat this line for each of the 4 choices\n'+
+    'ANSWER: the correct choice, written out again\n'+
+    'FACT: one short interesting fact about the answer';
+  var sys = {system:'You write fun, accurate trivia quizzes. Follow the requested labelled-line format exactly.'};
+  ASK(prompt, sys)
+    .then(function(reply){ return parse(reply||''); })
+    .catch(function(){ return ASK(prompt+'\nIMPORTANT: fill each labelled line with real content — never repeat the instruction text.', sys)
+      .then(function(reply){ return parse(reply||''); }); })
+    .then(function(data){ qs = data; idx = 0; score = 0; showQ(); })
     .catch(function(e){ el('app').innerHTML='<p class="note">'+(e&&e.message?e.message:'Something went wrong')+'</p><button class="go" onclick="setup()">Try again</button>'; });
 }
 
+/* Labelled lines, not JSON — small models (Apple Intelligence) echo JSON
+   templates back verbatim. Echoed instructions are rejected and retried. */
+var ECHO=/the question text|one answer choice|repeat this line|each of the 4 choices|the correct choice|one short interesting fact|labelled line/i;
 function parse(text){
-  try{ var s=text.indexOf('['), e=text.lastIndexOf(']'); if(s>=0&&e>s){ var arr=JSON.parse(text.slice(s,e+1)); return Array.isArray(arr)?arr.filter(valid).slice(0,5):null; } }catch(err){}
-  return null;
+  var blocks=[], cur=null, got=false;
+  String(text||'').split(/\r?\n/).forEach(function(raw){
+    var ln=raw.replace(/\*\*/g,'').trim();
+    var m=ln.match(/^[-*#>\s]*(QUESTIONS?|Q|OPTIONS?|ANSWERS?|FACTS?)\s*\d*\s*[::]\s*(.*)$/i);
+    if(!m)return;
+    got=true;
+    var k=m[1].toUpperCase().replace(/S$/,''), v=m[2].trim();
+    if(k==='Q'||k==='QUESTION'){ cur={q:v,options:[],ans:'',fact:''}; blocks.push(cur); }
+    else if(!cur)return;
+    else if(k==='OPTION'&&v)cur.options.push(v.replace(/^[A-Da-d][).]\s*/,''));
+    else if(k==='ANSWER')cur.ans=v;
+    else if(k==='FACT')cur.fact=v;
+  });
+  if(!got){ // model answered in the old JSON shape — accept it
+    try{ var s=text.indexOf('['), e=text.lastIndexOf(']'); if(s>=0&&e>s){ var arr=JSON.parse(text.slice(s,e+1)); if(Array.isArray(arr)){ var old=arr.filter(valid).slice(0,5); if(old.length) return old; } } }catch(err){}
+    throw new Error('Could not build a quiz — try another topic.');
+  }
+  var out=[];
+  blocks.forEach(function(c){
+    if(!c.q||ECHO.test(c.q))return;
+    var opts=c.options.filter(function(x){return x&&!ECHO.test(x)});
+    if(opts.length<2)return;
+    var a=answerIndex(c.ans,opts);
+    if(a<0)return;
+    out.push({q:c.q,options:opts,answer:a,fact:(c.fact&&!ECHO.test(c.fact))?c.fact:''});
+  });
+  if(!out.length){ throw new Error('Could not build a quiz — try another topic.'); }
+  return out.slice(0,5);
 }
+function answerIndex(v,opts){
+  v=String(v||'').trim();
+  if(!v||ECHO.test(v))return -1;
+  var m=v.match(/^\(?([1-9])\)?[.)]?$/);
+  if(m){ var n=parseInt(m[1],10)-1; return n<opts.length?n:-1; }
+  m=v.match(/^\(?([A-Da-d])\)?[.)]?$/);
+  if(m){ var n2=m[1].toUpperCase().charCodeAt(0)-65; return n2<opts.length?n2:-1; }
+  var t=norm(v.replace(/^[A-Da-d][).]\s*/,''));
+  if(!t)return -1;
+  for(var i=0;i<opts.length;i++)if(norm(opts[i])===t)return i;
+  for(i=0;i<opts.length;i++){ var o=norm(opts[i]); if(o&&(t.indexOf(o)>=0||o.indexOf(t)>=0))return i; }
+  return -1;
+}
+function norm(s){ return String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,''); }
 function valid(q){ return q && q.q && Array.isArray(q.options) && q.options.length>=2 && typeof q.answer==='number'; }
 
 function showQ(){

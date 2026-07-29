@@ -283,7 +283,35 @@ function lookupWeather(dest, start, nights){
   });
 }
 
-/* AI extras appended as their own group (optional, graceful) */
+/* AI extras appended as their own group (optional, graceful).
+   Labelled lines, not JSON — small models (Apple Intelligence) echo JSON
+   templates back verbatim. Echoed instructions are rejected and retried. */
+var EXTRAS_ECHO = /destination-specific packing item|generic list would miss|repeat this line|labelled line/i;
+function parseExtras(reply){
+  var s = String(reply || ""), items = [], got = false;
+  s.split(/\r?\n/).forEach(function(raw){
+    var ln = raw.replace(/\*\*/g, "").trim();
+    var m = ln.match(/^[-*#>\s]*(ITEMS?)\s*\d*\s*[::]\s*(.*)$/i);
+    if (!m) return;
+    got = true;
+    var v = m[2].trim();
+    if (v) items.push(v);
+  });
+  if (!got){ // model answered in the old JSON-array shape — accept it
+    var a = s.indexOf("["), b = s.lastIndexOf("]");
+    if (a >= 0 && b > a){
+      try{
+        var j = JSON.parse(s.slice(a, b + 1));
+        if (Array.isArray(j)) items = j;
+      }catch(e){}
+    }
+  }
+  items = items.filter(function(x){
+    return typeof x === "string" && x.length > 1 && x.length < 90 && !EXTRAS_ECHO.test(x);
+  }).slice(0, 8);
+  if (!items.length) throw new Error("no usable extras");
+  return items;
+}
 function smartExtras(){
   if (!ASK || !trip) return;
   var wxs = trip.wx ? (" Forecast: " + Math.round(Math.min.apply(null, trip.wx.map(function(d){return d.tmin;}))) + "–" +
@@ -291,17 +319,17 @@ function smartExtras(){
     Math.round(Math.max.apply(null, trip.wx.map(function(d){return d.rain;}))) + "%.") : "";
   var prompt = 'I\'m going to ' + trip.place + ' for ' + trip.nights + ' nights (' + trip.type + ' trip), starting ' + trip.start + '.' + wxs +
     ' List 4 to 6 destination-specific packing items a generic list would miss (think: plug adapter type, local etiquette, terrain, insects, payments). ' +
-    'Reply with ONLY a JSON array of short strings, e.g. ["Type-C plug adapter","Mosquito repellent"]. No prose.';
-  ASK(prompt, {system:"You output only compact JSON arrays of short strings. No commentary."})
-    .then(function(reply){
-      var s = String(reply);
-      var a = s.indexOf("["), b = s.lastIndexOf("]");
-      if (a < 0 || b <= a) return;
-      var items;
-      try{ items = JSON.parse(s.slice(a, b + 1)); }catch(e){ return; }
-      if (!items || !items.length || !trip) return;
-      items = items.filter(function(x){ return typeof x === "string" && x.length > 1 && x.length < 90; }).slice(0, 8);
-      if (!items.length) return;
+    'Reply with EXACTLY these labelled lines and nothing else:\n' +
+    'ITEM: one destination-specific packing item — repeat this line for each item';
+  var sys = {system:"You suggest practical, destination-specific packing items. Output only the labelled lines requested."};
+  ASK(prompt, sys)
+    .then(function(r){ return parseExtras(r || ""); })
+    .catch(function(){
+      return ASK(prompt + '\nIMPORTANT: fill each labelled line with real content — never repeat the instruction text.', sys)
+        .then(function(r){ return parseExtras(r || ""); });
+    })
+    .then(function(items){
+      if (!trip) return;
       trip.groups = trip.groups.filter(function(g){ return g.name !== "Smart extras ✨"; });
       trip.groups.push({name:"Smart extras ✨", items:items.map(function(t){ return {t:t, on:false}; })});
       save(); render();

@@ -188,15 +188,43 @@ function renderVocab(){
 /* ---------- phrases (AI) ---------- */
 var phrases=[];
 function needAI(setter){if(window.myllmAsk)return false;setter('This needs the latest MyLLM with “Allow apps to use the AI” enabled in Settings.');return true;}
+/* Labelled lines, not JSON — small models (Apple Intelligence) echo JSON
+   templates back verbatim. Echoed instructions are rejected and retried. */
+var ECHO=new RegExp('the phrase in '+LANG+'|simple English pronunciation|the English meaning|repeat this line|labelled line','i');
+function parsePhrases(reply){
+  reply=String(reply||'');
+  var items=[],got=false;
+  reply.split(/\r?\n/).forEach(function(raw){
+    var ln=raw.replace(/\*\*/g,'').trim();
+    var m=ln.match(/^[-*#>\s]*(PHRASES?)\s*\d*\s*[::]\s*(.*)$/i);
+    if(!m)return;
+    got=true;
+    var parts=m[2].split('|').map(function(x){return x.trim()});
+    if(parts[0])items.push({t:parts[0],p:parts[1]||'',n:parts[2]||''});
+  });
+  if(!got){ // model answered in the old JSON-array shape — accept it
+    var s=reply.indexOf('['),e=reply.lastIndexOf(']');
+    if(s>=0&&e>s)try{
+      var j=JSON.parse(reply.slice(s,e+1));
+      if(Array.isArray(j))j.forEach(function(x){
+        if(x&&x.t)items.push({t:String(x.t),p:x.p?String(x.p):'',n:x.n?String(x.n):''});
+      });
+    }catch(e2){}
+  }
+  items=items.filter(function(x){return x.t&&x.n&&!ECHO.test(x.t)&&!ECHO.test(x.p)&&!ECHO.test(x.n)});
+  if(!items.length)throw new Error('no lesson came back');
+  return items;
+}
 function genPhrases(){
   var topic=el('ptopic').value.trim();if(!topic){el('pstatus').textContent='Enter a topic.';return}
   if(needAI(function(t){el('pstatus').textContent=t})) return;
   el('pgen').disabled=true;el('pstatus').textContent='Writing '+LANG+' phrases about “'+topic+'”…';
-  myllmAsk('Create 8 useful '+LANG+' phrases about: '+topic+', for an English-speaking beginner. Reply with ONLY a JSON array like [{"t":"phrase in '+LANG+'","p":"simple English pronunciation","n":"English meaning"}] and nothing else.')
-  .then(function(reply){
-    var s=reply.indexOf('['),e=reply.lastIndexOf(']');if(s<0||e<=s)throw new Error('no lesson came back');
-    var got=JSON.parse(reply.slice(s,e+1)).filter(function(x){return x&&x.t&&x.n});
-    if(!got.length)throw new Error('the lesson was empty');
+  var p='Create 8 useful '+LANG+' phrases about: '+topic+', for an English-speaking beginner. Reply with EXACTLY these labelled lines and nothing else:\n'+
+    'PHRASE: the phrase in '+LANG+' | simple English pronunciation | the English meaning — repeat this line for each of the 8 phrases';
+  myllmAsk(p).then(function(r){return parsePhrases(r||'')})
+  .catch(function(){return myllmAsk(p+'\nIMPORTANT: fill each labelled line with real content — never repeat the instruction text.')
+    .then(function(r){return parsePhrases(r||'')})})
+  .then(function(got){
     phrases=got.concat(phrases);store.setItem('phrases',JSON.stringify(phrases.slice(0,80)));
     el('ptopic').value='';el('pstatus').textContent='';renderPhrases();
   }).catch(function(err){el('pstatus').textContent='Could not generate: '+err.message})

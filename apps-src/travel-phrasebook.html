@@ -309,6 +309,42 @@ function closeBig(e){
 }
 
 /* ---------- AI translation ---------- */
+/* Labelled lines with instruction-phrased fields, never example placeholders —
+   small models (Apple Intelligence) echo format templates back verbatim, and
+   the old "<the translation>" placeholder rendered as real content. Echoed
+   instructions are rejected and retried once. */
+var ECHO = /translated phrase|latin letters|polite traveller|traveller would pronounce|repeat this line|labelled line|nothing else|instruction text/i;
+function parseTranslation(reply, wantRom){
+  var r = String(reply || "").trim();
+  var tr = "", rom = "", got = false;
+  r.split(/\r?\n/).forEach(function(raw){
+    var ln = raw.replace(/\*\*/g, "").trim();
+    var m = ln.match(/^[-*#>\s]*(TRANSLATIONS?|ROMAN(?:IZATION|ISATION)?S?)\s*\d*\s*[:：]\s*(.*)$/i);
+    if (!m) return;
+    got = true;
+    var k = m[1].toUpperCase(), v = m[2].trim();
+    if (k.indexOf("TRANSLATION") === 0){ if (!tr) tr = v; }
+    else if (k.indexOf("ROMAN") === 0){ if (!rom) rom = v; }
+  });
+  if (!got){
+    /* legacy shapes: JSON from big cloud models, or a bare translation line */
+    var s = r.indexOf("{"), e = r.lastIndexOf("}");
+    if (s >= 0 && e > s){
+      try{
+        var j = JSON.parse(r.slice(s, e + 1));
+        tr = String(j.translation || j.tr || "").trim();
+        rom = String(j.roman || j.romanization || j.romanisation || j.rom || "").trim();
+      }catch(e2){}
+    }
+    if (!tr) tr = r.split("\n")[0].trim();
+  }
+  tr = tr.replace(/^["'«]|["'»]$/g, "").trim();
+  rom = rom.replace(/^["'«]|["'»]$/g, "").trim();
+  if (!wantRom) rom = "";
+  if (!tr || ECHO.test(tr) || ECHO.test(rom))
+    throw new Error("the translator didn't return a real translation");
+  return {tr: tr, rom: rom};
+}
 function aiTranslate(){
   var q = el("aiq").value.trim();
   if (!q){ haptic("light"); return; }
@@ -319,23 +355,19 @@ function aiTranslate(){
   haptic("light");
   el("aigo").disabled = true;
   var wantRom = !!R[lang.id];
-  ASK("Translate this into " + lang.name + " for a polite traveller: \"" + q + "\"\n" +
-      (wantRom ? "Reply in EXACTLY this format, nothing else:\nTRANSLATION: <the translation>\nROMAN: <how to pronounce it in latin letters>"
-               : "Reply with ONLY the translation, nothing else."),
-      {system:"You are a precise translator. No commentary, no alternatives, no quotes."})
-  .then(function(r){
-    r = String(r).trim();
-    var tr = r, rom = "";
-    if (wantRom){
-      var mt = r.match(/TRANSLATION:\s*(.+)/i);
-      var mr = r.match(/ROMAN:\s*(.+)/i);
-      if (mt) tr = mt[1].trim();
-      if (mr) rom = mr[1].trim();
-      if (!mt){ tr = r.split("\n")[0].trim(); }
-    }
-    tr = tr.replace(/^["'«]|["'»]$/g, "");
-    el("aitr").textContent = tr;
-    el("airom").textContent = rom;
+  var p = "Translate this into " + lang.name + " for a polite traveller: \"" + q + "\"\n" +
+      (wantRom ? "Reply with EXACTLY these labelled lines and nothing else:\nTRANSLATION: the translated phrase in " + lang.name + "\nROMAN: how a traveller would pronounce it, written in latin letters"
+               : "Reply with EXACTLY this labelled line and nothing else:\nTRANSLATION: the translated phrase in " + lang.name);
+  var sys = {system:"You are a precise translator. No commentary, no alternatives, no quotes."};
+  ASK(p, sys)
+  .then(function(r){ return parseTranslation(r || "", wantRom); })
+  .catch(function(){
+    return ASK(p + "\nIMPORTANT: fill each labelled line with real content — never repeat the instruction text.", sys)
+      .then(function(r){ return parseTranslation(r || "", wantRom); });
+  })
+  .then(function(o){
+    el("aitr").textContent = o.tr;
+    el("airom").textContent = o.rom;
     el("aiout").style.display = "block";
     el("ainote").textContent = "Tap the translation to show it full-screen.";
     el("aigo").disabled = false;
