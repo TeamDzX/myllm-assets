@@ -4,9 +4,11 @@
    rule order (a later `background:#fff` once beat the dark override — the
    "grey text on white card" bug) */
 :root{color-scheme:light dark;--accent:#ff453a;
-  --bg:#f2f2f7;--card:#fff;--ink:#111;--line:#d1d1d6;--alt:#e5e5ea;--alt-ink:#333;--save-bg:#ffe5e3}
+  --bg:#f2f2f7;--card:#fff;--ink:#111;--line:#d1d1d6;--alt:#e5e5ea;--alt-ink:#333;--save-bg:#ffe5e3;
+  --diet-bg:#e3f4e7;--diet-ink:#1e7d3c}
 @media(prefers-color-scheme:dark){:root{
-  --bg:#000;--card:#1c1c1e;--ink:#eee;--line:#3a3a3c;--alt:#1c1c1e;--alt-ink:#eee;--save-bg:#3a1f1e}}
+  --bg:#000;--card:#1c1c1e;--ink:#eee;--line:#3a3a3c;--alt:#1c1c1e;--alt-ink:#eee;--save-bg:#3a1f1e;
+  --diet-bg:#173322;--diet-ink:#7ed99a}}
 *{box-sizing:border-box}
 body{font-family:-apple-system,system-ui,sans-serif;margin:0;padding:18px;background:var(--bg);color:var(--ink)}
 h1{font-size:22px;margin:0 0 4px}
@@ -16,6 +18,8 @@ input{flex:1;min-width:0;padding:12px;border:1px solid var(--line);border-radius
 button.go{border:0;background:var(--accent);color:#fff;border-radius:10px;padding:0 16px;font-size:15px;font-weight:600}
 .alt{display:flex;gap:8px;margin-bottom:6px}
 .alt button{flex:1;border:0;background:var(--alt);color:var(--alt-ink);border-radius:9px;padding:9px;font-size:13px;font-weight:600}
+.diet{border:1.5px solid var(--line);background:none;color:var(--alt-ink);border-radius:999px;padding:7px 14px;font-size:13px;font-weight:600;margin-bottom:6px}
+.diet.on{border-color:#34a853;background:var(--diet-bg);color:var(--diet-ink)}
 #status{font-size:13px;opacity:.7;min-height:16px;margin:8px 0}
 .recipe{background:var(--card);color:var(--ink);border-radius:16px;padding:18px;margin-top:6px;box-shadow:0 1px 4px rgba(0,0,0,.1);display:none}
 .recipe h2{margin:0 0 2px;font-size:20px}
@@ -55,13 +59,22 @@ h4{font-size:13px;text-transform:uppercase;letter-spacing:.05em;opacity:.55;marg
 <div class="sub">Tell it what's in your fridge, or a dish you fancy — get a recipe.</div>
 <div class="row"><input id="q" placeholder="e.g. chicken, rice, peppers — or “lasagne”" enterkeyhint="search"><button class="go" id="go" onclick="find()">Cook</button></div>
 <div class="alt"><button onclick="surprise()">🎲 Surprise me</button><button onclick="find(' make it quick (under 20 minutes)')">⚡ Something quick</button></div>
+<button class="diet" id="dietBtn" onclick="toggleDiet()">🌱 Plant-based</button>
 <div id="status"></div>
 <div class="recipe" id="recipe"></div>
 <h4 id="savedHead" style="display:none">Saved recipes</h4>
 <div id="saved"></div>
 <script>
 var store=window.myllmStorage||{getItem:function(){return Promise.resolve(null)},setItem:function(){return Promise.resolve()}};
-var saved=[],current=null;
+var saved=[],current=null,plant=false;
+function toggleDiet(){
+  plant=!plant;renderDiet();store.setItem('recipes.plant',plant?'1':'');
+  if(window.myllmHaptic)myllmHaptic('selection');
+}
+function renderDiet(){
+  var b=el('dietBtn');b.classList.toggle('on',plant);
+  b.textContent=plant?'🌱 Plant-based — on (eggs ok)':'🌱 Plant-based';
+}
 function el(i){return document.getElementById(i)}
 function setStatus(t){el('status').textContent=t||''}
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
@@ -106,7 +119,8 @@ function parseRecipe(reply){
 function ask(prompt){
   if(!window.myllmAsk){setStatus('Recipes need AI — update MyLLM and enable “Allow apps to use the AI” in Settings.');return}
   el('go').disabled=true;setStatus('Cooking something up…');
-  var p=prompt+' Reply with EXACTLY these labelled lines and nothing else:\n'+
+  var diet=plant?' The recipe MUST be fully plant-based: no meat, poultry, fish, seafood, dairy, gelatine or honey. Eggs ARE allowed.':'';
+  var p=prompt+diet+' Reply with EXACTLY these labelled lines and nothing else:\n'+
     'TITLE: the recipe name\nSERVES: how many people it serves\nTIME: total cooking time\n'+
     'INGREDIENT: one ingredient with its quantity (repeat this line for every ingredient)\n'+
     'STEP: one short cooking step (repeat this line for every step)';
@@ -151,5 +165,6 @@ store.getItem('recipes').then(function(v){
   if(v)try{saved=JSON.parse(v)}catch(e){}
   renderSaved();
   if(!window.myllmAsk)setStatus('Heads-up: this app needs the latest MyLLM with apps-AI enabled.');
-});
+  return store.getItem('recipes.plant');
+}).then(function(v){ plant=!!v; renderDiet(); });
 </script></body></html>
