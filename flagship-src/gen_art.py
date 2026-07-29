@@ -20,6 +20,7 @@ JOBS = [
   ("eq-scifi.jpg",    "atmospheric painterly science fiction game backdrop, vast space station corridor window onto a nebula, deep blue and cyan glow, muted, cinematic, no text, no people", 306, "1216x608", 900),
   ("eq-mystery.jpg",  "atmospheric painterly noir mystery game backdrop, foggy gaslit victorian street at night, rain sheen on cobblestones, deep charcoal and amber, cinematic, no text, no people", 307, "1216x608", 900),
   ("eq-pirate.jpg",   "atmospheric painterly pirate adventure game backdrop, tall ship silhouetted against a golden storm sunset at sea, deep teal waves, cinematic, no text, no people", 308, "1216x608", 900),
+  ("eq-romance.jpg",  "atmospheric painterly cosy romance game backdrop, lamplit seaside village lane at golden dusk, warm glowing cottage windows and flower boxes, blank hanging wooden signs, harbour and gentle sea beyond, warm rose gold and honey tones, soft, cinematic, no text, no words, no letters, no signage lettering, no people", 312, "1216x608", 900),
 ]
 fails = []
 for name, prompt, seed, size, maxpx in JOBS:
