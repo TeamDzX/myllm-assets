@@ -235,18 +235,63 @@ function turnPrompt(action){
   (G.summary? 'Story so far: '+G.summary+'\n' : '')+
   (recent? 'Recent events:\n'+recent+'\n' : '')+
   'Player action: '+action+'\n\n'+
-  'Continue the story. Reply with ONLY this JSON object, nothing else:\n'+
-  '{"scene":"2 to 4 vivid sentences in second person present tense","choices":["short action","short action","short action"],"health_change":0,"item_gained":null,"item_lost":null,"game_over":false,"victory":false}\n'+
-  'Rules: health_change is an integer from -2 to 1 — actually USE it: -1 or -2 when the hero is hurt, endangered, or an action fails or backfires; +1 when they rest, are healed, or eat and drink; 0 only for genuinely safe, uneventful moments. The hero\'s health should meaningfully rise and fall across the adventure. item_gained/item_lost are short item names or null. Set game_over true only on death (health would reach 0) or on victory=true when the quest truly resolves. Keep the tone cinematic but concise.';
+  'Continue the story. Reply with EXACTLY these labelled lines, each one filled in:\n'+
+  'SCENE: the next story beat — 2 to 4 vivid sentences, second person ("you"), present tense\n'+
+  'CHOICE1: a short action the player could take next\n'+
+  'CHOICE2: a different short action\n'+
+  'CHOICE3: a third short action\n'+
+  'HEALTH: one whole number from -2 to 1 — use -1 or -2 when the hero is hurt, endangered, or an action fails or backfires; 1 when they rest, are healed, or eat and drink; 0 only for genuinely safe moments\n'+
+  'GAINED: an item gained this scene, or none\n'+
+  'LOST: an item lost this scene, or none\n'+
+  'ENDED: yes only if the story ends here (death, or the quest truly resolves), otherwise no\n'+
+  'VICTORY: yes only if it ends in triumph, otherwise no\n'+
+  'The health number should meaningfully rise and fall across the adventure. Keep the tone cinematic but concise.';
+}
+/* Small models (Apple Intelligence included) can echo a format template back
+   verbatim — so the turn format is labelled lines, instructions are phrased as
+   instructions, and anything that still parrots them is rejected and retried. */
+var ECHO=/vivid sentences|second person|present tense|story beat|short action|player could take|labelled line/i;
+function cleanItem(v){
+  v=String(v||'').trim().replace(/^["'\u201c\u201d]+|["'\u201c\u201d]+$/g,'');
+  if(!v||v.length>48||/^(none|null|nothing|no|n\/a|nil|-+)$/i.test(v)) return null;
+  return v;
 }
 function parseTurn(reply){
-  var s=reply.indexOf('{'), e=reply.lastIndexOf('}');
-  if(s<0||e<=s) throw new Error('no JSON');
-  var o=JSON.parse(reply.slice(s,e+1).replace(/[\u0000-\u001F]+/g,' '));
-  if(typeof o.scene!=='string'||!o.scene.trim()) throw new Error('no scene');
-  if(!Array.isArray(o.choices)) o.choices=[];
-  o.choices=o.choices.filter(function(c){return typeof c==='string'&&c.trim();}).slice(0,3);
-  o.health_change=Math.max(-2,Math.min(1,parseInt(o.health_change||0,10)||0));
+  reply=String(reply||'');
+  var o={scene:'',choices:[],health_change:0,item_gained:null,item_lost:null,game_over:false,victory:false};
+  var inScene=false,got=false;
+  reply.split(/\r?\n/).forEach(function(raw){
+    var ln=raw.replace(/\*\*/g,'').trim();
+    var m=ln.match(/^[-*#>\s]*(SCENE|CHOICES?|HEALTH|GAINED|LOST|ENDED|VICTORY)\s*\d*\s*[::]\s*(.*)$/i);
+    if(m){
+      got=true; inScene=false;
+      var k=m[1].toUpperCase(), v=m[2].trim(); if(k==='CHOICES')k='CHOICE';
+      if(k==='SCENE'){ o.scene=v; inScene=true; }
+      else if(k==='CHOICE'){ (v.indexOf('|')>=0?v.split('|'):[v]).forEach(function(c){ c=c.trim(); if(c)o.choices.push(c); }); }
+      else if(k==='HEALTH'){ var n=parseInt((v.match(/-?\d+/)||['0'])[0],10); o.health_change=Math.max(-2,Math.min(1,isNaN(n)?0:n)); }
+      else if(k==='GAINED'){ o.item_gained=cleanItem(v); }
+      else if(k==='LOST'){ o.item_lost=cleanItem(v); }
+      else if(k==='ENDED'){ o.game_over=/^\s*y/i.test(v); }
+      else if(k==='VICTORY'){ o.victory=/^\s*y/i.test(v); }
+    } else if(inScene&&ln){ o.scene+=' '+ln; }   // scenes may wrap over lines
+  });
+  if(!got){ // some models still answer in the old JSON shape — accept it
+    var s=reply.indexOf('{'), e=reply.lastIndexOf('}');
+    if(s>=0&&e>s){
+      try{
+        var j=JSON.parse(reply.slice(s,e+1).replace(/[\u0000-\u001F]+/g,' '));
+        o.scene=typeof j.scene==='string'?j.scene:'';
+        o.choices=Array.isArray(j.choices)?j.choices.filter(function(c){return typeof c==='string'&&c.trim();}):[];
+        o.health_change=Math.max(-2,Math.min(1,parseInt(j.health_change||0,10)||0));
+        o.item_gained=cleanItem(j.item_gained); o.item_lost=cleanItem(j.item_lost);
+        o.game_over=!!j.game_over; o.victory=!!j.victory;
+      }catch(e2){}
+    }
+  }
+  o.scene=o.scene.trim();
+  if(!o.scene) throw new Error('no scene came back');
+  if(ECHO.test(o.scene)) throw new Error('the storyteller repeated the instructions');
+  o.choices=o.choices.filter(function(c){ return c&&!ECHO.test(c); }).slice(0,3);
   return o;
 }
 function doTurn(action){
@@ -256,7 +301,7 @@ function doTurn(action){
   var p=turnPrompt(action);
   myllmAsk(p).then(function(r){ return parseTurn(r||''); })
   .catch(function(){ // one strict retry — small models sometimes chat first
-    return myllmAsk(p+'\n\nIMPORTANT: reply with ONLY the raw JSON object, no other words.').then(function(r){ return parseTurn(r||''); });
+    return myllmAsk(p+'\n\nIMPORTANT: fill each labelled line with real story content — never repeat the instruction text itself.').then(function(r){ return parseTurn(r||''); });
   })
   .then(function(o){ applyTurn(action,o); })
   .catch(function(e){
