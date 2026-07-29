@@ -131,7 +131,9 @@ return Promise.resolve(p).then(function(r){hide();return r;},function(e){hide();
     <div class="lbl">Tone</div>
     <div class="chips" id="toneChips"></div>
     <div style="height:10px"></div>
-    <button class="btn" id="writeBtn" onclick="writeCopy()" style="width:100%">Write my post</button>
+    <button class="btn" id="designBtn" onclick="designMe()" style="width:100%;background:linear-gradient(135deg,#7d5cff,#e05c8a)">✨ Design it for me</button>
+    <div style="height:8px"></div>
+    <button class="btn ghost" id="writeBtn" onclick="writeCopy()" style="width:100%">Write the words only</button>
     <p class="hint" id="wordsHint"></p>
     <div class="lbl">Headline</div>
     <input type="text" id="fHook" maxlength="60" oninput="S.copy.hook=this.value;paint()">
@@ -140,7 +142,12 @@ return Promise.resolve(p).then(function(r){hide();return r;},function(e){hide();
     <div class="lbl">Button / call to action</div>
     <input type="text" id="fCta" maxlength="30" oninput="S.copy.cta=this.value;paint()">
     <div class="lbl">Caption &amp; hashtags — copied when you save</div>
-    <textarea id="fCaption" rows="3" oninput="S.copy.caption=this.value"></textarea>
+    <textarea id="fCaption" rows="3" oninput="S.copy.caption=this.value;updCount()"></textarea>
+    <div class="row" style="margin-top:6px;align-items:center">
+      <button class="btn ghost" style="flex:1" id="tagBtn" onclick="suggestTags()"># Suggest hashtags</button>
+      <span id="capCount" style="font-size:11px;color:var(--mut);white-space:nowrap"></span>
+    </div>
+    <div class="chips" id="tagSets" style="margin-top:6px"></div>
   </div>
 
   <div class="panel" id="p-style">
@@ -152,6 +159,8 @@ return Promise.resolve(p).then(function(r){hide();return r;},function(e){hide();
     <input type="file" id="photoIn" accept="image/*" style="display:none" onchange="loadPhoto(this)">
     <p class="hint" id="styleHint"></p>
     <div id="photoCtl" style="display:none">
+      <div class="lbl">Filter</div>
+      <div class="chips" id="filterRow" style="display:none"></div>
       <div class="lbl">Photo zoom — drag to move, pinch to zoom</div>
       <input type="range" id="pzoom" min="100" max="400" value="100" oninput="S.photoPos.scale=this.value/100;paint()">
       <div style="height:8px"></div>
@@ -263,7 +272,7 @@ function render(cv,W,H,forExport){
   var x=cv.getContext("2d"),T=TEMPLATES[S.template];
   /* background */
   if(S.photo&&S.bg.type==="photo"){
-    var im=S.photo,sc=Math.max(W/im.width,H/im.height)*S.photoPos.scale;
+    var im=S.photoDraw||S.photo,sc=Math.max(W/im.width,H/im.height)*S.photoPos.scale;
     var dw=im.width*sc,dh=im.height*sc;
     var dx=(W-dw)/2+S.photoPos.x*W,dy=(H-dh)/2+S.photoPos.y*H;
     dx=Math.min(0,Math.max(W-dw,dx));dy=Math.min(0,Math.max(H-dh,dy));
@@ -499,9 +508,58 @@ function deleteSel(){
 
 /* ---------------- photo ---------------- */
 /* Set a fully-loaded Image as the background and reset its position. */
+var FILTERS=[
+ ['none','Original',''],
+ ['bw','B&W','grayscale(1) contrast(1.06)'],
+ ['warm','Warm','sepia(.32) saturate(1.3) contrast(1.03)'],
+ ['cool','Cool','saturate(1.12) hue-rotate(14deg) brightness(1.04)'],
+ ['fade','Fade','contrast(.85) brightness(1.14) saturate(.8)'],
+ ['punch','Punch','contrast(1.28) saturate(1.4)']
+];
 function setPhoto(im){
-  S.photo=im;S.bg.type='photo';S.photoPos={x:0,y:0,scale:1};el('pzoom').value=100;
-  refreshStyle();buildGrads();paint();saveDraft();haptic('success');
+  S.photo=im;S.photoDraw=null;S.photoFilter='none';
+  S.bg.type='photo';S.photoPos={x:0,y:0,scale:1};el('pzoom').value=100;
+  refreshStyle();buildFilters();buildGrads();paint();saveDraft();haptic('success');
+}
+/* bake the chosen filter once (ctx.filter when supported, else a pixel pass) so
+   live drag/zoom repaints stay fast */
+function applyFilter(id){
+  S.photoFilter=id;buildFilters();
+  if(!S.photo){paint();return}
+  var f=null;for(var i=0;i<FILTERS.length;i++)if(FILTERS[i][0]===id)f=FILTERS[i];
+  if(!f||!f[2]){S.photoDraw=null;paint();return}
+  var im=S.photo,c=document.createElement('canvas');c.width=im.width;c.height=im.height;
+  var x=c.getContext('2d');
+  x.filter=f[2];
+  var supported=x.filter!=='none'&&x.filter!=='';
+  x.drawImage(im,0,0);
+  if(!supported){ // manual fallback: approximate with a pixel pass
+    x.filter='none';x.drawImage(im,0,0);
+    try{
+      var d=x.getImageData(0,0,c.width,c.height),p=d.data;
+      for(var j=0;j<p.length;j+=4){
+        var r=p[j],g=p[j+1],b=p[j+2];
+        if(id==='bw'){var l=r*0.299+g*0.587+b*0.114;r=g=b=l;}
+        else if(id==='warm'){r=Math.min(255,r*1.12+10);g=Math.min(255,g*1.04);b=b*0.88;}
+        else if(id==='cool'){r=r*0.9;g=Math.min(255,g*1.02);b=Math.min(255,b*1.12+8);}
+        else if(id==='fade'){r=r*0.85+34;g=g*0.85+34;b=b*0.85+34;}
+        else if(id==='punch'){r=(r-128)*1.28+128;g=(g-128)*1.28+128;b=(b-128)*1.28+128;}
+        p[j]=Math.max(0,Math.min(255,r));p[j+1]=Math.max(0,Math.min(255,g));p[j+2]=Math.max(0,Math.min(255,b));
+      }
+      x.putImageData(d,0,0);
+    }catch(e){}
+  }
+  S.photoDraw=c;paint();haptic('selection');
+}
+function buildFilters(){
+  var w=el('filterRow');if(!w)return;
+  w.style.display=(S.photo&&S.bg.type==='photo')?'flex':'none';
+  w.innerHTML='';
+  FILTERS.forEach(function(f){
+    var b=document.createElement('button');b.className='chip'+(S.photoFilter===f[0]?' on':'');b.textContent=f[1];
+    b.onclick=function(){applyFilter(f[0])};
+    w.appendChild(b);
+  });
 }
 /* Preferred path: the native picker bridge returns a ready data: URL. Falls back
    to a plain <input type=file> (used in the web preview, where the bridge is
@@ -537,10 +595,10 @@ function loadPhoto(inp){
   inp.value='';
 }
 function clearPhoto(){
-  S.photo=null;if(S.bg.type==='photo')S.bg={type:'grad',grad:S.bg.grad||0,aiUrl:null};
+  S.photo=null;S.photoDraw=null;S.photoFilter='none';buildFilters();if(S.bg.type==='photo')S.bg={type:'grad',grad:S.bg.grad||0,aiUrl:null};
   refreshStyle();buildGrads();paint();saveDraft();
 }
-function refreshStyle(){ el('photoCtl').style.display = (S.photo&&S.bg.type==='photo')?'block':'none'; }
+function refreshStyle(){ el('photoCtl').style.display = (S.photo&&S.bg.type==='photo')?'block':'none'; buildFilters(); }
 
 /* ---------------- AI ---------------- */
 function needAI(hintEl){
@@ -577,6 +635,42 @@ function writeCopy(){
   .catch(function(e){hint.textContent='Couldn’t write it: '+e.message;})
   .then(function(){el('writeBtn').disabled=false;});
 }
+/* one tap: AI picks the template + palette, writes every field, then (if an
+   image server is set up) paints a background to match */
+function designMe(){
+  var hint=el('wordsHint');hint.textContent='';
+  if(needAI(hint))return;
+  var topic=el('topic').value.trim();
+  if(!topic){hint.textContent='Tell me what the post is about first.';return}
+  var p='Art-direct a social media post about: "'+topic+'". Tone: '+S.copy.tone.toLowerCase()+'.'+
+    ' Reply with ONLY this JSON object: {"template":"quote|promo|announce|tips|photocap|bold (pick the best fit)",'+
+    '"palette":0-11 (a colour mood: 0 ocean blue,1 violet,2 emerald,3 crimson,4 amber,5 slate,6 sky,7 magenta,8 forest,9 bronze,10 charcoal,11 electric purple),'+
+    '"hook":"punchy headline, max 7 words","sub":"supporting line, max 16 words","cta":"call to action, max 4 words",'+
+    '"caption":"2-3 sentence caption","hashtags":["#tag"] (6-10 relevant)}';
+  el('designBtn').disabled=true;setStatusWords('Designing your post…');
+  function parse(reply){
+    var s=reply.indexOf('{'),e=reply.lastIndexOf('}');
+    if(s<0||e<=s)throw new Error('no JSON');
+    return JSON.parse(reply.slice(s,e+1).replace(/[\u0000-\u001F]+/g,' '));
+  }
+  myllmAsk(p).then(function(r){return parse(r||'')})
+  .catch(function(){return myllmAsk(p+'\nIMPORTANT: only the raw JSON object.').then(function(r){return parse(r||'')})})
+  .then(function(o){
+    if(o.template&&TEMPLATES[o.template])S.template=o.template;
+    var pal=parseInt(o.palette,10);
+    if(pal>=0&&pal<GRADS.length){S.bg={type:'grad',grad:pal,aiUrl:null};S.photo=null;S.photoDraw=null;}
+    S.copy.hook=String(o.hook||'').slice(0,60);
+    S.copy.sub=String(o.sub||'').slice(0,110);
+    S.copy.cta=String(o.cta||'').slice(0,30);
+    S.copy.caption=(String(o.caption||'').trim()+'\n\n'+(Array.isArray(o.hashtags)?o.hashtags.join(' '):'')).trim();
+    fillWordFields();buildTemplates();buildGrads();refreshStyle();paint();saveDraft();
+    setStatusWords('');haptic('success');
+    if(window.myllmGenerateImage){aiBackground();}
+  })
+  .catch(function(e){setStatusWords('Couldn’t design it: '+e.message)})
+  .then(function(){el('designBtn').disabled=false});
+}
+function setStatusWords(t){el('wordsHint').textContent=t}
 function aiBackground(){
   var hint=el('styleHint');hint.textContent='';
   if(!window.myllmGenerateImage){hint.textContent='AI backgrounds need image generation set up in MyLLM (Settings → Image Generation).';return;}
@@ -596,12 +690,20 @@ function aiBackground(){
 }
 
 /* ---------------- export ---------------- */
+var lastExport=null;
+function sharePost(){
+  if(!lastExport||!window.myllmShareFile)return;
+  var name=(S.copy.hook||'Social post').replace(/[^\w .-]/g,'').trim()||'Social post';
+  myllmShareFile(lastExport,{filename:name,mime:'image/jpeg'}).catch(function(){});
+  haptic('light');
+}
 function doExport(){
   var f=FORMATS[S.format],cv=document.createElement('canvas');
   var keep=sel;sel=null;
   render(cv,f.w,f.h,true);
   sel=keep;
   var data=cv.toDataURL('image/jpeg',.92);
+  lastExport=data;
   var caption=(S.copy.caption||'').trim();
   var copied=false;
   if(caption){
@@ -615,6 +717,7 @@ function doExport(){
   var s=el('sheet');
   s.innerHTML='<h3>'+(saved?'Saved to Photos':'Your post is ready')+'</h3>'+
     '<img src="'+data+'" alt="Finished post">'+
+    (window.myllmShareFile?'<button class="btn" onclick="sharePost()">Share post…</button>':'')+
     (saved?'':'<p class="hint">Press and hold the image to save it.</p>')+
     (caption?('<p class="ok">'+(copied?'Caption + hashtags copied — just paste when you post.':'')+'</p>'):'')+
     (caption?'<button class="btn ghost" onclick="shareCaption()">Share caption text</button>':'')+
@@ -637,9 +740,48 @@ function saveDraft(){
   },500);
 }
 function saveBrand(){ store.setItem('socialstudio.brand',JSON.stringify(BRAND)); }
+function updCount(){
+  var len=(S.copy.caption||'').length;
+  el('capCount').textContent=len?(len+' / 2,200'):'';
+  el('capCount').style.color=len>2200?'var(--danger)':'var(--mut)';
+}
+/* three AI-suggested hashtag sets — tap one to swap it into the caption */
+var TAGSETS=null;
+function suggestTags(){
+  var hint=el('wordsHint');hint.textContent='';
+  if(needAI(hint))return;
+  var topic=el('topic').value.trim()||S.copy.hook||'';
+  if(!topic){hint.textContent='Add a topic or headline first.';return}
+  el('tagBtn').disabled=true;hint.textContent='Finding hashtags…';
+  var p='Suggest hashtags for a social post about: "'+topic+'". Reply with ONLY this JSON: '+
+    '{"broad":["#..."] (6 popular high-reach tags),"niche":["#..."] (6 specific community tags),"local":["#..."] (5 location/scene tags, invent a plausible scene if unknown)}';
+  myllmAsk(p).then(function(r){
+    var s=r.indexOf('{'),e=r.lastIndexOf('}');
+    if(s<0||e<=s)throw new Error('no JSON');
+    TAGSETS=JSON.parse(r.slice(s,e+1).replace(/[\u0000-\u001F]+/g,' '));
+    var w=el('tagSets');w.innerHTML='';
+    [['broad','Broad reach'],['niche','Niche'],['local','Local']].forEach(function(k){
+      var set=TAGSETS[k[0]];
+      if(!Array.isArray(set)||!set.length)return;
+      var b=document.createElement('button');b.className='chip';
+      b.textContent=k[1]+' · '+set.length;
+      b.title=set.join(' ');
+      b.onclick=function(){applyTags(set);document.querySelectorAll('#tagSets .chip').forEach(function(x){x.classList.remove('on')});b.classList.add('on')};
+      w.appendChild(b);
+    });
+    hint.textContent='Tap a set to use it.';haptic('success');
+  }).catch(function(e){hint.textContent='No hashtags: '+e.message})
+  .then(function(){el('tagBtn').disabled=false});
+}
+function applyTags(set){
+  // strip any trailing hashtag block, then append the chosen set
+  var cap=(S.copy.caption||'').replace(/(\n\s*)?(#[\w\u00c0-\uffff]+[ \t]*)+\s*$/,'').trim();
+  S.copy.caption=(cap+'\n\n'+set.join(' ')).trim();
+  el('fCaption').value=S.copy.caption;updCount();saveDraft();haptic('selection');
+}
 function fillWordFields(){
   el('fHook').value=S.copy.hook||'';el('fSub').value=S.copy.sub||'';
-  el('fCta').value=S.copy.cta||'';el('fCaption').value=S.copy.caption||'';
+  el('fCta').value=S.copy.cta||'';el('fCaption').value=S.copy.caption||'';updCount();
 }
 
 /* ---------------- init ---------------- */
