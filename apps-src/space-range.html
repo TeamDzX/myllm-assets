@@ -1532,7 +1532,7 @@ function escT(t){return String(t).replace(/[&<>]/g,function(c){return{'&':'&amp;
 /* world leaderboard: strictly opt-in — zero network traffic unless the player
    turns it on. SCORE_API empty = feature fully hidden (flip it when the
    Cloudflare Worker is deployed). Server data is untrusted → escT everything. */
-var SCORE_API='';
+var SCORE_API='https://spacerange-scores.broad-breeze-c0e4.workers.dev';
 var NET=window.myllmFetch||null;
 var globalOpt=false,worldScores=null,worldAt=0,hsTab='local';
 function worldAvailable(){return !!(SCORE_API&&NET);}

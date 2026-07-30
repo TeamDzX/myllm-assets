@@ -28,8 +28,11 @@ export default {
 
     if (url.pathname === '/submit' && req.method === 'POST') {
       const ip = req.headers.get('cf-connecting-ip') || 'unknown';
-      if (await env.SCORES.get('rl:' + ip)) return json({ error: 'slow down' }, 429);
-      await env.SCORES.put('rl:' + ip, '1', { expirationTtl: 20 });
+      // 20s limit window via stored timestamp; KV TTL only handles cleanup and
+      // must be >= 60 (Cloudflare minimum — a smaller value throws at runtime)
+      const last = await env.SCORES.get('rl:' + ip);
+      if (last && Date.now() - Number(last) < 20000) return json({ error: 'slow down' }, 429);
+      await env.SCORES.put('rl:' + ip, String(Date.now()), { expirationTtl: 60 });
 
       let b;
       try { b = await req.json(); } catch { return json({ error: 'bad body' }, 400); }
