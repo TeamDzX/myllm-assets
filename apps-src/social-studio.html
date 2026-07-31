@@ -153,6 +153,8 @@ return Promise.resolve(p).then(function(r){hide();return r;},function(e){hide();
     <input type="text" id="fCta" maxlength="30" oninput="S.copy.cta=this.value;paint()">
     <div class="lbl">Word size</div>
     <input type="range" id="tsize" min="60" max="150" value="100" oninput="S.textScale=this.value/100;paint();saveDraft()">
+    <div class="lbl">Word position — up / down</div>
+    <input type="range" id="tpos" min="-22" max="22" value="0" oninput="S.textY=this.value/100;paint();saveDraft()">
     <div class="lbl">Caption &amp; hashtags — copied when you save</div>
     <textarea id="fCaption" rows="3" oninput="S.copy.caption=this.value;updCount()"></textarea>
     <div class="row" style="margin-top:6px;align-items:center">
@@ -292,7 +294,7 @@ var TEMPLATES = {
 
 var S = {
   format:"square", template:"promo", textScale:1,
-  gradDir:"diag", texture:"none", vig:false, scrimAdj:1, frame:"none", photoBlur:0,
+  gradDir:"diag", texture:"none", vig:false, scrimAdj:1, frame:"none", photoBlur:0, textY:0,
   bg:{ type:"grad", grad:0, aiUrl:null },
   photo:null, photoPos:{x:0,y:0,scale:1},
   copy:{ hook:"Weekend plant sale", sub:"Every leafy friend 20% off, Saturday only", cta:"Visit us", caption:"", tone:"Playful" },
@@ -387,10 +389,11 @@ function render(cv,W,H,forExport){
   /* text blocks */
   T.blocks.forEach(function(b){
     var val=S.copy[b.key]||"";if(!val)return;
+    var by=b.y+(S.textY||0);   // global up/down nudge from the Words panel
     if(b.list){
       var items=val.split(/\n|(?:^|\s)[•·-]\s+/).map(function(s){return s.trim();}).filter(Boolean).slice(0,6);
       var fs=H*b.size*(S.textScale||1);x.font=b.font.replace("%f",fs);x.textAlign="left";x.textBaseline="middle";x.fillStyle="#fff";
-      var y0=H*.32,gap=fs*1.9;
+      var y0=H*(.32+(S.textY||0)),gap=fs*1.9;
       items.forEach(function(it,i){
         x.fillStyle=BRAND.accent;x.beginPath();x.arc(W*.12,y0+i*gap,fs*.22,0,7);x.fill();
         x.fillStyle="#fff";
@@ -401,8 +404,8 @@ function render(cv,W,H,forExport){
     if(b.pill){
       var fs2=H*b.size*(S.textScale||1);x.font="700 "+fs2+"px -apple-system, sans-serif";
       var tw=x.measureText(val).width,pw=tw+fs2*2.2,ph=fs2*2.1;
-      x.fillStyle=BRAND.accent;roundRect(x,(W-pw)/2,H*b.y-ph/2,pw,ph,ph/2);x.fill();
-      x.fillStyle="#fff";x.textAlign="center";x.textBaseline="middle";x.fillText(val,W/2,H*b.y+fs2*.06);
+      x.fillStyle=BRAND.accent;roundRect(x,(W-pw)/2,H*by-ph/2,pw,ph,ph/2);x.fill();
+      x.fillStyle="#fff";x.textAlign="center";x.textBaseline="middle";x.fillText(val,W/2,H*by+fs2*.06);
       return;
     }
     var t=b.caps?val.toUpperCase():val;
@@ -412,9 +415,9 @@ function render(cv,W,H,forExport){
     var lines=wrap(x,t,W*.82,b.maxLines||2),lh=fs3*1.18;
     x.shadowColor="rgba(0,0,0,.45)";x.shadowBlur=fs3*.25;
     x.fillStyle="#fff";
-    lines.forEach(function(ln,i){x.fillText(ln,W/2,H*b.y+(i-(lines.length-1)/2)*lh);});
+    lines.forEach(function(ln,i){x.fillText(ln,W/2,H*by+(i-(lines.length-1)/2)*lh);});
     x.shadowBlur=0;
-    if(b.caps&&b.key==="sub"){x.fillStyle=BRAND.accent;x.fillRect(W/2-W*.045,H*b.y+fs3*1.1,W*.09,H*.004);}
+    if(b.caps&&b.key==="sub"){x.fillStyle=BRAND.accent;x.fillRect(W/2-W*.045,H*by+fs3*1.1,W*.09,H*.004);}
   });
   /* stickers */
   S.stickers.forEach(function(st){
@@ -1015,7 +1018,7 @@ function savePost(){
     id:'p'+Date.now(),
     name:(S.copy.hook||'Untitled post').slice(0,40),
     date:new Date().toLocaleDateString(undefined,{month:'short',day:'numeric'}),
-    st:{format:S.format,template:S.template,textScale:S.textScale||1,
+    st:{format:S.format,template:S.template,textScale:S.textScale||1,textY:S.textY||0,
         gradDir:S.gradDir,texture:S.texture,vig:S.vig?1:0,scrimAdj:S.scrimAdj||1,frame:S.frame,
         bg:{type:S.bg.type==='photo'?'photo':S.bg.type==='solid'?'solid':'grad',grad:S.bg.grad||0,solid:S.bg.solid||null},
         copy:JSON.parse(JSON.stringify(S.copy)),
@@ -1057,6 +1060,7 @@ function openPost(p){
   S.template=TEMPLATES[st.template]?st.template:'promo';
   S.copy=Object.assign({},S.copy,st.copy||{});
   S.textScale=typeof st.textScale==='number'?Math.min(1.5,Math.max(.6,st.textScale)):1;
+  S.textY=typeof st.textY==='number'?Math.min(.22,Math.max(-.22,st.textY)):0;
   S.gradDir=st.gradDir||'diag';S.texture=st.texture||'none';S.vig=!!st.vig;
   S.scrimAdj=+st.scrimAdj||1;S.frame=st.frame||'none';
   S.stickers=restoreStickers(st.stickers);
@@ -1104,7 +1108,7 @@ var draftTimer=null;
 function saveDraft(){
   clearTimeout(draftTimer);
   draftTimer=setTimeout(function(){
-    var d={format:S.format,template:S.template,textScale:S.textScale||1,
+    var d={format:S.format,template:S.template,textScale:S.textScale||1,textY:S.textY||0,
       gradDir:S.gradDir,texture:S.texture,vig:S.vig?1:0,scrimAdj:S.scrimAdj||1,frame:S.frame,
       bg:{type:S.bg.type==='solid'?'solid':'grad',grad:S.bg.grad||0,solid:S.bg.solid||null},
       copy:S.copy,stickers:packStickers(S.stickers)};
@@ -1191,7 +1195,8 @@ function applyTags(set){
 function fillWordFields(){
   el('fHook').value=S.copy.hook||'';el('fSub').value=S.copy.sub||'';
   el('fCta').value=S.copy.cta||'';el('fCaption').value=S.copy.caption||'';
-  el('tsize').value=Math.round((S.textScale||1)*100);updCount();
+  el('tsize').value=Math.round((S.textScale||1)*100);
+  el('tpos').value=Math.round((S.textY||0)*100);updCount();
 }
 
 /* ---------------- init ---------------- */
@@ -1207,6 +1212,7 @@ store.getItem('socialstudio.brand').then(function(v){
       S.bg=d.bg&&d.bg.type==='solid'&&d.bg.solid?{type:'solid',solid:d.bg.solid,grad:d.bg.grad||0}
           :(d.bg&&typeof d.bg.grad==='number'?{type:'grad',grad:d.bg.grad}:S.bg);
       if(typeof d.textScale==='number')S.textScale=Math.min(1.5,Math.max(.6,d.textScale));
+      if(typeof d.textY==='number')S.textY=Math.min(.22,Math.max(-.22,d.textY));
       if(d.gradDir)S.gradDir=d.gradDir; if(d.texture)S.texture=d.texture;
       S.vig=!!d.vig; if(d.scrimAdj)S.scrimAdj=+d.scrimAdj||1; if(d.frame)S.frame=d.frame;
       S.copy=Object.assign(S.copy,d.copy);S.stickers=restoreStickers(d.stickers);}
