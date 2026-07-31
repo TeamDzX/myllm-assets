@@ -79,7 +79,15 @@ function haversine(a,b){
 var MAX_MS=340;           // ~1220 km/h sanity ceiling (fast jet); beyond = GPS glitch
 var ACC_LIMIT=35;         // metres — ignore sloppy fixes
 function makeEngine(){
-  return {fixes:[],ema:null,dist:0,movingMs:0,maxMs:0};
+  return {fixes:[],ema:null,dist:0,movingMs:0,maxMs:0,peakMs:0};
+}
+/* the gauge follows a DECAYING peak, not the trip max: it grows instantly when
+   you speed up, then eases back ~12%/s so a plane's 0-1000 scale returns to
+   something readable within half a minute of landing */
+function decayPeak(en,dtMs){
+  var v=en.ema||0;
+  if(v>en.peakMs)en.peakMs=v;
+  else if(dtMs>0)en.peakMs=Math.max(v,en.peakMs*Math.pow(0.88,dtMs/1000));
 }
 /* feed one fix {lat,lon,acc,t(ms),vNative(m/s or -1)}; returns speed m/s or null */
 function feed(en,fix){
@@ -108,6 +116,7 @@ function feed(en,fix){
     if(en.ema<0.3)en.ema=0;
     if(en.ema>en.maxMs)en.maxMs=en.ema;
   }
+  decayPeak(en,prev?(fix.t-prev.t):0);
   /* trip accumulation between consecutive good fixes */
   if(prev&&prev.acc<=ACC_LIMIT&&fix.acc<=ACC_LIMIT){
     var dt=(fix.t-prev.t)/1000;
@@ -132,7 +141,7 @@ function vehicleFor(kmh){
   return ['✈️','Air speed'];
 }
 /* gauge range auto-grows in display units */
-var RANGES=[30,60,120,240,500,1000];
+var RANGES=[30,60,120,200,300,500,750,1000,1400];
 function rangeFor(maxDisp){
   for(var i=0;i<RANGES.length;i++)if(RANGES[i]>=Math.max(30,maxDisp*1.12))return RANGES[i];
   return RANGES[RANGES.length-1];
@@ -161,7 +170,7 @@ function drawGauge(disp){
   var W=Math.min(innerWidth-24,430),H=W*0.62,D=Math.min(window.devicePixelRatio||1,2);
   cv.width=W*D;cv.height=H*D;cv.style.width=W+'px';cv.style.height=H+'px';
   var cx=W/2*D,cy=H*0.92*D,r=W*0.44*D;
-  var range=rangeFor(Math.max(disp,conv(en.maxMs,unit)));
+  var range=rangeFor(Math.max(disp,conv(en.peakMs,unit)));
   var a0=Math.PI*1.05,a1=Math.PI*1.95;
   function ang(v){return a0+(a1-a0)*Math.min(1,v/range)}
   ctx.clearRect(0,0,cv.width,cv.height);
@@ -243,7 +252,7 @@ function stop(){
 }
 el('goBtn').onclick=function(){running?stop():start()};
 el('resetBtn').onclick=function(){
-  var keep=en.fixes;en=makeEngine();en.fixes=keep.slice(-2);
+  var keep=en.fixes,e2=makeEngine();e2.fixes=keep.slice(-2);e2.ema=en.ema;e2.peakMs=en.ema||0;en=e2;
   render();haptic('warning');
 };
 window.addEventListener('resize',render);
