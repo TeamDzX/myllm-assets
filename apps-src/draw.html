@@ -127,6 +127,23 @@
             transform: translateX(-50%) translateY(0);
         }
 
+        /* while a submenu is open it REPLACES the toolbar in place */
+        .toolbar.visible.sub-open {
+            opacity: 0;
+            visibility: hidden;
+            transform: translateX(-50%) translateY(10px);
+        }
+        .sub-head {
+            display: flex; align-items: center; gap: 10px; width: 100%;
+            grid-column: 1 / -1; margin: -4px 0 8px;
+        }
+        .sub-back {
+            border: none; background: rgba(255,255,255,0.12); color: white;
+            border-radius: 999px; padding: 7px 14px; font-size: 13px; font-weight: 700;
+            display: flex; align-items: center; gap: 4px; cursor: pointer;
+        }
+        .sub-title { font-size: 12px; font-weight: 700; color: rgba(255,255,255,0.55); letter-spacing: 0.08em; }
+
         .tool-btn {
             width: 52px;
             height: 52px;
@@ -197,8 +214,8 @@
 
         .color-palette {
             position: fixed;
-            bottom: 180px;
-            bottom: calc(180px + env(safe-area-inset-bottom, 0px));
+            bottom: 100px;
+            bottom: calc(100px + env(safe-area-inset-bottom, 0px));
             left: 50%;
             transform: translateX(-50%) scale(0.9);
             background: rgba(26, 26, 46, 0.95);
@@ -212,7 +229,7 @@
             opacity: 0;
             visibility: hidden;
             transition: all 0.3s ease;
-            z-index: 998;
+            z-index: 1001;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
         }
 
@@ -391,8 +408,8 @@
         /* Pen type menu */
         .pen-menu {
             position: fixed;
-            bottom: 180px;
-            bottom: calc(180px + env(safe-area-inset-bottom, 0px));
+            bottom: 100px;
+            bottom: calc(100px + env(safe-area-inset-bottom, 0px));
             left: 50%;
             transform: translateX(-50%) scale(0.9);
             background: rgba(26, 26, 46, 0.95);
@@ -408,7 +425,7 @@
             opacity: 0;
             visibility: hidden;
             transition: all 0.3s ease;
-            z-index: 998;
+            z-index: 1001;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
         }
 
@@ -441,8 +458,8 @@
         /* Stroke shape menu */
         .stroke-menu {
             position: fixed;
-            bottom: 180px;
-            bottom: calc(180px + env(safe-area-inset-bottom, 0px));
+            bottom: 100px;
+            bottom: calc(100px + env(safe-area-inset-bottom, 0px));
             left: 50%;
             transform: translateX(-50%) scale(0.9);
             background: rgba(26, 26, 46, 0.95);
@@ -458,7 +475,7 @@
             opacity: 0;
             visibility: hidden;
             transition: all 0.3s ease;
-            z-index: 998;
+            z-index: 1001;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
         }
 
@@ -816,6 +833,7 @@
         </div>
 
         <div class="color-palette" id="colorPalette">
+            <div class="sub-head"><button class="sub-back" type="button">‹ Menu</button><span class="sub-title">COLOURS</span></div>
             <button class="palette-color active" style="background: #000000;" data-color="#000000"></button>
             <button class="palette-color" style="background: #ffffff; border: 2px solid rgba(0,0,0,0.2);" data-color="#ffffff"></button>
             <button class="palette-color" style="background: #808080;" data-color="#808080"></button>
@@ -845,6 +863,7 @@
 
         <!-- Pen Type Menu (Media) -->
         <div class="pen-menu" id="penMenu">
+            <div class="sub-head"><button class="sub-back" type="button">‹ Menu</button><span class="sub-title">PEN TYPE</span></div>
             <button class="pen-option active" data-pen="marker" title="Marker">
                 <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
                 <span>Marker</span>
@@ -897,6 +916,7 @@
 
         <!-- Stroke Shape Menu -->
         <div class="stroke-menu" id="strokeMenu">
+            <div class="sub-head"><button class="sub-back" type="button">‹ Menu</button><span class="sub-title">STROKE SHAPE</span></div>
             <button class="stroke-option active" data-stroke="round" title="Round">
                 <div class="stroke-preview"><svg viewBox="0 0 24 24" fill="white"><circle cx="12" cy="12" r="8"/></svg></div>
                 <span>Round</span>
@@ -1747,42 +1767,59 @@
             }
         }
 
+        /* submenus REPLACE the toolbar in place (same spot, toolbar fades);
+           the ‹ Menu row brings the main toolbar back */
+        function syncSubOpen() {
+            const any = state.colorPaletteVisible || state.penMenuVisible || state.strokeMenuVisible;
+            toolbar.classList.toggle('sub-open', any);
+        }
+
+        function hideAllSubs() {
+            hideColorPalette();
+            hidePenMenu();
+            hideStrokeMenu();
+        }
+
         function toggleToolbar() {
             state.toolbarVisible = !state.toolbarVisible;
             toolbar.classList.toggle('visible', state.toolbarVisible);
             toolbarToggle.classList.toggle('active', state.toolbarVisible);
-            if (!state.toolbarVisible) hideColorPalette();
+            if (!state.toolbarVisible) hideAllSubs();
         }
 
         function hideToolbar() {
             state.toolbarVisible = false;
             toolbar.classList.remove('visible');
             toolbarToggle.classList.remove('active');
-            hideColorPalette();
+            hideAllSubs();
         }
 
         function toggleColorPalette() {
-            state.colorPaletteVisible = !state.colorPaletteVisible;
-            colorPalette.classList.toggle('visible', state.colorPaletteVisible);
+            const open = !state.colorPaletteVisible;
+            hidePenMenu(); hideStrokeMenu();
+            state.colorPaletteVisible = open;
+            colorPalette.classList.toggle('visible', open);
+            syncSubOpen();
         }
 
         function hideColorPalette() {
             state.colorPaletteVisible = false;
             colorPalette.classList.remove('visible');
+            syncSubOpen();
         }
 
         function togglePenMenu() {
-            state.penMenuVisible = !state.penMenuVisible;
-            penMenu.classList.toggle('visible', state.penMenuVisible);
-            if (state.penMenuVisible) {
-                hideColorPalette();
-                hideStrokeMenu();
-            }
+            const open = !state.penMenuVisible;
+            hideColorPalette(); hideStrokeMenu();
+            state.penMenuVisible = open;
+            penMenu.classList.toggle('visible', open);
+            syncSubOpen();
         }
 
         function hidePenMenu() {
             state.penMenuVisible = false;
             penMenu.classList.remove('visible');
+            syncSubOpen();
         }
 
         function setPenType(type) {
@@ -1797,17 +1834,17 @@
         }
 
         function toggleStrokeMenu() {
-            state.strokeMenuVisible = !state.strokeMenuVisible;
-            strokeMenu.classList.toggle('visible', state.strokeMenuVisible);
-            if (state.strokeMenuVisible) {
-                hideColorPalette();
-                hidePenMenu();
-            }
+            const open = !state.strokeMenuVisible;
+            hideColorPalette(); hidePenMenu();
+            state.strokeMenuVisible = open;
+            strokeMenu.classList.toggle('visible', open);
+            syncSubOpen();
         }
 
         function hideStrokeMenu() {
             state.strokeMenuVisible = false;
             strokeMenu.classList.remove('visible');
+            syncSubOpen();
         }
 
         function setStrokeShape(shape) {
@@ -2044,6 +2081,7 @@
         canvas.addEventListener('touchcancel', () => { stopDrawing(); touchCount = 0; });
 
         toolbarToggle.addEventListener('click', toggleToolbar);
+        document.querySelectorAll('.sub-back').forEach(btn => btn.addEventListener('click', hideAllSubs));
         document.getElementById('brushTool').addEventListener('click', () => setTool('brush'));
         document.getElementById('eraserTool').addEventListener('click', () => setTool('eraser'));
         document.getElementById('clearBtn').addEventListener('click', clearCanvas);
