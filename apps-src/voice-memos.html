@@ -56,8 +56,9 @@ body{font-family:var(--font);margin:0;padding:0 16px calc(40px + env(safe-area-i
 /* memos */
 .section{font-size:12px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin:18px 2px 10px}
 .memo{background:var(--surface);border:1px solid var(--border);border-radius:15px;padding:10px 12px;margin-bottom:9px;
-  display:flex;align-items:center;gap:12px;box-shadow:var(--shadow);transition:border-color .2s}
+  box-shadow:var(--shadow);transition:border-color .2s}
 .memo.playing{border-color:var(--acc)}
+.mrow{display:flex;align-items:center;gap:12px}
 .play{border:0;width:44px;height:44px;border-radius:50%;flex:0 0 auto;cursor:pointer;color:#fff;font-size:15px;
   display:grid;place-items:center;background:linear-gradient(135deg,var(--acc),var(--acc2));box-shadow:0 6px 16px -8px var(--acc)}
 .play:active{transform:scale(.94)}
@@ -71,6 +72,55 @@ body{font-family:var(--font);margin:0;padding:0 16px calc(40px + env(safe-area-i
 .iconbtn.send:active{background:var(--accSoft);color:var(--acc)}
 .iconbtn.del{color:var(--faint)} .iconbtn.del.armed{background:rgba(255,69,58,.14);color:var(--rec);width:auto;padding:0 12px;font-size:13px;font-weight:700}
 .iconbtn.del:active{color:var(--rec)}
+
+/* expandable memo body: rename / trim / transcript */
+.mbody{display:none;border-top:1px solid var(--border);margin-top:10px;padding:10px 2px 2px}
+.memo.open .mbody{display:block}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{border:0;background:var(--surface2);color:var(--ink);font:inherit;font-size:13px;font-weight:650;
+  padding:8px 13px;border-radius:11px;cursor:pointer;display:flex;align-items:center;gap:6px}
+.chip:active{background:var(--accSoft);color:var(--acc)}
+.chip[disabled]{opacity:.55}
+.ren{display:flex;gap:8px}
+.ren input{flex:1;min-width:0;font:inherit;font-size:15px;padding:9px 11px;border-radius:11px;
+  border:1px solid var(--border);background:var(--surface2);color:var(--ink)}
+.ren button{border:0;background:var(--acc);color:#fff;font:inherit;font-size:13.5px;font-weight:700;
+  padding:0 15px;border-radius:11px;cursor:pointer}
+.tx{background:var(--surface2);border-radius:11px;padding:10px 12px;margin-top:10px;font-size:13.5px;
+  line-height:1.55;max-height:190px;overflow:auto;white-space:pre-wrap;-webkit-overflow-scrolling:touch}
+.txrow{display:flex;align-items:center;justify-content:space-between;margin-top:10px}
+.txrow .lbl{font-size:11px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--faint)}
+
+/* trim sheet */
+.sheetWrap{position:fixed;inset:0;background:rgba(10,8,18,.55);display:none;z-index:50;align-items:flex-end}
+.sheetWrap.show{display:flex}
+.sheet{background:var(--surface);width:100%;border-radius:22px 22px 0 0;box-shadow:var(--shadowLg);
+  padding:18px 18px calc(18px + env(safe-area-inset-bottom))}
+@media(min-width:768px){.sheetWrap{align-items:center;justify-content:center;padding:20px}
+  .sheet{max-width:560px;border-radius:22px}}
+.shtop{display:flex;align-items:center;gap:10px}
+.shtop .ttl{font-size:16px;font-weight:750;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.shx{border:0;background:var(--surface2);color:var(--muted);font:inherit;font-size:13px;font-weight:700;
+  padding:8px 14px;border-radius:11px;cursor:pointer;flex:0 0 auto}
+.waveBox{position:relative;height:88px;margin:16px 0 8px;background:var(--surface2);border-radius:12px;
+  overflow:hidden;touch-action:none}
+.waveBox canvas{position:absolute;inset:0}
+.dim{position:absolute;top:0;bottom:0;background:rgba(10,8,18,.42);pointer-events:none}
+#dimL{left:0}#dimR{right:0}
+.handle{position:absolute;top:0;bottom:0;width:30px;margin-left:-15px;cursor:ew-resize;touch-action:none}
+.handle::after{content:"";position:absolute;left:50%;top:5px;bottom:5px;width:4px;margin-left:-2px;
+  border-radius:2px;background:var(--acc2);box-shadow:0 0 0 1.5px var(--surface)}
+.tlabels{display:flex;justify-content:space-between;font-size:12.5px;color:var(--muted);
+  font-variant-numeric:tabular-nums}
+.tlabels b{color:var(--acc);font-weight:700}
+#trimMsg{font-size:13px;color:var(--muted);min-height:18px;margin-top:10px;text-align:center}
+.tprog{height:6px;border-radius:3px;background:var(--surface2);overflow:hidden;display:none;margin-top:6px}
+.tprog i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--acc),var(--acc2))}
+.tbtns{display:flex;gap:10px;margin-top:14px}
+.tbtns button{flex:1;border:0;font:inherit;font-size:14.5px;font-weight:700;padding:13px 0;border-radius:13px;cursor:pointer}
+#trimPrev{background:var(--surface2);color:var(--ink)}
+#trimGo{background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;box-shadow:0 6px 16px -8px var(--acc)}
+.tbtns button[disabled]{opacity:.5}
 
 .use{font-size:11.5px;color:var(--faint);text-align:right;margin-top:8px}
 .empty{display:none;text-align:center;padding:26px 20px 6px;color:var(--muted)}
@@ -95,16 +145,35 @@ body{font-family:var(--font);margin:0;padding:0 16px calc(40px + env(safe-area-i
 <div class="empty" id="empty">
   <div class="empty-emoji">🎙️</div>
   <h3>No memos yet</h3>
-  <p>Tap the red button to record. Play it back, or send it to a contact.</p>
+  <p>Tap the red button to record. Then tap a memo to rename, trim, or turn it into text.</p>
 </div>
+<div class="sheetWrap" id="trimSheet">
+  <div class="sheet">
+    <div class="shtop"><div class="ttl">✂️ <span id="trimName"></span></div><button class="shx" onclick="closeTrim()">Cancel</button></div>
+    <div class="waveBox" id="waveBox">
+      <canvas id="waveCv"></canvas>
+      <div class="dim" id="dimL"></div><div class="dim" id="dimR"></div>
+      <div class="handle" id="hS" aria-label="Trim start"></div><div class="handle" id="hE" aria-label="Trim end"></div>
+    </div>
+    <div class="tlabels"><span id="tS">0:00</span><b id="tKeep"></b><span id="tE">0:00</span></div>
+    <div id="trimMsg"></div>
+    <div class="tprog" id="tprog"><i id="tbar"></i></div>
+    <div class="tbtns"><button id="trimPrev" onclick="trimPreview()">▶ Preview</button><button id="trimGo" onclick="trimSave()">Save trim</button></div>
+  </div>
+</div>
+
 <audio id="player"></audio>
 
 <script>
 "use strict";
 var store=window.myllmStorage||{getItem:function(){return Promise.resolve(null)},setItem:function(){return Promise.resolve()}};
 var memos=[],rec=null,stream=null,chunks=[],recording=false,t0=0,tHandle=null,armed=null,playingId=null;
+var openId=null,renamingId=null,txBusy=null,tr=null;
 var MAXBYTES=950000,MAXSECS=120;
 var CANSHARE=!!window.myllmShareFile;
+var TXOK=!!window.myllmTranscribeFile;
+var TRIMOK=(function(){var AC=window.AudioContext||window.webkitAudioContext;
+  return !!(AC&&AC.prototype.createMediaStreamDestination&&typeof MediaRecorder!=='undefined')})();
 var WAVEBARS=18;
 function el(i){return document.getElementById(i)}
 function setStatus(t){el('status').innerHTML=t||''}
@@ -204,29 +273,280 @@ function sendMemo(id){
 function del(id){
   if(armed!==id){armed=id;render();setTimeout(function(){if(armed===id){armed=null;render()}},2500);return}
   armed=null;if(playingId===id){el('player').pause();playingId=null;}
+  if(openId===id)openId=null;if(renamingId===id)renamingId=null;
   memos=memos.filter(function(m){return m.id!==id});persist();render();haptic('warning');
 }
+
+/* ---- expand / rename ---- */
+function toggleOpen(id){
+  renamingId=null;openId=(openId===id?null:id);render();haptic('selection');
+}
+function startRename(id){
+  renamingId=id;render();
+  var inp=el('ren-'+id);if(inp){inp.focus();try{inp.select()}catch(e){}}
+}
+function saveRename(id){
+  var inp=el('ren-'+id);renamingId=null;
+  if(inp){
+    var v=inp.value.replace(/\s+/g,' ').trim().slice(0,60);
+    var m=byId(id);if(m&&v&&v!==m.name){m.name=v;persist();haptic('light')}
+  }
+  render();
+}
+
+/* ---- transcription (myllmTranscribeFile — needs latest MyLLM) ---- */
+function transcribe(id){
+  var m=byId(id);if(!m||txBusy||!TXOK)return;
+  txBusy=id;render();haptic('light');
+  myllmTranscribeFile({audio:m.url}).then(function(text){
+    txBusy=null;
+    var mm=byId(id);
+    if(mm&&text){
+      var old=mm.txt;mm.txt=String(text);
+      if(JSON.stringify(memos).length>MAXBYTES){
+        if(old===undefined)delete mm.txt;else mm.txt=old;
+        setStatus('Transcribed, but there isn’t room to keep the text — delete an old memo first.');
+      }else{persist();setStatus('')}
+    }else if(mm){setStatus('Nothing heard in that memo.')}
+    render();
+  }).catch(function(e){
+    txBusy=null;render();
+    setStatus(esc((e&&e.message)||'Couldn’t transcribe that memo.'));
+  });
+}
+function shareTxt(id){
+  var m=byId(id);if(!m||!m.txt)return;haptic('light');
+  if(window.myllmShare){myllmShare(m.txt).catch(function(){})}
+  else{
+    var ta=document.createElement('textarea');ta.value=m.txt;document.body.appendChild(ta);ta.select();
+    try{document.execCommand('copy');setStatus('Copied to clipboard.')}catch(e){}
+    document.body.removeChild(ta);
+  }
+}
+
+/* ---- trimmer ---- */
+function b64buf(u){
+  var b=atob(u.split(',')[1]||'');var a=new Uint8Array(b.length);
+  for(var i=0;i<b.length;i++)a[i]=b.charCodeAt(i);
+  return a.buffer;
+}
+function setTrimMsg(t){el('trimMsg').textContent=t||''}
+function openTrim(id){
+  var m=byId(id);if(!m||tr||recording)return;
+  var p=el('player');if(!p.paused)p.pause();playingId=null;render();
+  var AC=window.AudioContext||window.webkitAudioContext;
+  var ac;try{ac=new AC()}catch(e){setStatus('Trimming isn’t available on this device.');return}
+  if(ac.state==='suspended')try{ac.resume()}catch(e){}
+  tr={id:id,ac:ac,buf:null,s:0,e:0,psrc:null,saving:null};
+  el('trimName').textContent=m.name;
+  el('trimSheet').classList.add('show');
+  setTrimMsg('Loading audio…');trimUI();
+  var my=tr;
+  var done=function(buf){
+    if(tr!==my)return;
+    tr.buf=buf;tr.s=0;tr.e=buf.duration;
+    setTrimMsg('Drag the pink handles, then save.');
+    drawWave();placeHandles();updateTrimLabels();trimUI();
+  };
+  var err=function(){if(tr===my)setTrimMsg('Couldn’t decode this recording for trimming.')};
+  try{ac.decodeAudioData(b64buf(m.url),done,err)}catch(e){err()}
+}
+function closeTrim(){
+  if(!tr)return;
+  var t=tr;tr=null;
+  if(t.psrc)try{t.psrc.stop()}catch(e){}
+  if(t.saving){
+    if(t.saving.timer)clearTimeout(t.saving.timer);
+    if(t.saving.mr&&t.saving.mr.state!=='inactive')try{t.saving.mr.stop()}catch(e){}
+  }
+  try{t.ac.close()}catch(e){}
+  el('trimSheet').classList.remove('show');
+  el('tbar').style.width='0';el('tprog').style.display='none';
+  el('trimPrev').textContent='▶ Preview';setTrimMsg('');
+}
+function drawWave(){
+  if(!tr||!tr.buf)return;
+  var c=el('waveCv'),box=el('waveBox');
+  var W=box.clientWidth||300,H=box.clientHeight||88,dpr=window.devicePixelRatio||1;
+  c.width=W*dpr;c.height=H*dpr;
+  var g=c.getContext('2d');g.scale(dpr,dpr);g.clearRect(0,0,W,H);
+  g.fillStyle=(getComputedStyle(document.documentElement).getPropertyValue('--acc')||'#8b5cf6').trim();
+  var data=tr.buf.getChannelData(0),N=Math.max(40,Math.floor(W/3)),step=Math.floor(data.length/N)||1;
+  var hop=Math.ceil(step/24)||1;
+  for(var i=0;i<N;i++){
+    var peak=0;
+    for(var j=i*step;j<(i+1)*step&&j<data.length;j+=hop){var v=Math.abs(data[j]);if(v>peak)peak=v}
+    var h=Math.max(2,peak*H*.94);
+    g.fillRect(i*(W/N)+.5,(H-h)/2,Math.max(1.5,W/N-1.5),h);
+  }
+}
+function placeHandles(){
+  if(!tr||!tr.buf)return;var d=tr.buf.duration;
+  el('hS').style.left=(tr.s/d*100)+'%';
+  el('hE').style.left=(tr.e/d*100)+'%';
+  el('dimL').style.width=(tr.s/d*100)+'%';
+  el('dimR').style.width=(100-tr.e/d*100)+'%';
+}
+function updateTrimLabels(){
+  if(!tr||!tr.buf)return;
+  el('tS').textContent=mmss(tr.s);el('tE').textContent=mmss(tr.e);
+  el('tKeep').textContent='keep '+Math.max(1,Math.round(tr.e-tr.s))+'s';
+}
+function trimUI(){
+  var saving=!!(tr&&tr.saving),ready=!!(tr&&tr.buf);
+  el('tprog').style.display=saving?'block':'none';
+  el('trimPrev').disabled=saving||!ready;
+  el('trimGo').disabled=saving||!ready;
+  if(saving)setTrimMsg('Saving trim… keep this sheet open.');
+}
+function trimPreview(){
+  if(!tr||!tr.buf||tr.saving)return;
+  if(tr.ac.state==='suspended')try{tr.ac.resume()}catch(e){}
+  if(tr.psrc){try{tr.psrc.stop()}catch(e){}tr.psrc=null;el('trimPrev').textContent='▶ Preview';return}
+  var src=tr.ac.createBufferSource();src.buffer=tr.buf;src.connect(tr.ac.destination);
+  src.onended=function(){if(tr&&tr.psrc===src){tr.psrc=null;el('trimPrev').textContent='▶ Preview'}};
+  src.start(0,tr.s,Math.max(.1,tr.e-tr.s));
+  tr.psrc=src;el('trimPrev').textContent='■ Stop';haptic('light');
+}
+function trimSave(){
+  if(!tr||!tr.buf||tr.saving)return;
+  if(tr.psrc){try{tr.psrc.stop()}catch(e){}tr.psrc=null;el('trimPrev').textContent='▶ Preview'}
+  if(tr.ac.state==='suspended')try{tr.ac.resume()}catch(e){}
+  var dur=Math.max(.1,tr.e-tr.s);
+  var dest=tr.ac.createMediaStreamDestination();
+  var src=tr.ac.createBufferSource();src.buffer=tr.buf;src.connect(dest);
+  var mime=pickMime(),mr;
+  try{mr=mime?new MediaRecorder(dest.stream,{mimeType:mime,audioBitsPerSecond:96000}):new MediaRecorder(dest.stream)}
+  catch(e){try{mr=new MediaRecorder(dest.stream)}catch(e2){setTrimMsg('Trimming isn’t supported on this device.');return}}
+  var parts=[];mr.ondataavailable=function(ev){if(ev.data&&ev.data.size)parts.push(ev.data)};
+  var sv={mr:mr,t0:Date.now(),dur:dur,timer:null};
+  tr.saving=sv;
+  mr.onstop=function(){
+    if(!tr||tr.saving!==sv)return; // sheet was cancelled
+    if(sv.timer)clearTimeout(sv.timer);
+    var blob=new Blob(parts,{type:mr.mimeType||'audio/mp4'});
+    var fr=new FileReader();
+    fr.onload=function(){
+      if(!tr||tr.saving!==sv)return;
+      var m=byId(tr.id);
+      if(!m){closeTrim();render();return}
+      var old={url:m.url,dur:m.dur,txt:m.txt};
+      m.url=fr.result;m.dur=Math.max(1,Math.round(dur));
+      delete m.txt; // transcript no longer matches the audio
+      if(JSON.stringify(memos).length>MAXBYTES){
+        m.url=old.url;m.dur=old.dur;if(old.txt!==undefined)m.txt=old.txt;
+        tr.saving=null;trimUI();
+        setTrimMsg('The trimmed audio wouldn’t fit in storage — trim not saved.');
+        return;
+      }
+      persist();closeTrim();render();haptic('success');setStatus('Memo trimmed ✂️');
+    };
+    fr.readAsDataURL(blob);
+  };
+  src.onended=function(){
+    setTimeout(function(){
+      if(tr&&tr.saving===sv&&mr.state!=='inactive')try{mr.stop()}catch(e){}
+    },200);
+  };
+  mr.start();src.start(0,tr.s,dur);
+  trimUI();haptic('light');tickTrimSave();
+}
+function tickTrimSave(){
+  if(!tr||!tr.saving)return;
+  var sv=tr.saving;
+  var f=Math.min(1,((Date.now()-sv.t0)/1000)/sv.dur);
+  el('tbar').style.width=(f*100)+'%';
+  sv.timer=setTimeout(tickTrimSave,120);
+}
+/* trim handle dragging + backdrop dismiss */
+(function(){
+  var drag=null;
+  function move(ev){
+    if(!drag||!tr||!tr.buf||tr.saving)return;
+    var r=el('waveBox').getBoundingClientRect();if(!r.width)return;
+    var t=Math.max(0,Math.min(1,(ev.clientX-r.left)/r.width))*tr.buf.duration;
+    var MIN=.3;
+    if(drag==='s')tr.s=Math.max(0,Math.min(t,tr.e-MIN));
+    else tr.e=Math.min(tr.buf.duration,Math.max(t,tr.s+MIN));
+    placeHandles();updateTrimLabels();
+  }
+  function up(){drag=null}
+  ['hS','hE'].forEach(function(id){
+    el(id).addEventListener('pointerdown',function(ev){
+      drag=(id==='hS')?'s':'e';ev.preventDefault();
+      try{ev.target.setPointerCapture(ev.pointerId)}catch(e){}
+    });
+  });
+  window.addEventListener('pointermove',move);
+  window.addEventListener('pointerup',up);
+  window.addEventListener('pointercancel',up);
+  el('trimSheet').addEventListener('click',function(ev){if(ev.target===el('trimSheet'))closeTrim()});
+})();
 function persist(){return store.setItem('memos',JSON.stringify(memos))}
 
 var SHARE_SVG='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V4M8.5 7.5L12 4l3.5 3.5"/><path d="M5 12v6.5A1.5 1.5 0 0 0 6.5 20h11a1.5 1.5 0 0 0 1.5-1.5V12"/></svg>';
+function chipBtn(parent,label,fn){
+  var s=document.createElement('button');s.className='chip';s.textContent=label;s.onclick=fn;
+  parent.appendChild(s);return s;
+}
+function buildBody(m){
+  var b=document.createElement('div');b.className='mbody';
+  if(renamingId===m.id){
+    var r=document.createElement('div');r.className='ren';
+    var inp=document.createElement('input');inp.id='ren-'+m.id;inp.value=m.name;inp.maxLength=60;
+    inp.setAttribute('aria-label','Memo name');
+    inp.onkeydown=function(ev){if(ev.key==='Enter'){ev.preventDefault();saveRename(m.id)}};
+    var ok=document.createElement('button');ok.textContent='Save';ok.onclick=function(){saveRename(m.id)};
+    r.appendChild(inp);r.appendChild(ok);b.appendChild(r);
+    return b;
+  }
+  var c=document.createElement('div');c.className='chips';
+  chipBtn(c,'✏️ Rename',function(){startRename(m.id)});
+  if(TRIMOK)chipBtn(c,'✂️ Trim',function(){openTrim(m.id)});
+  if(TXOK){
+    var busy=(txBusy===m.id);
+    var t=chipBtn(c,busy?'⏳ Transcribing…':(m.txt?'💬 Re-transcribe':'💬 Transcribe'),function(){transcribe(m.id)});
+    if(txBusy)t.disabled=true;
+  }
+  b.appendChild(c);
+  if(!TXOK){
+    var no=document.createElement('div');no.style.cssText='font-size:12px;color:var(--faint);margin-top:9px';
+    no.textContent='Transcribing memos to text needs the latest MyLLM.';
+    b.appendChild(no);
+  }
+  if(m.txt){
+    var hd=document.createElement('div');hd.className='txrow';
+    var lb=document.createElement('span');lb.className='lbl';lb.textContent='Transcript';hd.appendChild(lb);
+    var sh=document.createElement('button');sh.className='chip';
+    sh.textContent=window.myllmShare?'Share':'Copy';sh.onclick=function(){shareTxt(m.id)};
+    hd.appendChild(sh);b.appendChild(hd);
+    var tx=document.createElement('div');tx.className='tx';tx.textContent=m.txt;b.appendChild(tx);
+  }
+  return b;
+}
 function render(){
   var L=el('list');L.innerHTML='';el('head').style.display=memos.length?'block':'none';
   el('empty').style.display=memos.length?'none':'block';
   memos.forEach(function(m){
-    var playing=(playingId===m.id);
-    var d=document.createElement('div');d.className='memo'+(playing?' playing':'');
+    var playing=(playingId===m.id),open=(openId===m.id);
+    var d=document.createElement('div');d.className='memo'+(playing?' playing':'')+(open?' open':'');
+    var row=document.createElement('div');row.className='mrow';
     var pl=document.createElement('button');pl.className='play';pl.textContent=playing?'❚❚':'▶';pl.setAttribute('aria-label','Play');pl.onclick=function(){play(m.id)};
     var info=document.createElement('div');info.className='mi';
-    info.innerHTML='<div class="nm">'+esc(m.name)+'</div><div class="dt">'+(playing?'<b>Playing</b>':mmss(m.dur))+'</div>';
-    d.appendChild(pl);d.appendChild(info);
+    info.innerHTML='<div class="nm">'+esc(m.name)+'</div><div class="dt">'+(playing?'<b>Playing</b>':mmss(m.dur))
+      +(m.txt?' · 💬':'')+' <span style="color:var(--faint)">'+(open?'▾':'▸')+'</span></div>';
+    info.onclick=function(){toggleOpen(m.id)};
+    row.appendChild(pl);row.appendChild(info);
     if(CANSHARE){
       var sn=document.createElement('button');sn.className='iconbtn send';sn.innerHTML=SHARE_SVG;sn.setAttribute('aria-label','Send memo');sn.onclick=function(){sendMemo(m.id)};
-      d.appendChild(sn);
+      row.appendChild(sn);
     }
     var x=document.createElement('button');x.className='iconbtn del'+(armed===m.id?' armed':'');x.setAttribute('aria-label','Delete');
     x.innerHTML=armed===m.id?'Delete?':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>';
     x.onclick=function(){del(m.id)};
-    d.appendChild(x);
+    row.appendChild(x);
+    d.appendChild(row);
+    if(open)d.appendChild(buildBody(m));
     L.appendChild(d);
   });
   renderUse();

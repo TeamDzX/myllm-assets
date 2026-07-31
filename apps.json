@@ -1,5 +1,5 @@
 {
-  "updated": "2026-07-25",
+  "updated": "2026-07-31",
   "categories": [
     "Students",
     "Productivity",
@@ -1309,22 +1309,23 @@
       "name": "Voice Memos",
       "emoji": "🎙️",
       "tagline": "Quick voice notes",
-      "description": "Record quick voice notes and keep them on your device — tap to record, tap to play back, swipe-free delete. Recordings are saved on-device (a few minutes' worth). Requires MyLLM 3.1+ and “Allow apps to use the microphone” in Settings → MyLLMos Apps (off by default; iOS asks once).",
+      "description": "Record quick voice notes and keep them on your device — tap to record, tap a memo to rename it, trim the start/end with a waveform editor, or turn it into text (on-device transcription; transcribing needs the latest MyLLM). Share a recording or its transcript to any contact. Recordings are saved on-device (a few minutes’ worth). Requires “Allow apps to use the microphone” in Settings → MyLLMos Apps (off by default; iOS asks once).",
       "tags": [
         "utility",
         "microphone",
+        "transcription",
         "saves data"
       ],
       "category": "Utilities",
       "iconSymbol": "mic.fill",
       "iconColor": "red",
-      "version": 3,
+      "version": 4,
       "featured": false,
       "requiresAI": false,
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/voice-memos.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@0768da91bd8248f531998a90c70894ed5f3b0993/apps-src/voice-memos.html",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@582dd6c2856d32460c4048c46bbf7f8da70ac0d7/apps-src/voice-memos.myllmapp",
-      "sizeKB": 62,
+      "sizeKB": 77,
       "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/icons/voice-memos.jpg"
     },
     {
