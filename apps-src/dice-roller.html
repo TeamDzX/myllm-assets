@@ -1,0 +1,171 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Dice</title>
+<style>
+:root{color-scheme:dark;--bg:#0c0e14;--panel:#151924;--ink:#eceff5;--mut:#828da1;--line:#252c3c;--ac:#6ea8ff;--gold:#ffd23f}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%}
+body{font-family:-apple-system,system-ui,sans-serif;color:var(--ink);
+  position:fixed;inset:0;width:100%;height:100dvh;overflow:hidden;display:flex;flex-direction:column;
+  -webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;
+  background:radial-gradient(130% 100% at 50% 0%,#141a28,var(--bg))}
+.top{padding:calc(12px + env(safe-area-inset-top)) 18px 4px;display:flex;align-items:baseline;gap:10px}
+h1{font-size:20px;font-weight:900;letter-spacing:.02em}
+.total{margin-left:auto;font-size:14px;color:var(--mut);font-weight:700}
+.total b{font-size:24px;color:var(--gold);font-variant-numeric:tabular-nums}
+/* table */
+#stage{flex:1;display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:26px;
+  padding:16px;min-height:0;perspective:900px;cursor:pointer}
+.die{width:var(--sz);height:var(--sz);position:relative;transform-style:preserve-3d;
+  transition:transform .95s cubic-bezier(.22,1.2,.36,1)}
+.face{position:absolute;inset:0;border-radius:16%;background:var(--body);
+  display:grid;grid-template:repeat(3,1fr)/repeat(3,1fr);padding:14%;
+  box-shadow:inset 0 0 calc(var(--sz)*.09) rgba(0,0,0,.28);border:1px solid var(--edge)}
+.pip{border-radius:50%;background:var(--pip);align-self:center;justify-self:center;
+  width:70%;aspect-ratio:1;box-shadow:var(--pipglow, inset 0 1px 2px rgba(0,0,0,.4))}
+.f1{transform:translateZ(calc(var(--sz)/2))}
+.f6{transform:rotateY(180deg) translateZ(calc(var(--sz)/2))}
+.f3{transform:rotateY(90deg) translateZ(calc(var(--sz)/2))}
+.f4{transform:rotateY(-90deg) translateZ(calc(var(--sz)/2))}
+.f2{transform:rotateX(90deg) translateZ(calc(var(--sz)/2))}
+.f5{transform:rotateX(-90deg) translateZ(calc(var(--sz)/2))}
+/* themes */
+body.t-ivory{--body:linear-gradient(145deg,#fdfcf7,#e8e4d8);--pip:#22242b;--edge:rgba(0,0,0,.18)}
+body.t-neon{--body:linear-gradient(145deg,#101625,#0a0e1a);--pip:#39e6ff;--edge:rgba(57,230,255,.5);
+  --pipglow:0 0 8px #39e6ff,0 0 16px rgba(57,230,255,.6)}
+body.t-ember{--body:linear-gradient(145deg,#4a1512,#2b0b09);--pip:#ffd23f;--edge:rgba(255,150,60,.35);
+  --pipglow:0 0 6px rgba(255,210,63,.7)}
+.hint{text-align:center;font-size:12px;color:var(--mut);font-weight:600;padding:0 0 6px;min-height:16px}
+/* controls */
+.deck{flex:0 0 auto;background:rgba(17,21,31,.9);border-top:1px solid var(--line);
+  border-radius:20px 20px 0 0;padding:12px 16px calc(14px + env(safe-area-inset-bottom))}
+.lbl{font-size:10px;font-weight:800;letter-spacing:.14em;color:var(--mut);margin:8px 0 6px}
+.row{display:flex;gap:7px;flex-wrap:wrap}
+.chip{border:1.5px solid var(--line);background:none;color:var(--mut);border-radius:999px;
+  padding:8px 15px;font-size:13px;font-weight:700}
+.chip.on{color:var(--ac);border-color:var(--ac)}
+.rollbtn{width:100%;border:0;border-radius:14px;background:linear-gradient(135deg,#6ea8ff,#3f6fe0);
+  color:#0a1220;font-weight:900;font-size:16px;letter-spacing:.03em;padding:14px;margin-top:12px}
+.hist{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin-top:10px;min-height:26px}
+.hist::-webkit-scrollbar{display:none}
+.hist span{flex:0 0 auto;font-size:12px;font-weight:700;color:var(--mut);background:var(--panel);
+  border:1px solid var(--line);border-radius:8px;padding:4px 9px;font-variant-numeric:tabular-nums}
+.hist span.dbl{color:var(--gold);border-color:rgba(255,210,63,.4)}
+/* full-app card */
+.upsell{margin-top:12px;border:1px solid var(--line);border-radius:14px;padding:11px 13px;
+  display:flex;align-items:center;gap:11px;background:linear-gradient(135deg,rgba(110,168,255,.08),rgba(110,168,255,0))}
+.upsell .e{font-size:26px}
+.upsell .t{flex:1;font-size:11.5px;line-height:1.45;color:var(--mut)}
+.upsell .t b{color:var(--ink);font-size:12.5px}
+.upsell a{flex:0 0 auto;text-decoration:none;background:var(--ink);color:#10131c;font-weight:800;
+  font-size:12px;border-radius:999px;padding:8px 14px}
+</style></head><body class="t-ivory">
+
+<div class="top"><h1>🎲 Dice</h1><div class="total">total <b id="total">–</b></div></div>
+<div id="stage"></div>
+<div class="hint" id="hint">Tap the table to roll</div>
+
+<div class="deck">
+  <div class="lbl">DICE</div>
+  <div class="row" id="countRow"></div>
+  <div class="lbl">STYLE</div>
+  <div class="row" id="themeRow"></div>
+  <button class="rollbtn" id="rollBtn">ROLL</button>
+  <div class="hist" id="hist"></div>
+  <div class="upsell">
+    <span class="e">🎲</span>
+    <div class="t"><b>Dice — the full app</b><br>Real 3D physics, dice &amp; table packs, game rulebooks, pass-the-phone play.</div>
+    <a href="https://apps.apple.com/app/id6761314774" target="_blank" rel="noopener">Get it</a>
+  </div>
+</div>
+
+<script>
+"use strict";
+var store=window.myllmStorage||{getItem:function(){return Promise.resolve(null)},setItem:function(){return Promise.resolve()}};
+function el(i){return document.getElementById(i)}
+function haptic(k){if(window.myllmHaptic)try{myllmHaptic(k||'light')}catch(e){}}
+
+/* pip layouts on a 3x3 grid (row,col), 1-indexed */
+var PIPS={1:[[2,2]],2:[[1,1],[3,3]],3:[[1,1],[2,2],[3,3]],4:[[1,1],[1,3],[3,1],[3,3]],
+          5:[[1,1],[1,3],[2,2],[3,1],[3,3]],6:[[1,1],[1,3],[2,1],[2,3],[3,1],[3,3]]};
+/* cube rotation that brings each value to face the viewer (opposites sum to 7) */
+var ORIENT={1:[0,0],2:[-90,0],3:[0,-90],4:[0,90],5:[90,0],6:[0,180]};
+
+var THEMES=[['t-ivory','Ivory'],['t-neon','Neon'],['t-ember','Ember']];
+var count=2,theme='t-ivory',dice=[],rolling=false,spins=0;
+
+function buildDice(){
+  var stage=el('stage');stage.innerHTML='';dice=[];
+  var sz=count<=2?110:(count<=4?92:74);
+  for(var i=0;i<count;i++){
+    var d=document.createElement('div');d.className='die';
+    d.style.setProperty('--sz',sz+'px');
+    for(var f=1;f<=6;f++){
+      var face=document.createElement('div');face.className='face f'+f;
+      PIPS[f].forEach(function(p){
+        var pip=document.createElement('i');pip.className='pip';
+        pip.style.gridRow=p[0];pip.style.gridColumn=p[1];
+        face.appendChild(pip);
+      });
+      d.appendChild(face);
+    }
+    d.style.transform='rotateX(-18deg) rotateY(22deg)';
+    stage.appendChild(d);dice.push({elDie:d,val:null});
+  }
+  el('total').textContent='–';
+}
+function roll(){
+  if(rolling)return;
+  rolling=true;spins++;haptic('medium');
+  el('hint').textContent='';
+  var vals=[];
+  dice.forEach(function(d,i){
+    var v=1+Math.floor(Math.random()*6);vals.push(v);d.val=v;
+    var o=ORIENT[v];
+    var tx=o[0]+360*(2+((spins+i)%2)), ty=o[1]+360*(2+(i%3)), tz=(Math.random()*14-7);
+    d.elDie.style.transform='rotateX('+tx+'deg) rotateY('+ty+'deg) rotateZ('+tz.toFixed(1)+'deg)';
+  });
+  setTimeout(function(){
+    var total=vals.reduce(function(a,b){return a+b},0);
+    el('total').textContent=total;
+    var allSame=vals.length>1&&vals.every(function(v){return v===vals[0]});
+    addHist(vals,total,allSame);
+    el('hint').textContent=allSame?(vals.length===2?'Doubles!':'All '+vals[0]+'s!'):'Tap the table to roll';
+    haptic(allSame?'success':'light');
+    rolling=false;
+  },980);
+}
+function addHist(vals,total,dbl){
+  var h=el('hist'),s=document.createElement('span');
+  if(dbl)s.className='dbl';
+  s.textContent=vals.join('+')+' = '+total;
+  h.insertBefore(s,h.firstChild);
+  while(h.children.length>14)h.removeChild(h.lastChild);
+}
+function buildCount(){
+  var r=el('countRow');r.innerHTML='';
+  for(var n=1;n<=6;n++)(function(n){
+    var b=document.createElement('button');b.className='chip'+(n===count?' on':'');b.textContent=n;
+    b.onclick=function(){count=n;store.setItem('dice.count',String(n));buildCount();buildDice();haptic('selection');};
+    r.appendChild(b);
+  })(n);
+}
+function buildTheme(){
+  var r=el('themeRow');r.innerHTML='';
+  THEMES.forEach(function(t){
+    var b=document.createElement('button');b.className='chip'+(t[0]===theme?' on':'');b.textContent=t[1];
+    b.onclick=function(){theme=t[0];document.body.className=theme;store.setItem('dice.theme',theme);buildTheme();haptic('selection');};
+    r.appendChild(b);
+  });
+}
+el('stage').addEventListener('click',roll);
+el('rollBtn').onclick=roll;
+
+store.getItem('dice.count').then(function(v){
+  if(v&&+v>=1&&+v<=6)count=+v;
+  return store.getItem('dice.theme');
+}).then(function(v){
+  if(v&&THEMES.some(function(t){return t[0]===v})){theme=v;document.body.className=theme;}
+  buildCount();buildTheme();buildDice();
+});
+</script>
+</body></html>
