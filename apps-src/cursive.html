@@ -34,6 +34,10 @@ h1 i{font-style:italic;background:linear-gradient(90deg,var(--teal),var(--pink))
 .phint{flex:1;font-size:12.5px;color:var(--mut);font-weight:600;line-height:1.4}
 .pclose{border:0;background:var(--card);border:1.5px solid var(--line);border-radius:50%;width:36px;height:36px;
   font-size:16px;color:var(--mut);font-weight:700}
+.ftag{font-size:8.5px;letter-spacing:.12em;color:var(--mut);font-weight:800;text-align:center;line-height:1.5}
+.ftag b{font-size:11px;color:var(--teal);letter-spacing:.06em}
+.lcard .pen{position:absolute;top:5px;right:7px;font-size:10px;opacity:.85}
+.lcard{position:relative}
 #wrap{flex:1;display:flex;align-items:center;justify-content:center;min-height:0;padding:8px 14px}
 #pad{background:var(--card);border:1.5px solid var(--line);border-radius:22px;touch-action:none;
   box-shadow:0 6px 24px rgba(60,50,30,.08);max-width:100%;max-height:100%}
@@ -60,6 +64,7 @@ h1 i{font-style:italic;background:linear-gradient(90deg,var(--teal),var(--pink))
   <div class="phead">
     <div class="pletter" id="pLetter">a</div>
     <div class="phint" id="pHint">Watch the pen, then trace the stroke</div>
+    <div class="ftag" id="fadeTag">GUIDE<br><b>FULL</b></div>
     <button class="pclose" id="pClose">✕</button>
   </div>
   <div id="wrap"><canvas id="pad"></canvas></div>
@@ -131,7 +136,12 @@ function evalStroke(guide,ink){
 }
 
 /* ---- state ---- */
-var tab='lowercase',stars={},cur=null,strokeIdx=0,quals=[],ink=[],drawing=false,demoT=null,earned=null;
+var tab='lowercase',stars={},levels={},cur=null,strokeIdx=0,quals=[],ink=[],inkDone=[],
+    drawing=false,demoT=null,earned=null,fade=0;
+/* the guide fades as you repeat a letter — full → faint → ghost → from memory.
+   Your own ink always stays on the page so you can see your handwriting. */
+var FADE=[1,0.45,0.2,0.06],FADE_NAME=['FULL','FAINT','GHOST','MEMORY'];
+var MAXFADE=FADE.length-1;
 function letterList(){return LETTERS.filter(function(l){return l.cat===tab})}
 
 /* ---- grid ---- */
@@ -140,7 +150,8 @@ function renderGrid(){
   var g=el('grid');g.innerHTML='';
   letterList().forEach(function(l){
     var d=document.createElement('button');d.className='lcard'+(stars[l.ch]?' done':'');
-    d.innerHTML='<span class="g">'+l.ch+'</span><span class="s">'+starStr(stars[l.ch]||0)+'</span>';
+    d.innerHTML='<span class="g">'+l.ch+'</span><span class="s">'+starStr(stars[l.ch]||0)+'</span>'+
+      ((levels[l.ch]||0)>=MAXFADE?'<span class="pen" title="written from memory">✒️</span>':'');
     d.onclick=function(){openPractice(l);haptic('selection')};
     g.appendChild(d);
   });
@@ -172,29 +183,36 @@ function guides(){
   ctx.setLineDash([]);
 }
 function drawGuidePath(){
+  var f=FADE[fade];
   cur.strokes.forEach(function(stk,i){
     var s=sampleStroke(stk);
-    ctx.strokeStyle=i<strokeIdx?'rgba(62,184,172,.9)':(i===strokeIdx?'rgba(150,140,130,.5)':'rgba(150,140,130,.22)');
+    var a=i<strokeIdx?0.55:(i===strokeIdx?0.5:0.22);
+    ctx.strokeStyle=(i<strokeIdx?'rgba(62,184,172,':'rgba(150,140,130,')+(a*f).toFixed(3)+')';
     ctx.lineWidth=(i===strokeIdx?7:6)*DPR;ctx.lineCap='round';ctx.lineJoin='round';
     ctx.beginPath();ctx.moveTo(P(s[0][0]),P(s[0][1]));
     for(var j=1;j<s.length;j++)ctx.lineTo(P(s[j][0]),P(s[j][1]));
     ctx.stroke();
   });
-  /* entry dot on the active stroke */
+  /* entry dot: stays readable even at MEMORY so you know where to begin */
   if(strokeIdx<cur.strokes.length){
-    var p0=cur.strokes[strokeIdx][0];
-    ctx.fillStyle='#f26d9a';
+    var p0=cur.strokes[strokeIdx][0],da=Math.max(0.4,f);
+    ctx.fillStyle='rgba(242,109,154,'+da.toFixed(2)+')';
     ctx.beginPath();ctx.arc(P(p0[0]),P(p0[1]),7*DPR,0,7);ctx.fill();
-    ctx.fillStyle='rgba(242,109,154,.25)';
+    ctx.fillStyle='rgba(242,109,154,'+(da*0.25).toFixed(2)+')';
     ctx.beginPath();ctx.arc(P(p0[0]),P(p0[1]),13*DPR,0,7);ctx.fill();
   }
 }
-function drawInk(){
-  if(ink.length<2)return;
-  ctx.strokeStyle='#2c2b33';ctx.lineWidth=8*DPR;ctx.lineCap='round';ctx.lineJoin='round';
-  ctx.beginPath();ctx.moveTo(P(ink[0][0]),P(ink[0][1]));
-  for(var i=1;i<ink.length;i++)ctx.lineTo(P(ink[i][0]),P(ink[i][1]));
+/* your handwriting: finished strokes stay in ink, the live one draws on top */
+function strokePath(pts,alpha){
+  if(pts.length<2)return;
+  ctx.strokeStyle='rgba(44,43,51,'+alpha+')';ctx.lineWidth=8*DPR;ctx.lineCap='round';ctx.lineJoin='round';
+  ctx.beginPath();ctx.moveTo(P(pts[0][0]),P(pts[0][1]));
+  for(var i=1;i<pts.length;i++)ctx.lineTo(P(pts[i][0]),P(pts[i][1]));
   ctx.stroke();
+}
+function drawInk(){
+  inkDone.forEach(function(s){strokePath(s,'1')});
+  strokePath(ink,'1');
 }
 function paint(demoPt){
   ctx.clearRect(0,0,cv.width,cv.height);
@@ -231,6 +249,7 @@ function finishStroke(){
   var r=evalStroke(guide,ink);
   if(r.pass){
     quals.push(r.q);
+    inkDone.push(ink);          // your stroke stays on the page
     strokeIdx++;ink=[];
     haptic('success');
     if(strokeIdx>=cur.strokes.length)finishLetter();
@@ -246,21 +265,37 @@ function finishLetter(){
   earned=q>=0.72?3:(q>=0.45?2:1);
   var prev=stars[cur.ch]||0;
   if(earned>prev){stars[cur.ch]=earned;store.setItem('cursive.stars',JSON.stringify(stars));}
+  if((levels[cur.ch]||0)<fade){levels[cur.ch]=fade;store.setItem('cursive.levels',JSON.stringify(levels));}
   el('pStars').textContent='★★★'.slice(0,earned)+'☆☆☆'.slice(0,3-earned);
-  el('pHint').textContent=earned===3?'Beautiful penmanship!':(earned===2?'Lovely — smooth those curves for 3 stars':'Done! Practice makes perfect');
+  el('pHint').textContent=fade>=MAXFADE
+    ?(earned===3?'Written from memory — beautiful!':'Written from memory. Well done!')
+    :(earned===3?'Beautiful! Try it again with a fainter guide':'Nicely done — fade the guide and try again');
   el('btnNext').disabled=false;
-  toast(earned===3?'Beautiful!':'Well done!');
+  el('btnNext').textContent=fade>=MAXFADE?'Next letter':'Fainter ✎';
+  toast(fade>=MAXFADE?'From memory!':(earned===3?'Beautiful!':'Well done!'));
   haptic('success');paint();renderGrid();
 }
 
 /* ---- flow ---- */
 function openPractice(l){
-  cur=l;strokeIdx=0;quals=[];ink=[];earned=null;
+  cur=l;strokeIdx=0;quals=[];ink=[];inkDone=[];earned=null;fade=0;
   el('practice').classList.add('on');
   el('pLetter').textContent=l.ch;
   el('pStars').textContent='';
-  el('btnNext').disabled=true;
+  el('btnNext').disabled=true;el('btnNext').textContent='Fainter ✎';
+  updFadeTag();
   fitCanvas();paint();demo();
+}
+/* same letter, fainter guide, clean page — the practice ladder */
+function fainter(){
+  fade=Math.min(MAXFADE,fade+1);
+  strokeIdx=0;quals=[];ink=[];inkDone=[];earned=null;
+  el('pStars').textContent='';el('btnNext').disabled=true;el('btnNext').textContent='Fainter ✎';
+  el('pHint').textContent=fade>=MAXFADE?'No guide now — write it from memory':'Fainter guide — trace from the pink dot';
+  updFadeTag();paint();haptic('success');
+}
+function updFadeTag(){
+  el('fadeTag').innerHTML='GUIDE<br><b>'+FADE_NAME[fade]+'</b>';
 }
 function nextLetter(){
   var list=letterList(),i=list.indexOf(cur);
@@ -268,14 +303,18 @@ function nextLetter(){
 }
 el('pClose').onclick=function(){clearInterval(demoT);demoT=null;el('practice').classList.remove('on');haptic('light')};
 el('btnDemo').onclick=function(){if(!demoT)demo()};
-el('btnClear').onclick=function(){strokeIdx=0;quals=[];ink=[];el('btnNext').disabled=true;el('pStars').textContent='';paint();demo();haptic('light')};
-el('btnNext').onclick=nextLetter;
+el('btnClear').onclick=function(){strokeIdx=0;quals=[];ink=[];inkDone=[];earned=null;
+  el('btnNext').disabled=true;el('pStars').textContent='';paint();if(fade===0)demo();haptic('light')};
+el('btnNext').onclick=function(){ (earned!==null&&fade<MAXFADE)?fainter():nextLetter(); };
 var toastT=null;
 function toast(t){var x=el('toast');x.textContent=t;x.classList.add('on');clearTimeout(toastT);toastT=setTimeout(function(){x.classList.remove('on')},1300)}
 window.addEventListener('resize',function(){if(cur){fitCanvas();paint();}});
 
 store.getItem('cursive.stars').then(function(v){
   if(v)try{stars=JSON.parse(v)||{}}catch(e){}
+  return store.getItem('cursive.levels');
+}).then(function(v){
+  if(v)try{levels=JSON.parse(v)||{}}catch(e){}
   renderGrid();
 });
 </script>
