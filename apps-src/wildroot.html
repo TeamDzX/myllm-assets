@@ -1,0 +1,411 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Wildroot</title>
+<style>
+:root{color-scheme:dark;--bg:#0a0d0a;--panel:#131a13;--ink:#e9efe6;--mut:#7f8f7c;--line:#243024;
+  --p0:#5fd08a;--p1:#e0965a;--gold:#ffd23f;--danger:#e06060}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%}
+body{font-family:-apple-system,system-ui,sans-serif;background:radial-gradient(120% 100% at 50% 0%,#101810,var(--bg));color:var(--ink);
+  position:fixed;inset:0;width:100%;height:100dvh;overflow:hidden;display:flex;flex-direction:column;
+  -webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+/* top: opponent + score */
+.top{padding:calc(10px + env(safe-area-inset-top)) 16px 6px;display:flex;align-items:center;gap:10px}
+.pname{font-size:13px;font-weight:800}
+.pname.foe{color:var(--p1)}
+.pname.you{color:var(--p0)}
+.sp{flex:1}
+.scorebar{height:10px;border-radius:6px;background:var(--panel);overflow:hidden;display:flex;margin:4px 16px 2px;border:1px solid var(--line)}
+.scorebar i{display:block;height:100%;transition:width .5s ease}
+.scorebar .s0{background:var(--p0)}
+.scorebar .s1{background:var(--p1);margin-left:auto}
+.scores{display:flex;justify-content:space-between;padding:0 16px;font-size:12px;font-weight:800;color:var(--mut)}
+/* board */
+#stage{flex:1;display:flex;align-items:center;justify-content:center;min-height:0;padding:6px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;width:min(92vw,46dvh)}
+.cell{aspect-ratio:3/4;border-radius:13px;border:1.5px dashed #2c3a2c;background:rgba(19,26,19,.5);
+  position:relative;display:flex;align-items:center;justify-content:center;transition:border-color .2s,box-shadow .2s}
+.cell.open.can{border-color:var(--p0);box-shadow:0 0 14px rgba(95,208,138,.25);cursor:pointer}
+.cell .remains{font-size:22px;opacity:.55}
+.cell .rlabel{position:absolute;bottom:6px;font-size:8px;letter-spacing:.1em;color:var(--mut);font-weight:800}
+/* creature card (board + hand share the look) */
+.card{width:100%;height:100%;border-radius:12px;padding:6px 7px;display:flex;flex-direction:column;position:relative;
+  background:linear-gradient(180deg,#1a231a,#131a13);border:2px solid var(--line);overflow:hidden}
+.card.own{border-color:var(--p0)}
+.card.foe{border-color:var(--p1)}
+.card .art{flex:1;display:flex;align-items:center;justify-content:center;font-size:clamp(22px,6dvh,40px);
+  filter:drop-shadow(0 3px 8px rgba(0,0,0,.6))}
+.card .nm{font-size:clamp(8px,1.3dvh,11px);font-weight:800;text-align:center;line-height:1.15;letter-spacing:.02em}
+.card .tag{position:absolute;top:5px;left:6px;font-size:8px;font-weight:900;letter-spacing:.08em;color:var(--mut)}
+.card .pw{position:absolute;top:3px;right:6px;font-size:clamp(14px,2.4dvh,20px);font-weight:900;color:var(--gold);
+  text-shadow:0 0 10px rgba(255,210,63,.45);font-variant-numeric:tabular-nums}
+.card.bumped .pw{color:#8dffb5}
+.card.hit{animation:shake .35s}
+@keyframes shake{25%{transform:translateX(-3px)}75%{transform:translateX(3px)}}
+.card.eaten{animation:gulp .4s forwards}
+@keyframes gulp{to{transform:scale(.1) rotate(14deg);opacity:0}}
+/* hand */
+.handwrap{flex:0 0 auto;padding:6px 10px calc(12px + env(safe-area-inset-bottom))}
+.hlabel{font-size:10px;letter-spacing:.14em;color:var(--mut);font-weight:800;padding:0 8px 6px}
+.hand{display:flex;gap:8px;justify-content:center}
+.hand .hcard{width:17.5%;aspect-ratio:3/4;border-radius:11px;cursor:pointer;transition:transform .15s}
+.hand .hcard.sel{transform:translateY(-10px) scale(1.06)}
+.hand .hcard.sel .card{border-color:var(--gold);box-shadow:0 6px 18px rgba(255,210,63,.25)}
+.pilebox{flex:1;border:1.5px solid var(--line);border-radius:14px;padding:10px 8px;cursor:pointer;background:rgba(19,26,19,.6);transition:border-color .2s,box-shadow .2s}
+.pilebox:active{border-color:var(--gold)}
+.pilebox .ph{font-size:10px;letter-spacing:.14em;color:var(--mut);font-weight:800;text-align:center;margin-bottom:8px}
+.pilebox .prow{display:flex;align-items:center;gap:7px;padding:4px 2px;font-size:12px;font-weight:700}
+.pilebox .prow .e{font-size:18px}
+.pilebox .prow .p{margin-left:auto;color:var(--gold);font-weight:900}
+/* ability toast + log line */
+.toast{position:fixed;left:50%;top:38%;transform:translateX(-50%);background:rgba(10,16,10,.94);border:1px solid var(--line);
+  color:var(--ink);border-radius:12px;padding:9px 16px;font-size:13px;font-weight:700;opacity:0;transition:opacity .25s;pointer-events:none;z-index:40;max-width:86%;text-align:center}
+.toast.on{opacity:1}
+/* overlays */
+.overlay{position:fixed;inset:0;z-index:50;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;
+  background:radial-gradient(120% 90% at 50% 18%,rgba(16,26,16,.85),rgba(6,9,6,.97));padding:26px}
+.overlay.hide{display:none}
+.title{font-size:44px;font-weight:900;letter-spacing:.03em;line-height:1.05;
+  background:linear-gradient(180deg,#8dffb5,#3f9d5f);-webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 0 26px rgba(95,208,138,.3))}
+.subtitle{font-size:14.5px;color:var(--mut);line-height:1.65;margin:16px 0 20px;max-width:310px}
+.subtitle b{color:var(--ink)}
+.big{border:0;border-radius:15px;background:linear-gradient(135deg,#5fd08a,#2f7d4f);color:#04160a;font-weight:900;
+  font-size:16px;padding:15px 34px;margin-top:9px;min-width:240px}
+.big.alt{background:none;border:1.5px solid #2c3a2c;color:var(--mut);font-weight:700}
+.gbnote{margin-top:12px;font-size:11px;color:#4c5c4a;letter-spacing:.08em;font-weight:700}
+.tiny{position:absolute;bottom:calc(14px + env(safe-area-inset-bottom));left:0;right:0;font-size:11px;color:#39433a;text-align:center}
+.result{font-size:15px;line-height:1.7;color:var(--mut)}
+.result b{color:var(--ink)}
+</style></head><body>
+
+<div class="top">
+  <span class="pname foe" id="foeName">KEEPER</span><span class="sp"></span><span class="pname you">YOU</span>
+</div>
+<div class="scorebar"><i class="s0" id="s0bar" style="width:50%"></i><i class="s1" id="s1bar" style="width:50%"></i></div>
+<div class="scores"><span id="s0v" style="color:var(--p0)">0</span><span id="s1v" style="color:var(--p1)">0</span></div>
+
+<div id="stage"><div class="grid" id="grid"></div></div>
+
+<div class="handwrap">
+  <div class="hlabel" id="handHint">YOUR HAND — pick a creature, then a glowing spot</div>
+  <div class="hand" id="hand"></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<div class="overlay" id="start">
+  <div class="title">WILDROOT</div>
+  <div class="subtitle">One wild grid, two keepers. <b>Every creature you plant can eat, feed, or shield its neighbours</b> — grow the mightier ecosystem before the ground runs out.</div>
+  <button class="big" id="startBtn">Take root</button>
+  <div class="gbnote">GREY-BOX PROTOTYPE · emoji stand in for painted creatures</div>
+  <div class="tiny">A MyLLMos mini-game · everything runs on your device</div>
+</div>
+
+<div class="overlay hide" id="draft" style="justify-content:flex-start;padding-top:calc(44px + env(safe-area-inset-top))">
+  <div class="title" style="font-size:24px">THE KEEPER<br>CUTS THE GROVE</div>
+  <div class="subtitle" style="margin:10px 0 12px">Two halves of one wild grove. <b>Choose yours</b> — the keeper takes the other, and plants first.</div>
+  <div id="pileWrap" style="display:flex;gap:10px;width:min(94vw,430px)">
+    <div class="pilebox" id="pile0"></div>
+    <div class="pilebox" id="pile1"></div>
+  </div>
+</div>
+
+<div class="overlay hide" id="over">
+  <div class="title" id="overTitle" style="font-size:36px">THE GROVE<br>IS YOURS</div>
+  <div class="subtitle result" id="overStats"></div>
+  <button class="big" id="againBtn">Grow again</button>
+</div>
+
+<script>
+"use strict";
+var store=window.myllmStorage||{getItem:function(){return Promise.resolve(null)},setItem:function(){return Promise.resolve()}};
+function el(i){return document.getElementById(i)}
+function haptic(k){if(window.myllmHaptic)try{myllmHaptic(k||'light')}catch(e){}}
+
+/* ============================ SPECIES ============================
+   tag food chain: PLANT < GRAZER < HUNTER < APEX. FUNGUS eats nothing —
+   it grows on death. Abilities are the design space; emoji are grey-box art. */
+var SPECIES=[
+ {id:'sunpetal', name:'Sunpetal',     tag:'PLANT', pw:2, emo:'🌻', ab:'bloom',  abTx:'Adjacent allied plants +1'},
+ {id:'thornbark',name:'Thornbark',    tag:'PLANT', pw:2, emo:'🌵', ab:'armor',  abTx:'Grazers cannot eat it'},
+ {id:'moonfern', name:'Moonfern',     tag:'PLANT', pw:2, emo:'🌿', ab:'lush',   abTx:'On remains: +3 instead of +1'},
+ {id:'mosshare', name:'Moss Hare',    tag:'GRAZER',pw:3, emo:'🐇', ab:'fed',    abTx:'+1 per adjacent allied plant'},
+ {id:'riverelk', name:'River Elk',    tag:'GRAZER',pw:3, emo:'🦌', ab:null,     abTx:'Sturdy and plain'},
+ {id:'emberbeetle',name:'Ember Beetle',tag:'GRAZER',pw:3,emo:'🪲', ab:'toxic',  abTx:'Its eater loses 2'},
+ {id:'ashwolf',  name:'Ash Wolf',     tag:'HUNTER',pw:4, emo:'🐺', ab:'pack',   abTx:'+1 per adjacent allied hunter'},
+ {id:'marshlynx',name:'Marsh Lynx',   tag:'HUNTER',pw:4, emo:'🐈‍⬛', ab:'pounce', abTx:'Counts +2 power when eating'},
+ {id:'skytyrant',name:'Sky Tyrant',   tag:'APEX',  pw:5, emo:'🦅', ab:'lone',   abTx:'-1 per adjacent ally'},
+ {id:'gravecap', name:'Gravecap',     tag:'FUNGUS',pw:2, emo:'🍄', ab:'scav',   abTx:'+2 whenever a neighbour dies'}
+];
+var BYID={};SPECIES.forEach(function(s){BYID[s.id]=s});
+var EATS={PLANT:[],GRAZER:['PLANT'],HUNTER:['GRAZER'],APEX:['HUNTER'],FUNGUS:[]};
+var NB=[[1,3],[0,2,4],[1,5],[0,4,6],[1,3,5,7],[2,4,8],[3,7],[4,6,8],[5,7]];
+
+/* ============================ ENGINE (pure) ============================ */
+/* Divide-and-choose: one keeper SPLITS the grove into two piles of five, the
+   other CHOOSES which pile to keep. The splitter is incentivised to cut
+   evenly — fairness is built into the rule, not tuned into the numbers.
+   The splitter plants first (the chooser already got the pick). */
+function newMatch(seed,splitter){
+  var g={board:[],remains:[],hands:[[],[]],biomass:[0,0],turn:0,over:false,log:[],seed:seed||1234,
+         phase:'split',splitter:splitter||0,piles:null};
+  for(var i=0;i<9;i++){g.board.push(null);g.remains.push(false);}
+  return g;
+}
+function setSplit(g,pileA){ /* pileA: array of 5 species ids; rest form pile B */
+  if(g.phase!=='split')return;
+  var rest=SPECIES.map(function(s){return s.id}).filter(function(id){return pileA.indexOf(id)<0});
+  g.piles=[pileA.slice(),rest];
+  g.phase='choose';
+}
+function choosePile(g,idx){
+  if(g.phase!=='choose')return;
+  var chooser=1-g.splitter;
+  g.hands[chooser]=g.piles[idx].slice();
+  g.hands[g.splitter]=g.piles[1-idx].slice();
+  g.phase='play';g.turn=g.splitter;
+}
+function rnd(g){g.seed=(g.seed*1664525+1013904223)>>>0;return g.seed/4294967296}
+function clone(g){return JSON.parse(JSON.stringify(g))}
+function legalMoves(g){
+  var mv=[];if(g.over||g.phase!=='play')return mv;
+  var hand=g.hands[g.turn];
+  for(var h=0;h<hand.length;h++)for(var s=0;s<9;s++)if(!g.board[s])mv.push({h:h,s:s});
+  return mv;
+}
+function place(g,mv){
+  var p=g.turn,sp=BYID[g.hands[p][mv.h]],ev=[];
+  g.hands[p].splice(mv.h,1);
+  var pw=sp.pw;
+  /* remains nourish whoever plants on them */
+  if(g.remains[mv.s]){pw+=(sp.ab==='lush')?3:1;g.remains[mv.s]=false;ev.push({t:'nourish',s:mv.s});}
+  var unit={sp:sp.id,owner:p,pw:pw};
+  g.board[mv.s]=unit;
+  /* --- predation: eat every weaker neighbour in this creature's diet --- */
+  var bite=(sp.ab==='pounce')?2:0;
+  NB[mv.s].forEach(function(n){
+    var v=g.board[n];if(!v)return;
+    if(v.owner===p)return;             // never eats allies — no self-farming
+    var vsp=BYID[v.sp];
+    if(EATS[sp.tag].indexOf(vsp.tag)<0)return;
+    if(vsp.ab==='armor'&&sp.tag==='GRAZER')return;
+    if(v.pw>=unit.pw+bite)return;
+    /* eaten */
+    g.board[n]=null;g.remains[n]=true;
+    g.biomass[p]+=v.pw;unit.pw+=1;
+    ev.push({t:'eat',s:mv.s,n:n,prey:v.sp,preyOwner:v.owner});
+    if(vsp.ab==='toxic'){unit.pw=Math.max(1,unit.pw-2);ev.push({t:'toxic',s:mv.s});}
+    /* fungi feast on any adjacent death */
+    NB[n].forEach(function(f){
+      var fu=g.board[f];
+      if(fu&&BYID[fu.sp].ab==='scav'){fu.pw+=2;ev.push({t:'scav',s:f});}
+    });
+  });
+  /* --- symbiosis --- */
+  if(sp.ab==='bloom')NB[mv.s].forEach(function(n){var v=g.board[n];
+    if(v&&v.owner===p&&BYID[v.sp].tag==='PLANT'){v.pw+=1;ev.push({t:'bloom',s:n});}});
+  if(sp.ab==='fed'){var plants=0;NB[mv.s].forEach(function(n){var v=g.board[n];
+    if(v&&v.owner===p&&BYID[v.sp].tag==='PLANT')plants++;});
+    if(plants){unit.pw+=plants;ev.push({t:'fed',s:mv.s,n:plants});}}
+  if(sp.ab==='pack'){var mates=0;NB[mv.s].forEach(function(n){var v=g.board[n];
+    if(v&&v.owner===p&&BYID[v.sp].tag==='HUNTER')mates++;});
+    if(mates){unit.pw+=mates;ev.push({t:'pack',s:mv.s,n:mates});}}
+  if(sp.ab==='lone'){var allies=0;NB[mv.s].forEach(function(n){var v=g.board[n];
+    if(v&&v.owner===p)allies++;});
+    if(allies){unit.pw=Math.max(1,unit.pw-allies);ev.push({t:'lone',s:mv.s,n:allies});}}
+  g.log.push({p:p,sp:sp.id,s:mv.s,ev:ev});
+  /* end conditions: ground full, or both keepers out of cards */
+  var full=g.board.every(function(b){return b});
+  var empty=g.hands[0].length===0&&g.hands[1].length===0;
+  var nextHasCards=g.hands[1-p].length>0;
+  if(full||empty)g.over=true;
+  else g.turn=nextHasCards?1-p:p;
+  return ev;
+}
+function score(g){
+  var s=[g.biomass[0],g.biomass[1]];
+  g.board.forEach(function(v){if(v)s[v.owner]+=v.pw});
+  return s;
+}
+
+/* ============================ BOTS ============================ */
+var AB_VAL={bloom:1.5,armor:1,lush:1,fed:.5,pack:1,pounce:1.5,lone:-1,scav:1.5,toxic:.5};
+function draftValue(id){var s=BYID[id];
+  var v=s.pw+(AB_VAL[s.ab]||0);
+  if(EATS[s.tag].length&&s.tag==='APEX')v+=2.5;   // nothing eats an apex — priced in
+  return v;
+}
+function pileValue(ids){return ids.reduce(function(a,id){return a+draftValue(id)},0)}
+function botSplit(g){ /* enumerate all 252 cuts, take the most even one */
+  var ids=SPECIES.map(function(s){return s.id}),best=null,bd=1e9;
+  for(var m=0;m<1024;m++){
+    if(popcount(m)!==5)continue;
+    var a=[],b=[];
+    for(var i=0;i<10;i++)((m>>i)&1?a:b).push(ids[i]);
+    var d=Math.abs(pileValue(a)-pileValue(b))+rnd(g)*.001;
+    if(d<bd){bd=d;best=a;}
+  }
+  return best;
+}
+function popcount(n){var c=0;while(n){c+=n&1;n>>=1}return c}
+function botChoose(g){return pileValue(g.piles[0])>=pileValue(g.piles[1])?0:1}
+function botRandom(g){var mv=legalMoves(g);return mv[Math.floor(rnd(g)*mv.length)]}
+function evalFor(g,p){var s=score(g);return s[p]-s[1-p]}
+function botGreedy(g){
+  var best=null,bv=-1e9,me=g.turn;
+  legalMoves(g).forEach(function(mv){
+    var c=clone(g);place(c,mv);
+    var v=evalFor(c,me)+rnd(g)*.01;
+    if(v>bv){bv=v;best=mv;}
+  });
+  return best;
+}
+function botDeep(g){ /* 2-ply: my move vs opponent's best greedy reply */
+  var best=null,bv=-1e9,me=g.turn;
+  legalMoves(g).forEach(function(mv){
+    var c=clone(g);place(c,mv);
+    var v;
+    if(c.over||c.turn===me){v=evalFor(c,me);}
+    else{
+      var worst=1e9;
+      legalMoves(c).forEach(function(om){
+        var c2=clone(c);place(c2,om);
+        var ov=evalFor(c2,me);
+        if(ov<worst)worst=ov;
+      });
+      v=worst===1e9?evalFor(c,me):worst;
+    }
+    v+=rnd(g)*.01;
+    if(v>bv){bv=v;best=mv;}
+  });
+  return best;
+}
+
+/* ============================ UI ============================ */
+var G=null,selHand=-1,busy=false,wins=0,games=0;
+var TAGEMO={PLANT:'🌱',GRAZER:'🌾',HUNTER:'🐾',APEX:'👑',FUNGUS:'💀'};
+function cardHTML(spId,owner,pw,base){
+  var s=BYID[spId];
+  var bump=pw>s.pw?' bumped':'';
+  return '<div class="card '+(owner===0?'own':'foe')+bump+'">'+
+    '<span class="tag">'+s.tag+'</span><span class="pw">'+pw+'</span>'+
+    '<div class="art">'+s.emo+'</div><div class="nm">'+s.name+'</div></div>';
+}
+function renderBoard(hl){
+  var grid=el('grid');grid.innerHTML='';
+  for(var i=0;i<9;i++){
+    var c=document.createElement('div');
+    var v=G.board[i];
+    if(v){c.className='cell';c.innerHTML=cardHTML(v.sp,v.owner,v.pw);}
+    else{
+      c.className='cell open'+((selHand>=0&&!busy&&G.turn===0)?' can':'');
+      if(G.remains[i])c.innerHTML='<span class="remains">🍂</span><span class="rlabel">REMAINS +1</span>';
+      (function(slot){c.onclick=function(){tapCell(slot)}})(i);
+    }
+    if(hl&&hl.indexOf(i)>=0)c.firstChild&&c.firstChild.classList&&c.firstChild.classList.add('hit');
+    grid.appendChild(c);
+  }
+  var s=score(G);
+  var tot=Math.max(1,s[0]+s[1]);
+  el('s0bar').style.width=(s[0]/tot*100)+'%';
+  el('s1bar').style.width=(s[1]/tot*100)+'%';
+  el('s0v').textContent=s[0]+(G.biomass[0]?' ('+G.biomass[0]+' eaten)':'');
+  el('s1v').textContent=s[1]+(G.biomass[1]?' ('+G.biomass[1]+' eaten)':'');
+}
+function renderHand(){
+  var h=el('hand');h.innerHTML='';
+  G.hands[0].forEach(function(id,i){
+    var d=document.createElement('div');
+    d.className='hcard'+(i===selHand?' sel':'');
+    d.innerHTML=cardHTML(id,0,BYID[id].pw);
+    d.onclick=function(){
+      selHand=(selHand===i)?-1:i;
+      el('handHint').textContent=selHand>=0?BYID[id].abTx.toUpperCase()+' — now pick a glowing spot':'YOUR HAND — pick a creature, then a glowing spot';
+      renderHand();renderBoard();haptic('selection');
+    };
+    h.appendChild(d);
+  });
+}
+var toastT=null;
+function toast(t){var x=el('toast');x.textContent=t;x.classList.add('on');
+  clearTimeout(toastT);toastT=setTimeout(function(){x.classList.remove('on')},1400)}
+function narrate(ev){
+  var eats=ev.filter(function(e){return e.t==='eat'});
+  if(eats.length)toast((eats.length>1?eats.length+' creatures':BYID[eats[0].prey].name)+' devoured! 🍂');
+  else{
+    var e=ev.find(function(x){return ['bloom','fed','pack','scav','nourish','lone','toxic'].indexOf(x.t)>=0});
+    if(e){var tx={bloom:'The plants bloom 🌸',fed:'Well fed +'+e.n,pack:'The pack gathers +'+e.n,
+      scav:'The fungus feasts +2',nourish:'Rooted in remains +1',lone:'Too crowded −'+e.n,toxic:'Poisoned! −2'}[e.t];
+      if(tx)toast(tx);}
+  }
+}
+function tapCell(slot){
+  if(busy||G.over||G.turn!==0||selHand<0||G.board[slot])return;
+  busy=true;
+  var ev=place(G,{h:selHand,s:slot});
+  selHand=-1;
+  el('handHint').textContent='YOUR HAND — pick a creature, then a glowing spot';
+  renderHand();renderBoard(ev.filter(function(e){return e.t==='eat'}).map(function(e){return e.n}));
+  narrate(ev);haptic(ev.some(function(e){return e.t==='eat'})?'success':'light');
+  setTimeout(aiTurn,900);
+}
+function aiTurn(){
+  if(G.over){busy=false;endMatch();return;}
+  if(G.turn!==0){
+    var mv=botDeep(G);
+    if(mv){
+      var ev=place(G,mv);
+      renderBoard(ev.filter(function(e){return e.t==='eat'}).map(function(e){return e.n}));
+      renderHand();narrate(ev);
+    }
+    if(G.over){busy=false;endMatch();return;}
+    if(G.turn!==0){setTimeout(aiTurn,700);return;}
+  }
+  busy=false;
+  if(G.over)endMatch();
+}
+function endMatch(){
+  var s=score(G);games++;
+  var won=s[0]>s[1],draw=s[0]===s[1];
+  if(won)wins++;
+  store.setItem('wildroot.record',wins+'/'+games);
+  el('overTitle').innerHTML=draw?'THE GROVE<br>SHARED':(won?'THE GROVE<br>IS YOURS':'THE KEEPER<br>PREVAILS');
+  el('overTitle').style.background=won?'':'linear-gradient(180deg,#e0965a,#9d5f2f)';
+  el('overStats').innerHTML='You <b>'+s[0]+'</b> · Keeper <b>'+s[1]+'</b><br>'+
+    'Eaten: you '+G.biomass[0]+' · keeper '+G.biomass[1]+'<br>Record <b>'+wins+' / '+games+'</b>';
+  setTimeout(function(){el('over').classList.remove('hide')},700);
+  haptic(won?'success':'warning');
+}
+function renderPiles(){
+  [0,1].forEach(function(pi){
+    var box=el('pile'+pi);
+    box.innerHTML='<div class="ph">'+(pi===0?'FIRST CUT':'SECOND CUT')+'</div>'+
+      G.piles[pi].map(function(id){var s=BYID[id];
+        return '<div class="prow"><span class="e">'+s.emo+'</span>'+s.name+'<span class="p">'+s.pw+'</span></div>';
+      }).join('');
+    box.onclick=function(){
+      choosePile(G,pi);haptic('success');
+      toast('The keeper takes the other half — and plants first');
+      beginPlay();
+    };
+  });
+}
+function beginPlay(){
+  el('draft').classList.add('hide');
+  renderBoard();renderHand();
+  if(G.turn!==0){busy=true;setTimeout(aiTurn,800);}
+}
+function startMatch(){
+  /* the KEEPER always splits; you always choose — the flattering seat */
+  G=newMatch(Date.now()>>>0,1);selHand=-1;busy=false;
+  setSplit(G,botSplit(G));
+  el('start').classList.add('hide');el('over').classList.add('hide');
+  el('draft').classList.remove('hide');
+  renderPiles();haptic('success');
+}
+el('startBtn').onclick=startMatch;
+el('againBtn').onclick=startMatch;
+store.getItem('wildroot.record').then(function(v){
+  if(v){var m=String(v).split('/');wins=+m[0]||0;games=+m[1]||0;}
+});
+</script>
+</body></html>
