@@ -56,6 +56,17 @@ body{font-family:-apple-system,system-ui,sans-serif;background:radial-gradient(1
 .pilebox .prow{display:flex;align-items:center;gap:7px;padding:4px 2px;font-size:12px;font-weight:700}
 .pilebox .prow .e{font-size:18px}
 .pilebox .prow .p{margin-left:auto;color:var(--gold);font-weight:900}
+.card .diet{font-size:clamp(7px,1.1dvh,9px);color:var(--mut);text-align:center;font-weight:700;margin-top:1px}
+.pv{position:absolute;top:-7px;right:-5px;background:#2a1a10;border:1.5px solid var(--gold);color:var(--gold);
+  font-size:11px;font-weight:900;border-radius:999px;padding:2px 7px;z-index:3;box-shadow:0 2px 8px rgba(0,0,0,.5)}
+.pv.eat{background:#33120e;border-color:var(--danger);color:#ff9c8a}
+.cell.open.can.good{border-color:var(--gold);box-shadow:0 0 16px rgba(255,210,63,.3)}
+.rules{max-width:330px;text-align:left;font-size:13.5px;line-height:1.7;color:var(--mut)}
+.rules b{color:var(--ink)}
+.chain{display:flex;align-items:center;justify-content:center;gap:6px;font-size:22px;margin:12px 0;
+  background:rgba(19,26,19,.7);border:1px solid var(--line);border-radius:12px;padding:10px}
+.chain .a{font-size:13px;color:var(--mut)}
+.qbtn{border:0;background:none;color:var(--mut);font-size:16px;font-weight:900;padding:4px 10px;pointer-events:auto}
 /* ability toast + log line */
 .toast{position:fixed;left:50%;top:38%;transform:translateX(-50%);background:rgba(10,16,10,.94);border:1px solid var(--line);
   color:var(--ink);border-radius:12px;padding:9px 16px;font-size:13px;font-weight:700;opacity:0;transition:opacity .25s;pointer-events:none;z-index:40;max-width:86%;text-align:center}
@@ -79,7 +90,8 @@ body{font-family:-apple-system,system-ui,sans-serif;background:radial-gradient(1
 </style></head><body>
 
 <div class="top">
-  <span class="pname foe" id="foeName">KEEPER</span><span class="sp"></span><span class="pname you">YOU</span>
+  <span class="pname foe" id="foeName">KEEPER</span><span class="sp"></span>
+  <button class="qbtn" onclick="showRules()">?</button><span class="pname you">YOU</span>
 </div>
 <div class="scorebar"><i class="s0" id="s0bar" style="width:50%"></i><i class="s1" id="s1bar" style="width:50%"></i></div>
 <div class="scores"><span id="s0v" style="color:var(--p0)">0</span><span id="s1v" style="color:var(--p1)">0</span></div>
@@ -96,6 +108,7 @@ body{font-family:-apple-system,system-ui,sans-serif;background:radial-gradient(1
   <div class="title">WILDROOT</div>
   <div class="subtitle">One wild grid, two keepers. <b>Every creature you plant can eat, feed, or shield its neighbours</b> — grow the mightier ecosystem before the ground runs out.</div>
   <button class="big" id="startBtn">Take root</button>
+  <button class="big alt" onclick="showRules()">How it plays</button>
   <div class="gbnote">GREY-BOX PROTOTYPE · emoji stand in for painted creatures</div>
   <div class="tiny">A MyLLMos mini-game · everything runs on your device</div>
 </div>
@@ -107,6 +120,19 @@ body{font-family:-apple-system,system-ui,sans-serif;background:radial-gradient(1
     <div class="pilebox" id="pile0"></div>
     <div class="pilebox" id="pile1"></div>
   </div>
+</div>
+
+<div class="overlay hide" id="rules">
+  <div class="title" style="font-size:24px">HOW IT PLAYS</div>
+  <div class="chain">🌱<span class="a">← eaten by</span>🐇<span class="a">←</span>🐺<span class="a">←</span>🦅</div>
+  <div class="rules">
+    <b>1 · Cut the grove.</b> The keeper splits ten species into two piles — <b>you pick your five</b>, the keeper plants first.<br><br>
+    <b>2 · Plant creatures</b> into the shared 3×3 grove, one per turn.<br><br>
+    <b>3 · Bigger eats smaller.</b> A new creature <b>devours weaker enemy neighbours</b> one step down its food chain — it grows +1, and you bank the prey's power as score. 🍄 eats nothing; it feeds on nearby deaths.<br><br>
+    <b>4 · Remains 🍂</b> are left where something died — plant on them for +1.<br><br>
+    <b>5 · When the grove is full,</b> surviving power + everything you've eaten decides it. <b>Tap a card, then watch the badges</b>: 🍽 = it will eat there, +N = it grows there.
+  </div>
+  <button class="big" onclick="el('rules').classList.add('hide')">Got it</button>
 </div>
 
 <div class="overlay hide" id="over">
@@ -283,12 +309,24 @@ function botDeep(g){ /* 2-ply: my move vs opponent's best greedy reply */
 /* ============================ UI ============================ */
 var G=null,selHand=-1,busy=false,wins=0,games=0;
 var TAGEMO={PLANT:'🌱',GRAZER:'🌾',HUNTER:'🐾',APEX:'👑',FUNGUS:'💀'};
+var DIET_TX={PLANT:'eats nothing',GRAZER:'eats 🌱',HUNTER:'eats 🐇',APEX:'eats 🐺',FUNGUS:'feeds on deaths'};
 function cardHTML(spId,owner,pw,base){
   var s=BYID[spId];
   var bump=pw>s.pw?' bumped':'';
   return '<div class="card '+(owner===0?'own':'foe')+bump+'">'+
     '<span class="tag">'+s.tag+'</span><span class="pw">'+pw+'</span>'+
-    '<div class="art">'+s.emo+'</div><div class="nm">'+s.name+'</div></div>';
+    '<div class="art">'+s.emo+'</div><div class="nm">'+s.name+'</div>'+
+    '<div class="diet">'+DIET_TX[s.tag]+'</div></div>';
+}
+/* preview: what happens if the selected card lands on this open slot? */
+function previewAt(slot){
+  if(selHand<0||G.turn!==0||G.board[slot])return null;
+  var c=clone(G),base=BYID[G.hands[0][selHand]].pw;
+  var ev=place(c,{h:selHand,s:slot});
+  var eats=ev.filter(function(e){return e.t==='eat'}).length;
+  var unit=c.board[slot],net=unit?unit.pw-base:0;
+  if(!eats&&net<=0)return null;
+  return {eats:eats,net:net};
 }
 function renderBoard(hl){
   var grid=el('grid');grid.innerHTML='';
@@ -297,8 +335,12 @@ function renderBoard(hl){
     var v=G.board[i];
     if(v){c.className='cell';c.innerHTML=cardHTML(v.sp,v.owner,v.pw);}
     else{
-      c.className='cell open'+((selHand>=0&&!busy&&G.turn===0)?' can':'');
+      var pvw=(selHand>=0&&!busy&&G.turn===0)?previewAt(i):null;
+      c.className='cell open'+((selHand>=0&&!busy&&G.turn===0)?' can':'')+(pvw?' good':'');
       if(G.remains[i])c.innerHTML='<span class="remains">🍂</span><span class="rlabel">REMAINS +1</span>';
+      if(pvw)c.innerHTML+=pvw.eats
+        ?'<span class="pv eat">🍽'+(pvw.eats>1?'×'+pvw.eats:'')+'</span>'
+        :'<span class="pv">+'+pvw.net+'</span>';
       (function(slot){c.onclick=function(){tapCell(slot)}})(i);
     }
     if(hl&&hl.indexOf(i)>=0)c.firstChild&&c.firstChild.classList&&c.firstChild.classList.add('hit');
@@ -319,7 +361,10 @@ function renderHand(){
     d.innerHTML=cardHTML(id,0,BYID[id].pw);
     d.onclick=function(){
       selHand=(selHand===i)?-1:i;
-      el('handHint').textContent=selHand>=0?BYID[id].abTx.toUpperCase()+' — now pick a glowing spot':'YOUR HAND — pick a creature, then a glowing spot';
+      var s=BYID[id];
+      el('handHint').textContent=selHand>=0
+        ?(s.name+' · '+DIET_TX[s.tag]+' · '+s.abTx+' — 🍽 marks where it eats').toUpperCase()
+        :'YOUR HAND — pick a creature, then a glowing spot';
       renderHand();renderBoard();haptic('selection');
     };
     h.appendChild(d);
@@ -394,6 +439,8 @@ function beginPlay(){
   renderBoard();renderHand();
   if(G.turn!==0){busy=true;setTimeout(aiTurn,800);}
 }
+var seenRules=false;
+function showRules(){el('rules').classList.remove('hide');}
 function startMatch(){
   /* the KEEPER always splits; you always choose — the flattering seat */
   G=newMatch(Date.now()>>>0,1);selHand=-1;busy=false;
@@ -401,11 +448,13 @@ function startMatch(){
   el('start').classList.add('hide');el('over').classList.add('hide');
   el('draft').classList.remove('hide');
   renderPiles();haptic('success');
+  if(!seenRules){seenRules=true;store.setItem('wildroot.rules','1');showRules();}
 }
 el('startBtn').onclick=startMatch;
 el('againBtn').onclick=startMatch;
 store.getItem('wildroot.record').then(function(v){
   if(v){var m=String(v).split('/');wins=+m[0]||0;games=+m[1]||0;}
-});
+  return store.getItem('wildroot.rules');
+}).then(function(v){seenRules=!!v;});
 </script>
 </body></html>
