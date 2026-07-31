@@ -35,9 +35,11 @@ jobs:
         run: python3 pin_jsdelivr.py --apply
 
       - name: Commit apps.json back if it changed
+        id: pin
         run: |
           if git diff --quiet -- apps.json; then
             echo "No pin changes — nothing to commit."
+            echo "changed=0" >> "$GITHUB_OUTPUT"
             exit 0
           fi
           git config user.name "github-actions[bot]"
@@ -45,4 +47,15 @@ jobs:
           git add apps.json
           git commit -m "chore: pin gallery URLs to latest commit [skip ci]"
           git push
+          echo "changed=1" >> "$GITHUB_OUTPUT"
           echo "Re-pinned and pushed updated apps.json."
+
+      # The Android manifest serves the same bytes at the fresh pin-commit ref, so
+      # jsDelivr's per-ref counters split installs by platform (no telemetry).
+      - name: Rebuild Android alias manifest
+        if: steps.pin.outputs.changed == '1'
+        run: |
+          python3 pin_android.py
+          git add apps-android.json android-refs.json
+          git commit -m "chore: refresh Android alias manifest [skip ci]"
+          git push
