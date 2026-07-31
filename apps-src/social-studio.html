@@ -154,6 +154,7 @@ return Promise.resolve(p).then(function(r){hide();return r;},function(e){hide();
     <p class="hint" id="ctaHint"></p>
     <div class="lbl">Button style</div>
     <div class="chips" id="ctaStyleRow"></div>
+    <button class="btn line" id="ctaResetBtn" style="display:none;width:100%" onclick="S.ctaPos=null;paint();saveDraft();updCtaHint()">Reset button position</button>
     <div class="lbl">Link — goes in your caption, not the image</div>
     <input type="text" id="fLink" maxlength="120" placeholder="https://…" oninput="S.copy.link=this.value;saveDraft()">
     <div class="lbl">Word size</div>
@@ -299,7 +300,7 @@ var TEMPLATES = {
 
 var S = {
   format:"square", template:"promo", textScale:1,
-  gradDir:"diag", texture:"none", vig:false, scrimAdj:1, frame:"none", photoBlur:0, textY:0, ctaStyle:"pill",
+  gradDir:"diag", texture:"none", vig:false, scrimAdj:1, frame:"none", photoBlur:0, textY:0, ctaStyle:"pill", ctaPos:null,
   bg:{ type:"grad", grad:0, aiUrl:null },
   photo:null, photoPos:{x:0,y:0,scale:1},
   copy:{ hook:"Weekend plant sale", sub:"Every leafy friend 20% off, Saturday only", cta:"Visit us", caption:"", tone:"Playful" },
@@ -364,25 +365,27 @@ function drawCta(x,W,H,val,yF){
   x.font="700 "+fs+"px -apple-system, sans-serif";
   var style=S.ctaStyle||'pill';
   var label=style==='link'?val+'  ›':val;
-  var tw=x.measureText(label).width,pw=tw+fs*2.2,ph=fs*2.1,cy=H*yF;
+  var tw=x.measureText(label).width,pw=tw+fs*2.2,ph=fs*2.1;
+  var cxF=S.ctaPos?S.ctaPos.x:.5, cy=H*(S.ctaPos?S.ctaPos.y:yF), cx=W*cxF;
+  S._ctaBox={x:cxF,y:cy/H,hw:(pw/2+fs*.3)/W,hh:(ph/2+fs*.45)/H};   // pointer hit-test
   x.textAlign="center";x.textBaseline="middle";
   if(style==='outline'){
     x.strokeStyle=BRAND.accent;x.lineWidth=Math.max(2,fs*.13);
-    roundRect(x,(W-pw)/2,cy-ph/2,pw,ph,ph/2);x.stroke();
+    roundRect(x,cx-pw/2,cy-ph/2,pw,ph,ph/2);x.stroke();
     x.fillStyle="#fff";x.shadowColor="rgba(0,0,0,.4)";x.shadowBlur=fs*.2;
-    x.fillText(label,W/2,cy+fs*.06);x.shadowBlur=0;
+    x.fillText(label,cx,cy+fs*.06);x.shadowBlur=0;
   } else if(style==='ghost'){
-    x.fillStyle="rgba(255,255,255,.16)";roundRect(x,(W-pw)/2,cy-ph/2,pw,ph,ph/2);x.fill();
+    x.fillStyle="rgba(255,255,255,.16)";roundRect(x,cx-pw/2,cy-ph/2,pw,ph,ph/2);x.fill();
     x.strokeStyle="rgba(255,255,255,.55)";x.lineWidth=Math.max(1.5,fs*.07);
-    roundRect(x,(W-pw)/2,cy-ph/2,pw,ph,ph/2);x.stroke();
-    x.fillStyle="#fff";x.fillText(label,W/2,cy+fs*.06);
+    roundRect(x,cx-pw/2,cy-ph/2,pw,ph,ph/2);x.stroke();
+    x.fillStyle="#fff";x.fillText(label,cx,cy+fs*.06);
   } else if(style==='link'){
     x.fillStyle="#fff";x.shadowColor="rgba(0,0,0,.45)";x.shadowBlur=fs*.25;
-    x.fillText(label,W/2,cy);x.shadowBlur=0;
-    x.fillStyle=BRAND.accent;x.fillRect(W/2-tw/2,cy+fs*.75,tw,Math.max(2,fs*.09));
+    x.fillText(label,cx,cy);x.shadowBlur=0;
+    x.fillStyle=BRAND.accent;x.fillRect(cx-tw/2,cy+fs*.75,tw,Math.max(2,fs*.09));
   } else { // pill
-    x.fillStyle=BRAND.accent;roundRect(x,(W-pw)/2,cy-ph/2,pw,ph,ph/2);x.fill();
-    x.fillStyle="#fff";x.fillText(label,W/2,cy+fs*.06);
+    x.fillStyle=BRAND.accent;roundRect(x,cx-pw/2,cy-ph/2,pw,ph,ph/2);x.fill();
+    x.fillStyle="#fff";x.fillText(label,cx,cy+fs*.06);
   }
 }
 function render(cv,W,H,forExport){
@@ -448,7 +451,8 @@ function render(cv,W,H,forExport){
     if(b.caps&&b.key==="sub"){x.fillStyle=BRAND.accent;x.fillRect(W/2-W*.045,H*by+fs3*1.1,W*.09,H*.004);}
   });
   /* CTA on templates without their own spot — the field works everywhere */
-  if(S.copy.cta&&!T.blocks.some(function(b){return b.pill||b.key==="cta"})){
+  if(!S.copy.cta)S._ctaBox=null;
+  else if(!T.blocks.some(function(b){return b.pill||b.key==="cta"})){
     drawCta(x,W,H,S.copy.cta,(CTA_FALLBACK_Y[S.template]||.84)+(S.textY||0));
   }
   /* stickers */
@@ -575,6 +579,14 @@ function paint(){
       }
     }
     if(sel){sel=null;el('selCtl').style.display='none';paint();}
+    // the call-to-action is draggable too (stickers above it win the tap)
+    if(S._ctaBox&&S.copy.cta){
+      var cb=S._ctaBox;
+      if(Math.abs(p.x-cb.x)<cb.hw&&Math.abs(p.y-cb.y)<cb.hh){
+        drag={kind:"cta",dx:p.x-cb.x,dy:p.y-cb.y};
+        cv.setPointerCapture(e.pointerId);haptic('selection');return;
+      }
+    }
     if(photoBg()){drag={kind:"photo",px:p.x,py:p.y,ox:S.photoPos.x,oy:S.photoPos.y};cv.setPointerCapture(e.pointerId);}
   });
   cv.addEventListener("pointermove",function(e){
@@ -582,6 +594,10 @@ function paint(){
     if(pinch){var t=twoPts();if(t){setZoom(pinch.s0*(dist(t[0],t[1])/pinch.d0));paint();}return;}
     if(!drag)return;var p=pos(e);
     if(drag.kind==="st"){drag.st.x=Math.min(.98,Math.max(.02,p.x-drag.dx));drag.st.y=Math.min(.98,Math.max(.02,p.y-drag.dy));}
+    else if(drag.kind==="cta"){
+      S.ctaPos={x:Math.min(.92,Math.max(.08,p.x-drag.dx)),y:Math.min(.95,Math.max(.05,p.y-drag.dy))};
+      updCtaHint();
+    }
     else if(drag.kind==="rs"){
       var rr=sizeRange(drag.st),d=cssDist(p,drag.st.x,drag.st.y);
       drag.st.size=Math.round(Math.min(rr[1],Math.max(rr[0],drag.s0*d/drag.d0)));
@@ -1051,7 +1067,7 @@ function savePost(){
     id:'p'+Date.now(),
     name:(S.copy.hook||'Untitled post').slice(0,40),
     date:new Date().toLocaleDateString(undefined,{month:'short',day:'numeric'}),
-    st:{format:S.format,template:S.template,textScale:S.textScale||1,textY:S.textY||0,ctaStyle:S.ctaStyle||'pill',
+    st:{format:S.format,template:S.template,textScale:S.textScale||1,textY:S.textY||0,ctaStyle:S.ctaStyle||'pill',ctaPos:S.ctaPos||null,
         gradDir:S.gradDir,texture:S.texture,vig:S.vig?1:0,scrimAdj:S.scrimAdj||1,frame:S.frame,
         bg:{type:S.bg.type==='photo'?'photo':S.bg.type==='solid'?'solid':'grad',grad:S.bg.grad||0,solid:S.bg.solid||null},
         copy:JSON.parse(JSON.stringify(S.copy)),
@@ -1095,6 +1111,7 @@ function openPost(p){
   S.textScale=typeof st.textScale==='number'?Math.min(1.5,Math.max(.6,st.textScale)):1;
   S.textY=typeof st.textY==='number'?Math.min(.22,Math.max(-.22,st.textY)):0;
   S.ctaStyle=st.ctaStyle||'pill';
+  S.ctaPos=(st.ctaPos&&typeof st.ctaPos.x==='number')?st.ctaPos:null;
   S.gradDir=st.gradDir||'diag';S.texture=st.texture||'none';S.vig=!!st.vig;
   S.scrimAdj=+st.scrimAdj||1;S.frame=st.frame||'none';
   S.stickers=restoreStickers(st.stickers);
@@ -1142,7 +1159,7 @@ var draftTimer=null;
 function saveDraft(){
   clearTimeout(draftTimer);
   draftTimer=setTimeout(function(){
-    var d={format:S.format,template:S.template,textScale:S.textScale||1,textY:S.textY||0,ctaStyle:S.ctaStyle||'pill',
+    var d={format:S.format,template:S.template,textScale:S.textScale||1,textY:S.textY||0,ctaStyle:S.ctaStyle||'pill',ctaPos:S.ctaPos||null,
       gradDir:S.gradDir,texture:S.texture,vig:S.vig?1:0,scrimAdj:S.scrimAdj||1,frame:S.frame,
       bg:{type:S.bg.type==='solid'?'solid':'grad',grad:S.bg.grad||0,solid:S.bg.solid||null},
       copy:S.copy,stickers:packStickers(S.stickers)};
@@ -1229,9 +1246,10 @@ function applyTags(set){
 function updCtaHint(){
   var native=TEMPLATES[S.template].blocks.some(function(b){return b.pill||b.key==='cta'});
   el('ctaHint').textContent=(S.copy.cta||'').trim()
-    ?(native?'Drawn as a button on this template — pick a style below.'
-            :'This template has no button spot, so it sits near the bottom.')
+    ?((native?'Drawn as a button on this template — pick a style below.'
+             :'This template has no button spot, so it sits near the bottom.')+' Drag it on the preview to place it.')
     :'The button is part of the picture — it can’t be tapped in a post. Put the destination in the Link field and it’s copied with your caption.';
+  el('ctaResetBtn').style.display=S.ctaPos?'block':'none';
 }
 /* caption as actually copied/shared: the Link field rides along at the end */
 function captionOut(){
@@ -1262,6 +1280,7 @@ store.getItem('socialstudio.brand').then(function(v){
       if(typeof d.textScale==='number')S.textScale=Math.min(1.5,Math.max(.6,d.textScale));
       if(typeof d.textY==='number')S.textY=Math.min(.22,Math.max(-.22,d.textY));
       if(d.ctaStyle)S.ctaStyle=d.ctaStyle;
+      S.ctaPos=(d.ctaPos&&typeof d.ctaPos.x==='number')?d.ctaPos:null;
       if(d.gradDir)S.gradDir=d.gradDir; if(d.texture)S.texture=d.texture;
       S.vig=!!d.vig; if(d.scrimAdj)S.scrimAdj=+d.scrimAdj||1; if(d.frame)S.frame=d.frame;
       S.copy=Object.assign(S.copy,d.copy);S.stickers=restoreStickers(d.stickers);}
