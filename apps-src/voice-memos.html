@@ -107,6 +107,8 @@ body{font-family:var(--font);margin:0;padding:0 16px calc(40px + env(safe-area-i
 .waveBox canvas{position:absolute;inset:0}
 .dim{position:absolute;top:0;bottom:0;background:rgba(10,8,18,.42);pointer-events:none}
 #dimL{left:0}#dimR{right:0}
+#ph{position:absolute;top:0;bottom:0;width:2px;margin-left:-1px;background:var(--ink);
+  box-shadow:0 0 5px var(--ink);display:none;pointer-events:none}
 .handle{position:absolute;top:0;bottom:0;width:30px;margin-left:-15px;cursor:ew-resize;touch-action:none}
 .handle::after{content:"";position:absolute;left:50%;top:5px;bottom:5px;width:4px;margin-left:-2px;
   border-radius:2px;background:var(--acc2);box-shadow:0 0 0 1.5px var(--surface)}
@@ -153,6 +155,7 @@ body{font-family:var(--font);margin:0;padding:0 16px calc(40px + env(safe-area-i
     <div class="waveBox" id="waveBox">
       <canvas id="waveCv"></canvas>
       <div class="dim" id="dimL"></div><div class="dim" id="dimR"></div>
+      <div id="ph"></div>
       <div class="handle" id="hS" aria-label="Trim start"></div><div class="handle" id="hE" aria-label="Trim end"></div>
     </div>
     <div class="tlabels"><span id="tS">0:00</span><b id="tKeep"></b><span id="tE">0:00</span></div>
@@ -360,8 +363,9 @@ function closeTrim(){
     if(t.saving.mr&&t.saving.mr.state!=='inactive')try{t.saving.mr.stop()}catch(e){}
   }
   try{t.ac.close()}catch(e){}
+  if(t.phRaf)cancelAnimationFrame(t.phRaf);
   el('trimSheet').classList.remove('show');
-  el('tbar').style.width='0';el('tprog').style.display='none';
+  el('tbar').style.width='0';el('tprog').style.display='none';el('ph').style.display='none';
   el('trimPrev').textContent='▶ Preview';setTrimMsg('');
 }
 function drawWave(){
@@ -370,15 +374,38 @@ function drawWave(){
   var W=box.clientWidth||300,H=box.clientHeight||88,dpr=window.devicePixelRatio||1;
   c.width=W*dpr;c.height=H*dpr;
   var g=c.getContext('2d');g.scale(dpr,dpr);g.clearRect(0,0,W,H);
-  g.fillStyle=(getComputedStyle(document.documentElement).getPropertyValue('--acc')||'#8b5cf6').trim();
+  var css=getComputedStyle(document.documentElement);
+  var acc=(css.getPropertyValue('--acc')||'#8b5cf6').trim(),acc2=(css.getPropertyValue('--acc2')||'#e0559e').trim();
+  var grad=g.createLinearGradient(0,0,W,0);grad.addColorStop(0,acc);grad.addColorStop(1,acc2);
+  g.fillStyle=grad;
   var data=tr.buf.getChannelData(0),N=Math.max(40,Math.floor(W/3)),step=Math.floor(data.length/N)||1;
   var hop=Math.ceil(step/24)||1;
+  // normalise so quiet recordings still show shape
+  var max=0;
+  for(var k=0;k<data.length;k+=hop){var av=Math.abs(data[k]);if(av>max)max=av}
+  var gain=max>0.01?Math.min(3,.95/max):1;
   for(var i=0;i<N;i++){
     var peak=0;
     for(var j=i*step;j<(i+1)*step&&j<data.length;j+=hop){var v=Math.abs(data[j]);if(v>peak)peak=v}
-    var h=Math.max(2,peak*H*.94);
+    var h=Math.max(2,Math.min(.94,peak*gain)*H*.94);
     g.fillRect(i*(W/N)+.5,(H-h)/2,Math.max(1.5,W/N-1.5),h);
   }
+  // time ticks along the bottom
+  var d=tr.buf.duration,stepS=d>90?30:d>45?15:d>20?10:d>8?5:1;
+  g.fillStyle='rgba(125,122,140,.55)';
+  for(var s2=stepS;s2<d;s2+=stepS)g.fillRect(Math.round(s2/d*W),H-8,1,8);
+}
+/* playhead over the waveform (preview + save) */
+function hidePh(){
+  if(tr&&tr.phRaf){cancelAnimationFrame(tr.phRaf);tr.phRaf=null}
+  el('ph').style.display='none';
+}
+function phTick(){
+  if(!tr||!tr.psrc||!tr.buf){hidePh();return}
+  var pos=tr.s+(tr.ac.currentTime-tr.pt0);
+  if(pos>=tr.e){hidePh();return}
+  if(pos>=tr.s)el('ph').style.left=(pos/tr.buf.duration*100)+'%';
+  tr.phRaf=requestAnimationFrame(phTick);
 }
 function placeHandles(){
   if(!tr||!tr.buf)return;var d=tr.buf.duration;
@@ -402,15 +429,18 @@ function trimUI(){
 function trimPreview(){
   if(!tr||!tr.buf||tr.saving)return;
   if(tr.ac.state==='suspended')try{tr.ac.resume()}catch(e){}
-  if(tr.psrc){try{tr.psrc.stop()}catch(e){}tr.psrc=null;el('trimPrev').textContent='▶ Preview';return}
+  if(tr.psrc){try{tr.psrc.stop()}catch(e){}tr.psrc=null;el('trimPrev').textContent='▶ Preview';hidePh();return}
   var src=tr.ac.createBufferSource();src.buffer=tr.buf;src.connect(tr.ac.destination);
-  src.onended=function(){if(tr&&tr.psrc===src){tr.psrc=null;el('trimPrev').textContent='▶ Preview'}};
+  src.onended=function(){if(tr&&tr.psrc===src){tr.psrc=null;el('trimPrev').textContent='▶ Preview';hidePh()}};
   src.start(0,tr.s,Math.max(.1,tr.e-tr.s));
-  tr.psrc=src;el('trimPrev').textContent='■ Stop';haptic('light');
+  tr.psrc=src;tr.pt0=tr.ac.currentTime;
+  el('ph').style.left=(tr.s/tr.buf.duration*100)+'%';el('ph').style.display='block';
+  phTick();
+  el('trimPrev').textContent='■ Stop';haptic('light');
 }
 function trimSave(){
   if(!tr||!tr.buf||tr.saving)return;
-  if(tr.psrc){try{tr.psrc.stop()}catch(e){}tr.psrc=null;el('trimPrev').textContent='▶ Preview'}
+  if(tr.psrc){try{tr.psrc.stop()}catch(e){}tr.psrc=null;el('trimPrev').textContent='▶ Preview';hidePh()}
   if(tr.ac.state==='suspended')try{tr.ac.resume()}catch(e){}
   var dur=Math.max(.1,tr.e-tr.s);
   var dest=tr.ac.createMediaStreamDestination();
@@ -435,7 +465,7 @@ function trimSave(){
       delete m.txt; // transcript no longer matches the audio
       if(JSON.stringify(memos).length>MAXBYTES){
         m.url=old.url;m.dur=old.dur;if(old.txt!==undefined)m.txt=old.txt;
-        tr.saving=null;trimUI();
+        tr.saving=null;trimUI();hidePh();
         setTrimMsg('The trimmed audio wouldn’t fit in storage — trim not saved.');
         return;
       }
@@ -456,6 +486,10 @@ function tickTrimSave(){
   var sv=tr.saving;
   var f=Math.min(1,((Date.now()-sv.t0)/1000)/sv.dur);
   el('tbar').style.width=(f*100)+'%';
+  if(tr.buf){
+    el('ph').style.left=((tr.s+f*sv.dur)/tr.buf.duration*100)+'%';
+    el('ph').style.display='block';
+  }
   sv.timer=setTimeout(tickTrimSave,120);
 }
 /* trim handle dragging + backdrop dismiss */
