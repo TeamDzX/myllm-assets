@@ -1,0 +1,260 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Speedometer</title>
+<style>
+:root{color-scheme:dark;--bg:#0b0d12;--panel:#141824;--ink:#edf0f7;--mut:#7c86a0;--line:#232a3c;
+  --ac:#ffb04c;--ok:#5fd08a;--warn:#ffd23f;--bad:#ff6b60}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%}
+body{font-family:-apple-system,system-ui,sans-serif;color:var(--ink);
+  position:fixed;inset:0;width:100%;height:100dvh;overflow:hidden;display:flex;flex-direction:column;
+  -webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;
+  background:radial-gradient(130% 100% at 50% 0%,#131a2c,var(--bg))}
+.top{padding:calc(12px + env(safe-area-inset-top)) 18px 0;display:flex;align-items:center;gap:8px}
+h1{font-size:17px;font-weight:800;letter-spacing:.04em}
+.gpsdot{width:9px;height:9px;border-radius:50%;background:#555;margin-left:auto}
+.gpsdot.ok{background:var(--ok);box-shadow:0 0 8px rgba(95,208,138,.7)}
+.gpsdot.mid{background:var(--warn)}
+.gpsdot.bad{background:var(--bad)}
+.gpstxt{font-size:11px;color:var(--mut);font-weight:700}
+#gaugeWrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:0;padding:0 12px}
+canvas{max-width:100%}
+.readout{text-align:center;margin-top:-14dvh}
+.speed{font-size:min(19dvw,86px);font-weight:900;font-variant-numeric:tabular-nums;line-height:1;
+  text-shadow:0 0 30px rgba(255,176,76,.25)}
+.vehicle{font-size:14px;color:var(--mut);font-weight:700;min-height:20px;margin-top:6px}
+.vehicle b{font-size:17px}
+.units{display:flex;gap:8px;justify-content:center;margin:10px 0 4px}
+.uchip{border:1.5px solid var(--line);background:none;color:var(--mut);border-radius:999px;
+  padding:7px 16px;font-size:13px;font-weight:800}
+.uchip.on{color:var(--ac);border-color:var(--ac)}
+.trip{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:8px 14px}
+.tcell{background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:9px 6px;text-align:center}
+.tcell .v{font-size:16px;font-weight:900;font-variant-numeric:tabular-nums}
+.tcell .l{font-size:9px;letter-spacing:.12em;color:var(--mut);font-weight:800;margin-top:2px}
+.bar{display:flex;gap:9px;padding:8px 14px calc(16px + env(safe-area-inset-bottom))}
+.btn{flex:1;border:1.5px solid var(--line);background:var(--panel);color:var(--ink);border-radius:13px;
+  padding:13px;font-size:14px;font-weight:800}
+.btn.go{background:linear-gradient(135deg,var(--ac),#e08a2f);border:0;color:#1a1206}
+.btn.stop{background:linear-gradient(135deg,#ff7a6b,#d05548);border:0;color:#2a0d0a}
+.hint{text-align:center;font-size:11.5px;color:var(--mut);padding:0 22px 6px;line-height:1.5;min-height:16px}
+.best{text-align:center;font-size:11px;color:var(--warn);font-weight:700;padding-bottom:2px}
+</style></head><body>
+
+<div class="top"><h1>⛭ SPEEDOMETER</h1><div class="gpstxt" id="gpsTxt">GPS off</div><div class="gpsdot" id="gpsDot"></div></div>
+<div id="gaugeWrap">
+  <canvas id="gauge"></canvas>
+  <div class="readout">
+    <div class="speed" id="speedV">0</div>
+    <div class="vehicle" id="vehicle"></div>
+  </div>
+</div>
+<div class="units" id="units"></div>
+<div class="best" id="best"></div>
+<div class="trip">
+  <div class="tcell"><div class="v" id="tDist">0.0</div><div class="l" id="tDistU">KM</div></div>
+  <div class="tcell"><div class="v" id="tAvg">0</div><div class="l">AVG</div></div>
+  <div class="tcell"><div class="v" id="tMax">0</div><div class="l">MAX</div></div>
+  <div class="tcell"><div class="v" id="tTime">0:00</div><div class="l">MOVING</div></div>
+</div>
+<div class="hint" id="hint"></div>
+<div class="bar">
+  <button class="btn" id="resetBtn">Reset trip</button>
+  <button class="btn go" id="goBtn">Start</button>
+</div>
+
+<script>
+"use strict";
+var store=window.myllmStorage||{getItem:function(){return Promise.resolve(null)},setItem:function(){return Promise.resolve()}};
+function el(i){return document.getElementById(i)}
+function haptic(k){if(window.myllmHaptic)try{myllmHaptic(k||'light')}catch(e){}}
+
+/* ================= speed engine (pure — harness-tested) ================= */
+var R=6371000;
+function haversine(a,b){
+  var dLat=(b.lat-a.lat)*Math.PI/180,dLon=(b.lon-a.lon)*Math.PI/180;
+  var la=a.lat*Math.PI/180,lb=b.lat*Math.PI/180;
+  var h=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(la)*Math.cos(lb)*Math.sin(dLon/2)*Math.sin(dLon/2);
+  return 2*R*Math.asin(Math.min(1,Math.sqrt(h)));
+}
+var MAX_MS=340;           // ~1220 km/h sanity ceiling (fast jet); beyond = GPS glitch
+var ACC_LIMIT=35;         // metres — ignore sloppy fixes
+function makeEngine(){
+  return {fixes:[],ema:null,dist:0,movingMs:0,maxMs:0};
+}
+/* feed one fix {lat,lon,acc,t(ms),vNative(m/s or -1)}; returns speed m/s or null */
+function feed(en,fix){
+  var prev=en.fixes.length?en.fixes[en.fixes.length-1]:null;
+  en.fixes.push(fix);
+  if(en.fixes.length>10)en.fixes.shift();
+  var v=null;
+  if(fix.vNative!=null&&fix.vNative>=0){
+    v=Math.min(MAX_MS,fix.vNative);
+  } else if(fix.acc<=ACC_LIMIT){
+    /* windowed derivation: oldest good fix 4–9s back smooths poll-latency jitter */
+    var base=null;
+    for(var i=0;i<en.fixes.length-1;i++){
+      var f=en.fixes[i];
+      if(f.acc<=ACC_LIMIT&&fix.t-f.t>=4000&&fix.t-f.t<=9500){base=f;break;}
+    }
+    if(base){
+      var d=haversine({lat:base.lat,lon:base.lon},{lat:fix.lat,lon:fix.lon});
+      var raw=d/((fix.t-base.t)/1000);
+      if(raw<=MAX_MS)v=raw;
+    }
+  }
+  if(v!=null){
+    if(v<0.6)v=0;                      // GPS drift while standing reads as zero
+    en.ema=en.ema==null?v:en.ema+(v-en.ema)*0.45;
+    if(en.ema<0.3)en.ema=0;
+    if(en.ema>en.maxMs)en.maxMs=en.ema;
+  }
+  /* trip accumulation between consecutive good fixes */
+  if(prev&&prev.acc<=ACC_LIMIT&&fix.acc<=ACC_LIMIT){
+    var dt=(fix.t-prev.t)/1000;
+    if(dt>0&&dt<15){
+      var seg=haversine({lat:prev.lat,lon:prev.lon},{lat:fix.lat,lon:fix.lon});
+      var segV=seg/dt;
+      if(segV>=0.5&&segV<=MAX_MS){en.dist+=seg;en.movingMs+=dt*1000;}
+    }
+  }
+  return en.ema;
+}
+/* units: factor from m/s + label */
+var UNITS=[['kmh','km/h',3.6],['mph','mph',2.23694],['kn','kn',1.94384]];
+function conv(ms,u){return ms*UNITS.find(function(x){return x[0]===u})[2]}
+/* what's likely carrying you, from km/h */
+function vehicleFor(kmh){
+  if(kmh<1)return null;
+  if(kmh<7)return ['🚶','Walking pace'];
+  if(kmh<50)return ['🐎','Gallop territory'];
+  if(kmh<160)return ['🚗','Road speed'];
+  if(kmh<360)return ['🚄','Rail speed'];
+  return ['✈️','Air speed'];
+}
+/* gauge range auto-grows in display units */
+var RANGES=[30,60,120,240,500,1000];
+function rangeFor(maxDisp){
+  for(var i=0;i<RANGES.length;i++)if(RANGES[i]>=Math.max(30,maxDisp*1.12))return RANGES[i];
+  return RANGES[RANGES.length-1];
+}
+
+/* ================= state + UI ================= */
+var en=makeEngine(),unit='kmh',running=false,pollT=null,inFlight=false,best=0,lastFixAt=0,lastAcc=null;
+function fmtTime(ms){var s=Math.floor(ms/1000),m=Math.floor(s/60);return m+':'+('0'+(s%60)).slice(-2)}
+function render(){
+  var ms=en.ema||0,disp=conv(ms,unit);
+  el('speedV').textContent=disp<10?disp.toFixed(1):Math.round(disp);
+  var veh=vehicleFor(ms*3.6);
+  el('vehicle').innerHTML=veh?('<b>'+veh[0]+'</b> '+veh[1]):(running?'Waiting for movement…':'');
+  el('tDist').textContent=unit==='mph'?(en.dist/1609.34).toFixed(1):unit==='kn'?(en.dist/1852).toFixed(1):(en.dist/1000).toFixed(1);
+  el('tDistU').textContent=unit==='mph'?'MI':unit==='kn'?'NM':'KM';
+  var avg=en.movingMs>2000?conv(en.dist/(en.movingMs/1000),unit):0;
+  el('tAvg').textContent=Math.round(avg);
+  el('tMax').textContent=Math.round(conv(en.maxMs,unit));
+  el('tTime').textContent=fmtTime(en.movingMs);
+  el('best').textContent=best>0?('Best ever  '+Math.round(conv(best,unit))+' '+UNITS.find(function(x){return x[0]===unit})[1]):'';
+  drawGauge(disp);
+}
+/* ---- gauge ---- */
+var cv=el('gauge'),ctx=cv.getContext('2d');
+function drawGauge(disp){
+  var W=Math.min(innerWidth-24,430),H=W*0.62,D=Math.min(window.devicePixelRatio||1,2);
+  cv.width=W*D;cv.height=H*D;cv.style.width=W+'px';cv.style.height=H+'px';
+  var cx=W/2*D,cy=H*0.92*D,r=W*0.44*D;
+  var range=rangeFor(Math.max(disp,conv(en.maxMs,unit)));
+  var a0=Math.PI*1.05,a1=Math.PI*1.95;
+  function ang(v){return a0+(a1-a0)*Math.min(1,v/range)}
+  ctx.clearRect(0,0,cv.width,cv.height);
+  /* track */
+  ctx.lineWidth=10*D;ctx.lineCap='round';
+  ctx.strokeStyle='rgba(45,55,80,.8)';
+  ctx.beginPath();ctx.arc(cx,cy,r,a0,a1);ctx.stroke();
+  /* fill */
+  if(disp>0.4){
+    var grad=ctx.createLinearGradient(0,0,cv.width,0);
+    grad.addColorStop(0,'#ffb04c');grad.addColorStop(1,'#ff7a4c');
+    ctx.strokeStyle=grad;
+    ctx.beginPath();ctx.arc(cx,cy,r,a0,ang(disp));ctx.stroke();
+  }
+  /* ticks + labels */
+  ctx.fillStyle='rgba(160,172,200,.8)';
+  ctx.font=(11*D)+'px -apple-system';ctx.textAlign='center';ctx.textBaseline='middle';
+  for(var i=0;i<=6;i++){
+    var v=range*i/6,a=ang(v);
+    var x1=cx+Math.cos(a)*(r-16*D),y1=cy+Math.sin(a)*(r-16*D);
+    var x2=cx+Math.cos(a)*(r-7*D),y2=cy+Math.sin(a)*(r-7*D);
+    ctx.strokeStyle='rgba(160,172,200,.5)';ctx.lineWidth=2*D;
+    ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
+    ctx.fillText(String(Math.round(v)),cx+Math.cos(a)*(r-30*D),cy+Math.sin(a)*(r-30*D));
+  }
+}
+/* ---- units ---- */
+function buildUnits(){
+  var w=el('units');w.innerHTML='';
+  UNITS.forEach(function(u){
+    var b=document.createElement('button');b.className='uchip'+(u[0]===unit?' on':'');b.textContent=u[1];
+    b.onclick=function(){unit=u[0];store.setItem('speedo.unit',unit);buildUnits();render();haptic('selection')};
+    w.appendChild(b);
+  });
+}
+/* ---- GPS polling ---- */
+function setGps(state,txt){
+  el('gpsDot').className='gpsdot'+(state?' '+state:'');
+  el('gpsTxt').textContent=txt;
+}
+function poll(){
+  if(inFlight||!window.myllmLocation)return;
+  inFlight=true;
+  myllmLocation.current({address:false}).then(function(p){
+    inFlight=false;
+    if(!p)return;
+    var now=Date.now();
+    var fix={lat:p.latitude,lon:p.longitude,acc:p.accuracy==null?999:p.accuracy,
+             t:(typeof p.timestamp==='number'&&p.timestamp>0)?p.timestamp:now,
+             vNative:(typeof p.speed==='number')?p.speed:null};
+    lastFixAt=now;lastAcc=fix.acc;
+    feed(en,fix);
+    if(en.maxMs>best){best=en.maxMs;store.setItem('speedo.best',String(best));}
+    setGps(fix.acc<=15?'ok':(fix.acc<=ACC_LIMIT?'mid':'bad'),'±'+Math.round(fix.acc)+'m');
+    if(fix.acc>ACC_LIMIT)el('hint').textContent='Weak GPS — get clearer sky for a good reading';
+    else if(fix.vNative==null&&en.fixes.length<3)el('hint').textContent='Getting a bearing — a few seconds…';
+    else el('hint').textContent='';
+    render();
+  }).catch(function(e){
+    inFlight=false;
+    setGps('bad','no fix');
+    el('hint').textContent=/turned off/i.test(e&&e.message||'')
+      ?'Turn on Settings → MyLLMos Apps → “Allow apps to use your location”.'
+      :'No GPS fix — open sky helps. ('+((e&&e.message)||'error')+')';
+  });
+}
+function start(){
+  if(!window.myllmLocation){
+    el('hint').textContent='This needs the MyLLM app with location for apps enabled.';
+    haptic('warning');return;
+  }
+  running=true;el('goBtn').textContent='Pause';el('goBtn').className='btn stop';
+  poll();pollT=setInterval(poll,2000);haptic('success');
+}
+function stop(){
+  running=false;clearInterval(pollT);pollT=null;
+  el('goBtn').textContent='Start';el('goBtn').className='btn go';
+  setGps(null,'paused');haptic('light');
+}
+el('goBtn').onclick=function(){running?stop():start()};
+el('resetBtn').onclick=function(){
+  var keep=en.fixes;en=makeEngine();en.fixes=keep.slice(-2);
+  render();haptic('warning');
+};
+window.addEventListener('resize',render);
+
+store.getItem('speedo.unit').then(function(v){
+  if(v&&UNITS.some(function(u){return u[0]===v}))unit=v;
+  return store.getItem('speedo.best');
+}).then(function(v){
+  best=parseFloat(v)||0;
+  buildUnits();render();
+  el('hint').textContent=window.myllmLocation?'Tap Start, then get moving — train, plane, car or horse.':'Open inside MyLLM to use GPS.';
+});
+</script>
+</body></html>
