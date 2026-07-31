@@ -443,15 +443,25 @@ function render(cv,W,H,forExport){
     }
     if(!forExport&&st===sel){
       x.strokeStyle="#4f8df9";x.lineWidth=3;x.setLineDash([8,6]);
+      var hw,hh;
       if(st.kind==="photo"){
         var ar=(st._img&&st._img.naturalWidth)?st._img.naturalHeight/st._img.naturalWidth:1;
-        var hw=fs*.58,hh=fs*ar*.58+fs*.1;
-        roundRect(x,px2-hw,py-hh,hw*2,hh*2,10);
-      } else {
-        var r=fs*.62;
-        roundRect(x,px2-r,py-r*.72,r*2,r*1.44,10);
-      }
+        hw=fs*.58;hh=fs*ar*.58+fs*.1;
+      } else { hw=fs*.62;hh=fs*.62*.72; }
+      roundRect(x,px2-hw,py-hh,hw*2,hh*2,10);
       x.stroke();x.setLineDash([]);
+      st._box={hw:hw/W,hh:hh/H};   // pointer code hit-tests the same geometry
+      /* corner handles: red ✕ removes, blue dot resizes */
+      var hr=Math.max(14,W*.022);
+      x.fillStyle="#e0485a";x.beginPath();x.arc(px2+hw,py-hh,hr,0,7);x.fill();
+      x.strokeStyle="#fff";x.lineWidth=Math.max(2,hr*.2);
+      x.beginPath();x.moveTo(px2+hw-hr*.38,py-hh-hr*.38);x.lineTo(px2+hw+hr*.38,py-hh+hr*.38);x.stroke();
+      x.beginPath();x.moveTo(px2+hw+hr*.38,py-hh-hr*.38);x.lineTo(px2+hw-hr*.38,py-hh+hr*.38);x.stroke();
+      x.fillStyle="#4f8df9";x.beginPath();x.arc(px2+hw,py+hh,hr,0,7);x.fill();
+      x.strokeStyle="#fff";
+      x.beginPath();x.moveTo(px2+hw-hr*.34,py+hh+hr*.34);x.lineTo(px2+hw+hr*.34,py+hh-hr*.34);x.stroke();
+      x.beginPath();x.moveTo(px2+hw+hr*.05,py+hh-hr*.34);x.lineTo(px2+hw+hr*.34,py+hh-hr*.34);x.stroke();
+      x.beginPath();x.moveTo(px2+hw+hr*.34,py+hh-hr*.05);x.lineTo(px2+hw+hr*.34,py+hh-hr*.34);x.stroke();
     }
   });
   drawFrame(x,W,H);
@@ -486,7 +496,8 @@ function paint(){
   var cv=el('pv');
   render(cv,Math.round(f.w*sc*dpr),Math.round(f.h*sc*dpr),false);
   cv.style.width=Math.round(f.w*sc)+"px";cv.style.height=Math.round(f.h*sc)+"px";
-  el('stageHint').textContent = S.stickers.length? "drag stickers to place them" : (S.photo&&S.bg.type==="photo"? "drag to move · pinch to zoom":"");
+  el('stageHint').textContent = sel? "drag to move · blue dot resizes · red ✕ removes"
+    : (S.stickers.length? "drag stickers to place them" : (S.photo&&S.bg.type==="photo"? "drag to move · pinch to zoom":""));
 }
 
 /* ---------------- pointer drag ---------------- */
@@ -498,11 +509,27 @@ function paint(){
   function twoPts(){var k=Object.keys(pts);return k.length>=2?[pts[k[0]],pts[k[1]]]:null;}
   function setZoom(s){S.photoPos.scale=Math.min(4,Math.max(1,s));el('pzoom').value=Math.round(S.photoPos.scale*100);}
   var photoBg=function(){return S.photo&&S.bg.type==="photo";};
+  function sizeRange(st){return st.kind==='photo'?[140,760]:[24,200];}
+  function cssDist(p,nx,ny){var r=cv.getBoundingClientRect();
+    var dx=(p.x-nx)*r.width,dy=(p.y-ny)*r.height;return Math.sqrt(dx*dx+dy*dy);}
   cv.addEventListener("pointerdown",function(e){
     pts[e.pointerId]={x:e.clientX,y:e.clientY};
     // A second finger on a photo background starts a pinch-zoom.
     if(count()>=2&&photoBg()){var t=twoPts();drag=null;pinch={d0:dist(t[0],t[1])||1,s0:S.photoPos.scale};haptic('selection');return;}
     var p=pos(e),f=FORMATS[S.format];
+    // selection handles first: red ✕ removes, blue corner dot starts a resize.
+    // On small stickers the handles sit close together, so the NEAREST one wins.
+    if(sel&&sel._box){
+      var b=sel._box;
+      var dDel=cssDist(p,sel.x+b.hw,sel.y-b.hh),dRs=cssDist(p,sel.x+b.hw,sel.y+b.hh);
+      if(Math.min(dDel,dRs)<24){
+        if(dRs<=dDel){
+          drag={kind:"rs",st:sel,s0:sel.size,d0:Math.max(8,cssDist(p,sel.x,sel.y))};
+          cv.setPointerCapture(e.pointerId);haptic('selection');
+        } else deleteSel();
+        return;
+      }
+    }
     for(var i=S.stickers.length-1;i>=0;i--){
       var st=S.stickers[i],rx=(st.size*(1/1080))*.75,ry=rx*(f.w/f.h);
       if(Math.abs(p.x-st.x)<rx&&Math.abs(p.y-st.y)<ry){
@@ -520,6 +547,11 @@ function paint(){
     if(pinch){var t=twoPts();if(t){setZoom(pinch.s0*(dist(t[0],t[1])/pinch.d0));paint();}return;}
     if(!drag)return;var p=pos(e);
     if(drag.kind==="st"){drag.st.x=Math.min(.98,Math.max(.02,p.x-drag.dx));drag.st.y=Math.min(.98,Math.max(.02,p.y-drag.dy));}
+    else if(drag.kind==="rs"){
+      var rr=sizeRange(drag.st),d=cssDist(p,drag.st.x,drag.st.y);
+      drag.st.size=Math.round(Math.min(rr[1],Math.max(rr[0],drag.s0*d/drag.d0)));
+      if(drag.st===sel)el('ssize').value=drag.st.size;
+    }
     else {S.photoPos.x=drag.ox+(p.x-drag.px);S.photoPos.y=drag.oy+(p.y-drag.py);}
     paint();
   });
