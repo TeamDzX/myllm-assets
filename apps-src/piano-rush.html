@@ -59,6 +59,9 @@ body{font-family:var(--font);margin:0;background:linear-gradient(180deg,var(--bg
   border:1px solid rgba(255,255,255,.25);box-shadow:0 -2px 14px rgba(0,0,0,.35),inset 0 -7px 0 rgba(80,70,120,.28);
   position:relative;touch-action:none}
 .key.hit{transform:translateY(3px);box-shadow:0 -1px 6px rgba(0,0,0,.3),inset 0 -4px 0 rgba(80,70,120,.28)}
+.klbl{position:absolute;left:0;right:0;bottom:30px;text-align:center;font-size:16px;font-weight:800;
+  color:#3a3160;opacity:0;transition:opacity .18s;pointer-events:none}
+.key.lit .klbl{opacity:1}
 .key::after{content:"";position:absolute;left:12%;right:12%;bottom:14px;height:5px;border-radius:3px;opacity:.85}
 .key:nth-child(1)::after{background:var(--lane0)}
 .key:nth-child(2)::after{background:var(--lane1)}
@@ -103,6 +106,7 @@ body{font-family:var(--font);margin:0;background:linear-gradient(180deg,var(--bg
   <div class="logo">Piano Rush</div>
   <p class="sub">Tap the keys as the notes reach them — play real songs.</p>
   <div class="speeds" id="speeds"></div>
+  <div class="speeds" id="namesRow" style="margin-top:-8px"></div>
   <div id="songList"></div>
   <div class="foot">All melodies are traditional or public domain.<br>Best scores are saved on your device.</div>
 </div>
@@ -196,11 +200,57 @@ var SONGS=[
   n:'E5:0:.5 D#5:.5:.5 E5:1:.5 D#5:1.5:.5 E5:2:.5 B4:2.5:.5 D5:3:.5 C5:3.5:.5 A4:4:1 C4:5:.5 E4:5.5:.5 A4:6:.5 '+
     'B4:6.5:1 E4:7.5:.5 G#4:8:.5 B4:8.5:.5 C5:9:1 E4:10:.5 '+
     'E5:10.5:.5 D#5:11:.5 E5:11.5:.5 D#5:12:.5 E5:12.5:.5 B4:13:.5 D5:13.5:.5 C5:14:.5 A4:14.5:1 C4:15.5:.5 E4:16:.5 A4:16.5:.5 '+
-    'B4:17:1 E4:18:.5 C5:18.5:.5 B4:19:.5 A4:19.5:2'}
+    'B4:17:1 E4:18:.5 C5:18.5:.5 B4:19:.5 A4:19.5:2'},
+
+ /* ---- public-domain crowd-pleasers (trad., or composer d. >70 yrs) ---- */
+ {id:'saints',name:'When the Saints Go Marching In',em:'🎺',bpm:120,diff:1,
+  n:'C4:0:1 E4:1:1 F4:2:1 G4:3:3 C4:8:1 E4:9:1 F4:10:1 G4:11:3 '+
+    'C4:16:1 E4:17:1 F4:18:1 G4:19:1 E4:20:1 C4:21:1 E4:22:1 D4:23:3 '+
+    'E4:28:1.5 E4:29.5:.5 D4:30:1 C4:31:1 C4:32:1 E4:33:1 G4:34:1.5 G4:35.5:.5 F4:36:3 '+
+    'E4:40:1 F4:41:1 G4:42:2 E4:44:1 C4:45:1 D4:46:1 C4:47:4'},
+ {id:'grace',name:'Amazing Grace',em:'🕯️',bpm:90,diff:1,
+  n:'G4:0:1 C5:1:2 E5:3:1 C5:4:2 E5:6:1 D5:7:3 C5:10:2 A4:12:1 G4:13:3 '+
+    'G4:16:1 C5:17:2 E5:19:1 C5:20:2 E5:22:1 D5:23:3 E5:26:3 '+
+    'G5:29:1 E5:30:2 G5:32:1 E5:33:2 D5:35:1 C5:36:2 A4:38:1 G4:39:3 '+
+    'G4:42:1 C5:43:2 E5:45:1 C5:46:2 E5:48:1 D5:49:3 C5:52:4'},
+ {id:'greensleeves',name:'Greensleeves',em:'🌿',bpm:100,diff:2,
+  n:'A4:0:1 C5:1:1.5 D5:2.5:.5 E5:3:1.5 F5:4.5:.5 E5:5:1 '+
+    'D5:6:1.5 B4:7.5:.5 G4:8:1.5 A4:9.5:.5 B4:10:1 '+
+    'C5:11:1.5 A4:12.5:.5 A4:13:1.5 G#4:14.5:.5 A4:15:1 '+
+    'B4:16:1.5 G#4:17.5:.5 E4:18:2 '+
+    'G5:20:1.5 G5:21.5:.5 F5:22:1.5 D5:23.5:.5 B4:24:1 '+
+    'C5:25:1.5 A4:26.5:.5 A4:27:1.5 G#4:28.5:.5 A4:29:1 B4:30:1 A4:31:2'},
+ {id:'risingsun',name:'House of the Rising Sun',em:'🌅',bpm:96,diff:2,
+  n:'A4:0:1 C5:1:1 D5:2:1 F5:3:2 A4:5:1 C5:6:1 E5:7:2 '+
+    'A4:9:1 C5:10:1 D5:11:1 F5:12:2 E5:14:1 C5:15:1 A4:16:2 '+
+    'A4:18:1 C5:19:1 D5:20:1 F5:21:2 A4:23:1 C5:24:1 E5:25:2 '+
+    'E5:27:1 D5:28:1 C5:29:1 A4:30:3'},
+ {id:'danube',name:'The Blue Danube',em:'🌊',bpm:160,diff:2,
+  n:'D4:0:1 F#4:1:1 A4:2:2 A4:4:2 B4:6:1 B4:7:2 A4:9:1 A4:10:2 '+
+    'F#4:12:1 A4:13:1 D5:14:2 D5:16:2 E5:18:1 E5:19:2 D5:21:1 D5:22:2 '+
+    'F#4:24:1 A4:25:1 D5:26:2 D5:28:2 E5:30:1 E5:31:2 D5:33:1 D5:34:2 '+
+    'A4:36:1 C#5:37:1 E5:38:2 E5:40:2 D5:42:1 D5:43:2 C#5:45:1 C#5:46:2'},
+ {id:'habanera',name:'Habanera (Carmen)',em:'💃',bpm:100,diff:3,
+  n:'D5:0:1 C#5:1:.5 C5:1.5:.5 B4:2:.5 A#4:2.5:.5 A4:3:1 '+
+    'A4:4:.5 A#4:4.5:.5 A4:5:.5 G#4:5.5:.5 A4:6:1 F5:7:1 '+
+    'D5:8:1 C#5:9:.5 C5:9.5:.5 B4:10:.5 A#4:10.5:.5 A4:11:1 '+
+    'A4:12:.5 A#4:12.5:.5 A4:13:.5 G#4:13.5:.5 A4:14:2 '+
+    'D5:16:1 C#5:17:.5 C5:17.5:.5 B4:18:.5 A#4:18.5:.5 A4:19:1 '+
+    'A4:20:.5 A#4:20.5:.5 A4:21:.5 G#4:21.5:.5 A4:22:2'},
+ {id:'entertainer',name:'The Entertainer',em:'🎩',bpm:100,diff:3,
+  n:'D5:0:.5 E5:.5:.5 C5:1:1 A4:2:.5 B4:2.5:.5 G4:3:1 '+
+    'D4:4:.5 E4:4.5:.5 C4:5:1 A3:6:2 '+
+    'C5:8:.5 D5:8.5:.5 D#5:9:.5 E5:9.5:.5 C5:10:.5 E5:10.5:.5 C5:11:.5 E5:11.5:.5 C5:12:2 '+
+    'C5:14:.5 D5:14.5:.5 D#5:15:.5 E5:15.5:.5 C5:16:.5 E5:16.5:.5 C5:17:.5 E5:17.5:.5 C5:18:2'}
 ];
+// Easiest first — stable sort keeps each difficulty band in authored order.
+SONGS.sort(function(a,b){return a.diff-b.diff});
 
 /* parse "Name:beat:dur" → [{t,d,m,lane}] with contour-based lane mapping */
 var NOTEIDX={C:0,D:2,E:4,F:5,G:7,A:9,B:11};
+var PITCHNAMES=['C','C♯','D','D♯','E','F','F♯','G','G♯','A','A♯','B'];
+function noteName(m){return PITCHNAMES[((m%12)+12)%12]}
+function noteFull(m){return noteName(m)+(Math.floor(m/12)-1)}
 function midiOf(nm){
   var mch=/^([A-G])([#b]?)(\d)$/.exec(nm);if(!mch)return null;
   var v=NOTEIDX[mch[1]]+(mch[2]==='#'?1:mch[2]==='b'?-1:0);
@@ -276,6 +326,8 @@ function starsOf(scorePct){return scorePct>=.92?3:scorePct>=.72?2:scorePct>=.45?
 /* ================= state ================= */
 var SPEEDS=[{k:'chill',label:'Chill',lead:2.6},{k:'normal',label:'Normal',lead:2.0},{k:'fast',label:'Fast',lead:1.45}];
 var speedIdx=1;
+var showNames=true;      // note letters on the bars + on the key you strike
+var NAMEFONT='-apple-system,system-ui,"Segoe UI",Roboto,sans-serif';
 var bests={};                   // {songId_speed:{score,stars}}
 var cur=null;                   // running game
 var previewT=null;
@@ -291,6 +343,14 @@ function renderSpeeds(){
     b.onclick=function(){speedIdx=i;store.setItem('speed',String(i));renderSpeeds();renderSongs();haptic('selection')};
     w.appendChild(b);
   });
+  var n=document.createElement('button');n.className='spd'+(showNames?' on':'');
+  n.textContent=showNames?'♪ Note names':'♪ Names off';
+  n.setAttribute('aria-pressed',showNames?'true':'false');
+  n.onclick=function(){
+    showNames=!showNames;store.setItem('names',showNames?'1':'0');
+    renderSpeeds();haptic('selection');
+  };
+  el('namesRow').innerHTML='';el('namesRow').appendChild(n);
 }
 function renderSongs(){
   var L=el('songList');L.innerHTML='';
@@ -421,6 +481,18 @@ function draw(now){
     g.globalAlpha=n.missed?.1:.45;
     g.fillStyle='#fff';rr(g,x+4,y-h+4,w2-8,7,4);g.fill();
     g.globalAlpha=1;
+    // note letter on the bar — learn the keyboard while you play
+    if(showNames&&h>=24){
+      var fs=Math.max(12,Math.min(19,w2*.34));
+      g.font='800 '+fs+'px '+NAMEFONT;
+      g.textAlign='center';g.textBaseline='middle';
+      g.globalAlpha=n.missed?.3:1;
+      g.fillStyle='rgba(20,14,40,.45)';
+      g.fillText(noteName(n.m),x+w2/2,y-h/2+1.5);
+      g.fillStyle='#fff';
+      g.fillText(noteName(n.m),x+w2/2,y-h/2);
+      g.globalAlpha=1;
+    }
   });
   // hit effects
   if(!RM){
@@ -460,6 +532,15 @@ function tapLane(lane){
   var kb=el('keys').children[lane];
   kb.classList.add('hit');setTimeout(function(){kb.classList.remove('hit')},90);
   if(!best){playClick(false);return}
+  if(showNames){
+    var lbl=kb.querySelector('.klbl');
+    if(lbl){
+      lbl.textContent=noteFull(best.m);
+      kb.classList.add('lit');
+      clearTimeout(kb._lt);
+      kb._lt=setTimeout(function(){kb.classList.remove('lit')},520);
+    }
+  }
   var j=judge(now-best.t);
   best.hit=true;
   playNote(best.m,best.d,.55);
@@ -540,6 +621,7 @@ function alert1(t){var s=document.querySelector('.sub');if(s)s.textContent=t}
   for(var i=0;i<4;i++){
     var k=document.createElement('div');k.className='key';k.dataset.lane=i;
     k.setAttribute('role','button');k.setAttribute('aria-label','Key '+(i+1));
+    var sp=document.createElement('span');sp.className='klbl';k.appendChild(sp);
     k.addEventListener('pointerdown',function(ev){ev.preventDefault();tapLane(+this.dataset.lane)});
     K.appendChild(k);
   }
@@ -575,6 +657,9 @@ store.getItem('bests').then(function(v){if(v)try{bests=JSON.parse(v)||{}}catch(e
   return store.getItem('speed');
 }).then(function(v){
   var i=parseInt(v,10);if(i>=0&&i<SPEEDS.length)speedIdx=i;
+  return store.getItem('names');
+}).then(function(v){
+  if(v==='0')showNames=false;
   renderSpeeds();renderSongs();
 });
 </script></body></html>
