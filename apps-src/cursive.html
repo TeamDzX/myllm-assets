@@ -12,9 +12,10 @@ body{font-family:-apple-system,system-ui,sans-serif;background:var(--paper);colo
 .top img{height:42px;border-radius:8px}
 .prog{margin-left:auto;font-size:13px;color:var(--mut);font-weight:700}
 .prog b{color:var(--gold)}
-.rowsel{display:flex;gap:8px;padding:6px 20px 4px}
-.tab{flex:1;border:1.5px solid var(--line);background:var(--card);color:var(--mut);border-radius:12px;
-  padding:9px;font-size:16px;font-weight:700}
+.rowsel{display:flex;gap:7px;padding:6px 16px 4px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.rowsel::-webkit-scrollbar{display:none}
+.tab{flex:0 0 auto;border:1.5px solid var(--line);background:var(--card);color:var(--mut);border-radius:12px;
+  padding:8px 14px;font-size:15px;font-weight:700;white-space:nowrap}
 .tab.on{color:var(--teal);border-color:var(--teal);box-shadow:0 2px 10px rgba(62,184,172,.15)}
 .styles{display:flex;gap:7px;padding:2px 20px 8px}
 .sty{flex:1;border:1.5px solid var(--line);background:none;color:var(--mut);border-radius:999px;
@@ -119,6 +120,41 @@ var THAI=[['ก','ko kai','chicken'],['ข','kho khai','egg'],['ฃ','kho khuat'
  ['ห','ho hip','chest'],['ฬ','lo chula','kite'],['อ','o ang','basin'],['ฮ','ho nokhuk','owl']];
 function infoMap(rows){var m={};rows.forEach(function(r){m[r[0]]={p:r[1],m:r[2]}});return m}
 var HZ=infoMap(HANZI),TH=infoMap(THAI);
+/* --- scripts whose symbols carry names: shown on the card and while practising --- */
+var GREEK_L=[['α','alpha'],['β','beta'],['γ','gamma'],['δ','delta'],['ε','epsilon'],['ζ','zeta'],
+ ['η','eta'],['θ','theta'],['ι','iota'],['κ','kappa'],['λ','lambda'],['μ','mu'],['ν','nu'],['ξ','xi'],
+ ['ο','omicron'],['π','pi'],['ρ','rho'],['σ','sigma'],['τ','tau'],['υ','upsilon'],['φ','phi'],
+ ['χ','chi'],['ψ','psi'],['ω','omega']];
+var CYR_L=[['а','a'],['б','be'],['в','ve'],['г','ge'],['д','de'],['е','ye'],['ё','yo'],['ж','zhe'],
+ ['з','ze'],['и','i'],['й','short i'],['к','ka'],['л','el'],['м','em'],['н','en'],['о','o'],['п','pe'],
+ ['р','er'],['с','es'],['т','te'],['у','u'],['ф','ef'],['х','kha'],['ц','tse'],['ч','che'],['ш','sha'],
+ ['щ','shcha'],['ъ','hard sign'],['ы','yery'],['ь','soft sign'],['э','e'],['ю','yu'],['я','ya']];
+var KANA=[['a'],['i'],['u'],['e'],['o'],['ka'],['ki'],['ku'],['ke'],['ko'],['sa'],['shi'],['su'],['se'],['so'],
+ ['ta'],['chi'],['tsu'],['te'],['to'],['na'],['ni'],['nu'],['ne'],['no'],['ha'],['hi'],['fu'],['he'],['ho'],
+ ['ma'],['mi'],['mu'],['me'],['mo'],['ya'],['yu'],['yo'],['ra'],['ri'],['ru'],['re'],['ro'],['wa'],['wo'],['n']];
+var HIRA='あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわをん'.split('');
+var KATA='アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン'.split('');
+var HANGUL=[['ㄱ','giyeok'],['ㄴ','nieun'],['ㄷ','digeut'],['ㄹ','rieul'],['ㅁ','mieum'],['ㅂ','bieup'],
+ ['ㅅ','siot'],['ㅇ','ieung'],['ㅈ','jieut'],['ㅊ','chieut'],['ㅋ','kieuk'],['ㅌ','tieut'],['ㅍ','pieup'],
+ ['ㅎ','hieut'],['ㅏ','a'],['ㅑ','ya'],['ㅓ','eo'],['ㅕ','yeo'],['ㅗ','o'],['ㅛ','yo'],['ㅜ','u'],['ㅠ','yu'],
+ ['ㅡ','eu'],['ㅣ','i']];
+function pairMap(rows){var m={};rows.forEach(function(r){m[r[0]]={p:r[1],m:''}});return m}
+function zipMap(chars,rows){var m={};chars.forEach(function(c,i){m[c]={p:rows[i][0],m:''}});return m}
+var GRK=pairMap(GREEK_L),CYR=pairMap(CYR_L),HAN=pairMap(HANGUL);
+var GRK_U={},CYR_U={};
+GREEK_L.forEach(function(r){GRK_U[r[0].toUpperCase()]={p:r[1],m:''}});
+CYR_L.forEach(function(r){CYR_U[r[0].toUpperCase()]={p:r[1],m:''}});
+var HIRA_I=zipMap(HIRA,KANA),KATA_I=zipMap(KATA,KANA);
+var EURO_FONTS={roman:'"New York",Georgia,"Times New Roman",serif',
+                script:'"Palatino","Book Antiqua",Didot,serif',
+                print:'-apple-system,"Helvetica Neue",Arial,sans-serif'};
+var EURO_NAMES={roman:'Serif',script:'Elegant',print:'Sans'};
+var JP_FONTS={roman:'"Hiragino Mincho ProN","YuMincho","Hiragino Sans GB",serif',
+              script:'"Klee","Hiragino Mincho ProN",cursive',
+              print:'"Hiragino Sans","Hiragino Kaku Gothic ProN",sans-serif'};
+var KO_FONTS={roman:'"AppleMyungjo","Nanum Myeongjo",serif',
+              script:'"Nanum Pen Script","AppleMyungjo",cursive',
+              print:'"Apple SD Gothic Neo","AppleGothic","Malgun Gothic",sans-serif'};
 /* Adding a script is just another entry here — fonts, characters, guides. */
 var SETS=[
  {id:'lower',label:'abc',latin:true,chars:LOWER,fonts:LATIN_FONTS,
@@ -135,7 +171,22 @@ var SETS=[
   fonts:{roman:'"Thonburi","Sukhumvit Set",serif',
          script:'"Ayuthaya","Thonburi",cursive',
          print:'"Sukhumvit Set","Thonburi",-apple-system,sans-serif'},
-  metrics:{asc:'ป',desc:'ฐ',xh:'ก'},fit:.52}
+  metrics:{asc:'ป',desc:'ฐ',xh:'ก'},fit:.52},
+ {id:'greek',label:'αβγ',chars:GREEK_L.map(function(r){return r[0]}),info:GRK,fonts:EURO_FONTS,
+  styleNames:EURO_NAMES,metrics:{asc:'λ',desc:'γ',xh:'ο'},fit:.60},
+ {id:'greekU',label:'ΑΒΓ',chars:GREEK_L.map(function(r){return r[0].toUpperCase()}),info:GRK_U,
+  fonts:EURO_FONTS,styleNames:EURO_NAMES,metrics:{asc:'Α',desc:'Α',xh:'Α'},fit:.50},
+ {id:'cyr',label:'абв',chars:CYR_L.map(function(r){return r[0]}),info:CYR,fonts:EURO_FONTS,
+  styleNames:EURO_NAMES,metrics:{asc:'б',desc:'у',xh:'о'},fit:.58},
+ {id:'cyrU',label:'АБВ',chars:CYR_L.map(function(r){return r[0].toUpperCase()}),info:CYR_U,
+  fonts:EURO_FONTS,styleNames:EURO_NAMES,metrics:{asc:'А',desc:'А',xh:'А'},fit:.50},
+ {id:'hira',label:'あいう',square:true,chars:HIRA,info:HIRA_I,fonts:JP_FONTS,scale:.96,
+  styleNames:{roman:'Mincho 明朝',script:'Klee 手書',print:'Gothic ゴシック'}},
+ {id:'kata',label:'アイウ',square:true,chars:KATA,info:KATA_I,fonts:JP_FONTS,scale:.96,
+  styleNames:{roman:'Mincho 明朝',script:'Klee 手書',print:'Gothic ゴシック'}},
+ {id:'hangul',label:'한글',square:true,chars:HANGUL.map(function(r){return r[0]}),info:HAN,
+  fonts:KO_FONTS,scale:.94,
+  styleNames:{roman:'Myeongjo 명조',script:'Pen 손글씨',print:'Gothic 고딕'}}
 ];
 function styleDef(){for(var i=0;i<STYLES.length;i++)if(STYLES[i].id===styleId)return STYLES[i];return STYLES[0]}
 function curSet(){for(var i=0;i<SETS.length;i++)if(SETS[i].id===tab)return SETS[i];return SETS[0]}
