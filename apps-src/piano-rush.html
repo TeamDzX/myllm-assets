@@ -379,20 +379,26 @@ function loop(){
 }
 
 function laneX(i,W){var lw=(W-24)/4;return 12+lw*i}
+/* Geometry + palette are read once per resize, never inside the frame loop:
+   getComputedStyle forces a style recalc and offsetHeight forces layout, and at
+   60fps that stutters on older phones. */
+var geo={W:0,H:0,hitY:0,lw:0,cols:['#8b5cf6','#5e9eff','#5eead4','#e0559e']};
 function sizeCanvas(){
   var c=el('cv'),dpr=window.devicePixelRatio||1;
   c.width=innerWidth*dpr;c.height=innerHeight*dpr;
   var g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);
+  var css=getComputedStyle(document.documentElement);
+  geo.W=innerWidth;geo.H=innerHeight;
+  geo.hitY=innerHeight-el('keys').offsetHeight-14;
+  geo.lw=(geo.W-24)/4;
+  geo.cols=[0,1,2,3].map(function(i){
+    return (css.getPropertyValue('--lane'+i)||geo.cols[i]).trim()||geo.cols[i];
+  });
 }
 function draw(now){
   var c=el('cv'),g=c.getContext('2d');
-  var W=innerWidth,H=innerHeight;
-  var keysH=el('keys').offsetHeight,hitY=H-keysH-14;
+  var W=geo.W,H=geo.H,hitY=geo.hitY,lw=geo.lw,laneCols=geo.cols;
   g.clearRect(0,0,W,H);
-  var lw=(W-24)/4;
-  var css=getComputedStyle(document.documentElement);
-  var laneCols=[css.getPropertyValue('--lane0'),css.getPropertyValue('--lane1'),
-                css.getPropertyValue('--lane2'),css.getPropertyValue('--lane3')].map(function(x){return x.trim()});
   // lanes
   for(var i=0;i<4;i++){
     g.fillStyle='rgba(255,255,255,.035)';
@@ -434,12 +440,9 @@ function rr(g,x,y,w,h,r){
 }
 function spawnFx(lane){
   if(RM||!cur)return;
-  var W=innerWidth,H=innerHeight,keysH=el('keys').offsetHeight,hitY=H-keysH-14;
-  var lw=(W-24)/4,cx=laneX(lane,W)+lw/2;
-  var css=getComputedStyle(document.documentElement);
-  var col=css.getPropertyValue('--lane'+lane).trim();
+  var cx=laneX(lane,geo.W)+geo.lw/2,col=geo.cols[lane];
   for(var i=0;i<10;i++){
-    cur.fx.push({x:cx,y:hitY,vx:(Math.random()-.5)*7,vy:-Math.random()*5-1,a:1,c:col});
+    cur.fx.push({x:cx,y:geo.hitY,vx:(Math.random()-.5)*7,vy:-Math.random()*5-1,a:1,c:col});
   }
 }
 
@@ -544,6 +547,21 @@ function alert1(t){var s=document.querySelector('.sub');if(s)s.textContent=t}
   el('cv').addEventListener('pointerdown',function(ev){
     if(!cur||cur.paused||cur.over)return;
     var lane=Math.max(0,Math.min(3,Math.floor((ev.clientX-12)/((innerWidth-24)/4))));
+    tapLane(lane);
+  });
+  // Desktop/keyboard play (harmless on device): ASDF, 1-4 or the arrow keys.
+  var KEYMAP={'1':0,'2':1,'3':2,'4':3,a:0,s:1,d:2,f:3,
+              arrowleft:0,arrowdown:1,arrowup:2,arrowright:3};
+  window.addEventListener('keydown',function(ev){
+    if(ev.repeat||ev.metaKey||ev.ctrlKey)return;
+    var k=String(ev.key||'').toLowerCase();
+    if(k===' '||k==='escape'){
+      if(cur&&!cur.over){ev.preventDefault();cur.paused?resumeGame():pauseGame()}
+      return;
+    }
+    var lane=KEYMAP[k];
+    if(lane===undefined)return;
+    ev.preventDefault();
     tapLane(lane);
   });
   window.addEventListener('resize',function(){if(cur)sizeCanvas()});
