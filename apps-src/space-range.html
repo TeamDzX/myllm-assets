@@ -1533,17 +1533,28 @@ function escT(t){return String(t).replace(/[&<>]/g,function(c){return{'&':'&amp;
    turns it on. SCORE_API empty = feature fully hidden (flip it when the
    Cloudflare Worker is deployed). Server data is untrusted → escT everything. */
 var SCORE_API='https://spacerange-scores.broad-breeze-c0e4.workers.dev';
-var NET=window.myllmFetch||null;
+/* read the bridge lazily: it can be injected after this script parses, and a
+   parse-time capture silently disabled the whole board when that happened */
+function net(){return (typeof window!=='undefined'&&window.myllmFetch)||null;}
 var globalOpt=false,worldScores=null,worldAt=0,hsTab='local';
-function worldAvailable(){return !!(SCORE_API&&NET);}
+function worldAvailable(){return !!(SCORE_API&&net());}
+var worldErr=null,worldBusy=false;
 function refreshWorld(force){
-  if(!globalOpt||!worldAvailable()){renderScores();return;}
+  if(!globalOpt){renderScores();return;}
+  if(!worldAvailable()){worldErr='Turn on app network access in MyLLM Settings to see the world board.';renderScores();return;}
   if(!force&&worldScores&&Date.now()-worldAt<60000){renderScores();return;}
-  NET(SCORE_API+'/top?limit=10').then(function(r){
-    var j=JSON.parse(r.body||'[]');
-    if(Array.isArray(j)){worldScores=j.slice(0,10);worldAt=Date.now();}
-    renderScores();
-  }).catch(function(){if(worldScores===null)worldScores=[];renderScores();});
+  if(worldBusy)return;
+  worldBusy=true;worldErr=null;renderScores();
+  /* cache-buster: the native fetch may reuse a cached response otherwise */
+  net()(SCORE_API+'/top?limit=10&t='+Date.now()).then(function(r){
+    if(!r||r.ok===false||(r.status&&r.status>=400))throw new Error('server said '+(r&&r.status));
+    var j=JSON.parse((r&&r.body)||'[]');
+    if(!Array.isArray(j))throw new Error('unexpected reply');
+    worldScores=j.slice(0,10);worldAt=Date.now();worldErr=null;
+  }).catch(function(e){
+    if(worldScores===null)worldScores=[];
+    worldErr='Couldn\u2019t reach the score board ('+((e&&e.message)||'no answer')+'). Tap \u21bb to retry.';
+  }).then(function(){worldBusy=false;renderScores();});
 }
 function toggleWorld(){
   globalOpt=!globalOpt;store.setItem('spacerange.world',globalOpt?'1':'');
@@ -1563,16 +1574,21 @@ function renderWorldToggle(){
 }
 function renderScores(){
   var h='';
-  if(globalOpt&&worldAvailable()){
+  /* the tabs show whenever you're opted in — if the board can't load you get a
+     reason, not a silently local-only table */
+  if(globalOpt){
     h+='<div class="hstabs"><button class="hstab'+(hsTab==='local'?' on':'')+'" onclick="hsTab=\'local\';renderScores()">LOCAL</button>'+
-       '<button class="hstab'+(hsTab==='world'?' on':'')+'" onclick="hsTab=\'world\';refreshWorld()">WORLD</button></div>';
+       '<button class="hstab'+(hsTab==='world'?' on':'')+'" onclick="hsTab=\'world\';refreshWorld()">WORLD</button>'+
+       (hsTab==='world'?'<button class="hstab" onclick="refreshWorld(true)">\u21bb</button>':'')+'</div>';
   }
-  if(globalOpt&&worldAvailable()&&hsTab==='world'){
-    if(worldScores===null)h+='<div class="hsrow">Fetching world scores\u2026</div>';
+  if(globalOpt&&hsTab==='world'){
+    if(worldErr)h+='<div class="hsrow" style="color:#ff9c8a">'+escT(worldErr)+'</div>';
+    else if(worldBusy||worldScores===null)h+='<div class="hsrow">Fetching world scores\u2026</div>';
     else if(!worldScores.length)h+='<div class="hsrow">No world scores yet \u2014 set the first!</div>';
     else{h+='<div class="hsrow hshead"><span>PILOT</span><span>WAVE</span><span>SCORE</span></div>';
       for(var j2=0;j2<worldScores.length;j2++){var ws=worldScores[j2];
-        h+='<div class="hsrow"><span>'+(j2+1)+'. '+escT(ws.n)+'</span><span>'+escT(ws.w)+'</span><span>'+escT(ws.s)+'</span></div>';}}
+        var mine=String(ws.n).toUpperCase()===String(playerName).toUpperCase();
+        h+='<div class="hsrow'+(mine?' hsnew':'')+'"><span>'+(j2+1)+'. '+escT(ws.n)+'</span><span>'+escT(ws.w)+'</span><span>'+escT(ws.s)+'</span></div>';}}
   } else if(scores.length){h+='<div class="hsrow hshead"><span>PILOT</span><span>WAVE</span><span>SCORE</span></div>';
     for(var i=0;i<scores.length;i++){var s=scores[i];
       h+='<div class="hsrow'+(s._new?' hsnew':'')+'"><span>'+(i+1)+'. '+escT(s.n)+'</span><span>'+s.w+'</span><span>'+s.s+'</span></div>';}}
@@ -1587,7 +1603,7 @@ function saveScore(){
   store.setItem('spacerange.scores',JSON.stringify(scores.map(function(s){return {n:s.n,s:s.s,w:s.w}})));
   renderScores();el('hsEntry').style.display='none';haptic('success');sfx('unlock');
   if(globalOpt&&worldAvailable()){
-    NET(SCORE_API+'/submit',{method:'POST',headers:{'Content-Type':'application/json'},
+    net()(SCORE_API+'/submit',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({n:playerName,s:score,w:wave})})
     .then(function(){worldScores=null;if(hsTab==='world')refreshWorld(true);}).catch(function(){});
   }
