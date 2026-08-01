@@ -21,15 +21,15 @@ body{font-family:-apple-system,system-ui,sans-serif;background:var(--paper);colo
   padding:7px 4px;font-size:12px;font-weight:700}
 .sty.on{color:var(--pink);border-color:var(--pink)}
 #grid{flex:1;overflow-y:auto;padding:2px 16px calc(20px + env(safe-area-inset-bottom));
-  display:grid;grid-template-columns:repeat(4,1fr);gap:10px;align-content:start}
-.lcard{position:relative;aspect-ratio:1;min-height:78px;border:1.5px solid var(--line);
-  background:var(--card);border-radius:16px;cursor:pointer;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(76px,1fr));gap:9px;align-content:start}
+.lcard{position:relative;width:100%;height:0;padding-bottom:100%;   /* a guaranteed square */
+  border:1.5px solid var(--line);background:var(--card);border-radius:14px;cursor:pointer;
   box-shadow:0 2px 8px rgba(60,50,30,.05);overflow:hidden}
-.lcard .g{line-height:1.18;color:var(--ink);display:block}
-.lcard .py{position:absolute;bottom:17px;font-size:10px;color:var(--mut);font-weight:600}
-.lcard .s{position:absolute;bottom:4px;font-size:10px;letter-spacing:1px;color:var(--gold);min-height:12px}
-.lcard .pen{position:absolute;top:5px;right:7px;font-size:10px;opacity:.85}
+.lcard .in{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+.lcard .g{line-height:1;color:var(--ink)}
+.lcard .py{position:absolute;left:0;right:0;bottom:14px;text-align:center;font-size:9px;color:var(--mut);font-weight:600}
+.lcard .s{position:absolute;left:0;right:0;bottom:3px;text-align:center;font-size:9px;letter-spacing:1px;color:var(--gold);min-height:10px}
+.lcard .pen{position:absolute;top:4px;right:6px;font-size:9px;opacity:.85}
 .lcard.done{border-color:rgba(232,182,76,.55)}
 /* practice */
 .practice{position:fixed;inset:0;background:var(--paper);display:none;flex-direction:column;z-index:10}
@@ -267,25 +267,18 @@ function inkGrid(){
 
 /* ================= grid of cards ================= */
 function starStr(n){return n?'★★★'.slice(0,n):''}
-/* size the glyph from the card's real width — percentage font-size is relative
-   to the parent's font-size, not its box, so it has to be measured */
-function glyphPx(){
-  var g=el('grid'),cols=4,gap=10,pad=32;
-  var w=(g.clientWidth||360)-pad-(cols-1)*gap;
-  var card=Math.max(60,w/cols);
-  return Math.round(card*(isHanzi()?.56:.5)*faceSize());
-}
+
+var glyphs=[];
 function renderGrid(){
-  var g=el('grid');g.innerHTML='';
+  var g=el('grid');g.innerHTML='';glyphs=[];
   var f=styleDef();
   letters().forEach(function(ch){
     var d=document.createElement('div');d.className='lcard'+(stars[ch]?' done':'');
     d.setAttribute('role','button');d.setAttribute('tabindex','0');
+    var box=document.createElement('span');box.className='in';
     var sp=document.createElement('span');sp.className='g';
-    sp.style.fontFamily=faceFont();
-    sp.style.fontSize=glyphPx()+'px';
-    sp.textContent=ch;
-    d.appendChild(sp);
+    sp.style.fontFamily=faceFont();sp.textContent=ch;
+    box.appendChild(sp);d.appendChild(box);glyphs.push(sp);
     if(isHanzi()&&HZ[ch]){var py=document.createElement('span');py.className='py';py.textContent=HZ[ch].p;d.appendChild(py)}
     var s=document.createElement('span');s.className='s';s.textContent=starStr(stars[ch]||0);d.appendChild(s);
     if((levels[ch]||0)>=MAXFADE){var p=document.createElement('span');p.className='pen';p.textContent='✒️';d.appendChild(p)}
@@ -294,6 +287,17 @@ function renderGrid(){
   });
   var tot=0;for(var k in stars)tot+=stars[k];
   el('starCount').textContent=tot;
+  sizeGlyphs();
+}
+/* the glyph is scaled to the card's real width once the grid has laid out —
+   a percentage font-size would resolve against the parent's font-size instead */
+function sizeGlyphs(){
+  if(!glyphs.length)return;
+  var g=el('grid'),first=g.children&&g.children[0];
+  var w=(first&&(first.clientWidth||first.offsetWidth))||0;
+  if(!w){var cols=Math.max(1,Math.round((g.clientWidth||360)/86));w=((g.clientWidth||360)-32-(cols-1)*9)/cols}
+  var px=Math.max(18,Math.round(w*(isHanzi()?.60:.54)*faceSize()));
+  for(var i=0;i<glyphs.length;i++)glyphs[i].style.fontSize=px+'px';
 }
 function buildStyles(){
   var w=el('styles');w.innerHTML='';
@@ -387,7 +391,7 @@ function toast(t){var x=el('toast');x.textContent=t;x.classList.add('on');
 var rgT=null;
 window.addEventListener('resize',function(){
   if(cur){fitCanvas();buildMask();paint()}
-  clearTimeout(rgT);rgT=setTimeout(renderGrid,150);
+  clearTimeout(rgT);rgT=setTimeout(function(){renderGrid();sizeGlyphs()},150);
 });
 
 store.getItem('cursive.style').then(function(v){
