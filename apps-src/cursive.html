@@ -26,7 +26,8 @@ body{font-family:-apple-system,system-ui,sans-serif;background:var(--paper);colo
   display:flex;flex-direction:column;align-items:center;justify-content:center;
   box-shadow:0 2px 8px rgba(60,50,30,.05);overflow:hidden}
 .lcard .g{line-height:1;color:var(--ink)}
-.lcard .s{position:absolute;bottom:6px;font-size:10px;letter-spacing:1px;color:var(--gold);min-height:12px}
+.lcard .py{position:absolute;bottom:17px;font-size:10px;color:var(--mut);font-weight:600}
+.lcard .s{position:absolute;bottom:4px;font-size:10px;letter-spacing:1px;color:var(--gold);min-height:12px}
 .lcard .pen{position:absolute;top:5px;right:7px;font-size:10px;opacity:.85}
 .lcard.done{border-color:rgba(232,182,76,.55)}
 /* practice */
@@ -58,6 +59,7 @@ body{font-family:-apple-system,system-ui,sans-serif;background:var(--paper);colo
 <div class="rowsel">
   <button class="tab on" id="tabLower">abc</button>
   <button class="tab" id="tabUpper">ABC</button>
+  <button class="tab" id="tabHanzi">漢字</button>
 </div>
 <div class="styles" id="styles"></div>
 <div id="grid"></div>
@@ -87,10 +89,28 @@ function haptic(k){if(window.myllmHaptic)try{myllmHaptic(k||'light')}catch(e){}}
 
 /* ---- the letters are drawn by a real typeface, not by hand-authored paths ---- */
 var STYLES=[
- {id:'roman',   name:'Roman',      font:'"New York","Baskerville",Georgia,"Times New Roman",serif', size:1},
- {id:'script',  name:'Calligraphy',font:'"Snell Roundhand","Apple Chancery","Segoe Script",cursive', size:1.18},
- {id:'print',   name:'Print',      font:'-apple-system,"Helvetica Neue",Arial,sans-serif', size:.94}
+ {id:'roman',  name:'Roman',      cjkName:'Song 宋', size:1,    cjk:.98,
+  font:'"New York","Baskerville",Georgia,"Times New Roman",serif',
+  cjkFont:'"Songti SC","STSong","Songti TC","SimSun",serif'},
+ {id:'script', name:'Calligraphy',cjkName:'Kai 楷',  size:1.18, cjk:.98,
+  font:'"Snell Roundhand","Apple Chancery","Segoe Script",cursive',
+  cjkFont:'"Kaiti SC","STKaiti","Kaiti","KaiTi","Songti SC",serif'},
+ {id:'print',  name:'Print',      cjkName:'Hei 黑',  size:.94,  cjk:.94,
+  font:'-apple-system,"Helvetica Neue",Arial,sans-serif',
+  cjkFont:'"PingFang SC","Heiti SC","STHeiti","Microsoft YaHei",sans-serif'}
 ];
+/* a starter set of characters, in the order they're usually taught */
+var HANZI=[['一','yī','one'],['二','èr','two'],['三','sān','three'],['四','sì','four'],['五','wǔ','five'],
+ ['六','liù','six'],['七','qī','seven'],['八','bā','eight'],['九','jiǔ','nine'],['十','shí','ten'],
+ ['人','rén','person'],['大','dà','big'],['小','xiǎo','small'],['上','shàng','above'],['下','xià','below'],
+ ['中','zhōng','middle'],['日','rì','sun'],['月','yuè','moon'],['山','shān','mountain'],['水','shuǐ','water'],
+ ['火','huǒ','fire'],['木','mù','tree'],['土','tǔ','earth'],['田','tián','field'],['天','tiān','sky'],
+ ['口','kǒu','mouth'],['手','shǒu','hand'],['目','mù','eye'],['心','xīn','heart'],['子','zǐ','child'],
+ ['女','nǚ','woman'],['男','nán','man'],['好','hǎo','good'],['不','bù','not'],['我','wǒ','I'],
+ ['你','nǐ','you'],['他','tā','he'],['爱','ài','love'],['家','jiā','home'],['学','xué','study'],
+ ['书','shū','book'],['门','mén','door'],['车','chē','car'],['马','mǎ','horse'],['鸟','niǎo','bird'],
+ ['鱼','yú','fish'],['花','huā','flower'],['雨','yǔ','rain']];
+var HZ={};HANZI.forEach(function(h){HZ[h[0]]={p:h[1],m:h[2]}});
 var LOWER='abcdefghijklmnopqrstuvwxyz'.split('');
 var UPPER='ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 var FADE=[1,.42,.18,.05],FADE_NAME=['FULL','FAINT','GHOST','MEMORY'],MAXFADE=3;
@@ -98,7 +118,10 @@ var FADE=[1,.42,.18,.05],FADE_NAME=['FULL','FAINT','GHOST','MEMORY'],MAXFADE=3;
 var tab='lowercase',styleId='roman',stars={},levels={},cur=null,fade=0,earned=null;
 var strokesInk=[],ink=[],drawing=false;
 function styleDef(){for(var i=0;i<STYLES.length;i++)if(STYLES[i].id===styleId)return STYLES[i];return STYLES[0]}
-function letters(){return tab==='lowercase'?LOWER:UPPER}
+function isHanzi(){return tab==='hanzi'}
+function faceFont(){var f=styleDef();return isHanzi()?f.cjkFont:f.font}
+function faceSize(){var f=styleDef();return isHanzi()?f.cjk:f.size}
+function letters(){return tab==='lowercase'?LOWER:(tab==='uppercase'?UPPER:HANZI.map(function(h){return h[0]}))}
 
 /* ================= grading (pure — the harness drives these directly) ================= */
 /* Compare two boolean grids: what the letter covers, and what you drew. */
@@ -129,6 +152,15 @@ function fitCanvas(){
 /* fit the glyph to the writing bands using the font's own metrics */
 function layout(){
   var W=cv.width,H=cv.height,f=styleDef();
+  if(isHanzi()){
+    /* Chinese characters sit in a square cell, not on a baseline */
+    var box=Math.min(W,H)*.62, size=Math.round(box);
+    ctx.font=size+'px '+f.cjkFont;
+    var m2=ctx.measureText(cur||'一');
+    var a3=m2.actualBoundingBoxAscent||size*.85, d3=m2.actualBoundingBoxDescent||0;
+    return {font:size+'px '+f.cjkFont,size:size,base:H/2+(a3-d3)/2,box:box,
+            asc:a3,desc:d3,xh:a3,w:m2.width,cx:W/2,square:true};
+  }
   var probe=Math.round(H*.4);
   ctx.font=probe+'px '+f.font;
   var asc=ctx.measureText(tab==='lowercase'?'h':'H').actualBoundingBoxAscent||probe*.7;
@@ -145,8 +177,21 @@ function layout(){
           w:m.width,cx:W/2};
 }
 function guides(L){
-  var W=cv.width;
+  var W=cv.width,H=cv.height;
   ctx.lineWidth=1*DPR;
+  if(L.square){
+    var b=L.box*1.12,x0=(W-b)/2,y0=(H-b)/2;
+    ctx.strokeStyle='rgba(80,70,60,.30)';ctx.setLineDash([]);
+    ctx.strokeRect(x0,y0,b,b);
+    ctx.strokeStyle='rgba(80,70,60,.15)';ctx.setLineDash([5*DPR,5*DPR]);
+    ctx.beginPath();
+    ctx.moveTo(x0+b/2,y0);ctx.lineTo(x0+b/2,y0+b);
+    ctx.moveTo(x0,y0+b/2);ctx.lineTo(x0+b,y0+b/2);
+    ctx.moveTo(x0,y0);ctx.lineTo(x0+b,y0+b);
+    ctx.moveTo(x0+b,y0);ctx.lineTo(x0,y0+b);
+    ctx.stroke();ctx.setLineDash([]);
+    return;
+  }
   var ys=[[L.base,'rgba(80,70,60,.34)'],[L.base-L.xh,'rgba(80,70,60,.13)'],
           [L.base-L.asc,'rgba(80,70,60,.13)'],[L.base+L.desc,'rgba(80,70,60,.10)']];
   ys.forEach(function(g,i){
@@ -227,8 +272,11 @@ function renderGrid(){
   letters().forEach(function(ch){
     var d=document.createElement('button');d.className='lcard'+(stars[ch]?' done':'');
     var sp=document.createElement('span');sp.className='g';
-    sp.style.font=Math.round(52*f.size)+'px '+f.font;sp.textContent=ch;
+    sp.style.fontFamily=faceFont();
+    sp.style.fontSize=Math.round(50*faceSize())+'px';
+    sp.textContent=ch;
     d.appendChild(sp);
+    if(isHanzi()&&HZ[ch]){var py=document.createElement('span');py.className='py';py.textContent=HZ[ch].p;d.appendChild(py)}
     var s=document.createElement('span');s.className='s';s.textContent=starStr(stars[ch]||0);d.appendChild(s);
     if((levels[ch]||0)>=MAXFADE){var p=document.createElement('span');p.className='pen';p.textContent='✒️';d.appendChild(p)}
     d.onclick=function(){openPractice(ch);haptic('selection')};
@@ -241,14 +289,22 @@ function buildStyles(){
   var w=el('styles');w.innerHTML='';
   STYLES.forEach(function(s){
     var b=document.createElement('button');b.className='sty'+(s.id===styleId?' on':'');
-    b.textContent=s.name;b.style.fontFamily=s.font;
+    b.textContent=isHanzi()?s.cjkName:s.name;b.style.fontFamily=isHanzi()?s.cjkFont:s.font;
     b.onclick=function(){styleId=s.id;store.setItem('cursive.style',styleId);
-      buildStyles();renderGrid();if(cur){buildMask();paint()}haptic('selection')};
+      buildStyles();renderGrid();if(cur){fitCanvas();buildMask();paint()}haptic('selection')};
     w.appendChild(b);
   });
 }
-el('tabLower').onclick=function(){tab='lowercase';el('tabLower').classList.add('on');el('tabUpper').classList.remove('on');renderGrid();haptic('selection')};
-el('tabUpper').onclick=function(){tab='uppercase';el('tabUpper').classList.add('on');el('tabLower').classList.remove('on');renderGrid();haptic('selection')};
+function setTab(t){
+  tab=t;
+  [['lowercase','tabLower'],['uppercase','tabUpper'],['hanzi','tabHanzi']].forEach(function(p){
+    el(p[1]).classList.toggle('on',p[0]===t);
+  });
+  buildStyles();renderGrid();haptic('selection');
+}
+el('tabLower').onclick=function(){setTab('lowercase')};
+el('tabUpper').onclick=function(){setTab('uppercase')};
+el('tabHanzi').onclick=function(){setTab('hanzi')};
 
 /* ================= tracing ================= */
 function pos(e){var r=cv.getBoundingClientRect();return [(e.clientX-r.left)/r.width,(e.clientY-r.top)/r.height]}
@@ -269,7 +325,7 @@ function check(){
   if(!maskG)buildMask();
   var r=scoreGrids(maskG,tolG,inkGrid(),GRID);
   if(!r.pass){
-    el('pHint').textContent=r.cov<.45?'Cover the whole letter — follow its shape':'Stay closer to the letter';
+    el('pHint').textContent=r.cov<.45?'Cover the whole character — follow its shape':'Stay closer to the strokes';
     toast('Not quite — try again');haptic('warning');return;
   }
   earned=starsFor(r.q);
@@ -296,12 +352,14 @@ function fainter(){
 function openPractice(ch){
   cur=ch;fade=0;strokesInk=[];ink=[];earned=null;
   el('practice').classList.add('on');
-  el('pLetter').style.font='30px '+styleDef().font;
+  el('pLetter').style.fontFamily=faceFont();el('pLetter').style.fontSize='30px';
   el('pLetter').textContent=ch;
   el('pStars').textContent='';
   el('btnNext').disabled=true;el('btnNext').textContent='Fainter ✎';
   el('btnCheck').disabled=true;
-  el('pHint').textContent='Trace over the letter';
+  el('pHint').textContent=(isHanzi()&&HZ[ch])
+    ? (HZ[ch].p+' \u00b7 '+HZ[ch].m+' \u2014 trace inside the square')
+    : 'Trace over the letter';
   updFadeTag();fitCanvas();buildMask();paint();
 }
 function nextLetter(){
