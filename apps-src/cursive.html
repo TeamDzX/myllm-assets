@@ -22,10 +22,11 @@ body{font-family:-apple-system,system-ui,sans-serif;background:var(--paper);colo
 .sty.on{color:var(--pink);border-color:var(--pink)}
 #grid{flex:1;overflow-y:auto;padding:2px 16px calc(20px + env(safe-area-inset-bottom));
   display:grid;grid-template-columns:repeat(4,1fr);gap:10px;align-content:start}
-.lcard{position:relative;aspect-ratio:1;border:1.5px solid var(--line);background:var(--card);border-radius:16px;
+.lcard{position:relative;aspect-ratio:1;min-height:78px;border:1.5px solid var(--line);
+  background:var(--card);border-radius:16px;cursor:pointer;
   display:flex;flex-direction:column;align-items:center;justify-content:center;
   box-shadow:0 2px 8px rgba(60,50,30,.05);overflow:hidden}
-.lcard .g{line-height:1;color:var(--ink)}
+.lcard .g{line-height:1.18;color:var(--ink);display:block}
 .lcard .py{position:absolute;bottom:17px;font-size:10px;color:var(--mut);font-weight:600}
 .lcard .s{position:absolute;bottom:4px;font-size:10px;letter-spacing:1px;color:var(--gold);min-height:12px}
 .lcard .pen{position:absolute;top:5px;right:7px;font-size:10px;opacity:.85}
@@ -266,14 +267,23 @@ function inkGrid(){
 
 /* ================= grid of cards ================= */
 function starStr(n){return n?'★★★'.slice(0,n):''}
+/* size the glyph from the card's real width — percentage font-size is relative
+   to the parent's font-size, not its box, so it has to be measured */
+function glyphPx(){
+  var g=el('grid'),cols=4,gap=10,pad=32;
+  var w=(g.clientWidth||360)-pad-(cols-1)*gap;
+  var card=Math.max(60,w/cols);
+  return Math.round(card*(isHanzi()?.56:.5)*faceSize());
+}
 function renderGrid(){
   var g=el('grid');g.innerHTML='';
   var f=styleDef();
   letters().forEach(function(ch){
-    var d=document.createElement('button');d.className='lcard'+(stars[ch]?' done':'');
+    var d=document.createElement('div');d.className='lcard'+(stars[ch]?' done':'');
+    d.setAttribute('role','button');d.setAttribute('tabindex','0');
     var sp=document.createElement('span');sp.className='g';
     sp.style.fontFamily=faceFont();
-    sp.style.fontSize=Math.round(50*faceSize())+'px';
+    sp.style.fontSize=glyphPx()+'px';
     sp.textContent=ch;
     d.appendChild(sp);
     if(isHanzi()&&HZ[ch]){var py=document.createElement('span');py.className='py';py.textContent=HZ[ch].p;d.appendChild(py)}
@@ -374,7 +384,11 @@ el('btnNext').onclick=function(){(earned!==null&&fade<MAXFADE)?fainter():nextLet
 var toastT=null;
 function toast(t){var x=el('toast');x.textContent=t;x.classList.add('on');
   clearTimeout(toastT);toastT=setTimeout(function(){x.classList.remove('on')},1400)}
-window.addEventListener('resize',function(){if(cur){fitCanvas();buildMask();paint()}});
+var rgT=null;
+window.addEventListener('resize',function(){
+  if(cur){fitCanvas();buildMask();paint()}
+  clearTimeout(rgT);rgT=setTimeout(renderGrid,150);
+});
 
 store.getItem('cursive.style').then(function(v){
   if(v&&STYLES.some(function(s){return s.id===v}))styleId=v;
