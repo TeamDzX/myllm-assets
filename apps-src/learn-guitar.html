@@ -309,27 +309,68 @@ function ensureCtx(){
   return actx;
 }
 function midiFreq(m){ return 440 * Math.pow(2,(m-69)/12); }
+/* Three refinements over a plain Karplus-Strong, each fixing one cause of the
+   thin, metallic character the textbook version has:
+
+   1. LOSS IS SET FROM A TARGET DECAY TIME. The naive version applies a fixed
+      per-lap factor, which at 0.9965 takes ~1970 laps to fall 60 dB — about
+      18 seconds at 110 Hz. The note therefore never decayed inside the buffer;
+      it held flat and was then killed by a linear fade, and a tone that
+      sustains and then ramps off is exactly what reads as metallic. Loss is
+      now derived from a target T60, longer for the bass strings than the
+      treble, so notes die away the way a string actually does.
+
+   2. THE EXCITATION IS COMB-FILTERED AT THE PICK POSITION. A real string
+      plucked an eighth of the way along starts with no energy in the harmonics
+      that have a node at that point. Feeding in flat white noise instead gives
+      every harmonic equal weight, which is much of why the plain algorithm
+      sounds wiry rather than woody.
+
+   3. THE LOOP FILTER DARKENS WITH PITCH. A thin top string loses its highs
+      faster than a wound bottom one; matching that stops the treble ringing
+      like a harpsichord. */
 function pluckBuffer(ctx, freq){
   var key = Math.round(freq*10);
   if(bufCache[key]) return bufCache[key];
-  var sr = ctx.sampleRate, dur = 2.4;
-  var N = Math.max(2, Math.round(sr/freq));
+  var sr = ctx.sampleRate;
+  var hi = Math.min(1, Math.max(0, (freq-80)/280));   /* 0 = low E … 1 = high E */
+  var t60 = 3.6 - 1.5*hi;                             /* bass rings longer */
+  var dur = Math.min(3.0, t60*0.9);
+  /* Loop delay is N - b, not N + b. Working it through: a cell is rewritten as
+     g*((1-b)*cur + b*next), so out[i] = g*((1-b)out[i-N] + b*out[i-N+1]), whose
+     delay is (N-1) + (1-b) = N - b. Compensating the wrong way makes every
+     note sharp by 2b samples' worth — about 19 cents on the top string. */
+  var bright = 0.5 + 0.16*hi;
+  var N = Math.max(3, Math.round(sr/freq + bright));
+
   var buf = ctx.createBuffer(1, Math.floor(sr*dur), sr);
   var out = buf.getChannelData(0);
-  var ring = new Float32Array(N);
-  for(var i=0;i<N;i++) ring[i] = Math.random()*2-1;
-  /* a touch of lowpass on the initial burst takes the harshness off the attack */
-  for(var p=0;p<2;p++) for(var i=1;i<N;i++) ring[i] = (ring[i]+ring[i-1])*0.5;
-  var idx=0, decay=0.9965;
-  for(var i=0;i<out.length;i++){
+
+  /* ---- excitation: softened noise, combed at the pick point ---- */
+  var ring = new Float32Array(N), i;
+  for(i=0;i<N;i++) ring[i] = Math.random()*2-1;
+  var lp = 0;
+  for(i=0;i<N;i++){ lp += 0.5*(ring[i]-lp); ring[i] = lp; }
+  /* pluck exactly 1/8 of the way along: the comb's null then lands ON the 8th
+     harmonic and its multiples, which is what a real pluck at that point does */
+  var pick = Math.max(1, Math.round(N/8));
+  for(i=N-1;i>=pick;i--) ring[i] -= 0.9*ring[i-pick];
+  var mx = 0;
+  for(i=0;i<N;i++) mx = Math.max(mx, Math.abs(ring[i]));
+  if(mx>0) for(i=0;i<N;i++) ring[i] /= mx;
+
+  /* ---- the string ---- */
+  var gLap = Math.pow(10, -3/(t60*freq));             /* one lap's loss for that T60 */
+  var idx = 0;
+  for(i=0;i<out.length;i++){
     var cur = ring[idx], nxt = ring[(idx+1)%N];
-    ring[idx] = (cur+nxt)*0.5*decay;
     out[i] = cur;
+    ring[idx] = ((1-bright)*cur + bright*nxt) * gLap;
     idx = (idx+1)%N;
   }
-  /* fade the tail so the buffer never ends on a click */
-  var f = Math.floor(sr*0.25);
-  for(var i=0;i<f;i++) out[out.length-1-i] *= i/f;
+  /* the note has already decayed on its own; this only guards the very end */
+  var f = Math.min(out.length, Math.floor(sr*0.08));
+  for(i=0;i<f;i++) out[out.length-1-i] *= i/f;
   bufCache[key] = buf;
   return buf;
 }
