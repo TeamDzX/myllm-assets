@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Feedback &amp; Ideas</title>
+<style>
+  :root { color-scheme: light dark; }
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body{
+    font-family:var(--myllm-font,-apple-system,system-ui,sans-serif);
+    background:var(--myllm-bg,#f2f2f7);
+    color:var(--myllm-text,#111);
+    max-width:640px; margin:0 auto; min-height:100dvh;
+    padding:16px 16px calc(30px + env(safe-area-inset-bottom));
+  }
+  h1{ font-size:22px; font-weight:800; margin:6px 2px 4px; }
+  p.sub{ font-size:13.5px; color:var(--myllm-muted,#8a8a8e); margin:0 2px 14px; line-height:1.5; }
+  .card{
+    background:var(--myllm-surface,#fff); border:1px solid var(--myllm-border,#e3e3e8);
+    border-radius:16px; padding:14px; margin-bottom:12px;
+  }
+  label{ display:block; font-size:11.5px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; color:var(--myllm-muted,#8a8a8e); margin:12px 0 6px; }
+  label:first-child{ margin-top:0; }
+  input, textarea{
+    width:100%; font-size:15px; padding:11px 12px; border-radius:12px;
+    border:1px solid var(--myllm-border,#e3e3e8); background:var(--myllm-bg,#f2f2f7); color:var(--myllm-text,#111);
+    font-family:inherit;
+  }
+  textarea{ min-height:120px; resize:vertical; line-height:1.45; }
+  .kinds{ display:flex; flex-wrap:wrap; gap:8px; }
+  .kind{
+    flex:1 1 calc(50% - 4px); border:1px solid var(--myllm-border,#e3e3e8); background:var(--myllm-bg,#f2f2f7);
+    color:var(--myllm-text,#111); border-radius:12px; padding:11px 8px; font-size:14px; font-weight:650;
+    font-family:inherit; display:flex; align-items:center; justify-content:center; gap:6px;
+  }
+  .kind[aria-pressed="true"]{ background:var(--myllm-accent,#0a84ff); color:#fff; border-color:transparent; }
+  .go{
+    width:100%; border:none; border-radius:13px; padding:14px; margin-top:12px;
+    font-size:15.5px; font-weight:750; background:var(--myllm-accent,#0a84ff); color:#fff; font-family:inherit;
+  }
+  .go.ghost{ background:var(--myllm-bg,#f2f2f7); color:var(--myllm-text,#111); border:1px solid var(--myllm-border,#e3e3e8); }
+  .go[disabled]{ opacity:.45; }
+  .note{ font-size:12.5px; color:var(--myllm-muted,#8a8a8e); line-height:1.5; margin-top:10px; }
+  .note b{ color:var(--myllm-text,#111); font-weight:700; }
+  .msg{ font-size:13.5px; margin-top:10px; line-height:1.5; min-height:19px; }
+  .msg.warn{ color:#d1342f; }
+  .msg.ok{ color:#1a8a3f; }
+  #out{ display:none; }
+  #pkg{ min-height:150px; font-family:ui-monospace,Menlo,monospace; font-size:11.5px; }
+  .privacy{ border-left:3px solid var(--myllm-accent,#0a84ff); padding-left:10px; }
+  .count{ float:right; font-size:11px; color:var(--myllm-muted,#8a8a8e); text-transform:none; letter-spacing:0; font-weight:600; }
+</style>
+</head>
+<body>
+
+<h1>💡 Feedback &amp; Ideas</h1>
+<p class="sub">Tell us what to build next, what's broken, or what you love. Write it here and send it whichever way suits you — nothing is uploaded on its own.</p>
+
+<div class="card">
+  <label>What is this?</label>
+  <div class="kinds">
+    <button class="kind" id="k-idea"  aria-pressed="true"  onclick="setKind('idea')">💡 Idea</button>
+    <button class="kind" id="k-bug"   aria-pressed="false" onclick="setKind('bug')">🐞 Something's broken</button>
+    <button class="kind" id="k-app"   aria-pressed="false" onclick="setKind('app')">📦 App request</button>
+    <button class="kind" id="k-love"  aria-pressed="false" onclick="setKind('love')">💚 Something I like</button>
+  </div>
+
+  <label>Which app or part of MyLLM? <span class="count">optional</span></label>
+  <input id="area" placeholder="e.g. Chess, the springboard, voice mode" oninput="draft()">
+
+  <label id="bodyLabel">Your idea <span class="count" id="len">0</span></label>
+  <textarea id="body" placeholder="The more specific, the more useful." oninput="draft()"></textarea>
+
+  <div id="bugWrap" style="display:none">
+    <label>What did you expect to happen instead?</label>
+    <textarea id="expected" style="min-height:70px" placeholder="Optional, but it helps a lot." oninput="draft()"></textarea>
+  </div>
+
+  <label>How should we reply? <span class="count">optional</span></label>
+  <input id="contact" placeholder="Email or handle — leave blank to stay anonymous" oninput="draft()">
+
+  <button class="go" onclick="build()">Prepare my feedback</button>
+  <div class="msg" id="msg"></div>
+</div>
+
+<div class="card" id="out">
+  <label>Ready to send</label>
+  <textarea id="pkg" readonly onclick="this.select()"></textarea>
+  <button class="go" id="shareBtn" onclick="share()">Send it (email, Messages…)</button>
+  <button class="go ghost" onclick="openIssue()">Post it on GitHub instead</button>
+  <button class="go ghost" onclick="reset()">Clear and start again</button>
+  <p class="note">Send to <b>MyLLM@opticell-limited.com</b>, or open an issue at <b>github.com/TeamDzX/myllm-assets</b>. Every message is read by a human — you may not get a reply to each one, but it all feeds the roadmap.</p>
+</div>
+
+<div class="card privacy">
+  <p class="note" style="margin-top:0"><b>Nothing leaves your phone by itself.</b> This app has no internet access at all — it only builds the text above. It travels only when you tap send, and only to where you choose. Your draft is saved on-device so you don't lose it.</p>
+</div>
+
+<script>
+/* Deliberately network-free. A suggestion box that displays nobody else's words
+   needs no server, no account and no moderation — and it keeps the app clear of
+   the user-generated-content rules that a public board would trigger. Everything
+   here is composed locally and handed to the share sheet. */
+
+var KINDS = {
+  idea: { label:"Idea",           body:"Your idea",              hint:"The more specific, the more useful." },
+  bug:  { label:"Bug report",     body:"What happened?",         hint:"What you did, and what went wrong." },
+  app:  { label:"App request",    body:"What should it do?",     hint:"Describe the app you wish existed." },
+  love: { label:"Positive note",  body:"What's working well?",   hint:"Tell us what you like — it guides us too." }
+};
+var kind = "idea";
+var KEY = "feedbackDraft";
+
+function el(id){ return document.getElementById(id); }
+function haptic(k){ if(window.myllmHaptic){ try{ myllmHaptic(k||'light'); }catch(_){} } }
+function say(text, cls){ var m = el("msg"); m.textContent = text || ""; m.className = "msg" + (cls ? " " + cls : ""); }
+
+function setKind(k){
+  kind = k;
+  Object.keys(KINDS).forEach(function(key){
+    el("k-" + key).setAttribute("aria-pressed", String(key === k));
+  });
+  el("bodyLabel").innerHTML = KINDS[k].body + ' <span class="count" id="len">' + el("body").value.length + '</span>';
+  el("body").placeholder = KINDS[k].hint;
+  el("bugWrap").style.display = (k === "bug") ? "block" : "none";
+  haptic("light");
+  draft();
+}
+
+/* ---- draft persistence (async storage, with a web-preview fallback) ---- */
+function snapshot(){
+  return { kind:kind, area:el("area").value, body:el("body").value,
+           expected:el("expected").value, contact:el("contact").value };
+}
+var saveTimer = null;
+function draft(){
+  var n = el("len"); if (n) n.textContent = el("body").value.length;
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(function(){ persist(snapshot()); }, 400);
+}
+async function persist(obj){
+  var s = JSON.stringify(obj);
+  try{ if(window.myllmStorage){ await myllmStorage.setItem(KEY, s); return; } }catch(e){}
+  try{ localStorage.setItem(KEY, s); }catch(e){}
+}
+async function restore(){
+  var raw = null;
+  try{ if(window.myllmStorage){ raw = await myllmStorage.getItem(KEY); } }catch(e){}
+  if(!raw){ try{ raw = localStorage.getItem(KEY); }catch(e){} }
+  if(!raw) return;
+  var d; try{ d = JSON.parse(raw); }catch(e){ return; }
+  el("area").value     = d.area     || "";
+  el("body").value     = d.body     || "";
+  el("expected").value = d.expected || "";
+  el("contact").value  = d.contact  || "";
+  setKind(d.kind && KINDS[d.kind] ? d.kind : "idea");
+}
+
+/* ---- compose ---- */
+function build(){
+  var body = el("body").value.trim();
+  if (body.length < 10){
+    haptic("light");
+    say("Add a little more detail first — a sentence or two is plenty.", "warn");
+    el("body").focus();
+    return;
+  }
+  var lines = [];
+  lines.push("MyLLM feedback — " + KINDS[kind].label);
+  lines.push("");
+  if (el("area").value.trim()) lines.push("About: " + el("area").value.trim());
+  lines.push("");
+  lines.push(body);
+  if (kind === "bug" && el("expected").value.trim()){
+    lines.push("");
+    lines.push("Expected instead:");
+    lines.push(el("expected").value.trim());
+  }
+  lines.push("");
+  lines.push("Reply to: " + (el("contact").value.trim() || "(no reply needed)"));
+  el("pkg").value = lines.join("\n");
+  el("out").style.display = "block";
+  el("shareBtn").style.display = window.myllmShare ? "block" : "none";
+  say("Ready — now choose how to send it.", "ok");
+  haptic("success");
+  el("out").scrollIntoView({ behavior:"smooth", block:"nearest" });
+}
+
+function share(){
+  if (window.myllmShare){ try{ myllmShare({ text: el("pkg").value }); }catch(_){} }
+  haptic("light");
+}
+
+function openIssue(){
+  haptic("light");
+  var title = encodeURIComponent("[" + KINDS[kind].label + "] " + (el("area").value.trim() || "MyLLM"));
+  window.open("https://github.com/TeamDzX/myllm-assets/issues/new?title=" + title);
+}
+
+function reset(){
+  el("area").value = ""; el("body").value = ""; el("expected").value = ""; el("contact").value = "";
+  el("pkg").value = ""; el("out").style.display = "none";
+  setKind("idea");
+  persist(snapshot());
+  say("Cleared.", "ok");
+  haptic("light");
+}
+
+restore();
+</script>
+</body>
+</html>

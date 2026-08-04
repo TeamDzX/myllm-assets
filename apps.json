@@ -2211,6 +2211,32 @@
       "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/icons/mastodon-feed.jpg"
     },
     {
+      "id": "feedback-box",
+      "name": "Feedback & Ideas",
+      "emoji": "💡",
+      "tagline": "Tell us what to build next",
+      "description": "Got an idea for MyLLM, found something broken, or want an app that doesn't exist yet? Write it here. Pick what kind of note it is, say which app it's about, and this builds a tidy message you can send by email, Messages or GitHub — whichever you prefer. It works entirely offline: the app has no internet access at all, so nothing is uploaded on its own and nothing travels until you tap send. Your draft is saved on-device so a half-written thought is never lost. Every message is read by a human.",
+      "tags": [
+        "community",
+        "feedback",
+        "ideas",
+        "bug report",
+        "offline",
+        "no network"
+      ],
+      "category": "Community",
+      "iconSymbol": "lightbulb.fill",
+      "iconColor": "yellow",
+      "version": 1,
+      "featured": false,
+      "requiresAI": false,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/feedback-box.jpg",
+      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@main/apps-src/feedback-box.html",
+      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@main/apps-src/feedback-box.myllmapp",
+      "sizeKB": 10,
+      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/icons/feedback-box.jpg"
+    },
+    {
       "id": "submit-app",
       "name": "Submit Your App",
       "emoji": "🚀",
