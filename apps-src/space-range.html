@@ -114,6 +114,12 @@ html,body{height:100%;overflow:hidden;background:#05060d;font-family:-apple-syst
 .hsentry{margin-top:16px;pointer-events:auto}
 .hslabel{font-size:11px;letter-spacing:.14em;color:#ffd23f;font-weight:800;margin-bottom:8px}
 .hsrow2{display:flex;gap:8px;justify-content:center}
+/* offered only to players who haven't opted in yet — the consent is the same
+   as the world-board toggle, just asked where the motivation is (they've just
+   set a high score) rather than requiring them to have found the toggle first */
+.hsworld{margin:10px auto 0;display:block;background:none;border:none;color:#6f86b8;font-family:inherit;font-size:11px;letter-spacing:.04em;font-weight:700;padding:6px 4px;pointer-events:auto}
+.hsworld.on{color:#8affdc}
+.hsworld span{font-size:13px;margin-right:2px}
 #hsName{width:150px;background:rgba(16,24,44,.95);border:1px solid rgba(255,210,63,.4);border-radius:12px;color:#fff;font-size:15px;font-weight:800;letter-spacing:.08em;padding:10px 12px;text-transform:uppercase;outline:none;text-align:center;font-family:inherit}
 </style></head><body>
 <canvas id="v"></canvas>
@@ -191,6 +197,7 @@ html,body{height:100%;overflow:hidden;background:#05060d;font-family:-apple-syst
   <div class="hsentry" id="hsEntry" style="display:none">
     <div class="hslabel">★ HALL OF FAME — sign your run</div>
     <div class="hsrow2"><input id="hsName" maxlength="8" placeholder="PILOT NAME"><button class="big sm" id="hsSave">Save</button></div>
+    <button class="hsworld" id="hsWorld" style="display:none" aria-pressed="false"><span id="hsWorldBox">☐</span> Post this run to the world board</button>
   </div>
   <div class="hstable" id="hsTableOver"></div>
   <button class="big" id="againBtn">Run it back</button>
@@ -1536,7 +1543,7 @@ var SCORE_API='https://spacerange-scores.broad-breeze-c0e4.workers.dev';
 /* read the bridge lazily: it can be injected after this script parses, and a
    parse-time capture silently disabled the whole board when that happened */
 function net(){return (typeof window!=='undefined'&&window.myllmFetch)||null;}
-var globalOpt=false,worldScores=null,worldAt=0,hsTab='local';
+var globalOpt=false,worldScores=null,worldAt=0,hsTab='local',hsWorldWanted=false;
 function worldAvailable(){return !!(SCORE_API&&net());}
 var worldErr=null,worldBusy=false;
 function refreshWorld(force){
@@ -1555,6 +1562,25 @@ function refreshWorld(force){
     if(worldScores===null)worldScores=[];
     worldErr='Couldn\u2019t reach the score board ('+((e&&e.message)||'no answer')+'). Tap \u21bb to retry.';
   }).then(function(){worldBusy=false;renderScores();});
+}
+/* the sign-up offer only exists for players who haven't opted in yet; once they
+   have, the board is already theirs and the line would just be noise */
+function renderHsWorld(){
+  var b=el('hsWorld');if(!b)return;
+  var show=worldAvailable()&&!globalOpt;
+  b.style.display=show?'block':'none';
+  if(!show){hsWorldWanted=false;return;}
+  hsWorldWanted=false;
+  b.className='hsworld';b.setAttribute('aria-pressed','false');
+  el('hsWorldBox').textContent='☐';
+}
+function toggleHsWorld(){
+  hsWorldWanted=!hsWorldWanted;
+  var b=el('hsWorld');
+  b.className='hsworld'+(hsWorldWanted?' on':'');
+  b.setAttribute('aria-pressed',hsWorldWanted?'true':'false');
+  el('hsWorldBox').textContent=hsWorldWanted?'☑':'☐';
+  haptic('selection');
 }
 function toggleWorld(){
   globalOpt=!globalOpt;store.setItem('spacerange.world',globalOpt?'1':'');
@@ -1602,6 +1628,12 @@ function saveScore(){
   scores.sort(function(a,b){return b.s-a.s});scores=scores.slice(0,5);
   store.setItem('spacerange.scores',JSON.stringify(scores.map(function(s){return {n:s.n,s:s.s,w:s.w}})));
   renderScores();el('hsEntry').style.display='none';haptic('success');sfx('unlock');
+  /* signing with the offer ticked opts you in for good — same consent as the
+     toggle, so flip that too and keep the tabs in step */
+  if(hsWorldWanted&&!globalOpt&&worldAvailable()){
+    globalOpt=true;store.setItem('spacerange.world','1');
+    hsTab='world';renderWorldToggle();
+  }
   if(globalOpt&&worldAvailable()){
     net()(SCORE_API+'/submit',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({n:playerName,s:score,w:wave})})
@@ -1632,6 +1664,7 @@ function gameOver(){
   var qualifies=score>0&&(scores.length<5||score>scores[scores.length-1].s);
   el('hsEntry').style.display=qualifies?'block':'none';
   if(qualifies)el('hsName').value=playerName==='ACE'?'':playerName;
+  if(qualifies)renderHsWorld();
   el('overStats').innerHTML='You scored <b style="color:#8affdc;font-size:22px">'+score+'</b><br>Reached wave '+wave;
   if(score>best){best=score;store.setItem('spacerange.best',String(best));el('overBest').textContent='★ New best!';}
   else el('overBest').textContent=best?('Best  '+best):'';
@@ -1647,6 +1680,7 @@ el('rangeExit').onclick=function(){if(rangeMode)endRange();};
 el('rAgain').onclick=startRange;
 el('rBack').onclick=function(){el('rangeend').classList.add('hide');el('start').classList.remove('hide');targets=[];};
 el('hsSave').onclick=saveScore;
+el('hsWorld').onclick=toggleHsWorld;
 el('hsName').addEventListener('keydown',function(e){if(e.key==='Enter')saveScore()});
 
 store.getItem('spacerange.best').then(function(v){best=parseInt(v||'0',10)||0;el('startBest').textContent=best?('Best  '+best):''});
