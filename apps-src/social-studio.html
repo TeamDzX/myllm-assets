@@ -69,6 +69,9 @@ textarea{resize:none;min-height:56px;line-height:1.4}
 .dot.on{border-color:#fff}
 /* slider */
 input[type=range]{width:100%;accent-color:var(--ac)}
+/* render progress */
+.bar{height:6px;border-radius:999px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--ac);border-radius:999px;transition:width .12s linear}
 /* toggle */
 .tog{display:flex;align-items:center;justify-content:space-between;padding:4px 0}
 .tog small{color:var(--mut);font-size:12px;display:block;margin-top:2px}
@@ -225,6 +228,27 @@ return Promise.resolve(p).then(function(r){hide();return r;},function(e){hide();
     </div>
   </div>
 
+  <div class="panel" id="p-video">
+    <p class="hint" id="vidFmtHint"></p>
+    <button class="btn line" id="vidFmtBtn" style="display:none;width:100%" onclick="useReelFormat()">Switch to 9:16 for Reels &amp; Stories</button>
+    <div class="lbl">Motion</div>
+    <div class="chips" id="motionRow"></div>
+    <div class="lbl">How the words arrive</div>
+    <div class="chips" id="textInRow"></div>
+    <div class="lbl">Length — <span id="vidLen">6s</span></div>
+    <input type="range" id="vsecs" min="3" max="15" value="6" oninput="setReelSecs(+this.value)">
+    <div style="height:10px"></div>
+    <button class="btn ghost" id="playBtn" style="width:100%" onclick="toggleReel()">▶ Play preview</button>
+    <div style="height:8px"></div>
+    <button class="btn" id="vidBtn" style="width:100%" onclick="exportReel()">Save reel to Photos</button>
+    <div id="vidProg" style="display:none;margin-top:12px">
+      <div class="bar"><i id="vidBarFill"></i></div>
+      <p class="hint" id="vidProgTxt"></p>
+      <button class="btn line" style="width:100%" onclick="cancelReel()">Stop</button>
+    </div>
+    <p class="hint" id="vidHint"></p>
+  </div>
+
   <div class="panel" id="p-brand">
     <div class="lbl">Your handle — shown on every post</div>
     <input type="text" id="bHandle" maxlength="30" placeholder="@yourname" oninput="BRAND.handle=this.value;saveBrand();paint()">
@@ -304,7 +328,8 @@ var S = {
   bg:{ type:"grad", grad:0, aiUrl:null },
   photo:null, photoPos:{x:0,y:0,scale:1},
   copy:{ hook:"Weekend plant sale", sub:"Every leafy friend 20% off, Saturday only", cta:"Visit us", caption:"", tone:"Playful" },
-  stickers:[]   // {kind:'emoji'|'banner', txt, x,y (0..1), size(px @1080)}
+  stickers:[],  // {kind:'emoji'|'banner', txt, x,y (0..1), size(px @1080)}
+  video:{ motion:"drift", textIn:"word", secs:6, fps:30 }
 };
 var BRAND = { handle:"", accent:"#4f8df9", wm:true, logo:null, logoPos:"tr", logoSize:0.12, logoImg:null };
 var sel = null;
@@ -388,10 +413,87 @@ function drawCta(x,W,H,val,yF){
     x.fillStyle="#fff";x.fillText(label,cx,cy+fs*.06);
   }
 }
+/* Reveal text without it shifting: the line breaks and the centring both come
+   from the FULL string, and we simply stop drawing partway through. Anything
+   that re-measured the visible substring would make the words jitter. */
+function drawReveal(x,lines,cx,cy,lh,rev,mode){
+  var li,i,align=x.textAlign;
+  x.textAlign="left";
+  if(mode==="type"){
+    var total=lines.join("").length||1,shown=rev*total,used=0;
+    for(li=0;li<lines.length;li++){
+      var ln=lines[li],take=Math.max(0,Math.min(ln.length,Math.round(shown-used)));
+      used+=ln.length;
+      if(take<=0)break;
+      x.fillText(ln.slice(0,take),cx-x.measureText(ln).width/2,cy+(li-(lines.length-1)/2)*lh);
+      if(take<ln.length)break;
+    }
+    x.textAlign=align;return;
+  }
+  var words=lines.map(function(l){return l.split(/\s+/).filter(Boolean);});
+  var count=words.reduce(function(n,w){return n+w.length;},0);
+  if(!count){x.textAlign=align;return;}
+  var target=rev*count,seen=0;
+  for(li=0;li<lines.length;li++){
+    var cur=cx-x.measureText(lines[li]).width/2,y=cy+(li-(lines.length-1)/2)*lh;
+    for(i=0;i<words[li].length;i++){
+      var a=Math.min(1,Math.max(0,target-seen));   // the newest word fades in
+      if(a>0){
+        var g0=x.globalAlpha;x.globalAlpha=g0*a;
+        x.fillText(words[li][i],cur,y);
+        x.globalAlpha=g0;
+      }
+      cur+=x.measureText(words[li][i]+" ").width;
+      seen++;
+    }
+  }
+  x.textAlign=align;
+}
+/* one text block, optionally mid-entrance (an) */
+function drawBlock(x,W,H,b,val,an){
+  var by=b.y+(S.textY||0)+(an?an.dy:0);
+  if(b.list){
+    var items=val.split(/\n|(?:^|\s)[•·-]\s+/).map(function(s){return s.trim();}).filter(Boolean).slice(0,6);
+    var fs=H*b.size*(S.textScale||1);x.font=b.font.replace("%f",fs);x.textAlign="left";x.textBaseline="middle";x.fillStyle="#fff";
+    var y0=H*(.32+(S.textY||0)+(an?an.dy:0)),gap=fs*1.9;
+    items.forEach(function(it,i){
+      x.fillStyle=BRAND.accent;x.beginPath();x.arc(W*.12,y0+i*gap,fs*.22,0,7);x.fill();
+      x.fillStyle="#fff";
+      var ln=wrap(x,it,W*.72,1);x.fillText(ln[0]||"",W*.12+fs*.8,y0+i*gap);
+    });
+    return;
+  }
+  if(b.pill||b.key==="cta"){
+    var cs=an?an.cs:1;
+    if(cs!==1){var ccx=W*(S.ctaPos?S.ctaPos.x:.5),ccy=H*by;
+      x.save();x.translate(ccx,ccy);x.scale(cs,cs);x.translate(-ccx,-ccy);}
+    drawCta(x,W,H,b.caps?val.toUpperCase():val,by);
+    if(cs!==1)x.restore();
+    return;
+  }
+  var t=b.caps?val.toUpperCase():val;
+  if(b.quote)t="“"+t+"”";
+  var fs3=H*b.size*(S.textScale||1);x.font=b.font.replace("%f",fs3);
+  x.textAlign="center";x.textBaseline="middle";
+  var lines=wrap(x,t,W*.82,b.maxLines||2),lh=fs3*1.18;
+  x.shadowColor="rgba(0,0,0,.45)";x.shadowBlur=fs3*.25;
+  x.fillStyle="#fff";
+  var rev=(an&&b.key==="hook")?an.rev:1;
+  if(rev>=1)lines.forEach(function(ln,i){x.fillText(ln,W/2,H*by+(i-(lines.length-1)/2)*lh);});
+  else drawReveal(x,lines,W/2,H*by,lh,rev,an.mode);
+  x.shadowBlur=0;
+  if(b.caps&&b.key==="sub"){x.fillStyle=BRAND.accent;x.fillRect(W/2-W*.045,H*by+fs3*1.1,W*.09,H*.004);}
+}
+/* Set while a reel plays or exports; null for ordinary stills — so an untouched
+   still renders byte-for-byte as it always did. */
+var ANIM=null;
 function render(cv,W,H,forExport){
   cv.width=W;cv.height=H;
   var x=cv.getContext("2d"),T=TEMPLATES[S.template];
-  /* background */
+  var A=ANIM;
+  /* background — scaled about the centre, so a zoom/pan never exposes an edge */
+  if(A){x.save();x.translate(W/2,H/2);x.scale(A.bgScale,A.bgScale);
+        x.translate(-W/2+A.bgDx*W,-H/2+A.bgDy*H);}
   if(S.photo&&S.bg.type==="photo"){
     var im=S.photoDraw||S.photo,sc=Math.max(W/im.width,H/im.height)*S.photoPos.scale;
     var dw=im.width*sc,dh=im.height*sc;
@@ -404,14 +506,16 @@ function render(cv,W,H,forExport){
   } else if(S.bg.type==="solid"){
     x.fillStyle=S.bg.solid||"#101216";x.fillRect(0,0,W,H);
   } else {
-    var g;
-    if(S.gradDir==="radial")g=x.createRadialGradient(W/2,H*.42,W*.08,W/2,H*.5,Math.max(W,H)*.78);
-    else if(S.gradDir==="down")g=x.createLinearGradient(0,0,0,H);
-    else if(S.gradDir==="right")g=x.createLinearGradient(0,0,W,0);
-    else g=x.createLinearGradient(0,0,W*.7,H);
+    var g,gs=A?A.gradShift:0;   // a flat gradient would sit dead still in a reel,
+                                // so its axis drifts across the clip
+    if(S.gradDir==="radial")g=x.createRadialGradient(W/2+gs*W*.1,H*.42,W*.08,W/2,H*.5,Math.max(W,H)*.78);
+    else if(S.gradDir==="down")g=x.createLinearGradient(0,-gs*H*.16,0,H-gs*H*.16);
+    else if(S.gradDir==="right")g=x.createLinearGradient(-gs*W*.16,0,W-gs*W*.16,0);
+    else g=x.createLinearGradient(gs*W*.18,0,W*.7+gs*W*.18,H);
     g.addColorStop(0,GRADS[S.bg.grad][0]);g.addColorStop(1,GRADS[S.bg.grad][1]);
     x.fillStyle=g;x.fillRect(0,0,W,H);
   }
+  if(A)x.restore();
   /* scrim / band */
   if(T.band){x.save();x.globalAlpha=Math.min(1,S.scrimAdj||1);
     var bg2=x.createLinearGradient(0,H*(1-T.band-.12),0,H);bg2.addColorStop(0,"rgba(0,0,0,0)");bg2.addColorStop(.45,"rgba(0,0,0,.62)");bg2.addColorStop(1,"rgba(0,0,0,.78)");x.fillStyle=bg2;x.fillRect(0,H*(1-T.band-.12),W,H*(T.band+.12));x.restore();}
@@ -424,39 +528,30 @@ function render(cv,W,H,forExport){
     x.beginPath();x.moveTo(W*.3,H*.28);x.lineTo(W*.7,H*.28);x.stroke();
     x.beginPath();x.moveTo(W*.3,H*.74);x.lineTo(W*.7,H*.74);x.stroke();}
   /* text blocks */
-  T.blocks.forEach(function(b){
+  T.blocks.forEach(function(b,bi){
     var val=S.copy[b.key]||"";if(!val)return;
-    var by=b.y+(S.textY||0);   // global up/down nudge from the Words panel
-    if(b.list){
-      var items=val.split(/\n|(?:^|\s)[•·-]\s+/).map(function(s){return s.trim();}).filter(Boolean).slice(0,6);
-      var fs=H*b.size*(S.textScale||1);x.font=b.font.replace("%f",fs);x.textAlign="left";x.textBaseline="middle";x.fillStyle="#fff";
-      var y0=H*(.32+(S.textY||0)),gap=fs*1.9;
-      items.forEach(function(it,i){
-        x.fillStyle=BRAND.accent;x.beginPath();x.arc(W*.12,y0+i*gap,fs*.22,0,7);x.fill();
-        x.fillStyle="#fff";
-        var ln=wrap(x,it,W*.72,1);x.fillText(ln[0]||"",W*.12+fs*.8,y0+i*gap);
-      });
-      return;
-    }
-    if(b.pill||b.key==="cta"){ drawCta(x,W,H,b.caps?val.toUpperCase():val,by); return; }
-    var t=b.caps?val.toUpperCase():val;
-    if(b.quote)t="“"+t+"”";
-    var fs3=H*b.size*(S.textScale||1);x.font=b.font.replace("%f",fs3);
-    x.textAlign="center";x.textBaseline="middle";
-    var lines=wrap(x,t,W*.82,b.maxLines||2),lh=fs3*1.18;
-    x.shadowColor="rgba(0,0,0,.45)";x.shadowBlur=fs3*.25;
-    x.fillStyle="#fff";
-    lines.forEach(function(ln,i){x.fillText(ln,W/2,H*by+(i-(lines.length-1)/2)*lh);});
-    x.shadowBlur=0;
-    if(b.caps&&b.key==="sub"){x.fillStyle=BRAND.accent;x.fillRect(W/2-W*.045,H*by+fs3*1.1,W*.09,H*.004);}
+    var an=A?A.block(bi):null;
+    if(an&&an.a<=0)return;               // hasn't entered yet
+    if(an){x.save();x.globalAlpha=an.a;}
+    drawBlock(x,W,H,b,val,an);
+    if(an)x.restore();
   });
   /* CTA on templates without their own spot — the field works everywhere */
   if(!S.copy.cta)S._ctaBox=null;
   else if(!T.blocks.some(function(b){return b.pill||b.key==="cta"})){
-    drawCta(x,W,H,S.copy.cta,(CTA_FALLBACK_Y[S.template]||.84)+(S.textY||0));
+    var ca=A?A.block(T.blocks.length):null;
+    if(!ca||ca.a>0){
+      if(ca){x.save();x.globalAlpha=ca.a;}
+      drawCta(x,W,H,S.copy.cta,(CTA_FALLBACK_Y[S.template]||.84)+(S.textY||0)+(ca?ca.dy:0));
+      if(ca)x.restore();
+    }
   }
   /* stickers */
-  S.stickers.forEach(function(st){
+  S.stickers.forEach(function(st,si){
+    var sa=A?A.sticker(si):null;
+    if(sa&&sa.a<=0)return;
+    if(sa){x.save();x.globalAlpha=sa.a;
+      x.translate(st.x*W,st.y*H);x.scale(sa.s,sa.s);x.translate(-st.x*W,-st.y*H);}
     var px2=st.x*W,py=st.y*H,fs=st.size*(W/1080);
     if(st.kind==="photo"){
       if(st._img&&st._img.naturalWidth){
@@ -480,7 +575,7 @@ function render(cv,W,H,forExport){
       x.fillStyle="#fff";x.textAlign="center";x.textBaseline="middle";x.fillText(st.txt,0,fs*.02);
       x.restore();
     }
-    if(!forExport&&st===sel){
+    if(!forExport&&!A&&st===sel){
       x.strokeStyle="#4f8df9";x.lineWidth=3;x.setLineDash([8,6]);
       var hw,hh;
       if(st.kind==="photo"){
@@ -502,6 +597,7 @@ function render(cv,W,H,forExport){
       x.beginPath();x.moveTo(px2+hw+hr*.05,py+hh-hr*.34);x.lineTo(px2+hw+hr*.34,py+hh-hr*.34);x.stroke();
       x.beginPath();x.moveTo(px2+hw+hr*.34,py+hh-hr*.05);x.lineTo(px2+hw+hr*.34,py+hh-hr*.34);x.stroke();
     }
+    if(sa)x.restore();
   });
   drawFrame(x,W,H);
   /* brand + watermark (dark ink on the polaroid band so they stay visible) */
@@ -535,7 +631,8 @@ function paint(){
   var cv=el('pv');
   render(cv,Math.round(f.w*sc*dpr),Math.round(f.h*sc*dpr),false);
   cv.style.width=Math.round(f.w*sc)+"px";cv.style.height=Math.round(f.h*sc)+"px";
-  el('stageHint').textContent = sel? "drag to move · blue dot resizes · red ✕ removes"
+  el('stageHint').textContent = ANIM? ""
+    : sel? "drag to move · blue dot resizes · red ✕ removes"
     : (S.stickers.length? "drag stickers to place them" : (S.photo&&S.bg.type==="photo"? "drag to move · pinch to zoom":""));
 }
 
@@ -613,11 +710,207 @@ function paint(){
   });});
 })();
 
+/* ---------------- reels ---------------- */
+/* One pure function maps a moment in the clip to the handful of numbers render()
+   reads. Pure matters: the live preview and the exported frames run the same
+   code, so what you watch IS the video — no second renderer to drift out of sync. */
+var MOTIONS=[["drift","Drift"],["pop","Pop"],["slide","Slide"],["pulse","Pulse"]];
+var TEXTINS=[["fade","Fade up"],["rise","Rise"],["word","Word by word"],["type","Typewriter"]];
+/* stored reel settings are user data — clamp them back into range on the way in */
+function normVideo(v){
+  var d={motion:"drift",textIn:"word",secs:6,fps:30};
+  if(!v||typeof v!=='object')return d;
+  var ms=MOTIONS.map(function(m){return m[0];}),ts=TEXTINS.map(function(m){return m[0];});
+  return {motion:ms.indexOf(v.motion)>=0?v.motion:d.motion,
+          textIn:ts.indexOf(v.textIn)>=0?v.textIn:d.textIn,
+          secs:Math.min(15,Math.max(3,Math.round(+v.secs||d.secs))),fps:30};
+}
+function ease(p){return 1-Math.pow(1-p,3);}                       // easeOutCubic
+function easeBack(p){var c=1.7;return 1+(c+1)*Math.pow(p-1,3)+c*Math.pow(p-1,2);}
+function animAt(t,D){
+  var p=D>0?Math.min(1,Math.max(0,t/D)):0;
+  var m=(S.video&&S.video.motion)||"drift",mode=(S.video&&S.video.textIn)||"word";
+  var A={p:p,mode:mode,bgScale:1,bgDx:0,bgDy:0,gradShift:0};
+  if(m==="drift"){ A.bgScale=1.03+.09*p; A.bgDx=(p-.5)*.03; A.gradShift=p; }
+  // every motion keeps a slow continuing component — a reel that goes completely
+  // static after its intro reads as a broken video rather than a still
+  else if(m==="pop"){ A.bgScale=1.12-.08*ease(Math.min(1,t/.9))+.05*p; A.gradShift=p*.6; }
+  else if(m==="slide"){ A.bgScale=1.10; A.bgDx=(.5-p)*.06; A.gradShift=p; }
+  else { A.bgScale=1.05+.022*(Math.sin(t*Math.PI*2/1.5)*.5+.5); A.gradShift=p; }
+  // a pan must never drag the canvas edge into view
+  var room=(A.bgScale-1)/2*.9;
+  A.bgDx=Math.max(-room,Math.min(room,A.bgDx));
+  A.bgDy=Math.max(-room,Math.min(room,A.bgDy));
+  A.block=function(i){
+    var at=.22+i*.34,q=Math.min(1,Math.max(0,(t-at)/.62)),e=ease(q);
+    var o={a:e,dy:0,rev:1,mode:mode,cs:1};
+    if(m==="slide"||mode==="rise")o.dy=(1-e)*.055;
+    if(m==="pop")o.cs=.9+.1*easeBack(q);
+    else if(m==="pulse")o.cs=1+.03*Math.sin(t*Math.PI*2/1.5);
+    if(i===0&&(mode==="word"||mode==="type")){
+      // the headline reveals itself, so the block as a whole never fades
+      o.rev=Math.min(1,Math.max(0,(t-at)/Math.max(.9,Math.min(2.4,D*.45))));
+      o.a=1;
+    }
+    return o;
+  };
+  A.sticker=function(i){
+    var q=Math.min(1,Math.max(0,(t-(.5+i*.16))/.5));
+    return {a:Math.min(1,q*1.6),s:.6+.4*easeBack(q)};
+  };
+  return A;
+}
+function reelDur(){return (S.video&&S.video.secs)||6;}
+var reelRAF=null,reelT0=0;
+function toggleReel(){ reelRAF?stopReel():playReel(); }
+function playReel(){
+  stopReel();
+  sel=null;el('selCtl').style.display='none';
+  var D=reelDur();reelT0=(window.performance||Date).now();
+  (function step(){
+    var t=((window.performance||Date).now()-reelT0)/1000;
+    if(t>=D+.35){stopReel();return;}
+    ANIM=animAt(Math.min(t,D),D);paint();
+    reelRAF=requestAnimationFrame(step);
+  })();
+  updVideo();haptic('light');
+}
+function stopReel(){
+  if(reelRAF)cancelAnimationFrame(reelRAF);
+  reelRAF=null;ANIM=null;paint();updVideo();
+}
+function setReelSecs(v){
+  S.video.secs=v;el('vidLen').textContent=v+'s';saveDraft();updVideo();
+}
+function useReelFormat(){
+  S.format='story';buildFormats();buildTemplates();paint();saveDraft();updVideo();haptic('success');
+}
+function vidChips(id,items,cur,set){
+  var w=el(id);if(!w)return;w.innerHTML='';
+  items.forEach(function(it){
+    var b=document.createElement('button');b.className='chip'+(it[0]===cur?' on':'');b.textContent=it[1];
+    b.onclick=function(){set(it[0]);buildVideoControls();saveDraft();haptic('selection');playReel();};
+    w.appendChild(b);
+  });
+}
+function buildVideoControls(){
+  vidChips('motionRow',MOTIONS,S.video.motion,function(v){S.video.motion=v;});
+  vidChips('textInRow',TEXTINS,S.video.textIn,function(v){S.video.textIn=v;});
+  el('vsecs').value=S.video.secs;el('vidLen').textContent=S.video.secs+'s';
+  updVideo();
+}
+function updVideo(){
+  var story=S.format==='story';
+  el('vidFmtHint').textContent=story
+    ? 'Every reel exports at 1080 × 1920 — the right shape for Reels, Stories and TikTok.'
+    : 'Reels and Stories are 9:16. This one exports at '+FORMATS[S.format].name+' instead.';
+  el('vidFmtBtn').style.display=story?'none':'block';
+  el('playBtn').textContent=reelRAF?'■ Stop preview':'▶ Play preview';
+  el('vidBtn').textContent=window.myllmVideo?'Save reel to Photos':'Save a still instead';
+  el('vidHint').textContent=vidMsg||(window.myllmVideo
+    ? 'Silent by design — add music in Instagram, TikTok or Reels. Rendering takes about '
+      +Math.max(10,Math.round(reelDur()*3))+' seconds.'
+    : 'The preview works right now — saving it as a video needs a newer version of MyLLM.');
+}
+/* The result of the last export outlives the tidy-up pass that re-renders the
+   panel — otherwise updVideo() wipes the very message the user needs to read. */
+var vidMsg='';
+function setVidMsg(t){ vidMsg=t||''; if(el('vidHint'))updVideo(); }
+/* Export: render every frame at full size and hand it to the native encoder one
+   at a time. Each frame() resolves only once it's encoded, so this loop is its
+   own back-pressure — memory stays at one frame however long the clip is. */
+var reelCancel=false;
+function cancelReel(){ reelCancel=true; el('vidProgTxt').textContent='Stopping…'; }
+function exportReel(){
+  stopReel();
+  if(!window.myllmVideo){ doExport(); return; }   // older build: still image
+  var f=FORMATS[S.format],D=reelDur(),fps=S.video.fps||30;
+  var total=Math.max(1,Math.round(D*fps)),cv=document.createElement('canvas');
+  var keep=sel;sel=null;reelCancel=false;setVidMsg('');
+  var name=((S.copy.hook||'Social reel').replace(/[^\w .-]/g,'').trim()||'Social reel').slice(0,40);
+  el('vidBtn').disabled=true;el('playBtn').disabled=true;
+  el('vidProg').style.display='block';setReelProgress(0,total);
+  myllmVideo.start({width:f.w,height:f.h,fps:fps}).then(function(){
+    var i=0;
+    return (function next(){
+      if(reelCancel)return myllmVideo.cancel().then(function(){return null;});
+      if(i>=total)return myllmVideo.finish({save:true,filename:name});
+      ANIM=animAt(i/fps,D);
+      render(cv,f.w,f.h,true);
+      if(i%3===0)paint();                       // let the preview show it building
+      var frame=cv.toDataURL('image/jpeg',.88);
+      setReelProgress(i+1,total);
+      return myllmVideo.frame(frame).then(function(){i++;return next();});
+    })();
+  }).then(function(res){
+    if(!res){setVidMsg('Reel cancelled.');haptic('warning');return;}
+    reelDoneSheet(res,name,D);
+  }).catch(function(e){
+    setVidMsg('The reel didn’t save: '+(e&&e.message||'something went wrong'));
+    haptic('error');
+    try{myllmVideo.cancel();}catch(e2){}
+  }).then(function(){
+    ANIM=null;sel=keep;paint();
+    el('vidBtn').disabled=false;el('playBtn').disabled=false;
+    el('vidProg').style.display='none';updVideo();
+  });
+}
+function setReelProgress(n,total){
+  el('vidBarFill').style.width=Math.round(n/total*100)+'%';
+  el('vidProgTxt').textContent='Rendering frame '+n+' of '+total+'…';
+}
+function reelDoneSheet(res,name,D){
+  var caption=captionOut(),copied=false;
+  if(caption){
+    try{
+      var ta=document.createElement('textarea');ta.value=caption;document.body.appendChild(ta);
+      ta.select();copied=document.execCommand('copy');document.body.removeChild(ta);
+    }catch(e){}
+  }
+  var saved=res&&res.saved;
+  el('sheet').innerHTML='<h3>'+(saved?'Reel saved to Photos':'Your reel is ready')+'</h3>'+
+    '<p class="hint">'+Math.round((res&&res.seconds)||D)+' seconds · '+FORMATS[S.format].name+
+      ' · no sound, so add music where you post it.</p>'+
+    (saved?'':'<p class="hint">'+((res&&res.note)||'It wasn’t added to Photos.')+'</p>')+
+    '<button class="btn" onclick="shareReel()">Share the reel…</button>'+
+    (caption?'<p class="ok">'+(copied?'Caption + hashtags copied — just paste when you post.':'')+'</p>':'')+
+    '<button class="btn line" onclick="el(\'scrim\').classList.remove(\'on\')">Done</button>';
+  el('scrim').classList.add('on');
+  setVidMsg(saved?'Saved to Photos ✓':'');
+  haptic('success');
+}
+/* Sharing re-renders the clip: the encoder hands the finished file straight to
+   the iOS share sheet, so there's no multi-megabyte round trip through JS. */
+function shareReel(){
+  el('scrim').classList.remove('on');
+  if(!window.myllmVideo)return;
+  var f=FORMATS[S.format],D=reelDur(),fps=S.video.fps||30;
+  var total=Math.max(1,Math.round(D*fps)),cv=document.createElement('canvas');
+  var name=((S.copy.hook||'Social reel').replace(/[^\w .-]/g,'').trim()||'Social reel').slice(0,40);
+  reelCancel=false;setVidMsg('');
+  el('vidBtn').disabled=true;el('vidProg').style.display='block';setReelProgress(0,total);
+  myllmVideo.start({width:f.w,height:f.h,fps:fps}).then(function(){
+    var i=0;
+    return (function next(){
+      if(reelCancel)return myllmVideo.cancel().then(function(){return null;});
+      if(i>=total)return myllmVideo.finish({save:false,share:true,filename:name});
+      ANIM=animAt(i/fps,D);render(cv,f.w,f.h,true);
+      setReelProgress(i+1,total);
+      return myllmVideo.frame(cv.toDataURL('image/jpeg',.88)).then(function(){i++;return next();});
+    })();
+  }).catch(function(e){
+    setVidMsg('Couldn’t share the reel: '+(e&&e.message||'something went wrong'));
+  }).then(function(){
+    ANIM=null;paint();el('vidBtn').disabled=false;el('vidProg').style.display='none';
+  });
+}
+
 /* ---------------- panels ---------------- */
 var TABS=[["layout","Layout","M4 5.5A1.5 1.5 0 0 1 5.5 4h13A1.5 1.5 0 0 1 20 5.5v13a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 18.5zM4 10h16M10 10v10"],
  ["words","Words","M5 7h14M5 12h14M5 17h9"],
  ["style","Style","M12 3a9 9 0 1 0 0 18c1.2 0 2-.9 2-2 0-.6-.25-1.1-.6-1.5-.35-.4-.6-.9-.6-1.5a2 2 0 0 1 2-2h2.3A3.9 3.9 0 0 0 21 12c0-5-4-9-9-9zM7.5 10.5h.01M10.5 6.5h.01M15.5 6.5h.01"],
  ["stickers","Stickers","M12 3a9 9 0 1 0 9 9c0-.5 0-1-.14-1.5H12z M8.8 10.2h.01M14 14.5c-.6.7-1.4 1-2 1s-1.4-.3-2-1"],
+ ["video","Video","M4 7.5A1.5 1.5 0 0 1 5.5 6h8A1.5 1.5 0 0 1 15 7.5v9A1.5 1.5 0 0 1 13.5 18h-8A1.5 1.5 0 0 1 4 16.5zM15 10.5l5-3v9l-5-3z"],
  ["brand","Brand","M4 8l8-5 8 5v8l-8 5-8-5zM12 3v18"],
  ["posts","Posts","M4 6.5A1.5 1.5 0 0 1 5.5 5H9l2 2h7.5A1.5 1.5 0 0 1 20 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 17.5z"]];
 function buildTabs(){
@@ -626,9 +919,13 @@ function buildTabs(){
     var b=document.createElement('button');b.className=i===0?'on':'';
     b.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="'+tb[2]+'"/></svg>'+tb[1];
     b.onclick=function(){
+      if(reelRAF&&tb[0]!=='video')stopReel();   // leaving Video ends the preview
       document.querySelectorAll('.tabs button').forEach(function(x){x.classList.remove('on');});
       document.querySelectorAll('.panel').forEach(function(x){x.classList.remove('on');});
-      b.classList.add('on');el('p-'+tb[0]).classList.add('on');if(tb[0]==='posts')renderLibrary();haptic('selection');
+      b.classList.add('on');el('p-'+tb[0]).classList.add('on');
+      if(tb[0]==='posts')renderLibrary();
+      if(tb[0]==='video'){buildVideoControls();playReel();}
+      haptic('selection');
     };
     t.appendChild(b);
   });
@@ -1073,6 +1370,7 @@ function savePost(){
         copy:JSON.parse(JSON.stringify(S.copy)),
         stickers:packStickers(S.stickers),
         photoFilter:S.photoFilter||'none',
+        video:JSON.parse(JSON.stringify(S.video)),
         photoPos:JSON.parse(JSON.stringify(S.photoPos))},
     thumb:postThumb(),
     pd:photoData()
@@ -1115,13 +1413,14 @@ function openPost(p){
   S.gradDir=st.gradDir||'diag';S.texture=st.texture||'none';S.vig=!!st.vig;
   S.scrimAdj=+st.scrimAdj||1;S.frame=st.frame||'none';
   S.stickers=restoreStickers(st.stickers);
+  S.video=normVideo(st.video);
   S.photoFilter=st.photoFilter||'none';
   S.photoPos=st.photoPos||{x:0,y:0,scale:1};
   S.photo=null;S.photoDraw=null;
   S.bg=(st.bg&&st.bg.type==='solid'&&st.bg.solid)?{type:'solid',solid:st.bg.solid,grad:st.bg.grad||0,aiUrl:null}
       :{type:'grad',grad:(st.bg&&st.bg.grad)||0,aiUrl:null};
   function done(){
-    buildFormats();buildTemplates();buildGrads();buildStyleControls();fillWordFields();refreshStyle();paint();saveDraft();
+    buildFormats();buildTemplates();buildGrads();buildStyleControls();buildVideoControls();fillWordFields();refreshStyle();paint();saveDraft();
     el('libHint').textContent='Opened “'+p.name+'”'+((st.bg&&st.bg.type==='photo'&&!p.pd)?' — its photo couldn’t be kept, re-add one.':'');
     haptic('selection');
   }
@@ -1162,7 +1461,7 @@ function saveDraft(){
     var d={format:S.format,template:S.template,textScale:S.textScale||1,textY:S.textY||0,ctaStyle:S.ctaStyle||'pill',ctaPos:S.ctaPos||null,
       gradDir:S.gradDir,texture:S.texture,vig:S.vig?1:0,scrimAdj:S.scrimAdj||1,frame:S.frame,
       bg:{type:S.bg.type==='solid'?'solid':'grad',grad:S.bg.grad||0,solid:S.bg.solid||null},
-      copy:S.copy,stickers:packStickers(S.stickers)};
+      copy:S.copy,stickers:packStickers(S.stickers),video:S.video};
     var dj=JSON.stringify(d);
     if(dj.length>820000){ // photo items can outgrow the draft budget — shed their data, oldest first
       for(var i=0;i<d.stickers.length&&dj.length>820000;i++){
@@ -1266,7 +1565,7 @@ function fillWordFields(){
 }
 
 /* ---------------- init ---------------- */
-buildTabs();buildFormats();buildTones();buildGrads();buildEmoji();buildStyleControls();renderBrand();fillWordFields();
+buildTabs();buildFormats();buildTones();buildGrads();buildEmoji();buildStyleControls();buildVideoControls();renderBrand();fillWordFields();
 store.getItem('socialstudio.brand').then(function(v){
   if(v){try{var b=JSON.parse(v);if(b&&typeof b==='object')BRAND=Object.assign(BRAND,b);}catch(e){}}
   if(BRAND.logo){var li=new Image();li.onload=function(){BRAND.logoImg=li;paint()};li.src=BRAND.logo;}
@@ -1283,9 +1582,10 @@ store.getItem('socialstudio.brand').then(function(v){
       S.ctaPos=(d.ctaPos&&typeof d.ctaPos.x==='number')?d.ctaPos:null;
       if(d.gradDir)S.gradDir=d.gradDir; if(d.texture)S.texture=d.texture;
       S.vig=!!d.vig; if(d.scrimAdj)S.scrimAdj=+d.scrimAdj||1; if(d.frame)S.frame=d.frame;
-      S.copy=Object.assign(S.copy,d.copy);S.stickers=restoreStickers(d.stickers);}
+      S.copy=Object.assign(S.copy,d.copy);S.stickers=restoreStickers(d.stickers);
+      S.video=normVideo(d.video);}
   }catch(e){}}
-  buildFormats();buildGrads();buildStyleControls();fillWordFields();buildTemplates();paint();
+  buildFormats();buildGrads();buildStyleControls();buildVideoControls();fillWordFields();buildTemplates();paint();
   return store.getItem('socialstudio.library');
 }).then(function(v){
   if(v)try{LIB=JSON.parse(v)||[]}catch(e){}
