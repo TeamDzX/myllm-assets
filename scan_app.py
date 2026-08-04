@@ -135,8 +135,9 @@ def scan(path):
         findings[INFO].append(("remote-image", line_of(html, m.start()), m.group(1)))
 
     # which sandbox bridges the app uses (cross-check against declared needs)
-    bridges = sorted(set(re.findall(r"\bmyllm(?:Fetch|Storage|Ask|Vision|Generate\w+|Location|"
-                                    r"Memory|Transcribe|Scan|Haptic|Share|SaveImage|Files|Intent|Theme)\b", html)))
+    bridges = sorted(set(re.findall(r"\bmyllm(?:Fetch|Storage|Ask|Vision|Generate\w+|Location|Steps|"
+                                    r"Memory|Transcribe\w*|Scan|Haptic|Share\w*|SaveImage|PickImage|"
+                                    r"Video|Files|Intent|System|Theme)\b", html)))
     if bridges:
         findings[INFO].append(("bridges", 0, ", ".join(bridges)))
 

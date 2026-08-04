@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Stride</title>
+<style>
+:root{
+  --bg:var(--myllm-bg,#f4f1ee);--surface:var(--myllm-surface,#fff);
+  --text:var(--myllm-text,#181513);--muted:var(--myllm-muted,#6d6560);
+  --border:var(--myllm-border,rgba(120,110,100,.22));
+  --radius:var(--myllm-radius,20px);
+  --font:var(--myllm-font,-apple-system,system-ui,sans-serif);
+  /* Stride's own identity: a sunrise arc. Deliberately not Apple's ring trio. */
+  --warm:#ff6b4a;--glow:#ffb347;--deep:#0f7d7d;--track:rgba(120,110,100,.16);
+  --scale:1;
+}
+@media(prefers-color-scheme:dark){:root{
+  --bg:var(--myllm-bg,#0e0d0c);--surface:var(--myllm-surface,#1b1917);
+  --text:var(--myllm-text,#f2ede8);--muted:var(--myllm-muted,#a49b94);
+  --border:var(--myllm-border,rgba(255,240,225,.16));--track:rgba(255,240,225,.12);
+}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{font-size:calc(17px * var(--scale))}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font);
+  line-height:1.45;padding:0 0 max(28px,env(safe-area-inset-bottom));
+  -webkit-text-size-adjust:100%}
+.wrap{max-width:560px;margin:0 auto;padding:0 16px}
+
+/* ---------- header ---------- */
+header{position:relative;overflow:hidden;padding:max(18px,env(safe-area-inset-top)) 0 14px;
+  margin-bottom:6px}
+header .sky{position:absolute;inset:0;background-size:cover;background-position:center;
+  opacity:.5;filter:saturate(1.05)}
+@media(prefers-color-scheme:dark){header .sky{opacity:.34}}
+header .veil{position:absolute;inset:0;
+  background:linear-gradient(180deg,transparent 0%,var(--bg) 96%)}
+header .inner{position:relative}
+h1{margin:0;font-size:1.5rem;font-weight:800;letter-spacing:-.02em}
+.date{margin:2px 0 0;color:var(--muted);font-size:.95rem;font-weight:600}
+
+/* ---------- hero ring ---------- */
+.hero{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  padding:22px 18px 20px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.ringbox{position:relative;width:min(74vw,290px);margin:0 auto}
+svg.ring{display:block;width:100%;height:auto;transform:rotate(-90deg)}
+svg.ring circle{fill:none;stroke-linecap:round}
+.readout{position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:1px}
+/* The number is the app. Everything else is support. */
+.count{font-size:clamp(2.9rem,17vw,4.1rem);font-weight:850;letter-spacing:-.045em;
+  line-height:1;font-variant-numeric:tabular-nums}
+.count-label{font-size:.92rem;font-weight:700;color:var(--muted);letter-spacing:.06em;
+  text-transform:uppercase}
+.goalline{margin-top:6px;font-size:.92rem;font-weight:650;color:var(--muted)}
+.plain{margin:14px 4px 0;font-size:1.02rem;font-weight:600;color:var(--text)}
+.pct{display:inline-block;margin-top:10px;padding:5px 13px;border-radius:999px;
+  font-size:.9rem;font-weight:750;background:var(--track);color:var(--text)}
+.pct.done{background:linear-gradient(100deg,var(--warm),var(--glow));color:#2a1206}
+
+/* ---------- stats ---------- */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:10px;margin-top:12px}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:16px;
+  padding:13px 10px;text-align:center}
+.stat b{display:block;font-size:1.3rem;font-weight:800;letter-spacing:-.02em;
+  font-variant-numeric:tabular-nums}
+.stat span{display:block;margin-top:2px;font-size:.8rem;font-weight:650;color:var(--muted)}
+
+/* ---------- section ---------- */
+section{margin-top:20px}
+h2{margin:0 0 10px;font-size:1.06rem;font-weight:800;letter-spacing:-.01em}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px}
+
+/* ---------- week ---------- */
+.week{display:flex;align-items:flex-end;gap:6px;height:150px;position:relative}
+.goalmark{position:absolute;left:0;right:0;border-top:2px dashed var(--border);pointer-events:none}
+.goalmark i{position:absolute;right:0;top:-.95rem;font-size:.7rem;font-style:normal;
+  font-weight:700;color:var(--muted);background:var(--surface);padding:0 4px}
+.day{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;
+  height:100%;gap:5px;background:none;border:0;padding:0;cursor:pointer;font-family:inherit;
+  color:inherit;border-radius:10px;min-width:0}
+.day .bar{width:100%;max-width:34px;border-radius:8px 8px 5px 5px;background:var(--track);
+  transition:height .45s cubic-bezier(.22,1,.36,1);min-height:5px}
+.day.hit .bar{background:linear-gradient(180deg,var(--glow),var(--warm))}
+.day.sel .bar{outline:2.5px solid var(--deep);outline-offset:2px}
+.day .dl{font-size:.76rem;font-weight:750;color:var(--muted)}
+.day .dv{font-size:.72rem;font-weight:650;color:var(--muted);font-variant-numeric:tabular-nums}
+.day.sel .dl{color:var(--text)}
+
+/* ---------- goal ---------- */
+.goalrow{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.step{width:52px;height:52px;flex:none;border-radius:16px;border:1px solid var(--border);
+  background:var(--bg);color:var(--text);font-size:1.5rem;font-weight:700;cursor:pointer;
+  font-family:inherit;line-height:1}
+.step:active{transform:scale(.94)}
+.goalval{font-size:1.65rem;font-weight:850;font-variant-numeric:tabular-nums;letter-spacing:-.03em}
+.goalval small{display:block;font-size:.78rem;font-weight:650;color:var(--muted);letter-spacing:0}
+.presets{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
+.preset{text-align:left;padding:11px 13px;border-radius:14px;border:1px solid var(--border);
+  background:var(--bg);color:var(--text);cursor:pointer;font-family:inherit;min-height:44px}
+.preset.on{border-color:var(--warm);background:linear-gradient(100deg,rgba(255,107,74,.14),rgba(255,179,71,.12))}
+.preset b{display:block;font-size:.95rem;font-weight:800}
+.preset span{display:block;font-size:.78rem;color:var(--muted);font-weight:600}
+
+/* ---------- milestone ---------- */
+.milestone{margin-top:12px;border-radius:var(--radius);overflow:hidden;border:1px solid var(--border);
+  background:var(--surface);display:none}
+/* A slim band, not a poster — the number is still the point of the screen. */
+.milestone img{display:block;width:100%;height:112px;object-fit:cover;object-position:center 42%}
+@media(prefers-color-scheme:dark){.milestone img{filter:brightness(.86) saturate(.95)}}
+.milestone .m-txt{padding:13px 16px}
+.milestone b{display:block;font-size:1.02rem;font-weight:800}
+.milestone span{font-size:.9rem;color:var(--muted);font-weight:600}
+
+/* ---------- settings row ---------- */
+.opts{display:flex;flex-wrap:wrap;gap:8px}
+.opt{padding:9px 14px;border-radius:999px;border:1px solid var(--border);background:var(--bg);
+  color:var(--text);font-family:inherit;font-size:.9rem;font-weight:700;cursor:pointer;min-height:44px}
+.opt.on{border-color:var(--deep);background:rgba(15,125,125,.13);color:var(--text)}
+.lbl{font-size:.82rem;font-weight:750;color:var(--muted);margin:0 0 7px;
+  text-transform:uppercase;letter-spacing:.06em}
+
+/* ---------- notice ---------- */
+.notice{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  padding:20px;text-align:center}
+.notice .ico{font-size:2.4rem;line-height:1}
+.notice b{display:block;margin:10px 0 6px;font-size:1.1rem;font-weight:800}
+.notice p{margin:0 0 4px;color:var(--muted);font-size:.96rem;font-weight:600}
+.btn{margin-top:14px;padding:13px 20px;border-radius:14px;border:0;cursor:pointer;
+  font-family:inherit;font-size:1rem;font-weight:750;min-height:48px;
+  background:linear-gradient(100deg,var(--warm),var(--glow));color:#2a1206}
+.btn.ghost{background:var(--bg);color:var(--text);border:1px solid var(--border)}
+.foot{margin:22px 4px 0;font-size:.8rem;color:var(--muted);font-weight:600;text-align:center}
+.hide{display:none!important}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="sky" id="sky" aria-hidden="true"></div>
+  <div class="veil" aria-hidden="true"></div>
+  <div class="inner wrap">
+    <h1 id="greet">Stride</h1>
+    <p class="date" id="today-label">&nbsp;</p>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- states other than "working" -->
+  <div id="notice" class="notice hide"></div>
+
+  <!-- main -->
+  <div id="main" class="hide">
+
+    <div class="hero">
+      <div class="ringbox">
+        <svg class="ring" viewBox="0 0 200 200" aria-hidden="true">
+          <circle cx="100" cy="100" r="86" stroke="var(--track)" stroke-width="19"></circle>
+          <circle id="arc" cx="100" cy="100" r="86" stroke="url(#g)" stroke-width="19"
+                  stroke-dasharray="540.35" stroke-dashoffset="540.35"></circle>
+          <circle id="arc2" cx="100" cy="100" r="63" stroke="var(--deep)" stroke-width="7"
+                  stroke-dasharray="395.84" stroke-dashoffset="395.84" opacity="0"></circle>
+          <defs>
+            <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#ffb347"></stop>
+              <stop offset="100%" stop-color="#ff6b4a"></stop>
+            </linearGradient>
+          </defs>
+        </svg>
+        <div class="readout">
+          <div class="count" id="count" role="status" aria-live="polite">0</div>
+          <div class="count-label" id="count-label">steps</div>
+          <div class="goalline" id="goalline">&nbsp;</div>
+        </div>
+      </div>
+      <p class="plain" id="plain">&nbsp;</p>
+      <div class="pct" id="pct">&nbsp;</div>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><b id="s-dist">—</b><span id="s-dist-l">Distance</span></div>
+      <div class="stat"><b id="s-time">—</b><span>Walking time</span></div>
+      <div class="stat" id="s-extra-box"><b id="s-extra">—</b><span id="s-extra-l">Streak</span></div>
+    </div>
+
+    <div class="milestone" id="milestone">
+      <img id="m-img" alt="" src="">
+      <div class="m-txt"><b id="m-title"></b><span id="m-sub"></span></div>
+    </div>
+
+    <section>
+      <h2>Your last 7 days</h2>
+      <div class="card">
+        <div class="week" id="week" role="group" aria-label="Steps for each of the last seven days"></div>
+        <p class="foot" id="week-note" style="margin-top:14px">Tap a day to see it.</p>
+      </div>
+    </section>
+
+    <section>
+      <h2>Daily goal</h2>
+      <div class="card">
+        <div class="goalrow">
+          <button class="step" id="g-down" aria-label="Lower goal by 500 steps">−</button>
+          <div class="goalval" id="g-val">8,000<small>steps a day</small></div>
+          <button class="step" id="g-up" aria-label="Raise goal by 500 steps">+</button>
+        </div>
+        <div class="presets" id="presets"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Make it easier to read</h2>
+      <div class="card">
+        <p class="lbl">Text size</p>
+        <div class="opts" id="sizes"></div>
+        <p class="lbl" style="margin-top:16px">Distance in</p>
+        <div class="opts" id="units"></div>
+      </div>
+    </section>
+
+    <p class="foot" id="src-note">Steps come from your iPhone's motion chip. Nothing leaves your device.</p>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* NOTE: never name a global `history` here — that's window.history and the
+   assignment silently fails. Week data lives in `week` / `archive`. */
+
+var store = window.myllmStorage || {
+  getItem: function(){ return Promise.resolve(null); },
+  setItem: function(){ return Promise.resolve(); }
+};
+function haptic(k){ if(window.myllmHaptic){ try{ myllmHaptic(k||'light'); }catch(e){} } }
+function el(id){ return document.getElementById(id); }
+function fmt(n){ return Math.round(n).toLocaleString(); }
+
+var IMG = "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/stride/";
+
+var PRESETS = [
+  { v:3000,  b:"Gentle",    s:"a short daily walk" },
+  { v:6000,  b:"Steady",    s:"moving most days" },
+  { v:8000,  b:"Active",    s:"a walk plus errands" },
+  { v:10000, b:"Ambitious", s:"the classic target" }
+];
+var SIZES = [ {k:"1",b:"Normal"}, {k:"1.15",b:"Large"}, {k:"1.32",b:"Huge"} ];
+
+var state = {
+  goal: 8000,
+  unit: "km",         // "km" | "mi"
+  scale: "1",
+  week: [],           // [{date, steps, distance, unavailable}]
+  archive: {},        // date -> steps, kept past CoreMotion's 7-day window
+  selected: null,     // date string, or null = today
+  demo: false
+};
+
+/* ---------------- rendering ---------------- */
+
+function dayName(iso, short){
+  // Parse as local noon so a timezone shift can't roll the date back a day.
+  var p = iso.split("-");
+  var d = new Date(+p[0], +p[1]-1, +p[2], 12);
+  return d.toLocaleDateString(undefined, short ? {weekday:"narrow"} : {weekday:"long", day:"numeric", month:"long"});
+}
+function isToday(iso){ return iso === todayISO(); }
+function todayISO(){
+  var d = new Date();
+  return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+}
+
+function current(){
+  var iso = state.selected || todayISO();
+  for (var i=0;i<state.week.length;i++){ if(state.week[i].date === iso) return state.week[i]; }
+  return { date: iso, steps: 0 };
+}
+
+function distanceText(metres, steps){
+  // CoreMotion omits distance on some devices — fall back to a stride estimate
+  // so the card never just reads "—".
+  var m = (metres != null && metres > 0) ? metres : steps * 0.72;
+  if (state.unit === "mi"){
+    var mi = m / 1609.34;
+    return (mi < 10 ? mi.toFixed(1) : Math.round(mi)) + " mi";
+  }
+  var km = m / 1000;
+  return (km < 10 ? km.toFixed(1) : Math.round(km)) + " km";
+}
+
+function render(){
+  var d = current();
+  var steps = d.steps || 0;
+  var goal = state.goal;
+  var pct = goal > 0 ? steps / goal : 0;
+
+  el("count").textContent = fmt(steps);
+  el("count-label").textContent = steps === 1 ? "step" : "steps";
+  el("goalline").textContent = "of " + fmt(goal) + " goal";
+
+  // Ring: full circle at goal, inner ring tracks anything beyond it.
+  var C = 540.35, C2 = 395.84;
+  var p1 = Math.max(0, Math.min(1, pct));
+  el("arc").setAttribute("stroke-dashoffset", String(C - C * p1));
+  var over = Math.max(0, Math.min(1, pct - 1));
+  el("arc2").setAttribute("opacity", over > 0 ? "1" : "0");
+  el("arc2").setAttribute("stroke-dashoffset", String(C2 - C2 * over));
+
+  var pctEl = el("pct");
+  var whole = Math.round(pct * 100);
+  if (pct >= 1){
+    pctEl.textContent = pct >= 2 ? "Goal smashed — " + whole + "%" : "Goal reached — " + whole + "%";
+    pctEl.className = "pct done";
+  } else {
+    pctEl.textContent = whole + "% of your goal";
+    pctEl.className = "pct";
+  }
+
+  // Plain-language line — the accessible reading of the ring.
+  var left = Math.max(0, goal - steps);
+  var who = isToday(d.date) ? "You've walked" : dayName(d.date) + " —";
+  var line = who + " " + fmt(steps) + (steps === 1 ? " step" : " steps") +
+             ", about " + distanceText(d.distance, steps) + ".";
+  if (left > 0 && isToday(d.date)) line += " " + fmt(left) + " to go — roughly " + Math.max(1, Math.round(left/100)) + " min of walking.";
+  else if (left > 0) line += " That was " + fmt(left) + " short of goal.";
+  else line += " Goal reached.";
+  el("plain").textContent = line;
+
+  el("s-dist").textContent = distanceText(d.distance, steps);
+  el("s-dist-l").textContent = "Distance" + (d.distance == null || d.distance <= 0 ? " (est.)" : "");
+  el("s-time").textContent = Math.round(steps/100) + " min";
+
+  var st = streak();
+  el("s-extra").textContent = st > 0 ? st + (st === 1 ? " day" : " days") : "—";
+  el("s-extra-l").textContent = st > 0 ? "Goal streak" : "Streak";
+
+  el("today-label").textContent = isToday(d.date)
+    ? dayName(todayISO()) : dayName(d.date) + " · tap today to go back";
+
+  renderWeek();
+  renderMilestone(pct, st);
+}
+
+function renderWeek(){
+  var box = el("week");
+  var max = Math.max(state.goal, 1);
+  for (var i=0;i<state.week.length;i++) max = Math.max(max, state.week[i].steps || 0);
+
+  box.innerHTML = "";
+  var mark = document.createElement("div");
+  mark.className = "goalmark";
+  mark.style.bottom = "calc(" + (state.goal / max * 100) + "% * 0.82 + 30px)";
+  mark.innerHTML = "<i>goal</i>";
+  box.appendChild(mark);
+
+  var selIso = state.selected || todayISO();
+  state.week.forEach(function(d){
+    var steps = d.steps || 0;
+    var b = document.createElement("button");
+    b.className = "day" + (steps >= state.goal ? " hit" : "") + (d.date === selIso ? " sel" : "");
+    b.setAttribute("aria-label", dayName(d.date) + ": " + fmt(steps) + " steps" +
+      (steps >= state.goal ? ", goal reached" : ""));
+    b.setAttribute("aria-pressed", d.date === selIso ? "true" : "false");
+
+    var bar = document.createElement("div");
+    bar.className = "bar";
+    bar.style.height = "calc(" + Math.max(2, steps / max * 100) + "% * 0.82)";
+    var lbl = document.createElement("div"); lbl.className = "dl";
+    lbl.textContent = isToday(d.date) ? "Today" : dayName(d.date, true);
+    var val = document.createElement("div"); val.className = "dv";
+    val.textContent = steps >= 1000 ? (steps/1000).toFixed(1).replace(/\.0$/,"") + "k" : String(steps);
+
+    b.appendChild(bar); b.appendChild(lbl); b.appendChild(val);
+    b.addEventListener("click", function(){
+      state.selected = (state.selected === d.date) ? null : d.date;
+      haptic("light"); render();
+    });
+    box.appendChild(b);
+  });
+}
+
+/* Consecutive days up to today that met goal. Uses the archive so it survives
+   past CoreMotion's 7-day window. */
+function streak(){
+  var n = 0, d = new Date();
+  for (var i=0;i<400;i++){
+    var iso = d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+    var steps = state.archive[iso];
+    if (steps == null){
+      for (var j=0;j<state.week.length;j++) if (state.week[j].date === iso) steps = state.week[j].steps;
+    }
+    if (steps == null) break;
+    if (steps >= state.goal) n++;
+    // Today not yet at goal isn't a broken streak — you've still got the day.
+    else if (i > 0) break;
+    d.setDate(d.getDate() - 1);
+  }
+  return n;
+}
+
+var MILESTONES = [
+  { at:2, img:"double.jpg", t:"Double goal!", s:"Twice your target in one day. That's a proper hike." },
+  { at:1, img:"goal.jpg",   t:"Goal reached", s:"Nice work — you hit your daily target." }
+];
+function renderMilestone(pct, st){
+  var box = el("milestone"), m = null;
+  for (var i=0;i<MILESTONES.length;i++){ if (pct >= MILESTONES[i].at){ m = MILESTONES[i]; break; } }
+  if (!m && st >= 3) m = { img:"streak.jpg", t:st + "-day streak", s:"You've hit your goal " + st + " days running." };
+  if (!m){ box.style.display = "none"; return; }
+  var img = el("m-img");
+  // Offline (or a slow first load) must not leave a broken-image icon sitting
+  // above the text — drop the picture and keep the message.
+  img.onerror = function(){ img.style.display = "none"; };
+  img.onload = function(){ img.style.display = "block"; };
+  img.style.display = "none";
+  img.src = IMG + m.img;
+  img.alt = "";
+  el("m-title").textContent = m.t;
+  el("m-sub").textContent = m.s;
+  box.style.display = "block";
+}
+
+/* ---------------- controls ---------------- */
+
+function buildControls(){
+  var p = el("presets");
+  p.innerHTML = "";
+  PRESETS.forEach(function(x){
+    var b = document.createElement("button");
+    b.className = "preset" + (state.goal === x.v ? " on" : "");
+    // Name on its own line — "Ambitious · 10,000" wraps mid-title on a narrow phone.
+    b.innerHTML = "<b>" + x.b + "</b><span>" + fmt(x.v) + " · " + x.s + "</span>";
+    b.addEventListener("click", function(){ setGoal(x.v); });
+    p.appendChild(b);
+  });
+
+  var s = el("sizes"); s.innerHTML = "";
+  SIZES.forEach(function(x){
+    var b = document.createElement("button");
+    b.className = "opt" + (state.scale === x.k ? " on" : "");
+    b.textContent = x.b;
+    b.addEventListener("click", function(){
+      state.scale = x.k;
+      document.documentElement.style.setProperty("--scale", x.k);
+      store.setItem("scale", x.k); haptic("light"); buildControls();
+    });
+    s.appendChild(b);
+  });
+
+  var u = el("units"); u.innerHTML = "";
+  [{k:"km",b:"Kilometres"},{k:"mi",b:"Miles"}].forEach(function(x){
+    var b = document.createElement("button");
+    b.className = "opt" + (state.unit === x.k ? " on" : "");
+    b.textContent = x.b;
+    b.addEventListener("click", function(){
+      state.unit = x.k; store.setItem("unit", x.k); haptic("light"); buildControls(); render();
+    });
+    u.appendChild(b);
+  });
+}
+
+function setGoal(v){
+  state.goal = Math.max(500, Math.min(40000, Math.round(v/500)*500));
+  el("g-val").innerHTML = fmt(state.goal) + "<small>steps a day</small>";
+  store.setItem("goal", String(state.goal));
+  haptic("light"); buildControls(); render();
+}
+
+/* ---------------- data ---------------- */
+
+function mergeArchive(week){
+  var changed = false;
+  week.forEach(function(d){
+    if (d.unavailable) return;
+    if (state.archive[d.date] !== d.steps){ state.archive[d.date] = d.steps; changed = true; }
+  });
+  // Keep it small: a rolling year is plenty for streaks and bests.
+  var keys = Object.keys(state.archive).sort();
+  while (keys.length > 400){ delete state.archive[keys.shift()]; changed = true; }
+  if (changed) store.setItem("archive", JSON.stringify(state.archive));
+}
+
+function showNotice(icon, title, body, actionLabel, action){
+  var n = el("notice");
+  n.innerHTML = "";
+  var i = document.createElement("div"); i.className = "ico"; i.textContent = icon;
+  var b = document.createElement("b"); b.textContent = title;
+  var p = document.createElement("p"); p.textContent = body;
+  n.appendChild(i); n.appendChild(b); n.appendChild(p);
+  if (actionLabel){
+    var btn = document.createElement("button");
+    btn.className = "btn ghost"; btn.textContent = actionLabel;
+    btn.addEventListener("click", action);
+    n.appendChild(btn);
+  }
+  n.classList.remove("hide");
+  el("main").classList.add("hide");
+}
+
+function sampleWeek(){
+  // Deterministic, plausible-looking numbers for previewing the design.
+  var base = [6200, 9400, 4100, 11200, 7300, 8600, 5200], out = [];
+  var d = new Date(); d.setDate(d.getDate() - 6);
+  for (var i=0;i<7;i++){
+    out.push({
+      date: d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0"),
+      steps: base[i], distance: base[i] * 0.72
+    });
+    d.setDate(d.getDate() + 1);
+  }
+  return out;
+}
+
+function startDemo(){
+  state.demo = true;
+  state.week = sampleWeek();
+  el("notice").classList.add("hide");
+  el("main").classList.remove("hide");
+  el("src-note").textContent = "Sample data — a preview of the design, not your real steps.";
+  buildControls(); render();
+}
+
+function go(){
+  el("main").classList.remove("hide");
+  el("notice").classList.add("hide");
+  buildControls();
+  render();
+
+  myllmSteps.history(7).then(function(week){
+    state.week = week || [];
+    mergeArchive(state.week);
+    render();
+    // Live ticking while you walk with the app open.
+    return myllmSteps.watch(function(sample){
+      var iso = todayISO();
+      for (var i=0;i<state.week.length;i++){
+        if (state.week[i].date === iso){
+          state.week[i].steps = sample.steps;
+          if (sample.distance != null) state.week[i].distance = sample.distance;
+          state.archive[iso] = sample.steps;
+          render();
+          return;
+        }
+      }
+    });
+  }).catch(function(e){
+    showNotice("🚶", "Can't read your steps", e && e.message ? e.message : String(e),
+               "Preview with sample data", startDemo);
+  });
+}
+
+function boot(){
+  var hour = new Date().getHours();
+  el("greet").textContent = hour < 12 ? "Good morning" : (hour < 18 ? "Good afternoon" : "Good evening");
+  el("today-label").textContent = dayName(todayISO());
+  el("sky").style.backgroundImage = "url('" + IMG + "sky.jpg')";
+
+  el("g-up").addEventListener("click", function(){ setGoal(state.goal + 500); });
+  el("g-down").addEventListener("click", function(){ setGoal(state.goal - 500); });
+
+  Promise.all([
+    store.getItem("goal"), store.getItem("unit"), store.getItem("scale"), store.getItem("archive")
+  ]).then(function(v){
+    if (v[0]) state.goal = parseInt(v[0], 10) || 8000;
+    if (v[1]) state.unit = v[1];
+    if (v[2]){ state.scale = v[2]; document.documentElement.style.setProperty("--scale", v[2]); }
+    if (v[3]){ try { state.archive = JSON.parse(v[3]) || {}; } catch(e){ state.archive = {}; } }
+    el("g-val").innerHTML = fmt(state.goal) + "<small>steps a day</small>";
+
+    if (!window.myllmSteps){
+      // Store-neutral wording: apps.json is shared with the Android client.
+      showNotice("⏳", "Steps need a newer MyLLM",
+        "This app reads your step count through MyLLM. Update MyLLM to the latest version and it'll light up.",
+        "Preview with sample data", startDemo);
+      return;
+    }
+    myllmSteps.available().then(function(a){
+      if (!a.steps){
+        showNotice("📵", "No step counter",
+          "This device doesn't have the motion chip that counts steps.",
+          "Preview with sample data", startDemo);
+      } else if (!a.allowed){
+        showNotice("🔒", "Steps are switched off",
+          "Turn on “Allow apps to read your steps” in MyLLM Settings → MyLLMos Apps, then reopen Stride.",
+          "Preview with sample data", startDemo);
+      } else {
+        go();
+      }
+    }).catch(function(){ go(); });
+  });
+}
+
+boot();
+</script>
+</body>
+</html>
