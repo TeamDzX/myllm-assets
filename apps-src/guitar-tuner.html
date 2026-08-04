@@ -47,6 +47,14 @@
   }
   .needle.good{ background:#30d158; }
   .hub{ position:absolute; left:50%; bottom:-9px; width:18px; height:18px; margin-left:-9px; border-radius:50%; background:var(--myllm-accent,#0a84ff); }
+  /* Input level, shown once the mic is live. Without it a mic delivering
+     too-quiet audio looked identical to a working one: no needle, no warning.
+     The notch marks the level the pitch detector needs to see. */
+  .levelwrap{ display:none; position:relative; height:6px; border-radius:3px; background:var(--myllm-border,#e3e3e8); overflow:hidden; margin:10px 2px 8px; }
+  .levelwrap.on{ display:block; }
+  .levelbar{ height:100%; width:0%; border-radius:3px; background:var(--myllm-accent,#0a84ff); transition:width .08s linear; }
+  .levelbar.faint{ background:#ff9f0a; }
+  .levelgate{ position:absolute; top:0; bottom:0; left:22%; width:2px; background:var(--myllm-muted,#8a8a8e); opacity:.55; }
   .hub.good{ background:#30d158; }
 
   .readout{ text-align:center; margin-bottom:6px; }
@@ -134,6 +142,7 @@
       <div class="cents" id="cents"></div>
       <div class="freq" id="freq"></div>
     </div>
+    <div class="levelwrap" id="levelwrap"><div class="levelbar" id="levelbar"></div><div class="levelgate"></div></div>
     <div class="listenmsg" id="micmsg">The tuner listens through your microphone.</div>
     <button class="micbtn" id="micbtn" onclick="startMic()">Start tuning</button>
   </div>
@@ -193,6 +202,7 @@ function octaveOf(m){ return Math.floor(m / 12) - 1; }
 /* ================= TUNER ================= */
 var actx = null, analyser = null, micStream = null, rafId = null;
 var buf = null;
+var micGain = null;
 var recent = [];          /* recent detected freqs for median smoothing */
 var lockGood = false;
 
@@ -226,11 +236,20 @@ function startMic(){
     var src = ctx.createMediaStreamSource(s);
     analyser = ctx.createAnalyser();
     analyser.fftSize = 4096;   /* ~93ms window: low-E needs the longer view for cent accuracy */
-    src.connect(analyser);
+    /* Makeup gain between source and analyser. iOS hands us a very quiet stream
+       when autoGainControl is off (which we want off — AGC pumps the level and
+       ruins cent accuracy), quiet enough that the detector's gate never opened
+       and nothing moved. This restores level for ANALYSIS only; it is never
+       routed to the speakers, so it cannot feed back. */
+    micGain = ctx.createGain();
+    micGain.gain.value = 1;
+    src.connect(micGain);
+    micGain.connect(analyser);
     buf = new Float32Array(analyser.fftSize);
     el("micbtn").style.display = "none";
     el("micmsg").textContent = "Play a string…";
-    deadFrames = 0; liveSeen = false;
+    el("levelwrap").className = "levelwrap on";
+    deadFrames = 0; faintFrames = 0; liveSeen = false; autoGain = 1;
     loop();
   })
   .catch(function(err){
@@ -239,20 +258,50 @@ function startMic(){
   });
 }
 
-/* Some builds grant the mic but the audio session can't record — the stream
-   then delivers pure silence. Detect that and say so honestly instead of
-   sitting on "Play a string…" forever. */
-var deadFrames = 0, liveSeen = false;
-function watchSignal(maxAbs){
+/* Three states, not two. The old code only distinguished "pure silence" from
+   "fine", so a stream that was audible-but-too-quiet fell between them: the
+   detector's gate (rms 0.008) never opened and the silence warning (1e-4) never
+   fired, leaving "Play a string…" on screen forever with a dead needle. That
+   band is now its own state, with makeup gain applied to try to rescue it. */
+var deadFrames = 0, faintFrames = 0, liveSeen = false, autoGain = 1;
+var GATE = 0.0015;            /* detector floor, post-gain (was 0.008) */
+var MAX_GAIN = 24;
+
+function watchSignal(maxAbs, rms){
+  /* adapt gain toward putting a normal playing level near 0.15 rms */
+  if (rms > 1e-5 && rms < 0.05 && autoGain < MAX_GAIN){
+    autoGain = Math.min(MAX_GAIN, autoGain * 1.06);
+    if (micGain) micGain.gain.value = autoGain;
+  } else if (rms > 0.35 && autoGain > 1){
+    autoGain = Math.max(1, autoGain * 0.9);
+    if (micGain) micGain.gain.value = autoGain;
+  }
+
+  /* level meter: log scale, gate notch sits at 22% (see .levelgate) */
+  var bar = el("levelbar");
+  if (bar){
+    var pct = maxAbs <= 0 ? 0 : Math.max(0, Math.min(100, (20*Math.log(maxAbs)/Math.LN10 + 60) / 60 * 100));
+    bar.style.width = pct.toFixed(1) + "%";
+    bar.className = "levelbar" + (rms < GATE ? " faint" : "");
+  }
+
   if (liveSeen) return;
   if (maxAbs < 1e-4){
+    faintFrames = 0;
     deadFrames++;
     if (deadFrames === 180){   /* ~6s of true zero signal */
-      el("micmsg").textContent = "The mic connected but no sound is reaching it — an app update fixing this is on the way. Meanwhile, tune by ear with the reference tones below.";
+      el("micmsg").textContent = "The mic connected but no sound is reaching it at all. Check Microphone under the springboard's gear menu → “Allow apps to use”, then reopen — or tune by ear with the reference tones below.";
+    }
+  } else if (rms < GATE){
+    deadFrames = 0;
+    faintFrames++;
+    if (faintFrames === 240){  /* ~8s of audible-but-unusable input */
+      el("micmsg").textContent = "I can hear something, but it's far too quiet to read a pitch from. Move the phone closer to the strings and play a single note firmly.";
     }
   } else {
     liveSeen = true;
-    if (deadFrames >= 180) el("micmsg").textContent = "Play a string…";
+    if (deadFrames >= 180 || faintFrames >= 240) el("micmsg").textContent = "Play a string…";
+    deadFrames = 0; faintFrames = 0;
   }
 }
 
@@ -261,7 +310,7 @@ function autoCorrelate(b, sampleRate){
   var SIZE = b.length, rms = 0, i, j;
   for (i = 0; i < SIZE; i++) rms += b[i]*b[i];
   rms = Math.sqrt(rms / SIZE);
-  if (rms < 0.008) return -1;
+  if (rms < GATE) return -1;
 
   var r1 = 0, r2 = SIZE - 1, thres = 0.2;
   for (i = 0; i < SIZE/2; i++) if (Math.abs(b[i]) < thres){ r1 = i; break; }
@@ -303,9 +352,10 @@ function loop(){
   frameFlip = !frameFlip;
   if (!frameFlip) return;   /* detect at ~30fps — plenty for a needle, half the CPU */
   analyser.getFloatTimeDomainData(buf);
-  var maxAbs = 0;
-  for (var k = 0; k < buf.length; k += 8){ var av = Math.abs(buf[k]); if (av > maxAbs) maxAbs = av; }
-  watchSignal(maxAbs);
+  var maxAbs = 0, sq = 0, n = 0;
+  for (var k = 0; k < buf.length; k += 8){ var av = Math.abs(buf[k]); if (av > maxAbs) maxAbs = av; sq += buf[k]*buf[k]; n++; }
+  var rms = Math.sqrt(sq / (n || 1));
+  watchSignal(maxAbs, rms);
   var f = autoCorrelate(buf, actx.sampleRate);
   if (f > 55 && f < 1600){
     recent.push(f);
