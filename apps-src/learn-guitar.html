@@ -1,0 +1,596 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Learn Guitar</title>
+<style>
+  :root { color-scheme: light dark; }
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body{
+    font-family:var(--myllm-font,-apple-system,system-ui,sans-serif);
+    background:var(--myllm-bg,#f2f2f7);
+    color:var(--myllm-text,#111);
+    max-width:820px; margin:0 auto;
+    padding:16px 16px calc(40px + env(safe-area-inset-bottom));
+  }
+  h1{ font-size:22px; font-weight:800; letter-spacing:-0.02em; margin:6px 2px 14px; }
+
+  .seg{ display:flex; background:var(--myllm-surface,#fff); border:1px solid var(--myllm-border,#e3e3e8); border-radius:14px; padding:3px; margin-bottom:14px; gap:2px; }
+  .seg button{ flex:1; border:none; background:none; color:var(--myllm-muted,#8a8a8e); border-radius:11px; padding:9px 4px; font-size:13.5px; font-weight:700; font-family:inherit; }
+  .seg button.on{ background:var(--myllm-accent,#0a84ff); color:#fff; }
+
+  .card{ background:var(--myllm-surface,#fff); border:1px solid var(--myllm-border,#e3e3e8); border-radius:16px; padding:14px; margin-bottom:12px; }
+  .card h2{ font-size:16px; font-weight:750; margin-bottom:4px; }
+  .card p.lede{ font-size:13.5px; color:var(--myllm-muted,#8a8a8e); line-height:1.5; }
+  label.cap{ display:block; font-size:11.5px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; color:var(--myllm-muted,#8a8a8e); margin:0 0 8px; }
+
+  .btn{ border:none; border-radius:13px; padding:13px 16px; font-size:15px; font-weight:750; background:var(--myllm-accent,#0a84ff); color:#fff; font-family:inherit; }
+  .btn.ghost{ background:var(--myllm-bg,#f2f2f7); color:var(--myllm-text,#111); border:1px solid var(--myllm-border,#e3e3e8); }
+  .btn.wide{ display:block; width:100%; margin-top:10px; }
+  .btn.sm{ padding:9px 13px; font-size:13.5px; border-radius:11px; }
+  .btn[disabled]{ opacity:.45; }
+
+  /* ---- chord diagram grid ---- */
+  .chordgrid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(96px,1fr)); gap:10px; }
+  .chordcell{ background:var(--myllm-bg,#f2f2f7); border:1px solid var(--myllm-border,#e3e3e8); border-radius:14px; padding:8px 4px 6px; text-align:center; font-family:inherit; color:var(--myllm-text,#111); }
+  .chordcell.on{ border-color:var(--myllm-accent,#0a84ff); background:rgba(10,132,255,.10); }
+  .chordcell b{ display:block; font-size:14.5px; font-weight:800; margin-bottom:2px; }
+  .chordcell small{ display:block; font-size:10px; color:var(--myllm-muted,#8a8a8e); margin-top:3px; }
+  .cats{ display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px; }
+  .cat{ border:1px solid var(--myllm-border,#e3e3e8); background:var(--myllm-bg,#f2f2f7); color:var(--myllm-text,#111); border-radius:99px; padding:7px 12px; font-size:12.5px; font-weight:700; font-family:inherit; }
+  .cat.on{ background:var(--myllm-accent,#0a84ff); border-color:transparent; color:#fff; }
+
+  /* ---- big detail view ---- */
+  .detail{ display:flex; gap:14px; align-items:center; flex-wrap:wrap; }
+  .detail .meta{ flex:1 1 150px; min-width:0; }
+  .detail .name{ font-size:34px; font-weight:800; letter-spacing:-0.02em; line-height:1.1; }
+  .detail .sub{ font-size:13px; color:var(--myllm-muted,#8a8a8e); margin-top:3px; line-height:1.5; }
+  .tips{ font-size:13px; line-height:1.55; margin-top:10px; }
+  .tips li{ margin-left:18px; margin-bottom:4px; }
+
+  /* ---- changes drill ---- */
+  .pair{ display:flex; gap:10px; align-items:center; justify-content:center; margin:6px 0 4px; }
+  .pair select{ flex:1 1 0; min-width:0; font-size:16px; font-weight:700; padding:10px; border-radius:12px; border:1px solid var(--myllm-border,#e3e3e8); background:var(--myllm-bg,#f2f2f7); color:var(--myllm-text,#111); font-family:inherit; }
+  .pair span{ flex:0 0 auto; color:var(--myllm-muted,#8a8a8e); font-size:18px; }
+  .bigcount{ text-align:center; font-size:64px; font-weight:800; letter-spacing:-0.03em; line-height:1.05; }
+  .bigcount small{ display:block; font-size:13px; font-weight:650; color:var(--myllm-muted,#8a8a8e); letter-spacing:0; margin-top:2px; }
+  .timer{ text-align:center; font-size:15px; font-weight:700; color:var(--myllm-muted,#8a8a8e); margin-bottom:6px; }
+  .tapzone{ width:100%; border:2px dashed var(--myllm-border,#c9c9cf); border-radius:18px; padding:22px 12px; background:var(--myllm-bg,#f2f2f7); color:var(--myllm-text,#111); font-family:inherit; font-size:15px; font-weight:750; margin-top:8px; }
+  .tapzone.live{ border-style:solid; border-color:var(--myllm-accent,#0a84ff); background:rgba(10,132,255,.08); }
+  .best{ text-align:center; font-size:12.5px; color:var(--myllm-muted,#8a8a8e); margin-top:8px; }
+
+  /* ---- strumming ---- */
+  .strumrow{ display:flex; gap:6px; justify-content:center; margin:14px 0 8px; flex-wrap:wrap; }
+  .beat{ width:38px; height:52px; border-radius:11px; border:1px solid var(--myllm-border,#e3e3e8); background:var(--myllm-bg,#f2f2f7); display:flex; align-items:center; justify-content:center; font-size:19px; font-weight:800; color:var(--myllm-text,#111); }
+  .beat.rest{ color:var(--myllm-border,#c9c9cf); }
+  .beat.hit{ background:var(--myllm-accent,#0a84ff); border-color:transparent; color:#fff; transform:scale(1.08); }
+  .row{ display:flex; gap:10px; align-items:center; }
+  .row .grow{ flex:1 1 0; min-width:0; }
+  input[type=range]{ width:100%; accent-color:var(--myllm-accent,#0a84ff); }
+
+  /* ---- songs ---- */
+  .bars{ display:grid; grid-template-columns:repeat(4,1fr); gap:6px; margin-top:10px; }
+  .bar{ background:var(--myllm-bg,#f2f2f7); border:1px solid var(--myllm-border,#e3e3e8); border-radius:10px; padding:10px 4px; text-align:center; font-size:14px; font-weight:800; }
+  .bar.on{ background:var(--myllm-accent,#0a84ff); border-color:transparent; color:#fff; }
+  .trad{ font-size:11.5px; color:var(--myllm-muted,#8a8a8e); margin-top:8px; line-height:1.5; }
+
+  /* ---- learn path ---- */
+  .step{ display:flex; gap:11px; align-items:flex-start; padding:11px 0; border-bottom:1px solid var(--myllm-border,#e3e3e8); }
+  .step:last-child{ border-bottom:none; }
+  .step .tick{ flex:0 0 auto; width:26px; height:26px; border-radius:50%; border:2px solid var(--myllm-border,#c9c9cf); display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:800; color:var(--myllm-muted,#8a8a8e); background:none; font-family:inherit; }
+  .step.done .tick{ background:#30d158; border-color:#30d158; color:#fff; }
+  .step .body{ flex:1 1 0; min-width:0; }
+  .step .body b{ font-size:14.5px; font-weight:750; }
+  .step .body small{ display:block; font-size:12.5px; color:var(--myllm-muted,#8a8a8e); margin-top:2px; line-height:1.5; }
+  .step .body .go{ margin-top:7px; }
+  .prog{ height:7px; border-radius:4px; background:var(--myllm-border,#e3e3e8); overflow:hidden; margin:10px 0 2px; }
+  .prog i{ display:block; height:100%; background:#30d158; width:0%; transition:width .3s; }
+</style>
+</head>
+<body>
+
+<h1>🎸 Learn Guitar</h1>
+
+<div class="seg">
+  <button id="tabLearn" class="on" onclick="showTab('learn')">Learn</button>
+  <button id="tabChords" onclick="showTab('chords')">Chords</button>
+  <button id="tabChanges" onclick="showTab('changes')">Changes</button>
+  <button id="tabStrum" onclick="showTab('strum')">Strum</button>
+  <button id="tabSongs" onclick="showTab('songs')">Songs</button>
+</div>
+
+<!-- ======================= LEARN ======================= -->
+<div id="paneLearn">
+  <div class="card">
+    <h2>Your path</h2>
+    <p class="lede">Work down the list. Each step is small on purpose — the aim is clean changes, not speed.</p>
+    <div class="prog"><i id="progBar"></i></div>
+    <div class="best" id="progTxt"></div>
+  </div>
+  <div class="card" id="steps"></div>
+  <div class="card">
+    <h2>How to hold it</h2>
+    <p class="lede">Thumb behind the neck, roughly opposite your middle finger. Press just behind the fret, not on top of it. Curl your fingers so the tips land straight down — flat fingers mute the strings next door, which is the usual reason a chord buzzes.</p>
+  </div>
+</div>
+
+<!-- ======================= CHORDS ======================= -->
+<div id="paneChords" style="display:none">
+  <div class="card">
+    <div class="detail">
+      <div id="bigChord"></div>
+      <div class="meta">
+        <div class="name" id="cName">—</div>
+        <div class="sub" id="cSub"></div>
+        <button class="btn sm" style="margin-top:9px" onclick="strumCurrent()">▶︎ Hear it</button>
+      </div>
+    </div>
+    <ul class="tips" id="cTips"></ul>
+  </div>
+  <div class="card">
+    <div class="cats" id="cats"></div>
+    <div class="chordgrid" id="grid"></div>
+  </div>
+</div>
+
+<!-- ======================= CHANGES ======================= -->
+<div id="paneChanges" style="display:none">
+  <div class="card">
+    <h2>One-minute changes</h2>
+    <p class="lede">The real test of a beginner guitarist isn't knowing shapes, it's swapping between them. Pick two chords, start the clock, and tap every time you land the change cleanly. Both chords must ring — no muted strings.</p>
+    <div class="pair">
+      <select id="chA"></select><span>↔</span><select id="chB"></select>
+    </div>
+    <div class="row" style="gap:8px;margin-top:8px">
+      <button class="btn ghost sm grow" onclick="hearPair()">▶︎ Hear both</button>
+      <button class="btn sm grow" id="startDrill" onclick="toggleDrill()">Start 60s</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="timer" id="drillTime">60s</div>
+    <div class="bigcount" id="drillCount">0<small>changes</small></div>
+    <button class="tapzone" id="tapZone" onclick="tapChange()">Tap here on every change</button>
+    <div class="best" id="drillBest"></div>
+  </div>
+  <div class="card">
+    <p class="lede"><b>What's a good score?</b> Around 20 in a minute means the shape is becoming automatic. Under 10 is completely normal in your first weeks — the fix is short sessions, often, not long ones.</p>
+  </div>
+</div>
+
+<!-- ======================= STRUM ======================= -->
+<div id="paneStrum" style="display:none">
+  <div class="card">
+    <h2>Strumming patterns</h2>
+    <p class="lede">Keep your hand moving down-up all the way through, even on the beats you don't hit. That steady motion is what keeps time — the missed strokes are just your hand passing the strings.</p>
+    <div class="cats" id="patCats"></div>
+    <div class="strumrow" id="strumRow"></div>
+    <div class="row" style="margin-top:6px">
+      <label class="cap" style="margin:0;flex:0 0 auto">Tempo</label>
+      <input type="range" id="bpm" min="50" max="140" value="70" oninput="setBpm(this.value)">
+      <b id="bpmTxt" style="flex:0 0 auto;font-size:13px;min-width:58px;text-align:right">70 BPM</b>
+    </div>
+    <div class="row" style="gap:8px;margin-top:10px">
+      <select id="strumChord" class="grow" style="font-size:15px;padding:10px;border-radius:12px;border:1px solid var(--myllm-border,#e3e3e8);background:var(--myllm-bg,#f2f2f7);color:var(--myllm-text,#111);font-family:inherit"></select>
+      <button class="btn sm" id="strumBtn" onclick="toggleStrum()">Play</button>
+    </div>
+  </div>
+</div>
+
+<!-- ======================= SONGS ======================= -->
+<div id="paneSongs" style="display:none">
+  <div class="card">
+    <h2>Play something real</h2>
+    <p class="lede">Four beats per box. Change chord when the highlight moves. Start slow enough that the changes are clean, then nudge the tempo up.</p>
+    <div class="cats" id="songCats"></div>
+    <div class="best" id="songNeeds" style="text-align:left;margin-top:2px"></div>
+    <div class="bars" id="songBars"></div>
+    <div class="row" style="gap:8px;margin-top:12px">
+      <input type="range" id="songBpm" min="40" max="120" value="60" oninput="setSongBpm(this.value)" class="grow">
+      <b id="songBpmTxt" style="flex:0 0 auto;font-size:13px;min-width:58px;text-align:right">60 BPM</b>
+    </div>
+    <button class="btn wide" id="songBtn" onclick="toggleSong()">Play along</button>
+    <div class="trad" id="songNote"></div>
+  </div>
+</div>
+
+<script>
+/* ===================== helpers ===================== */
+function el(id){ return document.getElementById(id); }
+function haptic(k){ if(window.myllmHaptic){ try{ myllmHaptic(k||'light'); }catch(_){} } }
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+var store = {
+  set: async function(k,v){
+    try{ if(window.myllmStorage){ await myllmStorage.setItem(k,v); return; } }catch(e){}
+    try{ localStorage.setItem(k,v); }catch(e){}
+  },
+  get: async function(k){
+    try{ if(window.myllmStorage){ var v = await myllmStorage.getItem(k); if(v!=null) return v; } }catch(e){}
+    try{ return localStorage.getItem(k); }catch(e){ return null; }
+  }
+};
+
+/* ===================== chord data =====================
+   frets are low-E first; -1 = don't play, 0 = open string.
+   fingers: 1 index … 4 little, 0 = open/none. */
+var OPEN_MIDI = [40,45,50,55,59,64];   /* E2 A2 D3 G3 B3 E4 */
+
+var CHORDS = [
+  {n:"Em",  cat:"Minors",  frets:[0,2,2,0,0,0],     fing:[0,2,3,0,0,0], tip:"Two fingers, nothing muted — the friendliest chord on the guitar."},
+  {n:"Am",  cat:"Minors",  frets:[-1,0,2,2,1,0],    fing:[0,0,2,3,1,0], tip:"Same shape as E, moved across one string. Don't play the low E."},
+  {n:"Dm",  cat:"Minors",  frets:[-1,-1,0,2,3,1],   fing:[0,0,0,2,3,1], tip:"A tight little triangle. Only the thin four strings."},
+  {n:"E",   cat:"Majors",  frets:[0,2,2,1,0,0],     fing:[0,2,3,1,0,0], tip:"Em plus one finger. Big and full — all six strings ring."},
+  {n:"A",   cat:"Majors",  frets:[-1,0,2,2,2,0],    fing:[0,0,1,2,3,0], tip:"Three fingers squeezed into one fret. Roll them slightly if they won't fit."},
+  {n:"D",   cat:"Majors",  frets:[-1,-1,0,2,3,2],   fing:[0,0,0,1,3,2], tip:"Thin strings only. Keep your thumb low so your fingers arch."},
+  {n:"G",   cat:"Majors",  frets:[3,2,0,0,0,3],     fing:[2,1,0,0,0,3], tip:"A wide stretch at first. Use fingers 2-1-3 so G to C is an easy move later."},
+  {n:"C",   cat:"Majors",  frets:[-1,3,2,0,1,0],    fing:[0,3,2,0,1,0], tip:"A diagonal line. Keep the tips upright or the open strings choke."},
+  {n:"E7",  cat:"Sevenths",frets:[0,2,0,1,0,0],     fing:[0,2,0,1,0,0], tip:"E with a finger lifted. Instantly bluesy."},
+  {n:"A7",  cat:"Sevenths",frets:[-1,0,2,0,2,0],    fing:[0,0,2,0,3,0], tip:"Easier than A and sounds restless — it wants to move to D."},
+  {n:"D7",  cat:"Sevenths",frets:[-1,-1,0,2,1,2],   fing:[0,0,0,2,1,3], tip:"The classic turnaround chord at the end of a blues line."},
+  {n:"G7",  cat:"Sevenths",frets:[3,2,0,0,0,1],     fing:[3,2,0,0,0,1], tip:"G with the little finger swapped for the index on the thin string."},
+  {n:"C7",  cat:"Sevenths",frets:[-1,3,2,3,1,0],    fing:[0,3,2,4,1,0], tip:"C plus the little finger. Needed for a blues in C or F."},
+  {n:"B7",  cat:"Sevenths",frets:[-1,2,1,2,0,2],    fing:[0,2,1,3,0,4], tip:"Four fingers and awkward, but it's the chord that finishes an E blues."},
+  {n:"Am7", cat:"Sevenths",frets:[-1,0,2,0,1,0],    fing:[0,0,2,0,1,0], tip:"Am with one finger lifted. Soft and open."},
+  {n:"Em7", cat:"Sevenths",frets:[0,2,2,0,3,0],     fing:[0,1,2,0,3,0], tip:"Em with the little finger added. Drop it for plain Em any time."},
+  {n:"Dm7", cat:"Sevenths",frets:[-1,-1,0,2,1,1],   fing:[0,0,0,2,1,1], tip:"One finger flattened across the top two strings — a gentle first barre."},
+  {n:"Fmaj7",cat:"Majors", frets:[-1,-1,3,2,1,0],   fing:[0,0,3,2,1,0], tip:"Use this wherever F is asked for until the barre is ready."},
+  {n:"F",   cat:"Barre",   frets:[1,3,3,2,1,1],     fing:[1,3,4,2,1,1], barre:{fret:1,from:0,to:5}, tip:"The wall every beginner hits. Index bar flat, thumb low and centred. Weeks, not days."},
+  {n:"Bm",  cat:"Barre",   frets:[-1,2,4,4,3,2],    fing:[0,1,3,4,2,1], barre:{fret:2,from:1,to:5}, tip:"The Am shape with a bar behind it. Learn F first."},
+  {n:"E5",  cat:"Power",   frets:[0,2,2,-1,-1,-1],  fing:[0,1,2,0,0,0], tip:"Neither major nor minor — the rock chord. Two fingers, thick strings only."},
+  {n:"A5",  cat:"Power",   frets:[-1,0,2,2,-1,-1],  fing:[0,0,1,2,0,0], tip:"Same shape, one string across."},
+  {n:"D5",  cat:"Power",   frets:[-1,-1,0,2,3,-1],  fing:[0,0,0,1,3,0], tip:"Move this shape up the neck and it stays a power chord."},
+  {n:"G5",  cat:"Power",   frets:[3,5,5,-1,-1,-1],  fing:[1,3,4,0,0,0], tip:"A movable shape: slide it and the root moves with you."}
+];
+var CATS = ["All","Majors","Minors","Sevenths","Power","Barre"];
+function chordByName(n){ for(var i=0;i<CHORDS.length;i++) if(CHORDS[i].n===n) return CHORDS[i]; return null; }
+
+/* ===================== audio =====================
+   Karplus-Strong plucked string: a noise burst fed through a short delay line
+   with a gentle lowpass in the feedback path. Costs a few kilobytes of code
+   and sounds like a string, where samples would cost megabytes. */
+var actx = null, bufCache = {};
+function ensureCtx(){
+  if(!actx){ var AC = window.AudioContext || window.webkitAudioContext; if(!AC) return null; actx = new AC(); }
+  if(actx.state === "suspended"){ try{ actx.resume(); }catch(e){} }
+  return actx;
+}
+function midiFreq(m){ return 440 * Math.pow(2,(m-69)/12); }
+function pluckBuffer(ctx, freq){
+  var key = Math.round(freq*10);
+  if(bufCache[key]) return bufCache[key];
+  var sr = ctx.sampleRate, dur = 2.4;
+  var N = Math.max(2, Math.round(sr/freq));
+  var buf = ctx.createBuffer(1, Math.floor(sr*dur), sr);
+  var out = buf.getChannelData(0);
+  var ring = new Float32Array(N);
+  for(var i=0;i<N;i++) ring[i] = Math.random()*2-1;
+  /* a touch of lowpass on the initial burst takes the harshness off the attack */
+  for(var p=0;p<2;p++) for(var i=1;i<N;i++) ring[i] = (ring[i]+ring[i-1])*0.5;
+  var idx=0, decay=0.9965;
+  for(var i=0;i<out.length;i++){
+    var cur = ring[idx], nxt = ring[(idx+1)%N];
+    ring[idx] = (cur+nxt)*0.5*decay;
+    out[i] = cur;
+    idx = (idx+1)%N;
+  }
+  /* fade the tail so the buffer never ends on a click */
+  var f = Math.floor(sr*0.25);
+  for(var i=0;i<f;i++) out[out.length-1-i] *= i/f;
+  bufCache[key] = buf;
+  return buf;
+}
+function pluck(ctx, midi, when, gain){
+  var src = ctx.createBufferSource();
+  src.buffer = pluckBuffer(ctx, midiFreq(midi));
+  var g = ctx.createGain();
+  g.gain.value = gain==null ? 0.28 : gain;
+  src.connect(g); g.connect(ctx.destination);
+  src.start(when);
+  return src;
+}
+/* strum: stagger the strings so it rolls like a pick across them */
+function strumChord(ch, up, when){
+  var ctx = ensureCtx(); if(!ctx || !ch) return;
+  var t0 = when==null ? ctx.currentTime+0.01 : when;
+  var order = [0,1,2,3,4,5];
+  if(up) order = order.slice().reverse();
+  var k = 0;
+  for(var i=0;i<order.length;i++){
+    var s = order[i], fr = ch.frets[s];
+    if(fr < 0) continue;
+    pluck(ctx, OPEN_MIDI[s]+fr, t0 + k*0.026, 0.26);
+    k++;
+  }
+}
+function click(ctx, when, accent){
+  var o = ctx.createOscillator(), g = ctx.createGain();
+  o.frequency.value = accent ? 1600 : 1100;
+  g.gain.setValueAtTime(0.0001, when);
+  g.gain.exponentialRampToValueAtTime(accent?0.3:0.16, when+0.002);
+  g.gain.exponentialRampToValueAtTime(0.0001, when+0.055);
+  o.connect(g); g.connect(ctx.destination);
+  o.start(when); o.stop(when+0.07);
+}
+
+/* ===================== chord diagram (SVG) ===================== */
+function chordSVG(ch, size){
+  var W = size||118, H = Math.round(W*1.30);
+  var padL = W*0.14, padR = W*0.10, padT = H*0.20, padB = H*0.07;
+  var gw = W-padL-padR, gh = H-padT-padB;
+  var strings = 6, frets = 5;
+  var sx = gw/(strings-1), fy = gh/frets;
+  var lo = 99, hi = 0, i;
+  for(i=0;i<6;i++){ var f=ch.frets[i]; if(f>0){ if(f<lo) lo=f; if(f>hi) hi=f; } }
+  if(lo===99) lo = 1;
+  var base = (hi<=4) ? 1 : lo;          /* show open position unless the shape sits higher */
+  var s = '<svg viewBox="0 0 '+W+' '+H+'" width="'+W+'" height="'+H+'" aria-label="'+esc(ch.n)+' chord diagram">';
+  var C = 'var(--myllm-text,#111)', M = 'var(--myllm-muted,#8a8a8e)', A = 'var(--myllm-accent,#0a84ff)';
+  /* nut or fret-number label */
+  if(base===1) s += '<rect x="'+padL+'" y="'+(padT-3)+'" width="'+gw+'" height="4" fill="'+C+'"/>';
+  else s += '<text x="'+(padL-6)+'" y="'+(padT+fy*0.7)+'" font-size="'+(W*0.11)+'" fill="'+M+'" text-anchor="end" font-weight="700">'+base+'</text>';
+  for(i=0;i<=frets;i++) s += '<line x1="'+padL+'" y1="'+(padT+i*fy)+'" x2="'+(padL+gw)+'" y2="'+(padT+i*fy)+'" stroke="'+M+'" stroke-opacity=".45" stroke-width="1"/>';
+  for(i=0;i<strings;i++) s += '<line x1="'+(padL+i*sx)+'" y1="'+padT+'" x2="'+(padL+i*sx)+'" y2="'+(padT+gh)+'" stroke="'+M+'" stroke-opacity=".55" stroke-width="1"/>';
+  /* barre bar behind the dots */
+  if(ch.barre && ch.barre.fret>=base && ch.barre.fret<base+frets){
+    var by = padT+(ch.barre.fret-base+0.5)*fy;
+    s += '<rect x="'+(padL+ch.barre.from*sx-sx*0.28)+'" y="'+(by-fy*0.30)+'" width="'+((ch.barre.to-ch.barre.from)*sx+sx*0.56)+'" height="'+(fy*0.60)+'" rx="'+(fy*0.30)+'" fill="'+A+'"/>';
+  }
+  for(i=0;i<6;i++){
+    var f = ch.frets[i], x = padL+i*sx;
+    if(f < 0){
+      s += '<text x="'+x+'" y="'+(padT-7)+'" font-size="'+(W*0.115)+'" fill="'+M+'" text-anchor="middle" font-weight="700">✕</text>';
+    } else if(f === 0){
+      s += '<circle cx="'+x+'" cy="'+(padT-11)+'" r="'+(W*0.045)+'" fill="none" stroke="'+M+'" stroke-width="1.6"/>';
+    } else if(f>=base && f<base+frets){
+      var isBarreEnd = ch.barre && ch.barre.fret===f;
+      var y = padT+(f-base+0.5)*fy;
+      if(!isBarreEnd) s += '<circle cx="'+x+'" cy="'+y+'" r="'+(W*0.078)+'" fill="'+A+'"/>';
+      var fg = ch.fing[i];
+      if(fg) s += '<text x="'+x+'" y="'+(y+W*0.033)+'" font-size="'+(W*0.088)+'" fill="#fff" text-anchor="middle" font-weight="800">'+fg+'</text>';
+    }
+  }
+  return s+'</svg>';
+}
+
+/* ===================== chords tab ===================== */
+var curCat = "All", curChord = CHORDS[0];
+function renderCats(){
+  el("cats").innerHTML = CATS.map(function(c){
+    return '<button class="cat'+(c===curCat?' on':'')+'" onclick="setCat(\''+c+'\')">'+c+'</button>';
+  }).join("");
+}
+function setCat(c){ curCat=c; renderCats(); renderGrid(); haptic("light"); }
+function renderGrid(){
+  var list = CHORDS.filter(function(c){ return curCat==="All" || c.cat===curCat; });
+  el("grid").innerHTML = list.map(function(c){
+    return '<button class="chordcell'+(c.n===curChord.n?' on':'')+'" onclick="pickChord(\''+c.n+'\')">'
+         + '<b>'+esc(c.n)+'</b>'+chordSVG(c,78)+'<small>'+esc(c.cat)+'</small></button>';
+  }).join("");
+}
+function pickChord(n){
+  curChord = chordByName(n) || curChord;
+  renderGrid(); renderDetail(); strumCurrent(); haptic("light");
+}
+function renderDetail(){
+  var c = curChord;
+  el("bigChord").innerHTML = chordSVG(c,132);
+  el("cName").textContent = c.n;
+  var played = c.frets.filter(function(f){ return f>=0; }).length;
+  el("cSub").textContent = played+" of 6 strings" + (c.barre ? " · barre chord" : "");
+  var names = ["low E","A","D","G","B","high E"];
+  var lines = ['<li>'+esc(c.tip)+'</li>'];
+  var muted = [];
+  for(var i=0;i<6;i++) if(c.frets[i]<0) muted.push(names[i]);
+  if(muted.length) lines.push("<li>Don't play the "+muted.join(" or ")+" string"+(muted.length>1?"s":"")+".</li>");
+  lines.push("<li>Play it one string at a time — every note should ring. A dead note means a finger is leaning on its neighbour.</li>");
+  el("cTips").innerHTML = lines.join("");
+}
+function strumCurrent(){ strumChord(curChord,false); haptic("light"); }
+
+/* ===================== changes drill ===================== */
+var drillOn=false, drillLeft=60, drillCount=0, drillTimer=null, bestScores={};
+function fillChordSelects(){
+  var opts = CHORDS.map(function(c){ return '<option value="'+c.n+'">'+esc(c.n)+'</option>'; }).join("");
+  ["chA","chB","strumChord"].forEach(function(id){ if(el(id)) el(id).innerHTML = opts; });
+  el("chA").value = "Em"; el("chB").value = "Am"; el("strumChord").value = "Em";
+  el("chA").onchange = el("chB").onchange = showBest;
+  showBest();
+}
+function pairKey(){ var a=el("chA").value, b=el("chB").value; return [a,b].sort().join("|"); }
+function showBest(){
+  var k = pairKey(), v = bestScores[k];
+  el("drillBest").textContent = v ? ("Your best for this pair: "+v+" changes") : "No score yet for this pair.";
+}
+function hearPair(){
+  var ctx = ensureCtx(); if(!ctx) return;
+  var t = ctx.currentTime+0.05;
+  strumChord(chordByName(el("chA").value), false, t);
+  strumChord(chordByName(el("chB").value), false, t+1.1);
+  haptic("light");
+}
+function toggleDrill(){
+  if(drillOn){ endDrill(); return; }
+  ensureCtx();
+  drillOn=true; drillLeft=60; drillCount=0;
+  el("startDrill").textContent="Stop";
+  el("tapZone").className="tapzone live";
+  el("drillCount").innerHTML='0<small>changes</small>';
+  el("drillTime").textContent="60s";
+  haptic("success");
+  drillTimer = setInterval(function(){
+    drillLeft--;
+    el("drillTime").textContent = drillLeft+"s";
+    if(drillLeft<=0) endDrill(true);
+  },1000);
+}
+function tapChange(){
+  if(!drillOn) return;
+  drillCount++;
+  el("drillCount").innerHTML = drillCount+'<small>changes</small>';
+  haptic("light");
+}
+function endDrill(finished){
+  drillOn=false; clearInterval(drillTimer); drillTimer=null;
+  el("startDrill").textContent="Start 60s";
+  el("tapZone").className="tapzone";
+  el("drillTime").textContent = finished ? "Time!" : "60s";
+  if(finished){
+    var k = pairKey();
+    if(!bestScores[k] || drillCount>bestScores[k]){
+      bestScores[k]=drillCount;
+      store.set("lg.best", JSON.stringify(bestScores));
+    }
+    if(drillCount>=10) markDone("changes");
+    haptic("success");
+  }
+  showBest();
+}
+
+/* ===================== strumming ===================== */
+var PATTERNS = [
+  {n:"All down",     p:["D","D","D","D"]},
+  {n:"Down-up",      p:["D","U","D","U","D","U","D","U"]},
+  {n:"The classic",  p:["D","-","D","U","-","U","D","U"]},
+  {n:"Folk",         p:["D","-","D","U","D","U","D","U"]},
+  {n:"Waltz (3/4)",  p:["D","U","D","U","D","U"]}
+];
+var curPat = PATTERNS[0], strumOn=false, strumTimer=null, strumIdx=0, bpm=70;
+function renderPats(){
+  el("patCats").innerHTML = PATTERNS.map(function(p,i){
+    return '<button class="cat'+(p===curPat?' on':'')+'" onclick="setPat('+i+')">'+esc(p.n)+'</button>';
+  }).join("");
+  renderStrumRow(-1);
+}
+function setPat(i){ curPat=PATTERNS[i]; strumIdx=0; renderPats(); haptic("light"); }
+function renderStrumRow(active){
+  el("strumRow").innerHTML = curPat.p.map(function(s,i){
+    var cls = "beat"+(s==="-"?" rest":"")+(i===active?" hit":"");
+    return '<div class="'+cls+'">'+(s==="-"?"·":(s==="D"?"↓":"↑"))+'</div>';
+  }).join("");
+}
+function setBpm(v){ bpm = +v; el("bpmTxt").textContent = bpm+" BPM"; if(strumOn){ stopStrum(); startStrum(); } }
+function startStrum(){
+  var ctx = ensureCtx(); if(!ctx) return;
+  strumOn = true; el("strumBtn").textContent = "Stop";
+  var eighth = 30000/bpm;      /* two strokes per beat */
+  strumTimer = setInterval(function(){
+    var s = curPat.p[strumIdx % curPat.p.length];
+    renderStrumRow(strumIdx % curPat.p.length);
+    var isBeat = (strumIdx % 2) === 0;
+    click(ctx, ctx.currentTime+0.001, isBeat && (strumIdx % curPat.p.length)===0);
+    if(s!=="-") strumChord(chordByName(el("strumChord").value), s==="U");
+    strumIdx++;
+  }, eighth);
+}
+function stopStrum(){ strumOn=false; clearInterval(strumTimer); strumTimer=null; el("strumBtn").textContent="Play"; renderStrumRow(-1); }
+function toggleStrum(){ if(strumOn){ stopStrum(); } else { startStrum(); markDone("strum"); } haptic("light"); }
+
+/* ===================== songs =====================
+   Traditional / public-domain only — the same rule the piano game follows.
+   Chord progressions are facts, but modern arrangements are not ours to ship. */
+var SONGS = [
+  {n:"12-bar blues in A", bars:["A","A","A","A","D","D","A","A","E","D","A","E"],
+   note:"Not a song but a form — the backbone of blues and early rock, and public domain by nature."},
+  {n:"House of the Rising Sun", bars:["Am","C","D","Fmaj7","Am","C","E","E"],
+   note:"Traditional folk ballad, origins in the 18th–19th century."},
+  {n:"Scarborough Fair", bars:["Am","Am","C","D","Am","C","Am","Am"],
+   note:"Traditional English ballad, first printed in the 17th century."},
+  {n:"Amazing Grace", bars:["G","G","C","G","G","D","G","G"],
+   note:"Words by John Newton, 1779. Long out of copyright."},
+  {n:"When the Saints Go Marching In", bars:["G","G","G","G","C","C","G","G"],
+   note:"Traditional American gospel, published in the early 1900s."},
+  {n:"Auld Lang Syne", bars:["G","G","C","G","G","C","D","G"],
+   note:"Robert Burns, 1788, to an older folk melody."}
+];
+var curSong = SONGS[0], songOn=false, songTimer=null, songIdx=0, songBpm=60;
+function renderSongs(){
+  el("songCats").innerHTML = SONGS.map(function(s,i){
+    return '<button class="cat'+(s===curSong?' on':'')+'" onclick="setSong('+i+')">'+esc(s.n)+'</button>';
+  }).join("");
+  renderBars(-1);
+  var need = curSong.bars.filter(function(v,i,a){ return a.indexOf(v)===i; });
+  el("songNeeds").textContent = "Chords you'll need: "+need.join("  ·  ");
+  el("songNote").textContent = curSong.note;
+}
+function setSong(i){ if(songOn) stopSong(); curSong=SONGS[i]; songIdx=0; renderSongs(); haptic("light"); }
+function renderBars(active){
+  el("songBars").innerHTML = curSong.bars.map(function(b,i){
+    return '<div class="bar'+(i===active?' on':'')+'">'+esc(b)+'</div>';
+  }).join("");
+}
+function setSongBpm(v){ songBpm=+v; el("songBpmTxt").textContent=songBpm+" BPM"; if(songOn){ stopSong(); startSong(); } }
+function startSong(){
+  var ctx = ensureCtx(); if(!ctx) return;
+  songOn=true; el("songBtn").textContent="Stop";
+  var barMs = 4*60000/songBpm;
+  var fire = function(){
+    var i = songIdx % curSong.bars.length;
+    renderBars(i);
+    strumChord(chordByName(curSong.bars[i]), false);
+    songIdx++;
+  };
+  fire();
+  songTimer = setInterval(fire, barMs);
+}
+function stopSong(){ songOn=false; clearInterval(songTimer); songTimer=null; el("songBtn").textContent="Play along"; renderBars(-1); }
+function toggleSong(){ if(songOn){ stopSong(); } else { startSong(); markDone("song"); } haptic("light"); }
+
+/* ===================== learn path ===================== */
+var STEPS = [
+  {id:"strings", t:"Meet the six strings", d:"Low to high: E A D G B E. Thickest is the low E. Tap to hear them ring.", act:"Hear the strings", fn:function(){ heartStrings(); }},
+  {id:"em",      t:"Your first chord: Em", d:"Two fingers, all six strings. Get every note ringing before moving on.", act:"Show me Em", fn:function(){ showTab('chords'); pickChord('Em'); }},
+  {id:"am",      t:"Add Am", d:"One extra finger on the Em shape, shifted across. Now you have two chords.", act:"Show me Am", fn:function(){ showTab('chords'); pickChord('Am'); }},
+  {id:"changes", t:"Change between them", d:"Score 10 or more in the one-minute drill. This is the step that actually makes you a guitarist.", act:"Start the drill", fn:function(){ showTab('changes'); el('chA').value='Em'; el('chB').value='Am'; showBest(); }},
+  {id:"strum",   t:"Learn a strum", d:"Start with all-downs at a slow tempo, then try the down-up pattern.", act:"Open strumming", fn:function(){ showTab('strum'); }},
+  {id:"gcd",     t:"The big three: G, C, D", d:"Most traditional songs live in these three chords. Learn the shapes, then drill G↔C and C↔D.", act:"Show me G", fn:function(){ showTab('chords'); pickChord('G'); }},
+  {id:"song",    t:"Play a whole song", d:"Four beats a bar, slow enough to change cleanly. Speed comes later, on its own.", act:"Open songs", fn:function(){ showTab('songs'); }},
+  {id:"sevenths",t:"Add the sevenths", d:"E7, A7 and D7 turn three chords into a blues. Small change, completely different mood.", act:"Show me A7", fn:function(){ showTab('chords'); pickChord('A7'); }},
+  {id:"barre",   t:"Start on F", d:"The barre chord everyone struggles with. Use Fmaj7 in songs meanwhile — nobody will mind.", act:"Show me F", fn:function(){ showTab('chords'); pickChord('F'); }}
+];
+var done = {};
+function heartStrings(){
+  var ctx = ensureCtx(); if(!ctx) return;
+  for(var i=0;i<6;i++) pluck(ctx, OPEN_MIDI[i], ctx.currentTime+0.05+i*0.45, 0.3);
+  markDone("strings"); haptic("light");
+}
+function renderSteps(){
+  el("steps").innerHTML = STEPS.map(function(s,i){
+    return '<div class="step'+(done[s.id]?' done':'')+'">'
+      + '<button class="tick" onclick="toggleDone(\''+s.id+'\')" aria-label="Mark done">'+(done[s.id]?'✓':(i+1))+'</button>'
+      + '<div class="body"><b>'+esc(s.t)+'</b><small>'+esc(s.d)+'</small>'
+      + '<button class="btn ghost sm go" onclick="runStep('+i+')">'+esc(s.act)+'</button></div></div>';
+  }).join("");
+  var n = STEPS.filter(function(s){ return done[s.id]; }).length;
+  el("progBar").style.width = Math.round(n/STEPS.length*100)+"%";
+  el("progTxt").textContent = n+" of "+STEPS.length+" steps done";
+}
+function runStep(i){ STEPS[i].fn(); }
+function toggleDone(id){ done[id] = !done[id]; store.set("lg.done", JSON.stringify(done)); renderSteps(); haptic("light"); }
+function markDone(id){ if(!done[id]){ done[id]=true; store.set("lg.done", JSON.stringify(done)); renderSteps(); } }
+
+/* ===================== tabs ===================== */
+var PANES = {learn:"paneLearn", chords:"paneChords", changes:"paneChanges", strum:"paneStrum", songs:"paneSongs"};
+var TABS  = {learn:"tabLearn", chords:"tabChords", changes:"tabChanges", strum:"tabStrum", songs:"tabSongs"};
+function showTab(k){
+  if(strumOn) stopStrum();
+  if(songOn) stopSong();
+  Object.keys(PANES).forEach(function(key){
+    el(PANES[key]).style.display = (key===k) ? "block" : "none";
+    el(TABS[key]).className = (key===k) ? "on" : "";
+  });
+  window.scrollTo(0,0);
+}
+
+/* ===================== boot ===================== */
+(async function(){
+  try{
+    var d = await store.get("lg.done"); if(d) done = JSON.parse(d) || {};
+    var b = await store.get("lg.best"); if(b) bestScores = JSON.parse(b) || {};
+  }catch(e){}
+  renderCats(); renderGrid(); renderDetail();
+  fillChordSelects(); renderPats(); renderSongs(); renderSteps();
+})();
+</script>
+</body>
+</html>
