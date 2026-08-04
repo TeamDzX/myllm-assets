@@ -40,6 +40,16 @@
   .cats{ display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px; }
   .cat{ border:1px solid var(--myllm-border,#e3e3e8); background:var(--myllm-bg,#f2f2f7); color:var(--myllm-text,#111); border-radius:99px; padding:7px 12px; font-size:12.5px; font-weight:700; font-family:inherit; }
   .cat.on{ background:var(--myllm-accent,#0a84ff); border-color:transparent; color:#fff; }
+  /* what each chord family IS and how the families combine — the bit that turns
+     a grid of shapes into something you can actually use */
+  .catinfo{ background:var(--myllm-bg,#f2f2f7); border:1px solid var(--myllm-border,#e3e3e8); border-radius:14px; padding:12px 13px; margin-bottom:12px; }
+  .catinfo h3{ font-size:14.5px; font-weight:800; margin-bottom:5px; }
+  .catinfo p{ font-size:13px; line-height:1.55; color:var(--myllm-text,#111); margin-bottom:7px; }
+  .catinfo p:last-child{ margin-bottom:0; }
+  .catinfo .together{ color:var(--myllm-muted,#8a8a8e); }
+  .catinfo .together b{ color:var(--myllm-text,#111); font-weight:750; }
+  .catinfo .try{ display:flex; flex-wrap:wrap; gap:6px; margin-top:9px; }
+  .catinfo .try button{ border:1px solid var(--myllm-accent,#0a84ff); background:none; color:var(--myllm-accent,#0a84ff); border-radius:99px; padding:7px 12px; font-size:12.5px; font-weight:750; font-family:inherit; }
 
   /* ---- big detail view ---- */
   .detail{ display:flex; gap:14px; align-items:center; flex-wrap:wrap; }
@@ -130,6 +140,7 @@
   </div>
   <div class="card">
     <div class="cats" id="cats"></div>
+    <div class="catinfo" id="catInfo"></div>
     <div class="chordgrid" id="grid"></div>
   </div>
 </div>
@@ -243,6 +254,48 @@ var CHORDS = [
   {n:"G5",  cat:"Power",   frets:[3,5,5,-1,-1,-1],  fing:[1,3,4,0,0,0], tip:"A movable shape: slide it and the root moves with you."}
 ];
 var CATS = ["All","Majors","Minors","Sevenths","Power","Barre"];
+
+/* Each family explained in plain English: what it is, and — the part beginners
+   actually need — how it sits alongside the others. `demo` is a progression the
+   reader can hear, so the explanation is audible rather than just words. */
+var CATINFO = {
+  "All": {
+    h: "Five families of chord",
+    what: "Every chord here belongs to one of five families. <b>Majors</b> sound bright and settled, <b>minors</b> sound wistful, <b>sevenths</b> sound unfinished and lean forward, <b>power chords</b> are neither happy nor sad, and <b>barre chords</b> are movable shapes that unlock the rest of the neck.",
+    how: "Start with majors and minors. Those two families alone cover most traditional songs — everything else is flavour you add later.",
+    demos: [{n:"Hear a major, then its minor", bars:["C","Am"]}]
+  },
+  "Majors": {
+    h: "Majors — the bright ones",
+    what: "The settled, finished-sounding chords, and the backbone of nearly every song. Most music stays inside three majors belonging to one key: in the key of G those are <b>G, C and D</b>.",
+    how: "Those three are the famous <b>I–IV–V</b>. Play G → C → G → D and you've played the most common progression in Western music. Learn one set of three and hundreds of songs open up.",
+    demos: [{n:"I–IV–V in G", bars:["G","C","G","D"]}, {n:"I–IV–V in A", bars:["A","D","A","E"]}]
+  },
+  "Minors": {
+    h: "Minors — the wistful ones",
+    what: "A major with one note moved down a single fret. That one note is the whole difference between bright and sad, which is worth knowing when a chord sounds wrong: you've probably fretted a major where a minor was wanted.",
+    how: "Every major key has minors that belong to it. In G, the minors are <b>Em and Am</b>. Slot one into a major progression for contrast — <b>G → Em → C → D</b> is the spine of countless songs.",
+    demos: [{n:"G → Em → C → D", bars:["G","Em","C","D"]}, {n:"Am → F-ish → C → G", bars:["Am","Fmaj7","C","G"]}]
+  },
+  "Sevenths": {
+    h: "Sevenths — the restless ones",
+    what: "A major or minor with one extra note stacked on top. It deliberately sounds unfinished, as if leaning towards the next chord — which is exactly what makes it useful.",
+    how: "Drop one in just before you change and it pulls you along: <b>G → G7 → C</b> practically drags you into the C. In blues, every chord becomes a seventh — that's the whole sound.",
+    demos: [{n:"G7 pulling into C", bars:["G","G7","C"]}, {n:"Blues in A", bars:["A7","D7","A7","E7"]}]
+  },
+  "Power": {
+    h: "Power chords — neither happy nor sad",
+    what: "Only two different notes: the root and the fifth. The note that decides major or minor simply isn't there, so a power chord is neither — which is why it stays clean under heavy distortion where a full chord turns to mud.",
+    how: "The shape is <b>movable</b>: keep the fingering, slide it up or down, and the chord follows wherever the root lands. Two fingers gets you most rock rhythm playing.",
+    demos: [{n:"E5 → A5 → D5", bars:["E5","A5","D5"]}, {n:"Riff shape", bars:["E5","G5","A5","E5"]}]
+  },
+  "Barre": {
+    h: "Barre chords — one shape, twelve chords",
+    what: "Your index finger lies flat across all six strings, acting as a movable nut, with an open-chord shape fretted behind it. Slide the whole thing and the chord changes name but keeps its character.",
+    how: "<b>F</b> is the E shape barred at the first fret; <b>Bm</b> is the Am shape barred at the second. This is the hardest step on the instrument and takes weeks, not days — use <b>Fmaj7</b> wherever a song asks for F until the barre is ready. Nobody listening will mind.",
+    demos: [{n:"F the easy way (Fmaj7)", bars:["C","Fmaj7","G","C"]}, {n:"The real thing", bars:["F","C","G","F"]}]
+  }
+};
 function chordByName(n){ for(var i=0;i<CHORDS.length;i++) if(CHORDS[i].n===n) return CHORDS[i]; return null; }
 
 /* ===================== audio =====================
@@ -360,7 +413,29 @@ function renderCats(){
     return '<button class="cat'+(c===curCat?' on':'')+'" onclick="setCat(\''+c+'\')">'+c+'</button>';
   }).join("");
 }
-function setCat(c){ curCat=c; renderCats(); renderGrid(); haptic("light"); }
+function setCat(c){ curCat=c; renderCats(); renderCatInfo(); renderGrid(); haptic("light"); }
+function renderCatInfo(){
+  var info = CATINFO[curCat]; if(!info) { el("catInfo").innerHTML=""; return; }
+  var demos = (info.demos||[]).map(function(d,i){
+    return '<button onclick="playDemo(\''+curCat+'\','+i+')">▶︎ '+esc(d.n)+'</button>';
+  }).join("");
+  el("catInfo").innerHTML =
+      '<h3>'+esc(info.h)+'</h3>'
+    + '<p>'+info.what+'</p>'
+    + '<p class="together"><b>Playing them together:</b> '+info.how+'</p>'
+    + (demos ? '<div class="try">'+demos+'</div>' : '');
+}
+/* play a short progression so the explanation can be heard, not just read */
+function playDemo(cat, i){
+  var d = (CATINFO[cat].demos||[])[i]; if(!d) return;
+  var ctx = ensureCtx(); if(!ctx) return;
+  var t = ctx.currentTime + 0.05;
+  d.bars.forEach(function(name, k){
+    var ch = chordByName(name);
+    if(ch) strumChord(ch, false, t + k*1.15);
+  });
+  haptic("light");
+}
 function renderGrid(){
   var list = CHORDS.filter(function(c){ return curCat==="All" || c.cat===curCat; });
   el("grid").innerHTML = list.map(function(c){
@@ -588,7 +663,7 @@ function showTab(k){
     var d = await store.get("lg.done"); if(d) done = JSON.parse(d) || {};
     var b = await store.get("lg.best"); if(b) bestScores = JSON.parse(b) || {};
   }catch(e){}
-  renderCats(); renderGrid(); renderDetail();
+  renderCats(); renderCatInfo(); renderGrid(); renderDetail();
   fillChordSelects(); renderPats(); renderSongs(); renderSteps();
 })();
 </script>
