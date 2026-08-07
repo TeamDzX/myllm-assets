@@ -276,8 +276,17 @@ console.log(
 if (CONFIG.clicks === 0) console.log('note: --clicks 0 — no tap sweep ran, only load-time errors were checked.');
 
 if (CONFIG.json) {
-  await writeFile(CONFIG.json, JSON.stringify({ config: CONFIG, results }, null, 2));
-  console.log(`json → ${CONFIG.json}`);
+  // out/ only exists once something has written a screenshot, so on a fresh
+  // checkout this threw ENOENT — after every app had already passed — and took
+  // the whole run down with it. Create the directory, and never let a reporting
+  // failure masquerade as a failing gallery.
+  try {
+    await mkdir(path.dirname(path.resolve(CONFIG.json)), { recursive: true });
+    await writeFile(CONFIG.json, JSON.stringify({ config: CONFIG, results }, null, 2));
+    console.log(`json → ${CONFIG.json}`);
+  } catch (e) {
+    console.error(`could not write ${CONFIG.json}: ${e.message}`);
+  }
 }
 
 process.exit(failed.length ? 1 : 0);
