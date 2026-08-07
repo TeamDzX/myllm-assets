@@ -50,6 +50,10 @@ body{font-family:var(--font);margin:0;padding:18px 16px calc(34px + env(safe-are
   box-shadow:0 8px 20px -8px var(--acc);cursor:pointer;transition:transform .1s,opacity .2s}
 .btn-primary:active{transform:scale(.98)}
 .btn-primary:disabled{opacity:.5;box-shadow:none}
+.btn-ghost{width:100%;border:1px solid var(--border);border-radius:13px;padding:11px;font-size:13.5px;
+  font-weight:650;color:var(--ink);font-family:var(--font);background:var(--surface);cursor:pointer;
+  margin-bottom:12px;transition:transform .1s}
+.btn-ghost:active{transform:scale(.98)}
 .chips{display:flex;flex-wrap:wrap;gap:7px;margin:2px 0 12px}
 .chip{border:1px solid var(--border);background:var(--surface);color:var(--muted);border-radius:999px;
   padding:7px 12px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font);transition:.15s}
@@ -78,6 +82,156 @@ body{font-family:var(--font);margin:0;padding:18px 16px calc(34px + env(safe-are
 .face-text{font-size:19px;line-height:1.45;font-weight:600}
 .face-tip{position:absolute;bottom:11px;left:0;right:0;font-size:11px;opacity:.4;font-weight:500}
 
+.sizerow{display:flex;align-items:flex-start;gap:10px;margin:2px 0 12px}
+/* the chips wrap on narrow screens, so the label pins to the first row rather
+   than floating to the centre of a two-row group */
+.sizelbl{font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.02em;flex:0 0 auto;
+  min-width:42px;padding-top:9px}
+.chips.tight{margin:0;gap:6px}
+
+/* ---- fullscreen study ----
+   iOS WKWebView does not honour requestFullscreen for anything but video, so
+   immersion is an in-page layer that owns the viewport. requestFullscreen is
+   still attempted underneath, which buys real fullscreen in a desktop browser
+   and costs nothing where it is unsupported. */
+.fs{position:fixed;inset:0;z-index:200;display:none;flex-direction:column;
+  background:linear-gradient(180deg,var(--page1),var(--page2));
+  padding:calc(10px + env(safe-area-inset-top)) 16px calc(14px + env(safe-area-inset-bottom))}
+.fs.on{display:flex}
+body.fs-open{overflow:hidden}
+.fs-top{display:flex;align-items:center;gap:10px;flex:0 0 auto;padding-bottom:10px}
+.fs-topic{font-size:14px;font-weight:750;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;
+  text-overflow:ellipsis;min-width:0;flex:1}
+.fs-count{font-size:12.5px;font-weight:650;color:var(--muted);flex:0 0 auto;font-variant-numeric:tabular-nums}
+.fs-x{flex:0 0 auto;width:34px;height:34px;border-radius:11px;border:1px solid var(--border);
+  background:var(--surface);color:var(--ink);font-size:15px;cursor:pointer;font-family:var(--font)}
+.fs-bar{height:4px;border-radius:3px;background:var(--border);overflow:hidden;flex:0 0 auto;margin-bottom:12px}
+.fs-bar i{display:block;height:100%;background:linear-gradient(90deg,var(--acc),var(--acc2));
+  border-radius:3px;transition:width .28s cubic-bezier(.2,.75,.2,1)}
+.fs-stage{flex:1;min-height:0;perspective:1600px;cursor:pointer;touch-action:pan-y;
+  display:flex;align-items:center}
+/* Filling every pixel of a tall phone leaves the words marooned in a wall of
+   colour, so the card keeps a comfortable reading proportion and centres. */
+.fs-stage .card-inner{height:min(100%,72vh);width:100%}
+.fs-stage .face-text{font-size:clamp(22px,5.4vw,34px);line-height:1.34}
+.fs-stage .face{padding:34px 26px}
+.fs-nav{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:13px;flex:0 0 auto}
+.fs-nav button{background:var(--surface);border:1px solid var(--border);color:var(--ink);border-radius:13px;
+  padding:13px 22px;font-weight:700;font-size:15px;cursor:pointer;font-family:var(--font);transition:transform .1s}
+.fs-nav button:active{transform:scale(.96)}
+.fs-hint{font-size:11.5px;color:var(--faint);font-weight:600;text-align:center}
+
+/* grading row — only ever shown once the answer is face-up, because grading
+   a card you haven't seen the back of is meaningless */
+.grades{display:none;grid-template-columns:repeat(4,1fr);gap:7px;margin:0 0 12px}
+.grades.on{display:grid}
+.grade{border:1px solid var(--border);background:var(--surface);border-radius:12px;padding:9px 4px;
+  cursor:pointer;font-family:var(--font);display:flex;flex-direction:column;align-items:center;gap:2px;
+  transition:transform .1s}
+.grade:active{transform:scale(.95)}
+.grade b{font-size:12.5px;font-weight:750;color:var(--ink)}
+.grade span{font-size:10.5px;font-weight:600;color:var(--faint);font-variant-numeric:tabular-nums}
+.grade.g0 b{color:#d2544e}.grade.g1 b{color:#d08a2e}
+.grade.g2 b{color:#2f9e5e}.grade.g3 b{color:var(--acc)}
+.fs .grades{margin-bottom:10px}
+
+.srcrow{display:flex;gap:7px;margin-bottom:12px}
+.src{flex:1;border:1px solid var(--border);background:var(--surface);color:var(--muted);border-radius:12px;
+  padding:9px;font-size:13px;font-weight:650;cursor:pointer;font-family:var(--font);transition:.15s}
+.src.on{color:var(--acc);border-color:var(--acc);background:var(--accSoft)}
+#srcNotes textarea{width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--ink);
+  border-radius:14px;padding:12px 13px;font-family:var(--font);font-size:14px;line-height:1.5;
+  resize:vertical;margin-bottom:6px}
+#srcNotes textarea:focus{outline:2px solid var(--acc);outline-offset:-1px}
+.notemeta{font-size:11.5px;color:var(--faint);font-weight:600;margin-bottom:10px;text-align:right}
+
+.headfs{margin-left:auto;flex:0 0 auto;width:34px;height:34px;border-radius:11px;
+  border:1px solid var(--border);background:var(--surface);color:var(--muted);font-size:15px;
+  cursor:pointer;font-family:var(--font)}
+.headfs:active{transform:scale(.95)}
+
+/* Deck tools collapse. Six buttons stacked between the card and Prev/Next
+   pushed navigation off the bottom of the screen — the thing you press on
+   every single card was the hardest thing to reach. Navigation now sits
+   directly under the card, and the occasional actions fold away. */
+.tools{margin:2px 0 14px}
+.toolsbtn{width:100%;display:flex;align-items:center;justify-content:center;gap:7px;
+  border:1px solid var(--border);background:transparent;color:var(--muted);border-radius:12px;
+  padding:9px;font-size:12.5px;font-weight:650;cursor:pointer;font-family:var(--font)}
+.toolsbtn:active{transform:scale(.99)}
+.toolsbtn .caret{font-size:10px;transition:transform .2s}
+.toolsbtn.open{color:var(--acc);border-color:var(--acc)}
+.toolsbtn.open .caret{transform:rotate(180deg)}
+.toolsbody{padding-top:11px}
+
+.cardacts{display:flex;gap:8px;margin:0 0 12px}
+.cardacts button{flex:1;border:1px solid var(--border);background:var(--surface);color:var(--muted);
+  border-radius:12px;padding:9px;font-size:12.5px;font-weight:650;cursor:pointer;font-family:var(--font);
+  transition:transform .1s}
+.cardacts button:active{transform:scale(.97)}
+.cardacts button.on{color:var(--acc);border-color:var(--acc);background:var(--accSoft)}
+
+.editor{background:var(--surface);border:1px solid var(--border);border-radius:var(--radiusLg);
+  padding:18px;margin-bottom:14px;box-shadow:var(--shadow)}
+.ed-t{font-size:15px;font-weight:750;margin-bottom:12px}
+.ed-l{display:block;font-size:11.5px;font-weight:700;color:var(--muted);text-transform:uppercase;
+  letter-spacing:.06em;margin:0 0 5px}
+.editor textarea{width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--ink);
+  border-radius:12px;padding:11px 12px;font-family:var(--font);font-size:14.5px;line-height:1.45;
+  resize:vertical;margin-bottom:12px}
+.editor textarea:focus{outline:2px solid var(--acc);outline-offset:-1px}
+.ed-row{display:flex;gap:9px}
+.ed-row .btn-primary{margin:0;flex:1}
+.ed-row .btn-ghost{flex:1}
+.ed-msg{font-size:12.5px;color:#d2544e;font-weight:600;margin-bottom:8px;min-height:0}
+.ed-del{width:100%;margin-top:10px;background:none;border:0;color:#d2544e;font-family:var(--font);
+  font-size:12.5px;font-weight:650;cursor:pointer;padding:8px}
+
+.quiz{background:var(--surface);border:1px solid var(--border);border-radius:var(--radiusLg);
+  padding:18px;margin-bottom:14px;box-shadow:var(--shadow)}
+.qz-top{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.qz-n{font-size:12.5px;font-weight:700;color:var(--muted);flex:1}
+.qz-score{font-size:12.5px;font-weight:750;color:var(--acc);font-variant-numeric:tabular-nums}
+.qz-q{font-size:18px;font-weight:700;line-height:1.4;margin-bottom:15px}
+.qz-opts{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
+.qz-opt{text-align:left;border:1px solid var(--border);background:var(--surface2);color:var(--ink);
+  border-radius:13px;padding:13px 14px;font-size:14.5px;font-weight:600;cursor:pointer;
+  font-family:var(--font);line-height:1.4;transition:.12s}
+.qz-opt:active{transform:scale(.99)}
+.qz-opt.right{border-color:#2f9e5e;background:rgba(47,158,94,.14);color:#2f9e5e}
+.qz-opt.wrong{border-color:#d2544e;background:rgba(210,84,78,.13);color:#d2544e}
+.qz-opt.dim{opacity:.5}
+.quizdone{text-align:center;padding:26px 18px;background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radiusLg);box-shadow:var(--shadow);margin-bottom:14px}
+.quizdone h3{margin:0 0 4px;font-size:19px;font-weight:800}
+.quizdone p{margin:0 0 16px;font-size:13.5px;color:var(--muted)}
+
+.done{text-align:center;padding:26px 18px;background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radiusLg);box-shadow:var(--shadow);margin-bottom:14px}
+.done-emoji{font-size:38px;margin-bottom:6px}
+.done h3{margin:0 0 4px;font-size:17px;font-weight:750}
+.done p{margin:0 0 14px;font-size:13.5px;color:var(--muted)}
+
+.statsrow{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:11px 8px;
+  text-align:center;box-shadow:var(--shadow)}
+.stat b{display:block;font-size:18px;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.stat span{display:block;font-size:10px;font-weight:700;color:var(--faint);text-transform:uppercase;
+  letter-spacing:.05em;margin-top:2px}
+.stat.hot b{color:var(--acc)}
+
+.deck-s .due{color:var(--acc);font-weight:700}
+.deck-acts{display:flex;gap:2px;flex:0 0 auto;align-items:center}
+.dact{border:0;background:none;color:var(--faint);font-size:14px;cursor:pointer;padding:6px 5px;
+  border-radius:8px;font-family:var(--font);line-height:1}
+.dact:active{background:var(--surface2)}
+.dact.on{color:#e8b422}
+.dact.del.armed{color:#fff;background:#d2544e;font-size:11px;font-weight:750;padding:5px 8px}
+.renamebox{display:flex;gap:7px;margin-top:7px}
+.renamebox input{flex:1;min-width:0;background:var(--surface2);border:1px solid var(--border);
+  color:var(--ink);border-radius:10px;padding:8px 10px;font-family:var(--font);font-size:13.5px}
+.renamebox button{border:0;border-radius:10px;padding:8px 12px;font-size:12.5px;font-weight:700;
+  background:var(--acc);color:#fff;cursor:pointer;font-family:var(--font)}
 .dots{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin:0 0 14px}
 .dot{width:7px;height:7px;border-radius:50%;background:var(--border);transition:.2s}
 .dot.on{background:var(--acc);transform:scale(1.35)}
@@ -141,22 +295,36 @@ body{font-family:var(--font);margin:0;padding:18px 16px calc(34px + env(safe-are
 </div>
 
 <div class="surface">
-  <label class="field"><span class="field-ic">✨</span><input id="topic" placeholder="Topic — e.g. The Tudors, photosynthesis"></label>
-  <div class="chips" id="topicChips"></div>
+  <div class="srcrow" id="srcRow">
+    <button class="src on" data-src="topic" onclick="setSource('topic')">From a topic</button>
+    <button class="src" data-src="notes" onclick="setSource('notes')">From my notes</button>
+  </div>
+  <div id="srcTopic">
+    <label class="field"><span class="field-ic">✨</span><input id="topic" placeholder="Topic — e.g. The Tudors, photosynthesis"></label>
+    <div class="chips" id="topicChips"></div>
+  </div>
+  <div id="srcNotes" style="display:none">
+    <textarea id="notes" rows="6" placeholder="Paste your notes, a lesson, an article — anything you need to revise. Cards are made from this text, not from general knowledge."></textarea>
+    <div class="notemeta" id="noteMeta"></div>
+  </div>
+  <div class="sizerow"><span class="sizelbl">Cards</span><div class="chips tight" id="sizeChips"></div></div>
+  <div class="sizerow"><span class="sizelbl">Level</span><div class="chips tight" id="levelChips"></div></div>
   <button class="btn-primary" id="gen" onclick="gen()">Forge deck 🔨</button>
+  <button class="btn-ghost" style="margin:9px 0 0" onclick="newEmptyDeck()">✍️ Or build a deck by hand</button>
   <div id="status" class="status"></div>
 </div>
 
 <div class="empty" id="empty">
   <div class="empty-emoji">🗂️</div>
   <h3>No decks yet</h3>
-  <p>Type a topic above and your AI tutor forges an 8-card study deck to flip through.</p>
+  <p>Type a topic above and your AI tutor forges a study deck to flip through — or build one by hand, a card at a time.</p>
 </div>
 
 <div id="study">
   <div class="deck-head">
     <div class="badge">🧠</div>
     <div style="min-width:0"><div class="dt" id="deckTopic"></div><div class="dm" id="deckMeta"></div></div>
+    <button class="headfs" id="fsBtn" onclick="enterFs()" aria-label="Study fullscreen" title="Study fullscreen">⛶</button>
   </div>
   <div class="card" onclick="flip()">
     <div class="card-inner" id="cardInner">
@@ -164,15 +332,98 @@ body{font-family:var(--font);margin:0;padding:18px 16px calc(34px + env(safe-are
       <div class="face back"><span class="face-label">Answer</span><div class="face-text" id="aText"></div><div class="face-tip">tap to flip back</div></div>
     </div>
   </div>
+  <div class="grades" id="grades"></div>
   <div class="dots" id="dots"></div>
   <div class="nav">
     <button onclick="nav(-1)">‹ Prev</button>
     <span class="count" id="count"></span>
     <button onclick="nav(1)">Next ›</button>
   </div>
+
+  <div class="tools">
+    <button class="toolsbtn" id="toolsBtn" onclick="toggleTools()" aria-expanded="false" aria-controls="toolsBody">
+      <span>Deck tools</span><span class="caret" id="toolsCaret">▾</span>
+    </button>
+    <div class="toolsbody" id="toolsBody" style="display:none">
+      <div class="cardacts">
+        <button onclick="editCard()">✎ Edit card</button>
+        <button onclick="addCard()">＋ Add card</button>
+      </div>
+      <div class="cardacts">
+        <button onclick="shuffleQueue()">🔀 Shuffle</button>
+        <button id="revBtn" onclick="toggleReverse()">⇄ Reverse</button>
+      </div>
+      <button class="btn-ghost" id="quizBtn" onclick="startQuiz()">🎯 Quiz me</button>
+      <button class="btn-ghost" id="moreBtn" onclick="forgeMore()">✨ Forge more cards for this deck</button>
+      <div id="moreStatus" class="status"></div>
+    </div>
+  </div>
+</div>
+
+<div class="editor" id="editor" style="display:none">
+    <div class="ed-t" id="edTitle">Edit card</div>
+    <label class="ed-l" for="edQ">Question</label>
+    <textarea id="edQ" rows="3" placeholder="What goes on the front?"></textarea>
+    <label class="ed-l" for="edA">Answer</label>
+    <textarea id="edA" rows="4" placeholder="What goes on the back?"></textarea>
+    <div class="ed-msg" id="edMsg"></div>
+    <div class="ed-row">
+      <button class="btn-ghost" style="margin:0" onclick="closeEditor()">Cancel</button>
+      <button class="btn-primary" onclick="saveEditor()">Save card</button>
+    </div>
+    <button class="btn-ghost" style="margin:9px 0 0" onclick="saveEditor(true)">Save &amp; add another</button>
+    <button class="ed-del" id="edDel" onclick="deleteCard()">Delete this card</button>
+  </div>
+
+<div class="quiz" id="quiz" style="display:none">
+    <div class="qz-top">
+      <span class="qz-n" id="qzN"></span>
+      <span class="qz-score" id="qzScore"></span>
+      <button class="fs-x" onclick="endQuiz()" aria-label="Leave quiz">✕</button>
+    </div>
+    <div class="qz-q" id="qzQ"></div>
+    <div class="qz-opts" id="qzOpts"></div>
+    <button class="btn-primary" id="qzNext" style="display:none" onclick="quizNext()">Next question</button>
+  </div>
+
+<div class="quizdone" id="quizDone" style="display:none">
+    <div class="done-emoji" id="qdEmoji">🎯</div>
+    <h3 id="qdT"></h3>
+    <p id="qdP"></p>
+    <button class="btn-primary" onclick="startQuiz()">Play again</button>
+    <button class="btn-ghost" style="margin-top:9px" onclick="endQuiz()">Back to the deck</button>
+  </div>
+
+<div class="done" id="done" style="display:none">
+    <div class="done-emoji">🎉</div>
+    <h3 id="doneT"></h3>
+    <p id="doneP"></p>
+    <button class="btn-ghost" onclick="studyAll()">Study the whole deck again</button>
+  </div>
+
+<div class="fs" id="fs" role="dialog" aria-modal="true" aria-label="Fullscreen study">
+  <div class="fs-top">
+    <span class="fs-topic" id="fsTopic"></span>
+    <span class="fs-count" id="fsCount"></span>
+    <button class="fs-x" onclick="exitFs()" aria-label="Leave fullscreen">✕</button>
+  </div>
+  <div class="fs-bar"><i id="fsBar"></i></div>
+  <div class="fs-stage" id="fsStage">
+    <div class="card-inner" id="fsInner">
+      <div class="face front"><span class="face-label">Question</span><div class="face-text" id="fsQ"></div><div class="face-tip">tap to flip · swipe to move</div></div>
+      <div class="face back"><span class="face-label">Answer</span><div class="face-text" id="fsA"></div><div class="face-tip">tap to flip back</div></div>
+    </div>
+  </div>
+  <div class="grades" id="fsGrades"></div>
+  <div class="fs-nav">
+    <button onclick="nav(-1)">‹ Prev</button>
+    <span class="fs-hint" id="fsHint"></span>
+    <button onclick="nav(1)">Next ›</button>
+  </div>
 </div>
 
 <div id="savedWrap" style="display:none">
+  <div class="statsrow" id="statsRow"></div>
   <div class="section">Saved decks</div>
   <div id="decks"></div>
 </div>
@@ -181,12 +432,423 @@ body{font-family:var(--font);margin:0;padding:18px 16px calc(34px + env(safe-are
 "use strict";
 var store=window.myllmStorage||{getItem:function(){return Promise.resolve(null)},setItem:function(){return Promise.resolve()}};
 var decks=[],cur=-1,idx=0,showA=false;
+/* How many cards to ask for. Small on-device models get less reliable the more
+   you ask for in one go, so the parser takes whatever actually comes back and
+   the status line reports it when it differs from the request — better than
+   silently pretending you got twenty. */
+var SIZES=[5,8,12,20], deckSize=8;
+/* Level is folded into the generation prompt. One line, but it changes the
+   output more than anything else on this screen. */
+var LEVELS=[['beginner','Beginner'],['standard','Standard'],['advanced','Advanced'],['expert','Expert']];
+var level='standard';
+/* Reverse shows the answer first — much harder, and much better for recall
+   than repeatedly recognising a prompt you have already memorised the shape of. */
+var reverseMode=false;
+var source='topic';        // 'topic' | 'notes'
+function setSource(k){
+  source=k;
+  document.querySelectorAll('#srcRow .src').forEach(function(b){b.classList.toggle('on',b.dataset.src===k)});
+  el('srcTopic').style.display=k==='topic'?'block':'none';
+  el('srcNotes').style.display=k==='notes'?'block':'none';
+  setStatus('');haptic('selection');
+}
+/* Cards built FROM supplied text rather than from the model's own knowledge —
+   which is what makes this useful for the material you are actually sitting an
+   exam on. The instruction is emphatic because small models drift back to
+   general knowledge the moment the passage gets thin. */
+function notesPrompt(text,want,lvl){
+  return 'Here is study material:\n"""\n'+text+'\n"""\n\n'+
+    'Create exactly '+want+' study flashcards USING ONLY the material above. '+
+    'Do not add facts that are not in it. '+lvl+' '+
+    'Reply with EXACTLY these labelled lines and nothing else:\n'+
+    'CARD: the question on the front | the answer on the back (repeat this line for all '+want+' cards)';
+}
+
+/* ---------------- spaced repetition ----------------
+
+   SM-2, the algorithm Anki is built on. Each card carries its own ease and
+   interval, and a deck opens on what is actually DUE rather than on card one —
+   which is the whole difference between a card viewer and a study app.
+
+   Days are whole-day numbers rather than timestamps. Study at 23:50 and again
+   at 00:10 and you should get the next day's queue, not a card that is
+   technically due in nine hours; whole days match how people think about
+   revision and sidestep timezone drift entirely.
+
+   Cards made before this existed simply have no `srs`, and cardSrs() gives
+   them a fresh one on first touch — so old decks migrate by being used.       */
+function today(){ return Math.floor(Date.now()/86400000); }
+function cardSrs(c){
+  if(!c.srs)c.srs={ease:2.5,ivl:0,due:0,reps:0,lapses:0};
+  return c.srs;
+}
+function isDue(c){ return cardSrs(c).due<=today(); }
+function dueCount(deck){
+  var k=0;(deck.cards||[]).forEach(function(c){ if(isDue(c))k++; });
+  return k;
+}
+/* What each button would do, so the choice is informed rather than a guess. */
+function previewIvl(s,g){
+  var t=Object.assign({},s);
+  applyGrade(t,g);
+  return g===0?'<1m':(t.ivl===1?'1d':t.ivl+'d');
+}
+function applyGrade(s,g){
+  if(g===0){
+    s.lapses++;s.reps=0;s.ivl=0;
+    s.ease=Math.max(1.3,s.ease-0.20);
+    s.due=today();                       // still today: it returns this session
+  }else{
+    if(g===1){ s.ease=Math.max(1.3,s.ease-0.15);
+               s.ivl=s.reps?Math.max(1,Math.round(s.ivl*1.2)):1; }
+    else if(g===2){ s.ivl=s.reps===0?1:(s.reps===1?6:Math.round(s.ivl*s.ease)); }
+    else { s.ease=Math.min(3.0,s.ease+0.15);
+           s.ivl=s.reps===0?4:Math.round(s.ivl*s.ease*1.3); }
+    s.reps++;
+    s.ivl=Math.max(1,s.ivl);
+    s.due=today()+s.ivl;
+  }
+}
+
+/* ---- session queue ----
+   idx indexes the QUEUE, not the deck, so "next" means the next card to study
+   rather than the next card in storage. */
+var queue=[],studyAllMode=false;
+function buildQueue(all){
+  var deck=decks[cur];queue=[];
+  if(!deck)return;
+  deck.cards.forEach(function(c,i){ if(all||isDue(c))queue.push(i); });
+  if(!queue.length&&!all)studyAllMode=false;   // nothing due -> the done card shows
+  idx=0;showA=false;
+}
+function studyAll(){
+  studyAllMode=true;buildQueue(true);
+  el('done').style.display='none';
+  renderCard();haptic('light');
+}
+function curCard(){
+  var deck=decks[cur];
+  if(!deck||!queue.length)return null;
+  return deck.cards[queue[Math.min(idx,queue.length-1)]];
+}
+function grade(g){
+  var deck=decks[cur];if(!deck||!queue.length)return;
+  var ci=queue[idx],c=deck.cards[ci];
+  applyGrade(cardSrs(c),g);
+  bumpStats(g>=2);
+  if(g===0){
+    // put it back a few cards on rather than at the end, so a card you just
+    // failed is retried while it is still fresh
+    queue.splice(idx,1);
+    queue.splice(Math.min(queue.length,idx+3),0,ci);
+  }else{
+    queue.splice(idx,1);
+    if(idx>=queue.length)idx=queue.length?queue.length-1:0;
+  }
+  showA=false;save();
+  renderDecks();                      // the "N due" counts are live, not stale
+  if(!queue.length){ finishSession(); return; }
+  renderCard();haptic('selection');
+}
+function finishSession(){
+  el('study').style.display='none';
+  el('done').style.display='block';
+  renderDecks();
+  var deck=decks[cur];
+  var soon=deck?deck.cards.reduce(function(m,c){
+    var d=cardSrs(c).due;return (m===null||d<m)?d:m; },null):null;
+  el('doneT').textContent='Deck complete';
+  el('doneP').textContent = soon!==null
+    ? (soon<=today()?'Everything reviewed for now.'
+       :'Next cards are due in '+(soon-today())+' day'+((soon-today())===1?'':'s')+'.')
+    : 'Everything reviewed.';
+  haptic('success');
+}
+
+/* Extend a deck instead of starting over. The existing questions go into the
+   prompt so the model adds rather than repeats — the same trick that stopped
+   Social Studio's week series producing five variations of one post. */
+function forgeMore(){
+  var deck=decks[cur];if(!deck)return;
+  var msg=el('moreStatus');msg.textContent='';
+  if(!window.myllmAsk){msg.textContent='This needs AI access — enable it in MyLLM Settings.';return}
+  var want=deckSize;
+  var have=deck.cards.map(function(c){return c.q}).slice(0,40);
+  el('moreBtn').disabled=true;msg.textContent='Forging '+want+' more…';
+  var lvl={beginner:'Pitch them for a complete beginner.',standard:'Pitch them at a general adult learner.',
+           advanced:'Pitch them at an advanced student.',expert:'Pitch them at an expert.'}[level];
+  var p='Create exactly '+want+' MORE study flashcards about: '+deck.topic+'. '+lvl+'\n'+
+    'These questions are already covered — do NOT repeat them or ask the same thing differently:\n'+
+    have.map(function(q){return '- '+q}).join('\n')+'\n'+
+    'Reply with EXACTLY these labelled lines and nothing else:\n'+
+    'CARD: the question on the front | the answer on the back (repeat this line for all '+want+' cards)';
+  myllmAsk(p).then(function(r){return parseDeck(r||'')})
+  .then(function(cards){
+    // a model that ignores the exclusion list would silently bloat the deck
+    var seen={};deck.cards.forEach(function(c){seen[c.q.toLowerCase().trim()]=1});
+    var fresh=cards.filter(function(c){return !seen[c.q.toLowerCase().trim()]});
+    if(!fresh.length)throw new Error('every suggestion repeated a card you already have');
+    fresh.forEach(function(c){cardSrs(c);deck.cards.push(c);queue.push(deck.cards.length-1)});
+    save();renderDecks();renderCard();
+    msg.textContent='Added '+fresh.length+' card'+(fresh.length===1?'':'s')+
+      (fresh.length<cards.length
+        ? (function(d){return ' — '+d+(d===1?' was a duplicate and was':' were duplicates and were')+' dropped.'})(cards.length-fresh.length)
+        : '.');
+    haptic('success');
+  })
+  .catch(function(e){msg.textContent='Could not add cards: '+e.message})
+  .then(function(){el('moreBtn').disabled=false});
+}
+
+/* ---------------- quiz ----------------
+
+   Recognition rather than recall — a different, easier cognitive mode than
+   flipping, which is exactly why it is a separate button and not a replacement
+   for it. Distractors come from other answers in the SAME deck, so they are
+   plausible; drawing them from elsewhere would make every question trivial.
+
+   Grading here feeds the same SM-2 schedule: getting a card right in a quiz is
+   evidence you know it, and pretending otherwise would make the two modes
+   disagree about the same card.                                               */
+var quiz=null;
+function startQuiz(){
+  var deck=decks[cur];if(!deck)return;
+  if(deck.cards.length<4){
+    el('moreStatus').textContent='A quiz needs at least 4 cards — forge a few more first.';
+    return;
+  }
+  var order=deck.cards.map(function(_,i){return i});
+  for(var i=order.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1)),t=order[i];order[i]=order[j];order[j]=t}
+  quiz={order:order.slice(0,Math.min(10,order.length)),pos:0,score:0,answered:false};
+  el('study').style.display='none';el('done').style.display='none';
+  el('quizDone').style.display='none';el('quiz').style.display='block';
+  renderQuiz();haptic('light');
+}
+function endQuiz(){
+  quiz=null;
+  el('quiz').style.display='none';el('quizDone').style.display='none';
+  if(queue.length){el('study').style.display='block';renderCard()}
+  else finishSession();
+}
+function renderQuiz(){
+  var deck=decks[cur];if(!deck||!quiz)return;
+  var ci=quiz.order[quiz.pos],card=deck.cards[ci];
+  el('qzN').textContent='Question '+(quiz.pos+1)+' of '+quiz.order.length;
+  el('qzScore').textContent=quiz.score+' correct';
+  el('qzQ').textContent=card.q;
+  // three wrong answers from elsewhere in this deck, deduped by text so a
+  // repeated answer can never appear as two different options
+  var pool=[],seen={};seen[card.a.trim().toLowerCase()]=1;
+  deck.cards.forEach(function(c,i){
+    if(i===ci)return;
+    var k=c.a.trim().toLowerCase();
+    if(seen[k])return;seen[k]=1;pool.push(c.a);
+  });
+  for(var i=pool.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1)),t=pool[i];pool[i]=pool[j];pool[j]=t}
+  var opts=pool.slice(0,3).concat([card.a]);
+  for(var k2=opts.length-1;k2>0;k2--){var j2=Math.floor(Math.random()*(k2+1)),t2=opts[k2];opts[k2]=opts[j2];opts[j2]=t2}
+  var box=el('qzOpts');box.innerHTML='';
+  quiz.answered=false;
+  opts.forEach(function(o){
+    var b=document.createElement('button');b.className='qz-opt';b.type='button';b.textContent=o;
+    b.onclick=function(){ answerQuiz(b,o===card.a,ci) };
+    box.appendChild(b);
+  });
+  el('qzNext').style.display='none';
+}
+function answerQuiz(btn,right,ci){
+  if(!quiz||quiz.answered)return;
+  quiz.answered=true;
+  var deck=decks[cur],card=deck.cards[ci];
+  [].forEach.call(el('qzOpts').children,function(b){
+    if(b.textContent===card.a)b.classList.add('right');
+    else if(b===btn)b.classList.add('wrong');
+    else b.classList.add('dim');
+  });
+  if(right)quiz.score++;
+  // a quiz answer is real evidence, so it moves the same schedule
+  applyGrade(cardSrs(card),right?2:0);
+  bumpStats(right);
+  save();renderDecks();
+  el('qzNext').style.display='block';
+  el('qzScore').textContent=quiz.score+' correct';
+  haptic(right?'success':'warning');
+}
+function quizNext(){
+  if(!quiz)return;
+  quiz.pos++;
+  if(quiz.pos>=quiz.order.length){ finishQuiz(); return; }
+  renderQuiz();
+}
+function finishQuiz(){
+  var n=quiz.order.length,sc=quiz.score,pct=Math.round(sc/n*100);
+  el('quiz').style.display='none';el('quizDone').style.display='block';
+  el('qdEmoji').textContent=pct===100?'🏆':pct>=70?'🎉':pct>=40?'👍':'📚';
+  el('qdT').textContent=sc+' out of '+n;
+  el('qdP').textContent=pct===100?'Perfect round.'
+    :pct>=70?'Solid — the ones you missed are back in the deck sooner.'
+    :'The misses are scheduled to come round again quickly.';
+  quiz=null;haptic('success');
+}
+
+/* ---------------- editing ----------------
+
+   A deck used to be whatever the model said, permanently — one wrong answer
+   and the only remedy was regenerating the lot. Editing preserves the card's
+   schedule: fixing a typo should not reset how well you know it.             */
+var editingIdx=-2;                       // -2 closed, -1 new card, >=0 deck index
+function openEditor(deckIdx){
+  var deck=decks[cur];if(!deck)return;
+  editingIdx=deckIdx;
+  var c=deckIdx>=0?deck.cards[deckIdx]:{q:'',a:''};
+  el('edQ').value=c.q||'';
+  el('edA').value=c.a||'';
+  el('edMsg').textContent='';
+  el('edTitle').textContent=deckIdx>=0?'Edit card':'New card';
+  el('edDel').style.display=(deckIdx>=0&&deck.cards.length>1)?'block':'none';
+  el('editor').style.display='block';
+  el('study').style.display='none';
+  el('edQ').focus();
+}
+function editCard(){
+  if(cur<0||!queue.length)return;
+  openEditor(queue[idx]);
+}
+function addCard(){ if(cur>=0)openEditor(-1); }
+/* Every deck used to come from the model, so with AI off — or simply
+   unavailable — the app had no way to make a deck at all. Writing your own
+   cards is a legitimate way to study, not a fallback. */
+function newEmptyDeck(){
+  var name=el('topic').value.trim()||'My deck';
+  decks.unshift({topic:name,cards:[]});
+  sortDecks();save();
+  el('topic').value='';setStatus('');
+  cur=decks.indexOf(decks.find(function(d){return d.topic===name&&!d.cards.length}));
+  if(cur<0)cur=0;
+  queue=[];idx=0;showA=false;studyAllMode=false;
+  renderDecks();updateViews();
+  el('done').style.display='none';
+  openEditor(-1);
+  haptic('success');
+}
+function closeEditor(){
+  editingIdx=-2;
+  el('editor').style.display='none';
+  var deck=decks[cur];
+  if(deck&&!deck.cards.length){
+    // an empty deck has nothing to finish — drop it rather than leave a husk
+    decks.splice(cur,1);cur=-1;save();
+    el('study').style.display='none';renderDecks();updateViews();
+    return;
+  }
+  if(queue.length){ el('study').style.display='block'; renderCard(); }
+  else finishSession();
+}
+/* Building a deck by hand means writing card after card, so the flow stays in
+   the editor rather than bouncing out to a drawer for every one. */
+function saveEditor(again){
+  var deck=decks[cur];if(!deck)return;
+  var q=el('edQ').value.trim(),a=el('edA').value.trim();
+  if(!q||!a){ el('edMsg').textContent='Both sides need something on them.'; return; }
+  if(editingIdx>=0){
+    // keep the existing srs — a wording fix is not a reason to forget the card
+    deck.cards[editingIdx].q=q;
+    deck.cards[editingIdx].a=a;
+  }else{
+    var card={q:q,a:a};cardSrs(card);
+    deck.cards.push(card);
+    queue.push(deck.cards.length-1);      // study it in this session
+    if(queue.length===1)idx=0;
+  }
+  save();renderDecks();haptic('success');
+  if(again===true){
+    editingIdx=-1;
+    el('edQ').value='';el('edA').value='';el('edMsg').textContent='';
+    el('edTitle').textContent='New card';
+    el('edDel').style.display='none';
+    el('edQ').focus();
+    return;
+  }
+  closeEditor();
+}
+function deleteCard(){
+  var deck=decks[cur];if(!deck||editingIdx<0||deck.cards.length<2)return;
+  var gone=editingIdx;
+  deck.cards.splice(gone,1);
+  // queue holds DECK indices, so every entry past the hole shifts down by one
+  queue=queue.filter(function(i){return i!==gone;})
+             .map(function(i){return i>gone?i-1:i;});
+  if(idx>=queue.length)idx=queue.length?queue.length-1:0;
+  save();editingIdx=-2;
+  el('editor').style.display='none';
+  renderDecks();
+  if(queue.length){ el('study').style.display='block'; showA=false; renderCard(); }
+  else finishSession();
+  haptic('warning');
+}
+
+/* Reviews and a day streak, kept here so the stats view has data to show. */
+var stats={reviews:0,correct:0,day:0,streak:0};
+function bumpStats(right){
+  var t=today();
+  if(stats.day!==t){ stats.streak=(stats.day===t-1)?stats.streak+1:1; stats.day=t; }
+  stats.reviews++;
+  if(right)stats.correct++;
+  store.setItem('stats',JSON.stringify(stats));
+}
 function el(i){return document.getElementById(i)}
 function setStatus(t){el('status').textContent=t}
 function save(){store.setItem('decks',JSON.stringify(decks))}
 function haptic(k){if(window.myllmHaptic)try{myllmHaptic(k)}catch(e){}}
 
 var EXAMPLES=['The Tudors','Photosynthesis','French verbs','World capitals','Music theory'];
+function buildSizes(){
+  var c=el('sizeChips');if(!c)return;
+  c.innerHTML='';
+  SIZES.forEach(function(nn){
+    var b=document.createElement('button');b.type='button';
+    b.className='chip'+(nn===deckSize?' on':'');b.textContent=nn;
+    b.onclick=function(){deckSize=nn;buildSizes();store.setItem('decksize',String(nn));haptic('selection')};
+    c.appendChild(b);
+  });
+}
+function buildLevels(){
+  var c=el('levelChips');if(!c)return;
+  c.innerHTML='';
+  LEVELS.forEach(function(o){
+    var b=document.createElement('button');b.type='button';
+    b.className='chip'+(o[0]===level?' on':'');b.textContent=o[1];
+    b.onclick=function(){level=o[0];buildLevels();store.setItem('level',o[0]);haptic('selection')};
+    c.appendChild(b);
+  });
+}
+/* Fisher-Yates over the QUEUE, not the deck: shuffling storage would scramble
+   what "card 4" means for every other view. */
+function shuffleQueue(){
+  for(var i=queue.length-1;i>0;i--){
+    var j=Math.floor(Math.random()*(i+1)),t=queue[i];queue[i]=queue[j];queue[j]=t;
+  }
+  idx=0;showA=false;renderCard();haptic('success');
+}
+var toolsOpen=false;
+function applyTools(){
+  var body=el('toolsBody'),btn=el('toolsBtn');
+  if(!body||!btn)return;
+  body.style.display=toolsOpen?'block':'none';
+  btn.classList.toggle('open',toolsOpen);
+  btn.setAttribute('aria-expanded',toolsOpen?'true':'false');
+}
+function toggleTools(){
+  toolsOpen=!toolsOpen;
+  applyTools();
+  store.setItem('tools',toolsOpen?'1':'0');
+  haptic('selection');
+}
+function toggleReverse(){
+  reverseMode=!reverseMode;
+  store.setItem('reverse',reverseMode?'1':'0');
+  showA=false;renderCard();haptic('selection');
+}
 function buildChips(){
   var c=el('topicChips');c.innerHTML='';
   EXAMPLES.forEach(function(t){
@@ -224,47 +886,251 @@ function parseDeck(reply){
   return cards;
 }
 function gen(){
-  var topic=el('topic').value.trim();if(!topic){setStatus('Enter a topic first.');return}
+  var notes=el('notes')?el('notes').value.trim():'';
+  var topic=el('topic').value.trim();
+  if(source==='notes'){
+    if(notes.length<80){setStatus('Paste a bit more text — at least a paragraph or two to draw cards from.');return}
+  }else if(!topic){setStatus('Enter a topic first.');return}
   if(!window.myllmAsk){setStatus('This app needs AI access — update MyLLM and enable “Allow apps to use the AI” in Settings.');return}
-  el('gen').disabled=true;setStatus('Forging a deck about “'+topic+'”…');
-  var p='Create exactly 8 study flashcards about: '+topic+'. Reply with EXACTLY these labelled lines and nothing else:\n'+
-    'CARD: the question on the front | the answer on the back (repeat this line for all 8 cards)';
+  el('gen').disabled=true;
+  setStatus(source==='notes'?'Reading your notes…':'Forging a deck about “'+topic+'”…');
+  var want=deckSize;
+  var lvl={beginner:'Pitch them for a complete beginner — plain words, no jargon.',
+           standard:'Pitch them at a general adult learner.',
+           advanced:'Pitch them at an advanced student who already knows the basics.',
+           expert:'Pitch them at an expert — precise terminology and specifics.'}[level];
+  // Long notes are trimmed: an on-device context window is small, and a
+  // truncated passage yields better cards than an overflowing one yields none.
+  var body=notes.slice(0,4000);
+  var p=source==='notes'
+    ? notesPrompt(body,want,lvl)
+    : 'Create exactly '+want+' study flashcards about: '+topic+'. '+lvl+' Reply with EXACTLY these labelled lines and nothing else:\n'+
+      'CARD: the question on the front | the answer on the back (repeat this line for all '+want+' cards)';
   myllmAsk(p).then(function(r){return parseDeck(r||'')})
   .catch(function(){return myllmAsk(p+'\nIMPORTANT: fill each labelled line with real content — never repeat the instruction text.')
     .then(function(r){return parseDeck(r||'')})})
   .then(function(cards){
-    decks.unshift({topic:topic,cards:cards});save();
-    el('topic').value='';setStatus('');cur=-1;openDeck(0);haptic('success');
+    if(cards.length>want)cards=cards.slice(0,want);
+    var name=source==='notes'
+      ? (body.split(/\s+/).slice(0,5).join(' ').replace(/[^\w\s-]/g,'')||'My notes')
+      : topic;
+    cards.forEach(cardSrs);
+    decks.unshift({topic:name,cards:cards});sortDecks();save();
+    el('topic').value='';cur=-1;openDeck(0);haptic('success');
+    setStatus(cards.length<want
+      ? ('Forged '+cards.length+' cards — the model ran out before '+want+'. Try a smaller deck for a fuller set.')
+      : '');
   }).catch(function(err){setStatus('Could not generate: '+err.message)})
   .then(function(){el('gen').disabled=false});
 }
 
 function openDeck(i){
-  if(!decks[i]){el('study').style.display='none';return}
-  cur=i;idx=0;showA=false;
+  if(!decks[i]){el('study').style.display='none';if(fsOn)exitFs();return}
+  cur=i;showA=false;studyAllMode=false;
+  el('done').style.display='none';
+  if(!decks[i].cards.length){        // brand new hand-built deck
+    queue=[];renderDecks();updateViews();openEditor(-1);return;
+  }
+  buildQueue(false);
+  if(!queue.length){ renderDecks();updateViews();finishSession();return; }
   renderCard();renderDecks();updateViews();
   window.scrollTo({top:0,behavior:'smooth'});
 }
-function flip(){showA=!showA;haptic('light');el('cardInner').classList.toggle('flipped',showA)}
-function nav(d){
+function flip(){
+  showA=!showA;haptic('light');
+  el('cardInner').classList.toggle('flipped',showA);
+  el('fsInner').classList.toggle('flipped',showA);
+  el('fsHint').textContent=showA?'':'tap to reveal';   // flip() bypasses renderCard
+  renderGrades();
+}
+
+/* ---- fullscreen study ---- */
+var fsOn=false;
+function enterFs(){
   if(cur<0||!decks[cur])return;
-  var n=decks[cur].cards.length;idx=(idx+d+n)%n;showA=false;
+  fsOn=true;
+  el('fs').classList.add('on');
+  document.body.classList.add('fs-open');
+  // real fullscreen where it exists (desktop); harmless no-op on iOS
+  try{ var r=document.documentElement.requestFullscreen; if(r)r.call(document.documentElement).catch(function(){}); }catch(e){}
+  renderCard();haptic('light');
+}
+function exitFs(){
+  fsOn=false;
+  el('fs').classList.remove('on');
+  document.body.classList.remove('fs-open');
+  try{ if(document.fullscreenElement&&document.exitFullscreen)document.exitFullscreen().catch(function(){}); }catch(e){}
+  haptic('light');
+}
+/* Swipe to move, tap to flip. The threshold keeps a slightly untidy tap from
+   skipping a card, which is worse than a swipe that fails to register. */
+(function(){
+  var st=el('fsStage'),x0=null,y0=null,moved=false;
+  if(!st)return;
+  st.addEventListener('pointerdown',function(e){x0=e.clientX;y0=e.clientY;moved=false});
+  st.addEventListener('pointermove',function(e){
+    if(x0===null)return;
+    if(Math.abs(e.clientX-x0)>10||Math.abs(e.clientY-y0)>10)moved=true;
+  });
+  st.addEventListener('pointerup',function(e){
+    if(x0===null)return;
+    var dx=e.clientX-x0,dy=e.clientY-y0;
+    x0=null;
+    if(Math.abs(dx)>44&&Math.abs(dx)>Math.abs(dy)){ nav(dx<0?1:-1); return; }
+    if(!moved)flip();
+  });
+  st.addEventListener('pointercancel',function(){x0=null});
+})();
+/* Study shortcuts, with two guards that both have to hold.
+
+   The first is what a field IS: checking only for INPUT missed every TEXTAREA,
+   so typing a space in the card editor flipped the card and typing an "f"
+   threw you into fullscreen. Anything a person can type into has to count,
+   including contenteditable and select.
+
+   The second is what is on SCREEN: the shortcuts belong to the study view, so
+   they must not fire while the editor, the quiz or the completion card has the
+   stage — otherwise space flips a card nobody can see. */
+function isTyping(){
+  var a=document.activeElement;
+  if(!a)return false;
+  var t=(a.tagName||'').toUpperCase();
+  return t==='INPUT'||t==='TEXTAREA'||t==='SELECT'||a.isContentEditable===true;
+}
+function studyVisible(){
+  var e2=el('study');
+  return !!e2&&e2.offsetParent!==null;
+}
+document.addEventListener('keydown',function(e){
+  if(e.key==='Escape'&&fsOn){exitFs();return}
+  if(isTyping())return;
+  if(cur<0||!decks[cur])return;
+  if(!fsOn&&!studyVisible())return;
+  if(e.key==='ArrowRight')nav(1);
+  else if(e.key==='ArrowLeft')nav(-1);
+  else if(e.key===' '||e.key==='Enter'){e.preventDefault();flip()}
+  else if((e.key==='f'||e.key==='F')&&!fsOn)enterFs();
+});
+function nav(d){
+  if(cur<0||!decks[cur]||!queue.length)return;
+  var n=queue.length;idx=(idx+d+n)%n;showA=false;
   renderCard();haptic('selection');
 }
 function renderCard(){
-  if(cur<0||!decks[cur]){el('study').style.display='none';return}
-  var deck=decks[cur],c=deck.cards[idx];
+  if(cur<0||!decks[cur]){el('study').style.display='none';if(fsOn)exitFs();return}
+  var deck=decks[cur],c=curCard();
+  if(!c){el('study').style.display='none';return}
   el('study').style.display='block';
+  el('done').style.display='none';
   el('deckTopic').textContent=deck.topic;
-  el('deckMeta').textContent=deck.cards.length+' cards · tap the card to flip';
-  el('qText').textContent=c.q;
-  el('aText').textContent=c.a;
+  var due=dueCount(deck);
+  el('deckMeta').textContent = studyAllMode
+    ? (deck.cards.length+' cards · reviewing all')
+    : (due+' due of '+deck.cards.length+' · tap the card to flip');
+  var front=reverseMode?c.a:c.q, back=reverseMode?c.q:c.a;
+  var fLabel=reverseMode?'Answer':'Question', bLabel=reverseMode?'Question':'Answer';
+  el('qText').textContent=front;
+  el('aText').textContent=back;
+  document.querySelectorAll('.face.front .face-label').forEach(function(e){e.textContent=fLabel});
+  document.querySelectorAll('.face.back .face-label').forEach(function(e){e.textContent=bLabel});
+  var rb=el('revBtn');if(rb)rb.classList.toggle('on',reverseMode);
   el('cardInner').classList.toggle('flipped',showA);
-  el('count').textContent='Card '+(idx+1)+' of '+deck.cards.length;
+  el('count').textContent='Card '+(idx+1)+' of '+queue.length;
+  // the fullscreen layer is a second view of the same card, not a second model
+  el('fsQ').textContent=front;
+  el('fsA').textContent=back;
+  el('fsInner').classList.toggle('flipped',showA);
+  el('fsTopic').textContent=deck.topic;
+  el('fsCount').textContent=(idx+1)+' / '+queue.length;
+  el('fsBar').style.width=(((idx+1)/Math.max(1,queue.length))*100).toFixed(1)+'%';
+  el('fsHint').textContent=showA?'':'tap to reveal';
   var dd=el('dots');dd.innerHTML='';
-  if(deck.cards.length<=16){
-    deck.cards.forEach(function(_,j){var s=document.createElement('span');s.className='dot'+(j===idx?' on':'');dd.appendChild(s)});
+  if(queue.length<=16){
+    queue.forEach(function(_,j){var s=document.createElement('span');s.className='dot'+(j===idx?' on':'');dd.appendChild(s)});
   }
+  renderGrades();
+}
+
+/* Both views share one grading row builder; the buttons carry the interval
+   each choice would set, so you are picking an outcome, not a mood. */
+function renderGrades(){
+  var c=curCard();
+  [['grades'],['fsGrades']].forEach(function(o){
+    var g=el(o[0]);if(!g)return;
+    g.className='grades'+(showA&&c?' on':'');
+    if(!showA||!c){g.innerHTML='';return}
+    var s0=cardSrs(c);
+    g.innerHTML=[[0,'Again'],[1,'Hard'],[2,'Good'],[3,'Easy']].map(function(b){
+      return '<button class="grade g'+b[0]+'" onclick="grade('+b[0]+')">'+
+             '<b>'+b[1]+'</b><span>'+previewIvl(s0,b[0])+'</span></button>';
+    }).join('');
+  });
+}
+
+var deckArmed=null, renaming=-1;
+/* Starred decks float to the top; everything else keeps its existing order,
+   so pinning never silently reshuffles the rest. */
+function sortDecks(){
+  var keep=decks[cur];
+  decks=decks.map(function(d,i){return {d:d,i:i}})
+    .sort(function(a,b){ return (b.d.star?1:0)-(a.d.star?1:0) || a.i-b.i; })
+    .map(function(o){return o.d});
+  if(keep)cur=decks.indexOf(keep);
+}
+function startRename(i){ renaming=i;renderDecks(); }
+function commitRename(i){
+  var inp=el('rn'+i);if(!inp)return;
+  var v=inp.value.trim();
+  if(v)decks[i].topic=v.slice(0,60);
+  renaming=-1;save();renderDecks();
+  if(i===cur)renderCard();
+  haptic('success');
+}
+/* Anki and Quizlet both import plain CSV, so a shared deck is portable rather
+   than locked in here. Quotes are doubled per RFC 4180. */
+function deckCsv(d){
+  function esc(t){ return '"'+String(t||'').replace(/"/g,'""')+'"'; }
+  return d.cards.map(function(c){ return esc(c.q)+','+esc(c.a); }).join('\r\n');
+}
+/* UTF-8 -> base64, written out rather than reached for via the usual
+   btoa(unescape(encodeURIComponent(x))) idiom. unescape is deprecated, and it
+   trips scan_app.py's obfuscation heuristic — which is a fair rule, since
+   atob/unescape/fromCharCode really are how hidden payloads get reconstituted.
+   Better to encode explicitly than to teach the reviewer to wave that flag
+   through. The native bridge requires real base64: it strips to "base64," and
+   hands the rest to Data(base64Encoded:), so a percent-encoded data URL fails. */
+var B64A='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+function b64utf8(str){
+  var bytes=new TextEncoder().encode(str),out='',i=0,n;
+  for(;i+2<bytes.length;i+=3){
+    n=(bytes[i]<<16)|(bytes[i+1]<<8)|bytes[i+2];
+    out+=B64A[(n>>18)&63]+B64A[(n>>12)&63]+B64A[(n>>6)&63]+B64A[n&63];
+  }
+  var rem=bytes.length-i;
+  if(rem===1){ n=bytes[i]<<16; out+=B64A[(n>>18)&63]+B64A[(n>>12)&63]+'=='; }
+  else if(rem===2){ n=(bytes[i]<<16)|(bytes[i+1]<<8);
+    out+=B64A[(n>>18)&63]+B64A[(n>>12)&63]+B64A[(n>>6)&63]+'='; }
+  return out;
+}
+function shareDeck(i){
+  var d=decks[i];if(!d)return;
+  var csv=deckCsv(d);
+  if(window.myllmShareFile){
+    var b64;
+    try{ b64='data:text/csv;base64,'+b64utf8(csv); }catch(e){ b64=null; }
+    if(b64){
+      myllmShareFile(b64,{filename:d.topic.replace(/[^\w -]/g,'').slice(0,40)+'.csv',mime:'text/csv'})
+        .catch(function(){});
+      haptic('success');return;
+    }
+  }
+  var txt=d.topic+'\n\n'+d.cards.map(function(c){return c.q+'\n— '+c.a}).join('\n\n');
+  if(window.myllmShare){ try{ myllmShare(txt);haptic('success');return; }catch(e){} }
+  try{
+    var ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);
+    ta.select();document.execCommand('copy');document.body.removeChild(ta);
+    setStatus('Deck copied to the clipboard.');
+  }catch(e){ setStatus('Sharing is not available here.'); }
 }
 
 function renderDecks(){
@@ -276,36 +1142,108 @@ function renderDecks(){
     var mid=document.createElement('div');mid.className='deck-mid';
     var t=document.createElement('div');t.className='deck-t';t.textContent=d.topic;
     var s=document.createElement('div');s.className='deck-s';
-    s.innerHTML=(active?'<span class="now">Studying</span>':'')+'<span>'+d.cards.length+' cards</span>';
+    var dn=dueCount(d);
+    s.innerHTML=(active?'<span class="now">Studying</span>':'')+
+      '<span>'+d.cards.length+' cards</span>'+
+      (dn?'<span class="due">'+dn+' due</span>':'<span>up to date</span>');
     mid.appendChild(t);mid.appendChild(s);
-    var x=document.createElement('button');x.className='del';x.type='button';x.textContent='✕';x.setAttribute('aria-label','Delete deck');
-    x.onclick=function(ev){
-      ev.stopPropagation();
+    if(renaming===i){
+      t.style.display='none';
+      var rb=document.createElement('div');rb.className='renamebox';
+      var inp=document.createElement('input');inp.id='rn'+i;inp.value=d.topic;inp.maxLength=60;
+      inp.onclick=function(ev){ev.stopPropagation()};
+      inp.onkeydown=function(ev){if(ev.key==='Enter')commitRename(i);if(ev.key==='Escape'){renaming=-1;renderDecks()}};
+      var ok=document.createElement('button');ok.textContent='Save';
+      ok.onclick=function(ev){ev.stopPropagation();commitRename(i)};
+      rb.appendChild(inp);rb.appendChild(ok);
+      mid.appendChild(rb);
+      setTimeout(function(){var e2=el('rn'+i);if(e2){e2.focus();e2.select()}},0);
+    }
+    var acts=document.createElement('div');acts.className='deck-acts';
+    function act(label,aria,fn){
+      var b=document.createElement('button');b.type='button';b.className='dact';
+      b.textContent=label;b.setAttribute('aria-label',aria);
+      b.onclick=function(ev){ev.stopPropagation();fn()};
+      acts.appendChild(b);return b;
+    }
+    var starBtn=act(d.star?'★':'☆','Pin deck to top',function(){
+      d.star=!d.star;sortDecks();save();renderDecks();haptic('selection');
+    });
+    if(d.star)starBtn.classList.add('on');
+    act('✎','Rename deck',function(){ startRename(i) });
+    act('⤴','Share deck',function(){ shareDeck(i) });
+    var x=act(deckArmed===i?'Delete?':'✕','Delete deck',function(){
+      if(deckArmed!==i){
+        deckArmed=i;renderDecks();
+        setTimeout(function(){if(deckArmed===i){deckArmed=null;renderDecks()}},2500);
+        return;
+      }
+      deckArmed=null;
       decks.splice(i,1);
       if(cur===i)cur=-1;else if(cur>i)cur--;
       save();
       if(decks.length){openDeck(cur<0?0:cur)}else{cur=-1;el('study').style.display='none';renderDecks();updateViews()}
       haptic('warning');
-    };
-    r.appendChild(ic);r.appendChild(mid);r.appendChild(x);
+    });
+    x.classList.add('del');
+    if(deckArmed===i)x.classList.add('armed');
+    r.appendChild(ic);r.appendChild(mid);r.appendChild(acts);
     r.onclick=function(){openDeck(i)};
     D.appendChild(r);
   });
   updateViews();
 }
 
+/* Four numbers, no chart. Accuracy is only shown once there is enough of a
+   sample to mean anything — a 100% badge off two reviews flatters nobody. */
+function renderStats(){
+  var row=el('statsRow');if(!row)return;
+  var dueAll=decks.reduce(function(k,d){return k+dueCount(d)},0);
+  var cards=decks.reduce(function(k,d){return k+d.cards.length},0);
+  var acc=stats.reviews>=10?Math.round(stats.correct/stats.reviews*100)+'%':'—';
+  var streak=(stats.day===today()||stats.day===today()-1)?stats.streak:0;
+  row.innerHTML=
+    '<div class="stat'+(dueAll?' hot':'')+'"><b>'+dueAll+'</b><span>Due now</span></div>'+
+    '<div class="stat"><b>'+cards+'</b><span>Cards</span></div>'+
+    '<div class="stat"><b>'+stats.reviews+'</b><span>Reviews</span></div>'+
+    '<div class="stat"><b>'+(streak?streak+'d':acc)+'</b><span>'+(streak?'Streak':'Accuracy')+'</span></div>';
+}
+
 function updateViews(){
   el('empty').style.display=decks.length?'none':'block';
   el('savedWrap').style.display=decks.length?'block':'none';
   if(!decks.length)el('study').style.display='none';
+  renderStats();
 }
 
 el('topic').addEventListener('keydown',function(e){if(e.key==='Enter')gen()});
+el('notes').addEventListener('input',function(){
+  var v=this.value.trim();
+  el('noteMeta').textContent=v?(v.split(/\s+/).length+' words'+(v.length>4000?' · only the first 4000 characters are used':'')):'';
+});
 
-buildChips();
-store.getItem('decks').then(function(v){
+buildChips();buildSizes();buildLevels();
+store.getItem('tools').then(function(v){
+  toolsOpen=(v==='1');applyTools();
+  return store.getItem('level');
+}).then(function(v){
+  if(v&&LEVELS.some(function(l){return l[0]===v}))level=v;
+  buildLevels();
+  return store.getItem('reverse');
+}).then(function(v){
+  reverseMode=(v==='1');
+  return store.getItem('stats');
+}).then(function(v){
+  if(v)try{var t=JSON.parse(v);if(t&&typeof t==='object')stats=Object.assign(stats,t)}catch(e){}
+  return store.getItem('decksize');
+}).then(function(v){
+  var nn=parseInt(v,10);
+  if(SIZES.indexOf(nn)>=0)deckSize=nn;
+  buildSizes();
+  return store.getItem('decks');
+}).then(function(v){
   if(v)try{decks=JSON.parse(v)||[]}catch(e){}
-  renderDecks();
+  sortDecks();renderDecks();
   if(decks.length)openDeck(0);else updateViews();
   if(!window.myllmAsk)setStatus('Heads-up: this app needs the latest MyLLM with apps-AI enabled.');
 });
