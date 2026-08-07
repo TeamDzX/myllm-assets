@@ -1,0 +1,565 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Nutrition Lens</title>
+<style>
+:root{
+  color-scheme:light dark;
+  --font:var(--myllm-font,-apple-system,system-ui,"Segoe UI",Roboto,sans-serif);
+  --page1:#f2f7f3; --page2:#eef5fa;
+  --surface:#ffffff; --surface2:#f2f6f4;
+  --ink:#152019; --muted:#5f6f68; --faint:#9aa8a2;
+  --border:#e2ebe6;
+  --acc:#2f9e5e; --acc2:#37b6a4; --accSoft:rgba(47,158,94,.12);
+  --carb:#e8a33d; --prot:#3f7fd1; --fat:#d2705a;
+  --radius:16px; --radiusLg:22px;
+  --shadow:0 1px 2px rgba(20,40,30,.05),0 8px 22px -14px rgba(20,60,40,.28);
+  --shadowLg:0 16px 44px -16px rgba(20,70,45,.42);
+}
+@media(prefers-color-scheme:dark){:root{
+  --page1:#0b110e; --page2:#0c1416;
+  --surface:#161d19; --surface2:#1e2621;
+  --ink:#eef3f0; --muted:#94a49c; --faint:#63736c;
+  --border:#27322c; --accSoft:rgba(47,158,94,.22);
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 28px -14px rgba(0,0,0,.7);
+  --shadowLg:0 18px 48px -16px rgba(0,0,0,.85);
+}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0}
+body{font-family:var(--font);padding:18px 16px calc(34px + env(safe-area-inset-bottom));
+  background:linear-gradient(180deg,var(--page1),var(--page2));background-attachment:fixed;
+  min-height:100dvh;color:var(--ink);line-height:1.4}
+@media(min-width:768px){body{max-width:680px;margin:0 auto}}
+
+.hero{position:relative;overflow:hidden;border-radius:var(--radiusLg);padding:20px;margin-bottom:16px;
+  background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;box-shadow:var(--shadowLg);
+  display:flex;align-items:center;gap:14px}
+.hero::after{content:"";position:absolute;right:-46px;top:-46px;width:170px;height:170px;border-radius:50%;
+  background:radial-gradient(circle,rgba(255,255,255,.28),transparent 70%);pointer-events:none}
+.hero-badge{width:52px;height:52px;border-radius:16px;background:rgba(255,255,255,.22);
+  display:grid;place-items:center;font-size:28px;flex:0 0 auto}
+.hero h1{font-size:22px;font-weight:800;letter-spacing:-.02em;margin:0}
+.hero p{margin:3px 0 0;font-size:13px;opacity:.92;font-weight:500}
+
+.surface{background:var(--surface);border:1px solid var(--border);border-radius:var(--radiusLg);
+  padding:16px;margin-bottom:16px;box-shadow:var(--shadow)}
+.btn-primary{width:100%;border:0;border-radius:14px;padding:15px;font-size:15.5px;font-weight:700;color:#fff;
+  font-family:var(--font);background:linear-gradient(135deg,var(--acc),var(--acc2));
+  box-shadow:0 8px 20px -8px var(--acc);cursor:pointer;transition:transform .1s,opacity .2s}
+.btn-primary:active{transform:scale(.98)}
+.btn-primary:disabled{opacity:.5;box-shadow:none}
+.btn-ghost{width:100%;border:1px solid var(--border);border-radius:13px;padding:11px;font-size:13.5px;
+  font-weight:650;color:var(--ink);font-family:var(--font);background:var(--surface);cursor:pointer;transition:transform .1s}
+.btn-ghost:active{transform:scale(.98)}
+
+.field{display:flex;align-items:center;gap:9px;background:var(--surface2);border:1px solid var(--border);
+  border-radius:14px;padding:11px 13px;margin:11px 0 0}
+.field input{flex:1;min-width:0;border:0;background:none;color:var(--ink);font-family:var(--font);
+  font-size:15px;outline:none}
+.field-ic{font-size:16px;opacity:.6}
+.status{font-size:12.5px;color:var(--muted);font-weight:600;margin:9px 2px 0;min-height:1px}
+.status.err{color:#c8553d}
+
+.sugg{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.sugg button{border:1px solid var(--border);background:var(--surface2);color:var(--muted);border-radius:999px;
+  padding:6px 11px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:var(--font)}
+.sugg button:active{transform:scale(.97)}
+
+/* ---- result ---- */
+.res{background:var(--surface);border:1px solid var(--border);border-radius:var(--radiusLg);
+  padding:18px;margin-bottom:16px;box-shadow:var(--shadow)}
+.res-head{display:flex;align-items:flex-start;gap:11px;margin-bottom:14px}
+.res-name{font-size:20px;font-weight:800;letter-spacing:-.02em;margin:0;flex:1;min-width:0}
+.src{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;border-radius:999px;
+  padding:4px 9px;flex:0 0 auto;white-space:nowrap}
+.src.ref{background:var(--accSoft);color:var(--acc)}
+.src.est{background:rgba(232,163,61,.16);color:#b3781f}
+
+.kcal{display:flex;align-items:baseline;gap:9px;margin-bottom:4px}
+.kcal b{font-size:40px;font-weight:850;letter-spacing:-.03em;line-height:1}
+.kcal span{font-size:13px;color:var(--muted);font-weight:650}
+.per{font-size:12.5px;color:var(--faint);font-weight:600;margin-bottom:15px}
+
+.portion{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+.portion button{border:1px solid var(--border);background:var(--surface2);color:var(--muted);border-radius:10px;
+  padding:7px 11px;font-size:12.5px;font-weight:650;cursor:pointer;font-family:var(--font)}
+.portion button.on{color:var(--acc);border-color:var(--acc);background:var(--accSoft)}
+
+.lbl{font-size:11px;font-weight:800;color:var(--faint);text-transform:uppercase;letter-spacing:.07em;margin:0 0 9px}
+.macro{margin-bottom:11px}
+.macro-top{display:flex;justify-content:space-between;font-size:13.5px;font-weight:650;margin-bottom:5px}
+.macro-top span:last-child{font-variant-numeric:tabular-nums;color:var(--muted)}
+.bar{height:8px;background:var(--surface2);border-radius:5px;overflow:hidden}
+.bar i{display:block;height:100%;border-radius:5px;transition:width .45s cubic-bezier(.2,.75,.2,1)}
+.i-prot{background:var(--prot)}.i-carb{background:var(--carb)}.i-fat{background:var(--fat)}
+
+.sub{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0 4px}
+.subcell{background:var(--surface2);border-radius:12px;padding:10px 8px;text-align:center}
+.subcell b{display:block;font-size:15px;font-weight:750;font-variant-numeric:tabular-nums}
+.subcell span{display:block;font-size:10.5px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.04em;margin-top:2px}
+
+.mic{display:flex;flex-direction:column;gap:9px}
+.micro{display:grid;grid-template-columns:1fr auto;gap:3px 10px;align-items:center}
+.micro .mn{font-size:13px;font-weight:600}
+.micro .mv{font-size:12.5px;font-weight:650;color:var(--muted);font-variant-numeric:tabular-nums}
+.micro .mb{grid-column:1/-1;height:6px;background:var(--surface2);border-radius:4px;overflow:hidden}
+.micro .mb i{display:block;height:100%;background:linear-gradient(90deg,var(--acc),var(--acc2));border-radius:4px}
+
+.note{font-size:11.5px;color:var(--faint);line-height:1.55;margin:16px 0 0;padding-top:13px;border-top:1px solid var(--border)}
+
+.section{font-size:11.5px;font-weight:800;color:var(--faint);text-transform:uppercase;letter-spacing:.07em;margin:0 2px 10px}
+.hist{display:flex;flex-direction:column;gap:7px}
+.hrow{display:flex;align-items:center;gap:11px;background:var(--surface);border:1px solid var(--border);
+  border-radius:14px;padding:11px 13px;cursor:pointer;box-shadow:var(--shadow)}
+.hrow:active{transform:scale(.995)}
+.hrow .he{font-size:19px;flex:0 0 auto}
+.hrow .hn{flex:1;min-width:0;font-size:14px;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hrow .hk{font-size:13px;font-weight:750;color:var(--acc);font-variant-numeric:tabular-nums;flex:0 0 auto}
+.hrow .hx{border:0;background:none;color:var(--faint);font-size:13px;cursor:pointer;padding:2px 4px;flex:0 0 auto}
+
+.empty{text-align:center;padding:26px 18px;color:var(--muted)}
+.empty .big{font-size:34px;display:block;margin-bottom:8px}
+.empty p{margin:0;font-size:13.5px}
+
+@keyframes myllmAiSpin{to{transform:rotate(360deg)}}
+.myllm-ai-busy{position:fixed;left:50%;top:calc(14px + env(safe-area-inset-top));transform:translateX(-50%) translateY(-16px);z-index:99999;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;display:flex;align-items:center;gap:10px;background:rgba(28,28,30,.96);color:#fff;border-radius:999px;padding:10px 16px 10px 14px;box-shadow:0 6px 22px rgba(0,0,0,.4);font-family:-apple-system,system-ui,sans-serif;font-size:14px;font-weight:600;max-width:92%}
+.myllm-ai-busy.on{opacity:1;transform:translateX(-50%) translateY(0)}
+.myllm-ai-cog{font-size:18px;line-height:1;animation:myllmAiSpin 2.4s linear infinite;filter:drop-shadow(0 0 5px rgba(124,92,255,.85))}
+.myllm-ai-busy small{font-weight:400;opacity:.6}
+</style>
+</head><body>
+<script>
+(function(){
+  if(window.__myllmAiWrap||typeof window.myllmAsk!=='function')return;
+  window.__myllmAiWrap=true;
+  var orig=window.myllmAsk,depth=0,node=null;
+  function ensure(){if(node)return;node=document.createElement('div');node.className='myllm-ai-busy';
+    node.innerHTML='<span class="myllm-ai-cog">⚙️</span><span>AI is thinking… <small>privately, on your device</small></span>';
+    (document.body||document.documentElement).appendChild(node);}
+  function show(){ensure();depth++;node.classList.add('on');}
+  function hide(){depth=Math.max(0,depth-1);if(depth===0&&node)node.classList.remove('on');}
+  window.myllmAsk=function(){show();var p;try{p=orig.apply(this,arguments);}catch(e){hide();throw e;}
+    return Promise.resolve(p).then(function(r){hide();return r;},function(e){hide();throw e;});};
+})();
+</script>
+
+<div class="hero">
+  <div class="hero-badge">🍎</div>
+  <div><h1>Nutrition Lens</h1><p>Photograph an ingredient, see what's in it.</p></div>
+</div>
+
+<div class="surface">
+  <button class="btn-primary" id="scanBtn" onclick="scan()">📷 Scan an ingredient</button>
+  <div class="field"><span class="field-ic">🔍</span>
+    <input id="q" placeholder="…or type one: spinach, salmon, oats" autocomplete="off" spellcheck="false"></div>
+  <div class="sugg" id="sugg"></div>
+  <div class="status" id="status"></div>
+</div>
+
+<div id="result"></div>
+
+<div id="histWrap" style="display:none">
+  <div class="section">Recent</div>
+  <div class="hist" id="hist"></div>
+</div>
+
+<div id="empty" class="surface empty">
+  <span class="big">🥑</span>
+  <p>Point the camera at a single ingredient — an apple, a fillet of salmon, a handful of almonds — and it'll break down what's in 100 g.</p>
+</div>
+
+<script>
+"use strict";
+var store=window.myllmStorage||{getItem:function(){return Promise.resolve(null)},setItem:function(){return Promise.resolve()}};
+function el(i){return document.getElementById(i)}
+function haptic(k){if(window.myllmHaptic)try{myllmHaptic(k)}catch(e){}}
+function setStatus(t,err){var s=el('status');s.textContent=t||'';s.className='status'+(err?' err':'')}
+
+/* ---------------- reference table ----------------
+
+   Values per 100 g of the raw ingredient, from public-domain USDA FoodData
+   Central figures. US federal work carries no copyright, so it can be bundled
+   outright — which matters, because a gallery app must be one self-contained
+   file with no network.
+
+   This table exists because of a specific failure mode. Vision is genuinely
+   good at NAMING a food; language models are bad at RECALLING numbers, and
+   will produce confident, plausible, wrong ones. In a nutrition app the
+   numbers ARE the product, so anything in this table is looked up, never
+   guessed, and anything outside it is labelled an estimate in the UI.
+
+   Fields: kcal, protein, carbs, sugar, fibre, fat, sat (grams per 100 g).
+   `mic` lists notable micronutrients as [name, amount, unit, %DV].
+   Foods are keyed by their common name; `alt` carries the synonyms and
+   regional names vision is likely to return instead.                          */
+var FOODS = [
+  {n:'Apple', alt:['apples','red apple','green apple','gala apple'], kcal:52, protein:0.3, carbs:13.8, sugar:10.4, fibre:2.4, fat:0.2, sat:0.03,
+   mic:[['Vitamin C',4.6,'mg',5],['Potassium',107,'mg',2]]},
+  {n:'Banana', alt:['bananas'], kcal:89, protein:1.1, carbs:22.8, sugar:12.2, fibre:2.6, fat:0.3, sat:0.11,
+   mic:[['Potassium',358,'mg',8],['Vitamin B6',0.37,'mg',22],['Vitamin C',8.7,'mg',10]]},
+  {n:'Orange', alt:['oranges','navel orange'], kcal:47, protein:0.9, carbs:11.8, sugar:9.4, fibre:2.4, fat:0.1, sat:0.02,
+   mic:[['Vitamin C',53.2,'mg',59],['Folate',30,'µg',8],['Potassium',181,'mg',4]]},
+  {n:'Strawberries', alt:['strawberry'], kcal:32, protein:0.7, carbs:7.7, sugar:4.9, fibre:2.0, fat:0.3, sat:0.02,
+   mic:[['Vitamin C',58.8,'mg',65],['Manganese',0.39,'mg',17]]},
+  {n:'Blueberries', alt:['blueberry'], kcal:57, protein:0.7, carbs:14.5, sugar:10.0, fibre:2.4, fat:0.3, sat:0.03,
+   mic:[['Vitamin K',19.3,'µg',16],['Vitamin C',9.7,'mg',11]]},
+  {n:'Avocado', alt:['avocados','hass avocado'], kcal:160, protein:2.0, carbs:8.5, sugar:0.7, fibre:6.7, fat:14.7, sat:2.13,
+   mic:[['Potassium',485,'mg',10],['Folate',81,'µg',20],['Vitamin K',21,'µg',18]]},
+  {n:'Grapes', alt:['grape','red grapes','green grapes'], kcal:69, protein:0.7, carbs:18.1, sugar:15.5, fibre:0.9, fat:0.2, sat:0.05,
+   mic:[['Vitamin K',14.6,'µg',12]]},
+  {n:'Mango', alt:['mangoes'], kcal:60, protein:0.8, carbs:15.0, sugar:13.7, fibre:1.6, fat:0.4, sat:0.09,
+   mic:[['Vitamin C',36.4,'mg',40],['Vitamin A',54,'µg',6]]},
+  {n:'Pear', alt:['pears'], kcal:57, protein:0.4, carbs:15.2, sugar:9.8, fibre:3.1, fat:0.1, sat:0.02, mic:[]},
+  {n:'Pineapple', alt:['pineapples'], kcal:50, protein:0.5, carbs:13.1, sugar:9.9, fibre:1.4, fat:0.1, sat:0.01,
+   mic:[['Vitamin C',47.8,'mg',53],['Manganese',0.93,'mg',40]]},
+  {n:'Lemon', alt:['lemons','lime','limes'], kcal:29, protein:1.1, carbs:9.3, sugar:2.5, fibre:2.8, fat:0.3, sat:0.04,
+   mic:[['Vitamin C',53,'mg',59]]},
+  {n:'Watermelon', alt:['water melon'], kcal:30, protein:0.6, carbs:7.6, sugar:6.2, fibre:0.4, fat:0.2, sat:0.02,
+   mic:[['Vitamin C',8.1,'mg',9],['Vitamin A',28,'µg',3]]},
+  {n:'Peach', alt:['peaches','nectarine'], kcal:39, protein:0.9, carbs:9.5, sugar:8.4, fibre:1.5, fat:0.3, sat:0.02, mic:[['Vitamin C',6.6,'mg',7]]},
+  {n:'Kiwi', alt:['kiwifruit','kiwi fruit'], kcal:61, protein:1.1, carbs:14.7, sugar:9.0, fibre:3.0, fat:0.5, sat:0.03,
+   mic:[['Vitamin C',92.7,'mg',103],['Vitamin K',40.3,'µg',34]]},
+
+  {n:'Broccoli', alt:['broccoli florets'], kcal:34, protein:2.8, carbs:6.6, sugar:1.7, fibre:2.6, fat:0.4, sat:0.04,
+   mic:[['Vitamin C',89.2,'mg',99],['Vitamin K',101.6,'µg',85],['Folate',63,'µg',16]]},
+  {n:'Spinach', alt:['baby spinach','spinach leaves'], kcal:23, protein:2.9, carbs:3.6, sugar:0.4, fibre:2.2, fat:0.4, sat:0.06,
+   mic:[['Vitamin K',482.9,'µg',402],['Vitamin A',469,'µg',52],['Folate',194,'µg',49],['Iron',2.7,'mg',15]]},
+  {n:'Carrot', alt:['carrots'], kcal:41, protein:0.9, carbs:9.6, sugar:4.7, fibre:2.8, fat:0.2, sat:0.03,
+   mic:[['Vitamin A',835,'µg',93],['Vitamin K',13.2,'µg',11]]},
+  {n:'Tomato', alt:['tomatoes','cherry tomatoes'], kcal:18, protein:0.9, carbs:3.9, sugar:2.6, fibre:1.2, fat:0.2, sat:0.03,
+   mic:[['Vitamin C',13.7,'mg',15],['Potassium',237,'mg',5],['Vitamin A',42,'µg',5]]},
+  {n:'Potato', alt:['potatoes','white potato'], kcal:77, protein:2.0, carbs:17.5, sugar:0.8, fibre:2.2, fat:0.1, sat:0.03,
+   mic:[['Potassium',425,'mg',9],['Vitamin C',19.7,'mg',22],['Vitamin B6',0.3,'mg',18]]},
+  {n:'Sweet potato', alt:['sweet potatoes','yam'], kcal:86, protein:1.6, carbs:20.1, sugar:4.2, fibre:3.0, fat:0.1, sat:0.02,
+   mic:[['Vitamin A',709,'µg',79],['Potassium',337,'mg',7]]},
+  {n:'Onion', alt:['onions','red onion','white onion'], kcal:40, protein:1.1, carbs:9.3, sugar:4.2, fibre:1.7, fat:0.1, sat:0.04, mic:[['Vitamin C',7.4,'mg',8]]},
+  {n:'Garlic', alt:['garlic cloves'], kcal:149, protein:6.4, carbs:33.1, sugar:1.0, fibre:2.1, fat:0.5, sat:0.09,
+   mic:[['Manganese',1.67,'mg',73],['Vitamin B6',1.24,'mg',73],['Vitamin C',31.2,'mg',35]]},
+  {n:'Bell pepper', alt:['red pepper','capsicum','sweet pepper','peppers'], kcal:31, protein:1.0, carbs:6.0, sugar:4.2, fibre:2.1, fat:0.3, sat:0.03,
+   mic:[['Vitamin C',127.7,'mg',142],['Vitamin A',157,'µg',17]]},
+  {n:'Cucumber', alt:['cucumbers'], kcal:15, protein:0.7, carbs:3.6, sugar:1.7, fibre:0.5, fat:0.1, sat:0.04, mic:[['Vitamin K',16.4,'µg',14]]},
+  {n:'Mushroom', alt:['mushrooms','button mushrooms','chestnut mushrooms'], kcal:22, protein:3.1, carbs:3.3, sugar:2.0, fibre:1.0, fat:0.3, sat:0.05,
+   mic:[['Riboflavin',0.4,'mg',31],['Niacin',3.6,'mg',23],['Selenium',9.3,'µg',17]]},
+  {n:'Courgette', alt:['zucchini','courgettes'], kcal:17, protein:1.2, carbs:3.1, sugar:2.5, fibre:1.0, fat:0.3, sat:0.08, mic:[['Vitamin C',17.9,'mg',20]]},
+  {n:'Cauliflower', alt:['cauliflower florets'], kcal:25, protein:1.9, carbs:5.0, sugar:1.9, fibre:2.0, fat:0.3, sat:0.13,
+   mic:[['Vitamin C',48.2,'mg',54],['Vitamin K',15.5,'µg',13]]},
+  {n:'Kale', alt:['curly kale'], kcal:49, protein:4.3, carbs:8.8, sugar:2.3, fibre:3.6, fat:0.9, sat:0.09,
+   mic:[['Vitamin K',389.6,'µg',325],['Vitamin C',120,'mg',133],['Vitamin A',500,'µg',56]]},
+  {n:'Peas', alt:['garden peas','green peas'], kcal:81, protein:5.4, carbs:14.5, sugar:5.7, fibre:5.7, fat:0.4, sat:0.07,
+   mic:[['Vitamin C',40,'mg',44],['Vitamin K',24.8,'µg',21],['Thiamin',0.27,'mg',22]]},
+  {n:'Green beans', alt:['string beans','runner beans'], kcal:31, protein:1.8, carbs:7.0, sugar:3.3, fibre:2.7, fat:0.2, sat:0.03,
+   mic:[['Vitamin C',12.2,'mg',14],['Vitamin K',43,'µg',36]]},
+  {n:'Lettuce', alt:['romaine','iceberg lettuce','salad leaves'], kcal:15, protein:1.4, carbs:2.9, sugar:0.8, fibre:1.3, fat:0.2, sat:0.03,
+   mic:[['Vitamin K',126.3,'µg',105],['Vitamin A',436,'µg',48]]},
+  {n:'Cabbage', alt:['white cabbage','red cabbage'], kcal:25, protein:1.3, carbs:5.8, sugar:3.2, fibre:2.5, fat:0.1, sat:0.03,
+   mic:[['Vitamin C',36.6,'mg',41],['Vitamin K',76,'µg',63]]},
+  {n:'Aubergine', alt:['eggplant','aubergines'], kcal:25, protein:1.0, carbs:5.9, sugar:3.5, fibre:3.0, fat:0.2, sat:0.03, mic:[['Manganese',0.23,'mg',10]]},
+  {n:'Beetroot', alt:['beet','beets'], kcal:43, protein:1.6, carbs:9.6, sugar:6.8, fibre:2.8, fat:0.2, sat:0.03,
+   mic:[['Folate',109,'µg',27],['Manganese',0.33,'mg',14]]},
+  {n:'Corn', alt:['sweetcorn','maize'], kcal:86, protein:3.3, carbs:18.7, sugar:6.3, fibre:2.0, fat:1.4, sat:0.20, mic:[['Thiamin',0.2,'mg',16]]},
+
+  {n:'Chicken breast', alt:['chicken','chicken fillet','skinless chicken'], kcal:120, protein:22.5, carbs:0, sugar:0, fibre:0, fat:2.6, sat:0.68,
+   mic:[['Niacin',10.6,'mg',66],['Vitamin B6',0.6,'mg',35],['Selenium',22.8,'µg',41]]},
+  {n:'Salmon', alt:['salmon fillet','atlantic salmon'], kcal:208, protein:20.4, carbs:0, sugar:0, fibre:0, fat:13.4, sat:3.05,
+   mic:[['Vitamin B12',3.2,'µg',133],['Vitamin D',11,'µg',55],['Selenium',36.5,'µg',66]]},
+  {n:'Egg', alt:['eggs','chicken egg','hen egg'], kcal:143, protein:12.6, carbs:0.7, sugar:0.4, fibre:0, fat:9.5, sat:3.13,
+   mic:[['Vitamin B12',0.89,'µg',37],['Selenium',30.7,'µg',56],['Choline',294,'mg',53]]},
+  {n:'Beef mince', alt:['ground beef','minced beef','beef'], kcal:254, protein:17.2, carbs:0, sugar:0, fibre:0, fat:20.0, sat:7.67,
+   mic:[['Vitamin B12',2.1,'µg',88],['Zinc',4.2,'mg',38],['Iron',1.9,'mg',11]]},
+  {n:'Tuna', alt:['tuna steak','canned tuna'], kcal:132, protein:28.0, carbs:0, sugar:0, fibre:0, fat:1.3, sat:0.36,
+   mic:[['Vitamin B12',2.2,'µg',92],['Selenium',80.4,'µg',146],['Niacin',18.8,'mg',118]]},
+  {n:'Pork chop', alt:['pork','pork loin'], kcal:231, protein:23.7, carbs:0, sugar:0, fibre:0, fat:14.3, sat:5.03,
+   mic:[['Thiamin',0.73,'mg',61],['Selenium',31.9,'µg',58]]},
+  {n:'Prawns', alt:['shrimp','king prawns'], kcal:99, protein:24.0, carbs:0.2, sugar:0, fibre:0, fat:0.3, sat:0.05,
+   mic:[['Selenium',48,'µg',87],['Vitamin B12',1.1,'µg',46]]},
+  {n:'Tofu', alt:['bean curd','firm tofu'], kcal:76, protein:8.1, carbs:1.9, sugar:0.6, fibre:0.3, fat:4.8, sat:0.69,
+   mic:[['Calcium',350,'mg',27],['Manganese',0.61,'mg',27],['Iron',5.4,'mg',30]]},
+  {n:'Lentils', alt:['red lentils','green lentils','dal'], kcal:116, protein:9.0, carbs:20.1, sugar:1.8, fibre:7.9, fat:0.4, sat:0.05,
+   mic:[['Folate',181,'µg',45],['Iron',3.3,'mg',18],['Manganese',0.49,'mg',21]]},
+  {n:'Chickpeas', alt:['garbanzo beans','chick peas'], kcal:164, protein:8.9, carbs:27.4, sugar:4.8, fibre:7.6, fat:2.6, sat:0.27,
+   mic:[['Folate',172,'µg',43],['Manganese',1.03,'mg',45],['Iron',2.9,'mg',16]]},
+  {n:'Black beans', alt:['black bean','kidney beans'], kcal:132, protein:8.9, carbs:23.7, sugar:0.3, fibre:8.7, fat:0.5, sat:0.14,
+   mic:[['Folate',149,'µg',37],['Magnesium',70,'mg',17]]},
+
+  {n:'Milk', alt:['whole milk','semi-skimmed milk','cows milk'], kcal:61, protein:3.2, carbs:4.8, sugar:5.1, fibre:0, fat:3.3, sat:1.87,
+   mic:[['Calcium',113,'mg',9],['Vitamin B12',0.45,'µg',19]]},
+  {n:'Greek yoghurt', alt:['greek yogurt','yoghurt','yogurt'], kcal:59, protein:10.2, carbs:3.6, sugar:3.2, fibre:0, fat:0.4, sat:0.12,
+   mic:[['Calcium',110,'mg',8],['Vitamin B12',0.75,'µg',31]]},
+  {n:'Cheddar cheese', alt:['cheese','cheddar'], kcal:403, protein:24.9, carbs:1.3, sugar:0.5, fibre:0, fat:33.1, sat:21.09,
+   mic:[['Calcium',721,'mg',55],['Vitamin B12',1.1,'µg',46],['Phosphorus',512,'mg',41]]},
+  {n:'Butter', alt:['salted butter','unsalted butter'], kcal:717, protein:0.9, carbs:0.1, sugar:0.1, fibre:0, fat:81.1, sat:51.37,
+   mic:[['Vitamin A',684,'µg',76]]},
+
+  {n:'White rice', alt:['rice','basmati rice','cooked rice'], kcal:130, protein:2.7, carbs:28.2, sugar:0.1, fibre:0.4, fat:0.3, sat:0.08, mic:[['Manganese',0.47,'mg',20]]},
+  {n:'Brown rice', alt:['wholegrain rice'], kcal:123, protein:2.7, carbs:25.6, sugar:0.2, fibre:1.6, fat:1.0, sat:0.25,
+   mic:[['Manganese',1.1,'mg',48],['Magnesium',39,'mg',9]]},
+  {n:'Pasta', alt:['spaghetti','penne','cooked pasta'], kcal:158, protein:5.8, carbs:30.9, sugar:0.6, fibre:1.8, fat:0.9, sat:0.17, mic:[['Selenium',26.4,'µg',48]]},
+  {n:'Bread', alt:['white bread','wholemeal bread','toast'], kcal:265, protein:9.0, carbs:49.0, sugar:5.0, fibre:2.7, fat:3.2, sat:0.70,
+   mic:[['Thiamin',0.5,'mg',42],['Folate',85,'µg',21]]},
+  {n:'Oats', alt:['porridge oats','rolled oats','oatmeal'], kcal:389, protein:16.9, carbs:66.3, sugar:0.99, fibre:10.6, fat:6.9, sat:1.22,
+   mic:[['Manganese',4.9,'mg',213],['Magnesium',177,'mg',42],['Iron',4.7,'mg',26]]},
+  {n:'Quinoa', alt:['cooked quinoa'], kcal:120, protein:4.4, carbs:21.3, sugar:0.9, fibre:2.8, fat:1.9, sat:0.23,
+   mic:[['Manganese',0.63,'mg',27],['Magnesium',64,'mg',15],['Folate',42,'µg',11]]},
+
+  {n:'Almonds', alt:['almond'], kcal:579, protein:21.2, carbs:21.6, sugar:4.4, fibre:12.5, fat:49.9, sat:3.80,
+   mic:[['Vitamin E',25.6,'mg',171],['Magnesium',270,'mg',64],['Calcium',269,'mg',21]]},
+  {n:'Walnuts', alt:['walnut'], kcal:654, protein:15.2, carbs:13.7, sugar:2.6, fibre:6.7, fat:65.2, sat:6.13,
+   mic:[['Manganese',3.4,'mg',148],['Magnesium',158,'mg',38]]},
+  {n:'Peanut butter', alt:['peanuts','peanut'], kcal:588, protein:25.8, carbs:20.0, sugar:9.2, fibre:6.0, fat:50.4, sat:10.32,
+   mic:[['Niacin',13.1,'mg',82],['Vitamin E',9.1,'mg',61],['Magnesium',168,'mg',40]]},
+  {n:'Olive oil', alt:['extra virgin olive oil','oil'], kcal:884, protein:0, carbs:0, sugar:0, fibre:0, fat:100, sat:13.81,
+   mic:[['Vitamin E',14.4,'mg',96],['Vitamin K',60.2,'µg',50]]},
+  {n:'Chia seeds', alt:['chia'], kcal:486, protein:16.5, carbs:42.1, sugar:0, fibre:34.4, fat:30.7, sat:3.33,
+   mic:[['Calcium',631,'mg',49],['Magnesium',335,'mg',80],['Phosphorus',860,'mg',69]]},
+  {n:'Dark chocolate', alt:['chocolate','70% chocolate'], kcal:598, protein:7.8, carbs:45.9, sugar:24.0, fibre:11.0, fat:42.6, sat:24.49,
+   mic:[['Iron',11.9,'mg',66],['Magnesium',228,'mg',54],['Copper',1.8,'mg',200]]},
+  {n:'Honey', alt:['runny honey'], kcal:304, protein:0.3, carbs:82.4, sugar:82.1, fibre:0.2, fat:0, sat:0, mic:[]}
+];
+
+var EMOJI={Apple:'🍎',Banana:'🍌',Orange:'🍊',Strawberries:'🍓',Blueberries:'🫐',Avocado:'🥑',Grapes:'🍇',
+  Mango:'🥭',Pear:'🍐',Pineapple:'🍍',Lemon:'🍋',Watermelon:'🍉',Peach:'🍑',Kiwi:'🥝',Broccoli:'🥦',
+  Spinach:'🥬',Carrot:'🥕',Tomato:'🍅',Potato:'🥔','Sweet potato':'🍠',Onion:'🧅',Garlic:'🧄',
+  'Bell pepper':'🫑',Cucumber:'🥒',Mushroom:'🍄',Courgette:'🥒',Cauliflower:'🥦',Kale:'🥬',Peas:'🫛',
+  'Green beans':'🫛',Lettuce:'🥬',Cabbage:'🥬',Aubergine:'🍆',Beetroot:'🫜',Corn:'🌽',
+  'Chicken breast':'🍗',Salmon:'🐟',Egg:'🥚','Beef mince':'🥩',Tuna:'🐟','Pork chop':'🥩',Prawns:'🦐',
+  Tofu:'🧊',Lentils:'🫘',Chickpeas:'🫘','Black beans':'🫘',Milk:'🥛','Greek yoghurt':'🥛',
+  'Cheddar cheese':'🧀',Butter:'🧈','White rice':'🍚','Brown rice':'🍚',Pasta:'🍝',Bread:'🍞',
+  Oats:'🥣',Quinoa:'🍚',Almonds:'🌰',Walnuts:'🌰','Peanut butter':'🥜','Olive oil':'🫒',
+  'Chia seeds':'🌱','Dark chocolate':'🍫',Honey:'🍯'};
+function emojiFor(n){ return EMOJI[n]||'🍽️'; }
+
+/* ---- matching ----
+   Vision returns free text, so "a ripe Hass avocado" has to reach `Avocado`.
+   Exact name, then synonym, then a contained-word match, longest first so
+   "sweet potato" wins over "potato". */
+function norm(s){ return String(s||'').toLowerCase().replace(/[^a-z0-9 ]/g,' ').replace(/\s+/g,' ').trim(); }
+function lookup(raw){
+  var q=norm(raw);
+  if(!q)return null;
+  var i,f;
+  for(i=0;i<FOODS.length;i++){ if(norm(FOODS[i].n)===q)return FOODS[i]; }
+  for(i=0;i<FOODS.length;i++){
+    f=FOODS[i];
+    for(var j=0;j<f.alt.length;j++) if(norm(f.alt[j])===q)return f;
+  }
+  var best=null,bestLen=0;
+  for(i=0;i<FOODS.length;i++){
+    f=FOODS[i];
+    var keys=[f.n].concat(f.alt);
+    for(var k=0;k<keys.length;k++){
+      var key=norm(keys[k]);
+      if(!key)continue;
+      if(q.indexOf(key)>=0||key.indexOf(q)>=0){
+        if(key.length>bestLen){best=f;bestLen=key.length;}
+      }
+    }
+  }
+  return best;
+}
+function search(q){
+  var n=norm(q);
+  if(!n)return [];
+  return FOODS.filter(function(f){
+    if(norm(f.n).indexOf(n)>=0)return true;
+    return f.alt.some(function(a){return norm(a).indexOf(n)>=0});
+  }).slice(0,8);
+}
+
+/* ---------------- state ---------------- */
+var current=null, grams=100, HIST=[];
+var PORTIONS=[[100,'100 g'],[30,'30 g'],[50,'50 g'],[150,'150 g'],[250,'250 g']];
+
+/* ---------------- camera ---------------- */
+function scan(){
+  if(!window.myllmVision){
+    setStatus('Scanning needs the camera bridge — update MyLLM, or type an ingredient below.',true);
+    return;
+  }
+  setStatus('Opening the camera…');
+  el('scanBtn').disabled=true;
+  // A labelled line, not JSON — small on-device models echo JSON templates back
+  // verbatim, which is why the rest of the gallery uses this shape too.
+  myllmVision('Look at this photo and name the single main food ingredient shown. '+
+    'Reply with EXACTLY one line and nothing else:\nFOOD: <name of the ingredient>\n'+
+    'If the photo is not food, reply exactly: FOOD: none')
+  .then(function(reply){
+    if(reply==null){ setStatus(''); return; }        // user cancelled the camera
+    var m=/FOOD\s*[:：]\s*(.+)/i.exec(String(reply));
+    var name=m?m[1].trim():String(reply).split('\n')[0].trim();
+    name=name.replace(/^(a|an|the)\s+/i,'').replace(/[.*_"']/g,'').trim();
+    if(!name||/^none$/i.test(name)){
+      setStatus("That doesn't look like a single ingredient — try filling the frame with one item.",true);
+      return;
+    }
+    show(name);
+  })
+  .catch(function(e){ setStatus('Could not read the photo: '+e.message,true); })
+  .then(function(){ el('scanBtn').disabled=false; });
+}
+
+/* ---------------- resolve a name to numbers ---------------- */
+function show(name){
+  var hit=lookup(name);
+  if(hit){ present(hit,'ref',name); return; }
+  // Not in the reference table. Rather than let the model invent numbers and
+  // pass them off as data, the result is badged as an estimate.
+  if(!window.myllmAsk){
+    setStatus('“'+name+'” isn’t in the reference data, and the AI isn’t available to estimate it.',true);
+    return;
+  }
+  setStatus('“'+name+'” isn’t in the reference data — estimating…');
+  var p='Give typical nutrition values per 100 g of raw '+name+'. '+
+    'Reply with EXACTLY these labelled lines and nothing else, numbers only:\n'+
+    'KCAL: <number>\nPROTEIN: <grams>\nCARBS: <grams>\nSUGAR: <grams>\nFIBRE: <grams>\nFAT: <grams>\nSAT: <grams>';
+  myllmAsk(p).then(function(r){
+    var g=function(k){ var m=new RegExp(k+'\\s*[:：]\\s*([\\d.]+)','i').exec(String(r||'')); return m?parseFloat(m[1]):null; };
+    var kcal=g('KCAL');
+    if(kcal===null||isNaN(kcal))throw new Error('no usable numbers came back');
+    present({n:name.charAt(0).toUpperCase()+name.slice(1), kcal:kcal,
+      protein:g('PROTEIN')||0, carbs:g('CARBS')||0, sugar:g('SUGAR')||0,
+      fibre:g('FIBRE')||0, fat:g('FAT')||0, sat:g('SAT')||0, mic:[]}, 'est', name);
+  }).catch(function(e){ setStatus('Could not estimate “'+name+'”: '+e.message,true); });
+}
+
+/* ---------------- render ---------------- */
+function present(food,src,queried){
+  current={food:food,src:src};
+  grams=100;
+  setStatus('');
+  render();
+  addHistory(food,src);
+  haptic('success');
+  el('result').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+function fmt(v,d){
+  if(v===null||v===undefined||isNaN(v))return '—';
+  var n=Number(v);
+  return (n<10&&n!==Math.round(n))?n.toFixed(d===undefined?1:d):Math.round(n).toString();
+}
+function render(){
+  if(!current){el('result').innerHTML='';return}
+  var f=current.food, k=grams/100;
+  var kcal=f.kcal*k, p=f.protein*k, c=f.carbs*k, fa=f.fat*k;
+  // energy split by macro, which is what actually explains a calorie figure
+  var eP=p*4, eC=c*4, eF=fa*9, eT=Math.max(1,eP+eC+eF);
+  var isRef=current.src==='ref';
+
+  // Rounding each share independently lets them total 99% or 101%, which looks
+  // like sloppy arithmetic in an app whose whole promise is trustworthy
+  // numbers. Round the first two and give the remainder to the third.
+  var shares=[eP/eT,eC/eT,eF/eT];
+  var pc0=Math.round(shares[0]*100), pc1=Math.round(shares[1]*100);
+  var pcs=[pc0,pc1,Math.max(0,100-pc0-pc1)];
+  var macros=[['Protein',p,'i-prot'],['Carbs',c,'i-carb'],['Fat',fa,'i-fat']]
+    .map(function(m,i){
+      return '<div class="macro"><div class="macro-top"><span>'+m[0]+'</span>'+
+        '<span>'+fmt(m[1])+' g · '+pcs[i]+'%</span></div>'+
+        '<div class="bar"><i class="'+m[2]+'" style="width:'+(shares[i]*100).toFixed(1)+'%"></i></div></div>';
+    }).join('');
+
+  var mics=(f.mic||[]).length
+    ? '<p class="lbl" style="margin-top:18px">Micronutrients</p><div class="mic">'+
+      f.mic.map(function(m){
+        var dv=Math.min(100,m[3]*k);
+        return '<div class="micro"><span class="mn">'+m[0]+'</span>'+
+          '<span class="mv">'+fmt(m[1]*k,1)+' '+m[2]+' · '+Math.round(m[3]*k)+'% DV</span>'+
+          '<span class="mb"><i style="width:'+dv.toFixed(1)+'%"></i></span></div>';
+      }).join('')+'</div>'
+    : (isRef?'':'<p class="lbl" style="margin-top:18px">Micronutrients</p>'+
+       '<p style="font-size:12.5px;color:var(--faint);margin:0">Not estimated — micronutrient figures are too varied to guess at.</p>');
+
+  el('result').innerHTML=
+    '<div class="res">'+
+      '<div class="res-head">'+
+        '<h2 class="res-name">'+emojiFor(f.n)+' '+esc(f.n)+'</h2>'+
+        '<span class="src '+(isRef?'ref':'est')+'">'+(isRef?'Reference data':'AI estimate')+'</span>'+
+      '</div>'+
+      '<div class="kcal"><b>'+Math.round(kcal)+'</b><span>kcal</span></div>'+
+      '<div class="per">per '+grams+' g'+(grams!==100?' · '+Math.round(f.kcal)+' kcal per 100 g':'')+'</div>'+
+      '<div class="portion">'+PORTIONS.map(function(pr){
+        return '<button class="'+(grams===pr[0]?'on':'')+'" onclick="setGrams('+pr[0]+')">'+pr[1]+'</button>';
+      }).join('')+'</div>'+
+      '<p class="lbl">Macronutrients</p>'+macros+
+      '<div class="sub">'+
+        '<div class="subcell"><b>'+fmt(f.fibre*k)+' g</b><span>Fibre</span></div>'+
+        '<div class="subcell"><b>'+fmt(f.sugar*k)+' g</b><span>Sugars</span></div>'+
+        '<div class="subcell"><b>'+fmt(f.sat*k)+' g</b><span>Saturates</span></div>'+
+      '</div>'+
+      mics+
+      '<p class="note">'+(isRef
+        ? 'Reference values per 100 g of the raw ingredient, from public USDA data. %DV is against standard adult daily values.'
+        : 'These figures were estimated by the on-device AI because this ingredient isn’t in the reference data. Treat them as a rough guide.')+
+        ' Cooking, ripeness, cut and variety all shift the numbers. For general interest — not dietary or medical advice.</p>'+
+    '</div>';
+}
+function setGrams(g){ grams=g; render(); haptic('selection'); }
+function esc(s){ return String(s).replace(/[&<>"]/g,function(c){
+  return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+
+/* ---------------- history ---------------- */
+function addHistory(food,src){
+  HIST=HIST.filter(function(h){return h.n!==food.n});
+  HIST.unshift({n:food.n,kcal:food.kcal,src:src});
+  if(HIST.length>12)HIST.length=12;
+  store.setItem('history',JSON.stringify(HIST));
+  renderHistory();
+}
+function renderHistory(){
+  var w=el('histWrap'),h=el('hist');
+  if(!HIST.length){w.style.display='none';return}
+  w.style.display='block';
+  h.innerHTML='';
+  HIST.forEach(function(item,i){
+    var r=document.createElement('div');r.className='hrow';
+    r.innerHTML='<span class="he">'+emojiFor(item.n)+'</span>'+
+      '<span class="hn">'+esc(item.n)+'</span>'+
+      '<span class="hk">'+Math.round(item.kcal)+' kcal</span>';
+    var x=document.createElement('button');x.className='hx';x.type='button';x.textContent='✕';
+    x.setAttribute('aria-label','Remove');
+    x.onclick=function(ev){ ev.stopPropagation();HIST.splice(i,1);
+      store.setItem('history',JSON.stringify(HIST));renderHistory();haptic('warning'); };
+    r.appendChild(x);
+    r.onclick=function(){ show(item.n); };
+    h.appendChild(r);
+  });
+}
+
+/* ---------------- typed search ---------------- */
+var SUGGEST=['Avocado','Spinach','Salmon','Oats','Almonds','Sweet potato'];
+function buildSuggestions(){
+  var s=el('sugg');s.innerHTML='';
+  SUGGEST.forEach(function(n){
+    var b=document.createElement('button');b.type='button';b.textContent=emojiFor(n)+' '+n;
+    b.onclick=function(){ el('q').value='';show(n); };
+    s.appendChild(b);
+  });
+}
+function renderMatches(list){
+  var s=el('sugg');s.innerHTML='';
+  list.forEach(function(f){
+    var b=document.createElement('button');b.type='button';b.textContent=emojiFor(f.n)+' '+f.n;
+    b.onclick=function(){ el('q').value='';buildSuggestions();show(f.n); };
+    s.appendChild(b);
+  });
+}
+el('q').addEventListener('input',function(){
+  var v=this.value.trim();
+  if(!v){ buildSuggestions();setStatus('');return }
+  var m=search(v);
+  if(m.length)renderMatches(m);
+  else { el('sugg').innerHTML=''; }
+});
+el('q').addEventListener('keydown',function(e){
+  if(e.key!=='Enter')return;
+  var v=this.value.trim();if(!v)return;
+  this.value='';buildSuggestions();show(v);
+});
+
+/* ---------------- boot ---------------- */
+buildSuggestions();
+if(!window.myllmVision){
+  setStatus('Camera scanning needs the latest MyLLM. You can still look anything up by typing it.');
+}
+store.getItem('history').then(function(v){
+  if(v)try{HIST=JSON.parse(v)||[]}catch(e){}
+  renderHistory();
+});
+</script></body></html>

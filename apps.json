@@ -17,6 +17,31 @@
   ],
   "apps": [
     {
+      "id": "nutrition-lens",
+      "name": "Nutrition Lens",
+      "emoji": "🍎",
+      "tagline": "Photograph food, see what's in it",
+      "description": "Point your camera at an ingredient and see what it's made of — calories per 100 g, the protein/carbs/fat split, fibre and sugars, and the micronutrients it's actually a good source of. Values for 63 common ingredients come from public USDA reference data rather than being guessed, and anything outside that list is clearly badged as an AI estimate. You can also just type an ingredient, which works with no AI at all. Scanning needs the latest MyLLM with camera and AI access enabled.",
+      "tags": [
+        "AI-powered",
+        "camera",
+        "health",
+        "food",
+        "offline"
+      ],
+      "iconSymbol": "leaf.fill",
+      "iconColor": "green",
+      "version": 1,
+      "featured": false,
+      "requiresAI": true,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/nutrition-lens.jpg",
+      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@main/apps-src/nutrition-lens.html",
+      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@main/apps-src/nutrition-lens.myllmapp",
+      "sizeKB": 34,
+      "category": "Health & Wellbeing",
+      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/icons/nutrition-lens.jpg"
+    },
+    {
       "id": "welcome-to-myllmos",
       "name": "Welcome to MyLLMos",
       "emoji": "👋",
