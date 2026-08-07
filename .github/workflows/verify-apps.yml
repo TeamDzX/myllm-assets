@@ -12,17 +12,23 @@ name: Verify apps (runtime)
 # code, so it belongs in the disposable CI sandbox and not on a reviewer's Mac.
 
 on:
+  # Runnable on demand, so the harness can be exercised without inventing an
+  # app change — and so a change to THIS file re-runs it, which is the only way
+  # a workflow edit gets tested before it matters.
+  workflow_dispatch:
   push:
     branches: [main]
     paths:
       - 'apps-src/**'
       - 'apps.json'
       - 'verify/**'
+      - '.github/workflows/verify-apps.yml'
   pull_request:
     paths:
       - 'apps-src/**'
       - 'apps.json'
       - 'verify/**'
+      - '.github/workflows/verify-apps.yml'
 
 # No write access and no secrets are needed — this job executes community code.
 permissions:
@@ -37,9 +43,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: '22'
           cache: npm
@@ -72,7 +78,7 @@ jobs:
 
       - name: Upload reports and failure screenshots
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: verify-reports
           path: verify/out/
