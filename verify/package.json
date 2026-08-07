@@ -1,0 +1,17 @@
+{
+  "name": "myllm-gallery-verify",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Runtime verification harness for MyLLMos gallery apps. Dev-only — never shipped, never bundled into an app.",
+  "scripts": {
+    "verify": "node verify_app.mjs --all",
+    "verify:shots": "node verify_app.mjs --all --screenshots",
+    "verify:prose": "node verify_app.mjs --all --ask-mode prose",
+    "verify:nobridges": "node verify_app.mjs --all --no-bridges",
+    "postinstall": "playwright install webkit"
+  },
+  "devDependencies": {
+    "playwright": "^1.49.0"
+  }
+}

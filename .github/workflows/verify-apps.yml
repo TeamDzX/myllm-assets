@@ -1,0 +1,79 @@
+name: Verify apps (runtime)
+
+# scan_app.py reads an app's source and asks "does this text look wrong?".
+# This runs every gallery app in a real WebKit engine at a null origin — the
+# same footing the MyLLMos web view gives it — and asks "does it actually work,
+# and does it stay inside the sandbox?" It catches what regexes structurally
+# cannot: a TypeError on first tap, a blank screen, and remote loads whose URL
+# was assembled at runtime (new Image().src = h + o + s + t).
+#
+# The two gates are complements. scan_app.py stays FIRST for untrusted
+# submissions precisely because it never executes the code; this job runs the
+# code, so it belongs in the disposable CI sandbox and not on a reviewer's Mac.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps-src/**'
+      - 'apps.json'
+      - 'verify/**'
+  pull_request:
+    paths:
+      - 'apps-src/**'
+      - 'apps.json'
+      - 'verify/**'
+
+# No write access and no secrets are needed — this job executes community code.
+permissions:
+  contents: read
+
+concurrency:
+  group: verify-apps-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: verify/package-lock.json
+
+      - name: Install harness
+        working-directory: verify
+        run: npm ci
+
+      - name: Install WebKit
+        working-directory: verify
+        run: npx playwright install --with-deps webkit
+
+      # Every app must survive a load + tap sweep with the bridges present.
+      - name: Verify (bridges present)
+        working-directory: verify
+        run: node verify_app.mjs --all --json out/report.json
+
+      # …and on an older build where the newer bridges do not exist yet, which
+      # is the case CONTRIBUTING §2 "feature-detect every bridge" exists for.
+      - name: Verify (bridges absent)
+        working-directory: verify
+        run: node verify_app.mjs --all --no-bridges --quiet --json out/report-nobridges.json
+
+      # …and when the on-device model returns prose where the app asked for
+      # JSON, which is the most common way an AI app breaks in the wild.
+      - name: Verify (AI returns prose)
+        working-directory: verify
+        run: node verify_app.mjs --all --ask-mode prose --quiet --json out/report-prose.json
+
+      - name: Upload reports and failure screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: verify-reports
+          path: verify/out/
+          retention-days: 14
