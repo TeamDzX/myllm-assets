@@ -333,8 +333,10 @@ return Promise.resolve(p).then(function(r){hide();return r;},function(e){hide();
     <button class="btn line" id="vidFmtBtn" style="display:none;width:100%" onclick="useReelFormat()">Switch to 9:16 for Reels &amp; Stories</button>
     <div class="lbl">Motion</div>
     <div class="chips" id="motionRow"></div>
+    <p class="hint" id="motionHint"></p>
     <div class="lbl">How the words arrive</div>
     <div class="chips" id="textInRow"></div>
+    <p class="hint" id="textInHint"></p>
     <div class="lbl">Light effect</div>
     <div class="chips" id="lightRow"></div>
     <p class="hint" id="lightHint"></p>
@@ -482,7 +484,7 @@ var S = {
   photo:null, photoPos:{x:0,y:0,scale:1},
   copy:{ hook:"Weekend plant sale", sub:"Every leafy friend 20% off, Saturday only", cta:"Visit us", caption:"", tone:"Playful" },
   stickers:[],  // {kind:'emoji'|'banner', txt, x,y (0..1), size(px @1080)}
-  video:{ motion:"drift", textIn:"word", secs:6, fps:30, end:0, light:"none" }
+  video:{ motion:"drift", textIn:"word", secs:6, fps:30, end:"off", light:"none" }
 };
 var BRAND = { handle:"", accent:"#4f8df9", wm:true, logo:null, logoPos:"tr", logoSize:0.12, logoImg:null };
 var sel = null;
@@ -511,6 +513,15 @@ function lumaHex(h){
   return (0.2126*((n>>16)&255)+0.7152*((n>>8)&255)+0.0722*(n&255))/255;
 }
 function inkIsDark(){ return lumaHex(inkColor())<.5; }
+/* [r,g,b] from a hex colour, or null if it isn't one — callers fall back
+   rather than painting with NaN */
+function hexRGB(h){
+  h=String(h||"").replace("#","");
+  if(h.length===3)h=h[0]+h[0]+h[1]+h[1]+h[2]+h[2];
+  if(!/^[0-9a-f]{6}$/i.test(h))return null;
+  var n=parseInt(h,16);
+  return [(n>>16)&255,(n>>8)&255,n&255];
+}
 /* Label colour for anything drawn ON a coloured surface — a pale badge needs
    dark text whatever the page ink is doing. */
 function onColor(c){ return lumaHex(c)>.62?"#14151c":"#ffffff"; }
@@ -970,17 +981,24 @@ function buildLight(){
 function buildEndCard(){
   var row=el('endRow'); if(!row)return;
   row.innerHTML='';
-  [[0,'Off'],[1,'Logo + handle']].forEach(function(o){
+  var cur=endStyle()||'off';
+  ENDCARDS.forEach(function(o){
     var b=document.createElement('button');
-    b.className='chip'+(((S.video&&S.video.end)?1:0)===o[0]?' on':'');
+    b.className='chip'+(cur===o[0]?' on':'');
     b.textContent=o[1];
-    b.onclick=function(){ S.video.end=o[0];buildEndCard();paint();saveDraft();haptic('selection'); };
+    b.onclick=function(){
+      S.video.end=o[0];buildEndCard();saveDraft();haptic('selection');
+      // the card only exists in the last second, so jump straight to it rather
+      // than making the user watch the whole reel to see what they picked
+      if(o[0]==='off')paint(); else playReel(Math.max(0,reelDur()-END_LEN-.35));
+    };
     row.appendChild(b);
   });
   var has=!!(BRAND.handle||BRAND.logoImg||S.copy.cta);
-  el('endHint').textContent = !(S.video&&S.video.end)
+  el('endHint').textContent = cur==='off'
     ? 'Hold your handle and button on screen at the end — the beat where a view becomes a follow.'
-    : (has?('Last '+END_LEN.toFixed(2).replace(/0$/,'')+'s of the reel.')
+    : (has?('Last '+END_LEN.toFixed(2).replace(/0$/,'')+'s of the reel.'
+            +(cur==='minimal'?' Minimal keeps the design visible behind it.':''))
           :'Add a handle, logo or button first — the end card has nothing to show yet.');
 }
 function buildType(){
@@ -1230,6 +1248,20 @@ function drawReveal(x,lines,cx,cy,lh,rev,mode){
     }
     x.textAlign=align;return;
   }
+  if(mode==="line"){
+    // each line rises into place as it fades — the last one lands on the beat
+    // the block would otherwise have finished, so the timing still reads
+    x.textAlign=align;
+    var n=lines.length,step=1/n;
+    for(li=0;li<n;li++){
+      var lq=Math.min(1,Math.max(0,(rev-li*step)/step)),le=ease(lq);
+      if(lq<=0)break;
+      var ga=x.globalAlpha;x.globalAlpha=ga*le;
+      x.fillText(lines[li],cx,cy+(li-(n-1)/2)*lh+(1-le)*lh*.55);
+      x.globalAlpha=ga;
+    }
+    return;
+  }
   var words=lines.map(function(l){return l.split(/\s+/).filter(Boolean);});
   var count=words.reduce(function(n,w){return n+w.length;},0);
   if(!count){x.textAlign=align;return;}
@@ -1248,6 +1280,32 @@ function drawReveal(x,lines,cx,cy,lh,rev,mode){
     }
   }
   x.textAlign=align;
+}
+/* A soft-focus entrance. ctx.filter would be the obvious tool and WebKit still
+   doesn't have it — a silent no-op there would ship an export that doesn't
+   match the preview. Instead the glyphs are drawn far off-canvas and their
+   drop shadow is offset back into place: what lands is the shadow alone, which
+   IS a real gaussian blur of the letterforms, in one pass.
+   The sharp copy crossfades under it, so the word resolves rather than
+   snapping into focus at the end. */
+function drawSoft(x,fn,r,soft){
+  if(!(r>.4)){fn(0,0);return;}
+  var g0=x.globalAlpha;
+  var off=(x.canvas.width||1080)*2+2000;
+  x.globalAlpha=g0*Math.max(0,1-soft*1.25);
+  if(x.globalAlpha>.004)fn(0,0);
+  x.save();
+  x.shadowColor=inkColor();x.shadowBlur=r;x.shadowOffsetX=off;x.shadowOffsetY=0;
+  x.globalAlpha=g0;
+  fn(-off,0);
+  x.restore();
+  x.globalAlpha=g0;
+}
+/* dx / ts from the entrance, applied around the block's own centre so a scale
+   grows the words in place instead of walking them across the frame */
+function blockXform(x,W,an,cx,cy){
+  if(an.dx)x.translate(an.dx*W,0);
+  if(an.ts&&an.ts!==1){x.translate(cx,cy);x.scale(an.ts,an.ts);x.translate(-cx,-cy);}
 }
 /* one text block, optionally mid-entrance (an) */
 function drawBlock(x,W,H,b,val,an){
@@ -1279,8 +1337,11 @@ function drawBlock(x,W,H,b,val,an){
   x.shadowColor=inkShadow();x.shadowBlur=fs3*.25;
   x.fillStyle=inkColor();
   var rev=(an&&b.key==="hook")?an.rev:1;
-  if(rev>=1)lines.forEach(function(ln,i){x.fillText(ln,W/2,H*by+(i-(lines.length-1)/2)*lh);});
-  else drawReveal(x,lines,W/2,H*by,lh,rev,an.mode);
+  var put=function(ox,oy){
+    if(rev>=1)lines.forEach(function(ln,i){x.fillText(ln,W/2+ox,H*by+(i-(lines.length-1)/2)*lh+oy);});
+    else drawReveal(x,lines,W/2+ox,H*by+oy,lh,rev,an.mode);
+  };
+  drawSoft(x,put,(an?an.soft:0)*fs3*.30,an?an.soft:0);
   x.shadowBlur=0;
   if(b.caps&&b.key==="sub"){x.fillStyle=BRAND.accent;x.fillRect(W/2-W*.045,H*by+fs3*1.1,W*.09,H*.004);}
 }
@@ -1348,7 +1409,8 @@ function render(cv,W,H,forExport){
     var val=S.copy[b.key]||"";if(!val)return;
     var an=A?A.block(bi):null;
     if(an&&an.a<=0)return;               // hasn't entered yet
-    if(an){x.save();x.globalAlpha=an.a;}
+    if(an){x.save();x.globalAlpha=an.a;
+      blockXform(x,W,an,W/2,H*((b.list?.32:b.y)+(S.textY||0)));}
     drawBlock(x,W,H,b,val,an);
     if(an)x.restore();
   });
@@ -1356,9 +1418,11 @@ function render(cv,W,H,forExport){
   if(!S.copy.cta)S._ctaBox=null;
   else if(!T.blocks.some(function(b){return b.pill||b.key==="cta"})){
     var ca=A?A.block(T.blocks.length):null;
+    var cyF=(CTA_FALLBACK_Y[S.template]||.84)+(S.textY||0);
     if(!ca||ca.a>0){
-      if(ca){x.save();x.globalAlpha=ca.a;}
-      drawCta(x,W,H,S.copy.cta,(CTA_FALLBACK_Y[S.template]||.84)+(S.textY||0)+(ca?ca.dy:0));
+      if(ca){x.save();x.globalAlpha=ca.a;
+        blockXform(x,W,ca,W*(S.ctaPos?S.ctaPos.x:.5),H*(S.ctaPos?S.ctaPos.y:cyF));}
+      drawCta(x,W,H,S.copy.cta,cyF+(ca?ca.dy:0));
       if(ca)x.restore();
     }
   }
@@ -1414,6 +1478,9 @@ function render(cv,W,H,forExport){
   if(A)drawLight(x,W,H,A);
   /* brand + watermark (dark ink on the polaroid band so they stay visible) */
   var onBand=S.frame==='polaroid';
+  // the end card carries the handle itself — the corner copy fading out as it
+  // arrives is what stops the two reading as a doubled-up watermark
+  if(A&&A.end>0){x.save();x.globalAlpha=1-A.end;}
   if(BRAND.handle){
     x.font="650 "+H*.021+"px -apple-system, sans-serif";x.textAlign="left";x.textBaseline="alphabetic";
     x.fillStyle=onBand?"rgba(58,54,46,.9)":inkAlpha(.92);x.fillText(BRAND.handle,W*.05,H*.955);
@@ -1430,7 +1497,7 @@ function render(cv,W,H,forExport){
     x.save();x.shadowColor='rgba(0,0,0,.4)';x.shadowBlur=W*0.012;
     x.drawImage(BRAND.logoImg,lx,ly,lw,lh);x.restore();
   }
-  if(A&&A.end>0)drawEndCard(x,W,H,A.end);
+  if(A&&A.end>0){x.restore();drawEndCard(x,W,H,A.end);}
 }
 
 /* preview — while the keyboard is up the stage box is frozen so the canvas
@@ -1536,21 +1603,32 @@ function paint(){
 /* One pure function maps a moment in the clip to the handful of numbers render()
    reads. Pure matters: the live preview and the exported frames run the same
    code, so what you watch IS the video — no second renderer to drift out of sync. */
-var MOTIONS=[["drift","Drift"],["pop","Pop"],["slide","Slide"],["pulse","Pulse"]];
-var TEXTINS=[["fade","Fade up"],["rise","Rise"],["word","Word by word"],["type","Typewriter"]];
+var MOTIONS=[["drift","Drift"],["pop","Pop"],["slide","Slide"],["pulse","Pulse"],
+             ["zoom","Zoom out"],["sway","Sway"],["parallax","Parallax"]];
+var TEXTINS=[["fade","Fade up"],["rise","Rise"],["word","Word by word"],["type","Typewriter"],
+             ["blur","Soft focus"],["scale","Zoom in"],["line","Line by line"],["swipe","Swipe in"]];
 /* stored reel settings are user data — clamp them back into range on the way in */
 function normVideo(v){
-  var d={motion:"drift",textIn:"word",secs:6,fps:30,end:0,light:"none"};
+  var d={motion:"drift",textIn:"word",secs:6,fps:30,end:"off",light:"none"};
   if(!v||typeof v!=='object')return d;
   var ms=MOTIONS.map(function(m){return m[0];}),ts=TEXTINS.map(function(m){return m[0];});
   return {motion:ms.indexOf(v.motion)>=0?v.motion:d.motion,
           textIn:ts.indexOf(v.textIn)>=0?v.textIn:d.textIn,
           // default OFF: turning it on for everyone would silently restyle the
-          // last second of every reel already saved in a library
-          end:v.end?1:0,
+          // last second of every reel already saved in a library.
+          // Reels saved before end cards had styles stored a plain 1 — that
+          // means the one look that existed then, which is "classic".
+          end:normEnd(v.end),
           light:LIGHTS.some(function(l){return l[0]===v.light;})?v.light:"none",
           secs:Math.min(15,Math.max(3,Math.round(+v.secs||d.secs))),fps:30};
 }
+function normEnd(e){
+  if(e===1||e===true)return "classic";
+  return ENDCARDS.some(function(o){return o[0]===e&&e!=="off";})?e:"off";
+}
+/* '' when there is no end card — every caller treats that as off, and a bare
+   truthiness test on the stored value would read the string "off" as on */
+function endStyle(){ var e=S.video&&S.video.end; return (e&&e!=="off")?e:""; }
 function ease(p){return 1-Math.pow(1-p,3);}                       // easeOutCubic
 function easeBack(p){var c=1.7;return 1+(c+1)*Math.pow(p-1,3)+c*Math.pow(p-1,2);}
 function animAt(t,D){
@@ -1562,6 +1640,17 @@ function animAt(t,D){
   // static after its intro reads as a broken video rather than a still
   else if(m==="pop"){ A.bgScale=1.12-.08*ease(Math.min(1,t/.9))+.05*p; A.gradShift=p*.6; }
   else if(m==="slide"){ A.bgScale=1.10; A.bgDx=(.5-p)*.06; A.gradShift=p; }
+  // starts pushed right in and settles back — the opposite read to Drift, and
+  // the one that makes a photo feel like it was filmed rather than placed
+  else if(m==="zoom"){ A.bgScale=1.22-.14*ease(Math.min(1,t/1.6))-.02*p; A.bgDy=(1-ease(Math.min(1,t/1.6)))*.012; A.gradShift=p*.8; }
+  // two sines at unrelated periods never repeat inside a 15s clip, so the frame
+  // wanders like a held camera instead of tracing a visible loop
+  else if(m==="sway"){ A.bgScale=1.07+.01*Math.sin(t*Math.PI*2/4.3);
+                       A.bgDx=.018*Math.sin(t*Math.PI*2/3.7);
+                       A.bgDy=.014*Math.sin(t*Math.PI*2/2.9+1.1); A.gradShift=p; }
+  // background and words travel opposite ways: the depth cue is the offset
+  // between the two layers, so the text drift is set on the block below
+  else if(m==="parallax"){ A.bgScale=1.09+.03*p; A.bgDx=(.5-p)*.05; A.bgDy=(p-.5)*.02; A.gradShift=p; }
   else { A.bgScale=1.05+.022*(Math.sin(t*Math.PI*2/1.5)*.5+.5); A.gradShift=p; }
   // a pan must never drag the canvas edge into view
   var room=(A.bgScale-1)/2*.9;
@@ -1569,32 +1658,50 @@ function animAt(t,D){
   A.bgDy=Math.max(-room,Math.min(room,A.bgDy));
   A.block=function(i){
     var at=.22+i*.34,q=Math.min(1,Math.max(0,(t-at)/.62)),e=ease(q);
-    var o={a:e,dy:0,rev:1,mode:mode,cs:1};
+    var o={a:e,dy:0,dx:0,rev:1,mode:mode,cs:1,ts:1,soft:0};
     if(m==="slide"||mode==="rise")o.dy=(1-e)*.055;
     if(m==="pop")o.cs=.9+.1*easeBack(q);
     else if(m==="pulse")o.cs=1+.03*Math.sin(t*Math.PI*2/1.5);
-    if(i===0&&(mode==="word"||mode==="type")){
+    // Parallax: the words hold their own course against the background for the
+    // whole clip, not just the entrance — that is the entire effect
+    else if(m==="parallax")o.dx=(p-.5)*.022+(1-e)*.02;
+    else if(m==="sway")o.dx=.006*Math.sin(t*Math.PI*2/3.1+i);
+    // ts scales the block about its own centre; soft blurs it on the way in.
+    // Both stay at rest (1 and 0) once the entrance is over, so a long reel
+    // never sits on a permanently soft or oversized headline.
+    if(mode==="scale")o.ts=1+.18*(1-easeBack(q));
+    else if(mode==="blur"){o.soft=1-q;o.a=Math.min(1,e*1.15);}
+    else if(mode==="swipe")o.dx=(1-e)*(i%2?-.09:.09);
+    if(i===0&&REVEALS.indexOf(mode)>=0){
       // the headline reveals itself, so the block as a whole never fades
       o.rev=Math.min(1,Math.max(0,(t-at)/Math.max(.9,Math.min(2.4,D*.45))));
       o.a=1;
     }
+    // Clear the design's own words as the end card arrives — last, so it also
+    // takes the headline the branch above just pinned to full. Without it the
+    // type ghosts through the wash and, on Minimal, collides outright with the
+    // handle: two sets of words fighting over the same beat.
+    if(A.end>0)o.a*=1-A.end;
     return o;
   };
   A.sticker=function(i){
     var q=Math.min(1,Math.max(0,(t-(.5+i*.16))/.5));
-    return {a:Math.min(1,q*1.6),s:.6+.4*easeBack(q)};
+    return {a:Math.min(1,q*1.6)*(A.end>0?1-A.end:1),s:.6+.4*easeBack(q)};
   };
   // End card: a held frame carrying the handle and CTA. Reels that simply stop
   // give a viewer nothing to act on, and this is the beat where a view turns
   // into a follow. Fades in over the last stretch rather than cutting, so the
   // clip still loops cleanly.
   A.t = t;                       // the lighting pass is a pure function of it
-  A.end = (S.video&&S.video.end)
+  A.end = endStyle()
     ? Math.min(1,Math.max(0,(t-(D-END_LEN))/.5))
     : 0;
   return A;
 }
 var END_LEN=1.35;
+/* text-in modes that reveal the headline word/line at a time rather than
+   moving the block as a whole */
+var REVEALS=["word","type","line"];
 
 /* ---------------- light effects ----------------
 
@@ -1611,7 +1718,8 @@ var END_LEN=1.35;
    screening onto near-white has little left to give, which is honest to how
    real light behaves and is said plainly in the hint.                         */
 var LIGHTS=[["none","None"],["sweep","Shine"],["glow","Glow"],
-            ["bokeh","Bokeh"],["leak","Light leak"],["sparkle","Sparkle"]];
+            ["bokeh","Bokeh"],["leak","Light leak"],["sparkle","Sparkle"],
+            ["rays","Sun rays"],["neon","Neon"],["prism","Prism"],["dust","Dust"]];
 function lightRnd(i){
   var v=Math.sin(i*127.1+311.7)*43758.5453;
   return v-Math.floor(v);
@@ -1675,43 +1783,163 @@ function drawLight(x,W,H,A){
       x.stroke();
       softDot(x,sx,sy,s*1.5,"rgba(255,255,255,%a)",a2*.5);
     }
+
+  }else if(kind==="rays"){
+    // shafts fanning from a point off the top corner, the fan swinging slowly.
+    // Drawn as one rotated group so the beams stay parallel to each other.
+    var ox=W*.16,oy=-H*.12,sw=.10*Math.sin(t*Math.PI*2/7);
+    x.save();x.translate(ox,oy);x.rotate(.55+sw);
+    for(i=0;i<9;i++){
+      var off=(i-4)*W*.17, bw2=W*(.045+lightRnd(i+5)*.060);
+      var gr=x.createLinearGradient(off,0,off,D*1.7);
+      var ga=.10+.07*lightRnd(i+29)+.03*Math.sin(t*Math.PI*2/3.3+i);
+      gr.addColorStop(0,"rgba(255,247,224,"+ga.toFixed(3)+")");
+      gr.addColorStop(1,"rgba(255,247,224,0)");
+      x.fillStyle=gr;
+      x.beginPath();
+      x.moveTo(off-bw2*.25,0);x.lineTo(off+bw2*.25,0);
+      x.lineTo(off+bw2*1.6,D*1.7);x.lineTo(off-bw2*1.6,D*1.7);
+      x.closePath();x.fill();
+    }
+    x.restore();
+    softDot(x,ox,oy,D*.5,"rgba(255,240,210,%a)",.13);
+
+  }else if(kind==="neon"){
+    // takes the brand accent rather than white, so the glow belongs to the
+    // design instead of sitting on top of it
+    var ac=hexRGB(BRAND.accent)||[255,90,160];
+    var col="rgba("+ac[0]+","+ac[1]+","+ac[2]+",%a)";
+    var beat=.5+.5*Math.sin(t*Math.PI*2/1.9);
+    softDot(x,W*.5,H*1.02,D*.80,col,.16+.14*beat);
+    softDot(x,W*(.18+.10*Math.sin(t*.9)),H*.16,D*.38,col,.10+.09*(1-beat));
+    var eg=x.createLinearGradient(0,0,W,0);
+    eg.addColorStop(0,col.replace("%a",(.17+.09*beat).toFixed(3)));
+    eg.addColorStop(.35,col.replace("%a",0));
+    eg.addColorStop(.65,col.replace("%a",0));
+    eg.addColorStop(1,col.replace("%a",(.17+.09*(1-beat)).toFixed(3)));
+    x.fillStyle=eg;x.fillRect(0,0,W,H);
+
+  }else if(kind==="prism"){
+    // three offset bands of split light — the same rake as Shine, but the
+    // colours trail each other the way glass separates them
+    var cols=[[255,90,120],[110,240,180],[120,150,255]],per2=3.2;
+    for(i=0;i<3;i++){
+      var ph2=((t+i*.16)%per2)/per2, bw3=W*.22;
+      var cx2=-bw3+ph2*(W+bw3*2);
+      var g3=x.createLinearGradient(cx2-bw3,0,cx2+bw3,H*.6);
+      var c=cols[i];
+      g3.addColorStop(0,"rgba("+c[0]+","+c[1]+","+c[2]+",0)");
+      g3.addColorStop(.5,"rgba("+c[0]+","+c[1]+","+c[2]+",.16)");
+      g3.addColorStop(1,"rgba("+c[0]+","+c[1]+","+c[2]+",0)");
+      x.fillStyle=g3;x.fillRect(0,0,W,H);
+    }
+
+  }else if(kind==="dust"){
+    // fine motes rising through the beam of light — smaller, slower and far
+    // more numerous than Bokeh, so it reads as air rather than as lens shape
+    for(i=0;i<46;i++){
+      var dxr=lightRnd(i+7), dyr=lightRnd(i+61), dzr=lightRnd(i+131);
+      var dsp=.020+dzr*.030;
+      var dy2=((dyr-t*dsp)%1+1)%1;
+      var wob=Math.sin(t*.7+i)*.012;
+      var dr=W*(.0022+dzr*.0055);
+      softDot(x,(dxr+wob)*W,dy2*H,dr*4,"rgba(255,252,240,%a)",.10+dzr*.16);
+    }
   }
   x.restore();
 }
+/* End-card looks. "classic" is the original and stays first, because a reel
+   saved before this list existed reopens as that one. */
+var ENDCARDS=[["off","Off"],["classic","Classic"],["accent","Brand colour"],
+              ["minimal","Minimal"],["card","Card"]];
 function drawEndCard(x,W,H,a){
+  var st=endStyle();if(!st)return;
+  var e=ease(Math.min(1,a));                  // contents settle as the card lands
   x.save();
   x.globalAlpha=Math.min(1,a);
-  // wash the frame back so the card reads, tinted toward the accent
-  x.fillStyle=inkIsDark()?"rgba(255,255,255,.90)":"rgba(10,12,18,.86)";
-  x.fillRect(0,0,W,H);
-  var cy=H*.5, gap=H*.035;
-  var lg=BRAND.logoImg;
-  if(lg&&lg.naturalWidth){
-    var lw=W*.30, lh=lw*lg.naturalHeight/lg.naturalWidth;
-    x.drawImage(lg,(W-lw)/2,cy-lh-gap,lw,lh);
-    cy+=lh*.12;
+  // true when the INK is dark, which means the artwork under it is light — so
+  // every surface below flips to the pale side of the pair
+  var dark=inkIsDark();
+  var ink=inkColor(), gap=H*.035, lg=BRAND.logoImg, hasLogo=!!(lg&&lg.naturalWidth);
+
+  if(st==="accent"){
+    // the whole frame becomes the brand colour, so ink is decided by the
+    // accent rather than by whatever the artwork behind it was doing
+    x.fillStyle=BRAND.accent;x.fillRect(0,0,W,H);
+    ink=onAccent();
+  }else if(st==="minimal"){
+    // the design keeps playing — only the lower third is weighted down enough
+    // to carry the handle. Nothing is hidden, so it suits photo reels.
+    var mg=x.createLinearGradient(0,H*.42,0,H);
+    mg.addColorStop(0,dark?"rgba(255,255,255,0)":"rgba(8,10,16,0)");
+    mg.addColorStop(1,dark?"rgba(255,255,255,.88)":"rgba(8,10,16,.86)");
+    x.fillStyle=mg;x.fillRect(0,H*.42,W,H*.58);
+  }else{
+    x.fillStyle=dark?"rgba(255,255,255,.90)":"rgba(10,12,18,.86)";
+    x.fillRect(0,0,W,H);
   }
-  if(BRAND.handle){
-    x.font="700 "+H*.045+"px "+bodyFamily();
-    x.fillStyle=inkColor();x.textAlign="center";x.textBaseline="middle";
-    x.fillText(BRAND.handle,W/2,cy);
+
+  /* Measure the stack before drawing any of it: Card has to wrap it, and a
+     panel sized to a fixed fraction leaves a hole under a handle-only card. */
+  var hFs=H*(st==="card"?.038:.045), cFs=H*(st==="card"?.032:.036);
+  var lw=0,lh=0;
+  if(hasLogo){ lw=W*(st==="card"?.24:.30); lh=lw*lg.naturalHeight/lg.naturalWidth; }
+  var hasH=!!BRAND.handle, hasC=!!S.copy.cta;
+  var stack=(hasLogo?lh:0)+(hasH?hFs*1.2:0)+(hasC?cFs*2.1:0)
+           +((hasLogo&&(hasH||hasC))?gap*.8:0)+((hasH&&hasC)?gap*.9:0);
+
+  // where the stack sits: Minimal hangs it low over the band, the rest centre it
+  var mid=(st==="minimal"?H*.76:H*.5)+(1-e)*H*.035;
+  var y=mid-stack/2;
+  x.globalAlpha=Math.min(1,a)*e;
+  x.textAlign="center";x.textBaseline="middle";
+
+  if(st==="card"){
+    // a panel with its own edge, so the card reads as a card and not as the
+    // reel having simply faded out
+    var wide=hasLogo?lw:0;
+    if(hasH){x.font="700 "+hFs+"px "+bodyFamily();wide=Math.max(wide,x.measureText(BRAND.handle).width);}
+    if(hasC){x.font="700 "+cFs+"px "+bodyFamily();wide=Math.max(wide,x.measureText(S.copy.cta).width+cFs*2.2);}
+    var pad=H*.055, cw=Math.min(W*.86,Math.max(W*.58,wide+W*.16));
+    var chh=stack+pad*2, cx0=(W-cw)/2, cy0=mid-chh/2;
+    x.save();
+    // a white panel on a white wash has only its border to stand on, so it
+    // gets the heavier drop of the two
+    x.shadowColor="rgba(0,0,0,"+(dark?.28:.45)+")";x.shadowBlur=W*.05;x.shadowOffsetY=W*.012;
+    x.fillStyle=dark?"rgba(255,255,255,.96)":"rgba(20,22,30,.96)";
+    roundRect(x,cx0,cy0,cw,chh,W*.06);x.fill();
+    x.restore();
+    x.strokeStyle=BRAND.accent;x.lineWidth=Math.max(2,W*.005);
+    roundRect(x,cx0,cy0,cw,chh,W*.06);x.stroke();
   }
-  if(S.copy.cta){
-    var fs=H*.036;
-    x.font="700 "+fs+"px "+bodyFamily();
-    var tw=x.measureText(S.copy.cta).width,pw=tw+fs*2.2,ph=fs*2.1,py=cy+gap*2.1;
-    x.fillStyle=BRAND.accent;roundRect(x,W/2-pw/2,py-ph/2,pw,ph,ph/2);x.fill();
-    x.fillStyle=onAccent();x.fillText(S.copy.cta,W/2,py+fs*.06);
+
+  if(hasLogo){ x.drawImage(lg,(W-lw)/2,y,lw,lh); y+=lh+((hasH||hasC)?gap*.8:0); }
+  if(hasH){
+    x.font="700 "+hFs+"px "+bodyFamily();
+    x.fillStyle=ink;
+    x.fillText(BRAND.handle,W/2,y+hFs*.6);
+    y+=hFs*1.2+(hasC?gap*.9:0);
+  }
+  if(hasC){
+    x.font="700 "+cFs+"px "+bodyFamily();
+    var tw=x.measureText(S.copy.cta).width,pw=tw+cFs*2.2,ph=cFs*2.1,py=y+ph/2;
+    // on the accent fill a solid accent pill would vanish, so the pill inverts
+    x.fillStyle=st==="accent"?ink:BRAND.accent;
+    roundRect(x,W/2-pw/2,py-ph/2,pw,ph,ph/2);x.fill();
+    x.fillStyle=st==="accent"?BRAND.accent:onAccent();
+    x.fillText(S.copy.cta,W/2,py+cFs*.06);
   }
   x.restore();
 }
 function reelDur(){return (S.video&&S.video.secs)||6;}
 var reelRAF=null,reelT0=0;
 function toggleReel(){ reelRAF?stopReel():playReel(); }
-function playReel(){
+/* from: seconds to start at, for previewing a beat near the end without
+   sitting through the whole clip */
+function playReel(from){
   stopReel();
   sel=null;el('selCtl').style.display='none';
-  var D=reelDur();reelT0=(window.performance||Date).now();
+  var D=reelDur();reelT0=(window.performance||Date).now()-Math.max(0,(+from||0))*1000;
   (function step(){
     var t=((window.performance||Date).now()-reelT0)/1000;
     if(t>=D+.35){stopReel();return;}
@@ -1738,9 +1966,30 @@ function vidChips(id,items,cur,set){
     w.appendChild(b);
   });
 }
+/* One line per option, because the chip names alone can't say which ones move
+   the frame and which only touch the headline. */
+var MOTION_HINT={
+  drift:'A slow push in with a little pan — the safe one.',
+  pop:'Snaps in from wide, then keeps easing.',
+  slide:'The frame travels sideways under the words.',
+  pulse:'Breathes in and out on a steady beat.',
+  zoom:'Starts tight and pulls back to reveal the frame.',
+  sway:'Wanders like a handheld camera — never repeats itself.',
+  parallax:'Words and background travel opposite ways, for depth.'};
+var TEXTIN_HINT={
+  fade:'Everything fades up where it sits.',
+  rise:'Blocks lift into place as they appear.',
+  word:'The headline builds a word at a time.',
+  type:'The headline types itself out.',
+  blur:'Words arrive out of focus and sharpen as they land.',
+  scale:'Blocks grow into place and settle.',
+  line:'The headline arrives a line at a time.',
+  swipe:'Blocks slide in from alternating sides.'};
 function buildVideoControls(){
   vidChips('motionRow',MOTIONS,S.video.motion,function(v){S.video.motion=v;});
   vidChips('textInRow',TEXTINS,S.video.textIn,function(v){S.video.textIn=v;});
+  el('motionHint').textContent=MOTION_HINT[S.video.motion]||'';
+  el('textInHint').textContent=TEXTIN_HINT[S.video.textIn]||'';
   el('vsecs').value=S.video.secs;el('vidLen').textContent=S.video.secs+'s';
   updVideo();
 }
