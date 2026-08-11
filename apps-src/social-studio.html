@@ -291,6 +291,9 @@ return Promise.resolve(p).then(function(r){hide();return r;},function(e){hide();
     <div class="lbl">Finish</div>
     <div class="chips" id="texRow"></div>
     <div class="lbl">Text backdrop</div>
+    <div class="chips" id="plateRow"></div>
+    <p class="hint" id="plateHint"></p>
+    <div class="lbl">Scrim strength</div>
     <div class="chips" id="scrimRow"></div>
     <div class="lbl">Frame</div>
     <div class="chips" id="frameRow"></div>
@@ -410,8 +413,18 @@ var GRADS = [["#1b2a4a","#4f8df9"],["#2d1b4a","#b06df9"],["#0f3d3a","#2fbf9b"],[
              /* light palettes — added with the dark-ink option, which is what
                 finally makes them usable */
              ["#fdf6ec","#f2c9a0"],["#f4f1fb","#c9b6f2"],["#eef7f3","#a8d8c4"],
-             ["#fdf0f2","#f3b8c2"],["#f2f5fa","#b9cbe4"],["#fbf7ed","#e0d3ae"]];
-var GRAD_LIGHT_FROM = 12;   // index of the first light palette
+             ["#fdf0f2","#f3b8c2"],["#f2f5fa","#b9cbe4"],["#fbf7ed","#e0d3ae"],
+             /* neon — near-black bases so the second colour reads as emitted
+                light rather than as paint. They only work with light ink. */
+             /* the third value holds the dark colour out to that stop, so the
+                bright one stays a glow at one edge instead of filling half the
+                frame — which is the whole difference between neon and a plain
+                two-colour ramp. Older palettes have no third value and are
+                unaffected. */
+             ["#07070f","#00e5ff",.52],["#0b0413","#ff2fd0",.52],["#050d0a","#39ff88",.55],
+             ["#0d0616","#a855ff",.5],["#100604","#ff6a00",.55],["#00070f","#3d5bff",.5]];
+var GRAD_LIGHT_FROM = 12;   // index of the first light palette (the six after
+                            // those are neon, and dark again)
 var TONES = ["Playful","Premium","Bold","Minimal"];
 var EMOJI = "🔥✨🎉💥⭐️❤️💙💚🖤🙌👏💪🚀🌈☀️🌙🌸🌿🍕☕️🍰🥂🎁🏷️📣📸🎵🏆✅➡️💡🛍️🎯🕐📍🌍😄😍🤩😎🥳🤍💫🫶🍂❄️🌊".match(/./gu).filter(function(c){return c.trim();});
 
@@ -479,7 +492,7 @@ function bodyFamily(){
 
 var S = {
   format:"square", template:"promo", textScale:1, ink:"light", type:"auto", split:1,
-  gradDir:"diag", texture:"none", vig:false, scrimAdj:1, frame:"none", photoBlur:0, textY:0, ctaStyle:"pill", ctaPos:null,
+  gradDir:"diag", texture:"none", plate:"none", vig:false, scrimAdj:1, frame:"none", photoBlur:0, textY:0, ctaStyle:"pill", ctaPos:null,
   bg:{ type:"grad", grad:0, aiUrl:null },
   photo:null, photoPos:{x:0,y:0,scale:1},
   copy:{ hook:"Weekend plant sale", sub:"Every leafy friend 20% off, Saturday only", cta:"Visit us", caption:"", tone:"Playful" },
@@ -1054,27 +1067,171 @@ function wrap(ctx,text,maxW,maxLines){
 /* procedural finishes: baked once to a small tile, pattern-filled — seeded so
    repaints during drags don't shimmer */
 var _texTiles={};
+/* Tiles are drawn in the INK's colour, not always white: a white grain on a
+   cream background is a control that appears to do nothing, which is how the
+   light palettes shipped. Cached per kind AND per polarity, so switching ink
+   rebuilds rather than re-serving the invisible one. */
 function texTile(kind){
-  if(_texTiles[kind])return _texTiles[kind];
+  var lightArt=inkIsDark(), key=kind+(lightArt?'|d':'|l');
+  if(_texTiles[key])return _texTiles[key];
   var c=document.createElement('canvas');c.width=c.height=220;
   var t=c.getContext('2d');
+  var RGB=lightArt?'0,0,0':'255,255,255';
+  function ink(a){ return 'rgba('+RGB+','+a+')'; }
+  var seed=42;function rnd(){seed=(seed*1664525+1013904223)>>>0;return seed/4294967296;}
+  var i,d,xx,yy;
   if(kind==='grain'){
-    var seed=42;function rnd(){seed=(seed*1664525+1013904223)>>>0;return seed/4294967296;}
-    for(var i=0;i<2600;i++){t.fillStyle='rgba(255,255,255,'+(rnd()*.09).toFixed(3)+')';
+    for(i=0;i<2600;i++){t.fillStyle=ink((rnd()*.09).toFixed(3));
       t.fillRect(Math.floor(rnd()*220),Math.floor(rnd()*220),1,1);}
   } else if(kind==='dots'){
-    t.fillStyle='rgba(255,255,255,.08)';
-    for(var yy=8;yy<220;yy+=22)for(var xx=8;xx<220;xx+=22){t.beginPath();t.arc(xx,yy,2.1,0,7);t.fill();}
+    t.fillStyle=ink(.08);
+    for(yy=8;yy<220;yy+=22)for(xx=8;xx<220;xx+=22){t.beginPath();t.arc(xx,yy,2.1,0,7);t.fill();}
   } else if(kind==='lines'){
-    t.strokeStyle='rgba(255,255,255,.055)';t.lineWidth=3;
-    for(var d=-220;d<440;d+=24){t.beginPath();t.moveTo(d,220);t.lineTo(d+220,0);t.stroke();}
+    t.strokeStyle=ink(.055);t.lineWidth=3;
+    for(d=-220;d<440;d+=24){t.beginPath();t.moveTo(d,220);t.lineTo(d+220,0);t.stroke();}
+  } else if(kind==='grid'){
+    t.strokeStyle=ink(.055);t.lineWidth=1.4;
+    for(i=0;i<=220;i+=22){t.beginPath();t.moveTo(i,0);t.lineTo(i,220);t.stroke();
+                          t.beginPath();t.moveTo(0,i);t.lineTo(220,i);t.stroke();}
+    t.strokeStyle=ink(.10);t.lineWidth=2;
+    t.strokeRect(0,0,220,220);       // the tile edge doubles as the heavier rule
+  } else if(kind==='halftone'){
+    // staggered rows of graded dots — print screen rather than polka dot
+    for(yy=0;yy<220;yy+=20){
+      for(xx=(yy/20)%2?10:0;xx<220;xx+=20){
+        var rr=1.4+2.6*rnd();
+        t.fillStyle=ink((.05+rnd()*.07).toFixed(3));
+        t.beginPath();t.arc(xx,yy,rr,0,7);t.fill();
+      }
+    }
+  } else if(kind==='cross'){
+    t.strokeStyle=ink(.05);t.lineWidth=1.6;
+    for(d=-220;d<440;d+=18){
+      t.beginPath();t.moveTo(d,220);t.lineTo(d+220,0);t.stroke();
+      t.beginPath();t.moveTo(d,0);t.lineTo(d+220,220);t.stroke();
+    }
+  } else if(kind==='film'){
+    // grain, plus the vertical scratches and specks of a worn print
+    for(i=0;i<3400;i++){t.fillStyle=ink((rnd()*.10).toFixed(3));
+      t.fillRect(Math.floor(rnd()*220),Math.floor(rnd()*220),1,1);}
+    for(i=0;i<5;i++){
+      var sx=rnd()*220, h=60+rnd()*160, sy=rnd()*220;
+      t.fillStyle=ink((.05+rnd()*.06).toFixed(3));
+      t.fillRect(sx,sy,rnd()<.5?1:1.6,h);
+    }
+    for(i=0;i<26;i++){
+      t.fillStyle=ink((.06+rnd()*.09).toFixed(3));
+      t.beginPath();t.arc(rnd()*220,rnd()*220,.6+rnd()*1.6,0,7);t.fill();
+    }
   }
-  _texTiles[kind]=c;return c;
+  _texTiles[key]=c;return c;
+}
+/* The travelling light that makes Motion read on a flat background. Kept low
+   and very wide so it passes for the sheen on a surface rather than for the
+   Light effect, which is a separate control and composites over everything. */
+function drawBgSheen(x,W,H,A){
+  var cx=W*(.5+A.bgDx*7+A.gradShift*.22), cy=H*(.40+A.bgDy*7+(A.p-.5)*.22-A.gradShift*.10);
+  var r=Math.max(W,H)*.85;
+  var g=x.createRadialGradient(cx,cy,0,cx,cy,r);
+  // light artwork wants a shadow travelling over it; dark artwork wants a light
+  var c=inkIsDark()?"0,0,0":"255,255,255", a=inkIsDark()?.055:.075;
+  g.addColorStop(0,"rgba("+c+","+a+")");
+  g.addColorStop(.6,"rgba("+c+","+(a*.35).toFixed(4)+")");
+  g.addColorStop(1,"rgba("+c+",0)");
+  x.save();x.fillStyle=g;x.fillRect(0,0,W,H);x.restore();
 }
 function drawTexture(x,W,H){
   if(!S.texture||S.texture==='none')return;
   try{var p=x.createPattern(texTile(S.texture),'repeat');if(!p)return;
     x.save();x.fillStyle=p;x.fillRect(0,0,W,H);x.restore();}catch(e){}
+}
+/* ---------------- text backdrop ----------------
+
+   A surface behind the words themselves, as opposed to the template scrim,
+   which washes the whole frame. It is what makes a headline hold on a busy
+   photo without dimming the photo.
+
+   Returns null when there is no backdrop, '' when there is one and the ink is
+   unchanged, or a colour when the backdrop takes the ink with it (Bars invert
+   the type onto a solid block). Measured from the SAME wrapped lines the text
+   is about to be drawn from, so the box can never disagree with the words. */
+var PLATES=[["none","None"],["plate","Plate"],["bars","Bars"],
+            ["highlight","Marker"],["outline","Outline"]];
+/* How much of each line is on screen right now, in pixels, under a word,
+   typewriter or line reveal. The backdrop needs this or it paints a full-width
+   slab around two words — the box has to arrive WITH the type, not before it. */
+function revealWidths(x,lines,rev,mode){
+  var n=lines.length,out=new Array(n),li,i;
+  if(rev>=1||!mode||REVEALS.indexOf(mode)<0){
+    for(li=0;li<n;li++)out[li]=x.measureText(lines[li]).width;
+    return out;
+  }
+  if(mode==="line"){
+    var step=1/n;
+    for(li=0;li<n;li++)out[li]=(rev-li*step)>0?x.measureText(lines[li]).width:0;
+    return out;
+  }
+  if(mode==="type"){
+    var total=lines.join("").length||1,shown=rev*total,used=0;
+    for(li=0;li<n;li++){
+      var ln=lines[li],take=Math.max(0,Math.min(ln.length,Math.round(shown-used)));
+      used+=ln.length;
+      out[li]=take>0?x.measureText(ln.slice(0,take)).width:0;
+    }
+    return out;
+  }
+  var words=lines.map(function(l){return l.split(/\s+/).filter(Boolean);});
+  var count=words.reduce(function(a,ws){return a+ws.length;},0)||1;
+  var target=rev*count,seen=0;
+  for(li=0;li<n;li++){
+    var shownWords=[];
+    for(i=0;i<words[li].length;i++){ if(target-seen>0)shownWords.push(words[li][i]); seen++; }
+    out[li]=shownWords.length?x.measureText(shownWords.join(" ")).width:0;
+  }
+  return out;
+}
+function drawPlate(x,W,H,lines,cy,lh,fs,rev,mode){
+  var k=S.plate||"none";
+  if(k==="none"||!lines.length)return null;
+  var n=lines.length, px=fs*.42, py=fs*.26, i, wide=0;
+  var w=revealWidths(x,lines,rev==null?1:rev,mode);
+  for(i=0;i<n;i++){ var full=x.measureText(lines[i]).width; if(full>wide)wide=full; }
+  var top=cy-(n-1)/2*lh-fs*.62, boxH=(n-1)*lh+fs*1.24;
+  var surface=inkIsDark()?"rgba(255,255,255,.82)":"rgba(12,14,20,.55)";
+  x.save();
+  // A panel can't grow sideways without the words jumping around inside it, so
+  // it keeps its full size and fades up with the reveal instead.
+  if(k==="plate"||k==="outline"){
+    if(rev!=null&&rev<1)x.globalAlpha=x.globalAlpha*Math.min(1,rev*1.4);
+    if(k==="plate"){
+      x.fillStyle=surface;
+      roundRect(x,W/2-wide/2-px,top-py,wide+px*2,boxH+py*2,fs*.28);x.fill();
+    }else{
+      x.strokeStyle=inkAlpha(.55);x.lineWidth=Math.max(1.5,fs*.045);
+      roundRect(x,W/2-wide/2-px,top-py,wide+px*2,boxH+py*2,fs*.28);x.stroke();
+    }
+    x.restore();return "";
+  }
+  if(k==="highlight")x.globalAlpha=x.globalAlpha*.62;   // set once; restore() puts it back
+  for(i=0;i<n;i++){
+    if(!w[i])continue;                       // nothing revealed on this line yet
+    // the block sits under the words as they land: left edge fixed at the line's
+    // own left edge, right edge tracking the reveal
+    var x0=W/2-x.measureText(lines[i]).width/2;
+    var ly=cy+(i-(n-1)/2)*lh;
+    if(k==="bars"){
+      // solid blocks, one per line, with the type knocked out of them
+      x.fillStyle=inkColor();
+      x.fillRect(x0-px,ly-fs*.66,w[i]+px*2,fs*1.28);
+    }else{
+      // Marker: a band across the middle of the line, like a highlighter that
+      // doesn't quite cover the caps — the words keep their own colour
+      x.fillStyle=BRAND.accent;
+      x.fillRect(x0-px*.55,ly-fs*.34,w[i]+px*1.1,fs*.78);
+    }
+  }
+  x.restore();
+  return k==="bars"?onColor(inkColor()):"";
 }
 function drawFrame(x,W,H){
   if(!S.frame||S.frame==='none')return;
@@ -1334,9 +1491,11 @@ function drawBlock(x,W,H,b,val,an){
   var fs3=H*b.size*(S.textScale||1);x.font=fontFor(b,fs3);
   x.textAlign="center";x.textBaseline="middle";
   var lines=wrap(x,t,W*.82,b.maxLines||2),lh=fs3*1.18;
-  x.shadowColor=inkShadow();x.shadowBlur=fs3*.25;
-  x.fillStyle=inkColor();
   var rev=(an&&b.key==="hook")?an.rev:1;
+  var plateInk=drawPlate(x,W,H,lines,H*by,lh,fs3,rev,an&&an.mode);
+  // a drop shadow under a backdrop is just mud — the backdrop IS the lift
+  if(plateInk===null){x.shadowColor=inkShadow();x.shadowBlur=fs3*.25;}
+  x.fillStyle=plateInk||inkColor();
   var put=function(ox,oy){
     if(rev>=1)lines.forEach(function(ln,i){x.fillText(ln,W/2+ox,H*by+(i-(lines.length-1)/2)*lh+oy);});
     else drawReveal(x,lines,W/2+ox,H*by+oy,lh,rev,an.mode);
@@ -1367,19 +1526,32 @@ function render(cv,W,H,forExport){
   } else if(S.bg.type==="solid"){
     x.fillStyle=S.bg.solid||"#101216";x.fillRect(0,0,W,H);
   } else {
-    var g,gs=A?A.gradShift:0;   // a flat gradient would sit dead still in a reel,
-                                // so its axis drifts across the clip
-    if(S.gradDir==="radial")g=x.createRadialGradient(W/2+gs*W*.1,H*.42,W*.08,W/2,H*.5,Math.max(W,H)*.78);
-    else if(S.gradDir==="down")g=x.createLinearGradient(0,-gs*H*.16,0,H-gs*H*.16);
-    else if(S.gradDir==="right")g=x.createLinearGradient(-gs*W*.16,0,W-gs*W*.16,0);
-    else g=x.createLinearGradient(gs*W*.18,0,W*.7+gs*W*.18,H);
+    /* A flat gradient would sit dead still in a reel: the frame transform above
+       is a zoom, and zooming a full-bleed gradient lands on very nearly the
+       same pixels. So the AXIS travels instead, and it has to travel far — the
+       old sixth-of-a-frame shift measured out at about 2 levels of 255 across
+       two seconds, which is why Motion looked like it did nothing on anything
+       but a photo. Moving both ends by different amounts stretches the ramp as
+       it slides, so the colours change rather than merely translating. */
+    var g,gs=A?A.gradShift:0;
+    if(S.gradDir==="radial")g=x.createRadialGradient(W/2+gs*W*.34,H*(.42-gs*.14),W*.08,W/2,H*.5,Math.max(W,H)*(.78+gs*.16));
+    else if(S.gradDir==="down")g=x.createLinearGradient(0,-gs*H*.62,0,H-gs*H*.22);
+    else if(S.gradDir==="right")g=x.createLinearGradient(-gs*W*.62,0,W-gs*W*.22,0);
+    else g=x.createLinearGradient(gs*W*.55,0,W*.7+gs*W*.20,H);
     // A photo-derived palette is carried as an explicit colour PAIR, never as a
     // new GRADS index — appending per-photo entries would renumber the array
     // that every saved post indexes into.
     var pair=S.bg.pal||GRADS[S.bg.grad]||GRADS[0];
-    g.addColorStop(0,pair[0]);g.addColorStop(1,pair[1]);
+    g.addColorStop(0,pair[0]);
+    if(pair[2])g.addColorStop(Math.max(0,Math.min(.95,pair[2])),pair[0]);
+    g.addColorStop(1,pair[1]);
     x.fillStyle=g;x.fillRect(0,0,W,H);
   }
+  // A solid colour cannot be moved at all by a transform, and a gradient only
+  // just — so flat artwork gets a light that travels over it instead. It is
+  // driven by the same numbers as the frame, so each motion moves it its own
+  // way, and it is off entirely on photos, which have their own detail to move.
+  if(A&&!(S.photo&&S.bg.type==="photo")&&!(S.bg.type==="ai"&&S.bg.aiImg))drawBgSheen(x,W,H,A);
   if(A)x.restore();
   // autoInk() measures EXACTLY this much: the raw background, before any
   // ink-dependent layer. The scrim and vignette flip colour with the ink, so
@@ -1635,23 +1807,37 @@ function animAt(t,D){
   var p=D>0?Math.min(1,Math.max(0,t/D)):0;
   var m=(S.video&&S.video.motion)||"drift",mode=(S.video&&S.video.textIn)||"word";
   var A={p:p,mode:mode,bgScale:1,bgDx:0,bgDy:0,gradShift:0};
-  if(m==="drift"){ A.bgScale=1.03+.09*p; A.bgDx=(p-.5)*.03; A.gradShift=p; }
+  /* gradShift is what each motion does to a FLAT background: the gradient axis
+     and the travelling sheen both ride it, so the seven motions stay seven
+     distinct things on a design with no photo in it. Signed, and not bounded
+     to 0..1 — a sweep wants to run past both edges. */
+  if(m==="drift"){ A.bgScale=1.03+.09*p; A.bgDx=(p-.5)*.03;
+                   A.gradShift=p*.9+.45*Math.sin(t*Math.PI*2/2.8); }
   // every motion keeps a slow continuing component — a reel that goes completely
   // static after its intro reads as a broken video rather than a still
-  else if(m==="pop"){ A.bgScale=1.12-.08*ease(Math.min(1,t/.9))+.05*p; A.gradShift=p*.6; }
-  else if(m==="slide"){ A.bgScale=1.10; A.bgDx=(.5-p)*.06; A.gradShift=p; }
+  else if(m==="pop"){ A.bgScale=1.12-.08*ease(Math.min(1,t/.9))+.05*p;
+                      A.gradShift=ease(Math.min(1,t/.9))*.8+.45*Math.sin(t*Math.PI*2/3.2); }
+  else if(m==="slide"){ A.bgScale=1.10; A.bgDx=(.5-p)*.06; A.gradShift=(p-.5)*2.2; }
   // starts pushed right in and settles back — the opposite read to Drift, and
   // the one that makes a photo feel like it was filmed rather than placed
-  else if(m==="zoom"){ A.bgScale=1.22-.14*ease(Math.min(1,t/1.6))-.02*p; A.bgDy=(1-ease(Math.min(1,t/1.6)))*.012; A.gradShift=p*.8; }
+  else if(m==="zoom"){ A.bgScale=1.22-.14*ease(Math.min(1,t/1.6))-.02*p; A.bgDy=(1-ease(Math.min(1,t/1.6)))*.012;
+                       A.gradShift=1.05-1.25*ease(Math.min(1,t/1.6))+.42*Math.sin(t*Math.PI*2/3.4); }
   // two sines at unrelated periods never repeat inside a 15s clip, so the frame
   // wanders like a held camera instead of tracing a visible loop
   else if(m==="sway"){ A.bgScale=1.07+.01*Math.sin(t*Math.PI*2/4.3);
                        A.bgDx=.018*Math.sin(t*Math.PI*2/3.7);
-                       A.bgDy=.014*Math.sin(t*Math.PI*2/2.9+1.1); A.gradShift=p; }
+                       A.bgDy=.014*Math.sin(t*Math.PI*2/2.9+1.1);
+                       A.gradShift=.9*Math.sin(t*Math.PI*2/3.7); }
   // background and words travel opposite ways: the depth cue is the offset
   // between the two layers, so the text drift is set on the block below
-  else if(m==="parallax"){ A.bgScale=1.09+.03*p; A.bgDx=(.5-p)*.05; A.bgDy=(p-.5)*.02; A.gradShift=p; }
-  else { A.bgScale=1.05+.022*(Math.sin(t*Math.PI*2/1.5)*.5+.5); A.gradShift=p; }
+  else if(m==="parallax"){ A.bgScale=1.09+.03*p; A.bgDx=(.5-p)*.05; A.bgDy=(p-.5)*.02;
+                           A.gradShift=(.5-p)*1.6; }   // against the words, like everything else here
+  else { A.bgScale=1.04+.05*(Math.sin(t*Math.PI*2/1.5)*.5+.5);
+         A.gradShift=.75*Math.sin(t*Math.PI*2/1.5); }   // pulse: the whole surface breathes
+  // Settle motions keep a slow wander on top of their ramp, or a flat design
+  // freezes the moment the intro lands. Clamped so the ramp can never carry the
+  // gradient clean off the frame and leave a solid colour behind.
+  A.gradShift=Math.max(-1.3,Math.min(1.3,A.gradShift));
   // a pan must never drag the canvas edge into view
   var room=(A.bgScale-1)/2*.9;
   A.bgDx=Math.max(-room,Math.min(room,A.bgDx));
@@ -2158,7 +2344,9 @@ function buildGrads(){
   var g=el('grads');g.innerHTML='';
   GRADS.forEach(function(gr,i){
     var b=document.createElement('button');b.className='grad'+(S.bg.type==='grad'&&!S.bg.pal&&S.bg.grad===i?' on':'');
-    b.style.background='linear-gradient(135deg,'+gr[0]+','+gr[1]+')';
+    b.style.background=gr[2]
+      ? 'linear-gradient(135deg,'+gr[0]+' '+Math.round(gr[2]*100)+'%,'+gr[1]+')'
+      : 'linear-gradient(135deg,'+gr[0]+','+gr[1]+')';
     b.onclick=function(){S.bg={type:'grad',grad:i,aiUrl:null};buildGrads();buildStyleControls();refreshStyle();paint();saveDraft();haptic('selection');};
     g.appendChild(b);
   });
@@ -2171,7 +2359,9 @@ function buildEmoji(){
     g.appendChild(b);
   });
 }
-var SOLIDS=["#0b0d12","#14202e","#1d2b23","#2b1a2e","#33231a","#111f26","#3a3f4a","#5b2331","#0f3b36","#563a10","#e9e4da","#f4eee6"];
+var SOLIDS=["#0b0d12","#14202e","#1d2b23","#2b1a2e","#33231a","#111f26","#3a3f4a","#5b2331","#0f3b36","#563a10","#e9e4da","#f4eee6",
+            // the near-blacks a neon accent needs to glow against
+            "#05060b","#0a0116","#001014","#120009"];
 function chipRow(id,items,cur,set){
   var w=el(id);w.innerHTML='';
   items.forEach(function(it){
@@ -2183,10 +2373,19 @@ function chipRow(id,items,cur,set){
 function buildStyleControls(){
   chipRow('dirRow',[['diag','↘ Diagonal'],['down','↓ Down'],['right','→ Across'],['radial','◎ Glow']],S.gradDir,function(v){S.gradDir=v;if(S.bg.type!=='grad')S.bg={type:'grad',grad:S.bg.grad||0,aiUrl:null};buildGrads();refreshStyle();});
   var tex=el('texRow');
-  chipRow('texRow',[['none','None'],['grain','Grain'],['dots','Dots'],['lines','Lines']],S.texture,function(v){S.texture=v;});
+  chipRow('texRow',[['none','None'],['grain','Grain'],['dots','Dots'],['lines','Lines'],
+                    ['grid','Grid'],['halftone','Halftone'],['cross','Crosshatch'],['film','Film']],
+          S.texture,function(v){S.texture=v;});
   var vb=document.createElement('button');vb.className='chip'+(S.vig?' on':'');vb.textContent='Vignette';
   vb.onclick=function(){S.vig=!S.vig;buildStyleControls();paint();saveDraft();haptic('selection');};
   tex.appendChild(vb);
+  chipRow('plateRow',PLATES,S.plate||'none',function(v){S.plate=v;});
+  el('plateHint').textContent = (S.plate&&S.plate!=='none')
+    ? {plate:'A panel behind the headline — the one that holds up on a busy photo.',
+       bars:'Solid blocks with the words knocked out of them.',
+       highlight:'A marker band in your accent colour, under the words.',
+       outline:'A hairline box, nothing filled in.'}[S.plate]||''
+    : 'Sits behind the words themselves, rather than washing the whole frame.';
   chipRow('scrimRow',[[0.55,'Light'],[1,'Balanced'],[1.45,'Bold']],S.scrimAdj,function(v){S.scrimAdj=+v;});
   chipRow('frameRow',[['none','None'],['border','Border'],['inset','Inset'],['polaroid','Polaroid']],S.frame,function(v){S.frame=v;});
   chipRow('ctaStyleRow',[['pill','Pill'],['outline','Outline'],['ghost','Ghost'],['link','Link text ›']],S.ctaStyle||'pill',function(v){S.ctaStyle=v;});
@@ -2197,7 +2396,10 @@ function buildStyleControls(){
     d.appendChild(b);
   });
 }
-var ACCENTS=["#4f8df9","#7d5cff","#e05c8a","#f9646c","#f9b64f","#2fbf9b","#6cc267","#3fa7d6","#ffffff","#111318"];
+var ACCENTS=["#4f8df9","#7d5cff","#e05c8a","#f9646c","#f9b64f","#2fbf9b","#6cc267","#3fa7d6","#ffffff","#111318",
+             /* neon, to pair with the neon gradients — these are the accents
+                that survive being screened over by the Neon light effect */
+             "#00e5ff","#ff2fd0","#39ff88","#a855ff","#ff6a00","#ffe500"];
 function renderBrand(){
   el('bHandle').value=BRAND.handle;
   var d=el('bDots');d.innerHTML='';
@@ -2672,7 +2874,7 @@ function savePost(){
     name:(S.copy.hook||'Untitled post').slice(0,40),
     date:new Date().toLocaleDateString(undefined,{month:'short',day:'numeric'}),
     st:{format:S.format,template:S.template,ink:S.ink||'light',type:S.type||'auto',split:splitN(),textScale:S.textScale||1,textY:S.textY||0,ctaStyle:S.ctaStyle||'pill',ctaPos:S.ctaPos||null,
-        gradDir:S.gradDir,texture:S.texture,vig:S.vig?1:0,scrimAdj:S.scrimAdj||1,frame:S.frame,
+        gradDir:S.gradDir,texture:S.texture,plate:S.plate||"none",vig:S.vig?1:0,scrimAdj:S.scrimAdj||1,frame:S.frame,
         bg:{type:S.bg.type==='photo'?'photo':S.bg.type==='solid'?'solid':'grad',grad:S.bg.grad||0,solid:S.bg.solid||null,pal:S.bg.pal||null},
         copy:JSON.parse(JSON.stringify(S.copy)),
         stickers:packStickers(S.stickers),
@@ -2717,7 +2919,7 @@ function openPost(p){
   S.textY=typeof st.textY==='number'?Math.min(.22,Math.max(-.22,st.textY)):0;
   S.ctaStyle=st.ctaStyle||'pill';S.ink=st.ink||'light';S.type=TYPES[st.type]?st.type:'auto';S.split=Math.max(1,Math.min(3,+st.split||1));
   S.ctaPos=(st.ctaPos&&typeof st.ctaPos.x==='number')?st.ctaPos:null;
-  S.gradDir=st.gradDir||'diag';S.texture=st.texture||'none';S.vig=!!st.vig;
+  S.gradDir=st.gradDir||'diag';S.texture=st.texture||'none';S.plate=st.plate||'none';S.vig=!!st.vig;
   S.scrimAdj=+st.scrimAdj||1;S.frame=st.frame||'none';
   S.stickers=restoreStickers(st.stickers);
   S.video=normVideo(st.video);
@@ -2804,7 +3006,12 @@ function paintSafe(){
   var wantZones=z&&safeZone!=='off'&&S.format==='story'&&splitN()===1;
   var wantCuts=splitN()>1;
   if(!wantZones&&!wantCuts){
-    if(_safeSig!==null){ ov.className=''; ov.innerHTML=''; _safeSig=null; }
+    // Clear on what the OVERLAY is actually showing, not on the signature:
+    // turning the guides off resets _safeSig first, and keying the clear off
+    // that meant the one call that had to wipe the overlay was the one call
+    // that skipped it — the stripes stayed up until the next relayout.
+    if(ov.className||ov.innerHTML){ ov.className=''; ov.innerHTML=''; }
+    _safeSig=null;
     return;
   }
   var st=el('stage'), r=cv.getBoundingClientRect(), sr=st.getBoundingClientRect();
@@ -2840,7 +3047,7 @@ var UNDO=[], UNDO_MAX=25, undoTimer=null, lastSnapJ=null, prevSnap=null, restori
 function snapJSON(){
   return JSON.stringify({
     format:S.format, template:S.template, textScale:S.textScale||1, textY:S.textY||0, ink:S.ink, type:S.type, split:splitN(),
-    ctaStyle:S.ctaStyle||'pill', ctaPos:S.ctaPos||null, gradDir:S.gradDir, texture:S.texture,
+    ctaStyle:S.ctaStyle||'pill', ctaPos:S.ctaPos||null, gradDir:S.gradDir, texture:S.texture, plate:S.plate||"none",
     vig:S.vig?1:0, scrimAdj:S.scrimAdj||1, frame:S.frame, photoFilter:S.photoFilter||'none',
     photoBlur:S.photoBlur||0, photoPos:S.photoPos||{x:0,y:0,scale:1},
     bg:{type:S.bg.type,grad:S.bg.grad||0,solid:S.bg.solid||null,pal:S.bg.pal||null,aiUrl:S.bg.aiUrl||null},
@@ -2858,7 +3065,7 @@ function applySnap(sn){
   S.template=TEMPLATES[d.template]?d.template:'promo';
   S.copy=Object.assign({},S.copy,d.copy||{});
   S.textScale=d.textScale;S.textY=d.textY;S.ctaStyle=d.ctaStyle;S.ctaPos=d.ctaPos;S.ink=d.ink||'light';S.type=TYPES[d.type]?d.type:'auto';S.split=Math.max(1,Math.min(3,+d.split||1));
-  S.gradDir=d.gradDir;S.texture=d.texture;S.vig=!!d.vig;S.scrimAdj=d.scrimAdj;S.frame=d.frame;
+  S.gradDir=d.gradDir;S.texture=d.texture;S.plate=d.plate||"none";S.vig=!!d.vig;S.scrimAdj=d.scrimAdj;S.frame=d.frame;
   S.photoFilter=d.photoFilter;S.photoBlur=d.photoBlur;S.photoPos=d.photoPos;
   S.bg=d.bg; S.video=normVideo(d.video);
   S.stickers=restoreStickers(d.stickers);
@@ -2905,7 +3112,7 @@ function saveDraft(){
   clearTimeout(draftTimer);
   draftTimer=setTimeout(function(){
     var d={format:S.format,template:S.template,textScale:S.textScale||1,textY:S.textY||0,ctaStyle:S.ctaStyle||'pill',ctaPos:S.ctaPos||null,
-      gradDir:S.gradDir,texture:S.texture,vig:S.vig?1:0,scrimAdj:S.scrimAdj||1,frame:S.frame,
+      gradDir:S.gradDir,texture:S.texture,plate:S.plate||"none",vig:S.vig?1:0,scrimAdj:S.scrimAdj||1,frame:S.frame,
       bg:{type:S.bg.type==='solid'?'solid':'grad',grad:S.bg.grad||0,solid:S.bg.solid||null,pal:S.bg.pal||null},
       copy:S.copy,stickers:packStickers(S.stickers),video:S.video,safeZone:safeZone,ink:S.ink,type:S.type,split:splitN(),feed:feedChrome?1:0};
     var dj=JSON.stringify(d);
@@ -3026,7 +3233,7 @@ store.getItem('socialstudio.brand').then(function(v){
       if(typeof d.textY==='number')S.textY=Math.min(.22,Math.max(-.22,d.textY));
       if(d.ctaStyle)S.ctaStyle=d.ctaStyle;
       S.ctaPos=(d.ctaPos&&typeof d.ctaPos.x==='number')?d.ctaPos:null;
-      if(d.gradDir)S.gradDir=d.gradDir; if(d.texture)S.texture=d.texture;
+      if(d.gradDir)S.gradDir=d.gradDir; if(d.texture)S.texture=d.texture; if(d.plate)S.plate=d.plate;
       S.vig=!!d.vig; if(d.scrimAdj)S.scrimAdj=+d.scrimAdj||1; if(d.frame)S.frame=d.frame;
       S.copy=Object.assign(S.copy,d.copy);S.stickers=restoreStickers(d.stickers);
       if(INKS[d.ink]||d.ink==='accent')S.ink=d.ink;
