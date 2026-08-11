@@ -361,10 +361,14 @@ Adding a 4th language ≈ write one `langpacks/<code>.json` + run the builder.
 2. Generate `apps-src/<slug>.myllmapp` (`{name,kind:"html",iconSymbol,iconColor,html}`).
 3. Generate `apps/<slug>.jpg` (800×400, no text).
 4. Add the `apps.json` entry (surgical edit, valid category, good `description`/`tags`).
-5. `python3 -c "import json;json.load(open('apps.json'))"` to validate.
-6. Stage the **named** files (never `-A`), commit, `git push origin main`.
-7. Verify live: `curl -sI <raw html url>` → `200`; pull-to-refresh the gallery.
-8. Updating later? **Bump `version`.**
+5. `python3 stamp_apps.py --apply apps-src/<slug>.html` — adds the licence header
+   and the app's `--build-id`, and rewrites the payload to match. Needs the
+   `apps.json` entry to exist first, hence the order. Idempotent, so run it again
+   after any rebuild (`build_*.py` emits an unstamped file).
+6. `python3 -c "import json;json.load(open('apps.json'))"` to validate.
+7. Stage the **named** files (never `-A`), commit, `git push origin main`.
+8. Verify live: `curl -sI <raw html url>` → `200`; pull-to-refresh the gallery.
+9. Updating later? **Bump `version`.**
 
 ---
 

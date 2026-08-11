@@ -1,0 +1,2350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Credit Card Tracker</title>
+    <meta name="theme-color" content="#ffffff">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root {
+            --primary: #007AFF;
+            --primary-hover: #0056CC;
+            --success: #34C759;
+            --danger: #FF3B30;
+            --warning: #FF9500;
+            --gray-50: #F9FAFB;
+            --gray-100: #F3F4F6;
+            --gray-200: #E5E7EB;
+            --gray-300: #D1D5DB;
+            --gray-400: #9CA3AF;
+            --gray-500: #6B7280;
+            --gray-600: #4B5563;
+            --gray-700: #374151;
+            --gray-800: #1F2937;
+            --gray-900: #111827;
+            --white: #FFFFFF;
+            --card-bg: #FFFFFF;
+            --body-bg: #F3F4F6;
+            --border: #E5E7EB;
+            --radius: 12px;
+            --radius-sm: 8px;
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+            --shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+            --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+            --safe-area-top: env(safe-area-inset-top, 0px);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html, body {
+            height: 100%;
+            overflow: hidden;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--body-bg);
+            color: var(--gray-900);
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .app {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            max-width: 600px;
+            margin: 0 auto;
+            background: var(--body-bg);
+        }
+
+        /* Header */
+        .header {
+            background: var(--white);
+            padding: 12px 16px;
+            padding-top: calc(12px + var(--safe-area-top));
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header-icon {
+            width: 36px;
+            height: 36px;
+            background: var(--primary);
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 1.125rem;
+            font-weight: 600;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .header-btn {
+            width: 36px;
+            height: 36px;
+            background: var(--gray-100);
+            border: none;
+            border-radius: var(--radius-sm);
+            color: var(--gray-600);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .header-btn:active {
+            background: var(--gray-200);
+        }
+
+        /* Main scrollable area */
+        .main {
+            flex: 1;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            padding: 16px;
+            padding-bottom: calc(16px + var(--safe-area-bottom));
+        }
+
+        /* Cards */
+        .card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .card-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-title i {
+            color: var(--gray-400);
+        }
+
+        /* Summary Grid */
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .summary-item {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 16px 12px;
+            text-align: center;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .summary-label {
+            font-size: 0.75rem;
+            color: var(--gray-500);
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .summary-value {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--gray-900);
+        }
+
+        .summary-trend {
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-top: 4px;
+        }
+
+        .trend-up { color: var(--danger); }
+        .trend-down { color: var(--success); }
+        .trend-neutral { color: var(--gray-400); }
+
+        .days-badge {
+            display: inline-block;
+            background: rgba(0, 122, 255, 0.1);
+            color: var(--primary);
+            font-size: 0.6875rem;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 10px;
+            margin-top: 6px;
+        }
+
+        /* Form */
+        .form-group {
+            margin-bottom: 14px;
+        }
+
+        .form-label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.8125rem;
+            font-weight: 500;
+            color: var(--gray-700);
+            margin-bottom: 6px;
+        }
+
+        .form-label i {
+            color: var(--gray-400);
+            width: 14px;
+            text-align: center;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px 14px;
+            background: var(--gray-50);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-size: 1rem;
+            font-family: inherit;
+            color: var(--gray-900);
+            transition: all 0.2s;
+            -webkit-appearance: none;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: var(--white);
+            box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
+        }
+
+        input::placeholder {
+            color: var(--gray-400);
+        }
+
+        select {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239CA3AF'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            background-size: 16px;
+            padding-right: 40px;
+        }
+
+        /* Autocomplete */
+        .autocomplete-wrapper {
+            position: relative;
+        }
+
+        .autocomplete-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-top: none;
+            border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+            box-shadow: var(--shadow-md);
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 50;
+            display: none;
+        }
+
+        .autocomplete-dropdown.active {
+            display: block;
+        }
+
+        .autocomplete-item {
+            padding: 12px 14px;
+            cursor: pointer;
+            border-bottom: 1px solid var(--gray-100);
+            transition: background 0.15s;
+        }
+
+        .autocomplete-item:last-child {
+            border-bottom: none;
+        }
+
+        .autocomplete-item:hover,
+        .autocomplete-item.selected {
+            background: var(--gray-50);
+        }
+
+        .autocomplete-main {
+            font-weight: 500;
+            color: var(--gray-900);
+        }
+
+        .autocomplete-sub {
+            font-size: 0.75rem;
+            color: var(--gray-500);
+            margin-top: 2px;
+            display: flex;
+            gap: 12px;
+        }
+
+        .saved-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: rgba(0, 122, 255, 0.1);
+            color: var(--primary);
+            font-size: 0.625rem;
+            font-weight: 600;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-left: 8px;
+        }
+
+        /* Amount input */
+        .amount-wrapper {
+            position: relative;
+        }
+
+        .amount-wrapper .currency {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--gray-500);
+            font-weight: 600;
+        }
+
+        .amount-wrapper input {
+            padding-left: 28px;
+            font-weight: 600;
+        }
+
+        /* Spender Toggle */
+        .spender-toggle {
+            display: flex;
+            background: var(--gray-100);
+            border-radius: var(--radius-sm);
+            padding: 4px;
+        }
+
+        .spender-btn {
+            flex: 1;
+            padding: 10px;
+            background: transparent;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--gray-600);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .spender-btn.active {
+            background: var(--white);
+            color: var(--gray-900);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .spender-btn.user-1.active {
+            color: var(--primary);
+        }
+
+        .spender-btn.user-2.active {
+            color: var(--danger);
+        }
+
+        /* Buttons */
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: 1rem;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:active {
+            background: var(--primary-hover);
+        }
+
+        .btn-secondary {
+            background: var(--gray-100);
+            color: var(--gray-700);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        /* Expense List */
+        .filter-tabs {
+            display: flex;
+            background: var(--gray-100);
+            border-radius: var(--radius-sm);
+            padding: 3px;
+            margin-bottom: 12px;
+        }
+
+        .filter-tab {
+            flex: 1;
+            padding: 8px 12px;
+            background: transparent;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.8125rem;
+            font-weight: 500;
+            color: var(--gray-500);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .filter-tab.active {
+            background: var(--white);
+            color: var(--gray-900);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .expense-list {
+            list-style: none;
+        }
+
+        .expense-item {
+            padding: 12px 0;
+            border-bottom: 1px solid var(--gray-100);
+            position: relative;
+        }
+
+        .expense-item:last-child {
+            border-bottom: none;
+        }
+
+        .expense-content {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .expense-details {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .expense-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .expense-desc {
+            font-weight: 500;
+            color: var(--gray-900);
+        }
+
+        .expense-amount {
+            font-weight: 600;
+            color: var(--gray-900);
+        }
+
+        .expense-meta {
+            display: flex;
+            gap: 12px;
+            margin-top: 4px;
+            font-size: 0.75rem;
+            color: var(--gray-500);
+        }
+
+        .user-tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.6875rem;
+            font-weight: 600;
+        }
+
+        .user-tag.user-1 {
+            background: rgba(0, 122, 255, 0.1);
+            color: var(--primary);
+        }
+
+        .user-tag.user-2 {
+            background: rgba(255, 59, 48, 0.1);
+            color: var(--danger);
+        }
+
+        .expense-delete {
+            width: 32px;
+            height: 32px;
+            background: var(--gray-100);
+            border: none;
+            border-radius: 50%;
+            color: var(--gray-400);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: all 0.2s;
+            margin-top: 4px;
+        }
+
+        .expense-delete:hover {
+            background: rgba(255, 59, 48, 0.1);
+            color: var(--danger);
+        }
+
+        .expense-delete:active {
+            transform: scale(0.95);
+            background: var(--danger);
+            color: white;
+        }
+
+        /* Deleted/Reversal entries */
+        .expense-item.is-reversal {
+            opacity: 0.7;
+            background: rgba(255, 59, 48, 0.05);
+            margin: 0 -16px;
+            padding: 12px 16px;
+            border-radius: var(--radius-sm);
+        }
+
+        .expense-item.is-reversal .expense-desc {
+            text-decoration: line-through;
+            color: var(--gray-500);
+        }
+
+        .expense-item.is-reversal .expense-amount {
+            color: var(--danger);
+            font-weight: 600;
+        }
+
+        .expense-item.is-deleted {
+            opacity: 0.6;
+        }
+
+        .expense-item.is-deleted .expense-desc,
+        .expense-item.is-deleted .expense-amount {
+            text-decoration: line-through;
+            color: var(--gray-400);
+        }
+
+        .expense-item.is-deleted .expense-meta {
+            opacity: 0.6;
+        }
+
+        .reversal-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: rgba(255, 59, 48, 0.1);
+            color: var(--danger);
+            font-size: 0.625rem;
+            font-weight: 600;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-left: 6px;
+        }
+
+        .deleted-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: var(--gray-200);
+            color: var(--gray-500);
+            font-size: 0.625rem;
+            font-weight: 600;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-left: 6px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 32px 16px;
+            color: var(--gray-400);
+        }
+
+        /* Recurring Section */
+        .recurring-item {
+            padding: 14px;
+            background: var(--gray-50);
+            border-radius: var(--radius-sm);
+            margin-bottom: 10px;
+        }
+
+        .recurring-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 6px;
+        }
+
+        .recurring-icon {
+            width: 32px;
+            height: 32px;
+            background: rgba(0, 122, 255, 0.1);
+            color: var(--primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .recurring-title {
+            flex: 1;
+            font-weight: 600;
+        }
+
+        .recurring-amount {
+            font-weight: 600;
+            color: var(--danger);
+        }
+
+        .recurring-meta {
+            font-size: 0.75rem;
+            color: var(--gray-500);
+            margin-bottom: 8px;
+        }
+
+        .recurring-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .recurring-btn {
+            padding: 6px 12px;
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--primary);
+            cursor: pointer;
+        }
+
+        /* Detected Recurring */
+        .detected-item {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 14px;
+            margin-bottom: 10px;
+        }
+
+        .detected-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 6px;
+        }
+
+        .detected-title {
+            font-weight: 600;
+        }
+
+        .detected-amount {
+            font-weight: 600;
+            color: var(--danger);
+        }
+
+        .detected-pattern {
+            font-size: 0.8125rem;
+            color: var(--gray-500);
+            margin-bottom: 12px;
+        }
+
+        .detected-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .detected-btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .btn-confirm {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-dismiss {
+            background: var(--gray-100);
+            color: var(--gray-700);
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            top: calc(16px + var(--safe-area-top));
+            left: 16px;
+            right: 16px;
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 14px 16px;
+            background: var(--success);
+            color: white;
+            border-radius: var(--radius);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transform: translateY(-120%);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1000;
+            box-shadow: var(--shadow-md);
+            font-weight: 500;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast.error {
+            background: var(--danger);
+        }
+
+        .toast.info {
+            background: var(--primary);
+        }
+
+        .toast-icon {
+            width: 24px;
+            height: 24px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            z-index: 200;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal {
+            background: var(--white);
+            border-radius: var(--radius);
+            width: 100%;
+            max-width: 420px;
+            max-height: 85vh;
+            display: flex;
+            flex-direction: column;
+            transform: translateY(20px);
+            transition: transform 0.3s;
+        }
+
+        .modal-overlay.active .modal {
+            transform: translateY(0);
+        }
+
+        /* Settings modal - position at top */
+        #settingsOverlay {
+            align-items: flex-start;
+            padding-top: 60px;
+        }
+
+        #settingsOverlay .modal {
+            transform: translateY(-20px);
+        }
+
+        #settingsOverlay.active .modal {
+            transform: translateY(0);
+        }
+
+        .modal-header {
+            padding: 16px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--primary);
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .modal-content {
+            padding: 16px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .modal-actions {
+            padding: 16px;
+            border-top: 1px solid var(--border);
+        }
+
+        /* Comparison */
+        .comparison-row {
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--gray-100);
+        }
+
+        .comparison-label {
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .comparison-data {
+            padding-left: 12px;
+            font-size: 0.875rem;
+            color: var(--gray-600);
+        }
+
+        .comparison-data > div {
+            margin-bottom: 4px;
+        }
+
+        .comparison-increase { color: var(--danger); font-weight: 600; }
+        .comparison-decrease { color: var(--success); font-weight: 600; }
+        .comparison-neutral { color: var(--gray-500); }
+
+        .category-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--gray-100);
+            font-size: 0.875rem;
+        }
+
+        .category-values {
+            display: flex;
+            gap: 12px;
+        }
+
+        .category-current, .category-previous, .category-change {
+            min-width: 65px;
+            text-align: right;
+        }
+
+        /* Spinner */
+        .spinner {
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Loader */
+        .loader {
+            text-align: center;
+            padding: 24px;
+            color: var(--gray-500);
+        }
+
+        .loader-spinner {
+            width: 24px;
+            height: 24px;
+            border: 2px solid var(--gray-200);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 8px;
+        }
+
+        /* Hidden */
+        .hidden {
+            display: none !important;
+        }
+
+        /* Responsive */
+        @media (max-width: 380px) {
+            .summary-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .summary-item {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                text-align: left;
+            }
+
+            .summary-item > div:first-child {
+                display: flex;
+                flex-direction: column;
+            }
+
+            .btn-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (min-width: 600px) {
+            .app {
+                margin: 24px auto;
+                max-height: calc(100vh - 48px);
+                border-radius: var(--radius);
+                box-shadow: var(--shadow-md);
+                overflow: hidden;
+            }
+
+            .header {
+                border-radius: var(--radius) var(--radius) 0 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <header class="header">
+            <div class="header-content">
+                <div class="header-title">
+                    <div class="header-icon">
+                        <i class="fa-solid fa-credit-card"></i>
+                    </div>
+                    <h1>Credit Card Tracker</h1>
+                </div>
+                <div class="header-actions">
+                    <button class="header-btn" id="refreshBtn" title="Refresh">
+                        <i class="fa-solid fa-arrows-rotate"></i>
+                    </button>
+                    <button class="header-btn" id="settingsBtn" title="Settings">
+                        <i class="fa-solid fa-gear"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <main class="main" id="mainContent">
+            <!-- Summary -->
+            <div class="summary-grid">
+                <div class="summary-item">
+                    <div>
+                        <div class="summary-label">This Month</div>
+                        <div class="summary-value" id="totalSpending">£0.00</div>
+                        <div class="summary-trend" id="totalTrend"></div>
+                    </div>
+                    <div class="days-badge" id="daysLeft">30 days left</div>
+                </div>
+                <div class="summary-item">
+                    <div>
+                        <div class="summary-label" id="user1Label">Alex</div>
+                        <div class="summary-value" id="user1Spending">£0.00</div>
+                        <div class="summary-trend" id="user1Trend"></div>
+                    </div>
+                </div>
+                <div class="summary-item">
+                    <div>
+                        <div class="summary-label" id="user2Label">Anna</div>
+                        <div class="summary-value" id="user2Spending">£0.00</div>
+                        <div class="summary-trend" id="user2Trend"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Add Expense Form -->
+            <div class="card">
+                <h2 class="card-title">
+                    <i class="fa-solid fa-plus"></i>
+                    Add Expense
+                </h2>
+
+                <div class="form-group">
+                    <label class="form-label">
+                        <i class="fa-solid fa-sterling-sign"></i>
+                        Amount
+                    </label>
+                    <div class="amount-wrapper">
+                        <span class="currency">£</span>
+                        <input type="number" id="amount" step="0.01" min="0" placeholder="0.00" inputmode="decimal">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">
+                        <i class="fa-solid fa-pencil"></i>
+                        Description
+                        <span class="saved-badge" id="savedCount" style="display:none;">
+                            <i class="fa-solid fa-clock-rotate-left"></i>
+                            <span id="savedCountNum">0</span> saved
+                        </span>
+                    </label>
+                    <div class="autocomplete-wrapper">
+                        <input type="text" id="description" placeholder="Start typing for suggestions..." autocomplete="off">
+                        <div class="autocomplete-dropdown" id="descDropdown"></div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">
+                        <i class="fa-solid fa-folder"></i>
+                        Category
+                    </label>
+                    <select id="category">
+                        <option value="Groceries">Groceries</option>
+                        <option value="Dining Out">Dining Out</option>
+                        <option value="Transportation">Transportation</option>
+                        <option value="Utilities">Utilities</option>
+                        <option value="Entertainment">Entertainment</option>
+                        <option value="Shopping">Shopping</option>
+                        <option value="Healthcare">Healthcare</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">
+                        <i class="fa-solid fa-user"></i>
+                        Who spent?
+                    </label>
+                    <div class="spender-toggle">
+                        <button type="button" class="spender-btn user-1 active" data-spender="user1" id="spenderBtn1">Alex</button>
+                        <button type="button" class="spender-btn user-2" data-spender="user2" id="spenderBtn2">Anna</button>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary" id="addExpenseBtn">
+                    <i class="fa-solid fa-plus"></i>
+                    Add Expense
+                </button>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="card">
+                <div class="btn-row">
+                    <button class="btn btn-secondary" id="compareBtn">
+                        <i class="fa-solid fa-chart-column"></i>
+                        Compare
+                    </button>
+                    <button class="btn btn-success" id="connectBtn">
+                        <i class="fa-brands fa-google"></i>
+                        Sync
+                    </button>
+                </div>
+                <button class="btn btn-danger" id="resetBtn">
+                    <i class="fa-solid fa-trash"></i>
+                    Reset Month
+                </button>
+            </div>
+
+
+            <!-- Recurring Expenses -->
+            <div class="card" id="recurringCard">
+                <h2 class="card-title">
+                    <i class="fa-solid fa-repeat"></i>
+                    Recurring Expenses
+                </h2>
+                <div id="recurringLoader" class="loader">
+                    <div class="loader-spinner"></div>
+                    <p>Analyzing patterns...</p>
+                </div>
+                <div id="recurringContent" class="hidden"></div>
+                <div id="detectedRecurring" class="hidden">
+                    <h3 style="font-size: 0.875rem; color: var(--gray-600); margin-bottom: 10px;">Potential Recurring</h3>
+                    <div id="detectedList"></div>
+                </div>
+            </div>
+
+            <!-- Recent Expenses -->
+            <div class="card">
+                <h2 class="card-title">
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                    Recent Expenses
+                </h2>
+                <div class="filter-tabs">
+                    <button class="filter-tab active" data-filter="last5">Last 5</button>
+                    <button class="filter-tab" data-filter="month">This Month</button>
+                    <button class="filter-tab" data-filter="all">All</button>
+                </div>
+                <ul class="expense-list" id="expenseList"></ul>
+            </div>
+        </main>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast">
+        <div class="toast-icon"><i class="fa-solid fa-check"></i></div>
+        <span id="toastMessage">Success</span>
+    </div>
+
+    <!-- Comparison Modal -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Monthly Comparison</h3>
+                <button class="modal-close" id="modalClose">Done</button>
+            </div>
+            <div class="modal-content" id="modalContent"></div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal-overlay" id="settingsOverlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Settings</h3>
+                <button class="modal-close" id="settingsClose">Done</button>
+            </div>
+            <div class="modal-content">
+                <div class="form-group">
+                    <label class="form-label">Your Name</label>
+                    <input type="text" id="yourName" placeholder="Your name">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Partner's Name</label>
+                    <input type="text" id="partnerName" placeholder="Partner's name">
+                </div>
+                <button class="btn btn-primary" id="saveSettingsBtn" style="margin-bottom: 16px;">
+                    <i class="fa-solid fa-check"></i>
+                    Save Settings
+                </button>
+
+                <div style="padding-top: 16px; border-top: 1px solid var(--border);">
+                    <div class="form-label" style="margin-bottom: 8px;">Google Sheet Status</div>
+                    <div id="apiStatus" style="padding: 10px 12px; background: var(--gray-50); border-radius: 6px; font-size: 0.875rem; color: var(--gray-600); margin-bottom: 8px;">Not connected</div>
+                    <a href="#" id="sheetLink" class="hidden" target="_blank" style="display: inline-flex; align-items: center; gap: 6px; color: var(--primary); font-size: 0.875rem; text-decoration: none;">
+                        <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                        Open Spreadsheet
+                    </a>
+                </div>
+
+                <div style="padding-top: 16px; margin-top: 16px; border-top: 1px solid var(--border);">
+                    <div class="form-label" style="margin-bottom: 8px;">Data Management</div>
+                    <button class="btn btn-secondary" id="clearDataBtn">
+                        <i class="fa-solid fa-trash-can"></i>
+                        Clear Saved Suggestions
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+    <script>
+        // ============================================
+        // CONFIGURATION
+        // ============================================
+        const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbz_5qJTd91rcgR_yX3DcT_bJ8n0mfWXqXtBUF3PJthIv8EjGdm69N48ZheDXotDhMhWdw/exec';
+
+        // ============================================
+        // STORAGE MANAGER
+        // ============================================
+        const storage = {
+            isAvailable() {
+                try {
+                    localStorage.setItem('test', 'test');
+                    localStorage.removeItem('test');
+                    return true;
+                } catch (e) { return false; }
+            },
+            get(key, defaultValue = null) {
+                if (!this.isAvailable()) return defaultValue;
+                try {
+                    const item = localStorage.getItem(key);
+                    return item ? JSON.parse(item) : defaultValue;
+                } catch (e) { return defaultValue; }
+            },
+            set(key, value) {
+                if (!this.isAvailable()) return false;
+                try {
+                    localStorage.setItem(key, JSON.stringify(value));
+                    return true;
+                } catch (e) { return false; }
+            }
+        };
+
+        // ============================================
+        // AUTOCOMPLETE STORAGE
+        // ============================================
+        const AutocompleteManager = {
+            STORAGE_KEY: 'creditCardAutocomplete',
+
+            getData() {
+                return storage.get(this.STORAGE_KEY, { entries: {} });
+            },
+
+            saveEntry(expense) {
+                const data = this.getData();
+                const key = expense.description.toLowerCase().trim();
+
+                data.entries[key] = {
+                    description: expense.description,
+                    category: expense.category,
+                    spender: expense.spender,
+                    lastAmount: expense.amount,
+                    lastUsed: Date.now(),
+                    useCount: (data.entries[key]?.useCount || 0) + 1
+                };
+
+                storage.set(this.STORAGE_KEY, data);
+                this.updateBadge();
+            },
+
+            getEntries() {
+                const data = this.getData();
+                return Object.values(data.entries).sort((a, b) => b.lastUsed - a.lastUsed);
+            },
+
+            search(query) {
+                const entries = this.getEntries();
+                if (!query) return entries.slice(0, 8);
+                const lower = query.toLowerCase();
+                return entries.filter(e => e.description.toLowerCase().includes(lower)).slice(0, 6);
+            },
+
+            clear() {
+                storage.set(this.STORAGE_KEY, { entries: {} });
+                this.updateBadge();
+            },
+
+            updateBadge() {
+                const entries = this.getEntries();
+                const badge = document.getElementById('savedCount');
+                const num = document.getElementById('savedCountNum');
+                if (entries.length > 0) {
+                    badge.style.display = 'inline-flex';
+                    num.textContent = entries.length;
+                } else {
+                    badge.style.display = 'none';
+                }
+            }
+        };
+
+        // ============================================
+        // STATE
+        // ============================================
+        let expenses = [];
+        let recurringExpenses = [];
+        let currentFilter = 'last5';
+        let currentSpender = 'user1';
+        let selectedDropdownIndex = -1;
+
+        // ============================================
+        // DOM ELEMENTS
+        // ============================================
+        const $ = id => document.getElementById(id);
+        const amountInput = $('amount');
+        const descriptionInput = $('description');
+        const descDropdown = $('descDropdown');
+        const categorySelect = $('category');
+        const addExpenseBtn = $('addExpenseBtn');
+        const expenseList = $('expenseList');
+        const toast = $('toast');
+        const toastMessage = $('toastMessage');
+        const toastIcon = toast.querySelector('.toast-icon i');
+        const modalOverlay = $('modalOverlay');
+        const modalContent = $('modalContent');
+        const filterTabs = document.querySelectorAll('.filter-tab');
+        const spenderBtns = document.querySelectorAll('.spender-btn');
+
+        // ============================================
+        // TOAST NOTIFICATIONS
+        // ============================================
+        let toastTimeout = null;
+
+        function showToast(message, type = 'success') {
+            if (toastTimeout) clearTimeout(toastTimeout);
+
+            toastMessage.textContent = message;
+            toast.className = 'toast ' + type;
+
+            if (type === 'success') toastIcon.className = 'fa-solid fa-check';
+            else if (type === 'error') toastIcon.className = 'fa-solid fa-xmark';
+            else toastIcon.className = 'fa-solid fa-circle-info';
+
+            requestAnimationFrame(() => toast.classList.add('show'));
+
+            toastTimeout = setTimeout(() => {
+                toast.classList.remove('show');
+            }, type === 'error' ? 4000 : 3000);
+        }
+
+        // ============================================
+        // USER NAMES
+        // ============================================
+        function getUserNames() {
+            return storage.get('userNames', { user1: 'Alex', user2: 'Anna' });
+        }
+
+        function updateUserNames() {
+            const names = getUserNames();
+            $('user1Label').textContent = names.user1;
+            $('user2Label').textContent = names.user2;
+            $('spenderBtn1').textContent = names.user1;
+            $('spenderBtn2').textContent = names.user2;
+            $('yourName').value = names.user1;
+            $('partnerName').value = names.user2;
+        }
+
+        // ============================================
+        // SUMMARY
+        // ============================================
+        function updateSummary() {
+            const now = new Date();
+            const currentMonth = now.getMonth();
+            const currentYear = now.getFullYear();
+            const names = getUserNames();
+
+            const monthExpenses = expenses.filter(e => {
+                const d = new Date(e.date);
+                return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+            });
+
+            let total = 0, user1 = 0, user2 = 0;
+
+            monthExpenses.forEach(e => {
+                const amt = parseFloat(e.amount);
+                total += amt;
+                if (e.spender === 'user1' || e.person === names.user1) user1 += amt;
+                else user2 += amt;
+            });
+
+            $('totalSpending').textContent = `£${total.toFixed(2)}`;
+            $('user1Spending').textContent = `£${user1.toFixed(2)}`;
+            $('user2Spending').textContent = `£${user2.toFixed(2)}`;
+
+            calculateTrends();
+        }
+
+        function calculateTrends() {
+            const now = new Date();
+            const currentMonth = now.getMonth();
+            const currentYear = now.getFullYear();
+            const lastMonth = currentMonth === 0 ? 11 : currentMonth - 1;
+            const lastMonthYear = currentMonth === 0 ? currentYear - 1 : currentYear;
+            const names = getUserNames();
+
+            const currentExpenses = expenses.filter(e => {
+                const d = new Date(e.date);
+                return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+            });
+
+            const lastExpenses = expenses.filter(e => {
+                const d = new Date(e.date);
+                return d.getMonth() === lastMonth && d.getFullYear() === lastMonthYear;
+            });
+
+            let currTotal = 0, lastTotal = 0, currU1 = 0, lastU1 = 0, currU2 = 0, lastU2 = 0;
+
+            currentExpenses.forEach(e => {
+                const amt = parseFloat(e.amount);
+                currTotal += amt;
+                if (e.spender === 'user1' || e.person === names.user1) currU1 += amt;
+                else currU2 += amt;
+            });
+
+            lastExpenses.forEach(e => {
+                const amt = parseFloat(e.amount);
+                lastTotal += amt;
+                if (e.spender === 'user1' || e.person === names.user1) lastU1 += amt;
+                else lastU2 += amt;
+            });
+
+            updateTrendIcon('totalTrend', currTotal, lastTotal);
+            updateTrendIcon('user1Trend', currU1, lastU1);
+            updateTrendIcon('user2Trend', currU2, lastU2);
+        }
+
+        function updateTrendIcon(elementId, current, previous) {
+            const el = $(elementId);
+            if (!el) return;
+
+            let pct = 0, cls = 'trend-neutral', icon = '-';
+
+            if (previous > 0) {
+                pct = ((current - previous) / previous) * 100;
+                if (pct > 5) { cls = 'trend-up'; icon = '↑'; }
+                else if (pct < -5) { cls = 'trend-down'; icon = '↓'; }
+            } else if (current > 0) {
+                cls = 'trend-up'; icon = '↑';
+            }
+
+            el.className = 'summary-trend ' + cls;
+            el.textContent = previous > 0 ? `${icon} ${Math.abs(pct).toFixed(0)}%` : (current > 0 ? icon : '-');
+        }
+
+        function updateDaysLeft() {
+            const now = new Date();
+            const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+            const days = Math.floor((nextMonth - now) / (1000 * 60 * 60 * 24));
+            $('daysLeft').textContent = `${days} day${days !== 1 ? 's' : ''} left`;
+        }
+
+        // ============================================
+        // AUTOCOMPLETE
+        // ============================================
+        function renderAutocomplete(entries) {
+            if (entries.length === 0) {
+                descDropdown.classList.remove('active');
+                return;
+            }
+
+            descDropdown.innerHTML = entries.map((e, i) => `
+                <div class="autocomplete-item" data-index="${i}">
+                    <div class="autocomplete-main">${escapeHtml(e.description)}</div>
+                    <div class="autocomplete-sub">
+                        <span><i class="fa-solid fa-folder"></i> ${escapeHtml(e.category)}</span>
+                        <span><i class="fa-solid fa-sterling-sign"></i> ${e.lastAmount.toFixed(2)}</span>
+                    </div>
+                </div>
+            `).join('');
+
+            descDropdown.classList.add('active');
+            selectedDropdownIndex = -1;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function selectAutocomplete(entry) {
+            descriptionInput.value = entry.description;
+            categorySelect.value = entry.category;
+
+            // Update spender
+            currentSpender = entry.spender;
+            spenderBtns.forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.spender === currentSpender);
+            });
+
+            descDropdown.classList.remove('active');
+            amountInput.focus();
+
+            showToast(`Loaded: ${entry.description}`, 'info');
+        }
+
+        descriptionInput.addEventListener('input', () => {
+            const entries = AutocompleteManager.search(descriptionInput.value);
+            renderAutocomplete(entries);
+        });
+
+        descriptionInput.addEventListener('focus', () => {
+            const entries = AutocompleteManager.search(descriptionInput.value);
+            renderAutocomplete(entries);
+        });
+
+        descriptionInput.addEventListener('keydown', (e) => {
+            const items = descDropdown.querySelectorAll('.autocomplete-item');
+            if (!descDropdown.classList.contains('active') || items.length === 0) return;
+
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                selectedDropdownIndex = Math.min(selectedDropdownIndex + 1, items.length - 1);
+                items.forEach((item, i) => item.classList.toggle('selected', i === selectedDropdownIndex));
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                selectedDropdownIndex = Math.max(selectedDropdownIndex - 1, 0);
+                items.forEach((item, i) => item.classList.toggle('selected', i === selectedDropdownIndex));
+            } else if (e.key === 'Enter' && selectedDropdownIndex >= 0) {
+                e.preventDefault();
+                const entries = AutocompleteManager.search(descriptionInput.value);
+                if (entries[selectedDropdownIndex]) selectAutocomplete(entries[selectedDropdownIndex]);
+            } else if (e.key === 'Escape') {
+                descDropdown.classList.remove('active');
+            }
+        });
+
+        descDropdown.addEventListener('click', (e) => {
+            const item = e.target.closest('.autocomplete-item');
+            if (item) {
+                const entries = AutocompleteManager.search(descriptionInput.value);
+                if (entries[item.dataset.index]) selectAutocomplete(entries[item.dataset.index]);
+            }
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.autocomplete-wrapper')) {
+                descDropdown.classList.remove('active');
+            }
+        });
+
+        // ============================================
+        // SPENDER TOGGLE
+        // ============================================
+        spenderBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                currentSpender = btn.dataset.spender;
+                spenderBtns.forEach(b => b.classList.toggle('active', b === btn));
+            });
+        });
+
+        // ============================================
+        // ADD EXPENSE
+        // ============================================
+        async function addExpense() {
+            const amount = amountInput.value.trim();
+            const description = descriptionInput.value.trim();
+            const category = categorySelect.value;
+
+            if (!amount || isNaN(amount) || parseFloat(amount) <= 0) {
+                showToast('Please enter a valid amount', 'error');
+                amountInput.focus();
+                return;
+            }
+
+            if (!description) {
+                showToast('Please enter a description', 'error');
+                descriptionInput.focus();
+                return;
+            }
+
+            const names = getUserNames();
+            const spenderName = currentSpender === 'user1' ? names.user1 : names.user2;
+
+            const newExpense = {
+                date: new Date().toISOString(),
+                description,
+                category,
+                amount: parseFloat(amount),
+                spender: currentSpender,
+                person: spenderName
+            };
+
+            // Disable button
+            addExpenseBtn.disabled = true;
+            addExpenseBtn.innerHTML = '<div class="spinner"></div> Adding...';
+
+            showToast('Adding expense...', 'info');
+
+            try {
+                const success = await syncExpenseToWebApp(newExpense);
+
+                if (success) {
+                    expenses.push(newExpense);
+
+                    // Save to autocomplete
+                    AutocompleteManager.saveEntry(newExpense);
+
+                    // Clear form
+                    amountInput.value = '';
+                    descriptionInput.value = '';
+
+                    // Update UI
+                    updateSummary();
+                    renderExpensesList();
+                    detectRecurringExpenses();
+
+                    showToast('Expense added successfully', 'success');
+                } else {
+                    showToast('Failed to add expense', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showToast('Error: ' + error.message, 'error');
+            } finally {
+                addExpenseBtn.disabled = false;
+                addExpenseBtn.innerHTML = '<i class="fa-solid fa-plus"></i> Add Expense';
+            }
+        }
+
+        addExpenseBtn.addEventListener('click', addExpense);
+
+        // ============================================
+        // EXPENSE LIST
+        // ============================================
+        function filterExpenses(filter) {
+            currentFilter = filter;
+            filterTabs.forEach(tab => tab.classList.toggle('active', tab.dataset.filter === filter));
+
+            let filtered = [];
+            const now = new Date();
+            const currentMonth = now.getMonth();
+            const currentYear = now.getFullYear();
+
+            switch(filter) {
+                case 'last5':
+                    filtered = [...expenses].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 5);
+                    break;
+                case 'month':
+                    filtered = expenses.filter(e => {
+                        const d = new Date(e.date);
+                        return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+                    });
+                    break;
+                default:
+                    filtered = [...expenses];
+            }
+
+            renderFilteredExpenses(filtered);
+        }
+
+        function renderFilteredExpenses(list) {
+            const names = getUserNames();
+            expenseList.innerHTML = '';
+
+            if (list.length === 0) {
+                expenseList.innerHTML = '<li class="empty-state">No expenses to display</li>';
+                return;
+            }
+
+            list.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            list.forEach((e, index) => {
+                const isUser1 = e.spender === 'user1' || e.person === names.user1;
+                const spenderName = isUser1 ? names.user1 : names.user2;
+                const userClass = isUser1 ? 'user-1' : 'user-2';
+
+                // Create unique ID if not exists
+                if (!e.id) {
+                    e.id = `${e.date}_${e.description}_${e.amount}`.replace(/\s+/g, '_');
+                }
+
+                // Determine item classes
+                let itemClasses = 'expense-item';
+                if (e.isReversal) itemClasses += ' is-reversal';
+                if (e.isDeleted) itemClasses += ' is-deleted';
+
+                // Format amount (show - for reversal entries)
+                const amount = parseFloat(e.amount);
+                const amountDisplay = amount < 0
+                    ? `-£${Math.abs(amount).toFixed(2)}`
+                    : `£${amount.toFixed(2)}`;
+
+                // Description display (remove [DELETED] prefix for cleaner look, show badge instead)
+                const descDisplay = e.isReversal
+                    ? e.description.replace('[DELETED] ', '')
+                    : e.description;
+
+                // Badge for reversals and deleted items
+                let statusBadge = '';
+                if (e.isReversal) {
+                    statusBadge = '<span class="reversal-badge"><i class="fa-solid fa-rotate-left"></i> Reversal</span>';
+                } else if (e.isDeleted) {
+                    statusBadge = '<span class="deleted-badge"><i class="fa-solid fa-ban"></i> Deleted</span>';
+                }
+
+                // Hide delete button for already deleted/reversal items
+                const deleteBtn = (e.isReversal || e.isDeleted)
+                    ? ''
+                    : `<button class="expense-delete" data-id="${e.id}" data-index="${expenses.indexOf(e)}" title="Delete expense">
+                            <i class="fa-solid fa-trash-can"></i>
+                       </button>`;
+
+                const li = document.createElement('li');
+                li.className = itemClasses;
+                li.innerHTML = `
+                    <div class="expense-content">
+                        <div class="expense-details">
+                            <div class="expense-row">
+                                <div class="expense-desc">${escapeHtml(descDisplay)}${statusBadge}</div>
+                                <div class="expense-amount">${amountDisplay}</div>
+                            </div>
+                            <div class="expense-meta">
+                                <span>${e.category}</span>
+                                <span>${moment(e.date).format('MMM D')}</span>
+                                <span class="user-tag ${userClass}">${spenderName}</span>
+                            </div>
+                        </div>
+                        ${deleteBtn}
+                    </div>
+                `;
+                expenseList.appendChild(li);
+            });
+
+            // Add delete event listeners
+            expenseList.querySelectorAll('.expense-delete').forEach(btn => {
+                btn.addEventListener('click', (event) => {
+                    event.stopPropagation();
+                    const index = parseInt(btn.dataset.index);
+                    if (index >= 0) {
+                        confirmDeleteExpense(index);
+                    }
+                });
+            });
+        }
+
+        function confirmDeleteExpense(index) {
+            const expense = expenses[index];
+            if (!expense) return;
+
+            const confirmMsg = `Reverse "${expense.description}" (£${parseFloat(expense.amount).toFixed(2)})?\n\nThis will add a credit entry to cancel out this expense. Both entries will remain visible for your records.`;
+
+            if (confirm(confirmMsg)) {
+                deleteExpense(index);
+            }
+        }
+
+        async function deleteExpense(index) {
+            const expense = expenses[index];
+            if (!expense) return;
+
+            const names = getUserNames();
+            const spenderName = expense.spender === 'user1' ? names.user1 : names.user2;
+
+            // Create reversal entry (negative amount)
+            const reversalEntry = {
+                date: new Date().toISOString(),
+                description: `[DELETED] ${expense.description}`,
+                category: expense.category,
+                amount: -Math.abs(parseFloat(expense.amount)), // Negative amount
+                spender: expense.spender,
+                person: spenderName,
+                isReversal: true,
+                originalDate: expense.date
+            };
+
+            // Mark original as deleted (keep for reference)
+            expense.isDeleted = true;
+
+            // Add reversal to expenses array
+            expenses.push(reversalEntry);
+
+            // Update UI
+            updateSummary();
+            renderExpensesList();
+
+            showToast('Expense reversed', 'success');
+
+            // Sync reversal entry to Google Sheets
+            try {
+                const data = {
+                    date: moment(reversalEntry.date).format('YYYY-MM-DD HH:mm:ss'),
+                    person: spenderName,
+                    category: reversalEntry.category,
+                    amount: reversalEntry.amount,
+                    description: reversalEntry.description
+                };
+
+                await fetch(WEBAPP_URL, {
+                    method: 'POST',
+                    mode: 'cors',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify(data)
+                });
+            } catch (error) {
+                console.error('Could not sync reversal to sheet:', error);
+                showToast('Reversed locally, sync failed', 'info');
+            }
+        }
+
+        function renderExpensesList() {
+            filterExpenses(currentFilter);
+        }
+
+        filterTabs.forEach(tab => {
+            tab.addEventListener('click', () => filterExpenses(tab.dataset.filter));
+        });
+
+        // ============================================
+        // RECURRING EXPENSES
+        // ============================================
+        function detectRecurringExpenses() {
+            const loader = $('recurringLoader');
+            const content = $('recurringContent');
+            const detected = $('detectedRecurring');
+
+            loader.classList.remove('hidden');
+            content.classList.add('hidden');
+            detected.classList.add('hidden');
+
+            setTimeout(() => {
+                recurringExpenses = storage.get('recurringExpenses', []);
+                const patterns = findRecurringPatterns();
+
+                displayRecurringExpenses();
+                displayPotentialRecurring(patterns);
+
+                loader.classList.add('hidden');
+                content.classList.remove('hidden');
+
+                if (patterns.length > 0) detected.classList.remove('hidden');
+            }, 800);
+        }
+
+        function findRecurringPatterns() {
+            if (expenses.length < 2) return [];
+
+            const groups = {};
+
+            expenses.forEach(e => {
+                const key = e.description.toLowerCase().trim();
+                if (!groups[key]) groups[key] = [];
+                groups[key].push({ ...e, date: new Date(e.date) });
+            });
+
+            const patterns = [];
+
+            Object.keys(groups).forEach(key => {
+                const group = groups[key];
+                if (group.length >= 2) {
+                    group.sort((a, b) => a.date - b.date);
+
+                    const intervals = [];
+                    for (let i = 1; i < group.length; i++) {
+                        intervals.push(Math.round((group[i].date - group[i-1].date) / (1000 * 60 * 60 * 24)));
+                    }
+
+                    const avgInterval = intervals.reduce((s, i) => s + i, 0) / intervals.length;
+                    let interval = null;
+
+                    if (avgInterval >= 28 && avgInterval <= 31) interval = 'monthly';
+                    else if (avgInterval >= 6 && avgInterval <= 8) interval = 'weekly';
+                    else if (avgInterval >= 13 && avgInterval <= 16) interval = 'bi-weekly';
+
+                    if (interval) {
+                        const alreadyConfirmed = recurringExpenses.some(r =>
+                            r.description.toLowerCase() === key
+                        );
+
+                        if (!alreadyConfirmed) {
+                            const avgAmount = group.reduce((s, e) => s + parseFloat(e.amount), 0) / group.length;
+                            patterns.push({
+                                description: group[0].description,
+                                amount: avgAmount,
+                                interval,
+                                category: group[0].category,
+                                lastDate: group[group.length - 1].date,
+                                spender: group[0].spender,
+                                confidence: Math.min(group.length * 25, 100)
+                            });
+                        }
+                    }
+                }
+            });
+
+            return patterns.sort((a, b) => b.confidence - a.confidence);
+        }
+
+        function displayRecurringExpenses() {
+            const content = $('recurringContent');
+            content.innerHTML = '';
+
+            if (recurringExpenses.length === 0) {
+                content.innerHTML = '<div class="empty-state">No recurring expenses set up yet.</div>';
+                return;
+            }
+
+            recurringExpenses.forEach(r => {
+                const nextDate = calculateNextDate(r.lastDate, r.interval);
+                const div = document.createElement('div');
+                div.className = 'recurring-item';
+                div.innerHTML = `
+                    <div class="recurring-header">
+                        <div class="recurring-icon"><i class="fa-solid fa-repeat"></i></div>
+                        <div class="recurring-title">${escapeHtml(r.description)}</div>
+                        <div class="recurring-amount">£${r.amount.toFixed(2)}</div>
+                    </div>
+                    <div class="recurring-meta">
+                        ${formatFrequency(r.interval)} - ${r.category} - Next: ${moment(nextDate).format('MMM D')}
+                    </div>
+                    <div class="recurring-actions">
+                        <button class="recurring-btn" onclick="deleteRecurring('${r.id}')">Delete</button>
+                    </div>
+                `;
+                content.appendChild(div);
+            });
+        }
+
+        function displayPotentialRecurring(patterns) {
+            const list = $('detectedList');
+            list.innerHTML = '';
+
+            if (patterns.length === 0) return;
+
+            patterns.slice(0, 3).forEach(p => {
+                const nextDate = calculateNextDate(p.lastDate, p.interval);
+                const div = document.createElement('div');
+                div.className = 'detected-item';
+                div.innerHTML = `
+                    <div class="detected-header">
+                        <div class="detected-title">${escapeHtml(p.description)}</div>
+                        <div class="detected-amount">£${p.amount.toFixed(2)}</div>
+                    </div>
+                    <div class="detected-pattern">
+                        ${formatFrequency(p.interval)} payment. Next: ${moment(nextDate).format('MMM D')}
+                    </div>
+                    <div class="detected-buttons">
+                        <button class="detected-btn btn-confirm" data-pattern='${JSON.stringify(p)}'>Set as Recurring</button>
+                        <button class="detected-btn btn-dismiss" data-desc="${p.description}">Ignore</button>
+                    </div>
+                `;
+                list.appendChild(div);
+            });
+
+            // Event listeners
+            list.querySelectorAll('.btn-confirm').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const pattern = JSON.parse(btn.dataset.pattern);
+                    const newRecurring = {
+                        id: Date.now().toString(36),
+                        description: pattern.description,
+                        amount: pattern.amount,
+                        interval: pattern.interval,
+                        category: pattern.category,
+                        lastDate: pattern.lastDate,
+                        spender: pattern.spender
+                    };
+                    recurringExpenses.push(newRecurring);
+                    storage.set('recurringExpenses', recurringExpenses);
+                    detectRecurringExpenses();
+                    showToast('Recurring expense added', 'success');
+                });
+            });
+
+            list.querySelectorAll('.btn-dismiss').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    btn.closest('.detected-item').remove();
+                    if (list.children.length === 0) {
+                        $('detectedRecurring').classList.add('hidden');
+                    }
+                });
+            });
+        }
+
+        function deleteRecurring(id) {
+            recurringExpenses = recurringExpenses.filter(r => r.id !== id);
+            storage.set('recurringExpenses', recurringExpenses);
+            displayRecurringExpenses();
+            showToast('Recurring expense removed', 'success');
+        }
+
+        function calculateNextDate(lastDate, interval) {
+            const date = new Date(lastDate);
+            if (interval === 'weekly') date.setDate(date.getDate() + 7);
+            else if (interval === 'bi-weekly') date.setDate(date.getDate() + 14);
+            else if (interval === 'monthly') date.setMonth(date.getMonth() + 1);
+            return date;
+        }
+
+        function formatFrequency(interval) {
+            const map = { weekly: 'Weekly', 'bi-weekly': 'Bi-weekly', monthly: 'Monthly' };
+            return map[interval] || interval;
+        }
+
+        // ============================================
+        // GOOGLE SHEETS SYNC
+        // ============================================
+        async function syncExpenseToWebApp(expense) {
+            try {
+                const names = getUserNames();
+                const data = {
+                    date: moment(expense.date).format('YYYY-MM-DD HH:mm:ss'),
+                    person: expense.spender === 'user1' ? names.user1 : names.user2,
+                    category: expense.category,
+                    amount: expense.amount,
+                    description: expense.description
+                };
+
+                const response = await fetch(WEBAPP_URL, {
+                    method: 'POST',
+                    mode: 'cors',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.text();
+                return result.includes('Success');
+            } catch (error) {
+                console.error('Sync error:', error);
+                throw error;
+            }
+        }
+
+        async function fetchExpensesFromWebApp() {
+            try {
+                showToast('Loading expenses...', 'info');
+
+                const response = await fetch(`${WEBAPP_URL}?action=getExpenses`, { method: 'GET', mode: 'cors' });
+                const text = await response.text();
+                const data = JSON.parse(text);
+
+                if (data && Array.isArray(data.expenses)) {
+                    const names = getUserNames();
+                    expenses = data.expenses.map(e => ({
+                        date: e.date,
+                        description: e.description,
+                        category: e.category,
+                        amount: parseFloat(e.amount),
+                        person: e.person,
+                        spender: e.person === names.user1 ? 'user1' : 'user2'
+                    }));
+
+                    // Build autocomplete suggestions from fetched expenses
+                    buildAutocompletFromExpenses(expenses);
+
+                    updateSummary();
+                    renderExpensesList();
+                    detectRecurringExpenses();
+
+                    if (data.sheetUrl) {
+                        storage.set('sheetUrl', data.sheetUrl);
+                        $('sheetLink').href = data.sheetUrl;
+                        $('sheetLink').classList.remove('hidden');
+                    }
+
+                    storage.set('webAppConnected', true);
+                    $('apiStatus').textContent = 'Connected';
+                    $('apiStatus').style.color = '#059669';
+
+                    showToast('Expenses loaded', 'success');
+                }
+            } catch (error) {
+                console.error('Fetch error:', error);
+                showToast('Error loading: ' + error.message, 'error');
+            }
+        }
+
+        // Build autocomplete suggestions from existing expenses
+        function buildAutocompletFromExpenses(expenseList) {
+            const seen = {};
+
+            // Process expenses to build unique suggestions
+            expenseList.forEach(e => {
+                // Skip deleted/reversal entries
+                if (e.isDeleted || e.isReversal || e.description.startsWith('[DELETED]')) return;
+
+                const key = e.description.toLowerCase().trim();
+
+                // Keep the most recent entry for each unique description
+                if (!seen[key] || new Date(e.date) > new Date(seen[key].date)) {
+                    seen[key] = e;
+                }
+            });
+
+            // Save to autocomplete storage
+            const data = AutocompleteManager.getData();
+
+            Object.values(seen).forEach(e => {
+                const key = e.description.toLowerCase().trim();
+
+                // Only add if not already in autocomplete (preserve user's own entries)
+                if (!data.entries[key]) {
+                    data.entries[key] = {
+                        description: e.description,
+                        category: e.category,
+                        spender: e.spender,
+                        lastAmount: parseFloat(e.amount),
+                        lastUsed: new Date(e.date).getTime(),
+                        useCount: 1
+                    };
+                }
+            });
+
+            storage.set(AutocompleteManager.STORAGE_KEY, data);
+            AutocompleteManager.updateBadge();
+        }
+
+        $('connectBtn').addEventListener('click', fetchExpensesFromWebApp);
+        $('refreshBtn').addEventListener('click', fetchExpensesFromWebApp);
+
+        // ============================================
+        // RESET MONTH
+        // ============================================
+        $('resetBtn').addEventListener('click', async () => {
+            if (!confirm('Reset all expenses for this month? This clears the Google Sheet.')) return;
+
+            try {
+                showToast('Resetting...', 'info');
+                const response = await fetch(`${WEBAPP_URL}?action=resetMonth`, { method: 'GET', mode: 'cors' });
+                const result = await response.text();
+
+                if (result.includes('Success')) {
+                    expenses = [];
+                    updateSummary();
+                    renderExpensesList();
+                    showToast('Month reset', 'success');
+                } else {
+                    showToast('Reset failed', 'error');
+                }
+            } catch (error) {
+                showToast('Error: ' + error.message, 'error');
+            }
+        });
+
+        // ============================================
+        // COMPARISON MODAL
+        // ============================================
+        $('compareBtn').addEventListener('click', () => {
+            generateComparison();
+            modalOverlay.classList.add('active');
+        });
+
+        $('modalClose').addEventListener('click', () => {
+            modalOverlay.classList.remove('active');
+        });
+
+        modalOverlay.addEventListener('click', (e) => {
+            if (e.target === modalOverlay) modalOverlay.classList.remove('active');
+        });
+
+        function generateComparison() {
+            const now = new Date();
+            const currentMonth = now.getMonth();
+            const currentYear = now.getFullYear();
+            const lastMonth = currentMonth === 0 ? 11 : currentMonth - 1;
+            const lastMonthYear = currentMonth === 0 ? currentYear - 1 : currentYear;
+            const names = getUserNames();
+
+            const curr = expenses.filter(e => {
+                const d = new Date(e.date);
+                return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+            });
+
+            const last = expenses.filter(e => {
+                const d = new Date(e.date);
+                return d.getMonth() === lastMonth && d.getFullYear() === lastMonthYear;
+            });
+
+            let currTotal = 0, lastTotal = 0, currU1 = 0, lastU1 = 0, currU2 = 0, lastU2 = 0;
+            const currCat = {}, lastCat = {};
+
+            curr.forEach(e => {
+                const amt = parseFloat(e.amount);
+                currTotal += amt;
+                if (e.spender === 'user1' || e.person === names.user1) currU1 += amt;
+                else currU2 += amt;
+                currCat[e.category] = (currCat[e.category] || 0) + amt;
+            });
+
+            last.forEach(e => {
+                const amt = parseFloat(e.amount);
+                lastTotal += amt;
+                if (e.spender === 'user1' || e.person === names.user1) lastU1 += amt;
+                else lastU2 += amt;
+                lastCat[e.category] = (lastCat[e.category] || 0) + amt;
+            });
+
+            const pctChange = (c, p) => {
+                if (p === 0) return c > 0 ? { text: 'New', cls: 'comparison-increase' } : { text: '0%', cls: 'comparison-neutral' };
+                const pct = ((c - p) / p) * 100;
+                const sign = pct > 0 ? '+' : '';
+                const cls = pct > 0 ? 'comparison-increase' : pct < 0 ? 'comparison-decrease' : 'comparison-neutral';
+                return { text: `${sign}${pct.toFixed(1)}%`, cls };
+            };
+
+            const totalChange = pctChange(currTotal, lastTotal);
+            const u1Change = pctChange(currU1, lastU1);
+            const u2Change = pctChange(currU2, lastU2);
+
+            const allCats = new Set([...Object.keys(currCat), ...Object.keys(lastCat)]);
+            let catRows = '';
+            Array.from(allCats).sort().forEach(cat => {
+                const c = currCat[cat] || 0;
+                const p = lastCat[cat] || 0;
+                const change = pctChange(c, p);
+                catRows += `
+                    <div class="category-row">
+                        <span>${cat}</span>
+                        <div class="category-values">
+                            <span class="category-current">£${c.toFixed(2)}</span>
+                            <span class="category-previous">£${p.toFixed(2)}</span>
+                            <span class="category-change ${change.cls}">${change.text}</span>
+                        </div>
+                    </div>
+                `;
+            });
+
+            modalContent.innerHTML = `
+                <div class="comparison-row">
+                    <div class="comparison-label">Total Spending</div>
+                    <div class="comparison-data">
+                        <div>This Month: £${currTotal.toFixed(2)}</div>
+                        <div>Last Month: £${lastTotal.toFixed(2)}</div>
+                        <div class="${totalChange.cls}">Change: ${totalChange.text}</div>
+                    </div>
+                </div>
+                <div class="comparison-row">
+                    <div class="comparison-label">${names.user1}</div>
+                    <div class="comparison-data">
+                        <div>This Month: £${currU1.toFixed(2)}</div>
+                        <div>Last Month: £${lastU1.toFixed(2)}</div>
+                        <div class="${u1Change.cls}">Change: ${u1Change.text}</div>
+                    </div>
+                </div>
+                <div class="comparison-row">
+                    <div class="comparison-label">${names.user2}</div>
+                    <div class="comparison-data">
+                        <div>This Month: £${currU2.toFixed(2)}</div>
+                        <div>Last Month: £${lastU2.toFixed(2)}</div>
+                        <div class="${u2Change.cls}">Change: ${u2Change.text}</div>
+                    </div>
+                </div>
+                <div style="margin-top: 16px;">
+                    <div class="comparison-label">By Category</div>
+                    ${catRows || '<div class="empty-state">No category data</div>'}
+                </div>
+            `;
+        }
+
+        // ============================================
+        // SETTINGS
+        // ============================================
+        $('settingsBtn').addEventListener('click', () => {
+            // Populate current values
+            const names = getUserNames();
+            $('yourName').value = names.user1;
+            $('partnerName').value = names.user2;
+            // Open modal
+            $('settingsOverlay').classList.add('active');
+        });
+
+        $('settingsClose').addEventListener('click', () => {
+            $('settingsOverlay').classList.remove('active');
+        });
+
+        $('settingsOverlay').addEventListener('click', (e) => {
+            if (e.target === $('settingsOverlay')) {
+                $('settingsOverlay').classList.remove('active');
+            }
+        });
+
+        $('saveSettingsBtn').addEventListener('click', () => {
+            const yourName = $('yourName').value.trim();
+            const partnerName = $('partnerName').value.trim();
+
+            if (!yourName || !partnerName) {
+                showToast('Please enter both names', 'error');
+                return;
+            }
+
+            storage.set('userNames', { user1: yourName, user2: partnerName });
+            updateUserNames();
+            updateSummary();
+            renderExpensesList();
+            $('settingsOverlay').classList.remove('active');
+            showToast('Settings saved', 'success');
+        });
+
+        $('clearDataBtn').addEventListener('click', () => {
+            if (confirm('Clear all saved suggestions?')) {
+                AutocompleteManager.clear();
+                showToast('Suggestions cleared', 'success');
+            }
+        });
+
+        // ============================================
+        // INITIALIZATION
+        // ============================================
+        document.addEventListener('DOMContentLoaded', () => {
+            // Update UI with user names first
+            updateUserNames();
+            updateDaysLeft();
+            AutocompleteManager.updateBadge();
+
+            // Check if previously connected (for UI state)
+            if (storage.get('webAppConnected')) {
+                const sheetUrl = storage.get('sheetUrl');
+                if (sheetUrl) {
+                    $('sheetLink').href = sheetUrl;
+                    $('sheetLink').classList.remove('hidden');
+                }
+                $('apiStatus').textContent = 'Connecting...';
+                $('apiStatus').style.color = 'var(--primary)';
+            }
+
+            // Always try to fetch fresh data from Google Sheet on load
+            fetchExpensesFromWebApp().catch(err => {
+                console.error('Failed to fetch on load:', err);
+
+                // If fetch fails, fall back to locally stored data
+                expenses = storage.get('expenses', []);
+                updateSummary();
+                renderExpensesList();
+
+                if (storage.get('webAppConnected')) {
+                    $('apiStatus').textContent = 'Offline - showing cached data';
+                    $('apiStatus').style.color = 'var(--warning)';
+                }
+            });
+
+            // Detect recurring after data loads
+            setTimeout(detectRecurringExpenses, 1500);
+        });
+    </script>
+</body>
+</html>

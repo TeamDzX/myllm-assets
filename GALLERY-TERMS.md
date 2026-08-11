@@ -1,6 +1,6 @@
 # MyLLMos App Gallery — Terms of Use & Content Policy
 
-**Version 1 · Effective 16 July 2026**
+**Version 2 · Effective 11 August 2026**
 The App Gallery is operated by **Opticell Ltd** (UK), the maker of MyLLM.
 Questions, reports or takedown requests: open an issue on this repository, or contact us via [opticell-limited.com/myllm](https://www.opticell-limited.com/myllm).
 
@@ -20,7 +20,16 @@ These terms cover use of the Gallery and submission of apps to it. Your use of t
 - **Apps are provided "as is".** We review apps before listing them and remove ones that misbehave, but we can't guarantee any app is error-free or fit for a particular purpose. To the fullest extent permitted by law, gallery apps — including community apps — are provided without warranty, and Opticell is not liable for loss or damage arising from their use. Nothing in these terms excludes liability that cannot be excluded under UK law, and nothing affects your statutory consumer rights.
 - **Don't rely on gallery apps for critical decisions.** Apps that produce measurements, health-adjacent information or AI-generated content are for general information only.
 
-## 3. Content standards
+## 3. Who owns what
+
+- **Our apps stay ours.** Apps made by Opticell are copyright © Opticell Ltd, and are published here **source-available, not open source** — the full terms are in [LICENSE](LICENSE). In short: read them, modify them, run your version inside MyLLM, share what you make with people you know. Don't republish them, sell them, or present them as your own work. Every app file carries a header saying so, and a build id that identifies it as ours.
+- **Why the source is public at all.** MyLLM has a **View code** button and a **Remix** button. An app you can't read is an app you can't trust, and remixing ours is one of the better ways to learn what the platform can do. Readable is deliberate; free to take is not.
+- **Community apps stay their authors'.** Apps contributed by other people are owned and licensed by them, credited to them, and hosted here under the licence in section 5. Our licence doesn't cover them, and neither does our permission.
+- **Third-party libraries keep their own licences.** Some apps bundle open-source components, listed with their copyright holders in [THIRD-PARTY.md](THIRD-PARTY.md). Nothing in our licence limits your rights under theirs.
+- **Names and artwork are trade marks.** "MyLLM", "MyLLMos" and "Opticell", together with app names, icons and banner art, are not licensed by any of the above.
+- **Permission is usually available for the asking.** If you want to do something the licence doesn't allow — ship a derivative, use an app commercially, include one in a course or a template pack — open an issue. The answer is often yes.
+
+## 4. Content standards
 
 Every app in the Gallery — ours or the community's — must be:
 
@@ -31,7 +40,7 @@ Every app in the Gallery — ours or the community's — must be:
 
 We may remove or decline any app, at any time, at our sole discretion — including for reasons not listed here. That discretion is how we keep the Gallery worth browsing.
 
-## 4. Submitting an app (community authors)
+## 5. Submitting an app (community authors)
 
 By submitting an app to the Gallery you agree that:
 
@@ -42,7 +51,7 @@ By submitting an app to the Gallery you agree that:
 - **We may remove your app at any time**, before or after listing, for any reason — including content-standards breaches, security concerns, breakage, or curation.
 - **You submit at your own risk.** Don't include anything private or confidential in a submission — the Gallery repository is public.
 
-## 5. Reports and takedowns
+## 6. Reports and takedowns
 
 If an app in the Gallery infringes your rights, misbehaves, or breaches the standards above:
 
@@ -50,11 +59,11 @@ If an app in the Gallery infringes your rights, misbehaves, or breaches the stan
 2. For IP complaints, include: what you own, where the infringing material appears, and a statement that you believe in good faith the use is unauthorised.
 3. We aim to act on valid reports **within 7 days**, and immediately for security issues.
 
-## 6. Changes to these terms
+## 7. Changes to these terms
 
 We may update these terms from time to time; the version and effective date above will change when we do. Material changes will be noted in the repository's commit history and, where the change affects submitters, in the submission wizard. Continued use of the Gallery after a change means you accept the updated terms.
 
-## 7. Governing law
+## 8. Governing law
 
 These terms are governed by the laws of England and Wales, and the courts of England and Wales have exclusive jurisdiction — except that consumers resident elsewhere keep any protections and venue rights their local law grants them.
 
