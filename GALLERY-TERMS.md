@@ -1,4 +1,4 @@
-# MyLLMos App Gallery — Terms of Use & Content Policy
+# MyLLMos™ App Gallery — Terms of Use & Content Policy
 
 **Version 2 · Effective 11 August 2026**
 The App Gallery is operated by **Opticell Ltd** (UK), the maker of MyLLM.
@@ -26,7 +26,7 @@ These terms cover use of the Gallery and submission of apps to it. Your use of t
 - **Why the source is public at all.** MyLLM has a **View code** button and a **Remix** button. An app you can't read is an app you can't trust, and remixing ours is one of the better ways to learn what the platform can do. Readable is deliberate; free to take is not.
 - **Community apps stay their authors'.** Apps contributed by other people are owned and licensed by them, credited to them, and hosted here under the licence in section 5. Our licence doesn't cover them, and neither does our permission.
 - **Third-party libraries keep their own licences.** Some apps bundle open-source components, listed with their copyright holders in [THIRD-PARTY.md](THIRD-PARTY.md). Nothing in our licence limits your rights under theirs.
-- **Names and artwork are trade marks.** "MyLLM", "MyLLMos" and "Opticell", together with app names, icons and banner art, are not licensed by any of the above.
+- **Names and artwork are trade marks.** "MyLLM"™, "MyLLMos"™ and "Opticell"™, together with app names, icons and banner art, are not licensed by any of the above. Their first and continuous use is recorded in [BRAND.md](BRAND.md).
 - **Permission is usually available for the asking.** If you want to do something the licence doesn't allow — ship a derivative, use an app commercially, include one in a course or a template pack — open an issue. The answer is often yes.
 
 ## 4. Content standards

@@ -46,7 +46,9 @@ THIRD_PARTY = {
     "hanyu":        "HanziWriter (MIT)",
 }
 
-HEADER_MARK = "MyLLMos App Gallery ·"      # idempotency probe for the header
+# Finds a header this script wrote, whatever its wording, so the text can be
+# revised later without leaving 118 files on two different versions of it.
+HEADER_RE = re.compile(r"<!--\s*\n\s+[^\n]*?App Gallery.*?-->\n?", re.S)
 ID_PROP = "--build-id"                     # idempotency probe for the token
 
 
@@ -58,8 +60,8 @@ def build_id(app_id):
 def header(app_id, name):
     extra = THIRD_PARTY.get(app_id)
     lines = [
-        f"{name} — {HEADER_MARK} © {YEAR} {HOLDER}",
-        "Source-available: read it, remix it, run your version inside MyLLM.",
+        f"{name} — MyLLMos™ App Gallery · © {YEAR} {HOLDER}",
+        "Source-available: read it, remix it, run your version inside MyLLM™.",
         f"Not for redistribution or republication. Terms: {LICENCE_URL}",
     ]
     if extra:
@@ -71,12 +73,18 @@ def stamp(html, app_id, name):
     """Return (new_html, [what changed])."""
     did = []
 
-    if HEADER_MARK not in html[:1200]:
+    want = header(app_id, name)
+    head = html[:1600]
+    m_old = HEADER_RE.search(head)
+    if m_old and m_old.group(0).rstrip("\n") != want:
+        html = html[:m_old.start()] + want + html[m_old.end():]
+        did.append("header (rewritten)")
+    elif not m_old:
         m = re.match(r"\s*<!doctype[^>]*>", html, re.I)
         if m:
-            html = html[:m.end()] + "\n" + header(app_id, name) + html[m.end():]
+            html = html[:m.end()] + "\n" + want + html[m.end():]
         else:
-            html = header(app_id, name) + "\n" + html
+            html = want + "\n" + html
         did.append("header")
 
     if ID_PROP not in html:
