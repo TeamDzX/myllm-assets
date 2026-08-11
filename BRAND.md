@@ -48,6 +48,8 @@ brand's public use on that date is witnessed by a third party:
 - [App Store listing](https://web.archive.org/web/20260811142018/https://apps.apple.com/gb/app/myllm-local-ai-agent/id6760704297)
 - [github.com/TeamDzX/myllm-assets](https://web.archive.org/web/20260811142042/https://github.com/TeamDzX/myllm-assets)
 - [apps.json — the MyLLMos manifest](https://web.archive.org/web/20260811142102/https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps.json)
+- [BRAND.md — this file](https://web.archive.org/web/20260811150721/https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/BRAND.md)
+- [LICENSE](https://web.archive.org/web/20260811150736/https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/LICENSE)
 
 **Re-capture these once or twice a year.** A run of snapshots spread over years
 evidences *continuous* use; a single capture only evidences one day. Any of the
