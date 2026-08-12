@@ -1,0 +1,1491 @@
+<!DOCTYPE html>
+<!--
+  E-Grid — MyLLMos™ App Gallery · © 2026 Opticell Ltd
+  Source-available: read it, remix it, run your version inside MyLLM™.
+  Not for redistribution or republication. Terms: https://github.com/TeamDzX/myllm-assets/blob/main/LICENSE
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>E-Grid</title>
+<style>
+:root{--build-id:"3b30c8afe2";
+  --bg:var(--myllm-bg,#f2f2f7);--surface:var(--myllm-surface,#fff);
+  --text:var(--myllm-text,#0d0d0f);--muted:var(--myllm-muted,#6c6c72);
+  --border:var(--myllm-border,rgba(0,0,0,.12));
+  --radius:var(--myllm-radius,16px);
+  --font:var(--myllm-font,-apple-system,system-ui,sans-serif);
+  --accent:var(--myllm-accent,#e10600);
+  --sunk:rgba(120,120,128,.10);
+}
+@media(prefers-color-scheme:dark){:root{
+  --bg:var(--myllm-bg,#000);--surface:var(--myllm-surface,#151518);
+  --text:var(--myllm-text,#f4f4f6);--muted:var(--myllm-muted,#98989f);
+  --border:var(--myllm-border,rgba(255,255,255,.14));
+  --sunk:rgba(120,120,128,.20);
+}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font);
+  font-size:17px;line-height:1.42;-webkit-text-size-adjust:100%;
+  display:flex;flex-direction:column;height:100dvh;overflow:hidden}
+
+/* ---------- chrome ---------- */
+#bar{flex:0 0 auto;padding:max(10px,env(safe-area-inset-top)) 16px 10px;
+  display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);
+  background:var(--surface)}
+#bar h1{margin:0;font-size:1.22rem;font-weight:800;letter-spacing:-.03em;flex:1}
+#bar h1 em{font-style:normal;color:var(--accent)}
+.iconbtn{border:0;background:var(--sunk);color:var(--text);width:34px;height:34px;
+  border-radius:50%;font-size:1rem;display:grid;place-items:center;cursor:pointer}
+.iconbtn:active{opacity:.55}
+.iconbtn.spin{animation:spin 1s linear infinite}
+#back{font-size:1.5rem;line-height:0;padding-bottom:3px}
+#back[hidden]{display:none}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+#view{flex:1 1 auto;overflow-y:auto;-webkit-overflow-scrolling:touch;
+  padding:14px 16px calc(20px + env(safe-area-inset-bottom))}
+.wrap{max-width:760px;margin:0 auto}
+
+#tabs{flex:0 0 auto;display:flex;border-top:1px solid var(--border);
+  background:var(--surface);padding-bottom:env(safe-area-inset-bottom)}
+#tabs button{flex:1;border:0;background:none;color:var(--muted);cursor:pointer;
+  padding:8px 2px 7px;font-family:inherit;font-size:.66rem;font-weight:700;
+  letter-spacing:.02em;display:flex;flex-direction:column;align-items:center;gap:2px}
+#tabs button span{font-size:1.22rem;line-height:1.05}
+#tabs button[aria-selected=true]{color:var(--accent)}
+
+/* ---------- notices ---------- */
+.notice{background:var(--sunk);border-radius:12px;padding:10px 13px;font-size:.85rem;
+  color:var(--muted);margin-bottom:14px;font-weight:550}
+.notice b{color:var(--text);font-weight:700}
+
+/* ---------- cards ---------- */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  overflow:hidden;margin-bottom:14px}
+.pad{padding:14px 15px}
+h2.sec{font-size:.76rem;font-weight:800;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--muted);margin:22px 2px 9px}
+h2.sec:first-child{margin-top:4px}
+
+/* hero (next race / channel header) */
+/* min-height, not img height: when a photo fails the element still has to
+   hold its caption rather than collapsing to a broken-image box. */
+.hero{position:relative;border-radius:var(--radius);overflow:hidden;margin-bottom:14px;
+  background:#111;cursor:pointer;display:block;width:100%;border:0;padding:0;text-align:left;
+  font-family:inherit;color:#fff;min-height:200px}
+.hero img{display:block;width:100%;height:200px;object-fit:cover;opacity:.82}
+.hero .veil{position:absolute;inset:0;
+  background:linear-gradient(180deg,rgba(0,0,0,.12) 0%,rgba(0,0,0,.35) 46%,rgba(0,0,0,.86) 100%)}
+.hero .body{position:absolute;left:0;right:0;bottom:0;padding:14px 15px}
+.hero .eyebrow{font-size:.68rem;font-weight:850;letter-spacing:.13em;text-transform:uppercase;
+  display:flex;align-items:center;gap:5px}
+.hero .title{font-size:1.4rem;font-weight:800;letter-spacing:-.025em;margin:3px 0 1px;
+  color:#fff;text-shadow:0 1px 12px rgba(0,0,0,.5)}
+.hero .sub{font-size:.9rem;font-weight:600;color:rgba(255,255,255,.9)}
+.cd{font-size:1.06rem;font-weight:800;font-variant-numeric:tabular-nums;color:var(--text);
+  margin-top:5px;letter-spacing:.01em}
+.hero .cd{color:#fff}
+.cd.live{color:#16a34a}
+@media(prefers-color-scheme:dark){.cd.live{color:#4ade80}}
+.hero .cd.live{color:#4ade80}
+
+/* rows */
+.row{display:flex;align-items:center;gap:12px;padding:11px 15px;cursor:pointer;
+  border-top:1px solid var(--border)}
+.row:first-child{border-top:0}
+.row:active{background:var(--sunk)}
+.row .grow{flex:1;min-width:0}
+.row .name{font-weight:680;font-size:.99rem;letter-spacing:-.01em}
+.row .meta{font-size:.82rem;color:var(--muted);font-weight:550;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .right{text-align:right;font-size:.82rem;color:var(--muted);font-weight:650;flex:0 0 auto}
+.row .right b{display:block;color:var(--text);font-size:.92rem;font-weight:750;
+  font-variant-numeric:tabular-nums}
+.chev{color:var(--muted);opacity:.5;flex:0 0 auto;font-size:.9rem}
+.pill{flex:0 0 auto;width:38px;text-align:center;font-size:.7rem;font-weight:800;
+  color:#fff;border-radius:7px;padding:3px 0;letter-spacing:.02em}
+.tno{flex:0 0 auto;width:26px;text-align:center;font-weight:800;font-size:.95rem;
+  font-variant-numeric:tabular-nums;color:var(--muted)}
+.tno.p1{color:#d4a017}.tno.p2{color:#9aa0a6}.tno.p3{color:#b87333}
+
+/* series grid */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(158px,1fr));gap:12px}
+.tile{position:relative;border-radius:14px;overflow:hidden;background:#111;cursor:pointer;
+  border:0;padding:0;font-family:inherit;text-align:left;color:#fff;display:block;min-height:100px}
+.tile img{display:block;width:100%;height:100px;object-fit:cover;opacity:.8}
+.tile .veil{position:absolute;inset:0;
+  background:linear-gradient(180deg,rgba(0,0,0,.05),rgba(0,0,0,.82))}
+.tile .body{position:absolute;left:0;right:0;bottom:0;padding:9px 10px}
+.tile .nm{font-size:.86rem;font-weight:800;letter-spacing:-.02em;line-height:1.15;
+  text-shadow:0 1px 8px rgba(0,0,0,.55)}
+.tile .nx{font-size:.7rem;font-weight:650;color:rgba(255,255,255,.82);margin-top:2px}
+.tile .star{position:absolute;top:7px;right:8px;font-size:.85rem;
+  text-shadow:0 1px 6px rgba(0,0,0,.7)}
+.tile .bar{position:absolute;left:0;top:0;bottom:0;width:4px}
+
+/* segmented control */
+.segs{display:flex;gap:6px;overflow-x:auto;padding:2px 0 12px;scrollbar-width:none}
+.segs::-webkit-scrollbar{display:none}
+.seg{flex:0 0 auto;border:1px solid var(--border);background:var(--surface);color:var(--muted);
+  border-radius:999px;padding:6px 14px;font-size:.83rem;font-weight:700;cursor:pointer;
+  font-family:inherit}
+.seg[aria-selected=true]{background:var(--text);color:var(--bg);border-color:var(--text)}
+
+/* buttons */
+.btn{display:block;width:100%;border:0;border-radius:13px;padding:13px;cursor:pointer;
+  font-family:inherit;font-size:.97rem;font-weight:750;background:var(--sunk);color:var(--text)}
+.btn.fill{background:var(--accent);color:#fff}
+.btn:active{opacity:.7}
+
+/* news */
+.news{display:flex;gap:12px;padding:12px 15px;border-top:1px solid var(--border);cursor:pointer}
+.news:first-child{border-top:0}
+.news img{width:76px;height:76px;border-radius:10px;object-fit:cover;flex:0 0 auto;
+  background:var(--sunk)}
+.news .t{font-weight:680;font-size:.94rem;line-height:1.3;letter-spacing:-.01em}
+.news .s{font-size:.78rem;color:var(--muted);margin-top:3px;font-weight:600}
+
+/* tracks */
+.track img{width:64px;height:48px;border-radius:8px;object-fit:cover;flex:0 0 auto;
+  background:var(--sunk)}
+#tsearch{width:100%;border:1px solid var(--border);background:var(--surface);color:var(--text);
+  border-radius:11px;padding:10px 13px;font-family:inherit;font-size:.95rem;margin-bottom:12px}
+#tsearch:focus{outline:2px solid var(--accent);outline-offset:-1px}
+
+/* stat strip */
+.stats{display:flex;flex-wrap:wrap;gap:1px;background:var(--border)}
+.stats div{flex:1 1 33%;background:var(--surface);padding:11px 12px}
+.stats span{display:block;font-size:.68rem;font-weight:750;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--muted)}
+.stats b{font-size:1.02rem;font-weight:780;letter-spacing:-.02em}
+
+/* prose */
+.prose{font-size:.94rem;line-height:1.5}
+.prose p{margin:0 0 10px}
+.facts{margin:0;padding:0;list-style:none}
+.facts li{position:relative;padding:0 0 9px 17px;font-size:.9rem;line-height:1.45}
+.facts li:before{content:"";position:absolute;left:2px;top:8px;width:5px;height:5px;
+  border-radius:50%;background:var(--accent)}
+.credit{font-size:.7rem;color:var(--muted);padding:7px 15px 0;font-weight:600}
+.credit a{color:var(--muted)}
+a{color:var(--accent)}
+.empty{text-align:center;color:var(--muted);font-size:.9rem;padding:26px 18px;font-weight:600}
+
+/* App Store funnel */
+.cta{display:flex;align-items:center;gap:12px;padding:14px 15px;text-decoration:none;
+  color:var(--text)}
+.cta .mark{width:44px;height:44px;border-radius:11px;flex:0 0 auto;display:grid;
+  place-items:center;font-size:1.35rem;
+  background:linear-gradient(150deg,#e10600,#7a0400);color:#fff}
+.cta .t{font-weight:750;font-size:.97rem;letter-spacing:-.01em}
+.cta .s{font-size:.8rem;color:var(--muted);font-weight:600;margin-top:1px}
+.cta .go{font-size:.82rem;font-weight:800;color:var(--accent);flex:0 0 auto}
+
+/* sheet */
+#sheet{position:fixed;inset:0;z-index:60;background:var(--bg);display:flex;
+  flex-direction:column;transform:translateY(100%);transition:transform .26s ease;
+  visibility:hidden}
+#sheet.open{transform:none;visibility:visible}
+#sheet .head{flex:0 0 auto;display:flex;align-items:center;gap:10px;
+  padding:max(10px,env(safe-area-inset-top)) 16px 10px;border-bottom:1px solid var(--border);
+  background:var(--surface)}
+#sheet .head h2{margin:0;font-size:1.02rem;font-weight:780;flex:1;letter-spacing:-.02em;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#sheetbody{flex:1 1 auto;overflow-y:auto;padding:14px 16px calc(24px + env(safe-area-inset-bottom))}
+.shot{width:100%;height:210px;object-fit:cover;display:block}
+</style>
+</head>
+<body>
+
+<div id="bar">
+  <button class="iconbtn" id="back" data-act="back" aria-label="Back" hidden>‹</button>
+  <h1>E<em>-</em>Grid</h1>
+  <button class="iconbtn" id="refresh" data-act="refresh" aria-label="Refresh">⟳</button>
+</div>
+
+<main id="view"><div class="wrap"><div class="empty">Loading…</div></div></main>
+
+<nav id="tabs">
+  <button data-act="tab" data-tab="home" aria-selected="true"><span>🏁</span>Home</button>
+  <button data-act="tab" data-tab="series" aria-selected="false"><span>🏎️</span>Series</button>
+  <button data-act="tab" data-tab="tracks" aria-selected="false"><span>🛣️</span>Tracks</button>
+  <button data-act="tab" data-tab="news" aria-selected="false"><span>📰</span>News</button>
+</nav>
+
+<div id="sheet" aria-hidden="true">
+  <div class="head">
+    <button class="iconbtn" data-act="close" aria-label="Close">✕</button>
+    <h2 id="sheettitle"></h2>
+  </div>
+  <div id="sheetbody"></div>
+</div>
+
+<script>
+/* ============================================================
+   E-Grid for MyLLMos — a race hub built on the same content the
+   iOS and Android apps read. Series catalogue, track guides,
+   bios and machinery come from the E-Grid content repo; live
+   schedules and standings come from the same public APIs.
+   ============================================================ */
+
+/* The App Store listing. Left blank until the app is live — the
+   "Get E-Grid" cards render only when this is set. */
+var APPSTORE_URL = '';
+
+var CONTENT = 'https://raw.githubusercontent.com/TeamDzX/egrid-content/live/';
+var HERO    = 'https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/e-grid/';
+var K       = 'egrid1:';            /* storage key prefix */
+
+/* ---------- bridges (feature-detected; the app must run on any build) ---------- */
+var store = window.myllmStorage || {
+  getItem: function(){ return Promise.resolve(null); },
+  setItem: function(){ return Promise.resolve(); }
+};
+function haptic(k){ try{ if(window.myllmHaptic) window.myllmHaptic(k||'selection'); }catch(e){} }
+function online(){ return typeof window.myllmFetch === 'function'; }
+
+function save(key, val){
+  try{ store.setItem(K+key, JSON.stringify(val)); }catch(e){}
+}
+function read(key){
+  try{
+    return Promise.resolve(store.getItem(K+key)).then(function(s){
+      if(!s) return null;
+      try{ return JSON.parse(s); }catch(e){ return null; }
+    }, function(){ return null; });
+  }catch(e){ return Promise.resolve(null); }
+}
+/* Each cache is one blob rather than a key per series: the bridge is async,
+   and thirteen round-trips per bucket at launch is a visible delay. */
+var flushing = null;
+function flush(){
+  if(flushing) return;
+  flushing = setTimeout(function(){
+    flushing = null;
+    save('sched', S.sched);
+    save('stand', S.stand);
+    save('news', S.news);
+  }, 400);
+}
+
+/* The web view runs at a null origin, so browser-side networking is CORS-dead.
+   Everything goes through the native bridge instead. */
+function getText(url){
+  if(!online()) return Promise.reject(new Error('offline'));
+  return window.myllmFetch(url, {method:'GET'}).then(function(r){
+    if(!r || !r.ok) throw new Error('HTTP ' + (r ? r.status : '?'));
+    return r.body || '';
+  });
+}
+function getJSON(url){ return getText(url).then(function(t){ return JSON.parse(t); }); }
+
+/* ---------- state ---------- */
+var S = {
+  channels: [], circuits: [], drivers: [], teams: [], specs: [], broadcasts: [],
+  sched: {},      /* channelID -> [race]        */
+  stand: {},      /* channelID -> {groups:[]}   */
+  news:  {},      /* channelID -> [item]        */
+  follow: ['f1'],
+  tab: 'home', channel: null, seg: 'calendar',
+  query: '', stale: false, booted: false
+};
+
+/* Baked-in catalogue: enough to open the app with no network and nothing
+   cached. Refreshed from the content repo on every launch.
+   Regenerated by build_egrid.py — edit channels.json, not this line. */
+var FALLBACK = /*<FB>*/[{"id":"f1","name":"Formula 1","tagline":"Grand Prix racing \u2014 schedules, standings and stats","accentHex":"E10600","hasStandings":true,"comingSoon":false},{"id":"wrc","name":"World Rally Championship","tagline":"Rally calendar, results and news from the stages","accentHex":"1E88E5","hasStandings":false,"comingSoon":false},{"id":"f2","name":"Formula 2","tagline":"The final step to F1 \u2014 every round on a Grand Prix weekend","accentHex":"00A0DE","hasStandings":false,"comingSoon":false,"calendar":[{"round":1,"name":"Melbourne","location":"Albert Park Circuit, Australia","date":"2026-03-08"},{"round":2,"name":"Miami","location":"Miami International Autodrome, USA","date":"2026-05-03"},{"round":3,"name":"Montreal","location":"Circuit Gilles-Villeneuve, Canada","date":"2026-05-24"},{"round":4,"name":"Monaco","location":"Circuit de Monaco","date":"2026-06-07"},{"round":5,"name":"Barcelona","location":"Circuit de Barcelona-Catalunya, Spain","date":"2026-06-14"},{"round":6,"name":"Spielberg","location":"Red Bull Ring, Austria","date":"2026-06-28"},{"round":7,"name":"Silverstone","location":"Silverstone Circuit, Great Britain","date":"2026-07-05"},{"round":8,"name":"Spa-Francorchamps","location":"Circuit de Spa-Francorchamps, Belgium","date":"2026-07-19"},{"round":9,"name":"Budapest","location":"Hungaroring, Hungary","date":"2026-07-26"},{"round":10,"name":"Monza","location":"Autodromo Nazionale Monza, Italy","date":"2026-09-06"},{"round":11,"name":"Madrid","location":"Madrid, Spain","date":"2026-09-13"},{"round":12,"name":"Baku","location":"Baku City Circuit, Azerbaijan","date":"2026-09-27"},{"round":13,"name":"Lusail","location":"Lusail International Circuit, Qatar","date":"2026-11-29"},{"round":14,"name":"Abu Dhabi","location":"Yas Marina Circuit, UAE","date":"2026-12-06"}]},{"id":"f3","name":"Formula 3","tagline":"Tomorrow's stars \u2014 junior single-seaters on the F1 stage","accentHex":"FF6B00","hasStandings":false,"comingSoon":false,"calendar":[{"round":1,"name":"Melbourne","location":"Albert Park Circuit, Australia","date":"2026-03-08"},{"round":2,"name":"Sakhir","location":"Bahrain International Circuit","date":"2026-04-12"},{"round":3,"name":"Monaco","location":"Circuit de Monaco","date":"2026-06-07"},{"round":4,"name":"Barcelona","location":"Circuit de Barcelona-Catalunya, Spain","date":"2026-06-14"},{"round":5,"name":"Spielberg","location":"Red Bull Ring, Austria","date":"2026-06-28"},{"round":6,"name":"Silverstone","location":"Silverstone Circuit, Great Britain","date":"2026-07-05"},{"round":7,"name":"Spa-Francorchamps","location":"Circuit de Spa-Francorchamps, Belgium","date":"2026-07-19"},{"round":8,"name":"Budapest","location":"Hungaroring, Hungary","date":"2026-07-26"},{"round":9,"name":"Monza","location":"Autodromo Nazionale Monza, Italy","date":"2026-09-06"},{"round":10,"name":"Madrid","location":"Madrid, Spain","date":"2026-09-13"}]},{"id":"wec","name":"World Endurance Championship","tagline":"Hypercars, Le Mans and round-the-clock racing","accentHex":"0E7C86","hasStandings":false,"comingSoon":false,"calendar":[{"round":1,"name":"Qatar 1812 Km","location":"Lusail International Circuit, Qatar","date":"2026-03-28"},{"round":2,"name":"6 Hours of Imola","location":"Autodromo Enzo e Dino Ferrari, Italy","date":"2026-04-19"},{"round":3,"name":"6 Hours of Spa-Francorchamps","location":"Circuit de Spa-Francorchamps, Belgium","date":"2026-05-09"},{"round":4,"name":"24 Hours of Le Mans","location":"Circuit de la Sarthe, France","date":"2026-06-13"},{"round":5,"name":"6 Hours of S\u00e3o Paulo","location":"Interlagos, Brazil","date":"2026-07-12"},{"round":6,"name":"Lone Star Le Mans","location":"Circuit of the Americas, USA","date":"2026-09-06"},{"round":7,"name":"6 Hours of Fuji","location":"Fuji Speedway, Japan","date":"2026-09-27"},{"round":8,"name":"8 Hours of Bahrain","location":"Bahrain International Circuit","date":"2026-11-07"}]},{"id":"formulae","name":"Formula E","tagline":"All-electric racing on city streets worldwide","accentHex":"00BEC3","hasStandings":true,"comingSoon":false},{"id":"motogp","name":"MotoGP","tagline":"The pinnacle of motorcycle racing \u2014 riders, rounds and standings","accentHex":"D81B60","hasStandings":true,"comingSoon":false},{"id":"porschecup","name":"Porsche Supercup","tagline":"One-make 911 racing on the F1 stage","accentHex":"C89B3C","hasStandings":false,"comingSoon":false,"calendar":[{"round":1,"name":"Monaco","location":"Circuit de Monaco","date":"2026-06-07"},{"round":2,"name":"Barcelona","location":"Circuit de Barcelona-Catalunya, Spain","date":"2026-06-14"},{"round":3,"name":"Spielberg","location":"Red Bull Ring, Austria","date":"2026-06-28"},{"round":4,"name":"Spa-Francorchamps","location":"Circuit de Spa-Francorchamps, Belgium","date":"2026-07-19"},{"round":5,"name":"Budapest","location":"Hungaroring, Hungary","date":"2026-07-26"},{"round":6,"name":"Zandvoort","location":"Circuit Zandvoort, Netherlands","date":"2026-08-23"},{"round":7,"name":"Monza (double-header)","location":"Autodromo Nazionale Monza, Italy","date":"2026-09-06"}]},{"id":"cliocup","name":"Clio Cup Series","tagline":"Europe's classic one-make hot hatch battle","accentHex":"EFDF00","hasStandings":false,"comingSoon":false,"calendar":[{"round":1,"name":"Nogaro","location":"Circuit Paul Armagnac, France","date":"2026-04-06"},{"round":2,"name":"Paul Ricard","location":"Circuit Paul Ricard, France","date":"2026-04-26"},{"round":3,"name":"Magny-Cours","location":"Circuit de Nevers Magny-Cours, France","date":"2026-05-31"},{"round":4,"name":"Mugello","location":"Mugello Circuit, Italy","date":"2026-07-12"},{"round":5,"name":"Spa-Francorchamps","location":"Circuit de Spa-Francorchamps, Belgium","date":"2026-09-19"},{"round":6,"name":"Navarra","location":"Circuito de Navarra, Spain","date":"2026-10-18"},{"round":7,"name":"Portim\u00e3o","location":"Aut\u00f3dromo Internacional do Algarve, Portugal","date":"2026-11-08"}]},{"id":"nascar","name":"NASCAR Cup Series","tagline":"Stock car racing \u2014 The Chase for the championship","accentHex":"FFB300","hasStandings":false,"comingSoon":false,"calendar":[{"round":23,"name":"Iowa Corn 350","location":"Iowa Speedway","date":"2026-08-09"},{"round":24,"name":"Cook Out 400","location":"Richmond Raceway","date":"2026-08-15"},{"round":25,"name":"Dollar Tree 301","location":"New Hampshire Motor Speedway","date":"2026-08-23"},{"round":26,"name":"Coke Zero Sugar 400","location":"Daytona International Speedway","date":"2026-08-29"},{"round":27,"name":"Cook Out Southern 500","location":"Darlington Raceway","date":"2026-09-06"},{"round":28,"name":"Enjoy Illinois 300","location":"World Wide Technology Raceway","date":"2026-09-13"},{"round":29,"name":"Bass Pro Shops Night Race","location":"Bristol Motor Speedway","date":"2026-09-19"},{"round":30,"name":"Hollywood Casino 400","location":"Kansas Speedway","date":"2026-09-27"},{"round":31,"name":"South Point 400","location":"Las Vegas Motor Speedway","date":"2026-10-04"},{"round":32,"name":"Bank of America 400","location":"Charlotte Motor Speedway","date":"2026-10-11"},{"round":33,"name":"Freeway Insurance 500","location":"Phoenix Raceway","date":"2026-10-18"},{"round":34,"name":"YellaWood 500","location":"Talladega Superspeedway","date":"2026-10-25"},{"round":35,"name":"Xfinity 500","location":"Martinsville Speedway","date":"2026-11-01"},{"round":36,"name":"Championship Race","location":"Homestead-Miami Speedway","date":"2026-11-08"}]},{"id":"indycar","name":"IndyCar","tagline":"American open-wheel racing, from streets to superspeedways","accentHex":"1565C0","hasStandings":false,"comingSoon":false,"calendar":[{"name":"Grand Prix of Portland","location":"Portland International Raceway","date":"2026-08-09"},{"name":"Streets of Markham","location":"Markham, Ontario","date":"2026-08-16"},{"name":"Streets of Washington","location":"Washington, D.C.","date":"2026-08-23"},{"name":"Milwaukee Mile \u2014 Race 1","location":"Milwaukee Mile, Wisconsin","date":"2026-08-29"},{"name":"Milwaukee Mile \u2014 Race 2","location":"Milwaukee Mile, Wisconsin","date":"2026-08-30"},{"name":"Season Finale","location":"WeatherTech Raceway Laguna Seca","date":"2026-09-06"}]},{"id":"nhra","name":"NHRA Drag Racing","tagline":"11,000 horsepower, four seconds at a time","accentHex":"E53935","hasStandings":false,"comingSoon":false,"calendar":[{"name":"Brainerd Nationals","location":"Brainerd International Raceway, Minnesota","date":"2026-08-23"},{"name":"U.S. Nationals","location":"Lucas Oil Indianapolis Raceway Park","date":"2026-09-07"},{"name":"Great Lakes Nationals","location":"U.S. 131 Motorsports Park, Michigan","date":"2026-09-20"},{"name":"Nationals at The Rock","location":"Rockingham Dragway, North Carolina","date":"2026-09-27"},{"name":"Midwest Nationals","location":"World Wide Technology Raceway, Illinois","date":"2026-10-04"},{"name":"Texas FallNationals","location":"Texas Motorplex, Ennis","date":"2026-10-18"},{"name":"Las Vegas Nationals","location":"Las Vegas Motor Speedway","date":"2026-11-01"},{"name":"NHRA Finals","location":"Pomona Dragstrip, California","date":"2026-11-15"}]},{"id":"imsa","name":"IMSA SportsCar Championship","tagline":"American endurance racing \u2014 prototypes to Petit Le Mans","accentHex":"2E7D32","hasStandings":false,"comingSoon":false,"calendar":[{"round":8,"name":"SportsCar Endurance Grand Prix","location":"Road America, Wisconsin","date":"2026-08-02"},{"round":9,"name":"Michelin GT Challenge","location":"Virginia International Raceway","date":"2026-08-23"},{"round":10,"name":"Battle on the Bricks","location":"Indianapolis Motor Speedway","date":"2026-09-20"},{"round":11,"name":"Motul Petit Le Mans","location":"Michelin Raceway Road Atlanta","date":"2026-10-03"}]}]/*</FB>*/;
+
+/* ============================================================
+   Content
+   ============================================================ */
+function applyContent(c){
+  if(c.channels && c.channels.length)  S.channels   = c.channels;
+  if(c.circuits && c.circuits.length)  S.circuits   = c.circuits;
+  if(c.drivers  && c.drivers.length)   S.drivers    = c.drivers;
+  if(c.teams    && c.teams.length)     S.teams      = c.teams;
+  if(c.specs    && c.specs.length)     S.specs      = c.specs;
+  if(c.guides   && c.guides.length)    S.broadcasts = c.guides;
+}
+
+function loadContent(){
+  var files = ['channels','circuits','drivers','machines','broadcasters'];
+  return Promise.all(files.map(function(f){
+    return getJSON(CONTENT + f + '.json').catch(function(){ return null; });
+  })).then(function(r){
+    var c = {};
+    if(r[0] && r[0].channels) c.channels = r[0].channels;
+    if(r[1] && r[1].circuits) c.circuits = r[1].circuits;
+    if(r[2] && r[2].drivers)  c.drivers  = r[2].drivers;
+    if(r[3]){ c.teams = r[3].teams || []; c.specs = r[3].series || []; }
+    if(r[4] && r[4].guides)   c.guides   = r[4].guides;
+    if(!c.channels) throw new Error('no content');
+    applyContent(c);
+    save('content', c);
+    return true;
+  });
+}
+
+/* ============================================================
+   Schedules — live where a series publishes one, otherwise the
+   hand-maintained calendar that ships in channels.json.
+   ============================================================ */
+function race(o){
+  return {
+    id: o.id, channelID: o.channelID, round: o.round || 0, name: o.name,
+    circuit: o.circuit || '', locality: o.locality || '', country: o.country || '',
+    start: o.start || null, hasTime: !!o.hasTime, sessions: o.sessions || []
+  };
+}
+function iso(date, time){
+  if(!date) return null;
+  var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(date));
+  if(!m) return null;
+  /* A date with no published start time is anchored to LOCAL midnight. Parsed
+     as UTC it would render as the previous day for anyone west of Greenwich —
+     which is exactly the kind of off-by-one a calendar can't afford. */
+  if(!time) return new Date(+m[1], +m[2] - 1, +m[3]).getTime();
+  var t = Date.parse(date + 'T' + (time.length > 5 ? time : time + ':00Z'));
+  return isNaN(t) ? null : t;
+}
+/* How long a race stays "current" once it starts: a timed event for three
+   hours, a date-only event until the end of its day. */
+function endOf(r){ return r.start + (r.hasTime ? 10800000 : 86400000); }
+function ahead(r){ return r.start && endOf(r) >= Date.now(); }
+
+function f1Schedule(){
+  return getJSON('https://api.jolpi.ca/ergast/f1/current.json?limit=30').then(function(j){
+    var races = ((j.MRData || {}).RaceTable || {}).Races || [];
+    return races.map(function(r){
+      var ss = [];
+      function add(label, o){
+        if(o && o.date){ var t = iso(o.date, o.time); if(t) ss.push({name:label, date:t}); }
+      }
+      add('Practice 1', r.FirstPractice);
+      add('Practice 2', r.SecondPractice);
+      add('Practice 3', r.ThirdPractice);
+      add('Sprint Qualifying', r.SprintQualifying);
+      add('Sprint', r.Sprint);
+      add('Qualifying', r.Qualifying);
+      var start = iso(r.date, r.time);
+      if(start) ss.push({name:'Race', date:start});
+      ss.sort(function(a,b){ return a.date - b.date; });
+      var loc = (r.Circuit || {}).Location || {};
+      return race({
+        id:'f1-'+r.round, channelID:'f1', round:parseInt(r.round,10)||0, name:r.raceName,
+        circuit:(r.Circuit||{}).circuitName||'', locality:loc.locality||'', country:loc.country||'',
+        start:start, hasTime:!!r.time, sessions:ss
+      });
+    });
+  });
+}
+
+var mgpSeason = null;
+function motogpSeason(){
+  if(mgpSeason) return Promise.resolve(mgpSeason);
+  return getJSON('https://api.motogp.pulselive.com/motogp/v1/results/seasons').then(function(list){
+    var cur = null, i;
+    for(i = 0; i < list.length; i++){ if(list[i].current){ cur = list[i]; break; } }
+    if(!cur) cur = list[0];
+    if(!cur) throw new Error('no season');
+    mgpSeason = cur.id;
+    return mgpSeason;
+  });
+}
+function motogpSchedule(){
+  return motogpSeason().then(function(sid){
+    var b = 'https://api.motogp.pulselive.com/motogp/v1/results/events?seasonUuid=' + sid;
+    return Promise.all([ getJSON(b+'&isFinished=true'), getJSON(b+'&isFinished=false') ]);
+  }).then(function(r){
+    var all = (r[0] || []).concat(r[1] || []);
+    return all.map(function(e, i){
+      var end = e.date_end ? String(e.date_end).slice(0,10) : null;
+      return race({
+        id:'motogp-'+(i+1), channelID:'motogp', round:i+1,
+        name:(e.name||'').replace(/\w\S*/g, function(w){
+          return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
+        }),
+        circuit:(e.circuit||{}).name||'', locality:(e.circuit||{}).name||'',
+        country:(e.country||{}).name||'', start:iso(end), hasTime:false
+      });
+    }).filter(function(r){ return r.name; });
+  });
+}
+
+var feChamp = null;
+function feChampionship(){
+  if(feChamp) return Promise.resolve(feChamp);
+  return getJSON('https://api.formula-e.pulselive.com/formula-e/v1/championships').then(function(j){
+    var list = j.championships || [], cur = null, i;
+    for(i = 0; i < list.length; i++){ if(list[i].status === 'Present'){ cur = list[i]; break; } }
+    if(!cur) cur = list[list.length - 1];
+    if(!cur) throw new Error('no championship');
+    feChamp = cur.id;
+    return feChamp;
+  });
+}
+function feSchedule(){
+  return feChampionship().then(function(id){
+    return getJSON('https://api.formula-e.pulselive.com/formula-e/v1/races?championshipId=' + id);
+  }).then(function(j){
+    return (j.races || []).map(function(r, i){
+      return race({
+        id:'formulae-'+(r.sequence || i+1), channelID:'formulae', round:r.sequence || i+1,
+        name:r.name || ((r.city||'') + ' E-Prix'), circuit:r.city || '',
+        locality:r.city || '', country:r.country || '',
+        start:iso(r.date ? String(r.date).slice(0,10) : null), hasTime:false
+      });
+    }).filter(function(r){ return r.name; });
+  });
+}
+
+function staticSchedule(ch){
+  return (ch.calendar || []).map(function(r, i){
+    return race({
+      id:ch.id+'-'+(r.round || i+1), channelID:ch.id, round:r.round || i+1, name:r.name,
+      circuit:r.location || '', locality:r.location || '', country:'',
+      start:iso(r.date), hasTime:false
+    });
+  });
+}
+
+var LIVE = {f1:f1Schedule, motogp:motogpSchedule, formulae:feSchedule};
+
+/* Resolves a channel's season, preferring live data and falling back to the
+   static calendar (and then to whatever was last cached). */
+function schedule(ch, force){
+  var have = S.sched[ch.id];
+  if(have && !force) return Promise.resolve(have);
+  var fn = LIVE[ch.id];
+  if(!fn || !online()){
+    var s = staticSchedule(ch);
+    if(s.length){ S.sched[ch.id] = s; return Promise.resolve(s); }
+    return Promise.resolve(have || []);
+  }
+  return fn().then(function(rows){
+    if(!rows.length) throw new Error('empty');
+    S.sched[ch.id] = rows;
+    flush();
+    return rows;
+  }).catch(function(){
+    var s = staticSchedule(ch);
+    if(s.length){ S.sched[ch.id] = s; return s; }
+    return have || [];
+  });
+}
+
+/* ============================================================
+   Standings
+   ============================================================ */
+function row(pos, name, detail, points, wins){
+  return {position:pos, name:name, detail:detail||'', points:points, wins:wins};
+}
+function f1Standings(){
+  var b = 'https://api.jolpi.ca/ergast/f1/current/';
+  return Promise.all([
+    getJSON(b + 'driverstandings.json'),
+    getJSON(b + 'constructorstandings.json')
+  ]).then(function(r){
+    function list(j, key){
+      var t = ((j.MRData || {}).StandingsTable || {}).StandingsLists || [];
+      return (t[0] && t[0][key]) || [];
+    }
+    var d = list(r[0], 'DriverStandings').map(function(s, i){
+      return row(parseInt(s.position,10) || i+1,
+        s.Driver.givenName + ' ' + s.Driver.familyName,
+        (s.Constructors && s.Constructors.length ? s.Constructors[s.Constructors.length-1].name : ''),
+        parseFloat(s.points) || 0, parseInt(s.wins,10) || 0);
+    });
+    var c = list(r[1], 'ConstructorStandings').map(function(s, i){
+      return row(parseInt(s.position,10) || i+1, s.Constructor.name,
+        s.Constructor.nationality || '', parseFloat(s.points) || 0, parseInt(s.wins,10) || 0);
+    });
+    return [{title:'Drivers', rows:d}, {title:'Constructors', rows:c}];
+  });
+}
+function motogpStandings(){
+  var sid;
+  return motogpSeason().then(function(id){
+    sid = id;
+    return getJSON('https://api.motogp.pulselive.com/motogp/v1/results/categories?seasonUuid=' + sid);
+  }).then(function(cats){
+    var premier = null, i;
+    for(i = 0; i < cats.length; i++){
+      if((cats[i].name || '').toLowerCase().indexOf('motogp') >= 0){ premier = cats[i]; break; }
+    }
+    if(!premier) throw new Error('no class');
+    return getJSON('https://api.motogp.pulselive.com/motogp/v1/results/standings?seasonUuid=' +
+      sid + '&categoryUuid=' + premier.id);
+  }).then(function(j){
+    var rows = (j.classification || []).map(function(r, i){
+      return row(r.position || i+1, (r.rider || {}).full_name || 'Unknown',
+        (r.team || {}).name || '', r.points || 0, r.race_wins || 0);
+    });
+    return [{title:'Riders', rows:rows}];
+  });
+}
+function feStandings(){
+  var id;
+  return feChampionship().then(function(c){
+    id = c;
+    var b = 'https://api.formula-e.pulselive.com/formula-e/v1/standings/';
+    return Promise.all([
+      getJSON(b + 'drivers?championshipId=' + id),
+      getJSON(b + 'teams?championshipId=' + id).catch(function(){ return []; })
+    ]);
+  }).then(function(r){
+    var d = (r[0] || []).map(function(s, i){
+      var nm = [s.driverFirstName, s.driverLastName].filter(Boolean).join(' ');
+      return row(s.driverPosition || i+1, nm || 'Unknown', title(s.driverTeamName || ''),
+        s.driverPoints || 0, null);
+    });
+    var t = (r[1] || []).map(function(s, i){
+      return row(s.teamPosition || i+1, title(s.teamName || 'Unknown'), '', s.teamPoints || 0, null);
+    });
+    var out = [{title:'Drivers', rows:d}];
+    if(t.length) out.push({title:'Teams', rows:t});
+    return out;
+  });
+}
+var STAND = {f1:f1Standings, motogp:motogpStandings, formulae:feStandings};
+
+function standings(ch, force){
+  if(S.stand[ch.id] && !force) return Promise.resolve(S.stand[ch.id]);
+  var fn = STAND[ch.id];
+  if(!fn || !online()) return Promise.resolve(S.stand[ch.id] || null);
+  return fn().then(function(groups){
+    S.stand[ch.id] = groups;
+    flush();
+    return groups;
+  }).catch(function(){ return S.stand[ch.id] || null; });
+}
+
+/* ============================================================
+   News — RSS/Atom through the bridge, parsed with DOMParser
+   ============================================================ */
+function tagText(n, name){
+  var e = n.getElementsByTagName(name)[0];
+  return e ? (e.textContent || '').trim() : '';
+}
+/* Article art: RSS carries it as media:content / media:thumbnail / enclosure,
+   and otherwise it's the first <img> inside the description. */
+function itemImage(n, body){
+  var names = ['media:content', 'media:thumbnail', 'enclosure'], i, e, u, ty;
+  for(i = 0; i < names.length; i++){
+    e = n.getElementsByTagName(names[i])[0];
+    if(!e) continue;
+    u = e.getAttribute('url') || '';
+    ty = e.getAttribute('type') || '';
+    if(u && (names[i] !== 'enclosure' || ty.indexOf('image') === 0 ||
+             /\.(jpe?g|png|webp)/i.test(u))) return u;
+  }
+  var m = (body || '').match(/<img[^>]+src=["']([^"']+)["']/i);
+  return m ? m[1] : '';
+}
+function parseFeed(xml, source){
+  var doc = new DOMParser().parseFromString(xml, 'text/xml');
+  if(doc.getElementsByTagName('parsererror').length) return [];
+  var nodes = doc.getElementsByTagName('item');
+  if(!nodes.length) nodes = doc.getElementsByTagName('entry');
+  var out = [], i, n, title, link, l, body, img;
+  for(i = 0; i < nodes.length && out.length < 25; i++){
+    n = nodes[i];
+    title = tagText(n, 'title');
+    if(!title) continue;
+    link = tagText(n, 'link');
+    if(!link){
+      l = n.getElementsByTagName('link')[0];
+      if(l) link = l.getAttribute('href') || '';
+    }
+    body = tagText(n, 'description') || tagText(n, 'summary') || tagText(n, 'content');
+    img = itemImage(n, body);
+    out.push({
+      title: title,
+      link: /^https?:/.test(link) ? link : '',
+      date: Date.parse(tagText(n, 'pubDate') || tagText(n, 'published') ||
+                       tagText(n, 'updated')) || null,
+      source: source,
+      image: /^https?:/.test(img) ? img : ''
+    });
+  }
+  return out;
+}
+
+function news(ch, force){
+  if(S.news[ch.id] && !force) return Promise.resolve(S.news[ch.id]);
+  var feeds = ch.feeds || [];
+  if(!feeds.length || !online()) return Promise.resolve(S.news[ch.id] || []);
+  return Promise.all(feeds.map(function(f){
+    return getText(f.url).then(function(x){ return parseFeed(x, f.name); })
+                         .catch(function(){ return []; });
+  })).then(function(lists){
+    var all = [];
+    lists.forEach(function(l){ all = all.concat(l); });
+    all.sort(function(a,b){ return (b.date || 0) - (a.date || 0); });
+    all = all.slice(0, 30);
+    if(!all.length) return S.news[ch.id] || [];
+    S.news[ch.id] = all;
+    flush();
+    return all;
+  });
+}
+
+/* ============================================================
+   Matching — the content repo keys entries by matchKeys, the
+   same way the native apps resolve a guide for a race.
+   ============================================================ */
+function norm(s){ return (s||'').toLowerCase().replace(/[^a-z0-9 ]+/g,' ').replace(/\s+/g,' ').trim(); }
+
+function bestMatch(list, haystack, channelID){
+  var hay = ' ' + norm(haystack) + ' ', best = null, bestScore = -1;
+  list.forEach(function(e){
+    var longest = -1;
+    (e.matchKeys || []).forEach(function(k){
+      var n = norm(k);
+      if(n && hay.indexOf(' ' + n) >= 0 && n.length > longest) longest = n.length;
+    });
+    if(longest < 0) return;
+    var scoped = channelID && e.channelIDs && e.channelIDs.indexOf(channelID) >= 0;
+    var score = (scoped ? 1000 : 0) + longest;
+    if(score > bestScore){ bestScore = score; best = e; }
+  });
+  return best;
+}
+function circuitFor(r){
+  return bestMatch(S.circuits, r.circuit + ' ' + r.name + ' ' + r.locality, r.channelID);
+}
+function driverFor(name, channelID){ return bestMatch(S.drivers, name, channelID); }
+function teamFor(name, channelID){ return bestMatch(S.teams, name, channelID); }
+
+function photoURL(c){
+  if(!c || !c.image || !c.image.url) return '';
+  var u = c.image.url;
+  return /^https?:/.test(u) ? u : CONTENT + u;
+}
+function heroFor(id){ return HERO + id + '.jpg'; }
+/* Series art is hosted, so it can fail: offline, or a series added to the
+   catalogue before its artwork lands. The accent wash stands in for it. */
+function wash(ch){
+  return 'background:linear-gradient(155deg,' + accent(ch) + ' -30%,#141416 72%)';
+}
+var FALLBACK_IMG = ' onerror="this.remove()"';
+
+/* ============================================================
+   Formatting
+   ============================================================ */
+function esc(s){
+  return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
+}
+function title(s){
+  return String(s||'').toLowerCase().replace(/\b[a-z]/g, function(c){ return c.toUpperCase(); });
+}
+function fmtDate(t, hasTime){
+  if(!t) return 'Date to be confirmed';
+  var d = new Date(t);
+  var o = {weekday:'short', day:'numeric', month:'short'};
+  if(new Date().getFullYear() !== d.getFullYear()) o.year = 'numeric';
+  var s = d.toLocaleDateString(undefined, o);
+  if(hasTime) s += ' · ' + d.toLocaleTimeString(undefined, {hour:'2-digit', minute:'2-digit'});
+  return s;
+}
+function fmtTime(t){
+  return new Date(t).toLocaleString(undefined,
+    {weekday:'short', day:'numeric', month:'short', hour:'2-digit', minute:'2-digit'});
+}
+function ago(t){
+  if(!t) return '';
+  var s = Math.max(0, (Date.now() - t) / 1000);
+  if(s < 3600) return Math.round(s/60) + 'm ago';
+  if(s < 86400) return Math.round(s/3600) + 'h ago';
+  if(s < 604800) return Math.round(s/86400) + 'd ago';
+  return new Date(t).toLocaleDateString(undefined, {day:'numeric', month:'short'});
+}
+function countdown(t, hasTime){
+  var ms = t - Date.now();
+  /* A date-only event stays "today" for the whole day rather than
+     flipping to "under way" at midnight. */
+  if(ms <= 0) return (!hasTime && ms > -86400000) ? 'Race day' : 'Under way';
+  var d = Math.floor(ms/86400000), h = Math.floor(ms/3600000)%24,
+      m = Math.floor(ms/60000)%60, s = Math.floor(ms/1000)%60;
+  function p(n){ return n < 10 ? '0'+n : ''+n; }
+  if(!hasTime) return d > 0 ? (d + (d === 1 ? ' day' : ' days')) : 'Today';
+  return (d > 0 ? d + 'd ' : '') + p(h) + ':' + p(m) + ':' + p(s);
+}
+function accent(ch){ return ch && ch.accentHex ? '#' + ch.accentHex : 'var(--accent)'; }
+function channel(id){
+  for(var i = 0; i < S.channels.length; i++) if(S.channels[i].id === id) return S.channels[i];
+  return null;
+}
+
+/* ============================================================
+   Derived
+   ============================================================ */
+function nextIn(chid){
+  var rows = S.sched[chid] || [], best = null;
+  rows.forEach(function(r){
+    if(ahead(r) && (!best || r.start < best.start)) best = r;
+  });
+  return best;
+}
+function nextSession(r){
+  if(!r || !r.sessions) return null;
+  var now = Date.now(), best = null;
+  r.sessions.forEach(function(s){ if(s.date >= now && !best) best = s; });
+  return best;
+}
+function followed(){
+  return S.channels.filter(function(c){ return S.follow.indexOf(c.id) >= 0; });
+}
+function isFollowed(id){ return S.follow.indexOf(id) >= 0; }
+
+/* ============================================================
+   Views
+   ============================================================ */
+function ctaCard(line){
+  if(!APPSTORE_URL) return '';
+  return '<div class="card"><a class="cta" href="' + esc(APPSTORE_URL) +
+    '" target="_blank" rel="noopener">' +
+    '<div class="mark">🏁</div><div class="grow" style="flex:1;min-width:0">' +
+    '<div class="t">Get E-Grid on the App Store</div><div class="s">' +
+    esc(line || 'Race reminders, a home-screen widget and every series in one app.') +
+    '</div></div><div class="go">Get ›</div></a></div>';
+}
+
+function offlineNotice(){
+  if(online()) return '';
+  return '<div class="notice"><b>Offline.</b> Network access for MyLLMos apps is off, ' +
+    'so this is the last saved season. Turn it on in Settings → MyLLMos Apps to pull ' +
+    'live schedules, standings and news.</div>';
+}
+
+function cdSpan(t, hasTime, cls){
+  return '<div class="' + (cls || 'cd') + '" data-cd="' + t + '" data-ht="' + (hasTime ? 1 : 0) +
+    '">' + esc(countdown(t, hasTime)) + '</div>';
+}
+
+function heroHTML(r, ch, eyebrow){
+  var c = circuitFor(r), img = photoURL(c) || heroFor(ch ? ch.id : 'home');
+  var sess = nextSession(r);
+  var line = sess && sess.name !== 'Race'
+    ? sess.name + ' · ' + fmtTime(sess.date)
+    : fmtDate(r.start, r.hasTime);
+  return '<button class="hero" style="' + wash(ch) + '" data-act="race" data-ch="' +
+    esc(r.channelID) + '" data-id="' + esc(r.id) + '">' +
+    '<img src="' + esc(img) + '" alt="" loading="lazy" decoding="async"' + FALLBACK_IMG + '>' +
+    '<div class="veil"></div><div class="body">' +
+    '<div class="eyebrow" style="color:' + accent(ch) + '">' + esc(eyebrow || 'Next race') +
+    ' <span>›</span></div>' +
+    '<div class="title">' + esc(r.name) + '</div>' +
+    '<div class="sub">' + esc(line) + '</div>' +
+    (r.start ? cdSpan(sess ? sess.date : r.start, sess ? true : r.hasTime) : '') +
+    '</div></button>';
+}
+
+function raceRow(r, ch, showSeries){
+  var when = fmtDate(r.start, r.hasTime);
+  var past = r.start && !ahead(r);
+  return '<div class="row" data-act="race" data-ch="' + esc(r.channelID) + '" data-id="' +
+    esc(r.id) + '"' + (past ? ' style="opacity:.55"' : '') + '>' +
+    '<div class="pill" style="background:' + accent(ch) + '">' +
+    esc(showSeries ? shortName(ch) : 'R' + (r.round || '–')) + '</div>' +
+    '<div class="grow"><div class="name">' + esc(r.name) + '</div>' +
+    '<div class="meta">' + esc(r.circuit || r.locality || (ch ? ch.name : '')) + '</div></div>' +
+    '<div class="right">' + esc(when) + '</div><div class="chev">›</div></div>';
+}
+
+function shortName(ch){
+  if(!ch) return '—';
+  var map = {f1:'F1', f2:'F2', f3:'F3', wrc:'WRC', wec:'WEC', imsa:'IMSA', nhra:'NHRA',
+             motogp:'MGP', formulae:'FE', nascar:'CUP', indycar:'INDY',
+             porschecup:'PSC', cliocup:'CLIO'};
+  return map[ch.id] || ch.id.slice(0,4).toUpperCase();
+}
+
+/* ---------- Home ---------- */
+function viewHome(){
+  var h = '<div class="wrap">' + offlineNotice();
+  var mine = followed();
+  var upcoming = [];
+  S.channels.forEach(function(c){
+    var n = nextIn(c.id);
+    if(n) upcoming.push({r:n, ch:c});
+  });
+  upcoming.sort(function(a,b){ return a.r.start - b.r.start; });
+
+  var lead = null;
+  for(var i = 0; i < upcoming.length; i++){
+    if(isFollowed(upcoming[i].ch.id)){ lead = upcoming[i]; break; }
+  }
+  if(!lead) lead = upcoming[0];
+
+  if(lead){
+    h += heroHTML(lead.r, lead.ch, 'Next race · ' + lead.ch.name);
+  }else{
+    h += '<div class="card"><div class="empty">No dates loaded yet.' +
+      (online() ? ' Pull the refresh button above.' : '') + '</div></div>';
+  }
+
+  if(mine.length){
+    h += '<h2 class="sec">Your series</h2><div class="grid">';
+    mine.forEach(function(c){ h += tileHTML(c); });
+    h += '</div>';
+  }
+
+  var rest = upcoming.filter(function(u){ return !lead || u.ch.id !== lead.ch.id; }).slice(0, 8);
+  if(rest.length){
+    h += '<h2 class="sec">Coming up</h2><div class="card">';
+    rest.forEach(function(u){ h += raceRow(u.r, u.ch, true); });
+    h += '</div>';
+  }
+
+  h += ctaCard();
+  h += '<div class="empty" style="font-size:.76rem;padding-top:4px">E-Grid is not affiliated ' +
+       'with, endorsed by or connected to any championship, team or governing body named here.</div>';
+  return h + '</div>';
+}
+
+function tileHTML(c){
+  var n = nextIn(c.id);
+  return '<button class="tile" style="' + wash(c) + '" data-act="channel" data-ch="' +
+    esc(c.id) + '">' +
+    '<img src="' + esc(heroFor(c.id)) + '" alt="" loading="lazy" decoding="async"' +
+    FALLBACK_IMG + '>' +
+    '<div class="veil"></div><div class="bar" style="background:' + accent(c) + '"></div>' +
+    (isFollowed(c.id) ? '<div class="star">★</div>' : '') +
+    '<div class="body"><div class="nm">' + esc(c.name) + '</div>' +
+    '<div class="nx">' + esc(n ? fmtDate(n.start, false) + ' · ' + n.name : (c.tagline || '')) +
+    '</div></div></button>';
+}
+
+/* ---------- Series ---------- */
+function viewSeries(){
+  var h = '<div class="wrap">' + offlineNotice() +
+    '<div class="notice">Tap ★ on a series to follow it — followed series lead your ' +
+    'Home screen and News.</div><div class="grid">';
+  S.channels.forEach(function(c){ h += tileHTML(c); });
+  return h + '</div>' + ctaCard() + '</div>';
+}
+
+/* ---------- one series ---------- */
+function viewChannel(){
+  var c = channel(S.channel);
+  if(!c) return '<div class="wrap"><div class="empty">Series not found.</div></div>';
+  var segs = ['calendar'];
+  if(STAND[c.id]) segs.push('standings');
+  if((c.feeds || []).length) segs.push('news');
+  if(machinesFor(c.id).length || specsFor(c.id).length) segs.push('machines');
+  if(broadcastFor(c.id)) segs.push('watch');
+  if((c.regulationLinks || []).length) segs.push('rules');
+  if(segs.indexOf(S.seg) < 0) S.seg = segs[0];
+
+  var labels = {calendar:'Calendar', standings:'Standings', news:'News',
+                machines:'Machines', watch:'Watch', rules:'Rules'};
+
+  var h = '<div class="wrap">' +
+    '<div class="hero" style="cursor:default;' + wash(c) + '">' +
+    '<img src="' + esc(heroFor(c.id)) + '" alt="" decoding="async"' + FALLBACK_IMG + '>' +
+    '<div class="veil"></div><div class="body">' +
+    '<div class="eyebrow" style="color:' + accent(c) + '">Series</div>' +
+    '<div class="title">' + esc(c.name) + '</div>' +
+    '<div class="sub">' + esc(c.tagline || '') + '</div></div></div>' +
+    '<button class="btn" data-act="follow" data-ch="' + esc(c.id) + '" style="margin-bottom:14px' +
+    (isFollowed(c.id) ? '' : ';background:' + accent(c) + ';color:#fff') + '">' +
+    (isFollowed(c.id) ? '★ Following' : '☆ Follow this series') + '</button>' +
+    '<div class="segs">';
+  segs.forEach(function(s){
+    h += '<button class="seg" data-act="seg" data-seg="' + s + '" aria-selected="' +
+      (S.seg === s) + '">' + labels[s] + '</button>';
+  });
+  h += '</div><div id="segbody">' + segBody(c) + '</div>' + ctaCard() + '</div>';
+  return h;
+}
+
+function segBody(c){
+  if(S.seg === 'calendar') return calendarHTML(c);
+  if(S.seg === 'standings') return standingsHTML(c);
+  if(S.seg === 'news') return newsHTML(S.news[c.id] || [], c);
+  if(S.seg === 'machines') return machinesHTML(c);
+  if(S.seg === 'watch') return watchHTML(c);
+  if(S.seg === 'rules') return rulesHTML(c);
+  return '';
+}
+
+function calendarHTML(c){
+  var rows = S.sched[c.id] || [];
+  if(!rows.length){
+    return '<div class="card"><div class="empty">' +
+      (LIVE[c.id] || (c.calendar || []).length
+        ? 'No dates loaded yet.'
+        : 'This series doesn\'t publish a calendar we can read. Its news feed is live.') +
+      '</div></div>';
+  }
+  var next = nextIn(c.id);
+  var h = '';
+  if(next) h += heroHTML(next, c, 'Next round');
+  h += '<div class="card">';
+  rows.slice().sort(function(a,b){
+    return (a.start || 8e15) - (b.start || 8e15);
+  }).forEach(function(r){ h += raceRow(r, c, false); });
+  return h + '</div>';
+}
+
+function standingsHTML(c){
+  var g = S.stand[c.id];
+  if(!g) return '<div class="card"><div class="empty">' +
+    (online() ? 'Loading standings…' : 'Standings need network access.') + '</div></div>';
+  var h = '';
+  g.forEach(function(group){
+    h += '<h2 class="sec">' + esc(group.title) + '</h2><div class="card">';
+    if(!group.rows.length) h += '<div class="empty">Nothing published yet.</div>';
+    group.rows.forEach(function(r){
+      var bio = driverFor(r.name, c.id) || teamFor(r.name, c.id);
+      h += '<div class="row"' + (bio ? ' data-act="bio" data-name="' + esc(r.name) +
+        '" data-ch="' + esc(c.id) + '"' : ' style="cursor:default"') + '>' +
+        '<div class="tno p' + r.position + '">' + esc(r.position) + '</div>' +
+        '<div class="grow"><div class="name">' + esc(r.name) + '</div>' +
+        '<div class="meta">' + esc(r.detail) +
+        (r.wins ? ' · ' + r.wins + (r.wins === 1 ? ' win' : ' wins') : '') + '</div></div>' +
+        '<div class="right"><b>' + esc(fmtPoints(r.points)) + '</b>pts</div>' +
+        (bio ? '<div class="chev">›</div>' : '') + '</div>';
+    });
+    h += '</div>';
+  });
+  return h;
+}
+function fmtPoints(p){
+  if(p == null) return '–';
+  return (Math.round(p * 100) / 100).toString();
+}
+
+function newsHTML(items, c){
+  if(!items.length){
+    return '<div class="card"><div class="empty">' +
+      (online() ? 'Fetching headlines…' : 'Headlines need network access.') + '</div></div>';
+  }
+  var h = '<div class="card">';
+  items.forEach(function(n){
+    h += '<a class="news" href="' + esc(n.link) + '" target="_blank" rel="noopener" ' +
+      'style="text-decoration:none;color:inherit">' +
+      (n.image ? '<img src="' + esc(n.image) + '" alt="" loading="lazy" decoding="async" ' +
+        'onerror="this.style.display=\'none\'">' : '') +
+      '<div class="grow" style="flex:1;min-width:0"><div class="t">' + esc(n.title) + '</div>' +
+      '<div class="s">' + esc(n.source || '') + (n.date ? ' · ' + esc(ago(n.date)) : '') +
+      (c ? '' : '') + '</div></div></a>';
+  });
+  return h + '</div>';
+}
+
+function machinesFor(id){
+  return S.teams.filter(function(t){ return (t.channelIDs || []).indexOf(id) >= 0; });
+}
+function specsFor(id){
+  return S.specs.filter(function(s){ return s.channelID === id; });
+}
+function machinesHTML(c){
+  var h = '', specs = specsFor(c.id), teams = machinesFor(c.id);
+  specs.forEach(function(sp){
+    h += '<h2 class="sec">' + esc(sp.title) + (sp.season ? ' · ' + esc(sp.season) : '') +
+      '</h2><div class="card">';
+    (sp.entries || []).forEach(function(e){
+      h += '<div class="row" style="cursor:default"><div class="grow">' +
+        '<div class="name" style="font-weight:600">' + esc(e.label) + '</div></div>' +
+        '<div class="right"><b>' + esc(e.value) + '</b></div></div>';
+    });
+    h += '</div>';
+  });
+  if(teams.length){
+    h += '<h2 class="sec">Teams</h2><div class="card">';
+    teams.forEach(function(t){
+      h += '<div class="row" data-act="team" data-id="' + esc(t.id) + '">' +
+        '<div class="grow"><div class="name">' + esc(t.name) + '</div>' +
+        '<div class="meta">' + esc([t.base, t.chassis].filter(Boolean).join(' · ')) + '</div></div>' +
+        '<div class="chev">›</div></div>';
+    });
+    h += '</div>';
+  }
+  return h || '<div class="card"><div class="empty">Nothing published for this series yet.</div></div>';
+}
+
+function broadcastFor(id){
+  for(var i = 0; i < S.broadcasts.length; i++) if(S.broadcasts[i].channelID === id) return S.broadcasts[i];
+  return null;
+}
+function watchHTML(c){
+  var g = broadcastFor(c.id);
+  if(!g) return '<div class="card"><div class="empty">No broadcast guide yet.</div></div>';
+  var home = '';
+  try{ home = (navigator.language || '').split('-')[1] || ''; }catch(e){}
+  var regions = (g.regions || []).slice().sort(function(a, b){
+    return (b.code === home ? 1 : 0) - (a.code === home ? 1 : 0);
+  });
+  var h = '';
+  regions.forEach(function(r){
+    h += '<h2 class="sec">' + esc(r.country) + '</h2><div class="card">';
+    (r.entries || []).forEach(function(e){
+      h += '<div class="row" style="cursor:default"><div class="grow">' +
+        '<div class="name">' + esc(e.name) + '</div>' +
+        '<div class="meta">' + esc(e.note || '') + '</div></div>' +
+        '<div class="right">' + esc(e.kind || '') + '</div></div>';
+    });
+    h += '</div>';
+  });
+  return h + '<div class="empty" style="font-size:.76rem;padding-top:0">Rights change ' +
+    'between seasons — check your provider before a session.</div>';
+}
+
+function rulesHTML(c){
+  var h = '<div class="card">';
+  (c.regulationLinks || []).forEach(function(l){
+    h += '<a class="row" href="' + esc(l.url) + '" target="_blank" rel="noopener" ' +
+      'style="text-decoration:none;color:inherit"><div class="grow">' +
+      '<div class="name">' + esc(l.title) + '</div>' +
+      '<div class="meta">Opens in Safari</div></div><div class="chev">›</div></a>';
+  });
+  return h + '</div>';
+}
+
+/* ---------- Tracks ---------- */
+function trackListHTML(){
+  var q = norm(S.query);
+  var list = S.circuits.filter(function(c){
+    if(!q) return true;
+    return norm(c.name + ' ' + c.location + ' ' + c.country).indexOf(q) >= 0;
+  });
+  if(!S.circuits.length){
+    return '<div class="card"><div class="empty">' +
+      (online() ? 'Loading track guides…' : 'Track guides need one online launch first.') +
+      '</div></div>';
+  }
+  if(!list.length){
+    return '<div class="card"><div class="empty">No circuit matches “' + esc(S.query) +
+      '”.</div></div>';
+  }
+  var h = '<div class="card">';
+  list.forEach(function(c){
+    var img = photoURL(c);
+    h += '<div class="row track" data-act="circuit" data-id="' + esc(c.id) + '">' +
+      (img ? '<img src="' + esc(img) + '" alt="" loading="lazy" decoding="async">' : '') +
+      '<div class="grow"><div class="name">' + esc(c.name) + '</div>' +
+      '<div class="meta">' + esc(c.location || c.country || '') + '</div></div>' +
+      '<div class="right">' + (c.lengthKm ? esc(c.lengthKm.toFixed(3)) + ' km' : '') +
+      '</div><div class="chev">›</div></div>';
+  });
+  return h + '</div>';
+}
+function viewTracks(){
+  return '<div class="wrap">' +
+    '<input id="tsearch" type="search" placeholder="Search ' +
+    (S.circuits.length || '') + ' circuits" value="' + esc(S.query) +
+    '" autocomplete="off" autocorrect="off" enterkeyhint="search">' +
+    '<div id="tracklist">' + trackListHTML() + '</div></div>';
+}
+
+/* ---------- News tab ---------- */
+function viewNews(){
+  var mine = followed();
+  var all = [];
+  mine.forEach(function(c){
+    (S.news[c.id] || []).forEach(function(n){
+      all.push({n:n, ch:c});
+    });
+  });
+  all.sort(function(a, b){ return (b.n.date || 0) - (a.n.date || 0); });
+  var h = '<div class="wrap">' + offlineNotice();
+  if(!mine.length){
+    return h + '<div class="card"><div class="empty">Follow a series to build your news ' +
+      'feed.</div></div><button class="btn fill" data-act="tab" data-tab="series">' +
+      'Browse series</button></div>';
+  }
+  if(!all.length){
+    return h + '<div class="card"><div class="empty">' +
+      (online() ? 'Fetching headlines…' : 'Headlines need network access.') +
+      '</div></div></div>';
+  }
+  h += '<div class="card">';
+  all.slice(0, 60).forEach(function(x){
+    h += '<a class="news" href="' + esc(x.n.link) + '" target="_blank" rel="noopener" ' +
+      'style="text-decoration:none;color:inherit">' +
+      (x.n.image ? '<img src="' + esc(x.n.image) + '" alt="" loading="lazy" decoding="async" ' +
+        'onerror="this.style.display=\'none\'">' : '') +
+      '<div class="grow" style="flex:1;min-width:0"><div class="t">' + esc(x.n.title) + '</div>' +
+      '<div class="s" style="color:' + accent(x.ch) + '">' + esc(shortName(x.ch)) +
+      '<span style="color:var(--muted)"> · ' + esc(x.n.source || '') +
+      (x.n.date ? ' · ' + esc(ago(x.n.date)) : '') + '</span></div></div></a>';
+  });
+  return h + '</div>' + ctaCard() + '</div>';
+}
+
+/* ============================================================
+   Sheets
+   ============================================================ */
+function openSheet(title, html){
+  document.getElementById('sheettitle').textContent = title;
+  document.getElementById('sheetbody').innerHTML = html;
+  document.getElementById('sheetbody').scrollTop = 0;
+  var s = document.getElementById('sheet');
+  s.classList.add('open');
+  s.setAttribute('aria-hidden', 'false');
+  haptic('light');
+}
+function closeSheet(){
+  var s = document.getElementById('sheet');
+  s.classList.remove('open');
+  s.setAttribute('aria-hidden', 'true');
+}
+
+function raceSheet(chid, id){
+  var rows = S.sched[chid] || [], r = null;
+  rows.forEach(function(x){ if(x.id === id) r = x; });
+  if(!r) return;
+  var ch = channel(chid), c = circuitFor(r), img = photoURL(c) || heroFor(chid);
+  var h = '<div class="card" style="margin:-14px -16px 14px;border-radius:0;border-left:0;' +
+    'border-right:0;border-top:0;' + wash(ch) + '">' +
+    '<img class="shot" src="' + esc(img) + '" alt="" decoding="async"' + FALLBACK_IMG + '></div>';
+
+  h += '<div class="card"><div class="pad">' +
+    '<div style="font-size:.7rem;font-weight:850;letter-spacing:.1em;text-transform:uppercase;' +
+    'color:' + accent(ch) + '">' + esc(ch ? ch.name : '') +
+    (r.round ? ' · Round ' + r.round : '') + '</div>' +
+    '<div style="font-size:1.25rem;font-weight:800;letter-spacing:-.025em;margin:2px 0 2px">' +
+    esc(r.name) + '</div>' +
+    '<div style="color:var(--muted);font-weight:600;font-size:.9rem">' +
+    esc([r.circuit, r.locality !== r.circuit ? r.locality : '', r.country]
+        .filter(Boolean).join(' · ')) + '</div>' +
+    (r.start ? '<div style="margin-top:9px;font-weight:700">' + esc(fmtDate(r.start, r.hasTime)) +
+      '</div>' + cdSpan(r.start, r.hasTime) : '') +
+    '</div></div>';
+
+  if(r.sessions && r.sessions.length){
+    h += '<h2 class="sec">Weekend schedule <span style="text-transform:none;letter-spacing:0;' +
+      'font-weight:600">· your local time</span></h2><div class="card">';
+    r.sessions.forEach(function(s){
+      var done = s.date < Date.now();
+      h += '<div class="row" style="cursor:default' + (done ? ';opacity:.5' : '') + '">' +
+        '<div class="grow"><div class="name">' + esc(s.name) + '</div></div>' +
+        '<div class="right"><b>' + esc(fmtTime(s.date)) + '</b></div></div>';
+    });
+    h += '</div>';
+    if(APPSTORE_URL){
+      h += '<div class="notice">Session reminders are a notification, which a MyLLMos app ' +
+        'can\'t post — the E-Grid app on the App Store can.</div>';
+    }
+  }
+
+  if(c){
+    h += '<h2 class="sec">The circuit</h2>' + circuitCardHTML(c, true);
+  }
+  h += ctaCard();
+  openSheet(r.name, h);
+}
+
+function circuitCardHTML(c, compact){
+  var h = '<div class="card">';
+  if(!compact && photoURL(c)){
+    h += '<img class="shot" src="' + esc(photoURL(c)) + '" alt="" decoding="async"' +
+      FALLBACK_IMG + '>';
+  }
+  h += '<div class="stats">';
+  if(c.lengthKm) h += '<div><span>Length</span><b>' + c.lengthKm.toFixed(3) + ' km</b></div>';
+  if(c.corners)  h += '<div><span>Corners</span><b>' + c.corners + '</b></div>';
+  if(c.firstHeld) h += '<div><span>Since</span><b>' + c.firstHeld + '</b></div>';
+  h += '</div>';
+  if(c.lapRecord && c.lapRecord.time){
+    h += '<div class="row" style="cursor:default"><div class="grow">' +
+      '<div class="name">Lap record</div><div class="meta">' +
+      esc([c.lapRecord.holder, c.lapRecord.series, c.lapRecord.year].filter(Boolean).join(' · ')) +
+      '</div></div><div class="right"><b>' + esc(c.lapRecord.time) + '</b></div></div>';
+  }
+  if(c.overview){
+    h += '<div class="pad prose"><p>' + esc(c.overview) + '</p></div>';
+  }
+  if(c.facts && c.facts.length){
+    h += '<div class="pad" style="padding-top:0"><ul class="facts">';
+    c.facts.forEach(function(f){ h += '<li>' + esc(f) + '</li>'; });
+    h += '</ul></div>';
+  }
+  if(c.image && c.image.credit){
+    h += '<div class="credit" style="padding-bottom:12px">Photo: ' + esc(c.image.credit) +
+      (c.image.licence ? ' · ' + (c.image.licenceURL
+        ? '<a href="' + esc(c.image.licenceURL) + '" target="_blank" rel="noopener">' +
+          esc(c.image.licence) + '</a>'
+        : esc(c.image.licence)) : '') +
+      (c.image.sourceURL ? ' · <a href="' + esc(c.image.sourceURL) +
+        '" target="_blank" rel="noopener">source</a>' : '') + '</div>';
+  }
+  return h + '</div>';
+}
+
+function circuitSheet(id){
+  var c = null;
+  S.circuits.forEach(function(x){ if(x.id === id) c = x; });
+  if(!c) return;
+  var h = '';
+  if(photoURL(c)){
+    h += '<div style="margin:-14px -16px 14px"><img class="shot" src="' + esc(photoURL(c)) +
+      '" alt="" decoding="async"' + FALLBACK_IMG + '></div>';
+  }
+  h += '<div style="font-size:1.25rem;font-weight:800;letter-spacing:-.025em">' + esc(c.name) +
+    '</div><div style="color:var(--muted);font-weight:600;margin-bottom:12px">' +
+    esc(c.location || c.country || '') + '</div>';
+  h += circuitCardHTML(c, true);
+  openSheet(c.name, h);
+}
+
+function bioSheet(name, chid){
+  var d = driverFor(name, chid), t = !d ? teamFor(name, chid) : null;
+  var e = d || t;
+  if(!e) return;
+  var h = '<div style="font-size:1.3rem;font-weight:800;letter-spacing:-.03em">' + esc(e.name) +
+    '</div>';
+  var line = d
+    ? [d.nationality, d.born ? 'born ' + d.born : ''].filter(Boolean).join(' · ')
+    : [t.country, t.firstSeason ? 'since ' + t.firstSeason : ''].filter(Boolean).join(' · ');
+  if(line) h += '<div style="color:var(--muted);font-weight:600;margin-bottom:12px">' +
+    esc(line) + '</div>';
+
+  h += '<div class="card"><div class="stats">';
+  if(d){
+    if(d.birthplace) h += '<div><span>From</span><b style="font-size:.9rem">' +
+      esc(d.birthplace) + '</b></div>';
+    if(d.debut) h += '<div><span>Debut</span><b style="font-size:.9rem">' + esc(d.debut) +
+      '</b></div>';
+  }else{
+    if(t.base) h += '<div><span>Base</span><b style="font-size:.9rem">' + esc(t.base) + '</b></div>';
+    if(t.chassis) h += '<div><span>Chassis</span><b style="font-size:.9rem">' + esc(t.chassis) +
+      '</b></div>';
+    if(t.powerUnit) h += '<div><span>Power unit</span><b style="font-size:.9rem">' +
+      esc(t.powerUnit) + '</b></div>';
+  }
+  h += '</div>';
+  var body = d ? d.bio : t.notes;
+  if(body) h += '<div class="pad prose"><p>' + esc(body) + '</p></div>';
+  var facts = (d ? d.highlights : t.facts) || [];
+  if(facts.length){
+    h += '<div class="pad" style="padding-top:0"><ul class="facts">';
+    facts.forEach(function(f){ h += '<li>' + esc(f) + '</li>'; });
+    h += '</ul></div>';
+  }
+  h += '</div>' + ctaCard();
+  openSheet(e.name, h);
+}
+
+function teamSheet(id){
+  var t = null;
+  S.teams.forEach(function(x){ if(x.id === id) t = x; });
+  if(t) bioSheet(t.name, (t.channelIDs || [])[0]);
+}
+
+/* ============================================================
+   Render + routing
+   ============================================================ */
+function render(){
+  var v = document.getElementById('view');
+  var html;
+  if(S.tab === 'home') html = viewHome();
+  else if(S.tab === 'series') html = S.channel ? viewChannel() : viewSeries();
+  else if(S.tab === 'tracks') html = viewTracks();
+  else html = viewNews();
+  v.innerHTML = html;
+  var tabs = document.querySelectorAll('#tabs button');
+  for(var i = 0; i < tabs.length; i++){
+    tabs[i].setAttribute('aria-selected', tabs[i].getAttribute('data-tab') === S.tab);
+  }
+  var inChannel = !!(S.channel && S.tab === 'series');
+  var c = inChannel ? channel(S.channel) : null;
+  document.querySelector('#bar h1').innerHTML = c ? esc(c.name) : 'E<em>-</em>Grid';
+  document.getElementById('back').hidden = !inChannel;
+  tick();
+}
+
+/* Re-renders only the active segment, so switching tabs inside a series
+   doesn't scroll the page back to the top. */
+function renderSeg(){
+  var c = channel(S.channel);
+  if(!c) return;
+  var b = document.getElementById('segbody');
+  if(b) b.innerHTML = segBody(c);
+  var segs = document.querySelectorAll('.seg');
+  for(var i = 0; i < segs.length; i++){
+    segs[i].setAttribute('aria-selected', segs[i].getAttribute('data-seg') === S.seg);
+  }
+  tick();
+}
+
+function tick(){
+  var nodes = document.querySelectorAll('[data-cd]');
+  for(var i = 0; i < nodes.length; i++){
+    var t = parseInt(nodes[i].getAttribute('data-cd'), 10);
+    var ht = nodes[i].getAttribute('data-ht') === '1';
+    var s = countdown(t, ht);
+    if(nodes[i].textContent !== s) nodes[i].textContent = s;
+    nodes[i].className = nodes[i].className.replace(/\s*live/, '') + (s === 'Under way' ? ' live' : '');
+  }
+}
+setInterval(tick, 1000);
+
+/* ---------- lazy loading per view ---------- */
+function ensureFor(tab){
+  if(tab === 'home' || tab === 'series' && !S.channel){
+    S.channels.forEach(function(c){
+      if(!S.sched[c.id]) schedule(c).then(function(){ if(S.tab === tab) render(); });
+    });
+  }
+  if(tab === 'series' && S.channel){
+    var c = channel(S.channel);
+    if(!c) return;
+    if(!S.sched[c.id]) schedule(c).then(function(){ if(S.channel === c.id) renderSeg(); });
+    if(S.seg === 'standings' && !S.stand[c.id]){
+      standings(c).then(function(){ if(S.channel === c.id && S.seg === 'standings') renderSeg(); });
+    }
+    if(S.seg === 'news' && !S.news[c.id]){
+      news(c).then(function(){ if(S.channel === c.id && S.seg === 'news') renderSeg(); });
+    }
+  }
+  if(tab === 'news'){
+    followed().forEach(function(c){
+      if(!S.news[c.id]) news(c).then(function(){ if(S.tab === 'news') render(); });
+    });
+  }
+}
+
+function go(tab){
+  if(S.tab === tab && tab === 'series' && S.channel){ S.channel = null; }
+  S.tab = tab;
+  if(tab !== 'series') S.channel = null;
+  render();
+  ensureFor(tab);
+  document.getElementById('view').scrollTop = 0;
+}
+
+/* ---------- events ---------- */
+document.addEventListener('click', function(ev){
+  var el = ev.target.closest ? ev.target.closest('[data-act]') : null;
+  if(!el) return;
+  var act = el.getAttribute('data-act');
+
+  if(act === 'tab'){ haptic('selection'); go(el.getAttribute('data-tab')); return; }
+
+  if(act === 'back'){
+    haptic('light');
+    S.channel = null;
+    render();
+    document.getElementById('view').scrollTop = 0;
+    return;
+  }
+
+  if(act === 'channel'){
+    haptic('light');
+    S.tab = 'series'; S.channel = el.getAttribute('data-ch'); S.seg = 'calendar';
+    render(); ensureFor('series');
+    document.getElementById('view').scrollTop = 0;
+    return;
+  }
+  if(act === 'seg'){
+    haptic('selection');
+    S.seg = el.getAttribute('data-seg');
+    renderSeg(); ensureFor('series');
+    return;
+  }
+  if(act === 'follow'){
+    var id = el.getAttribute('data-ch'), i = S.follow.indexOf(id);
+    if(i >= 0) S.follow.splice(i, 1); else S.follow.push(id);
+    save('follow', S.follow);
+    haptic(i >= 0 ? 'light' : 'success');
+    render(); ensureFor(S.tab);
+    return;
+  }
+  if(act === 'race'){ raceSheet(el.getAttribute('data-ch'), el.getAttribute('data-id')); return; }
+  if(act === 'circuit'){ circuitSheet(el.getAttribute('data-id')); return; }
+  if(act === 'bio'){ bioSheet(el.getAttribute('data-name'), el.getAttribute('data-ch')); return; }
+  if(act === 'team'){ teamSheet(el.getAttribute('data-id')); return; }
+  if(act === 'close'){ closeSheet(); return; }
+  if(act === 'refresh'){ refreshAll(); return; }
+});
+
+/* Only the list is rebuilt — re-rendering the view would drop the keyboard. */
+document.addEventListener('input', function(ev){
+  if(ev.target && ev.target.id === 'tsearch'){
+    S.query = ev.target.value;
+    var list = document.getElementById('tracklist');
+    if(list) list.innerHTML = trackListHTML();
+  }
+});
+
+/* ---------- refresh ---------- */
+var refreshing = false;
+function refreshAll(){
+  if(refreshing) return;
+  if(!online()){ haptic('warning'); render(); return; }
+  refreshing = true;
+  haptic('light');
+  var btn = document.getElementById('refresh');
+  btn.classList.add('spin');
+  mgpSeason = null; feChamp = null;
+  loadContent().catch(function(){}).then(function(){
+    return Promise.all(S.channels.map(function(c){ return schedule(c, true); }));
+  }).then(function(){
+    var jobs = [];
+    Object.keys(S.stand).forEach(function(id){
+      var c = channel(id); if(c) jobs.push(standings(c, true));
+    });
+    followed().forEach(function(c){ jobs.push(news(c, true)); });
+    return Promise.all(jobs);
+  }).catch(function(){}).then(function(){
+    refreshing = false;
+    btn.classList.remove('spin');
+    render();
+    haptic('success');
+  });
+}
+
+/* ---------- boot ---------- */
+function hydrate(){
+  return Promise.all([read('content'), read('follow'), read('sched'),
+                      read('stand'), read('news')]).then(function(r){
+    if(r[0]) applyContent(r[0]);
+    if(r[1] && r[1].length) S.follow = r[1];
+    if(!S.channels.length && FALLBACK.length) S.channels = FALLBACK;
+    if(r[2]) S.sched = r[2];
+    if(r[3]) S.stand = r[3];
+    if(r[4]) S.news = r[4];
+    /* Series with a hand-maintained calendar need no network at all. */
+    S.channels.forEach(function(c){
+      if(!S.sched[c.id] || !S.sched[c.id].length){
+        var st = staticSchedule(c);
+        if(st.length) S.sched[c.id] = st;
+      }
+    });
+    /* A follow for a series that has since left the catalogue would render
+       an empty tile forever. */
+    S.follow = S.follow.filter(function(id){ return !!channel(id); });
+    if(!S.follow.length && S.channels.length) S.follow = [S.channels[0].id];
+  });
+}
+
+hydrate().then(function(){
+  S.booted = true;
+  render();
+  if(!online()) return;
+  loadContent().then(function(){
+    /* Content may add a series or fix a calendar — re-seed static schedules. */
+    S.channels.forEach(function(c){
+      if(!LIVE[c.id]){
+        var st = staticSchedule(c);
+        if(st.length) S.sched[c.id] = st;
+      }
+    });
+    render();
+  }).catch(function(){}).then(function(){
+    ensureFor(S.tab);
+    followed().forEach(function(c){
+      news(c).then(function(){ if(S.tab === 'news') render(); });
+    });
+  });
+});
+</script>
+</body>
+</html>

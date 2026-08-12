@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-04",
+  "updated": "2026-08-12",
   "categories": [
     "Students",
     "Productivity",
@@ -16,6 +16,34 @@
     "Community"
   ],
   "apps": [
+    {
+      "id": "e-grid",
+      "name": "E-Grid",
+      "emoji": "🏁",
+      "tagline": "Every race, one app",
+      "description": "A race hub for thirteen championships — Formula 1, MotoGP, WRC, Formula E, IndyCar, NASCAR, WEC, IMSA, NHRA, Formula 2, Formula 3, Porsche Supercup and Clio Cup. A live countdown to the next race, the full season calendar, the F1 weekend broken down session by session in your own time zone, drivers' and constructors' standings, and motorsport headlines from Autosport, Motorsport.com, DirtFish and The Race. Follow the series you care about and they lead your home screen. Also carries illustrated guides to 88 circuits with lengths, corner counts and lap records, driver and team profiles, the current technical regulations and a country-by-country guide to where each series is televised. Calendars and track guides work offline once loaded; live standings and headlines need app network access, which you can switch on in Settings. E-Grid is not affiliated with any championship, team or governing body.",
+      "tags": [
+        "motorsport",
+        "racing",
+        "sport",
+        "news",
+        "F1",
+        "MotoGP",
+        "offline",
+        "saves data"
+      ],
+      "iconSymbol": "flag.checkered",
+      "iconColor": "red",
+      "version": 1,
+      "featured": true,
+      "requiresAI": false,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/e-grid.jpg",
+      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@main/apps-src/e-grid.html",
+      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@main/apps-src/e-grid.myllmapp",
+      "sizeKB": 70,
+      "category": "News & Web",
+      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/icons/e-grid.jpg"
+    },
     {
       "id": "nutrition-lens",
       "name": "Nutrition Lens",
