@@ -711,6 +711,29 @@
 
         .help-item:last-child { border-bottom: none; }
 
+        /* Companion-app card. Sits inside the dark help panel, so it is a light
+           inset rather than the white card the rest of the gallery uses. The
+           icon is the real App Store artwork; the emoji underneath shows only
+           if that image can't load. */
+        .dp-cta {
+            display: flex; align-items: center; gap: 14px; margin-top: 18px;
+            padding: 14px; border-radius: 16px; text-decoration: none; color: white;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+        }
+        .dp-cta:active { background: rgba(255, 255, 255, 0.14); }
+        .dp-mark {
+            width: 52px; height: 52px; border-radius: 13px; flex: 0 0 auto;
+            position: relative; overflow: hidden; display: grid; place-items: center;
+            font-size: 1.5rem; background: linear-gradient(150deg, #ff6b6b, #7c5cff);
+        }
+        .dp-mark img { position: absolute; inset: 0; width: 100%; height: 100%;
+            object-fit: cover; display: block; }
+        .dp-body { flex: 1; min-width: 0; }
+        .dp-body strong { display: block; font-size: 15px; margin-bottom: 2px; }
+        .dp-body span { font-size: 12.5px; opacity: 0.72; line-height: 1.35; display: block; }
+        .dp-go { flex: 0 0 auto; font-size: 13px; font-weight: 700; opacity: 0.9; }
+
         .help-icon {
             width: 40px;
             height: 40px;
@@ -994,6 +1017,19 @@
                     <div class="help-icon"><svg viewBox="0 0 24 24"><path d="M12.5 8c-2.65 0-5.05.99-6.9 2.6L2 7v9h9l-3.62-3.62c1.39-1.16 3.16-1.88 5.12-1.88 3.54 0 6.55 2.31 7.6 5.5l2.37-.78C21.08 11.03 17.15 8 12.5 8z"/></svg></div>
                     <div class="help-text"><strong>Undo</strong><span>Two-finger tap or undo button</span></div>
                 </div>
+                <a class="dp-cta" href="https://apps.apple.com/us/app/drawpad/id6760317949"
+                   target="_blank" rel="noopener">
+                    <div class="dp-mark"><img
+                        src="https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/draw/appicon.jpg"
+                        alt="" loading="lazy" decoding="async"
+                        onerror="this.remove()">🎨</div>
+                    <div class="dp-body">
+                        <strong>DrawPad for iPhone &amp; iPad</strong>
+                        <span>Made for young artists — brushes, stickers,
+                        stencils and symmetry.</span>
+                    </div>
+                    <div class="dp-go">Get&nbsp;›</div>
+                </a>
                 <button class="close-help" id="closeHelp">Start Drawing</button>
             </div>
         </div>
