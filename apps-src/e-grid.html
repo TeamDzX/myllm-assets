@@ -177,9 +177,12 @@ a{color:var(--accent)}
 /* App Store funnel */
 .cta{display:flex;align-items:center;gap:12px;padding:14px 15px;text-decoration:none;
   color:var(--text)}
+/* The real app icon sits on top; the gradient and flag underneath are what
+   shows if it can't load. */
 .cta .mark{width:44px;height:44px;border-radius:11px;flex:0 0 auto;display:grid;
-  place-items:center;font-size:1.35rem;
+  place-items:center;font-size:1.35rem;position:relative;overflow:hidden;
   background:linear-gradient(150deg,#e10600,#7a0400);color:#fff}
+.cta .mark img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
 .cta .t{font-weight:750;font-size:.97rem;letter-spacing:-.01em}
 .cta .s{font-size:.8rem;color:var(--muted);font-weight:600;margin-top:1px}
 .cta .go{font-size:.82rem;font-weight:800;color:var(--accent);flex:0 0 auto}
@@ -753,7 +756,8 @@ function ctaCard(line){
   if(!APPSTORE_URL) return '';
   return '<div class="card"><a class="cta" href="' + esc(APPSTORE_URL) +
     '" target="_blank" rel="noopener">' +
-    '<div class="mark">🏁</div><div class="grow" style="flex:1;min-width:0">' +
+    '<div class="mark"><img src="' + esc(HERO + 'appicon.png') + '" alt="" loading="lazy" ' +
+    'decoding="async"' + FALLBACK_IMG + '>🏁</div><div class="grow" style="flex:1;min-width:0">' +
     '<div class="t">Get E-Grid on the App Store</div><div class="s">' +
     esc(line || 'Race reminders, a home-screen widget and every series in one app.') +
     '</div></div><div class="go">Get ›</div></a></div>';
