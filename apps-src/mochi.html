@@ -96,9 +96,21 @@
   .walker{ position:absolute; left:50%; bottom:6%; transform:translateX(-50%); width:min(46vw,210px); animation:bob 0.62s ease-in-out infinite alternate; z-index:2; }
   @keyframes bob{ from{ transform:translateX(-50%) translateY(0) rotate(-1.2deg); } to{ transform:translateX(-50%) translateY(-7px) rotate(1.2deg); } }
   .walker img{ width:100%; }
+  /* Mochi's walk is a 6x6 sprite sheet stepped by our own clock rather than an
+     animated webp, because a webp's playhead can't be read from JS — and the
+     accessories below have to know exactly which frame is showing. */
+  .walker .pet{ width:100%; aspect-ratio:1/1; background-repeat:no-repeat;
+                background-size:600% 600%; background-position:0% 0%; }
+  .walker .pet.plain{ background-size:100% 100%; background-position:0% 0%; }
   /* Walk accessories are children of .walker, so they inherit the waddle bob
-     for free — perfectly synced to the walk. Same tall/bottom-aligned overlay. */
-  .walker .wacc{ position:absolute; left:0; bottom:0; width:100%; height:auto; pointer-events:none; }
+     for free. On top of that each one rides the head track (set per frame in
+     JS), which is what stops a hat drifting off the head mid-stride. */
+  .walker .wacc{ position:absolute; left:0; bottom:0; width:100%; height:auto; pointer-events:none;
+     /* pivot = the head centre (210.7, 101.9) in sprite space, expressed in the
+        400x580 overlay: x 210.7/400, y (101.9+180)/580 */
+                 transform-origin:52.7% 48.6%; will-change:transform; }
+  /* A neck item pivots lower down — swinging a bowtie about the head reads wrong. */
+  .walker .wacc.neck{ transform-origin:52.7% 82.8%; }
   .wbubble-wrap{ position:absolute; top:8px; left:0; right:0; display:flex; justify-content:center; }
   .critters{ position:absolute; inset:0; overflow:hidden; pointer-events:none; }
   .critter{ position:absolute; left:-12%; will-change:transform; }
@@ -199,11 +211,11 @@
     <div class="walktrack" id="walktrack"></div>
     <div class="critters" id="critters"></div>
     <div class="wbubble-wrap"><div class="bubble" id="wbubble" style="position:relative; top:0;"></div></div>
-    <div class="walker">
-      <img id="walkpet" alt="">
+    <div class="walker" id="walker">
+      <div class="pet" id="walkpet" role="img" aria-label="Mochi walking"></div>
       <img class="wacc" id="wacc_head" alt="" style="display:none">
       <img class="wacc" id="wacc_eyes" alt="" style="display:none">
-      <img class="wacc" id="wacc_neck" alt="" style="display:none">
+      <img class="wacc neck" id="wacc_neck" alt="" style="display:none">
       <img class="wacc" id="wsmudge" alt="" style="display:none">
     </div>
   </div>
@@ -548,6 +560,98 @@ function talk(){
 /* ---------- walk mode ---------- */
 var walking = false, walkTimer = null, walkStart = 0, lastFind = 0, findCount = 0;
 
+/* ---------- walk rig ----------
+   Mochi's head travels ~32px across and ~20px up and down inside the 400px
+   sprite as she waddles. An accessory pinned to the walker box can't follow
+   that, which is why a hat used to drift beside her head instead of sitting on
+   it. RIG_TRACK is where the head is on each of the 33 unique frames, measured
+   from the loop itself (see build_mochi_rig.py); the accessories ride it.
+
+   Rebuild both the sheet and this table with:  python3 build_mochi_rig.py --apply */
+var RIG_PIVOT = [210.7, 101.9];        /* head centre in sprite px */
+var RIG_TRACK = [
+  [-8.5,5.0,-3.55],[-7.0,5.4,-2.94],[-3.1,6.7,-1.32],[0.7,6.7,0.29],
+  [4.2,4.3,1.76],[6.9,-1.5,2.88],[8.4,-7.2,3.54],[8.1,-10.2,3.42],
+  [6.5,-9.1,2.71],[3.9,-5.2,1.66],[1.1,-1.4,0.46],[-1.3,1.9,-0.54],
+  [-2.2,3.7,-0.92],[-0.8,4.6,-0.33],[2.5,4.1,1.04],[6.8,2.9,2.87],
+  [11.2,0.4,4.7],[14.4,-3.3,6.04],[14.9,-8.8,6.25],[11.6,-12.5,4.86],
+  [4.6,-12.8,1.95],[-4.0,-8.6,-1.67],[-11.6,-4.2,-4.88],[-16.2,-1.2,-6.81],
+  [-17.5,0.2,-7.35],[-16.3,1.7,-6.83],[-13.6,3.6,-5.72],[-9.9,5.6,-4.14],
+  [-5.4,7.0,-2.26],[-0.7,7.6,-0.3],[2.7,6.4,1.14],[4.5,4.6,1.91],
+  [5.0,3.5,2.08]
+];
+var SHEET_COLS = 6, SHEET_N = RIG_TRACK.length, WALK_FRAMES = 2 * (SHEET_N - 1), FRAME_MS = 71;
+
+/* How much of the head's motion each slot inherits. A bowtie sits on the neck,
+   which sways less than the crown does — giving it the full head track makes it
+   look flung about. */
+var SLOT_RIDE = { head:1, eyes:1, neck:0.55 };
+
+/* Per-item character. Rather than a canned wobble, each accessory reacts to how
+   the head is MOVING this frame — lag trails the horizontal swing, give softens
+   the vertical, swing adds a little life of its own. So a floppy bucket hat
+   lollops, a crown stays regal and stiff, and glasses stay clamped to the face.
+     lag   how far behind the head's sideways motion it drags (degrees per px/frame)
+     give  how much it keeps bouncing after a step lands (px per px/frame)
+     swing its own idle sway, in degrees, over one stride */
+var ACC_MOTION = {
+  beanie:        { lag:0.55, give:0.35, swing:0    },  /* snug knit */
+  bucket_hat:    { lag:1.05, give:0.60, swing:0.7  },  /* floppy brim */
+  crown:         { lag:0.20, give:0.15, swing:0    },  /* rigid, regal */
+  flower:        { lag:1.35, give:0.80, swing:1.8  },  /* springy stem */
+  bow:           { lag:0.85, give:0.50, swing:1.0  },
+  sunglasses:    { lag:0.12, give:0.08, swing:0    },  /* clamped to the face */
+  heart_glasses: { lag:0.30, give:0.18, swing:0.55 },
+  round_glasses: { lag:0.12, give:0.08, swing:0    },
+  bowtie:        { lag:0.75, give:0.45, swing:1.2  },
+  chain:         { lag:1.15, give:0.90, swing:0.6  },  /* heavy, swings late */
+  _smudge:       { lag:0,    give:0,    swing:0    }   /* painted on her face */
+};
+
+/* Played frame -> unique sheet cell. The loop is a palindrome, so the second
+   half is the first half walked backwards; only 33 frames are stored. */
+function walkCell(played){
+  var p = ((played % WALK_FRAMES) + WALK_FRAMES) % WALK_FRAMES;
+  return p < SHEET_N ? p : WALK_FRAMES - p;
+}
+/* One entry per PLAYED frame: where the head is, plus how fast it's moving
+   (which is what the per-item character reacts to). Built once. */
+var PLAY = null;
+function buildPlay(){
+  if (PLAY) return PLAY;
+  PLAY = [];
+  var i, c;
+  for (i = 0; i < WALK_FRAMES; i++){
+    c = RIG_TRACK[walkCell(i)];
+    PLAY.push({ dx:c[0], dy:c[1], lean:c[2], vx:0, vy:0 });
+  }
+  for (i = 0; i < WALK_FRAMES; i++){
+    var prev = PLAY[(i + WALK_FRAMES - 1) % WALK_FRAMES];
+    PLAY[i].vx = PLAY[i].dx - prev.dx;
+    PLAY[i].vy = PLAY[i].dy - prev.dy;
+  }
+  return PLAY;
+}
+/* The transform one accessory wears on one frame. Pure — the harness drives it
+   directly. `sc` converts sprite px to on-screen px. */
+function accTransform(played, slot, id, sc){
+  var p = buildPlay()[((played % WALK_FRAMES) + WALK_FRAMES) % WALK_FRAMES];
+  var m = ACC_MOTION[id] || { lag:0.5, give:0.3, swing:0 };
+  var ride = SLOT_RIDE[slot] == null ? 1 : SLOT_RIDE[slot];
+  var x = p.dx * ride;
+  var y = p.dy * ride + p.vy * m.give;
+  var r = p.lean * ride - p.vx * m.lag
+        + (m.swing ? Math.sin(played / WALK_FRAMES * Math.PI * 2) * m.swing : 0);
+  return "translate(" + (x * sc).toFixed(2) + "px," + (y * sc).toFixed(2) + "px) rotate(" + r.toFixed(2) + "deg)";
+}
+/* Sprite-sheet cell -> CSS background-position. With background-size 600%, the
+   step between cells is 100/(cols-1) percent, not 100/cols. */
+function cellPos(cell){
+  var rows = Math.ceil(SHEET_N / SHEET_COLS);
+  return { x: (cell % SHEET_COLS) * (100 / (SHEET_COLS - 1)),
+           y: Math.floor(cell / SHEET_COLS) * (100 / (rows - 1)) };
+}
+
 /* Meadow friends: birds up high, bugs mid-air, crawlers on the ground —
    drifting past on two depth layers. Config is pure (rng-injectable). */
 var CRITTERS = [
@@ -624,12 +728,73 @@ function startWalk(){
   track.style.animation = "none";
   void track.offsetWidth;
   track.style.animation = "";
-  el("walkpet").src = ART + "anim_walk_t.webp";   /* alpha-keyed: Mochi IS in the meadow */
   el("walkview").classList.add("show");
+  startWalkAnim();
   el("walksteps").textContent = "";
   walkTimer = setInterval(walkTick, 5000);
   startCritters();
   bubble("*waddle waddle*", 3200);
+}
+
+/* ---- walk playback ----
+   Sheet if we have it (frame-exact, so accessories can ride the head), the old
+   animated webp if we don't. The fallback isn't only for a failed download: the
+   sheet may simply not have arrived yet on a first run, and making Mochi wait
+   to go outside would be a worse trade than a few seconds of static hats. */
+var walkRAF = null, walkFrame = -1, sheetReady = false;
+/* Fetched at boot so it's warm before the first walk. If it lands while Mochi is
+   already outside, upgrade her mid-stroll — the sheet starts at the same pose,
+   so the swap isn't visible. */
+function preloadSheet(){
+  var im = new Image();
+  im.onload = function(){
+    sheetReady = true;
+    if (walking && !walkRAF) startWalkAnim();
+  };
+  im.src = ART + "walk_sheet.webp";
+}
+function startWalkAnim(){
+  var pet = el("walkpet");
+  if (sheetReady){
+    pet.classList.remove("plain");
+    pet.style.backgroundImage = "url(" + ART + "walk_sheet.webp)";
+    paintWalkFrame(0);
+    stopWalkAnim();
+    walkRAF = requestAnimationFrame(walkStep);
+  } else {
+    /* alpha-keyed: Mochi IS in the meadow, not pasted over it */
+    pet.classList.add("plain");
+    pet.style.backgroundImage = "url(" + ART + "anim_walk_t.webp)";
+    clearAccTransforms();
+  }
+}
+function stopWalkAnim(){
+  if (walkRAF){ cancelAnimationFrame(walkRAF); walkRAF = null; }
+  walkFrame = -1;
+}
+function walkStep(){
+  if (!walking){ walkRAF = null; return; }
+  paintWalkFrame(Math.floor((Date.now() - walkStart) / FRAME_MS));
+  walkRAF = requestAnimationFrame(walkStep);
+}
+/* rAF runs at 60fps for a 14fps animation, so only touch the DOM when the frame
+   actually changes — four out of five wake-ups have nothing to do. */
+function paintWalkFrame(played){
+  if (played === walkFrame) return;
+  walkFrame = played;
+  var cell = walkCell(played), pos = cellPos(cell);
+  el("walkpet").style.backgroundPosition = pos.x.toFixed(3) + "% " + pos.y.toFixed(3) + "%";
+  var sc = (el("walker").clientWidth || 210) / 400;
+  SLOT_ORDER.forEach(function(slot){
+    var img = el("wacc_" + slot);
+    if (img.style.display !== "none" && W[slot]) img.style.transform = accTransform(played, slot, W[slot], sc);
+  });
+  var sm = el("wsmudge");
+  if (sm.style.display !== "none") sm.style.transform = accTransform(played, "eyes", "_smudge", sc);
+}
+function clearAccTransforms(){
+  SLOT_ORDER.forEach(function(slot){ el("wacc_" + slot).style.transform = ""; });
+  el("wsmudge").style.transform = "";
 }
 
 function walkTick(){
@@ -663,6 +828,11 @@ function endWalk(tired){
   walking = false;
   clearInterval(walkTimer); walkTimer = null;
   stopCritters();
+  stopWalkAnim();
+  /* Drop the sheet's decoded surface — it's 2400x2400, and Mochi is indoors now.
+     The HTTP cache still has it, so the next walk starts just as fast. */
+  el("walkpet").style.backgroundImage = "";
+  clearAccTransforms();
   el("walkview").classList.remove("show");
   haptic("selection");
   render(); save();
@@ -759,8 +929,12 @@ function applyAccessories(){
     } else {
       a.style.display = "none";
       wa.style.display = "none";
+      wa.style.transform = "";
     }
   });
+  /* A change of outfit mid-stroll must not wait for the next frame tick to be
+     placed on the head — repaint the current one. */
+  if (walking && walkRAF){ var f = walkFrame; walkFrame = -1; paintWalkFrame(f < 0 ? 0 : f); }
 }
 
 function daysTogether(){ return Math.max(1, Math.ceil((Date.now() - (S ? S.born : Date.now())) / 86400000)); }
@@ -846,7 +1020,8 @@ function closeWardrobe(){ el("wardrobe").classList.remove("show"); }
 (function boot(){
   /* preload all loops so mood switches are instant */
   Object.keys(ANIM).forEach(function(k){ new Image().src = ART + ANIM[k]; });
-  new Image().src = ART + "anim_walk_t.webp";
+  new Image().src = ART + "anim_walk_t.webp";     /* fallback loop, and old installs */
+  preloadSheet();
   new Image().src = ART + "walk_bg.jpg";
   new Image().src = SMUDGE; new Image().src = SMUDGE_W;
   el("smudge").src = SMUDGE; el("wsmudge").src = SMUDGE_W;
