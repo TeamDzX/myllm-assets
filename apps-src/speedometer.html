@@ -20,12 +20,18 @@ h1{font-size:17px;font-weight:800;letter-spacing:.04em}
 .gpsdot.ok{background:var(--ok);box-shadow:0 0 8px rgba(95,208,138,.7)}
 .gpsdot.mid{background:var(--warn)}
 .gpsdot.bad{background:var(--bad)}
+/* the app is never silently doing nothing: while it's hunting for a fix the dot
+   breathes, so "connecting" never looks like "broken" */
+.gpsdot.search{background:var(--warn);animation:breathe 1.2s ease-in-out infinite}
+@keyframes breathe{0%,100%{opacity:.22;transform:scale(.75)}50%{opacity:1;transform:scale(1.3)}}
 .gpstxt{font-size:11px;color:var(--mut);font-weight:700}
 #gaugeWrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:0;padding:0 12px}
 canvas{max-width:100%}
 .readout{text-align:center;margin-top:-14dvh}
 .speed{font-size:min(19dvw,86px);font-weight:900;font-variant-numeric:tabular-nums;line-height:1;
-  text-shadow:0 0 30px rgba(255,176,76,.25)}
+  text-shadow:0 0 30px rgba(255,176,76,.25);transition:opacity .35s}
+/* a reading older than a few seconds is dimmed rather than shown as if live */
+.readout.stale .speed{opacity:.35;text-shadow:none}
 .vehicle{font-size:14px;color:var(--mut);font-weight:700;min-height:20px;margin-top:6px}
 .vehicle b{font-size:17px}
 .units{display:flex;gap:8px;justify-content:center;margin:10px 0 4px}
@@ -86,6 +92,11 @@ var ACC_LIMIT=35;         // metres — ignore sloppy fixes
 function makeEngine(){
   return {fixes:[],ema:null,dist:0,movingMs:0,maxMs:0,peakMs:0};
 }
+/* Coverage hole (tunnel, underground, backgrounded app): drop the window so the
+   first fix on the far side can't be paired with one from before the gap — that
+   would derive a fictional speed and teleport the trip distance. Trip totals and
+   peak survive; only the derivation state is forgotten. */
+function resetWindow(en){en.fixes=[];en.ema=null;}
 /* the gauge follows a DECAYING peak, not the trip max: it grows instantly when
    you speed up, then eases back ~12%/s so a plane's 0-1000 scale returns to
    something readable within half a minute of landing */
@@ -153,13 +164,25 @@ function rangeFor(maxDisp){
 }
 
 /* ================= state + UI ================= */
-var en=makeEngine(),unit='kmh',running=false,pollT=null,inFlight=false,best=0,lastFixAt=0,lastAcc=null;
+var en=makeEngine(),unit='kmh',running=false,best=0;
+/* connection state — deliberately split into "when was the fix taken" (lastFixAt,
+   from CoreLocation's own timestamp) and "when did the bridge last answer"
+   (lastReplyAt). iOS can keep answering instantly with a cached position, and
+   only the first of those tells you whether the GPS is actually alive. */
+var uiT=null,inFlight=0,seq=0,lastPollAt=0,lastFixAt=0,lastFixT=0,lastReplyAt=0,
+    lastAcc=null,failStreak=0,denied=false,startedAt=0;
+var POLL_MS=2000,SLOW_MS=5000,TIMEOUT_MS=12000,STALE_MS=6000,LOST_MS=18000,GAP_MS=12000;
+function fixAge(){return lastFixAt?Date.now()-lastFixAt:-1}
 function fmtTime(ms){var s=Math.floor(ms/1000),m=Math.floor(s/60);return m+':'+('0'+(s%60)).slice(-2)}
 function render(){
-  var ms=en.ema||0,disp=conv(ms,unit);
-  el('speedV').textContent=disp<10?disp.toFixed(1):Math.round(disp);
-  var veh=vehicleFor(ms*3.6);
-  el('vehicle').innerHTML=veh?('<b>'+veh[0]+'</b> '+veh[1]):(running?'Waiting for movement…':'');
+  var age=fixAge(),lost=running&&(age<0||age>=LOST_MS),stale=running&&age>=STALE_MS;
+  document.querySelector('.readout').classList.toggle('stale',!!stale);
+  var ms=lost?0:(en.ema||0),disp=conv(ms,unit);
+  /* an em dash, not a stale number: a speedometer that confidently reads 60 with
+     no signal is worse than one that admits it doesn't know */
+  el('speedV').textContent=lost?'—':(disp<10?disp.toFixed(1):Math.round(disp));
+  var veh=lost?null:vehicleFor(ms*3.6);
+  el('vehicle').innerHTML=veh?('<b>'+veh[0]+'</b> '+veh[1]):(running&&!lost?'Waiting for movement…':'');
   el('tDist').textContent=unit==='mph'?(en.dist/1609.34).toFixed(1):unit==='kn'?(en.dist/1852).toFixed(1):(en.dist/1000).toFixed(1);
   el('tDistU').textContent=unit==='mph'?'MI':unit==='kn'?'NM':'KM';
   var avg=en.movingMs>2000?conv(en.dist/(en.movingMs/1000),unit):0;
@@ -167,13 +190,17 @@ function render(){
   el('tMax').textContent=Math.round(conv(en.maxMs,unit));
   el('tTime').textContent=fmtTime(en.movingMs);
   el('best').textContent=best>0?('Best ever  '+Math.round(conv(best,unit))+' '+UNITS.find(function(x){return x[0]===unit})[1]):'';
-  drawGauge(disp);
+  drawGauge(lost?0:disp);
 }
 /* ---- gauge ---- */
 var cv=el('gauge'),ctx=cv.getContext('2d');
 function drawGauge(disp){
   var W=Math.min(innerWidth-24,430),H=W*0.62,D=Math.min(window.devicePixelRatio||1,2);
-  cv.width=W*D;cv.height=H*D;cv.style.width=W+'px';cv.style.height=H+'px';
+  /* the status clock redraws twice a second — only reallocate the backing store
+     when the size actually changed, not on every frame */
+  if(cv.width!==W*D||cv.height!==H*D){
+    cv.width=W*D;cv.height=H*D;cv.style.width=W+'px';cv.style.height=H+'px';
+  }
   var cx=W/2*D,cy=H*0.92*D,r=W*0.44*D;
   var range=rangeFor(Math.max(disp,conv(en.peakMs,unit)));
   var a0=Math.PI*1.05,a1=Math.PI*1.95;
@@ -211,50 +238,129 @@ function buildUnits(){
     w.appendChild(b);
   });
 }
-/* ---- GPS polling ---- */
+/* ---- GPS polling ----
+   One 500ms clock drives BOTH the status paint and the poll cadence. That is the
+   whole reconnect story: there is no separate poll timer to lose and no request
+   that can wedge the app shut, because every tick re-checks and re-arms. */
 function setGps(state,txt){
   el('gpsDot').className='gpsdot'+(state?' '+state:'');
   el('gpsTxt').textContent=txt;
 }
+function hint(t){if(el('hint').textContent!==t)el('hint').textContent=t}
+function idleHint(){
+  return !window.myllmLocation?'Open inside MyLLM to use GPS.'
+    :lastFixT?'Paused — tap Start to pick the signal back up.'
+    :'Tap Start, then get moving — train, plane, car or horse.';
+}
+/* Every word the user reads about the connection is derived HERE, from fix age.
+   Nothing else writes the dot or the hint, so a stale fix can't leave a healthy
+   green dot painted over a dead signal. */
+function paintStatus(){
+  if(!running){setGps(null,lastFixT?'paused':'GPS off');hint(idleHint());return}
+  if(denied){
+    setGps('bad','blocked');
+    hint('Location for apps is off. Turn it on in MyLLM Settings, then tap Start.');
+    return;
+  }
+  var age=fixAge();
+  if(age<0){                                     // no fix yet this session
+    var s=Math.max(0,Math.round((Date.now()-startedAt)/1000));
+    setGps('search','searching '+s+'s');
+    hint(s<10?'Acquiring GPS — the first fix takes a few seconds.'
+             :'Still searching — GPS needs a view of the sky. Indoors this can take a while.');
+    return;
+  }
+  if(age<STALE_MS){                              // live
+    setGps(lastAcc<=15?'ok':(lastAcc<=ACC_LIMIT?'mid':'bad'),'±'+Math.round(lastAcc)+'m');
+    hint(lastAcc>ACC_LIMIT?'Weak GPS — clearer sky gives a better reading.'
+        :(en.fixes.length<3?'Getting a bearing — a few seconds…':''));
+    return;
+  }
+  /* still answering but with old positions = iOS is serving a cache; not
+     answering at all = the fix or the bridge is gone. Different words, because
+     they need different things from the user. */
+  var answering=Date.now()-lastReplyAt<8000;
+  if(age<LOST_MS){
+    setGps('search','reacquiring');
+    hint('GPS went quiet '+Math.round(age/1000)+'s ago — reconnecting…');
+    return;
+  }
+  setGps('bad','no signal');
+  hint(answering?'Only an old position is coming back — open sky helps. Still retrying.'
+                :'Lost GPS. Still retrying — it picks up on its own when the signal returns.');
+}
 function poll(){
-  if(inFlight||!window.myllmLocation)return;
-  inFlight=true;
+  if(!running||inFlight||denied||!window.myllmLocation)return;
+  var id=++seq;inFlight=id;lastPollAt=Date.now();
+  var done=false;
+  /* Watchdog. myllmLocation.current() is a promise over a WKWebView bridge, and
+     a promise that never settles (permission sheet left open, app suspended
+     mid-request, native callback dropped) used to strand the in-flight guard
+     forever — the app stayed on screen looking fine and never polled again.
+     Sits past CoreLocation's own ~10s one-shot timeout so real failures land
+     first and this only ever catches the genuinely lost ones. */
+  var wd=setTimeout(function(){
+    if(done)return;done=true;
+    if(inFlight===id)inFlight=0;
+    failStreak++;paintStatus();
+  },TIMEOUT_MS);
+  function settle(){if(done)return false;done=true;clearTimeout(wd);if(inFlight===id)inFlight=0;return true}
   myllmLocation.current({address:false}).then(function(p){
-    inFlight=false;
-    if(!p)return;
+    if(!settle())return;
+    lastReplyAt=Date.now();
+    if(!p||typeof p.latitude!=='number'){failStreak++;paintStatus();return}
+    failStreak=0;
     var now=Date.now();
-    var fix={lat:p.latitude,lon:p.longitude,acc:p.accuracy==null?999:p.accuracy,
-             t:(typeof p.timestamp==='number'&&p.timestamp>0)?p.timestamp:now,
+    var t=(typeof p.timestamp==='number'&&p.timestamp>0)?p.timestamp:now;
+    /* A repeated or older timestamp is iOS replaying a cached fix. Feeding it
+       would stuff the window with duplicates AND refresh the "live" clock over a
+       signal that is actually gone, so it's dropped and the age keeps running. */
+    if(t<=lastFixT){paintStatus();return}
+    if(lastFixT&&t-lastFixT>GAP_MS)resetWindow(en);
+    var fix={lat:p.latitude,lon:p.longitude,acc:p.accuracy==null?999:p.accuracy,t:t,
              vNative:(typeof p.speed==='number')?p.speed:null};
-    lastFixAt=now;lastAcc=fix.acc;
+    lastFixT=t;lastFixAt=Math.min(now,t);lastAcc=fix.acc;
     feed(en,fix);
     if(en.maxMs>best){best=en.maxMs;store.setItem('speedo.best',String(best));}
-    setGps(fix.acc<=15?'ok':(fix.acc<=ACC_LIMIT?'mid':'bad'),'±'+Math.round(fix.acc)+'m');
-    if(fix.acc>ACC_LIMIT)el('hint').textContent='Weak GPS — get clearer sky for a good reading';
-    else if(fix.vNative==null&&en.fixes.length<3)el('hint').textContent='Getting a bearing — a few seconds…';
-    else el('hint').textContent='';
-    render();
+    paintStatus();render();
   }).catch(function(e){
-    inFlight=false;
-    setGps('bad','no fix');
-    el('hint').textContent=/turned off/i.test(e&&e.message||'')
-      ?'Turn on Settings → MyLLMos Apps → “Allow apps to use your location”.'
-      :'No GPS fix — open sky helps. ('+((e&&e.message)||'error')+')';
+    if(!settle())return;
+    lastReplyAt=Date.now();failStreak++;
+    /* a refused permission won't fix itself by asking 30 more times a minute */
+    if(/turned off|denied|restricted|permission/i.test((e&&e.message)||''))denied=true;
+    paintStatus();
   });
+}
+/* the single clock: paint, then poll if one is due and none is outstanding */
+function tick(){
+  paintStatus();render();
+  if(!running)return;
+  var gap=failStreak>=4?SLOW_MS:POLL_MS;   // ease off once it's clearly not answering
+  if(!inFlight&&Date.now()-lastPollAt>=gap)poll();
 }
 function start(){
   if(!window.myllmLocation){
-    el('hint').textContent='This needs the MyLLM app with location for apps enabled.';
+    hint('This needs the MyLLM app with location for apps enabled.');
     haptic('warning');return;
   }
-  running=true;el('goBtn').textContent='Pause';el('goBtn').className='btn stop';
-  poll();pollT=setInterval(poll,2000);haptic('success');
+  running=true;denied=false;failStreak=0;inFlight=0;
+  startedAt=Date.now();lastPollAt=0;lastFixAt=0;   // fresh session: "searching", not stale
+  el('goBtn').textContent='Pause';el('goBtn').className='btn stop';
+  clearInterval(uiT);uiT=setInterval(tick,500);
+  tick();haptic('success');
 }
 function stop(){
-  running=false;clearInterval(pollT);pollT=null;
+  running=false;clearInterval(uiT);uiT=null;inFlight=0;
   el('goBtn').textContent='Start';el('goBtn').className='btn go';
-  setGps(null,'paused');haptic('light');
+  paintStatus();render();haptic('light');
 }
+/* Coming back from the background: timers were frozen and any request in flight
+   when we left will never land, so clear the guard and poll straight away
+   instead of waiting out the watchdog. */
+document.addEventListener('visibilitychange',function(){
+  if(document.hidden||!running)return;
+  inFlight=0;lastPollAt=0;tick();
+});
 el('goBtn').onclick=function(){running?stop():start()};
 el('resetBtn').onclick=function(){
   var keep=en.fixes,e2=makeEngine();e2.fixes=keep.slice(-2);e2.ema=en.ema;e2.peakMs=en.ema||0;en=e2;
@@ -267,8 +373,7 @@ store.getItem('speedo.unit').then(function(v){
   return store.getItem('speedo.best');
 }).then(function(v){
   best=parseFloat(v)||0;
-  buildUnits();render();
-  el('hint').textContent=window.myllmLocation?'Tap Start, then get moving — train, plane, car or horse.':'Open inside MyLLM to use GPS.';
+  buildUnits();render();paintStatus();
 });
 </script>
 </body></html>
