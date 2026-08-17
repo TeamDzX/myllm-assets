@@ -134,9 +134,26 @@
   window.myllmTranscribeFile = (opts) => later('sample transcription', 40);
 
   window.myllmLocation = {
+    // timestamp is Date.now(), not 0: apps are told to judge freshness by the
+    // fix's own clock, and a stub that always looks 56 years stale would make
+    // every well-behaved app render a "no signal" screen here.
     current: (opts) => later({ latitude: 51.5074, longitude: -0.1278, accuracy: 12,
-                               speed: 0, course: -1, timestamp: 0,
+                               speed: 0, course: -1, timestamp: Date.now(),
                                address: (opts?.address !== false) ? 'London, United Kingdom' : null }),
+    // A watch that resolved but never delivered would leave every tracker app
+    // stuck on its "searching" screen, so the stub actually streams — slowly
+    // drifting north, which is enough for a speed/distance readout to move.
+    watch: (cb, opts) => {
+      clearInterval(window.__myllmWatchT);
+      let n = 0;
+      const emit = () => typeof cb === 'function' && cb({
+        latitude: 51.5074 + (n++ * 0.0002), longitude: -0.1278,
+        accuracy: 8, speed: 12.5, course: 0, timestamp: Date.now() });
+      emit();
+      window.__myllmWatchT = setInterval(emit, 1000);
+      return later({ watching: true });
+    },
+    stop: () => { clearInterval(window.__myllmWatchT); return later({ watching: false }); },
     search: (q, opts) => later([{ name: String(q || 'Place'), address: '1 Example St, London',
                                   latitude: 51.5074, longitude: -0.1278, distance: 420 }]),
     reverse: (lat, lon) => later({ address: 'London, United Kingdom' }),

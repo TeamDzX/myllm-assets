@@ -170,8 +170,9 @@ var en=makeEngine(),unit='kmh',running=false,best=0;
    (lastReplyAt). iOS can keep answering instantly with a cached position, and
    only the first of those tells you whether the GPS is actually alive. */
 var uiT=null,inFlight=0,seq=0,lastPollAt=0,lastFixAt=0,lastFixT=0,lastReplyAt=0,
-    lastAcc=null,failStreak=0,denied=false,startedAt=0;
-var POLL_MS=2000,SLOW_MS=5000,TIMEOUT_MS=12000,STALE_MS=6000,LOST_MS=18000,GAP_MS=12000;
+    lastAcc=null,failStreak=0,denied=false,startedAt=0,srcMode='none',watchStartedAt=0;
+var POLL_MS=2000,SLOW_MS=5000,TIMEOUT_MS=12000,STALE_MS=6000,LOST_MS=18000,GAP_MS=12000,
+    WATCH_GRACE=15000,WATCH_GIVEUP=30000;
 function fixAge(){return lastFixAt?Date.now()-lastFixAt:-1}
 function fmtTime(ms){var s=Math.floor(ms/1000),m=Math.floor(s/60);return m+':'+('0'+(s%60)).slice(-2)}
 function render(){
@@ -238,10 +239,15 @@ function buildUnits(){
     w.appendChild(b);
   });
 }
-/* ---- GPS polling ----
-   One 500ms clock drives BOTH the status paint and the poll cadence. That is the
-   whole reconnect story: there is no separate poll timer to lose and no request
-   that can wedge the app shut, because every tick re-checks and re-arms. */
+/* ---- GPS source ----
+   Two ways in. myllmLocation.watch() holds ONE live GPS session open, so fixes
+   carry the chip's real Doppler speed and a dropped signal reacquires itself —
+   that's the good path. Builds without it fall back to polling current(), and so
+   does a watch that never delivers.
+
+   Either way, one 500ms clock drives BOTH the status paint and the poll cadence.
+   That is the whole reconnect story: no separate poll timer to lose, and no
+   request that can wedge the app shut, because every tick re-checks and re-arms. */
 function setGps(state,txt){
   el('gpsDot').className='gpsdot'+(state?' '+state:'');
   el('gpsTxt').textContent=txt;
@@ -289,6 +295,60 @@ function paintStatus(){
   hint(answering?'Only an old position is coming back — open sky helps. Still retrying.'
                 :'Lost GPS. Still retrying — it picks up on its own when the signal returns.');
 }
+/* One fix in, from either source. Returns false if it wasn't usable — the
+   caller must NOT treat that as liveness. */
+function acceptFix(p){
+  if(!p||typeof p.latitude!=='number')return false;
+  var now=Date.now();
+  var t=(typeof p.timestamp==='number'&&p.timestamp>0)?p.timestamp:now;
+  /* A repeated or older timestamp is iOS replaying a cached fix. Feeding it
+     would stuff the window with duplicates AND refresh the "live" clock over a
+     signal that is actually gone, so it's dropped and the age keeps running. */
+  if(t<=lastFixT)return false;
+  if(lastFixT&&t-lastFixT>GAP_MS)resetWindow(en);
+  var fix={lat:p.latitude,lon:p.longitude,acc:p.accuracy==null?999:p.accuracy,t:t,
+           vNative:(typeof p.speed==='number')?p.speed:null};
+  lastFixT=t;lastFixAt=Math.min(now,t);lastAcc=fix.acc;
+  feed(en,fix);
+  if(en.maxMs>best){best=en.maxMs;store.setItem('speedo.best',String(best));}
+  return true;
+}
+function isBlocked(msg){return /turned off|denied|restricted|permission/i.test(msg||'')}
+/* ---- source A: live watch (MyLLM 4.5.6+) ---- */
+function onWatchFix(p){
+  lastReplyAt=Date.now();
+  if(p&&p.error){                       // the stream failed after it started
+    failStreak++;
+    if(isBlocked(p.error))denied=true;
+    paintStatus();return;
+  }
+  failStreak=0;
+  acceptFix(p);
+  paintStatus();render();
+}
+function beginSource(){
+  if(window.myllmLocation.watch){
+    srcMode='watch';watchStartedAt=Date.now();
+    /* 'best' = BestForNavigation. Worth the power for a speedometer, and it's
+       released the moment the user pauses. */
+    myllmLocation.watch(onWatchFix,{accuracy:'best'}).catch(function(e){
+      if(isBlocked((e&&e.message)||''))denied=true;
+      usePolling();
+    });
+  }else{
+    srcMode='poll';                     // older build — no watch() to feature-detect
+  }
+}
+function usePolling(){
+  if(srcMode==='poll')return;
+  srcMode='poll';
+  try{if(window.myllmLocation.stop)myllmLocation.stop()}catch(e){}
+}
+function releaseWatch(){
+  if(srcMode!=='watch')return;
+  try{myllmLocation.stop()}catch(e){}
+}
+/* ---- source B: polling current() ---- */
 function poll(){
   if(!running||inFlight||denied||!window.myllmLocation)return;
   var id=++seq;inFlight=id;lastPollAt=Date.now();
@@ -305,36 +365,34 @@ function poll(){
     failStreak++;paintStatus();
   },TIMEOUT_MS);
   function settle(){if(done)return false;done=true;clearTimeout(wd);if(inFlight===id)inFlight=0;return true}
-  myllmLocation.current({address:false}).then(function(p){
+  myllmLocation.current({address:false,accuracy:'best'}).then(function(p){
     if(!settle())return;
     lastReplyAt=Date.now();
     if(!p||typeof p.latitude!=='number'){failStreak++;paintStatus();return}
     failStreak=0;
-    var now=Date.now();
-    var t=(typeof p.timestamp==='number'&&p.timestamp>0)?p.timestamp:now;
-    /* A repeated or older timestamp is iOS replaying a cached fix. Feeding it
-       would stuff the window with duplicates AND refresh the "live" clock over a
-       signal that is actually gone, so it's dropped and the age keeps running. */
-    if(t<=lastFixT){paintStatus();return}
-    if(lastFixT&&t-lastFixT>GAP_MS)resetWindow(en);
-    var fix={lat:p.latitude,lon:p.longitude,acc:p.accuracy==null?999:p.accuracy,t:t,
-             vNative:(typeof p.speed==='number')?p.speed:null};
-    lastFixT=t;lastFixAt=Math.min(now,t);lastAcc=fix.acc;
-    feed(en,fix);
-    if(en.maxMs>best){best=en.maxMs;store.setItem('speedo.best',String(best));}
+    acceptFix(p);
     paintStatus();render();
   }).catch(function(e){
     if(!settle())return;
     lastReplyAt=Date.now();failStreak++;
     /* a refused permission won't fix itself by asking 30 more times a minute */
-    if(/turned off|denied|restricted|permission/i.test((e&&e.message)||''))denied=true;
+    if(isBlocked((e&&e.message)||''))denied=true;
     paintStatus();
   });
 }
-/* the single clock: paint, then poll if one is due and none is outstanding */
+/* the single clock: paint, then feed the source that needs feeding */
 function tick(){
   paintStatus();render();
-  if(!running)return;
+  if(!running||denied)return;
+  if(srcMode==='watch'){
+    /* A watch that never delivers is worse than no watch — it just sits there
+       looking like a signal problem. Give it a grace period from the start, and
+       a longer one mid-session (the native side reacquires on its own), then
+       drop to the polling path that older builds have always used. */
+    var quiet=lastFixAt?Date.now()-lastFixAt:Date.now()-watchStartedAt;
+    if(quiet>(lastFixAt?WATCH_GIVEUP:WATCH_GRACE))usePolling();
+    return;
+  }
   var gap=failStreak>=4?SLOW_MS:POLL_MS;   // ease off once it's clearly not answering
   if(!inFlight&&Date.now()-lastPollAt>=gap)poll();
 }
@@ -347,13 +405,17 @@ function start(){
   startedAt=Date.now();lastPollAt=0;lastFixAt=0;   // fresh session: "searching", not stale
   el('goBtn').textContent='Pause';el('goBtn').className='btn stop';
   clearInterval(uiT);uiT=setInterval(tick,500);
-  tick();haptic('success');
+  beginSource();tick();haptic('success');
 }
 function stop(){
   running=false;clearInterval(uiT);uiT=null;inFlight=0;
+  releaseWatch();srcMode='none';   // let go of the GPS the moment the user pauses
   el('goBtn').textContent='Start';el('goBtn').className='btn go';
   paintStatus();render();haptic('light');
 }
+/* The native side also stops the stream on teardown; this just makes sure a
+   swipe-away releases it without waiting for that. */
+window.addEventListener('pagehide',releaseWatch);
 /* Coming back from the background: timers were frozen and any request in flight
    when we left will never land, so clear the guard and poll straight away
    instead of waiting out the watchdog. */

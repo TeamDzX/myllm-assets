@@ -64,6 +64,23 @@ both load-bearing:
   enforces itself, and the documented `myllmStorage`-first fallback pattern
   correctly passes.
 
+## Per-app harnesses
+
+`verify_app.mjs` answers *"does it boot and stay in the sandbox"*. Some apps have
+a behaviour worth pinning that the sweep structurally cannot reach, and those get
+a file of their own:
+
+```bash
+node speedometer_gps.mjs        # GPS reconnect + feedback, both bridge generations
+```
+
+**`speedometer_gps.mjs`** drives the app on a *fake clock* (`page.clock`) against
+a `myllmLocation` you can break on purpose — hang the promise, replay a cached
+fix, reject the permission, resolve `watch()` and then deliver nothing. That is
+how you ask "what does this look like 18 seconds into a tunnel", which no
+boot-and-poke sweep can. Both suites run: polling (MyLLM ≤ 4.5.5, no `watch()`)
+and live watch (≥ 4.5.6, plus its fallback). Exit `0`/`1` like the sweep.
+
 ## Fidelity limits
 
 WebKit here is not iOS WKWebView. This will **not** catch AVAudioSession
