@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Shell</title>
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;background:#0d1117;color:#d6deeb;
+       font:13.5px/1.55 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+       display:flex;flex-direction:column;height:100dvh;overflow:hidden}
+  header{padding:10px 14px;border-bottom:1px solid #1e2733;display:flex;align-items:center;gap:10px}
+  header b{font-size:14px;color:#e7eef8;font-weight:650}
+  header .hint{font-size:11.5px;color:#6b7a90}
+  #out{flex:1;overflow:auto;padding:12px 14px 4px;white-space:pre-wrap;word-break:break-word}
+  .cmd{color:#7ee787}
+  .err{color:#ff7b72}
+  .ok{color:#79c0ff}
+  .dim{color:#6b7a90}
+  .dir{color:#79c0ff;font-weight:650}
+  form{display:flex;gap:8px;padding:10px 12px calc(10px + env(safe-area-inset-bottom));
+       border-top:1px solid #1e2733;background:#0d1117}
+  .ps1{color:#7ee787;align-self:center}
+  input{flex:1;background:#111823;border:1px solid #1e2733;border-radius:9px;color:#d6deeb;
+        padding:10px 11px;font:13.5px ui-monospace,SFMono-Regular,Menlo,monospace}
+  input:focus{outline:2px solid #1f6feb;outline-offset:-1px}
+  button{background:#1f6feb;border:0;color:#fff;border-radius:9px;padding:0 14px;font-weight:650;font-size:13.5px}
+  .chips{display:flex;gap:6px;overflow-x:auto;padding:0 12px 10px}
+  .chip{background:#111823;border:1px solid #1e2733;color:#9db2cd;border-radius:999px;
+        padding:6px 11px;font-size:12px;white-space:nowrap}
+</style></head>
+<body>
+
+<header>
+  <b>Shell</b>
+  <span class="hint">the shared workspace, on the command line</span>
+</header>
+
+<div id="out"></div>
+
+<div class="chips" id="chips"></div>
+
+<form id="form" autocomplete="off">
+  <span class="ps1">$</span>
+  <input id="in" placeholder="ls -R" autocapitalize="off" autocorrect="off" spellcheck="false">
+  <button type="submit">Run</button>
+</form>
+
+<script>
+/* Shell over the MyLLMos shared workspace.
+   The command grammar deliberately MATCHES the assistant's `workspace_shell`
+   tool, so what you learn here is what you can ask MyLLM for in words — and what
+   it prints back to you looks like what it prints back to itself.
+
+   Difference: you are a person at a prompt, so this one can also WRITE. rm asks
+   first, because the store has no undo and no trash. */
+var files = window.myllmFiles || null;
+var out = document.getElementById('out');
+var input = document.getElementById('in');
+/* NOT `history` — that is window.history (the History API), so `var history`
+   silently keeps the built-in and cmdHistory.push is undefined. The runtime
+   harness caught this; a regex scan never would. */
+var cmdHistory = [];
+var hIndex = -1;
+var pending = null;      /* a confirmation waiting on y/n */
+
+var HELP = [
+  'ls [-R] [path]     list a folder (-R for the whole tree)',
+  'tree [path]        same as ls -R',
+  'cat <path>         print a file',
+  'head [-n N] <path> first N lines (default 20)',
+  'tail [-n N] <path> last N lines',
+  'stat <path>        size, modified, type',
+  'find <glob>        match filenames, e.g. find *.json',
+  'du                 space used per folder',
+  'mkdir <path>       create a folder',
+  'mv <from> <to>     move or rename a file or folder',
+  'rm <path>          delete a file (asks first)',
+  'rmdir <path>       delete a folder (asks; refuses if not empty)',
+  'write <path>       type a line into a file (replaces it)',
+  'clear              clear the screen',
+  'help               this list'
+].join('\n');
+
+function esc(s){ return String(s==null?'':s)
+  .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function print(text, cls){
+  var d = document.createElement('div');
+  if (cls) d.className = cls;
+  d.innerHTML = esc(text);
+  out.appendChild(d);
+  out.scrollTop = out.scrollHeight;
+}
+function printHTML(html){
+  var d = document.createElement('div');
+  d.innerHTML = html;
+  out.appendChild(d);
+  out.scrollTop = out.scrollHeight;
+}
+function haptic(k){ try{ window.myllmHaptic && myllmHaptic(k); }catch(e){} }
+
+/* ---------- helpers that mirror the tool ---------- */
+
+function tokenize(s){
+  var outv = [], cur = '', q = null;
+  for (var i=0;i<s.length;i++){
+    var c = s[i];
+    if (q){ if (c === q) q = null; else cur += c; }
+    else if (c === '"' || c === "'"){ q = c; }
+    else if (c === ' '){ if (cur){ outv.push(cur); cur = ''; } }
+    else cur += c;
+  }
+  if (cur) outv.push(cur);
+  return outv;
+}
+
+function normalise(p){
+  var s = String(p||'').trim();
+  while (s.indexOf('./') === 0) s = s.slice(2);
+  while (s.charAt(0) === '/') s = s.slice(1);
+  while (s.charAt(s.length-1) === '/') s = s.slice(0,-1);
+  return s === '.' ? '' : s;
+}
+
+function bytes(n){ return n < 1024 ? n + 'B' : (n/1024).toFixed(1) + 'K'; }
+
+function when(ms){
+  var d = new Date(ms);
+  function p(x){ return (x<10?'0':'') + x; }
+  return d.getFullYear() + '-' + p(d.getMonth()+1) + '-' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
+}
+
+function glob(pattern, name){
+  if (pattern.indexOf('*') < 0 && pattern.indexOf('?') < 0)
+    return name.toLowerCase().indexOf(pattern.toLowerCase()) >= 0;
+  var rx = '^' + pattern.replace(/[.+^${}()|[\]\\]/g,'\\$&')
+                        .replace(/\*/g,'.*').replace(/\?/g,'.') + '$';
+  return new RegExp(rx,'i').test(name);
+}
+
+async function snapshot(){
+  var list = await files.list();
+  var folders = await files.folders ? await files.folders() : [];
+  return { files: list, folders: folders };
+}
+
+/* ---------- commands ---------- */
+
+async function run(line){
+  if (!files){ print('Shared files are off. Turn on "Shared files" in MyLLMos settings.', 'err'); return; }
+  var argv = tokenize(line);
+  var verb = (argv.shift()||'').toLowerCase();
+
+  var flags = {}, n = 20, ops = [];
+  for (var i=0;i<argv.length;i++){
+    var a = argv[i];
+    if (a === '-n' && argv[i+1] && !isNaN(+argv[i+1])){ n = Math.max(1, Math.min(+argv[i+1], 500)); i++; continue; }
+    if (a.charAt(0) === '-'){ a.slice(1).split('').forEach(function(f){ flags[f] = true; }); continue; }
+    ops.push(a);
+  }
+  var target = normalise(ops[0] || '');
+  var snap = await snapshot();
+
+  switch (verb){
+    case 'help': print(HELP, 'dim'); return;
+    case 'clear': out.innerHTML = ''; return;
+    case 'pwd': print('/ (workspace root — all paths are relative; there is no cd)', 'dim'); return;
+
+    case 'ls': case 'dir': case 'tree':
+      return listing(snap, target, verb === 'tree' || flags.R || flags.r);
+
+    case 'cat': case 'head': case 'tail': {
+      if (!target) return print(verb + ' needs a path', 'err');
+      var text = await files.read(target);
+      if (text == null) return print('No such file: ' + target, 'err');
+      if (verb === 'cat') return print(text);
+      var lines = text.split('\n');
+      print((verb === 'head' ? lines.slice(0, n) : lines.slice(-n)).join('\n'));
+      if (lines.length > n) print('[' + lines.length + ' lines total]', 'dim');
+      return;
+    }
+
+    case 'stat': {
+      var f = snap.files.filter(function(x){ return x.path === target; })[0];
+      if (f) return print(f.path + '\ntype: file\nsize: ' + f.size + ' bytes\nmodified: ' + when(f.modified*1000));
+      if (snap.folders.indexOf(target) >= 0){
+        var inside = snap.files.filter(function(x){ return x.path.indexOf(target + '/') === 0; });
+        var total = inside.reduce(function(a,b){ return a + b.size; }, 0);
+        return print(target + '/\ntype: folder\ncontains: ' + inside.length + ' file(s), ' + total + ' bytes');
+      }
+      return print('No such file or folder: ' + target, 'err');
+    }
+
+    case 'find': {
+      if (!ops[0]) return print('find needs a name or glob, e.g. find *.json', 'err');
+      var hits = snap.files.map(function(f){ return f.path; }).filter(function(p){
+        return glob(ops[0], p.split('/').pop()) || glob(ops[0], p);
+      });
+      return print(hits.length ? hits.sort().join('\n') : 'No match for ' + ops[0], hits.length ? '' : 'dim');
+    }
+
+    case 'du': {
+      var byDir = {};
+      snap.files.forEach(function(f){
+        var d = f.path.indexOf('/') < 0 ? '.' : f.path.slice(0, f.path.lastIndexOf('/'));
+        byDir[d] = (byDir[d]||0) + f.size;
+      });
+      var rows = Object.keys(byDir).sort(function(a,b){ return byDir[b]-byDir[a]; })
+        .map(function(d){ return bytes(byDir[d]) + '\t' + d; });
+      var total = snap.files.reduce(function(a,b){ return a + b.size; }, 0);
+      return print(rows.concat([bytes(total) + '\ttotal of 25 MB']).join('\n'));
+    }
+
+    /* ---- mutations: this is a person at a prompt, so they are allowed ---- */
+
+    case 'mkdir':
+      if (!target) return print('mkdir needs a path', 'err');
+      await files.makeFolder(target);
+      haptic('success');
+      return print('created ' + target + '/', 'ok');
+
+    case 'mv': {
+      if (ops.length < 2) return print('mv needs a source and a destination', 'err');
+      var to = normalise(ops[1]);
+      await files.move(target, to);
+      haptic('success');
+      return print(target + ' -> ' + to, 'ok');
+    }
+
+    case 'write': {
+      if (!target) return print('write needs a path', 'err');
+      var body = line.slice(line.indexOf(ops[0]) + ops[0].length).trim();
+      if (!body) return print('write <path> <text>  — the text replaces the file', 'err');
+      await files.write(target, body);
+      haptic('success');
+      return print('wrote ' + body.length + ' chars to ' + target, 'ok');
+    }
+
+    case 'rm': case 'rmdir': {
+      if (!target) return print(verb + ' needs a path', 'err');
+      var isDir = snap.folders.indexOf(target) >= 0;
+      if (verb === 'rm' && isDir) return print(target + ' is a folder — use rmdir', 'err');
+      if (verb === 'rmdir' && !isDir) return print(target + ' is not a folder — use rm', 'err');
+      var count = isDir ? snap.files.filter(function(x){ return x.path.indexOf(target+'/') === 0; }).length : 1;
+      /* No undo, no trash. A one-word delete of someone's documents should have
+         to be said twice. */
+      pending = { verb: verb, target: target, count: count };
+      return print('delete ' + target + (isDir ? '/ and its ' + count + ' file(s)' : '') + '? there is no undo — type  y  to confirm', 'err');
+    }
+
+    default:
+      return print('Unknown command: ' + verb + '  (type help)', 'err');
+  }
+}
+
+function listing(snap, root, recursive){
+  var prefix = root ? root + '/' : '';
+  if (root && snap.folders.indexOf(root) < 0){
+    var one = snap.files.filter(function(f){ return f.path === root; })[0];
+    if (one) return print(one.path + '\t' + one.size + 'B\t' + when(one.modified*1000));
+    return print('No such file or folder: ' + root, 'err');
+  }
+  var depth = prefix ? prefix.split('/').length : 1;
+  var subs = snap.folders.filter(function(f){
+    return f.indexOf(prefix) === 0 && f !== root && (recursive || f.split('/').length === depth);
+  }).sort();
+  var here = snap.files.filter(function(f){
+    return f.path.indexOf(prefix) === 0 && (recursive || f.path.split('/').length === depth);
+  }).sort(function(a,b){ return a.path < b.path ? -1 : 1; });
+  if (!subs.length && !here.length) return print(root ? root + '/ is empty' : 'The workspace is empty', 'dim');
+  var html = subs.map(function(d){ return '<span class="dir">' + esc(d) + '/</span>'; })
+    .concat(here.map(function(f){
+      return esc(f.path) + '\t<span class="dim">' + f.size + 'B\t' + when(f.modified*1000) + '</span>';
+    })).join('\n');
+  printHTML(html);
+}
+
+/* ---------- prompt ---------- */
+
+document.getElementById('form').addEventListener('submit', async function(ev){
+  ev.preventDefault();
+  var line = input.value.trim();
+  input.value = '';
+  if (!line) return;
+
+  if (pending){
+    var p = pending; pending = null;
+    if (line.toLowerCase() === 'y' || line.toLowerCase() === 'yes'){
+      try{
+        if (p.verb === 'rm') await files.remove(p.target);
+        else await files.removeFolder(p.target, true);
+        haptic('warning');
+        print('deleted ' + p.target, 'ok');
+      }catch(e){ print(e.message, 'err'); }
+    } else print('cancelled', 'dim');
+    return;
+  }
+
+  cmdHistory.push(line); hIndex = cmdHistory.length;
+  print('$ ' + line, 'cmd');
+  try { await run(line); }
+  catch(e){ print(String(e && e.message || e), 'err'); }
+});
+
+/* Up/down through history, as a shell does. */
+input.addEventListener('keydown', function(e){
+  if (e.key === 'ArrowUp'){ if (hIndex > 0){ hIndex--; input.value = cmdHistory[hIndex]; } e.preventDefault(); }
+  if (e.key === 'ArrowDown'){ if (hIndex < cmdHistory.length-1){ hIndex++; input.value = cmdHistory[hIndex]; } else { hIndex = cmdHistory.length; input.value = ''; } e.preventDefault(); }
+});
+
+['ls -R','du','find *.json','help'].forEach(function(c){
+  var b = document.createElement('button');
+  b.className = 'chip'; b.type = 'button'; b.textContent = c;
+  b.onclick = function(){ input.value = c; input.focus(); };
+  document.getElementById('chips').appendChild(b);
+});
+
+print('MyLLMos workspace shell. Type  help  for commands.', 'dim');
+print('The same commands work when you ask MyLLM — it has this shell too.', 'dim');
+if (!window.myllmFiles) print('\nShared files are off — turn them on in MyLLMos settings.', 'err');
+else run('ls');
+</script>
+</body></html>

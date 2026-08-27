@@ -2849,6 +2849,20 @@
       "featured": false,
       "requiresAI": false,
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@f7cb5383528ec2fb299420906b5863e208031f09/apps-src/workbench.html"
+    },
+    {
+      "id": "shell",
+      "name": "Shell",
+      "emoji": "⌨️",
+      "tagline": "Your workspace, on the command line",
+      "description": "A terminal for the shared workspace. ls, tree, cat, head, stat, find and du to look around; mkdir, mv, write and rm to change things, with deletes asking first because there is no undo. The command grammar is the same one MyLLM itself uses, so anything you learn here you can also just ask for in words. Nothing leaves your device.",
+      "category": "Utilities",
+      "iconSymbol": "terminal",
+      "iconColor": "gray",
+      "version": 1,
+      "featured": false,
+      "requiresAI": false,
+      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@main/apps-src/shell.html"
     }
   ]
 }
