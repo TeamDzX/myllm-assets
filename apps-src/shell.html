@@ -17,12 +17,26 @@
   .ok{color:#79c0ff}
   .dim{color:#6b7a90}
   .dir{color:#79c0ff;font-weight:650}
-  form{display:flex;gap:8px;padding:10px 12px calc(10px + env(safe-area-inset-bottom));
-       border-top:1px solid #1e2733;background:#0d1117}
-  input{flex:1;background:#111823;border:1px solid #1e2733;border-radius:9px;color:#d6deeb;
-        padding:10px 11px;font:13.5px ui-monospace,SFMono-Regular,Menlo,monospace}
-  input:focus{outline:2px solid #1f6feb;outline-offset:-1px}
-  button{background:#1f6feb;border:0;color:#fff;border-radius:9px;padding:0 14px;font-weight:650;font-size:13.5px}
+  /* The composer, shaped like Claude Code's: one quiet bordered box with a
+     chevron, the text filling it, and a status line underneath. No Run button —
+     Return submits, and a button competing with the prompt is the thing that
+     made this look like a form rather than a terminal. */
+  .composer{padding:0 12px calc(12px + env(safe-area-inset-bottom));background:#0d1117}
+  .composer hr{border:0;border-top:1px solid #1e2733;margin:0 -12px 10px}
+  form{display:flex;gap:9px;align-items:center;background:#0d1117;
+       border:1px solid #2a3646;border-radius:10px;padding:11px 12px}
+  form:focus-within{border-color:#3c5680}
+  .ps1{color:#6b7a90;align-self:center;user-select:none}
+  input{flex:1;min-width:0;background:transparent;border:0;color:#d6deeb;padding:0;
+        font:13.5px ui-monospace,SFMono-Regular,Menlo,monospace}
+  input:focus{outline:none}
+  input::placeholder{color:#3f4c5f}
+  /* One line, always. A status bar that wraps stops reading as a status bar —
+     the left half truncates, the right half is short enough never to. */
+  .statusbar{display:flex;justify-content:space-between;align-items:baseline;gap:12px;
+             padding:8px 3px 0;font-size:11.5px;color:#6b7a90;white-space:nowrap}
+  .statusbar .left{color:#7ee787;overflow:hidden;text-overflow:ellipsis;min-width:0}
+  .statusbar .right{color:#6b7a90;flex:none}
   .chips{display:flex;gap:6px;overflow-x:auto;padding:0 12px 10px}
   .chip{background:#111823;border:1px solid #1e2733;color:#9db2cd;border-radius:999px;
         padding:6px 11px;font-size:12px;white-space:nowrap}
@@ -43,11 +57,17 @@
 
 <div class="chips" id="chips"></div>
 
-<form id="form" autocomplete="off">
-  <span class="ps1">$</span>
-  <input id="in" placeholder="ls -R" autocapitalize="off" autocorrect="off" spellcheck="false">
-  <button type="submit">Run</button>
-</form>
+<div class="composer">
+  <hr>
+  <form id="form" autocomplete="off">
+    <span class="ps1">&#10095;</span>
+    <input id="in" placeholder="a command, or a question" autocapitalize="off" autocorrect="off" spellcheck="false">
+  </form>
+  <div class="statusbar">
+    <span class="left" id="statusLeft">~</span>
+    <span class="right" id="statusRight"></span>
+  </div>
+</div>
 
 <script>
 /* Shell over the MyLLMos shared workspace.
@@ -85,8 +105,22 @@ function resolve(p){
   });
   return parts.join('/');
 }
-function prompt$(){ return (cwd ? '~/' + cwd : '~') + ' $'; }
-function paintPrompt(){ document.querySelector('.ps1').textContent = prompt$(); }
+function prompt$(){ return cwd ? '~/' + cwd : '~'; }
+
+/* Left: where you are. Right: what the workspace costs. Both refresh after any
+   command, so the bar is a live readout rather than decoration. */
+async function paintPrompt(){
+  var l = document.getElementById('statusLeft');
+  if (l) l.textContent = prompt$() + '  \u00b7  read-only';
+  var r = document.getElementById('statusRight');
+  if (r && files){
+    try{
+      var list = await files.list();
+      var total = list.reduce(function(a,b){ return a + b.size; }, 0);
+      r.textContent = list.length + (list.length === 1 ? ' file' : ' files') + '  \u00b7  ' + bytes(total);
+    }catch(e){ r.textContent = ''; }
+  }
+}
 
 var HELP = [
   'ls [-R] [path]     list a folder (-R for the whole tree)',
@@ -439,9 +473,10 @@ document.getElementById('form').addEventListener('submit', async function(ev){
   }
 
   cmdHistory.push(line); hIndex = cmdHistory.length;
-  print('$ ' + line, 'cmd');
+  print(prompt$() + ' \u276f ' + line, 'cmd');
   try { await run(line); }
   catch(e){ print(String(e && e.message || e), 'err'); }
+  paintPrompt();
 });
 
 /* Up/down through history, as a shell does. */
