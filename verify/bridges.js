@@ -198,6 +198,17 @@
     },
   };
 
+  // Tile state (roadmap #4). Publishing is fire-and-forget from the app's side.
+  window.myllmWidget = {
+    publish: (state) => later(true, 15),
+    clear: () => later(true, 15),
+  };
+
+  // Hands a drafted request to the assistant. Compose only — never sends.
+  window.myllmChat = {
+    compose: (text) => true,
+  };
+
   window.myllmTheme = {
     accent: '#4f7cff', scheme: 'light', largeText: false,
     dyslexiaFont: false, highContrast: false, reduceMotion: false,

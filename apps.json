@@ -2699,7 +2699,7 @@
       ],
       "iconSymbol": "antenna.radiowaves.left.and.right",
       "iconColor": "blue",
-      "version": 3,
+      "version": 4,
       "featured": false,
       "requiresAI": false,
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/command-center.jpg",
@@ -2835,6 +2835,20 @@
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@00e8001b4a32b6d62b6d9c4fd4056b2b3d17f92a/apps-src/stride.html",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@00e8001b4a32b6d62b6d9c4fd4056b2b3d17f92a/apps-src/stride.myllmapp",
       "sizeKB": 25
+    },
+    {
+      "id": "workbench",
+      "name": "Workbench",
+      "emoji": "🧰",
+      "tagline": "Open anything in your workspace",
+      "description": "The app your files open into. Hand it a document from the Files app and it renders it properly: Markdown as formatted text, CSV as a real table, JSON pretty-printed, logs and plain text as they are. Switch to Edit to change it and save straight back to the shared workspace, or Save as to file a copy somewhere else. Ask MyLLM hands the document to the assistant by path, so it reads the file itself rather than having it pasted into the chat. Everything stays on your device.",
+      "category": "Developer",
+      "iconSymbol": "wrench.and.screwdriver",
+      "iconColor": "indigo",
+      "version": 1,
+      "featured": false,
+      "requiresAI": false,
+      "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/workbench.html"
     }
   ]
 }

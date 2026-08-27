@@ -90,6 +90,7 @@
 <div class="top">
   <h1>🛰️ Command Center</h1>
   <button class="ib" onclick="openMonitors()" aria-label="Monitors">🌐</button>
+  <button class="ib" onclick="openHistory()" aria-label="History">🕘</button>
   <button class="ib" onclick="openHelp()" aria-label="How to report">?</button>
   <button class="ib" onclick="syncNow(true)" aria-label="Sync">⟳</button>
   <button class="ib" onclick="openSettings()" aria-label="Settings">⚙</button>
@@ -107,10 +108,38 @@
 
 <div class="empty" id="empty" style="display:none">
   <div class="big">🛰️</div>
-  <p>No systems are reporting yet.<br>Systems write a small heartbeat into the shared registry; this hub reads it — all on your device by default.</p>
+  <p>No systems are reporting yet.<br>Start with a few real ones — the public status pages for GitHub, Cloudflare, Claude and OpenAI — then ask MyLLM <i>“are any of my systems down?”</i></p>
   <div class="btnrow">
-    <button class="btn" onclick="writeDemo()">Write a demo heartbeat</button>
+    <button class="btn" onclick="addPresets()">Add example monitors</button>
     <button class="btn sec" onclick="openHelp()">How reporting works</button>
+  </div>
+  <p class="note" style="margin-top:12px">Or point it at your own: anything that returns JSON over http(s). <a href="#" onclick="writeDemo();return false;">Write a demo heartbeat</a> to see the shape.</p>
+</div>
+
+<p class="note" id="cardHint" style="display:none; text-align:center; margin:10px 0 0">
+  Touch and hold a system to remove it.</p>
+
+<!-- History — the record of state changes -->
+<div class="sheet" id="history">
+  <div class="sheetcard">
+    <div class="sheethead"><h2>History</h2><button class="x" onclick="closeSheet('history')">✕</button></div>
+    <p style="font-size:13px; line-height:1.5; color:var(--myllm-muted,#8a8a8e)">
+      Every time a system moves between ok, warn and error it is recorded here — the last 200 changes.
+      Steady systems stay quiet. Ask MyLLM <i>“what changed overnight?”</i> and it reads this too.</p>
+    <div id="histList" style="margin:10px 0"></div>
+  </div>
+</div>
+
+<!-- Remove confirmation — an in-page sheet, since JS dialogs are not allowed here -->
+<div class="sheet" id="remove">
+  <div class="sheetcard">
+    <div class="sheethead"><h2>Remove system</h2><button class="x" onclick="closeSheet('remove')">✕</button></div>
+    <p style="font-size:15px; margin:6px 0"><b id="rmName"></b></p>
+    <p class="note" id="rmNote" style="line-height:1.5"></p>
+    <div class="btnrow" style="margin-top:14px">
+      <button class="btn" onclick="confirmRemove()">Remove</button>
+      <button class="btn sec" onclick="closeSheet('remove')">Cancel</button>
+    </div>
   </div>
 </div>
 
@@ -122,6 +151,9 @@
       Each monitor is a URL Command Center polls. It should return JSON — e.g. a small status
       endpoint in front of a database or service. Top-level numbers/text become metrics.</p>
     <div id="monList" style="margin:10px 0"></div>
+    <button class="btn sec" style="width:100%; margin-bottom:8px" onclick="addPresets()">Add example monitors (GitHub, Cloudflare, Claude, OpenAI)</button>
+    <button class="btn sec" style="width:100%; margin-bottom:12px" onclick="setUpBackgroundPolling()">Keep polling when the app is closed…</button>
+    <p class="note" style="margin:-6px 0 12px">Monitors are only polled while this app is open. That button drafts a routine for the assistant, which can poll them in the background — you send it.</p>
 
     <label>Display name</label>
     <input id="mName" type="text" autocomplete="off" placeholder="Greenhouse">
@@ -168,6 +200,29 @@
     <div class="sheethead"><h2>How systems report</h2><button class="x" onclick="closeSheet('help')">✕</button></div>
     <p style="font-size:13.5px; line-height:1.5; color:var(--myllm-muted,#8a8a8e)">
       Command Center shows one card per system. A system's state gets in three ways:</p>
+
+    <div class="note" style="margin-top:14px"><b>What it's for</b> — once anything is on the dashboard,
+      the assistant can read it. Try asking MyLLM:
+      <br>· <i>“are any of my systems down?”</i>
+      <br>· <i>“what changed since this morning?”</i>
+      <br>· <i>“monitor the greenhouse at http://greenhouse.local/status”</i>
+      <br>· <i>“if GitHub goes red, tell me”</i> (as a routine)
+      <br>Nothing here leaves the device unless a monitor's URL is remote.</div>
+
+    <div class="note"><b>New here?</b> Tap <b>Add example monitors</b> in 🌐 Monitors to put the public
+      status pages for GitHub, Cloudflare, Claude and OpenAI on the board. They're real, need no
+      account, and give the assistant something true to answer with straight away.</div>
+
+    <div class="note"><b>Removing a system</b> — touch and hold its card. If it came from a URL monitor,
+      the monitor goes with it, otherwise the card would return on the next poll.</div>
+
+    <div class="note"><b>Polling when the app is closed</b> — monitors are only fetched while Command
+      Center is on screen. In 🌐 Monitors, <b>Keep polling when the app is closed</b> drafts a routine for
+      the assistant: it reads the same monitor list from the shared workspace and writes the heartbeats
+      back on a schedule, with nothing open. You review and send it.</div>
+
+    <div class="note"><b>History</b> — 🕘 records every move between ok, warn and error (last 200), so
+      "was it down overnight?" and "how often does this flap?" have real answers.</div>
 
     <div class="note" style="margin-top:14px"><b>1. Monitor a URL (the main way)</b> — in 🌐 Monitors, add a
       URL that returns JSON. Command Center pulls it and turns the top-level fields into metrics. A database
@@ -228,8 +283,60 @@ async function writeHeartbeat(hb){
   hb.ts = hb.ts || Date.now();
   hb.status = hb.status || "ok";
   var safe = String(hb.id).replace(/[^a-z0-9_-]+/gi,'-').slice(0,48) || 'system';
+  var prev = null;
+  try{ var old = await files.read(REG+safe+".json"); if(old) prev = JSON.parse(old).status; }catch(e){}
   await files.write(REG+safe+".json", JSON.stringify(hb));
+  if(prev !== hb.status) await recordChange(hb, prev);
 }
+
+/* ---------- history ----------
+   Each heartbeat overwrites the last, so nothing could answer "was it down
+   overnight?" or "how often does this flap?" — the state was always only ever
+   NOW. This keeps a small append-only log of TRANSITIONS (not every poll, which
+   would be almost entirely noise) that the assistant can read straight out of
+   the shared workspace.
+
+   Named with a leading underscore and a .jsonl extension so readRegistry skips
+   it twice over — it is a log, not a system. */
+var HISTORY = "system/_history.jsonl";
+var HISTORY_MAX = 200;
+
+async function recordChange(hb, prevStatus){
+  if(!files) return;
+  var line = JSON.stringify({
+    ts: hb.ts,
+    id: hb.id,
+    name: hb.name || hb.id,
+    from: prevStatus || 'new',
+    to: hb.status,
+    errors: (hb.errors && hb.errors.length) ? hb.errors.slice(0,2) : undefined
+  });
+  var existing = '';
+  try{ existing = (await files.read(HISTORY)) || ''; }catch(e){}
+  var lines = existing ? existing.split('\n').filter(Boolean) : [];
+  lines.push(line);
+  if(lines.length > HISTORY_MAX) lines = lines.slice(lines.length - HISTORY_MAX);
+  try{ await files.write(HISTORY, lines.join('\n')); }catch(e){}
+}
+
+async function readHistory(){
+  if(!files) return [];
+  var t=''; try{ t = (await files.read(HISTORY)) || ''; }catch(e){ return []; }
+  return t.split('\n').filter(Boolean).map(function(l){
+    try{ return JSON.parse(l); }catch(e){ return null; }
+  }).filter(Boolean).reverse();
+}
+
+async function renderHistory(){
+  var h = await readHistory();
+  el('histList').innerHTML = h.length ? h.slice(0,60).map(function(e){
+    var cls = e.to==='error'?'err':(e.to==='warn'?'warn':'ok');
+    return '<div class="mon"><div class="mon-i"><b>'+esc(e.name)+'</b>'
+      + '<span>'+esc(e.from)+' → '+esc(e.to)+(e.errors&&e.errors.length?' · '+esc(e.errors[0]):'')+'</span></div>'
+      + '<span class="seen" style="white-space:nowrap"><span class="dot '+cls+'"></span> '+rel(e.ts)+'</span></div>';
+  }).join('') : '<p class="note">Nothing yet. Changes are recorded when a system moves between ok, warn and error — steady systems stay quiet.</p>';
+}
+async function openHistory(){ await renderHistory(); el('history').classList.add('show'); }
 
 /* ---------- render ---------- */
 function rel(ts){
@@ -256,12 +363,84 @@ async function render(){
       ? Object.keys(h.metrics).map(function(k){ return '<span class="metric"><span class="k">'+esc(k)+'</span> <b>'+esc(h.metrics[k])+'</b></span>'; }).join('') : '';
     var errs = (h.errors&&h.errors.length)
       ? '<div class="errs">'+h.errors.slice(0,4).map(function(e){return '<div>'+esc(e)+'</div>';}).join('')+'</div>' : '';
-    return '<div class="card '+s+'"><div class="row1"><span class="dot '+s+'"></span>'
+    return '<div class="card '+s+'" data-sys="'+esc(h.id)+'" data-name="'+esc(h.name||h.id)+'"><div class="row1"><span class="dot '+s+'"></span>'
       + '<span class="name">'+esc(h.name||h.id)+'</span>'
       + (h.source? '<span class="src">'+esc(h.source)+'</span>':'')
       + '<span class="seen">'+(s==='stale'?'stale · ':'')+rel(h.ts)+'</span></div>'
       + (metrics? '<div class="metrics">'+metrics+'</div>':'') + errs + '</div>';
   }).join('');
+  el('cardHint').style.display = items.length ? 'block' : 'none';
+  bindLongPress();
+  publishTile(items.length, counts);
+}
+
+/* Put the summary on this app's own springboard tile, so "is anything wrong?"
+   is answered without opening anything. Errors outrank warnings outrank ok —
+   the tile has room for one fact and it should be the worst one. */
+function publishTile(total, counts){
+  if(!window.myllmWidget) return;
+  if(!total){ myllmWidget.clear(); return; }
+  var value, label;
+  if(counts.err){ value = String(counts.err); label = counts.err===1 ? 'system down' : 'systems down'; }
+  else if(counts.warn){ value = String(counts.warn); label = 'needs a look'; }
+  else { value = String(counts.ok); label = counts.ok===1 ? 'system ok' : 'all ok'; }
+  myllmWidget.publish({ value: value, label: label });
+}
+
+/* ---------- removing a system from the dashboard ----------
+   Cards come from heartbeat FILES, which is why this was missing: only URL
+   monitors had a Remove button, so anything that wrote its own heartbeat — the
+   demo reporter, another MyLLMos app, the assistant via write_shared_file — had
+   no way off the dashboard at all.
+
+   Long-press is the gesture, but never the only affordance: a hint line sits
+   under the cards, because a removal that exists only as an undiscoverable
+   long-press may as well not exist. The web view forbids native JS dialogs, so
+   the confirmation is an in-page sheet. */
+var pendingRemove = null;
+function bindLongPress(){
+  var cards = document.querySelectorAll('#cards .card');
+  Array.prototype.forEach.call(cards, function(card){
+    var timer = null, moved = false;
+    function start(){
+      moved = false;
+      timer = setTimeout(function(){
+        if(moved) return;
+        haptic('impact');
+        askRemove(card.getAttribute('data-sys'), card.getAttribute('data-name'));
+      }, 500);
+    }
+    function cancel(){ if(timer){ clearTimeout(timer); timer=null; } }
+    card.addEventListener('touchstart', start, {passive:true});
+    card.addEventListener('touchmove', function(){ moved = true; cancel(); }, {passive:true});
+    card.addEventListener('touchend', cancel);
+    card.addEventListener('touchcancel', cancel);
+    /* Mouse equivalent so the same code is testable in a desktop preview. */
+    card.addEventListener('mousedown', start);
+    card.addEventListener('mouseup', cancel);
+    card.addEventListener('mouseleave', cancel);
+  });
+}
+
+async function askRemove(id, name){
+  pendingRemove = id;
+  el('rmName').textContent = name || id;
+  /* A polled monitor would simply reappear on the next poll, so say plainly
+     that removing the card also stops the monitor. */
+  var isMonitor = (await readCollectors()).some(function(c){ return c.id===id; });
+  el('rmNote').textContent = isMonitor
+    ? 'This system is polled from a URL, so its monitor will be removed too — otherwise the card would come straight back.'
+    : 'Its heartbeat file is deleted from the shared registry. If whatever wrote it reports again, it will reappear.';
+  el('remove').classList.add('show');
+}
+
+async function confirmRemove(){
+  var id = pendingRemove; pendingRemove = null;
+  closeSheet('remove');
+  if(!id) return;
+  await removeMonitor(id);          /* drops the collector AND the heartbeat file */
+  haptic('success');
+  await render();
 }
 
 /* ---------- collectors: URLs the hub polls (the main intake) ----------
@@ -271,6 +450,17 @@ var COLLECTORS = "system/_collectors.json";
 async function readCollectors(){ try{ return JSON.parse((files && await files.read(COLLECTORS))||'[]'); }catch(e){ return []; } }
 async function writeCollectors(list){ if(files) await files.write(COLLECTORS, JSON.stringify(list)); }
 async function authMap(){ try{ return JSON.parse(await store.getItem('cc_auth')||'{}'); }catch(e){ return {}; } }
+
+/* Read "status.indicator" style dot-paths. The original collector only looked
+   at TOP-LEVEL keys, which is fine for a status endpoint you wrote yourself and
+   useless for almost every real one — an Atlassian status page (GitHub,
+   Cloudflare, Claude, OpenAI, and most SaaS) nests everything under `status`,
+   so every such monitor reported a cheerful green no matter what was on fire. */
+function getPath(obj, path){
+  return String(path||'').split('.').reduce(function(o,k){
+    return (o && typeof o==='object' && k in o) ? o[k] : undefined;
+  }, obj);
+}
 
 /* Poll one URL → write a heartbeat. Failure becomes an "error" heartbeat so the
    card turns red rather than silently vanishing. */
@@ -286,7 +476,17 @@ async function collectOne(c){
     var keys = (c.metrics && c.metrics.length) ? c.metrics
       : Object.keys(data).filter(function(k){ var t=typeof data[k]; return t==='number'||t==='string'||t==='boolean'; }).slice(0,8);
     keys.forEach(function(k){ if(k in data) metrics[k]=data[k]; });
-    var st = data.status; st = (st==='warn'||st==='error'||st==='ok') ? st : 'ok';
+    /* Explicit metric paths win over the top-level scrape. */
+    if(c.metricPaths){
+      metrics = {};
+      Object.keys(c.metricPaths).forEach(function(label){
+        var v = getPath(data, c.metricPaths[label]);
+        if(v !== undefined && typeof v !== 'object') metrics[label] = v;
+      });
+    }
+    var st = c.statusPath ? getPath(data, c.statusPath) : data.status;
+    if(c.statusMap && st != null && (String(st) in c.statusMap)) st = c.statusMap[String(st)];
+    st = (st==='warn'||st==='error'||st==='ok') ? st : 'ok';
     await writeHeartbeat({ id:c.id, name:c.name||c.id, status:st, metrics:metrics, errors:(data.errors||[]), source:'url' });
     return true;
   }catch(e){
@@ -297,7 +497,7 @@ async function collectOne(c){
 async function collectAll(){ var list=await readCollectors(); for(var i=0;i<list.length;i++){ await collectOne(list[i]); } return list.length; }
 
 /* Add a monitor — used by the UI AND by the assistant's add-monitor action. */
-async function addMonitor(name, url, metrics, token){
+async function addMonitor(name, url, metrics, token, extra){
   url = String(url||'').trim();
   if(!/^https?:\/\//i.test(url)) throw new Error("URL must start with http:// or https://");
   name = String(name||'').trim() || url;
@@ -305,12 +505,54 @@ async function addMonitor(name, url, metrics, token){
   var list = (await readCollectors()).filter(function(c){ return c.id!==id; });
   var c = { id:id, name:name, url:url };
   if(metrics && metrics.length) c.metrics = metrics;
+  /* Optional shape mapping (used by the starter monitors); absent for a
+     hand-added or assistant-added URL, which behaves exactly as before. */
+  if(extra && extra.statusPath)  c.statusPath  = extra.statusPath;
+  if(extra && extra.statusMap)   c.statusMap   = extra.statusMap;
+  if(extra && extra.metricPaths) c.metricPaths = extra.metricPaths;
   list.push(c);
   await writeCollectors(list);
   if(token){ var a=await authMap(); a[id]=token; await store.setItem('cc_auth', JSON.stringify(a)); }
   await collectOne(c);   /* immediate first reading */
   return id;
 }
+/* ---------- starter monitors ----------
+   The honest answer to "what is this app for?". A dashboard with nothing on it
+   teaches nothing, and the only thing it previously offered a new user was a
+   fake "Demo Reporter" — which then could not be removed.
+
+   These are real, public, no-auth status pages for services this app's users
+   actually depend on, and they make `system_status` immediately worth asking
+   about: "are any of my systems down?" returns something true on day one. */
+var STATUSPAGE = {
+  statusPath: 'status.indicator',
+  statusMap: { none:'ok', minor:'warn', major:'error', critical:'error', maintenance:'warn' },
+  metricPaths: { state: 'status.description' }
+};
+var PRESETS = [
+  { name:'GitHub',     url:'https://www.githubstatus.com/api/v2/status.json' },
+  { name:'Cloudflare', url:'https://www.cloudflarestatus.com/api/v2/status.json' },
+  { name:'Claude',     url:'https://status.claude.com/api/v2/status.json' },
+  { name:'OpenAI',     url:'https://status.openai.com/api/v2/status.json' }
+];
+
+async function addPresets(){
+  if(!window.myllmFetch){
+    el('mStatus').textContent = '✗ Internet is off for apps — turn it on in MyLLMos settings to poll status pages.';
+    haptic('error');
+    return;
+  }
+  el('mStatus').textContent = 'Adding example monitors…';
+  var added = 0;
+  for(var i=0;i<PRESETS.length;i++){
+    try{ await addMonitor(PRESETS[i].name, PRESETS[i].url, null, null, STATUSPAGE); added++; }
+    catch(e){ /* keep going: one unreachable service shouldn't block the rest */ }
+  }
+  el('mStatus').textContent = 'Added '+added+' example monitor(s) and polled once.';
+  haptic('success');
+  await renderMonitors(); await render();
+}
+
 async function removeMonitor(id){
   await writeCollectors((await readCollectors()).filter(function(c){ return c.id!==id; }));
   try{ if(files) await files.remove(REG+id+".json"); }catch(e){}   /* drop its card */
@@ -335,6 +577,33 @@ async function submitMonitor(){
   }catch(e){ el('mStatus').textContent='✗ '+e.message; haptic('error'); }
 }
 function removeMon(id){ removeMonitor(id).then(function(){ renderMonitors(); render(); haptic('selection'); }); }
+/* ---------- background polling ----------
+   The app can only poll while it is on screen: setInterval stops the moment the
+   web view goes away, so this was a dashboard that refreshed when you looked at
+   it and never otherwise. An app action cannot fix that either — those need the
+   app open, by design.
+
+   The assistant can. The collector list lives in the SHARED workspace, so a
+   routine can read it, fetch each URL and write the heartbeats back with no app
+   running at all. This drafts exactly that request; the user presses send. */
+function backgroundPollPrompt(){
+  return 'Every hour, read the JSON list of monitors at system/_collectors.json in my '
+    + 'shared workspace. For each entry, fetch its "url", then write the result to '
+    + 'system/<id>.json as {"id","name","status","metrics","ts","source":"routine"} where '
+    + 'status is "ok", "warn" or "error" — use "error" if the request fails, and put the '
+    + 'reason in an "errors" array. Set ts to the current time in milliseconds. '
+    + 'Do not report back unless something is in error.';
+}
+
+function setUpBackgroundPolling(){
+  if(!window.myllmChat){
+    el('mStatus').textContent = 'Ask MyLLM in chat: “poll the monitors in system/_collectors.json every hour and write the results back to system/”.';
+    return;
+  }
+  window.myllmChat.compose(backgroundPollPrompt());
+  haptic('success');
+}
+
 async function pollNow(){ el('mStatus').textContent='Polling…'; var n=await collectAll(); el('mStatus').textContent='Polled '+n+' monitor(s).'; await render(); }
 
 /* ---------- actions ---------- */

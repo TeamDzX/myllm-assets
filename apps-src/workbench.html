@@ -1,0 +1,555 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Workbench</title>
+<!-- Receives files handed over from the MyLLMos Files app ("Open with an app..."). -->
+<meta name="myllm:intents" content="open-text">
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;font:16px/1.5 var(--myllm-font,-apple-system,system-ui,sans-serif);
+       background:var(--myllm-bg,#fff);color:var(--myllm-text,#0b0c0f);
+       padding:0 0 env(safe-area-inset-bottom)}
+  header{position:sticky;top:0;z-index:5;background:var(--myllm-bg,#fff);
+         border-bottom:1px solid var(--myllm-border,rgba(0,0,0,.12));padding:12px 16px}
+  h1{margin:0;font-size:17px;font-weight:650;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .sub{font-size:12px;color:var(--myllm-muted,#5b6270);margin-top:2px}
+  .tabs{display:flex;gap:6px;padding:10px 16px;overflow-x:auto}
+  .tab{border:0;background:var(--myllm-surface,#f4f5f7);color:var(--myllm-text,#111);
+       border-radius:999px;padding:7px 13px;font-size:13.5px;font-weight:600;white-space:nowrap}
+  .tab[aria-selected="true"]{background:var(--myllm-accent,#4f7cff);color:#fff}
+  main{padding:0 16px 96px}
+  .empty{padding:48px 24px;text-align:center;color:var(--myllm-muted,#5b6270)}
+  .empty .big{font-size:44px;margin-bottom:10px}
+  pre,textarea{white-space:pre-wrap;word-wrap:break-word;font:13.5px/1.55 ui-monospace,SFMono-Regular,Menlo,monospace}
+  textarea{width:100%;min-height:58vh;border:1px solid var(--myllm-border,#ddd);
+           border-radius:var(--myllm-radius,14px);padding:12px;background:var(--myllm-surface,#fafafa);
+           color:inherit;resize:vertical}
+  table{border-collapse:collapse;width:100%;font-size:13.5px}
+  th,td{border:1px solid var(--myllm-border,rgba(0,0,0,.12));padding:6px 8px;text-align:left;vertical-align:top}
+  th{background:var(--myllm-surface,#f4f5f7);position:sticky;top:0}
+  .scroll{overflow:auto;max-width:100%;border-radius:10px}
+  .md h1,.md h2,.md h3{line-height:1.25}
+  .md code{background:var(--myllm-surface,#f0f1f3);padding:1px 5px;border-radius:5px;font-size:13px}
+  .md pre{background:var(--myllm-surface,#f0f1f3);padding:12px;border-radius:10px;overflow:auto}
+  .md blockquote{margin:0;padding-left:12px;border-left:3px solid var(--myllm-border,#ddd);color:var(--myllm-muted,#5b6270)}
+  .md table{margin:10px 0}
+  .k{color:var(--myllm-accent,#4f7cff)}
+  .bar{position:fixed;left:0;right:0;bottom:0;display:flex;gap:8px;padding:10px 14px calc(10px + env(safe-area-inset-bottom));
+       background:var(--myllm-bg,#fff);border-top:1px solid var(--myllm-border,rgba(0,0,0,.12))}
+  .btn{flex:1;border:0;border-radius:12px;padding:12px 10px;font-size:14.5px;font-weight:650;
+       background:var(--myllm-surface,#eef0f4);color:var(--myllm-text,#111)}
+  .btn.primary{background:var(--myllm-accent,#4f7cff);color:#fff}
+  .btn:disabled{opacity:.45}
+  .note{font-size:12.5px;color:var(--myllm-muted,#5b6270);padding:8px 0}
+  .sheet{position:fixed;inset:0;background:rgba(0,0,0,.35);display:none;align-items:flex-end;z-index:20}
+  .sheet.show{display:flex}
+  .sheetcard{background:var(--myllm-bg,#fff);width:100%;border-radius:18px 18px 0 0;padding:16px;max-height:80vh;overflow:auto}
+  input[type=text]{width:100%;padding:11px;border-radius:10px;border:1px solid var(--myllm-border,#ddd);
+                   background:var(--myllm-surface,#fafafa);color:inherit;font-size:15px}
+
+  /* ---------- typography ----------
+     Reading settings live on one wrapper as custom properties, so the rendered
+     view, the raw view and the editor all inherit exactly the same type without
+     three sets of rules drifting apart. */
+  #doc{--doc-font:var(--myllm-font,-apple-system,system-ui,sans-serif);
+       --doc-size:16px;--doc-line:1.6;--doc-width:100%;--doc-align:left}
+  #doc, #doc .md, #doc pre, #doc textarea{
+       font-family:var(--doc-font);font-size:var(--doc-size);line-height:var(--doc-line);
+       text-align:var(--doc-align)}
+  #doc .md, #doc > pre, #doc .scroll, #doc > textarea{max-width:var(--doc-width);margin-left:auto;margin-right:auto}
+  #doc.paper{background:#fbf7ef;color:#33302b;border-radius:12px;padding:14px 16px}
+  #doc.paper pre,#doc.paper code{background:#f2ece0}
+  /* Justified text needs hyphenation or it opens rivers of whitespace on a phone. */
+  #doc[data-align="justify"] .md p{hyphens:auto;-webkit-hyphens:auto}
+  .fmtbar{display:flex;gap:6px;overflow-x:auto;padding:8px 0 10px;position:sticky;top:0;
+          background:var(--myllm-bg,#fff);z-index:3}
+  .fmt{border:1px solid var(--myllm-border,rgba(0,0,0,.14));background:var(--myllm-surface,#f4f5f7);
+       color:var(--myllm-text,#111);border-radius:9px;min-width:38px;height:34px;font-size:14px;font-weight:700}
+  .fmt.wide{padding:0 10px;font-weight:600}
+  .seg{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 2px}
+  .seg button{flex:1;min-width:74px;border:1px solid var(--myllm-border,rgba(0,0,0,.14));
+              background:var(--myllm-surface,#f4f5f7);color:var(--myllm-text,#111);
+              border-radius:10px;padding:9px 8px;font-size:13.5px;font-weight:600}
+  .seg button[aria-pressed="true"]{background:var(--myllm-accent,#4f7cff);color:#fff;border-color:transparent}
+  .lbl{font-size:12.5px;font-weight:700;color:var(--myllm-muted,#5b6270);
+       text-transform:uppercase;letter-spacing:.04em;margin:14px 0 2px}
+  input[type=range]{width:100%;accent-color:var(--myllm-accent,#4f7cff)}
+  .sample{border:1px dashed var(--myllm-border,#ddd);border-radius:10px;padding:10px;margin-top:12px}
+</style></head>
+<body>
+
+<header>
+  <div style="display:flex;align-items:center;gap:10px">
+    <div style="min-width:0;flex:1">
+      <h1 id="title">Workbench</h1>
+      <div class="sub" id="sub">Open a file from Files, then "Open with an app..."</div>
+    </div>
+    <button class="fmt wide" id="typeBtn" onclick="openType()" aria-label="Text settings"
+            style="height:38px;font-size:15px">Aa</button>
+  </div>
+</header>
+
+<div class="tabs" id="tabs" hidden>
+  <button class="tab" id="tabView" onclick="setMode('view')" aria-selected="true">View</button>
+  <button class="tab" id="tabEdit" onclick="setMode('edit')" aria-selected="false">Edit</button>
+  <button class="tab" id="tabRaw" onclick="setMode('raw')" aria-selected="false">Source</button>
+</div>
+
+<main id="doc">
+ <div id="main">
+  <div class="empty" id="empty">
+    <div class="big">&#129520;</div>
+    <p><b>Nothing open yet.</b><br>
+    Open the <b>Files</b> app in MyLLMos, swipe a file and choose <b>Open</b> &mdash;
+    Workbench reads Markdown, CSV, JSON, HTML, logs and plain text.</p>
+    <p class="note">Or ask MyLLM to save something into your workspace, then open it here.</p>
+  </div>
+ </div>
+</main>
+
+<div class="bar" id="bar" hidden>
+  <button class="btn" id="saveBtn" onclick="save()" disabled>Save</button>
+  <button class="btn" onclick="openSaveAs()">Save as...</button>
+  <button class="btn primary" onclick="askAI()">Ask MyLLM</button>
+</div>
+
+<div class="sheet" id="type">
+  <div class="sheetcard">
+    <h3 style="margin:2px 0 4px">Text</h3>
+    <p class="note" style="padding-top:0">Applies to reading, the source view and the editor. Remembered for next time.</p>
+
+    <div class="lbl">Typeface</div>
+    <div class="seg" id="segFont"></div>
+
+    <div class="lbl">Size <span id="sizeVal" style="font-weight:600"></span></div>
+    <input type="range" id="rngSize" min="13" max="26" step="1" oninput="setType('size', +this.value)">
+
+    <div class="lbl">Line spacing <span id="lineVal" style="font-weight:600"></span></div>
+    <input type="range" id="rngLine" min="12" max="22" step="1" oninput="setType('line', +this.value/10)">
+
+    <div class="lbl">Column width</div>
+    <div class="seg" id="segWidth"></div>
+
+    <div class="lbl">Alignment</div>
+    <div class="seg" id="segAlign"></div>
+
+    <div class="lbl">Page</div>
+    <div class="seg" id="segTheme"></div>
+
+    <div class="sample" id="sample">The quick brown fox jumps over the lazy dog. 0123456789</div>
+
+    <div style="display:flex;gap:8px;margin-top:14px">
+      <button class="btn" onclick="resetType()">Reset</button>
+      <button class="btn primary" onclick="closeSheet('type')">Done</button>
+    </div>
+  </div>
+</div>
+
+<div class="sheet" id="saveAs">
+  <div class="sheetcard">
+    <h3 style="margin:2px 0 10px">Save a copy</h3>
+    <p class="note" style="padding-top:0">Choose a path inside your shared workspace. Folders are created as needed.</p>
+    <input type="text" id="saveAsPath" placeholder="notes/2026/copy.md">
+    <div style="display:flex;gap:8px;margin-top:12px">
+      <button class="btn primary" onclick="commitSaveAs()">Save</button>
+      <button class="btn" onclick="closeSheet('saveAs')">Cancel</button>
+    </div>
+    <div class="note" id="saveAsStatus"></div>
+  </div>
+</div>
+
+<script>
+var files = window.myllmFiles || null;
+var current = null;          /* {name, path, ext, text} */
+var edited = null;           /* working copy while editing */
+var mode = 'view';
+
+function el(id){ return document.getElementById(id); }
+function esc(s){ return String(s==null?'':s)
+  .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function haptic(k){ try{ window.myllmHaptic && myllmHaptic(k); }catch(e){} }
+function closeSheet(id){ el(id).classList.remove('show'); }
+
+/* ---------- receiving a file (the whole point) ----------
+   The Files app routes an "open-text" intent through the MyLLMos intent bus and
+   the payload lands here. The declaration is the myllm:intents meta tag in the
+   head; without it the router would never offer this app as a destination.
+   (Written as prose on purpose: the router parses the document as TEXT, so a
+   literal meta tag in a comment shows up as a second declaration.) */
+if (window.myllmIntent && myllmIntent.receive) {
+  myllmIntent.receive(function (intent) {
+    if (!intent || intent.action !== 'open-text' || !intent.data) return;
+    openDoc(intent.data);
+  });
+}
+
+function openDoc(d){
+  current = { name: d.name || 'Untitled', path: d.path || '',
+              ext: String(d.ext||'').toLowerCase(), text: String(d.text||'') };
+  edited = current.text;
+  el('title').textContent = current.name;
+  el('sub').textContent = (current.path || 'unsaved') + ' - ' + human(current.text.length) + ' - ' + kindLabel(current.ext);
+  el('empty').style.display = 'none';
+  el('tabs').hidden = false;
+  el('bar').hidden = false;
+  setMode('view');
+  haptic('selection');
+}
+
+function human(n){ return n < 1024 ? n + ' chars' : (n/1024).toFixed(1) + ' KB'; }
+
+/* ================= typography =================
+   A document app that can't change its type is a viewer, not a workbench —
+   reading a long note at the system default in a sans stack is the thing people
+   actually complain about. Settings persist per app via myllmStorage.
+
+   Defaults are seeded from myllmTheme where MyLLM already knows the answer:
+   if the user asked the OS for larger text or a readable font, start there
+   rather than making them say it twice. */
+var FONTS = [
+  { id:'system', label:'System', css:"var(--myllm-font,-apple-system,system-ui,sans-serif)" },
+  { id:'serif',  label:'Serif',  css:"'Iowan Old Style','Palatino','Georgia',serif" },
+  { id:'mono',   label:'Mono',   css:"ui-monospace,SFMono-Regular,Menlo,monospace" },
+  { id:'read',   label:'Readable', css:"'Comic Sans MS','Chalkboard SE','Trebuchet MS',system-ui,sans-serif" }
+];
+var WIDTHS = [ {id:'narrow',label:'Narrow',css:'34em'}, {id:'normal',label:'Normal',css:'46em'}, {id:'full',label:'Full',css:'100%'} ];
+var ALIGNS = [ {id:'left',label:'Left'}, {id:'justify',label:'Justified'} ];
+var THEMES = [ {id:'default',label:'Default'}, {id:'paper',label:'Paper'} ];
+
+var type = { font:'system', size:16, line:1.6, width:'full', align:'left', theme:'default' };
+
+function themeDefaults(){
+  var t = window.myllmTheme || {};
+  if (t.largeText) type.size = 19;
+  if (t.dyslexiaFont) { type.font = 'read'; type.line = 1.8; }
+}
+
+async function loadType(){
+  themeDefaults();
+  try{
+    if (window.myllmStorage){
+      var raw = await myllmStorage.getItem('wb.type');
+      if (raw) {
+        var saved = JSON.parse(raw);
+        Object.keys(type).forEach(function(k){ if (saved[k] != null) type[k] = saved[k]; });
+      }
+    }
+  }catch(e){}
+  applyType();
+}
+
+function saveType(){
+  try{ window.myllmStorage && myllmStorage.setItem('wb.type', JSON.stringify(type)); }catch(e){}
+}
+
+function applyType(){
+  var d = el('doc');
+  var f = FONTS.filter(function(x){ return x.id === type.font; })[0] || FONTS[0];
+  var w = WIDTHS.filter(function(x){ return x.id === type.width; })[0] || WIDTHS[2];
+  d.style.setProperty('--doc-font', f.css);
+  d.style.setProperty('--doc-size', type.size + 'px');
+  d.style.setProperty('--doc-line', String(type.line));
+  d.style.setProperty('--doc-width', w.css);
+  d.style.setProperty('--doc-align', type.align);
+  d.setAttribute('data-align', type.align);
+  d.classList.toggle('paper', type.theme === 'paper');
+  var sample = el('sample');
+  if (sample){
+    sample.style.fontFamily = f.css;
+    sample.style.fontSize = type.size + 'px';
+    sample.style.lineHeight = String(type.line);
+    sample.style.textAlign = type.align;
+  }
+  if (el('sizeVal')) el('sizeVal').textContent = type.size + 'px';
+  if (el('lineVal')) el('lineVal').textContent = type.line.toFixed(1);
+  if (el('rngSize')) el('rngSize').value = type.size;
+  if (el('rngLine')) el('rngLine').value = Math.round(type.line * 10);
+  paintSegs();
+}
+
+function setType(k, v){ type[k] = v; applyType(); saveType(); }
+
+function resetType(){
+  type = { font:'system', size:16, line:1.6, width:'full', align:'left', theme:'default' };
+  themeDefaults(); applyType(); saveType(); haptic('selection');
+}
+
+function seg(containerId, options, key){
+  var c = el(containerId);
+  if (!c) return;
+  c.innerHTML = options.map(function(o){
+    return '<button aria-pressed="' + (type[key]===o.id) + '" data-v="' + o.id + '">' + esc(o.label) + '</button>';
+  }).join('');
+  Array.prototype.forEach.call(c.querySelectorAll('button'), function(b){
+    b.onclick = function(){ setType(key, b.getAttribute('data-v')); haptic('selection'); };
+  });
+}
+function paintSegs(){
+  seg('segFont', FONTS, 'font');
+  seg('segWidth', WIDTHS, 'width');
+  seg('segAlign', ALIGNS, 'align');
+  seg('segTheme', THEMES, 'theme');
+}
+
+function openType(){ paintSegs(); applyType(); el('type').classList.add('show'); }
+
+loadType();
+
+function kindLabel(ext){
+  if (ext==='md'||ext==='markdown') return 'Markdown';
+  if (ext==='csv') return 'CSV';
+  if (ext==='json') return 'JSON';
+  if (ext==='html'||ext==='htm') return 'HTML';
+  if (ext==='log') return 'Log';
+  return 'Text';
+}
+
+function setMode(m){
+  mode = m;
+  var map = { view:'tabView', edit:'tabEdit', raw:'tabRaw' };
+  Object.keys(map).forEach(function(x){
+    el(map[x]).setAttribute('aria-selected', String(x===m));
+  });
+  render();
+}
+
+function render(){
+  var m = el('main');
+  if (!current) return;
+  if (mode === 'edit'){
+    /* A Markdown editor with no formatting controls makes people memorise
+       syntax; these wrap the selection the way a word processor would. */
+    var isMd = (current.ext === 'md' || current.ext === 'markdown' || current.ext === '' || current.ext === 'txt');
+    m.innerHTML = (isMd ? fmtBar() : '') + '<textarea id="ta" spellcheck="false"></textarea>';
+    if (isMd) wireFmtBar();
+    var ta = el('ta');
+    ta.value = edited;
+    ta.addEventListener('input', function(){
+      edited = ta.value;
+      el('saveBtn').disabled = (edited === current.text) || !current.path;
+    });
+    el('saveBtn').disabled = (edited === current.text) || !current.path;
+    return;
+  }
+  if (mode === 'raw'){
+    m.innerHTML = '<pre>' + esc(edited) + '</pre>';
+    return;
+  }
+  var e = current.ext;
+  if (e==='md'||e==='markdown') m.innerHTML = '<div class="md">' + markdown(edited) + '</div>';
+  else if (e==='csv')  m.innerHTML = csvTable(edited);
+  else if (e==='json') m.innerHTML = jsonView(edited);
+  else if (e==='html'||e==='htm') m.innerHTML = htmlSource(edited);
+  else m.innerHTML = '<pre>' + esc(edited) + '</pre>';
+}
+
+/* ---------- editor formatting ---------- */
+
+var FMT = [
+  { k:'b',   label:'B',   title:'Bold',      wrap:['**','**'] },
+  { k:'i',   label:'I',   title:'Italic',    wrap:['*','*'] },
+  { k:'h1',  label:'H1',  title:'Heading 1', line:'# ' },
+  { k:'h2',  label:'H2',  title:'Heading 2', line:'## ' },
+  { k:'ul',  label:'•',   title:'List',      line:'- ' },
+  { k:'ol',  label:'1.',  title:'Numbered',  line:'1. ' },
+  { k:'q',   label:'❝',   title:'Quote',     line:'> ' },
+  { k:'code',label:'</>', title:'Code',      wrap:['`','`'] },
+  { k:'link',label:'Link',title:'Link',      wrap:['[',"](https://)"], wide:true }
+];
+
+function fmtBar(){
+  return '<div class="fmtbar">' + FMT.map(function(f){
+    return '<button class="fmt' + (f.wide?' wide':'') + '" data-k="' + f.k + '" title="' + f.title + '">' + f.label + '</button>';
+  }).join('') + '</div>';
+}
+
+function wireFmtBar(){
+  Array.prototype.forEach.call(document.querySelectorAll('.fmt[data-k]'), function(b){
+    /* mousedown, not click: the textarea must not lose its selection first. */
+    b.addEventListener('mousedown', function(ev){ ev.preventDefault(); });
+    b.addEventListener('click', function(){
+      var f = FMT.filter(function(x){ return x.k === b.getAttribute('data-k'); })[0];
+      if (f) applyFmt(f);
+    });
+  });
+}
+
+function applyFmt(f){
+  var ta = el('ta');
+  if (!ta) return;
+  var start = ta.selectionStart, end = ta.selectionEnd;
+  var before = ta.value.slice(0, start), sel = ta.value.slice(start, end), after = ta.value.slice(end);
+  if (f.line){
+    /* Prefix every line the selection touches, including the one the caret sits
+       on when nothing is selected. */
+    var ls = before.lastIndexOf('\n') + 1;
+    var le = end + (ta.value.slice(end).indexOf('\n') === -1 ? ta.value.length - end : ta.value.slice(end).indexOf('\n'));
+    var block = ta.value.slice(ls, le);
+    var prefixed = block.split('\n').map(function(l){
+      return l.indexOf(f.line) === 0 ? l.slice(f.line.length) : f.line + l;   /* toggles */
+    }).join('\n');
+    ta.value = ta.value.slice(0, ls) + prefixed + ta.value.slice(le);
+    ta.selectionStart = ls; ta.selectionEnd = ls + prefixed.length;
+  } else {
+    ta.value = before + f.wrap[0] + sel + f.wrap[1] + after;
+    ta.selectionStart = start + f.wrap[0].length;
+    ta.selectionEnd = ta.selectionStart + sel.length;
+  }
+  edited = ta.value;
+  el('saveBtn').disabled = (edited === current.text) || !current.path;
+  ta.focus();
+  haptic('light');
+}
+
+/* ---------- renderers ---------- */
+
+/* A small, dependency-free Markdown subset: headings, emphasis, code, lists,
+   quotes, links, rules. Deliberately not a full parser - a gallery app must stay
+   self-contained, and this covers what notes actually use. Escapes FIRST, so
+   nothing in the document can inject markup. */
+function markdown(src){
+  var s = esc(src);
+  var blocks = [];
+  s = s.replace(/```([\s\S]*?)```/g, function(_, code){
+    blocks.push('<pre>' + code.replace(/^\n/,'') + '</pre>');
+    return ' BLOCK' + (blocks.length-1) + ' ';
+  });
+  s = s.replace(/^######\s+(.*)$/gm,'<h6>$1</h6>')
+       .replace(/^#####\s+(.*)$/gm,'<h5>$1</h5>')
+       .replace(/^####\s+(.*)$/gm,'<h4>$1</h4>')
+       .replace(/^###\s+(.*)$/gm,'<h3>$1</h3>')
+       .replace(/^##\s+(.*)$/gm,'<h2>$1</h2>')
+       .replace(/^#\s+(.*)$/gm,'<h1>$1</h1>')
+       .replace(/^\s*([-*_])\1{2,}\s*$/gm,'<hr>')
+       .replace(/^&gt;\s?(.*)$/gm,'<blockquote>$1</blockquote>')
+       .replace(/`([^`\n]+)`/g,'<code>$1</code>')
+       .replace(/\*\*([^*\n]+)\*\*/g,'<strong>$1</strong>')
+       .replace(/(^|[^*])\*([^*\n]+)\*/g,'$1<em>$2</em>')
+       .replace(/\[([^\]]+)\]\((https?:[^)\s]+)\)/g,'<a href="$2">$1</a>');
+  s = s.replace(/(?:^[-*+]\s+.*(?:\n|$))+/gm, function(run){
+    return '<ul>' + run.trim().split('\n').map(function(l){
+      return '<li>' + l.replace(/^[-*+]\s+/,'') + '</li>'; }).join('') + '</ul>';
+  });
+  s = s.replace(/(?:^\d+\.\s+.*(?:\n|$))+/gm, function(run){
+    return '<ol>' + run.trim().split('\n').map(function(l){
+      return '<li>' + l.replace(/^\d+\.\s+/,'') + '</li>'; }).join('') + '</ol>';
+  });
+  s = s.split(/\n{2,}/).map(function(p){
+    return /^\s*<(h[1-6]|ul|ol|pre|blockquote|hr)/.test(p) ? p : '<p>' + p.replace(/\n/g,'<br>') + '</p>';
+  }).join('\n');
+  return s.replace(/ BLOCK(\d+) /g, function(_, i){ return blocks[+i]; });
+}
+
+/* RFC-ish CSV: honours quoted fields containing commas, newlines and doubled
+   quotes, which a naive split(',') mangles on exactly the files people have. */
+function parseCSV(text){
+  var rows=[], row=[], cur='', q=false;
+  for (var i=0;i<text.length;i++){
+    var c=text[i];
+    if (q){
+      if (c === '"'){ if (text[i+1] === '"'){ cur+='"'; i++; } else q=false; }
+      else cur+=c;
+    } else if (c === '"'){ q=true; }
+    else if (c === ','){ row.push(cur); cur=''; }
+    else if (c === '\n'){ row.push(cur); rows.push(row); row=[]; cur=''; }
+    else if (c !== '\r'){ cur+=c; }
+  }
+  if (cur.length || row.length){ row.push(cur); rows.push(row); }
+  return rows.filter(function(r){ return r.length>1 || String(r[0]||'').trim()!==''; });
+}
+
+function csvTable(text){
+  var rows = parseCSV(text);
+  if (!rows.length) return '<p class="note">Empty file.</p>';
+  var head = rows[0], body = rows.slice(1);
+  return '<div class="scroll"><table><thead><tr>' +
+    head.map(function(h){ return '<th>' + esc(h) + '</th>'; }).join('') +
+    '</tr></thead><tbody>' +
+    body.map(function(r){
+      return '<tr>' + head.map(function(_, i){ return '<td>' + esc(r[i]||'') + '</td>'; }).join('') + '</tr>';
+    }).join('') + '</tbody></table></div>' +
+    '<p class="note">' + body.length + ' row' + (body.length===1?'':'s') + ' - ' + head.length + ' columns</p>';
+}
+
+function jsonView(text){
+  var data;
+  try { data = JSON.parse(text); }
+  catch(e){
+    return '<p class="note">Not valid JSON - ' + esc(e.message) + '. Showing the source.</p><pre>' + esc(text) + '</pre>';
+  }
+  return '<pre>' + colourJSON(JSON.stringify(data, null, 2)) + '</pre>';
+}
+function colourJSON(s){
+  return esc(s).replace(/&quot;([^&]*?)&quot;(\s*:)/g, '<span class="k">&quot;$1&quot;</span>$2');
+}
+
+/* An HTML document is shown as SOURCE, never executed. Running a file from the
+   shared workspace inside this app would hand it this app's bridges and storage;
+   install it as its own app if that is what you want. */
+function htmlSource(text){
+  return '<p class="note">HTML is shown as source here. To run it, install it as its own app from the Files preview.</p>'
+       + '<pre>' + esc(text) + '</pre>';
+}
+
+/* ---------- actions ---------- */
+
+async function save(){
+  if (!files || !current || !current.path) return;
+  try{
+    await files.write(current.path, edited);
+    current.text = edited;
+    el('saveBtn').disabled = true;
+    el('sub').textContent = current.path + ' - saved - ' + kindLabel(current.ext);
+    haptic('success');
+  }catch(e){ el('sub').textContent = 'Save failed: ' + e.message; haptic('error'); }
+}
+
+function openSaveAs(){
+  if (!current) return;
+  el('saveAsPath').value = current.path || (current.name || 'untitled.txt');
+  el('saveAsStatus').textContent = '';
+  el('saveAs').classList.add('show');
+}
+
+async function commitSaveAs(){
+  var p = el('saveAsPath').value.trim();
+  if (!p){ el('saveAsStatus').textContent = 'Give it a path.'; return; }
+  if (!files){ el('saveAsStatus').textContent = 'Shared files are off.'; return; }
+  try{
+    await files.write(p, edited);
+    current.path = p;
+    current.name = p.split('/').pop();
+    current.ext = String(p.split('.').pop()||'').toLowerCase();
+    current.text = edited;
+    el('title').textContent = current.name;
+    el('sub').textContent = p + ' - saved - ' + kindLabel(current.ext);
+    el('saveBtn').disabled = true;
+    closeSheet('saveAs');
+    haptic('success');
+    render();
+  }catch(e){ el('saveAsStatus').textContent = 'x ' + e.message; haptic('error'); }
+}
+
+/* Hands the document to the assistant. compose (not send) so the user reads the
+   request before it goes - and a long file is referred to by PATH rather than
+   pasted, so the chat box stays usable and the assistant reads it itself. */
+function askAI(){
+  if (!current) return;
+  var where = current.path ? ('the file ' + current.path + ' in my shared workspace') : 'this document';
+  var ask = 'Read ' + where + ' and tell me what it says - the key points, anything that needs a decision, and anything that looks wrong.';
+  if (window.myllmChat && myllmChat.compose){ myllmChat.compose(ask); haptic('success'); return; }
+  if (window.myllmAsk){
+    el('sub').textContent = 'Asking MyLLM...';
+    myllmAsk('Summarise this ' + kindLabel(current.ext) + ' document in 5 bullets:\n\n' + String(edited).slice(0, 6000))
+      .then(function(r){
+        el('main').innerHTML = '<div class="md">' + markdown(r) + '</div>';
+        el('sub').textContent = 'MyLLM summary';
+      })
+      .catch(function(e){ el('sub').textContent = 'Ask failed: ' + e.message; });
+    return;
+  }
+  el('sub').textContent = 'AI is off for apps.';
+}
+</script>
+</body></html>
