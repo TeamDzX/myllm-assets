@@ -19,7 +19,6 @@
   .dir{color:#79c0ff;font-weight:650}
   form{display:flex;gap:8px;padding:10px 12px calc(10px + env(safe-area-inset-bottom));
        border-top:1px solid #1e2733;background:#0d1117}
-  .ps1{color:#7ee787;align-self:center}
   input{flex:1;background:#111823;border:1px solid #1e2733;border-radius:9px;color:#d6deeb;
         padding:10px 11px;font:13.5px ui-monospace,SFMono-Regular,Menlo,monospace}
   input:focus{outline:2px solid #1f6feb;outline-offset:-1px}
@@ -27,6 +26,11 @@
   .chips{display:flex;gap:6px;overflow-x:auto;padding:0 12px 10px}
   .chip{background:#111823;border:1px solid #1e2733;color:#9db2cd;border-radius:999px;
         padding:6px 11px;font-size:12px;white-space:nowrap}
+  .ask{color:#c9a3ff}
+  .step{color:#6b7a90;border-left:2px solid #2d3a4d;padding-left:9px;margin:3px 0}
+  .say{color:#e7eef8;border-left:2px solid #7ee787;padding-left:9px;margin:6px 0 8px;white-space:pre-wrap}
+  .propose{color:#ffb86b;border-left:2px solid #ffb86b;padding-left:9px;margin:6px 0}
+  .ps1{color:#7ee787;align-self:center;white-space:nowrap;max-width:46%;overflow:hidden;text-overflow:ellipsis}
 </style></head>
 <body>
 
@@ -62,6 +66,27 @@ var input = document.getElementById('in');
 var cmdHistory = [];
 var hIndex = -1;
 var pending = null;      /* a confirmation waiting on y/n */
+var cwd = '';            /* current directory, '' = workspace root */
+
+/* The APP may be stateful — you are standing somewhere. The assistant's
+   workspace_shell tool deliberately is NOT: state that persists between tool
+   calls is a trap for a model that cannot see the prompt. Same grammar, one
+   extra verb here. */
+function resolve(p){
+  var s = String(p||'').trim();
+  if (!s || s === '.') return cwd;
+  if (s.charAt(0) === '/') return normalise(s);
+  if (s === '..') return cwd.indexOf('/') < 0 ? '' : cwd.slice(0, cwd.lastIndexOf('/'));
+  var joined = cwd ? cwd + '/' + s : s;
+  /* collapse any a/b/../c the model or user typed */
+  var parts = [];
+  normalise(joined).split('/').forEach(function(seg){
+    if (seg === '..') parts.pop(); else if (seg && seg !== '.') parts.push(seg);
+  });
+  return parts.join('/');
+}
+function prompt$(){ return (cwd ? '~/' + cwd : '~') + ' $'; }
+function paintPrompt(){ document.querySelector('.ps1').textContent = prompt$(); }
 
 var HELP = [
   'ls [-R] [path]     list a folder (-R for the whole tree)',
@@ -77,14 +102,21 @@ var HELP = [
   'rm <path>          delete a file (asks first)',
   'rmdir <path>       delete a folder (asks; refuses if not empty)',
   'write <path>       type a line into a file (replaces it)',
+  'cd <path>          change directory (cd .. to go up)',
   'clear              clear the screen',
-  'help               this list'
+  'help               this list',
+  '',
+  'Anything else is a question for MyLLM. It can run the read-only commands',
+  'above to answer, and will ask before changing anything.'
 ].join('\n');
 
 function esc(s){ return String(s==null?'':s)
   .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
+var capture = null;   /* when set, print() also collects text for the agent loop */
+
 function print(text, cls){
+  if (capture !== null) capture.push(String(text));
   var d = document.createElement('div');
   if (cls) d.className = cls;
   d.innerHTML = esc(text);
@@ -92,6 +124,7 @@ function print(text, cls){
   out.scrollTop = out.scrollHeight;
 }
 function printHTML(html){
+  if (capture !== null) capture.push(html.replace(/<[^>]+>/g, ''));
   var d = document.createElement('div');
   d.innerHTML = html;
   out.appendChild(d);
@@ -158,13 +191,20 @@ async function run(line){
     if (a.charAt(0) === '-'){ a.slice(1).split('').forEach(function(f){ flags[f] = true; }); continue; }
     ops.push(a);
   }
-  var target = normalise(ops[0] || '');
+  var target = ops.length ? resolve(ops[0]) : cwd;
   var snap = await snapshot();
 
   switch (verb){
     case 'help': print(HELP, 'dim'); return;
     case 'clear': out.innerHTML = ''; return;
-    case 'pwd': print('/ (workspace root — all paths are relative; there is no cd)', 'dim'); return;
+    case 'pwd': print('/' + cwd, 'dim'); return;
+
+    case 'cd': {
+      var dest = ops.length ? resolve(ops[0]) : '';
+      if (dest && snap.folders.indexOf(dest) < 0) return print('No such folder: ' + dest, 'err');
+      cwd = dest; paintPrompt();
+      return print('/' + cwd, 'dim');
+    }
 
     case 'ls': case 'dir': case 'tree':
       return listing(snap, target, verb === 'tree' || flags.R || flags.r);
@@ -249,7 +289,10 @@ async function run(line){
     }
 
     default:
-      return print('Unknown command: ' + verb + '  (type help)', 'err');
+      /* Not a command? Then it was a question. This is the line that turns a
+         terminal into an assistant that happens to live in a directory. */
+      print('thinking…', 'dim');
+      return ask(line);
   }
 }
 
@@ -275,6 +318,104 @@ function listing(snap, root, recursive){
   printHTML(html);
 }
 
+/* ================= the assistant, inside the directory =================
+   Type anything that is not a command and it becomes a question. The model is
+   given the working directory and the command list, and answers with ONE JSON
+   object per turn: run a command, or say something. The app executes the
+   command locally and feeds the output back — which is the whole trick, because
+   myllmAsk has no tools of its own. The shell commands ARE the tools.
+
+   READ-ONLY autonomously. Anything that writes or deletes comes back as a
+   proposal the user has to accept: a model running rm across someone's
+   documents unattended is the one outcome worth designing against. */
+
+var READ_ONLY = ['ls','tree','cat','head','tail','stat','find','du','pwd'];
+var MAX_STEPS = 5;          /* myllmAsk is rate-limited; five is plenty and stays inside it */
+
+function systemPrompt(listing){
+  return [
+    'You are working inside a directory of the user\'s MyLLMos shared workspace, like a terminal assistant.',
+    'Current directory: /' + (cwd || ''),
+    '',
+    'Contents right now:',
+    listing || '(empty)',
+    '',
+    'You may run these READ-ONLY commands: ls [-R] [path], tree [path], cat <path>, head -n N <path>, tail -n N <path>, stat <path>, find <glob>, du.',
+    'Paths are relative to the current directory. There is no cd.',
+    '',
+    'Reply with ONE JSON object and nothing else:',
+    '  {"run":"<command>"}                     to look at something first',
+    '  {"say":"<answer>"}                      when you can answer',
+    '  {"propose":"<command>","why":"<reason>"} to CHANGE something (mkdir, mv, write, rm, rmdir) — the user approves it, you never run it',
+    '',
+    'Prefer running a command over guessing. Answer in plain prose, briefly. Do not invent file contents.'
+  ].join('\n');
+}
+
+async function runCaptured(line){
+  capture = [];
+  try { await run(line); } catch(e){ capture.push('error: ' + (e.message || e)); }
+  var text = capture.join('\n');
+  capture = null;
+  return text.length > 4000 ? text.slice(0, 4000) + '\n[truncated]' : text;
+}
+
+function parseReply(raw){
+  var t = String(raw || '').trim();
+  /* Models fence JSON even when told not to. */
+  t = t.replace(/^```(?:json)?/i, '').replace(/```$/, '').trim();
+  var a = t.indexOf('{'), b = t.lastIndexOf('}');
+  if (a < 0 || b < a) return null;
+  try { return JSON.parse(t.slice(a, b + 1)); } catch(e){ return null; }
+}
+
+async function ask(question){
+  if (!window.myllmAsk){
+    print('AI is off for apps — turn on "Allow apps to use the AI" in MyLLMos settings.', 'err');
+    return;
+  }
+  var snap = await snapshot();
+  capture = []; listing(snap, cwd, false); var here = capture.join('\n'); capture = null;
+
+  var transcript = 'User: ' + question;
+  for (var step = 0; step < MAX_STEPS; step++){
+    var raw;
+    try { raw = await myllmAsk(transcript + '\n\nReply with one JSON object.', { system: systemPrompt(here) }); }
+    catch(e){ print('ask failed: ' + (e.message || e), 'err'); return; }
+
+    var reply = parseReply(raw);
+    if (!reply){
+      /* Not JSON — treat it as the answer rather than failing in the user's face. */
+      print(String(raw).trim(), 'say');
+      return;
+    }
+    if (reply.say){ print(String(reply.say).trim(), 'say'); return; }
+
+    if (reply.propose){
+      var why = reply.why ? ' — ' + reply.why : '';
+      print('proposes: ' + reply.propose + why, 'propose');
+      print('run it? type  y  to confirm', 'propose');
+      pending = { verb: 'raw', line: String(reply.propose) };
+      return;
+    }
+    if (reply.run){
+      var cmd = String(reply.run).trim();
+      var verb = cmd.split(/\s+/)[0].toLowerCase();
+      if (READ_ONLY.indexOf(verb) < 0){
+        transcript += '\n\nAssistant tried: ' + cmd + '\nBlocked: only ' + READ_ONLY.join(', ') + ' may run automatically. Use "propose" for anything that changes files.';
+        continue;
+      }
+      print('$ ' + cmd, 'step');
+      var output = await runCaptured(cmd);
+      transcript += '\n\nAssistant ran: ' + cmd + '\nOutput:\n' + (output || '(no output)');
+      continue;
+    }
+    print(String(raw).trim(), 'say');
+    return;
+  }
+  print('Stopped after ' + MAX_STEPS + ' steps. Ask something narrower, or run the commands yourself.', 'dim');
+}
+
 /* ---------- prompt ---------- */
 
 document.getElementById('form').addEventListener('submit', async function(ev){
@@ -287,10 +428,11 @@ document.getElementById('form').addEventListener('submit', async function(ev){
     var p = pending; pending = null;
     if (line.toLowerCase() === 'y' || line.toLowerCase() === 'yes'){
       try{
-        if (p.verb === 'rm') await files.remove(p.target);
+        if (p.verb === 'raw'){ print('$ ' + p.line, 'cmd'); await run(p.line); }
+        else if (p.verb === 'rm') await files.remove(p.target);
         else await files.removeFolder(p.target, true);
         haptic('warning');
-        print('deleted ' + p.target, 'ok');
+        if (p.verb !== 'raw') print('deleted ' + p.target, 'ok');
       }catch(e){ print(e.message, 'err'); }
     } else print('cancelled', 'dim');
     return;
@@ -315,8 +457,10 @@ input.addEventListener('keydown', function(e){
   document.getElementById('chips').appendChild(b);
 });
 
+paintPrompt();
 print('MyLLMos workspace shell. Type  help  for commands.', 'dim');
-print('The same commands work when you ask MyLLM — it has this shell too.', 'dim');
+print('Anything that is not a command is a question — MyLLM answers it from here,', 'dim');
+print('running the read-only commands itself and asking before it changes anything.', 'dim');
 if (!window.myllmFiles) print('\nShared files are off — turn them on in MyLLMos settings.', 'err');
 else run('ls');
 </script>
