@@ -17,6 +17,48 @@
   ],
   "apps": [
     {
+      "id": "workbench",
+      "name": "Workbench",
+      "emoji": "🧰",
+      "tagline": "Open anything in your workspace",
+      "description": "The app your files open into. Hand it a document from the Files app and it renders it properly: Markdown as formatted text, CSV as a real table, JSON pretty-printed, logs and plain text as they are. Switch to Edit to change it and save straight back to the shared workspace, or Save as to file a copy somewhere else. Ask MyLLM hands the document to the assistant by path, so it reads the file itself rather than having it pasted into the chat. Everything stays on your device.",
+      "category": "Developer",
+      "iconSymbol": "wrench.and.screwdriver",
+      "iconColor": "indigo",
+      "version": 1,
+      "featured": true,
+      "requiresAI": false,
+      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@f7cb5383528ec2fb299420906b5863e208031f09/apps-src/workbench.html",
+      "tags": [
+        "files",
+        "writing",
+        "utility",
+        "saves data"
+      ],
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/workbench.jpg"
+    },
+    {
+      "id": "shell",
+      "name": "Shell",
+      "emoji": "⌨️",
+      "tagline": "A directory you can talk to",
+      "description": "A terminal for your shared workspace — and an assistant standing in it. ls, tree, cat, head, stat, find, du and cd to look around; mkdir, mv, write and rm to change things, with deletes asking first because there is no undo. Type anything that isn't a command and it becomes a question: MyLLM answers from inside the current directory, running the read-only commands itself to find out, and asking your permission before it changes a single file. The same command grammar works when you talk to MyLLM in chat. Nothing leaves your device.",
+      "category": "Utilities",
+      "iconSymbol": "terminal",
+      "iconColor": "gray",
+      "version": 3,
+      "featured": true,
+      "requiresAI": true,
+      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@648d90d318b3667d80d9ece1bbc1b2112f0ae99a/apps-src/shell.html",
+      "tags": [
+        "developer",
+        "files",
+        "utility",
+        "saves data"
+      ],
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/shell.jpg"
+    },
+    {
       "id": "e-grid",
       "name": "E-Grid",
       "emoji": "🏁",
@@ -2835,48 +2877,6 @@
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@00e8001b4a32b6d62b6d9c4fd4056b2b3d17f92a/apps-src/stride.html",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@00e8001b4a32b6d62b6d9c4fd4056b2b3d17f92a/apps-src/stride.myllmapp",
       "sizeKB": 25
-    },
-    {
-      "id": "workbench",
-      "name": "Workbench",
-      "emoji": "🧰",
-      "tagline": "Open anything in your workspace",
-      "description": "The app your files open into. Hand it a document from the Files app and it renders it properly: Markdown as formatted text, CSV as a real table, JSON pretty-printed, logs and plain text as they are. Switch to Edit to change it and save straight back to the shared workspace, or Save as to file a copy somewhere else. Ask MyLLM hands the document to the assistant by path, so it reads the file itself rather than having it pasted into the chat. Everything stays on your device.",
-      "category": "Developer",
-      "iconSymbol": "wrench.and.screwdriver",
-      "iconColor": "indigo",
-      "version": 1,
-      "featured": false,
-      "requiresAI": false,
-      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@f7cb5383528ec2fb299420906b5863e208031f09/apps-src/workbench.html",
-      "tags": [
-        "files",
-        "writing",
-        "utility",
-        "saves data"
-      ],
-      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/workbench.jpg"
-    },
-    {
-      "id": "shell",
-      "name": "Shell",
-      "emoji": "⌨️",
-      "tagline": "A directory you can talk to",
-      "description": "A terminal for your shared workspace — and an assistant standing in it. ls, tree, cat, head, stat, find, du and cd to look around; mkdir, mv, write and rm to change things, with deletes asking first because there is no undo. Type anything that isn't a command and it becomes a question: MyLLM answers from inside the current directory, running the read-only commands itself to find out, and asking your permission before it changes a single file. The same command grammar works when you talk to MyLLM in chat. Nothing leaves your device.",
-      "category": "Utilities",
-      "iconSymbol": "terminal",
-      "iconColor": "gray",
-      "version": 3,
-      "featured": false,
-      "requiresAI": true,
-      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@648d90d318b3667d80d9ece1bbc1b2112f0ae99a/apps-src/shell.html",
-      "tags": [
-        "developer",
-        "files",
-        "utility",
-        "saves data"
-      ],
-      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/shell.jpg"
     }
   ]
 }
