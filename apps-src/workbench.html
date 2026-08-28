@@ -1,4 +1,9 @@
 <!doctype html>
+<!--
+  Workbench — MyLLMos™ App Gallery · © 2026 Opticell Ltd
+  Source-available: read it, remix it, run your version inside MyLLM™.
+  Not for redistribution or republication. Terms: https://github.com/TeamDzX/myllm-assets/blob/main/LICENSE
+-->
 <html lang="en"><head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
@@ -13,14 +18,21 @@
   header{position:sticky;top:0;z-index:5;background:var(--myllm-bg,#fff);
          border-bottom:1px solid var(--myllm-border,rgba(0,0,0,.12));padding:12px 16px}
   h1{margin:0;font-size:17px;font-weight:650;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .sub{font-size:12px;color:var(--myllm-muted,#5b6270);margin-top:2px}
+  h2{margin:0 0 4px;font-size:20px;font-weight:700}
+  h3{margin:2px 0 4px}
+  .sub{font-size:12px;color:var(--myllm-muted,#5b6270);margin-top:2px;
+       overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .tabs{display:flex;gap:6px;padding:10px 16px;overflow-x:auto}
+  /* display:flex outranks the UA rule for [hidden], so the tab strip stayed on
+     screen with no document open until this said otherwise. */
+  .tabs[hidden]{display:none}
   .tab{border:0;background:var(--myllm-surface,#f4f5f7);color:var(--myllm-text,#111);
        border-radius:999px;padding:7px 13px;font-size:13.5px;font-weight:600;white-space:nowrap}
   .tab[aria-selected="true"]{background:var(--myllm-accent,#4f7cff);color:#fff}
-  main{padding:0 16px 96px}
-  .empty{padding:48px 24px;text-align:center;color:var(--myllm-muted,#5b6270)}
-  .empty .big{font-size:44px;margin-bottom:10px}
+  main{padding:0 16px 104px}
+  .hero{padding:26px 12px 6px;text-align:center;color:var(--myllm-muted,#5b6270)}
+  .hero .big{font-size:44px;margin-bottom:8px}
+  .hero h2{color:var(--myllm-text,#0b0c0f)}
   pre,textarea{white-space:pre-wrap;word-wrap:break-word;font:13.5px/1.55 ui-monospace,SFMono-Regular,Menlo,monospace}
   textarea{width:100%;min-height:58vh;border:1px solid var(--myllm-border,#ddd);
            border-radius:var(--myllm-radius,14px);padding:12px;background:var(--myllm-surface,#fafafa);
@@ -35,8 +47,13 @@
   .md blockquote{margin:0;padding-left:12px;border-left:3px solid var(--myllm-border,#ddd);color:var(--myllm-muted,#5b6270)}
   .md table{margin:10px 0}
   .k{color:var(--myllm-accent,#4f7cff)}
-  .bar{position:fixed;left:0;right:0;bottom:0;display:flex;gap:8px;padding:10px 14px calc(10px + env(safe-area-inset-bottom));
-       background:var(--myllm-bg,#fff);border-top:1px solid var(--myllm-border,rgba(0,0,0,.12))}
+  .bar{position:fixed;left:0;right:0;bottom:0;display:flex;gap:4px;padding:6px 8px calc(6px + env(safe-area-inset-bottom));
+       background:var(--myllm-bg,#fff);border-top:1px solid var(--myllm-border,rgba(0,0,0,.12));z-index:10}
+  .tb{flex:1;border:0;background:transparent;color:var(--myllm-text,#111);border-radius:10px;
+      display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 2px;
+      font-size:10.5px;font-weight:600;line-height:1.1}
+  .tb .g{font-size:19px;line-height:1}
+  .tb:disabled{opacity:.34}
   .btn{flex:1;border:0;border-radius:12px;padding:12px 10px;font-size:14.5px;font-weight:650;
        background:var(--myllm-surface,#eef0f4);color:var(--myllm-text,#111)}
   .btn.primary{background:var(--myllm-accent,#4f7cff);color:#fff}
@@ -44,9 +61,30 @@
   .note{font-size:12.5px;color:var(--myllm-muted,#5b6270);padding:8px 0}
   .sheet{position:fixed;inset:0;background:rgba(0,0,0,.35);display:none;align-items:flex-end;z-index:20}
   .sheet.show{display:flex}
-  .sheetcard{background:var(--myllm-bg,#fff);width:100%;border-radius:18px 18px 0 0;padding:16px;max-height:80vh;overflow:auto}
-  input[type=text]{width:100%;padding:11px;border-radius:10px;border:1px solid var(--myllm-border,#ddd);
-                   background:var(--myllm-surface,#fafafa);color:inherit;font-size:15px}
+  .sheetcard{background:var(--myllm-bg,#fff);width:100%;border-radius:18px 18px 0 0;padding:16px;max-height:86vh;overflow:auto}
+  input[type=text],select{width:100%;padding:11px;border-radius:10px;border:1px solid var(--myllm-border,#ddd);
+                   background:var(--myllm-surface,#fafafa);color:inherit;font-size:15px;font-family:inherit}
+
+  /* ---------- starting a document ---------- */
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(102px,1fr));gap:8px;margin:6px 0 4px}
+  .card{border:1px solid var(--myllm-border,rgba(0,0,0,.14));background:var(--myllm-surface,#f4f5f7);
+        color:var(--myllm-text,#111);border-radius:12px;padding:12px 6px;
+        display:flex;flex-direction:column;align-items:center;gap:6px;
+        font-family:inherit;font-size:12.5px;font-weight:600;text-align:center}
+  .card .g{font-size:22px;line-height:1}
+  .card[aria-pressed="true"]{background:var(--myllm-accent,#4f7cff);color:#fff;border-color:transparent}
+  .rows{margin:2px 0 10px}
+  .row{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:0;background:transparent;
+       color:inherit;font-family:inherit;padding:11px 6px;
+       border-bottom:1px solid var(--myllm-border,rgba(0,0,0,.08))}
+  .row .g{font-size:17px;line-height:1}
+  .row .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14.5px;font-weight:600}
+  .row .mt{font-size:11.5px;color:var(--myllm-muted,#5b6270);white-space:nowrap}
+  .banner{border:1px solid var(--myllm-border,rgba(0,0,0,.14));border-radius:12px;padding:12px;
+          background:var(--myllm-surface,#f4f5f7);margin:10px 0;font-size:13.5px}
+  .banner .acts{display:flex;gap:8px;margin-top:10px}
+  .stack{display:flex;flex-direction:column;gap:8px}
+  .stack .btn{flex:none;text-align:left;padding:13px 14px}
 
   /* ---------- typography ----------
      Reading settings live on one wrapper as custom properties, so the rendered
@@ -57,11 +95,18 @@
   #doc, #doc .md, #doc pre, #doc textarea{
        font-family:var(--doc-font);font-size:var(--doc-size);line-height:var(--doc-line);
        text-align:var(--doc-align)}
-  #doc .md, #doc > pre, #doc .scroll, #doc > textarea{max-width:var(--doc-width);margin-left:auto;margin-right:auto}
+  /* Descendant, not child: the views render inside #main, so a child selector
+     silently left the column-width setting doing nothing outside Markdown. */
+  #doc .md, #doc #main > pre, #doc .scroll, #doc #main > textarea{
+       max-width:var(--doc-width);margin-left:auto;margin-right:auto}
   #doc.paper{background:#fbf7ef;color:#33302b;border-radius:12px;padding:14px 16px}
   #doc.paper pre,#doc.paper code{background:#f2ece0}
   /* Justified text needs hyphenation or it opens rivers of whitespace on a phone. */
   #doc[data-align="justify"] .md p{hyphens:auto;-webkit-hyphens:auto}
+  /* The start screen is furniture, not the document: it keeps its own type. */
+  #doc .hero,#doc .card,#doc .row,#doc .note,#doc .banner,#doc .lbl{
+       font-family:var(--myllm-font,-apple-system,system-ui,sans-serif);text-align:initial}
+  #doc .hero{text-align:center}
   .fmtbar{display:flex;gap:6px;overflow-x:auto;padding:8px 0 10px;position:sticky;top:0;
           background:var(--myllm-bg,#fff);z-index:3}
   .fmt{border:1px solid var(--myllm-border,rgba(0,0,0,.14));background:var(--myllm-surface,#f4f5f7);
@@ -76,14 +121,15 @@
        text-transform:uppercase;letter-spacing:.04em;margin:14px 0 2px}
   input[type=range]{width:100%;accent-color:var(--myllm-accent,#4f7cff)}
   .sample{border:1px dashed var(--myllm-border,#ddd);border-radius:10px;padding:10px;margin-top:12px}
-</style></head>
+</style><style>:root{--build-id:"4a4a3b52da";}</style>
+</head>
 <body>
 
 <header>
   <div style="display:flex;align-items:center;gap:10px">
     <div style="min-width:0;flex:1">
       <h1 id="title">Workbench</h1>
-      <div class="sub" id="sub">Open a file from Files, then "Open with an app..."</div>
+      <div class="sub" id="sub">Start a document, or open one from your workspace</div>
     </div>
     <button class="fmt wide" id="typeBtn" onclick="openType()" aria-label="Text settings"
             style="height:38px;font-size:15px">Aa</button>
@@ -97,26 +143,60 @@
 </div>
 
 <main id="doc">
- <div id="main">
-  <div class="empty" id="empty">
-    <div class="big">&#129520;</div>
-    <p><b>Nothing open yet.</b><br>
-    Open the <b>Files</b> app in MyLLMos, swipe a file and choose <b>Open</b> &mdash;
-    Workbench reads Markdown, CSV, JSON, HTML, logs and plain text.</p>
-    <p class="note">Or ask MyLLM to save something into your workspace, then open it here.</p>
-  </div>
- </div>
+ <div id="main"></div>
 </main>
 
-<div class="bar" id="bar" hidden>
-  <button class="btn" id="saveBtn" onclick="save()" disabled>Save</button>
-  <button class="btn" onclick="openSaveAs()">Save as...</button>
-  <button class="btn primary" onclick="askAI()">Ask MyLLM</button>
+<div class="bar" id="bar">
+  <button class="tb" onclick="openNew()"><span class="g">&#43;</span>New</button>
+  <button class="tb" onclick="openBrowse()"><span class="g">&#128194;</span>Open</button>
+  <button class="tb" id="saveBtn" onclick="save()" disabled><span class="g">&#128190;</span>Save</button>
+  <button class="tb" id="moreBtn" onclick="openMore()" disabled><span class="g">&#8943;</span>More</button>
+  <button class="tb" id="askBtn" onclick="askAI()" disabled><span class="g">&#10024;</span>Ask</button>
+</div>
+
+<div class="sheet" id="new">
+  <div class="sheetcard">
+    <h3>New document</h3>
+    <p class="note" style="padding-top:0">It is created in your shared workspace straight away, so it is never lost before the first save.</p>
+    <div class="lbl">Kind</div>
+    <div class="grid" id="newTpl"></div>
+    <div class="lbl">Name</div>
+    <input type="text" id="newName" placeholder="Untitled">
+    <div class="lbl">Folder</div>
+    <select id="newFolder"></select>
+    <div style="display:flex;gap:8px;margin-top:14px">
+      <button class="btn primary" onclick="commitNew()">Create</button>
+      <button class="btn" onclick="closeSheet('new')">Cancel</button>
+    </div>
+    <div class="note" id="newStatus"></div>
+  </div>
+</div>
+
+<div class="sheet" id="browse">
+  <div class="sheetcard">
+    <h3>Open a document</h3>
+    <input type="text" id="browseQ" placeholder="Search your workspace" oninput="paintBrowse()">
+    <div class="rows" id="browseList"></div>
+    <button class="btn" onclick="closeSheet('browse')">Cancel</button>
+  </div>
+</div>
+
+<div class="sheet" id="more">
+  <div class="sheetcard">
+    <h3 id="moreTitle">Document</h3>
+    <div class="stack" style="margin-top:10px">
+      <button class="btn" onclick="closeSheet('more');openSaveAs()">Save a copy, or in another format...</button>
+      <button class="btn" onclick="closeSheet('more');openExport()">Export and share...</button>
+      <button class="btn" onclick="closeSheet('more');openRename()">Rename or move...</button>
+      <button class="btn" onclick="closeSheet('more');closeDoc()">Close document</button>
+      <button class="btn primary" onclick="closeSheet('more')">Done</button>
+    </div>
+  </div>
 </div>
 
 <div class="sheet" id="type">
   <div class="sheetcard">
-    <h3 style="margin:2px 0 4px">Text</h3>
+    <h3>Text</h3>
     <p class="note" style="padding-top:0">Applies to reading, the source view and the editor. Remembered for next time.</p>
 
     <div class="lbl">Typeface</div>
@@ -148,10 +228,14 @@
 
 <div class="sheet" id="saveAs">
   <div class="sheetcard">
-    <h3 style="margin:2px 0 10px">Save a copy</h3>
+    <h3>Save a copy</h3>
     <p class="note" style="padding-top:0">Choose a path inside your shared workspace. Folders are created as needed.</p>
+    <div class="lbl">Format</div>
+    <select id="saveAsFmt" onchange="saveAsFmtChanged()"></select>
+    <div class="lbl">Path</div>
     <input type="text" id="saveAsPath" placeholder="notes/2026/copy.md">
-    <div style="display:flex;gap:8px;margin-top:12px">
+    <div class="note" id="saveAsNote"></div>
+    <div style="display:flex;gap:8px;margin-top:6px">
       <button class="btn primary" onclick="commitSaveAs()">Save</button>
       <button class="btn" onclick="closeSheet('saveAs')">Cancel</button>
     </div>
@@ -159,19 +243,67 @@
   </div>
 </div>
 
+<div class="sheet" id="export">
+  <div class="sheetcard">
+    <h3>Export and share</h3>
+    <p class="note" style="padding-top:0">Sends a copy out of MyLLM through the iOS share sheet &mdash; Mail, Messages, Files, AirDrop. The workspace copy is untouched.</p>
+    <div class="lbl">Format</div>
+    <div class="seg" id="expFmt"></div>
+    <div class="note" id="expNote"></div>
+    <div style="display:flex;gap:8px;margin-top:6px">
+      <button class="btn primary" onclick="commitExport()">Share</button>
+      <button class="btn" onclick="closeSheet('export')">Cancel</button>
+    </div>
+    <div class="note" id="expStatus"></div>
+  </div>
+</div>
+
+<div class="sheet" id="rename">
+  <div class="sheetcard">
+    <h3>Rename or move</h3>
+    <p class="note" style="padding-top:0">Changes where the file lives in your workspace. Include a folder to move it.</p>
+    <input type="text" id="renamePath" placeholder="notes/2026/report.md">
+    <div style="display:flex;gap:8px;margin-top:12px">
+      <button class="btn primary" onclick="commitRename()">Rename</button>
+      <button class="btn" onclick="closeSheet('rename')">Cancel</button>
+    </div>
+    <div class="note" id="renameStatus"></div>
+  </div>
+</div>
+
+<div class="sheet" id="unsaved">
+  <div class="sheetcard">
+    <h3>Unsaved changes</h3>
+    <p class="note" style="padding-top:0" id="unsavedNote">This document has edits that are not saved yet.</p>
+    <div class="stack" style="margin-top:6px">
+      <button class="btn primary" onclick="guardSave()">Save, then continue</button>
+      <button class="btn" onclick="guardDiscard()">Discard the changes</button>
+      <button class="btn" onclick="guardCancel()">Stay here</button>
+    </div>
+  </div>
+</div>
+
 <script>
 var files = window.myllmFiles || null;
 var current = null;          /* {name, path, ext, text} */
-var edited = null;           /* working copy while editing */
+var edited = '';             /* working copy while editing */
 var mode = 'view';
+var recents = [];
+var draft = null;            /* crash-recovery copy of unsaved edits */
+var pendingGuard = null;     /* what to do once unsaved changes are dealt with */
+var allFiles = [];           /* last workspace listing, for the Open sheet */
 
 function el(id){ return document.getElementById(id); }
 function esc(s){ return String(s==null?'':s)
   .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 function haptic(k){ try{ window.myllmHaptic && myllmHaptic(k); }catch(e){} }
 function closeSheet(id){ el(id).classList.remove('show'); }
+function extOf(p){ var b = String(p||'').split('/').pop(); return b.indexOf('.')>0 ? b.split('.').pop().toLowerCase() : ''; }
+function dirty(){ return !!current && edited !== current.text; }
+function words(s){ var m = String(s||'').match(/\S+/g); return m ? m.length : 0; }
+function today(){ return new Date().toISOString().slice(0,10); }
 
-/* ---------- receiving a file (the whole point) ----------
+/* ---------- receiving a file (how this app started life) ----------
    The Files app routes an "open-text" intent through the MyLLMos intent bus and
    the payload lands here. The declaration is the myllm:intents meta tag in the
    head; without it the router would never offer this app as a destination.
@@ -180,27 +312,388 @@ function closeSheet(id){ el(id).classList.remove('show'); }
 if (window.myllmIntent && myllmIntent.receive) {
   myllmIntent.receive(function (intent) {
     if (!intent || intent.action !== 'open-text' || !intent.data) return;
-    openDoc(intent.data);
+    guard(function(){ openDoc(intent.data); });
   });
 }
 
-function openDoc(d){
+/* ================= documents =================
+   A document app that can only open what someone else hands it is a viewer.
+   Workbench owns the whole life of a file now: start it, open it, edit it,
+   save it, save it again in another format, send it out of the app. */
+
+var FORMATS = [
+  { ext:'md',   label:'Markdown',   mime:'text/markdown' },
+  { ext:'txt',  label:'Plain text', mime:'text/plain' },
+  { ext:'html', label:'Web page',   mime:'text/html' },
+  { ext:'csv',  label:'CSV',        mime:'text/csv' },
+  { ext:'json', label:'JSON',       mime:'application/json' }
+];
+
+var TEMPLATES = [
+  { id:'blank',   g:'\u{1F4C4}', label:'Blank',    ext:'md',   name:'Untitled', body:'' },
+  { id:'doc',     g:'\u{1F4DD}', label:'Document', ext:'md',   name:'Document',
+    body:'# Title\n\nStart writing here.\n\n## A section\n\n- a point\n- another point\n' },
+  { id:'meeting', g:'\u{1F5D3}', label:'Meeting',  ext:'md',   name:'Meeting notes',
+    body:'# Meeting — {{date}}\n\n**Present:** \n\n## Notes\n\n- \n\n## Actions\n\n- [ ] \n' },
+  { id:'list',    g:'☑',     label:'Checklist',ext:'md',   name:'Checklist',
+    body:'# Checklist\n\n- [ ] First thing\n- [ ] Second thing\n- [x] Already done\n' },
+  { id:'plain',   g:'Aa',        label:'Plain text',ext:'txt', name:'Notes', body:'' },
+  { id:'table',   g:'\u{1F4CA}', label:'Table',    ext:'csv',  name:'Table',
+    body:'Name,Value,Notes\n' },
+  { id:'data',    g:'{ }',       label:'JSON',     ext:'json', name:'Data',
+    body:'{\n  "items": []\n}\n' },
+  { id:'page',    g:'\u{1F310}', label:'Web page', ext:'html', name:'Page',
+    body:'<!doctype html>\n<html lang="en">\n<head><meta charset="utf-8"><title>Page</title></head>\n<body>\n<h1>Page</h1>\n</body>\n</html>\n' }
+];
+var newTplId = 'blank';
+
+/* Text-ish files the Open sheet offers. Anything else in the workspace is a
+   photo, a recording or a bundle, and opening it here would show mojibake. */
+var TEXTY = ['md','markdown','txt','text','csv','tsv','json','log','html','htm',
+             'xml','yml','yaml','ini','conf','cfg','js','css','py','sh','srt','rtf'];
+
+function openDoc(d, m){
   current = { name: d.name || 'Untitled', path: d.path || '',
               ext: String(d.ext||'').toLowerCase(), text: String(d.text||'') };
+  if (!current.ext && current.path) current.ext = extOf(current.path);
   edited = current.text;
   el('title').textContent = current.name;
-  el('sub').textContent = (current.path || 'unsaved') + ' - ' + human(current.text.length) + ' - ' + kindLabel(current.ext);
-  el('empty').style.display = 'none';
   el('tabs').hidden = false;
-  el('bar').hidden = false;
-  setMode('view');
+  setMode(m || 'view');
+  pushRecent(current.path);
+  updateSub(); updateBar();
   haptic('selection');
+}
+
+function closeDoc(){
+  current = null; edited = ''; clearDraft();
+  el('title').textContent = 'Workbench';
+  el('tabs').hidden = true;
+  renderStart();
+  updateSub(); updateBar();
+}
+
+function updateSub(msg){
+  if (!current){
+    el('sub').textContent = 'Start a document, or open one from your workspace';
+    return;
+  }
+  var bits = [ current.path || 'not saved anywhere yet' ];
+  if (msg) bits.push(msg);
+  else if (dirty()) bits.push('edited');
+  if (current.ext === 'csv' || current.ext === 'tsv') bits.push(Math.max(0, parseCSV(edited).length - 1) + ' rows');
+  else bits.push(words(edited) + ' words');
+  bits.push(kindLabel(current.ext));
+  el('sub').textContent = bits.join(' · ');
+}
+
+function updateBar(){
+  el('saveBtn').disabled = !current || (!dirty() && !!current.path);
+  el('moreBtn').disabled = !current;
+  el('askBtn').disabled  = !current;
+}
+
+/* Anything that would throw away edits goes through here first. A MyLLMos app
+   gets no browser dialogs - the OS suppresses them - so it is an in-page sheet. */
+function guard(fn){
+  if (!dirty()) { fn(); return; }
+  pendingGuard = fn;
+  el('unsavedNote').textContent = current.path
+    ? ('"' + current.name + '" has edits that are not saved yet.')
+    : 'This document has never been saved.';
+  el('unsaved').classList.add('show');
+}
+async function guardSave(){
+  await save();
+  if (dirty()) return;              /* save failed - leave the sheet up */
+  closeSheet('unsaved');
+  var f = pendingGuard; pendingGuard = null; if (f) f();
+}
+function guardDiscard(){
+  closeSheet('unsaved');
+  if (current) edited = current.text;
+  clearDraft(); updateBar(); render();
+  var f = pendingGuard; pendingGuard = null; if (f) f();
+}
+function guardCancel(){ closeSheet('unsaved'); pendingGuard = null; }
+
+/* ---------- start screen ---------- */
+
+function renderStart(){
+  var m = el('main');
+  var html = '<div class="hero"><div class="big">&#129520;</div>'
+    + '<h2>Workbench</h2>'
+    + '<p class="note">Write something new, open a document from your shared workspace, '
+    + 'or send a file here from the <b>Files</b> app with <b>Open with an app</b>.</p></div>';
+  if (draft) html += draftBanner();
+  html += '<div class="lbl">Start something</div><div class="grid" id="startGrid">'
+    + TEMPLATES.map(function(t){
+        return '<button class="card" data-t="' + t.id + '"><span class="g">' + esc(t.g) + '</span>'
+             + esc(t.label) + '</button>';
+      }).join('') + '</div>';
+  html += '<div class="lbl">Recent</div>' + recentRows();
+  m.innerHTML = html;
+  Array.prototype.forEach.call(m.querySelectorAll('.card[data-t]'), function(b){
+    b.onclick = function(){ openNew(b.getAttribute('data-t')); };
+  });
+  Array.prototype.forEach.call(m.querySelectorAll('.row[data-p]'), function(b){
+    b.onclick = function(){ openPath(b.getAttribute('data-p')); };
+  });
+  var r = el('draftRestore'); if (r) r.onclick = restoreDraft;
+  var d = el('draftDrop');    if (d) d.onclick = function(){ clearDraft(); renderStart(); };
+}
+
+function recentRows(){
+  if (!recents.length) return '<p class="note">Nothing yet. What you open or create shows up here.</p>';
+  return '<div class="rows">' + recents.map(function(p){
+    var name = p.split('/').pop(), dir = p.indexOf('/') > -1 ? p.slice(0, p.lastIndexOf('/')) : '';
+    return '<button class="row" data-p="' + esc(p) + '"><span class="g">' + esc(glyphFor(extOf(p))) + '</span>'
+      + '<span class="nm">' + esc(name) + '</span>'
+      + '<span class="mt">' + esc(dir || 'root') + '</span></button>';
+  }).join('') + '</div>';
+}
+
+function glyphFor(ext){
+  if (ext==='csv'||ext==='tsv') return '\u{1F4CA}';
+  if (ext==='json') return '{ }';
+  if (ext==='html'||ext==='htm') return '\u{1F310}';
+  if (ext==='md'||ext==='markdown') return '\u{1F4DD}';
+  if (ext==='log') return '\u{1F50E}';
+  return '\u{1F4C4}';
+}
+
+/* ---------- recents ---------- */
+
+async function loadRecents(){
+  try{
+    if (!window.myllmStorage) return;
+    var raw = await myllmStorage.getItem('wb.recent');
+    if (raw) recents = (JSON.parse(raw) || []).filter(function(x){ return typeof x === 'string'; });
+  }catch(e){}
+}
+function pushRecent(p){
+  if (!p) return;
+  recents = [p].concat(recents.filter(function(x){ return x !== p; })).slice(0, 10);
+  try{ window.myllmStorage && myllmStorage.setItem('wb.recent', JSON.stringify(recents)); }catch(e){}
+}
+function dropRecent(p){
+  recents = recents.filter(function(x){ return x !== p; });
+  try{ window.myllmStorage && myllmStorage.setItem('wb.recent', JSON.stringify(recents)); }catch(e){}
+}
+
+/* ---------- draft recovery ----------
+   A web view can be torn down while you are mid-paragraph. Every edit is
+   mirrored into app storage on a short delay, so the words survive even though
+   the file on disk has not been written. It is offered, never applied silently -
+   a draft that overwrites a file the user has since changed elsewhere would be
+   the worse bug. */
+var draftTimer = null;
+function queueDraft(){
+  if (draftTimer) clearTimeout(draftTimer);
+  draftTimer = setTimeout(function(){
+    if (!current) return;
+    try{
+      window.myllmStorage && myllmStorage.setItem('wb.draft', JSON.stringify({
+        name: current.name, path: current.path, ext: current.ext, text: edited, at: Date.now()
+      }));
+    }catch(e){}
+  }, 900);
+}
+function clearDraft(){
+  draft = null;
+  if (draftTimer) { clearTimeout(draftTimer); draftTimer = null; }
+  try{
+    if (window.myllmStorage){
+      if (myllmStorage.removeItem) myllmStorage.removeItem('wb.draft');
+      else myllmStorage.setItem('wb.draft', '');
+    }
+  }catch(e){}
+}
+async function loadDraft(){
+  try{
+    if (!window.myllmStorage) return;
+    var raw = await myllmStorage.getItem('wb.draft');
+    if (!raw) return;
+    var d = JSON.parse(raw);
+    if (d && typeof d.text === 'string' && d.text.length) draft = d;
+  }catch(e){}
+}
+function draftBanner(){
+  return '<div class="banner"><b>Unsaved work recovered.</b><br>'
+    + esc(draft.name || 'A document') + ' · ' + words(draft.text) + ' words, from when the app last closed.'
+    + '<div class="acts"><button class="btn primary" id="draftRestore">Open it</button>'
+    + '<button class="btn" id="draftDrop">Discard</button></div></div>';
+}
+function restoreDraft(){
+  var d = draft;
+  clearDraft();
+  openDoc({ name: d.name, path: d.path, ext: d.ext, text: d.text }, 'edit');
+  /* The file on disk still holds the old text, so this counts as unsaved. */
+  if (d.path && files){
+    files.read(d.path).then(function(onDisk){
+      if (onDisk != null && current && current.path === d.path){
+        current.text = onDisk; updateBar(); updateSub();
+      }
+    }).catch(function(){});
+  }
+}
+
+/* ---------- new ---------- */
+
+function openNew(tplId){
+  guard(function(){
+    if (tplId) newTplId = tplId;
+    paintNewTpl();
+    var t = tpl();
+    el('newName').value = t.name;
+    el('newStatus').textContent = '';
+    paintFolders('newFolder', folderOf(current && current.path));
+    el('new').classList.add('show');
+  });
+}
+function tpl(){ return TEMPLATES.filter(function(x){ return x.id === newTplId; })[0] || TEMPLATES[0]; }
+function paintNewTpl(){
+  var c = el('newTpl');
+  c.innerHTML = TEMPLATES.map(function(t){
+    return '<button class="card" aria-pressed="' + (t.id===newTplId) + '" data-t="' + t.id + '">'
+      + '<span class="g">' + esc(t.g) + '</span>' + esc(t.label) + '</button>';
+  }).join('');
+  Array.prototype.forEach.call(c.querySelectorAll('.card[data-t]'), function(b){
+    b.onclick = function(){
+      var prev = tpl();
+      newTplId = b.getAttribute('data-t');
+      var name = el('newName').value.trim();
+      if (!name || name === prev.name) el('newName').value = tpl().name;
+      paintNewTpl(); haptic('selection');
+    };
+  });
+}
+function folderOf(p){
+  if (!p || p.indexOf('/') < 0) return '/';
+  return p.slice(0, p.lastIndexOf('/'));
+}
+async function paintFolders(selectId, chosen){
+  var opts = ['/'];
+  try{
+    if (files && files.folders){
+      var f = await files.folders();
+      opts = ['/'].concat((f || []).map(String).sort());
+    }
+  }catch(e){}
+  el(selectId).innerHTML = opts.map(function(p){
+    return '<option value="' + esc(p) + '"' + (p === chosen ? ' selected' : '') + '>'
+      + esc(p === '/' ? 'Workspace root' : p) + '</option>';
+  }).join('');
+}
+function safeName(s){
+  return String(s||'').replace(/[\/\\:*?"<>|]/g,'-').replace(/\s+/g,' ').trim();
+}
+async function uniquePath(folder, stem, ext){
+  var dir = (folder && folder !== '/') ? folder.replace(/^\/+|\/+$/g,'') + '/' : '';
+  stem = stem.replace(new RegExp('\\.' + ext + '$', 'i'), '');
+  var p = dir + stem + '.' + ext, n = 2;
+  if (!files) return p;
+  try{
+    while (await files.exists(p)) { p = dir + stem + ' ' + n + '.' + ext; if (++n > 99) break; }
+  }catch(e){}
+  return p;
+}
+async function commitNew(){
+  var t = tpl();
+  var stem = safeName(el('newName').value) || t.name;
+  var body = t.body.replace('{{date}}', today());
+  try{
+    var path = await uniquePath(el('newFolder').value, stem, t.ext);
+    if (files) await files.write(path, body);
+    closeSheet('new');
+    openDoc({ name: path.split('/').pop(), path: files ? path : '', ext: t.ext, text: body }, 'edit');
+    if (!files) updateSub('shared files are off - use Export to get this out');
+  }catch(e){
+    el('newStatus').textContent = 'Could not create it: ' + e.message; haptic('error');
+  }
+}
+
+/* ---------- open ---------- */
+
+function openBrowse(){
+  guard(async function(){
+    el('browseQ').value = '';
+    el('browseList').innerHTML = '<p class="note">Reading your workspace...</p>';
+    el('browse').classList.add('show');
+    if (!files){
+      el('browseList').innerHTML = '<p class="note">Shared files are off for apps, so there is nothing to browse. '
+        + 'Turn them on in MyLLM settings, or send a file here from the Files app.</p>';
+      return;
+    }
+    try{
+      var list = await files.list();
+      /* The store lists [{path,size,modified}], but the Android bridge and older
+         builds have handed back bare path strings - normalise before reading. */
+      allFiles = (list || []).map(function(f){
+          return (typeof f === 'string') ? { path: f, size: 0, modified: 0 } : f;
+        })
+        .filter(function(f){ return f && f.path && TEXTY.indexOf(extOf(f.path)) > -1; })
+        .sort(function(a,b){ return (b.modified||0) - (a.modified||0); });
+      paintBrowse();
+    }catch(e){
+      el('browseList').innerHTML = '<p class="note">Could not read the workspace: ' + esc(e.message) + '</p>';
+    }
+  });
+}
+
+function paintBrowse(){
+  var q = el('browseQ').value.trim().toLowerCase();
+  var rows = allFiles.filter(function(f){ return !q || f.path.toLowerCase().indexOf(q) > -1; }).slice(0, 200);
+  if (!rows.length){
+    el('browseList').innerHTML = '<p class="note">' + (allFiles.length
+      ? 'Nothing matches that.'
+      : 'No text documents in your workspace yet. Create one with New.') + '</p>';
+    return;
+  }
+  el('browseList').innerHTML = rows.map(function(f){
+    return '<button class="row" data-p="' + esc(f.path) + '"><span class="g">' + esc(glyphFor(extOf(f.path))) + '</span>'
+      + '<span class="nm">' + esc(f.path) + '</span>'
+      + '<span class="mt">' + esc(sizeLabel(f.size) + (f.modified ? ' · ' + dateLabel(f.modified) : '')) + '</span></button>';
+  }).join('');
+  Array.prototype.forEach.call(el('browseList').querySelectorAll('.row[data-p]'), function(b){
+    b.onclick = function(){ openPath(b.getAttribute('data-p')); };
+  });
+}
+
+/* The store has reported `modified` in seconds on one platform and milliseconds
+   on another; anything below this threshold is plainly seconds. */
+function dateLabel(t){
+  var ms = t < 1e11 ? t * 1000 : t;
+  var d = new Date(ms);
+  return isNaN(d.getTime()) ? '' : d.toISOString().slice(0,10);
+}
+function sizeLabel(n){
+  n = n || 0;
+  return n < 1024 ? n + ' B' : (n / 1024).toFixed(1) + ' KB';
+}
+
+async function openPath(p){
+  if (!files) return;
+  try{
+    var txt = await files.read(p);
+    if (txt == null){
+      dropRecent(p);
+      updateSub('that file is gone');
+      if (!current) renderStart();
+      closeSheet('browse');
+      return;
+    }
+    closeSheet('browse');
+    guard(function(){
+      openDoc({ name: p.split('/').pop(), path: p, ext: extOf(p), text: String(txt) });
+    });
+  }catch(e){ updateSub('could not open it: ' + e.message); haptic('error'); }
 }
 
 function human(n){ return n < 1024 ? n + ' chars' : (n/1024).toFixed(1) + ' KB'; }
 
 /* ================= typography =================
-   A document app that can't change its type is a viewer, not a workbench —
+   A document app that can't change its type is a viewer, not a workbench -
    reading a long note at the system default in a sans stack is the thing people
    actually complain about. Settings persist per app via myllmStorage.
 
@@ -294,11 +787,10 @@ function paintSegs(){
 
 function openType(){ paintSegs(); applyType(); el('type').classList.add('show'); }
 
-loadType();
-
 function kindLabel(ext){
   if (ext==='md'||ext==='markdown') return 'Markdown';
   if (ext==='csv') return 'CSV';
+  if (ext==='tsv') return 'TSV';
   if (ext==='json') return 'JSON';
   if (ext==='html'||ext==='htm') return 'HTML';
   if (ext==='log') return 'Log';
@@ -316,7 +808,7 @@ function setMode(m){
 
 function render(){
   var m = el('main');
-  if (!current) return;
+  if (!current) { renderStart(); return; }
   if (mode === 'edit'){
     /* A Markdown editor with no formatting controls makes people memorise
        syntax; these wrap the selection the way a word processor would. */
@@ -327,9 +819,9 @@ function render(){
     ta.value = edited;
     ta.addEventListener('input', function(){
       edited = ta.value;
-      el('saveBtn').disabled = (edited === current.text) || !current.path;
+      updateBar(); updateSub(); queueDraft();
     });
-    el('saveBtn').disabled = (edited === current.text) || !current.path;
+    updateBar();
     return;
   }
   if (mode === 'raw'){
@@ -351,9 +843,10 @@ var FMT = [
   { k:'i',   label:'I',   title:'Italic',    wrap:['*','*'] },
   { k:'h1',  label:'H1',  title:'Heading 1', line:'# ' },
   { k:'h2',  label:'H2',  title:'Heading 2', line:'## ' },
-  { k:'ul',  label:'•',   title:'List',      line:'- ' },
+  { k:'ul',  label:'•', title:'List',   line:'- ' },
   { k:'ol',  label:'1.',  title:'Numbered',  line:'1. ' },
-  { k:'q',   label:'❝',   title:'Quote',     line:'> ' },
+  { k:'todo',label:'☐', title:'Task',   line:'- [ ] ' },
+  { k:'q',   label:'❝', title:'Quote',  line:'> ' },
   { k:'code',label:'</>', title:'Code',      wrap:['`','`'] },
   { k:'link',label:'Link',title:'Link',      wrap:['[',"](https://)"], wide:true }
 ];
@@ -397,7 +890,7 @@ function applyFmt(f){
     ta.selectionEnd = ta.selectionStart + sel.length;
   }
   edited = ta.value;
-  el('saveBtn').disabled = (edited === current.text) || !current.path;
+  updateBar(); updateSub(); queueDraft();
   ta.focus();
   haptic('light');
 }
@@ -405,9 +898,9 @@ function applyFmt(f){
 /* ---------- renderers ---------- */
 
 /* A small, dependency-free Markdown subset: headings, emphasis, code, lists,
-   quotes, links, rules. Deliberately not a full parser - a gallery app must stay
-   self-contained, and this covers what notes actually use. Escapes FIRST, so
-   nothing in the document can inject markup. */
+   tables, task boxes, quotes, links, rules. Deliberately not a full parser - a
+   gallery app must stay self-contained, and this covers what notes actually
+   use. Escapes FIRST, so nothing in the document can inject markup. */
 function markdown(src){
   var s = esc(src);
   var blocks = [];
@@ -427,6 +920,23 @@ function markdown(src){
        .replace(/\*\*([^*\n]+)\*\*/g,'<strong>$1</strong>')
        .replace(/(^|[^*])\*([^*\n]+)\*/g,'$1<em>$2</em>')
        .replace(/\[([^\]]+)\]\((https?:[^)\s]+)\)/g,'<a href="$2">$1</a>');
+  /* Pipe tables. Needs the ---|--- separator row, like every other renderer, so
+     a paragraph that merely contains a pipe is left alone. */
+  s = s.replace(/(?:^\|.*\|[ \t]*(?:\n|$))+/gm, function(run){
+    var lines = run.trim().split('\n');
+    if (lines.length < 2 || !/^\|[\s:|-]+\|$/.test(lines[1].trim())) return run;
+    var cells = function(l){
+      return l.trim().replace(/^\|/,'').replace(/\|$/,'').split('|').map(function(c){ return c.trim(); });
+    };
+    var head = cells(lines[0]), body = lines.slice(2).map(cells);
+    return '<div class="scroll"><table><thead><tr>'
+      + head.map(function(h){ return '<th>' + h + '</th>'; }).join('')
+      + '</tr></thead><tbody>'
+      + body.map(function(r){
+          return '<tr>' + head.map(function(_, i){ return '<td>' + (r[i]||'') + '</td>'; }).join('') + '</tr>';
+        }).join('')
+      + '</tbody></table></div>';
+  });
   s = s.replace(/(?:^[-*+]\s+.*(?:\n|$))+/gm, function(run){
     return '<ul>' + run.trim().split('\n').map(function(l){
       return '<li>' + l.replace(/^[-*+]\s+/,'') + '</li>'; }).join('') + '</ul>';
@@ -435,8 +945,11 @@ function markdown(src){
     return '<ol>' + run.trim().split('\n').map(function(l){
       return '<li>' + l.replace(/^\d+\.\s+/,'') + '</li>'; }).join('') + '</ol>';
   });
+  /* Task boxes, drawn rather than made interactive: a tick you can tap but that
+     never reaches the file would be a lie about what was saved. */
+  s = s.replace(/<li>\[ \]\s*/g, '<li>☐ ').replace(/<li>\[[xX]\]\s*/g, '<li>☑ ');
   s = s.split(/\n{2,}/).map(function(p){
-    return /^\s*<(h[1-6]|ul|ol|pre|blockquote|hr)/.test(p) ? p : '<p>' + p.replace(/\n/g,'<br>') + '</p>';
+    return /^\s*<(h[1-6]|ul|ol|pre|blockquote|hr|div|table)/.test(p) ? p : '<p>' + p.replace(/\n/g,'<br>') + '</p>';
   }).join('\n');
   return s.replace(/ BLOCK(\d+) /g, function(_, i){ return blocks[+i]; });
 }
@@ -492,43 +1005,280 @@ function htmlSource(text){
        + '<pre>' + esc(text) + '</pre>';
 }
 
-/* ---------- actions ---------- */
+/* ================= converting between formats =================
+   "Save as" in a word processor means two different things: a copy somewhere
+   else, and the same document in another file type. This does both. Every
+   conversion says what it did, and anything without a sensible conversion is
+   written unchanged with a note rather than silently mangled. */
+
+function normExt(e){
+  e = String(e||'').toLowerCase();
+  if (e === 'markdown') return 'md';
+  if (e === 'htm') return 'html';
+  if (e === '' || e === 'text' || e === 'log') return 'txt';
+  return e;
+}
+
+function convert(text, from, to){
+  from = normExt(from); to = normExt(to);
+  if (from === to) return { text: text, note: '' };
+  var name = (current && current.name) || 'Document';
+  try{
+    if (from === 'md'   && to === 'html') return { text: htmlDoc(name, '<div class="md">' + markdown(text) + '</div>'), note: 'Markdown rendered into a standalone web page.' };
+    if (from === 'md'   && to === 'txt')  return { text: stripMd(text), note: 'Markdown marks removed.' };
+    if (from === 'txt'  && to === 'md')   return { text: text, note: 'Kept as it is - plain text is already valid Markdown.' };
+    if (from === 'csv'  && to === 'json') return { text: csvToJson(text), note: 'Rows converted to JSON objects, using the first row as keys.' };
+    if (from === 'csv'  && to === 'md')   return { text: csvToMd(text), note: 'Table converted to a Markdown table.' };
+    if (from === 'csv'  && to === 'html') return { text: htmlDoc(name, csvTable(text)), note: 'Table rendered into a standalone web page.' };
+    if (from === 'json' && to === 'csv')  return jsonToCsv(text);
+    if (from === 'json' && to === 'md')   return { text: '```json\n' + String(text).trim() + '\n```\n', note: 'Wrapped in a Markdown code block.' };
+    if (from === 'html' && (to === 'txt' || to === 'md'))
+      return { text: stripTags(text), note: 'Tags stripped - this is the readable text, not a full HTML to Markdown conversion.' };
+    if (to === 'html')  return { text: htmlDoc(name, '<pre>' + esc(text) + '</pre>'), note: 'Wrapped in a standalone web page.' };
+    if (to === 'txt' || to === 'md') return { text: text, note: 'Written as it is.' };
+  }catch(e){
+    return { text: text, note: 'Could not convert it (' + e.message + '), so it was written unchanged.' };
+  }
+  return { text: text, note: 'No conversion from ' + kindLabel(from) + ' to ' + kindLabel(to) + ', so it was written unchanged.' };
+}
+
+function htmlDoc(title, inner){
+  return '<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n'
+    + '<meta name="viewport" content="width=device-width,initial-scale=1">\n'
+    + '<title>' + esc(title || 'Document') + '</title>\n<style>\n'
+    + '  body{max-width:42em;margin:0 auto;padding:26px 18px;font:17px/1.65 -apple-system,system-ui,sans-serif;color:#191b1f;background:#fff}\n'
+    + '  h1,h2,h3{line-height:1.25}\n'
+    + '  code{background:#f0f1f3;padding:1px 5px;border-radius:5px}\n'
+    + '  pre{background:#f0f1f3;padding:12px;border-radius:10px;overflow:auto;white-space:pre-wrap}\n'
+    + '  table{border-collapse:collapse;width:100%}\n'
+    + '  th,td{border:1px solid #dcdee3;padding:6px 8px;text-align:left}\n'
+    + '  blockquote{margin:0;padding-left:12px;border-left:3px solid #dcdee3;color:#5b6270}\n'
+    + '  @media (prefers-color-scheme:dark){body{background:#111318;color:#e8eaee}'
+    + 'code,pre{background:#1b1e25}th,td{border-color:#2a2e37}}\n'
+    + '</style>\n</head>\n<body>\n' + inner + '\n</body>\n</html>\n';
+}
+
+function stripMd(s){
+  return String(s)
+    .replace(/```[a-z]*\n?/gi, '')
+    .replace(/^#{1,6}\s+/gm, '')
+    .replace(/^\s*&gt;\s?/gm, '')
+    .replace(/^\s*>\s?/gm, '')
+    .replace(/^(\s*)[-*+]\s+\[[ xX]\]\s+/gm, '$1- ')
+    .replace(/\*\*([^*]+)\*\*/g, '$1')
+    .replace(/(^|[^*])\*([^*]+)\*/g, '$1$2')
+    .replace(/`([^`]+)`/g, '$1')
+    .replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, '$1 ($2)')
+    .replace(/^\s*([-*_])\1{2,}\s*$/gm, '----');
+}
+
+function stripTags(s){
+  return String(s)
+    .replace(/<script[\s\S]*?<\/script>/gi, '')
+    .replace(/<style[\s\S]*?<\/style>/gi, '')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/(p|div|h[1-6]|li|tr|blockquote)>/gi, '\n')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;/g, ' ').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, '&')
+    .replace(/\n{3,}/g, '\n\n').trim() + '\n';
+}
+
+function coerce(v){
+  if (v == null || v === '') return '';
+  if (/^-?\d+(\.\d+)?$/.test(v)) return Number(v);
+  if (/^(true|false)$/i.test(v)) return String(v).toLowerCase() === 'true';
+  return v;
+}
+function csvToJson(text){
+  var rows = parseCSV(text);
+  if (!rows.length) return '[]\n';
+  var head = rows[0].map(function(h, i){ return String(h||'').trim() || ('column' + (i+1)); });
+  var out = rows.slice(1).map(function(r){
+    var o = {};
+    head.forEach(function(h, i){ o[h] = coerce(r[i]); });
+    return o;
+  });
+  return JSON.stringify(out, null, 2) + '\n';
+}
+function csvToMd(text){
+  var rows = parseCSV(text);
+  if (!rows.length) return '';
+  var cell = function(v){ return String(v==null?'':v).replace(/\|/g, '\\|'); };
+  var head = rows[0];
+  var out = ['| ' + head.map(cell).join(' | ') + ' |',
+             '| ' + head.map(function(){ return '---'; }).join(' | ') + ' |'];
+  rows.slice(1).forEach(function(r){
+    out.push('| ' + head.map(function(_, i){ return cell(r[i]); }).join(' | ') + ' |');
+  });
+  return out.join('\n') + '\n';
+}
+function jsonToCsv(text){
+  var data = JSON.parse(text);
+  var rows = Array.isArray(data) ? data
+           : (data && Array.isArray(data.items) ? data.items : null);
+  if (!rows) return { text: text, note: 'That JSON is not a list of records, so there are no rows to make. Written unchanged.' };
+  var keys = [];
+  rows.forEach(function(r){
+    if (r && typeof r === 'object' && !Array.isArray(r)) Object.keys(r).forEach(function(k){ if (keys.indexOf(k) < 0) keys.push(k); });
+  });
+  if (!keys.length) return { text: text, note: 'No object keys to use as columns. Written unchanged.' };
+  var q = function(v){
+    v = (v == null) ? '' : (typeof v === 'object' ? JSON.stringify(v) : String(v));
+    return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v;
+  };
+  var out = [keys.join(',')].concat(rows.map(function(r){
+    return keys.map(function(k){ return q(r ? r[k] : ''); }).join(',');
+  })).join('\n') + '\n';
+  return { text: out, note: rows.length + ' record' + (rows.length===1?'':'s') + ' converted to CSV.' };
+}
+
+/* ---------- saving ---------- */
 
 async function save(){
-  if (!files || !current || !current.path) return;
+  if (!current) return;
+  if (!current.path){ openSaveAs(); return; }
+  if (!files){ updateSub('shared files are off'); return; }
   try{
     await files.write(current.path, edited);
     current.text = edited;
-    el('saveBtn').disabled = true;
-    el('sub').textContent = current.path + ' - saved - ' + kindLabel(current.ext);
+    clearDraft();
+    updateBar(); updateSub('saved');
     haptic('success');
-  }catch(e){ el('sub').textContent = 'Save failed: ' + e.message; haptic('error'); }
+  }catch(e){ updateSub('save failed: ' + e.message); haptic('error'); }
+}
+
+function fmtByExt(e){
+  e = normExt(e);
+  return FORMATS.filter(function(f){ return f.ext === e; })[0] || FORMATS[1];
 }
 
 function openSaveAs(){
   if (!current) return;
-  el('saveAsPath').value = current.path || (current.name || 'untitled.txt');
+  var cur = fmtByExt(current.ext);
+  el('saveAsFmt').innerHTML = FORMATS.map(function(f){
+    return '<option value="' + f.ext + '"' + (f.ext === cur.ext ? ' selected' : '') + '>'
+      + esc(f.label) + ' (.' + f.ext + ')</option>';
+  }).join('');
+  el('saveAsPath').value = current.path || ((current.name || 'untitled').replace(/\.[^.]+$/, '') + '.' + cur.ext);
+  el('saveAsNote').textContent = '';
   el('saveAsStatus').textContent = '';
   el('saveAs').classList.add('show');
+}
+
+function saveAsFmtChanged(){
+  var to = el('saveAsFmt').value;
+  var p = el('saveAsPath').value.trim() || 'untitled';
+  el('saveAsPath').value = p.replace(/\.[^./]+$/, '') + '.' + to;
+  var r = convert(edited, current ? current.ext : 'txt', to);
+  el('saveAsNote').textContent = r.note;
 }
 
 async function commitSaveAs(){
   var p = el('saveAsPath').value.trim();
   if (!p){ el('saveAsStatus').textContent = 'Give it a path.'; return; }
   if (!files){ el('saveAsStatus').textContent = 'Shared files are off.'; return; }
+  var to = el('saveAsFmt').value;
+  var r = convert(edited, current ? current.ext : 'txt', to);
   try{
-    await files.write(p, edited);
+    await files.write(p, r.text);
     current.path = p;
     current.name = p.split('/').pop();
-    current.ext = String(p.split('.').pop()||'').toLowerCase();
-    current.text = edited;
+    current.ext = extOf(p);
+    current.text = r.text;
+    edited = r.text;
+    clearDraft();
+    pushRecent(p);
     el('title').textContent = current.name;
-    el('sub').textContent = p + ' - saved - ' + kindLabel(current.ext);
-    el('saveBtn').disabled = true;
     closeSheet('saveAs');
+    updateBar(); updateSub('saved' + (r.note ? ' · ' + r.note.toLowerCase().replace(/\.$/,'') : ''));
     haptic('success');
     render();
   }catch(e){ el('saveAsStatus').textContent = 'x ' + e.message; haptic('error'); }
+}
+
+/* ---------- export out of the app ---------- */
+
+var expExt = 'md';
+function openExport(){
+  if (!current) return;
+  expExt = normExt(current.ext);
+  paintExport();
+  el('expStatus').textContent = '';
+  el('export').classList.add('show');
+}
+function paintExport(){
+  var c = el('expFmt');
+  c.innerHTML = FORMATS.map(function(f){
+    return '<button aria-pressed="' + (f.ext === expExt) + '" data-v="' + f.ext + '">' + esc(f.label) + '</button>';
+  }).join('');
+  Array.prototype.forEach.call(c.querySelectorAll('button'), function(b){
+    b.onclick = function(){ expExt = b.getAttribute('data-v'); paintExport(); haptic('selection'); };
+  });
+  var r = convert(edited, current ? current.ext : 'txt', expExt);
+  el('expNote').textContent = r.note || 'Shared exactly as it is on screen.';
+}
+
+/* btoa() only speaks Latin-1, so anything with an accent or an emoji has to go
+   through the encoder first or the share silently ships broken bytes. */
+function utf8b64(s){
+  var bytes = new TextEncoder().encode(s), bin = '';
+  for (var i = 0; i < bytes.length; i += 0x8000){
+    bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+  }
+  return btoa(bin);
+}
+
+async function commitExport(){
+  if (!current) return;
+  if (!window.myllmShareFile){ el('expStatus').textContent = 'Sharing needs a newer MyLLM build.'; return; }
+  var f = fmtByExt(expExt);
+  var r = convert(edited, current.ext, f.ext);
+  var base = (current.name || 'document').replace(/\.[^.]+$/, '');
+  try{
+    el('expStatus').textContent = 'Preparing...';
+    await myllmShareFile('data:' + f.mime + ';base64,' + utf8b64(r.text),
+                         { filename: base + '.' + f.ext, mime: f.mime });
+    el('expStatus').textContent = '';
+    closeSheet('export');
+    haptic('success');
+  }catch(e){ el('expStatus').textContent = 'Share failed: ' + e.message; haptic('error'); }
+}
+
+/* ---------- rename / move ---------- */
+
+function openRename(){
+  if (!current || !current.path) return;
+  el('renamePath').value = current.path;
+  el('renameStatus').textContent = '';
+  el('rename').classList.add('show');
+}
+async function commitRename(){
+  var to = el('renamePath').value.trim();
+  if (!to || !current || !files) return;
+  if (to === current.path){ closeSheet('rename'); return; }
+  try{
+    if (dirty()) await files.write(current.path, edited);
+    await files.move(current.path, to);
+    dropRecent(current.path);
+    current.path = to;
+    current.name = to.split('/').pop();
+    current.ext = extOf(to);
+    current.text = edited;
+    pushRecent(to);
+    el('title').textContent = current.name;
+    closeSheet('rename');
+    clearDraft();
+    updateBar(); updateSub('moved');
+    haptic('success');
+    render();
+  }catch(e){ el('renameStatus').textContent = 'x ' + e.message; haptic('error'); }
+}
+
+function openMore(){
+  if (!current) return;
+  el('moreTitle').textContent = current.name;
+  el('more').classList.add('show');
 }
 
 /* Hands the document to the assistant. compose (not send) so the user reads the
@@ -540,16 +1290,26 @@ function askAI(){
   var ask = 'Read ' + where + ' and tell me what it says - the key points, anything that needs a decision, and anything that looks wrong.';
   if (window.myllmChat && myllmChat.compose){ myllmChat.compose(ask); haptic('success'); return; }
   if (window.myllmAsk){
-    el('sub').textContent = 'Asking MyLLM...';
+    updateSub('asking MyLLM...');
     myllmAsk('Summarise this ' + kindLabel(current.ext) + ' document in 5 bullets:\n\n' + String(edited).slice(0, 6000))
       .then(function(r){
         el('main').innerHTML = '<div class="md">' + markdown(r) + '</div>';
-        el('sub').textContent = 'MyLLM summary';
+        updateSub('MyLLM summary');
       })
-      .catch(function(e){ el('sub').textContent = 'Ask failed: ' + e.message; });
+      .catch(function(e){ updateSub('ask failed: ' + e.message); });
     return;
   }
-  el('sub').textContent = 'AI is off for apps.';
+  updateSub('AI is off for apps');
 }
+
+/* ---------- boot ---------- */
+
+(async function boot(){
+  await loadType();
+  await loadRecents();
+  await loadDraft();
+  if (!current) renderStart();
+  updateBar();
+})();
 </script>
 </body></html>

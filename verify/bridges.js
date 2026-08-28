@@ -175,12 +175,28 @@
     cancel: () => later(true),
   };
 
+  // Mirrors MyLLMosFileStore: list() is FILES ONLY and yields records, not bare
+  // paths — an app that reads f.path off a string gets undefined, so the stub
+  // has to have the same shape as the store or it verifies nothing.
+  const folders = new Set();
+  const parents = (p) => {
+    const bits = String(p).split('/');
+    bits.pop();
+    for (let i = 1; i <= bits.length; i++) folders.add(bits.slice(0, i).join('/'));
+  };
   window.myllmFiles = {
     read: (p) => later(files.has(String(p)) ? files.get(String(p)) : null),
-    write: (p, c) => later(void files.set(String(p), String(c ?? ''))),
+    write: (p, c) => later(void (files.set(String(p), String(c ?? '')), parents(p))),
     remove: (p) => later(void files.delete(String(p))),
     exists: (p) => later(files.has(String(p))),
-    list: () => later([...files.keys()]),
+    list: () => later([...files.keys()].map((p) => ({
+      path: p, size: files.get(p).length, modified: Math.floor(Date.now() / 1000),
+    }))),
+    move: (from, to) => later(void (files.set(String(to), files.get(String(from)) ?? ''),
+                                   files.delete(String(from)), parents(to))),
+    makeFolder: (p) => later(void folders.add(String(p).replace(/^\/+|\/+$/g, ''))),
+    folders: () => later([...folders].filter(Boolean)),
+    removeFolder: (p) => later(void folders.delete(String(p))),
   };
 
   // Only remember/forget exist — see the myllmMemory block in HTMLArtifactView.swift.
