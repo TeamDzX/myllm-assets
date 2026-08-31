@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-12",
+  "updated": "2026-08-31",
   "categories": [
     "Students",
     "Productivity",
@@ -2878,6 +2878,31 @@
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@00e8001b4a32b6d62b6d9c4fd4056b2b3d17f92a/apps-src/stride.html",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@00e8001b4a32b6d62b6d9c4fd4056b2b3d17f92a/apps-src/stride.myllmapp",
       "sizeKB": 25
+    },
+    {
+      "id": "chess-clock",
+      "name": "Chess Clock",
+      "emoji": "⏱️",
+      "tagline": "A proper clock for both sides",
+      "description": "A chess clock for two players sharing one phone. Set it between you, tap your own half to end your move, and the other clock starts. Pick a standard control in a tap — bullet, blitz, rapid or classical, from 1+0 up to 90+30 — or build your own with increment, Bronstein delay or simple US delay. Tournament controls are there too: 40 moves in 90 minutes then 30 more, with the extra time landing on each player as they reach the move count. The running side is lit and the waiting side dims, so it is obvious whose move it is from across a table. Clocks turn red and buzz when time is short, and a flag ends the game. Move counters, pause and reset are on the bar between the two faces. Times are kept from the real clock rather than counted down frame by frame, so a locked screen or a phone call never costs anyone their time. Works entirely offline and remembers your last time control.",
+      "tags": [
+        "chess",
+        "board",
+        "timer",
+        "offline",
+        "saves data"
+      ],
+      "category": "Games",
+      "iconSymbol": "timer",
+      "iconColor": "orange",
+      "version": 1,
+      "featured": false,
+      "requiresAI": false,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/chess-clock.jpg",
+      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@main/apps-src/chess-clock.html",
+      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@main/apps-src/chess-clock.myllmapp",
+      "sizeKB": 28,
+      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/icons/chess-clock.jpg"
     }
   ]
 }

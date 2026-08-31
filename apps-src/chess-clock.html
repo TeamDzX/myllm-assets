@@ -1,0 +1,687 @@
+<!doctype html>
+<!--
+  Chess Clock — MyLLMos™ App Gallery · © 2026 Opticell Ltd
+  Source-available: read it, remix it, run your version inside MyLLM™.
+  Not for redistribution or republication. Terms: https://github.com/TeamDzX/myllm-assets/blob/main/LICENSE
+-->
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>Chess Clock</title>
+<style>
+  :root{--build-id:"e1eb6de5a6";
+    color-scheme: dark;
+    --cream:#f2ead9; --cream-2:#e4d8bf; --ink:#1b1815;
+    --slate:#22201e; --slate-2:#171513; --chalk:#efe9df;
+    --brass:#c99a3f; --brass-soft:rgba(201,154,63,.22);
+    --warn:#e0912f; --danger:#d8452f; --ok:#4e8d5b;
+    --font:-apple-system,system-ui,"Segoe UI",sans-serif;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%;margin:0;overscroll-behavior:none}
+  body{
+    font-family:var(--font); background:#0d0c0b; color:var(--chalk);
+    user-select:none; -webkit-user-select:none; touch-action:manipulation;
+    display:flex; flex-direction:column;
+  }
+
+  /* ---------- the two clock faces ---------- */
+  .board{flex:1;display:flex;flex-direction:column;min-height:0}
+  .side{
+    flex:1; position:relative; display:flex; align-items:center; justify-content:center;
+    border:0; padding:0; margin:0; font:inherit; color:inherit; width:100%;
+    background:var(--slate); transition:background .18s, opacity .18s;
+    min-height:0; overflow:hidden;
+  }
+  /* The far player reads across the phone, so their half is upside down. */
+  .side.flip .inner{transform:rotate(180deg)}
+  .side.white{background:var(--cream); color:var(--ink)}
+  .side.black{background:var(--slate); color:var(--chalk)}
+
+  /* Only the running side is lit; the waiting side recedes so there is never a
+     question about whose move it is from across a table. */
+  .side.idle{opacity:.5}
+  .side.live.white{background:linear-gradient(180deg,#fffaf0,var(--cream))}
+  .side.live.black{background:linear-gradient(180deg,#2c2926,var(--slate))}
+  .side.live::after{
+    content:""; position:absolute; inset:0; border:3px solid var(--brass);
+    border-radius:2px; pointer-events:none;
+  }
+  .side.low.live{animation:pulseLow 1s ease-in-out infinite}
+  @keyframes pulseLow{50%{filter:brightness(1.16)}}
+  .side.flagged{background:var(--danger) !important; color:#fff !important; opacity:1}
+
+  .inner{display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px;
+         transition:transform .2s}
+  .clock{
+    font-size:clamp(52px,17vw,120px); font-weight:600; line-height:1;
+    font-variant-numeric:tabular-nums; letter-spacing:-.02em;
+  }
+  .clock .frac{font-size:.52em;opacity:.62}
+  .side.low .clock{color:var(--danger)}
+  .side.white.low .clock{color:#b3301c}
+  .meta{font-size:12.5px;opacity:.62;display:flex;gap:12px;align-items:center;
+        font-variant-numeric:tabular-nums}
+  .who{font-size:11px;letter-spacing:.14em;text-transform:uppercase;opacity:.5;font-weight:600}
+  .stage-note{font-size:11.5px;color:var(--brass);min-height:14px;font-weight:600}
+
+  /* ---------- centre control bar ---------- */
+  .bar{
+    display:flex; align-items:center; justify-content:center; gap:10px;
+    padding:9px 12px calc(9px + env(safe-area-inset-bottom));
+    background:#0d0c0b; border-top:1px solid rgba(255,255,255,.09); flex:0 0 auto;
+  }
+  .bar .ctl{
+    appearance:none;border:1px solid rgba(255,255,255,.16);background:#1a1817;color:var(--chalk);
+    border-radius:11px; height:42px; min-width:42px; padding:0 13px; font:inherit; font-size:13.5px;
+    font-weight:600; display:inline-flex; align-items:center; justify-content:center; gap:6px;
+  }
+  .bar .ctl:active{background:#262322}
+  .bar .ctl.primary{background:var(--brass);border-color:var(--brass);color:#20180a}
+  .bar .name{flex:1;text-align:center;font-size:12.5px;opacity:.62;overflow:hidden;
+             text-overflow:ellipsis;white-space:nowrap}
+
+  /* ---------- sheets ---------- */
+  .scrim{position:fixed;inset:0;background:rgba(0,0,0,.62);display:none;z-index:20;
+         align-items:flex-end;justify-content:center}
+  .scrim.open{display:flex}
+  .sheet{
+    background:#141211;width:100%;max-width:560px;max-height:88dvh;overflow:auto;
+    border-radius:20px 20px 0 0;padding:20px 18px calc(22px + env(safe-area-inset-bottom));
+    border:1px solid rgba(255,255,255,.1);border-bottom:0;
+  }
+  .sheet h2{margin:0 0 3px;font-size:17px}
+  .sheet .cap{margin:0 0 16px;font-size:12.5px;opacity:.55;line-height:1.5}
+  .grp{margin-bottom:18px}
+  .grp h3{margin:0 0 8px;font-size:11px;letter-spacing:.13em;text-transform:uppercase;
+          opacity:.45;font-weight:700}
+  .presets{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px}
+  .preset{
+    appearance:none;border:1px solid rgba(255,255,255,.14);background:#1d1a18;color:var(--chalk);
+    border-radius:12px;padding:11px 8px;font:inherit;text-align:center;
+  }
+  .preset:active{background:#282422}
+  .preset[aria-pressed="true"]{border-color:var(--brass);background:var(--brass-soft)}
+  .preset b{display:block;font-size:15.5px;font-weight:650;font-variant-numeric:tabular-nums}
+  .preset span{display:block;font-size:11px;opacity:.55;margin-top:2px}
+
+  .row{display:flex;align-items:center;justify-content:space-between;gap:12px;
+       padding:11px 0;border-top:1px solid rgba(255,255,255,.08)}
+  .row:first-of-type{border-top:0}
+  .row label{font-size:14px}
+  .row .hint{font-size:11.5px;opacity:.5;margin-top:2px;line-height:1.45}
+  .row input[type=number],.row select{
+    background:#221f1d;border:1px solid rgba(255,255,255,.16);color:var(--chalk);
+    border-radius:10px;padding:9px 11px;font:inherit;font-size:14px;width:96px;text-align:right;
+  }
+  .row select{width:auto;text-align:left}
+  .row input:focus,.row select:focus{outline:2px solid var(--brass);outline-offset:-1px}
+  .seg{display:inline-flex;background:#221f1d;border:1px solid rgba(255,255,255,.14);
+       border-radius:10px;padding:2px}
+  .seg button{appearance:none;border:0;background:transparent;color:var(--chalk);font:inherit;
+              font-size:12.5px;font-weight:600;padding:7px 11px;border-radius:8px;opacity:.6}
+  .seg button[aria-pressed="true"]{background:var(--brass);color:#20180a;opacity:1}
+  .sheet .go{
+    appearance:none;border:0;background:var(--brass);color:#20180a;font:inherit;font-size:15.5px;
+    font-weight:700;border-radius:13px;padding:14px;width:100%;margin-top:6px;
+  }
+  .sheet .close{
+    appearance:none;border:1px solid rgba(255,255,255,.16);background:transparent;color:var(--chalk);
+    font:inherit;font-size:14px;border-radius:13px;padding:12px;width:100%;margin-top:9px;
+  }
+
+  /* ---------- result banner ---------- */
+  .result{
+    position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:15;
+    background:#141211;border:1px solid var(--brass);border-radius:16px;padding:18px 22px;
+    text-align:center;display:none;box-shadow:0 18px 50px rgba(0,0,0,.6);max-width:82vw;
+    pointer-events:none;
+  }
+  .result.show{display:block}
+  .result h2{margin:0 0 4px;font-size:19px}
+  .result p{margin:0;font-size:13px;opacity:.62}
+</style>
+</head>
+<body>
+
+<div class="board">
+  <button class="side flip black idle" id="side-1" aria-label="Black clock">
+    <div class="inner">
+      <div class="who" id="who-1">Black</div>
+      <div class="clock" id="clock-1">5:00</div>
+      <div class="meta"><span id="moves-1">0 moves</span></div>
+      <div class="stage-note" id="stage-1"></div>
+    </div>
+  </button>
+  <button class="side white idle" id="side-0" aria-label="White clock">
+    <div class="inner">
+      <div class="who" id="who-0">White</div>
+      <div class="clock" id="clock-0">5:00</div>
+      <div class="meta"><span id="moves-0">0 moves</span></div>
+      <div class="stage-note" id="stage-0"></div>
+    </div>
+  </button>
+</div>
+
+<div class="bar">
+  <button class="ctl" id="reset" aria-label="Reset clocks">↺</button>
+  <button class="ctl primary" id="playpause" aria-label="Start or pause">▶</button>
+  <div class="name" id="control-name">Blitz · 5 + 0</div>
+  <button class="ctl" id="sound" aria-label="Toggle sound">🔔</button>
+  <button class="ctl" id="settings" aria-label="Time control settings">⚙</button>
+</div>
+
+<div class="result" id="result" role="status">
+  <h2 id="result-t"></h2>
+  <p id="result-p"></p>
+</div>
+
+<div class="scrim" id="scrim">
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-t">
+    <h2 id="sheet-t">Time control</h2>
+    <p class="cap">Pick a standard control, or build your own below. Choosing one resets both clocks.</p>
+
+    <div class="grp"><h3>Bullet</h3><div class="presets" data-band="bullet"></div></div>
+    <div class="grp"><h3>Blitz</h3><div class="presets" data-band="blitz"></div></div>
+    <div class="grp"><h3>Rapid</h3><div class="presets" data-band="rapid"></div></div>
+    <div class="grp"><h3>Classical &amp; tournament</h3><div class="presets" data-band="classical"></div></div>
+
+    <div class="grp">
+      <h3>Custom</h3>
+      <div class="row">
+        <label for="c-min">Minutes each</label>
+        <input type="number" id="c-min" min="0" max="360" step="1" value="5" inputmode="numeric">
+      </div>
+      <div class="row">
+        <div><label for="c-inc">Extra seconds a move</label>
+          <div class="hint" id="inc-hint">Added to your clock each time you press.</div></div>
+        <input type="number" id="c-inc" min="0" max="180" step="1" value="0" inputmode="numeric">
+      </div>
+      <div class="row">
+        <label for="c-mode">Method</label>
+        <select id="c-mode">
+          <option value="fischer">Increment (Fischer)</option>
+          <option value="bronstein">Bronstein delay</option>
+          <option value="delay">Simple delay (US)</option>
+        </select>
+      </div>
+      <div class="row">
+        <div><label for="c-sec">Second time control</label>
+          <div class="hint">Tournament style: after a set number of moves, both players get extra minutes. Leave at 0 moves for a single control.</div></div>
+      </div>
+      <div class="row">
+        <label for="c-after">After … moves</label>
+        <input type="number" id="c-after" min="0" max="120" step="1" value="0" inputmode="numeric">
+      </div>
+      <div class="row">
+        <label for="c-add">Add … minutes</label>
+        <input type="number" id="c-add" min="0" max="180" step="1" value="0" inputmode="numeric">
+      </div>
+      <button class="go" id="use-custom">Use this control</button>
+    </div>
+
+    <div class="grp">
+      <h3>Options</h3>
+      <div class="row">
+        <div><label>Sound &amp; buzz</label>
+          <div class="hint">A tick when you press, and a warning when a clock drops under ten seconds.</div></div>
+        <div class="seg" id="seg-sound">
+          <button data-v="on" aria-pressed="true">On</button>
+          <button data-v="off" aria-pressed="false">Off</button>
+        </div>
+      </div>
+      <div class="row">
+        <div><label>Low-time warning</label>
+          <div class="hint">When a clock turns red.</div></div>
+        <div class="seg" id="seg-low">
+          <button data-v="10" aria-pressed="true">10s</button>
+          <button data-v="30" aria-pressed="false">30s</button>
+          <button data-v="60" aria-pressed="false">60s</button>
+        </div>
+      </div>
+    </div>
+
+    <button class="close" id="close">Done</button>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+/* ---------------------------------------------------------------------------
+   Time controls
+
+   A control is a list of stages. Stage 0 is the game's opening allowance; a
+   further stage adds its minutes once a player has completed `after` moves,
+   which is how FIDE-style tournament controls (90 minutes for 40 moves, then
+   30 more) actually work — the extra time lands on each player independently
+   as they reach the move count, not when the game does.
+
+   `mode` covers the three ways a move can earn time back:
+     fischer   — a flat bonus added after every move (the common one online)
+     bronstein — returns what you spent, capped at the bonus, so you can never
+                 bank time you did not use
+     delay     — the clock simply does not start for the first N seconds of
+                 your move (US delay)
+--------------------------------------------------------------------------- */
+function control(label, band, minutes, bonus, mode, after, addMinutes){
+  return {
+    label: label, band: band, mode: mode || "fischer",
+    baseMs: Math.round(minutes * 60000),
+    bonusMs: Math.round((bonus || 0) * 1000),
+    after: after || 0,
+    addMs: Math.round((addMinutes || 0) * 60000),
+  };
+}
+
+var PRESETS = [
+  control("1 + 0",   "bullet", 1, 0),
+  control("1 + 1",   "bullet", 1, 1),
+  control("2 + 1",   "bullet", 2, 1),
+  control("3 + 0",   "blitz", 3, 0),
+  control("3 + 2",   "blitz", 3, 2),
+  control("5 + 0",   "blitz", 5, 0),
+  control("5 + 3",   "blitz", 5, 3),
+  control("10 + 0",  "rapid", 10, 0),
+  control("10 + 5",  "rapid", 10, 5),
+  control("15 + 10", "rapid", 15, 10),
+  control("25 + 10", "rapid", 25, 10),
+  control("30 + 0",  "classical", 30, 0),
+  control("30 + 20", "classical", 30, 20),
+  control("60 + 30", "classical", 60, 30),
+  control("90 + 30", "classical", 90, 30),
+  // The FIDE standard, and the club control most people mean by "tournament".
+  control("40/90 + 30", "classical", 90, 30, "fischer", 40, 30),
+  control("40/120 + 60", "classical", 120, 0, "fischer", 40, 60),
+];
+var BAND_NAME = { bullet:"Bullet", blitz:"Blitz", rapid:"Rapid", classical:"Classical" };
+
+/* ---------------------------------------------------------------------------
+   State
+
+   Clocks are wall-clock derived, never decremented by a timer. `remain` is the
+   time banked at the last press; the running side's live figure is that minus
+   the elapsed time since the press. A dropped frame, a backgrounded web view
+   or a sleeping screen therefore cannot make the clock wrong — it only makes
+   the display stale until the next paint.
+--------------------------------------------------------------------------- */
+var LS = { control:"chessclock.control", opts:"chessclock.opts" };
+var cfg = PRESETS[5];                 // 5 + 0
+var remain = [0, 0];                  // ms banked, [white, black]
+var moves  = [0, 0];
+var staged = [false, false];          // has this side taken its extra stage yet
+var turn = 0;                         // 0 white, 1 black
+var running = false;
+var started = false;                  // a press has happened this game
+var turnStart = 0;                    // ms timestamp the running turn began
+var flagged = -1;
+var opts = { sound:true, lowAt:10 };
+var warned = [false, false];
+var raf = null;
+var actx = null;
+
+var $ = function(s){ return document.querySelector(s); };
+function el(id){ return document.getElementById(id); }
+function now(){ return Date.now(); }
+
+/* ---------------------------------------------------------------------------
+   Storage — myllmStorage is async and absent in a plain browser, so both paths
+   are guarded and neither is allowed to throw into the game loop.
+--------------------------------------------------------------------------- */
+function save(key, value){
+  var s = JSON.stringify(value);
+  try{ if(window.myllmStorage){ window.myllmStorage.setItem(key, s); return; } }catch(e){}
+  try{ localStorage.setItem(key, s); }catch(e){}
+}
+function load(key){
+  try{
+    if(window.myllmStorage){
+      return Promise.resolve(window.myllmStorage.getItem(key)).then(function(v){
+        try{ return v ? JSON.parse(v) : null; }catch(e){ return null; }
+      }).catch(function(){ return null; });
+    }
+  }catch(e){}
+  try{ var v = localStorage.getItem(key); return Promise.resolve(v ? JSON.parse(v) : null); }
+  catch(e){ return Promise.resolve(null); }
+}
+
+function buzz(style){
+  if(!opts.sound) return;
+  try{ if(window.myllmHaptic) window.myllmHaptic(style || "light"); }catch(e){}
+}
+
+/* A short tone rather than an audio file, so the app stays self-contained.
+   The context is created on the first press — a user gesture — because that is
+   the only moment iOS will let it start. */
+function tone(freq, ms, gain){
+  if(!opts.sound) return;
+  try{
+    var AC = window.AudioContext || window.webkitAudioContext;
+    if(!AC) return;
+    if(!actx) actx = new AC();
+    if(actx.state === "suspended") actx.resume();
+    var o = actx.createOscillator(), g = actx.createGain();
+    o.type = "triangle";
+    o.frequency.value = freq;
+    g.gain.setValueAtTime(0.0001, actx.currentTime);
+    g.gain.exponentialRampToValueAtTime(gain || 0.16, actx.currentTime + 0.008);
+    g.gain.exponentialRampToValueAtTime(0.0001, actx.currentTime + ms/1000);
+    o.connect(g); g.connect(actx.destination);
+    o.start(); o.stop(actx.currentTime + ms/1000 + 0.02);
+  }catch(e){}
+}
+
+/* ---------------------------------------------------------------------------
+   Clock maths
+--------------------------------------------------------------------------- */
+// How much of this turn actually counts against the clock. Simple delay gives
+// the first `bonusMs` free; the other two modes charge from the first instant.
+function charged(elapsed){
+  if(cfg.mode === "delay") return Math.max(0, elapsed - cfg.bonusMs);
+  return elapsed;
+}
+
+function liveRemaining(side){
+  if(!running || side !== turn || flagged >= 0) return remain[side];
+  return remain[side] - charged(now() - turnStart);
+}
+
+function fmt(ms){
+  if(ms < 0) ms = 0;
+  var t = Math.ceil(ms / 100) / 10;                 // tenths, rounded up
+  var h = Math.floor(t / 3600);
+  var m = Math.floor((t % 3600) / 60);
+  var s = t % 60;
+  // Under twenty seconds a chess clock shows tenths — that is when they matter.
+  if(ms < 20000){
+    var whole = Math.floor(s);
+    var frac = Math.floor((s - whole) * 10);
+    return '<span>' + (h ? h + ":" + pad(m) + ":" + pad(whole) : (m ? m + ":" + pad(whole) : whole))
+         + '</span><span class="frac">.' + frac + '</span>';
+  }
+  s = Math.floor(s);
+  if(h) return h + ":" + pad(m) + ":" + pad(s);
+  return m + ":" + pad(s);
+}
+function pad(n){ return n < 10 ? "0" + n : "" + n; }
+
+/* ---------------------------------------------------------------------------
+   Game flow
+--------------------------------------------------------------------------- */
+function setControl(c){
+  cfg = c;
+  save(LS.control, c);
+  resetGame();
+}
+
+function resetGame(){
+  stopLoop();
+  remain = [cfg.baseMs, cfg.baseMs];
+  moves = [0, 0];
+  staged = [false, false];
+  warned = [false, false];
+  turn = 0;
+  running = false;
+  started = false;
+  flagged = -1;
+  el("result").className = "result";
+  el("stage-0").textContent = "";
+  el("stage-1").textContent = "";
+  el("control-name").textContent = controlName(cfg);
+  draw();
+}
+
+function controlName(c){
+  var band = BAND_NAME[c.band] || "Custom";
+  var mode = c.mode === "bronstein" ? " · Bronstein" : (c.mode === "delay" ? " · delay" : "");
+  return band + " · " + c.label + mode;
+}
+
+// Pressing your own side ends your move. Anything else is ignored, which is
+// what stops a spectator's stray tap — or the waiting player's — from moving
+// the game on.
+function press(side){
+  if(flagged >= 0) return;
+
+  if(!started){ begin(); return; }
+  if(!running){ resume(); return; }
+  if(side !== turn) return;
+  commitTurn();
+}
+
+// Bank the elapsed time, pay out the bonus, advance the stage if this move
+// reached it, and hand over.
+function commitTurn(){
+  var elapsed = now() - turnStart;
+  var spent = charged(elapsed);
+  remain[turn] -= spent;
+
+  if(remain[turn] <= 0){ remain[turn] = 0; flag(turn); return; }
+
+  if(cfg.mode === "fischer") remain[turn] += cfg.bonusMs;
+  else if(cfg.mode === "bronstein") remain[turn] += Math.min(cfg.bonusMs, spent);
+
+  moves[turn] += 1;
+
+  if(cfg.after > 0 && !staged[turn] && moves[turn] >= cfg.after){
+    staged[turn] = true;
+    remain[turn] += cfg.addMs;
+    el("stage-" + turn).textContent = "+" + Math.round(cfg.addMs / 60000) + " min";
+    tone(760, 140, 0.13);
+  }
+
+  warned[turn] = false;
+  turn = turn === 0 ? 1 : 0;
+  turnStart = now();
+  buzz("light");
+  tone(520, 45, 0.1);
+  draw();
+}
+
+function flag(side){
+  flagged = side;
+  running = false;
+  stopLoop();
+  remain[side] = 0;
+  buzz("heavy");
+  tone(180, 520, 0.2);
+  el("result-t").textContent = (side === 0 ? "Black" : "White") + " wins on time";
+  el("result-p").textContent = (side === 0 ? "White" : "Black") + " ran out after " +
+    moves[side] + " move" + (moves[side] === 1 ? "" : "s") + ".";
+  el("result").className = "result show";
+  draw();
+}
+
+function pause(){
+  if(!running || flagged >= 0) return;
+  remain[turn] -= charged(now() - turnStart);
+  if(remain[turn] < 0) remain[turn] = 0;
+  running = false;
+  stopLoop();
+  draw();
+}
+function resume(){
+  if(running || flagged >= 0 || !started) return;
+  running = true;
+  turnStart = now();
+  startLoop();
+  draw();
+}
+// White always moves first, so the opening gesture — either clock face or the
+// play button — just starts White's clock. It must not commit a turn: doing so
+// credited a move nobody had made and, under Fischer, paid an increment for it.
+function begin(){
+  started = true; running = true;
+  turn = 0;
+  turnStart = now();
+  startLoop();
+  draw();
+}
+
+function toggleRun(){
+  if(flagged >= 0){ resetGame(); return; }
+  if(!started){ begin(); return; }
+  if(running) pause(); else resume();
+}
+
+/* ---------------------------------------------------------------------------
+   Paint
+--------------------------------------------------------------------------- */
+function draw(){
+  for(var i = 0; i < 2; i++){
+    var ms = liveRemaining(i);
+    var node = el("side-" + i);
+    var low = ms <= opts.lowAt * 1000;
+
+    el("clock-" + i).innerHTML = fmt(ms);
+    el("moves-" + i).textContent = moves[i] + (moves[i] === 1 ? " move" : " moves");
+
+    var cls = "side " + (i === 1 ? "flip black" : "white");
+    if(flagged === i) cls += " flagged";
+    else if(!started || !running) cls += " idle";
+    else if(i === turn) cls += " live";
+    else cls += " idle";
+    if(low && flagged !== i) cls += " low";
+    node.className = cls;
+
+    if(running && i === turn && low && !warned[i] && ms > 0){
+      warned[i] = true;
+      buzz("medium");
+      tone(880, 120, 0.14);
+    }
+    if(running && i === turn && ms <= 0){ flag(i); return; }
+  }
+  el("playpause").textContent = flagged >= 0 ? "↺" : (running ? "❚❚" : "▶");
+  el("sound").style.opacity = opts.sound ? "1" : ".4";
+}
+
+function startLoop(){ if(!raf) raf = requestAnimationFrame(loop); }
+function stopLoop(){ if(raf){ cancelAnimationFrame(raf); raf = null; } }
+function loop(){ raf = null; draw(); if(running) startLoop(); }
+
+/* ---------------------------------------------------------------------------
+   Settings sheet
+--------------------------------------------------------------------------- */
+function buildPresets(){
+  var bands = document.querySelectorAll(".presets");
+  for(var b = 0; b < bands.length; b++){
+    var band = bands[b].dataset.band, html = "";
+    for(var i = 0; i < PRESETS.length; i++){
+      var p = PRESETS[i];
+      if(p.band !== band) continue;
+      var sub = p.after ? p.after + " moves, then +" + Math.round(p.addMs/60000)
+              : (p.bonusMs ? "+" + Math.round(p.bonusMs/1000) + "s a move" : "no increment");
+      html += '<button class="preset" data-i="' + i + '" aria-pressed="false">' +
+              "<b>" + p.label + "</b><span>" + sub + "</span></button>";
+    }
+    bands[b].innerHTML = html;
+  }
+  markPreset();
+}
+function markPreset(){
+  var all = document.querySelectorAll(".preset");
+  for(var i = 0; i < all.length; i++){
+    var p = PRESETS[+all[i].dataset.i];
+    all[i].setAttribute("aria-pressed", String(p === cfg || (p.label === cfg.label && p.band === cfg.band)));
+  }
+}
+
+function openSheet(){ pause(); el("scrim").classList.add("open"); markPreset(); }
+function closeSheet(){ el("scrim").classList.remove("open"); }
+
+function syncSegs(){
+  var s = el("seg-sound").children;
+  s[0].setAttribute("aria-pressed", String(opts.sound));
+  s[1].setAttribute("aria-pressed", String(!opts.sound));
+  var l = el("seg-low").children;
+  for(var i = 0; i < l.length; i++)
+    l[i].setAttribute("aria-pressed", String(+l[i].dataset.v === opts.lowAt));
+  el("inc-hint").textContent = el("c-mode").value === "delay"
+    ? "Your clock does not start until these seconds have passed."
+    : el("c-mode").value === "bronstein"
+      ? "Returns what you spent, up to this many seconds — never more."
+      : "Added to your clock each time you press.";
+}
+
+/* ---------------------------------------------------------------------------
+   Wiring
+--------------------------------------------------------------------------- */
+el("side-0").addEventListener("pointerdown", function(e){ e.preventDefault(); press(0); });
+el("side-1").addEventListener("pointerdown", function(e){ e.preventDefault(); press(1); });
+
+el("playpause").addEventListener("click", toggleRun);
+el("reset").addEventListener("click", function(){ resetGame(); buzz("light"); });
+el("settings").addEventListener("click", openSheet);
+el("close").addEventListener("click", closeSheet);
+el("scrim").addEventListener("click", function(e){ if(e.target === el("scrim")) closeSheet(); });
+el("sound").addEventListener("click", function(){
+  opts.sound = !opts.sound; save(LS.opts, opts); syncSegs(); draw();
+});
+
+document.addEventListener("click", function(e){
+  var p = e.target.closest ? e.target.closest(".preset") : null;
+  if(!p) return;
+  setControl(PRESETS[+p.dataset.i]);
+  markPreset();
+  closeSheet();
+});
+
+el("use-custom").addEventListener("click", function(){
+  var mins = Math.max(0, Math.min(360, +el("c-min").value || 0));
+  var inc  = Math.max(0, Math.min(180, +el("c-inc").value || 0));
+  var mode = el("c-mode").value;
+  var after = Math.max(0, Math.min(120, +el("c-after").value || 0));
+  var add = Math.max(0, Math.min(180, +el("c-add").value || 0));
+  if(mins <= 0 && inc <= 0) return;                 // a clock with no time is not a control
+  var label = mins + " + " + inc + (after && add ? " · " + after + "/+" + add : "");
+  setControl(control(label, "custom", mins, inc, mode, after, add));
+  markPreset();
+  closeSheet();
+});
+
+el("c-mode").addEventListener("change", syncSegs);
+
+el("seg-sound").addEventListener("click", function(e){
+  var b = e.target.closest("button"); if(!b) return;
+  opts.sound = b.dataset.v === "on"; save(LS.opts, opts); syncSegs(); draw();
+});
+el("seg-low").addEventListener("click", function(e){
+  var b = e.target.closest("button"); if(!b) return;
+  opts.lowAt = +b.dataset.v; save(LS.opts, opts); warned = [false, false]; syncSegs(); draw();
+});
+
+// A backgrounded web view stops painting, so the display can be stale on the
+// way back in. The clocks are timestamp-derived, so one repaint is the whole
+// fix — nothing needs reconciling.
+document.addEventListener("visibilitychange", function(){
+  if(document.visibilityState === "visible"){ draw(); if(running) startLoop(); }
+});
+
+// Best effort only: there is no keep-awake bridge, and the clocks survive the
+// screen sleeping anyway.
+try{ if(navigator.wakeLock) navigator.wakeLock.request("screen").catch(function(){}); }catch(e){}
+
+/* ---------------------------------------------------------------------------
+   Boot
+--------------------------------------------------------------------------- */
+buildPresets();
+Promise.all([load(LS.control), load(LS.opts)]).then(function(r){
+  var savedControl = r[0], savedOpts = r[1];
+  if(savedOpts && typeof savedOpts === "object"){
+    if(typeof savedOpts.sound === "boolean") opts.sound = savedOpts.sound;
+    if([10,30,60].indexOf(+savedOpts.lowAt) >= 0) opts.lowAt = +savedOpts.lowAt;
+  }
+  if(savedControl && typeof savedControl.baseMs === "number" && savedControl.baseMs >= 0){
+    cfg = savedControl;
+    el("c-min").value = Math.round(cfg.baseMs / 60000);
+    el("c-inc").value = Math.round(cfg.bonusMs / 1000);
+    el("c-mode").value = cfg.mode || "fischer";
+    el("c-after").value = cfg.after || 0;
+    el("c-add").value = Math.round((cfg.addMs || 0) / 60000);
+  }
+  syncSegs();
+  resetGame();
+  markPreset();
+}).catch(function(){ syncSegs(); resetGame(); });
+</script>
+</body></html>
