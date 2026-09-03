@@ -214,6 +214,13 @@ function pubFromPosts(host,posts){
       for(var k=0;k<pu.length;k++){var pub=pu[k].publication;if(pub&&pub.name)return {name:pub.name,logo:pub.logo_url||'',tagline:pub.hero_text||''};}}}
   return null;
 }
+function pubHost(pub){return pub.custom_domain||((pub.subdomain||'')+'.substack.com');}
+function fetchProfile(handle){
+  return apiJSON('https://substack.com/api/v1/user/'+encodeURIComponent(handle)+'/public_profile').then(function(d){
+    var pubs=(d.publicationUsers||[]).map(function(pu){return pu.publication;}).filter(function(x){return x&&x.name;});
+    return {name:d.name||'',photo:d.photo_url||'',pubs:pubs.map(function(x){return {host:pubHost(x),name:x.name,logo:x.logo_url||'',tagline:x.hero_text||''};})};
+  });
+}
 function fetchPub(host){
   return apiJSON('https://'+host+'/api/v1/archive?sort=new&limit=12').then(function(posts){
     if(!Array.isArray(posts))throw new Error('Unexpected reply from '+host);
@@ -231,17 +238,37 @@ function follow(input,btn){
   status('Looking up '+host+'…');haptic('light');
   var tries=[host];
   if(host.indexOf('www.')===0)tries.push(host.slice(4));else if(host.split('.').length===2)tries.push('www.'+host);
+  var slug=/\.substack\.com$/.test(host)?host.replace(/\.substack\.com$/,''):null;
+  var notFound=new Error('No Substack publication found at '+host+'. Some newsletters have moved to other platforms.');
   function attempt(i){
-    if(i>=tries.length)return Promise.reject(new Error('No Substack publication found at '+host+'. Some newsletters have moved to other platforms.'));
+    if(i>=tries.length){
+      // A bare name may be a writer's handle rather than a publication slug: ask their public profile.
+      if(!slug)return Promise.reject(notFound);
+      return fetchProfile(slug).then(function(prof){
+        var pub=prof.pubs[0];if(!pub||isFollowed(pub.host))throw notFound;
+        return fetchPub(pub.host).then(function(r){if(!r.meta)r.meta=pub;return {host:pub.host,r:r};});
+      }).catch(function(){throw notFound;});
+    }
     return fetchPub(tries[i]).then(function(r){return {host:tries[i],r:r};}).catch(function(e){if(i+1<tries.length)return attempt(i+1);throw e;});
   }
   return attempt(0).then(function(x){
+    if(x.r.meta||!slug)return x;
+    // No bylines to learn the name from (typical of a brand-new publication): use the writer's profile.
+    return fetchProfile(slug).then(function(prof){
+      var pub=prof.pubs.filter(function(q){return q.host===x.host;})[0]||prof.pubs[0];
+      x.r.meta=pub?{name:pub.name,logo:pub.logo||prof.photo,tagline:pub.tagline}:(prof.name?{name:prof.name,logo:prof.photo,tagline:''}:null);
+      return x;
+    }).catch(function(){return x;});
+  }).then(function(x){
+    if(isFollowed(x.host)){toast('Already following');return;}
     var meta=x.r.meta||{name:x.host.replace(/^www\./,'').replace(/\.substack\.com$/,''),logo:'',tagline:''};
     state.follows.push({host:x.host,name:meta.name,logo:meta.logo,tagline:meta.tagline});
     state.followedAt[x.host]=Date.now();
     state.cache[x.host]=x.r.posts;
     save();renderFollows();renderInbox();
-    status('');toast('Following '+meta.name);haptic('success');
+    if(x.r.posts.length){status('');toast('Following '+meta.name);}
+    else{status('Following '+meta.name+', but it has not published any posts yet. They will appear in your inbox when it does.');toast('Following '+meta.name);}
+    haptic('success');
     $('addInput').value='';
   }).catch(function(e){status(friendlyError(e));haptic('error');}).then(function(){if(btn)btn.disabled=false;});
 }
@@ -290,7 +317,11 @@ function renderInbox(){
   pills.innerHTML='<button class="pill'+(filter?'':' on')+'" data-host="">All</button>'+state.follows.map(function(f){
     return '<button class="pill'+(filter===f.host?' on':'')+'" data-host="'+esc(f.host)+'">'+(f.logo?'<img src="'+esc(img(f.logo,64))+'" alt="">':'')+esc(f.name)+'</button>';}).join('');
   var posts=allPosts().filter(function(p){return !filter||p.host===filter;});
-  if(!posts.length){box.innerHTML='<div class="empty">No posts loaded yet. Tap Refresh.</div>';return;}
+  if(!posts.length){
+    var quiet=state.follows.filter(function(f){return (!filter||f.host===filter)&&!(state.cache[f.host]||[]).length;});
+    box.innerHTML='<div class="empty">'+(quiet.length?quiet.map(function(f){return '<b>'+esc(f.name)+'</b> has not published any posts yet.';}).join('<br>')+'<br><br>New posts will appear here when they are published.':'No posts loaded yet. Tap Refresh.')+'</div>';
+    return;
+  }
   box.innerHTML=posts.map(function(p){
     var pub=pubOf(p.host);
     return '<div class="post'+(state.read[p.id]?' read':'')+'" data-id="'+esc(p.id)+'" data-host="'+esc(p.host)+'">'+
@@ -306,7 +337,7 @@ function renderFollows(){
   if(!state.follows.length)el.innerHTML='<div class="empty">You are not following anything yet.</div>';
   else el.innerHTML=state.follows.map(function(f){
     return '<div class="frow" data-host="'+esc(f.host)+'">'+(f.logo?'<img src="'+esc(img(f.logo,128))+'" alt="">':'<img alt="">')+
-      '<div class="txt"><b>'+esc(f.name)+'</b><span>'+esc(f.tagline||f.host)+'</span></div><button class="unf">Unfollow</button></div>';
+      '<div class="txt"><b>'+esc(f.name)+'</b><span>'+esc((state.cache[f.host]||[]).length?(f.tagline||f.host):'No posts published yet · '+f.host)+'</span></div><button class="unf">Unfollow</button></div>';
   }).join('');
   var st=$('starters');
   st.innerHTML='<h4>Some places to start</h4>'+STARTERS.map(function(s){
