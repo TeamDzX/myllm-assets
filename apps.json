@@ -1,5 +1,5 @@
 {
-  "updated": "2026-09-01",
+  "updated": "2026-09-03",
   "categories": [
     "Students",
     "Productivity",
@@ -16,6 +16,30 @@
     "Community"
   ],
   "apps": [
+    {
+      "id": "speed-check",
+      "name": "Speed Check",
+      "emoji": "⚡",
+      "tagline": "How fast is this connection?",
+      "description": "A clean internet speed test. Tap Start and watch the dial: it measures ping and jitter, then download and upload using several parallel streams that size themselves to your connection, so slow and fast links both get a fair reading in about fifteen seconds. Results are translated into plain English — whether this connection will cope with 4K streaming, video calls, gaming or a whole household at once — alongside your public IP, country and the Cloudflare edge you were tested against. Every run is kept in an on-device history so you can compare Wi-Fi with mobile, or the kitchen with the back bedroom, and share a result as text. Tests run against Cloudflare's public speed-test service through MyLLM's network bridge; nothing but test data is sent. A full test moves up to about 160 MB, so bear that in mind on a metered plan.",
+      "tags": [
+        "network",
+        "wifi",
+        "utility",
+        "saves data"
+      ],
+      "category": "Utilities",
+      "iconSymbol": "gauge.with.dots.needle.67percent",
+      "iconColor": "orange",
+      "version": 1,
+      "featured": true,
+      "requiresAI": false,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/speed-check.jpg",
+      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@main/apps-src/speed-check.html",
+      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@main/apps-src/speed-check.myllmapp",
+      "sizeKB": 22,
+      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/icons/speed-check.jpg"
+    },
     {
       "id": "workbench",
       "name": "Workbench",
