@@ -21,7 +21,7 @@
       "name": "Bin",
       "emoji": "🗑️",
       "tagline": "Deleted files, until you say so",
-      "description": "The bin for your shared workspace. Anything removed with rm or rmdir in the Shell app lands here instead of vanishing, and this app is the tile that shows it: every file with where it came from, its size and date, newest first. Tap one to restore it to its original place, look inside first, or delete it for good; if a file with the same name is already back in the workspace you choose whether to keep both or replace it. Select several to restore or delete together, and Empty Bin clears the lot when you are sure. It is simply the hidden .trash folder in the workspace, so the assistant can see and restore things too. Nothing leaves your device.",
+      "description": "The bin for your shared workspace. Anything removed with rm or rmdir in the Shell app lands here instead of vanishing, and this app is the tile that shows it: every file with where it came from, its size and date, newest first. Tap one to restore it to its original place, look inside first, or delete it for good; if a file with the same name is already back in the workspace you choose whether to keep both or replace it. Select several to restore or delete together, and Empty Bin clears the lot when you are sure. It is simply the hidden .trash folder in the workspace, so the assistant can see and restore things too. A Rewind tab lists files that were overwritten, with their previous versions to look at or restore (needs MyLLM 5.1.2). Nothing leaves your device.",
       "tags": [
         "files",
         "utility",
@@ -31,13 +31,13 @@
       "category": "Utilities",
       "iconSymbol": "trash.fill",
       "iconColor": "mint",
-      "version": 2,
+      "version": 3,
       "featured": true,
       "requiresAI": false,
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/bin.jpg",
-      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@a3176c34761875674243ff809faa670f1cd7597b/apps-src/bin.html",
-      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@a3176c34761875674243ff809faa670f1cd7597b/apps-src/bin.myllmapp",
-      "sizeKB": 14,
+      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@3db0c59e5e60c505397d07561ddc58867c840153/apps-src/bin.html",
+      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@3db0c59e5e60c505397d07561ddc58867c840153/apps-src/bin.myllmapp",
+      "sizeKB": 20,
       "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/icons/bin.jpg"
     },
     {
@@ -120,10 +120,10 @@
       "category": "Utilities",
       "iconSymbol": "terminal",
       "iconColor": "gray",
-      "version": 5,
+      "version": 6,
       "featured": true,
       "requiresAI": true,
-      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@50bf78b236f8334793593f85f372277f54d53fad/apps-src/shell.html",
+      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@3db0c59e5e60c505397d07561ddc58867c840153/apps-src/shell.html",
       "tags": [
         "developer",
         "files",
@@ -131,7 +131,7 @@
         "saves data"
       ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/shell.jpg",
-      "sizeKB": 35
+      "sizeKB": 37
     },
     {
       "id": "e-grid",
