@@ -26,7 +26,7 @@ h1{font-size:24px;margin:0;letter-spacing:-.3px}
 .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:4px 14px}
 .bar{display:flex;gap:8px;margin-bottom:10px;align-items:center}
 .bar .spacer{flex:1}
-.count{font-size:13px;color:var(--muted)}
+.count{font-size:13px;color:var(--muted);white-space:nowrap}
 .row{display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid var(--border)}
 .row:first-child{border-top:0}
 .row .ico{width:38px;height:38px;border-radius:10px;background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:18px;flex:none}
@@ -117,6 +117,7 @@ function render(){
   $('restoreSelBtn').hidden=!selecting;$('deleteSelBtn').hidden=!selecting;
   $('restoreSelBtn').disabled=!nSel;$('deleteSelBtn').disabled=!nSel;
   $('restoreSelBtn').textContent=nSel?'Restore ('+nSel+')':'Restore';$('deleteSelBtn').textContent=nSel?'Delete ('+nSel+')':'Delete';
+  $('count').hidden=selecting;
   $('count').textContent=items.length?items.length+(items.length===1?' item':' items')+' · '+bytes(total):'';
   if(!items.length){list.innerHTML='<div class="empty"><div class="big">🗑️</div>The Bin is empty.<br>Files removed with rm in the Shell app land here.</div>';return;}
   list.innerHTML=items.map(function(it){
