@@ -50,6 +50,14 @@
   .say{color:#e7eef8;border-left:2px solid #7ee787;padding-left:9px;margin:6px 0 8px;white-space:pre-wrap}
   .propose{color:#ffb86b;border-left:2px solid #ffb86b;padding-left:9px;margin:6px 0}
   .ps1{color:#7ee787;align-self:center;white-space:nowrap;max-width:46%;overflow:hidden;text-overflow:ellipsis}
+  /* Tappable paths: a phone has no Tab key, so anything the shell prints that
+     you might type next can be tapped into the prompt instead. */
+  .path{cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-decoration-color:#3c5680;text-underline-offset:3px}
+  .chip.comp{color:#7ee787;border-color:#2d3a4d}
+  .chip.dirc{color:#79c0ff}
+  .chip.undo{color:#ffb86b}
+  .hit{color:#6b7a90}
+  .hit b{color:#e7eef8;font-weight:650}
 </style><style>:root{--build-id:"301f85fd18";}</style>
 </head>
 <body>
@@ -81,8 +89,9 @@
    tool, so what you learn here is what you can ask MyLLM for in words — and what
    it prints back to you looks like what it prints back to itself.
 
-   Difference: you are a person at a prompt, so this one can also WRITE. rm asks
-   first, because the store has no undo and no trash. */
+   Difference: you are a person at a prompt, so this one can also WRITE. The
+   store itself has no trash and no undo, so this app supplies both: rm moves
+   into a hidden .trash folder, and undo reverses the last change. */
 var files = window.myllmFiles || null;
 var out = document.getElementById('out');
 var input = document.getElementById('in');
@@ -93,6 +102,11 @@ var cmdHistory = [];
 var hIndex = -1;
 var pending = null;      /* a confirmation waiting on y/n */
 var cwd = '';            /* current directory, '' = workspace root */
+var TRASH = '.trash';    /* where rm puts things; hidden from ls unless -a or you cd into it */
+var undoStack = [];      /* this session's reversible changes, newest last */
+var lastSnap = null;     /* most recent listing, for completion chips */
+var VERBS = ['ls','tree','cat','head','tail','stat','find','grep','du','mkdir','mv','write','rm','rmdir','undo','trash','restore','cd','pwd','clear','help'];
+function inTrash(path){ return path === TRASH || path.indexOf(TRASH + '/') === 0; }
 
 /* The APP may be stateful — you are standing somewhere. The assistant's
    workspace_shell tool deliberately is NOT: state that persists between tool
@@ -117,11 +131,11 @@ function prompt$(){ return cwd ? '~/' + cwd : '~'; }
    command, so the bar is a live readout rather than decoration. */
 async function paintPrompt(){
   var l = document.getElementById('statusLeft');
-  if (l) l.textContent = prompt$() + '  \u00b7  read-only';
+  if (l) l.textContent = prompt$() + (undoStack.length ? '  \u00b7  undo \u00d7' + undoStack.length : '');
   var r = document.getElementById('statusRight');
   if (r && files){
     try{
-      var list = await files.list();
+      var list = (await files.list()).filter(function(f){ return !inTrash(f.path); });
       var total = list.reduce(function(a,b){ return a + b.size; }, 0);
       r.textContent = list.length + (list.length === 1 ? ' file' : ' files') + '  \u00b7  ' + bytes(total);
     }catch(e){ r.textContent = ''; }
@@ -136,13 +150,17 @@ var HELP = [
   'tail [-n N] <path> last N lines',
   'stat <path>        size, modified, type',
   'find <glob>        match filenames, e.g. find *.json',
+  'grep <text> [path] search inside files (add -l for names only)',
   'du                 space used per folder',
   'mkdir <path>       create a folder',
-  'mv <from> <to>     move or rename a file or folder',
-  'rm <path>          delete a file (asks first)',
-  'rmdir <path>       delete a folder (asks; refuses if not empty)',
+  'mv <from> <to>     move or rename (-f to replace an existing file)',
+  'rm <path>          move a file to .trash  (rm -p deletes for good, asks first)',
+  'rmdir <path>       move a folder to .trash (rmdir -p deletes for good)',
+  'undo               reverse the last change: rm, rmdir, mv, write, mkdir',
+  'trash              what is in .trash;  trash empty  deletes it all (asks)',
+  'restore <path>     put something back from .trash',
   'write <path>       type a line into a file (replaces it)',
-  'cd <path>          change directory (cd .. to go up)',
+  'cd <path>          change directory (cd .. to go up); ls -a shows .trash',
   'clear              clear the screen',
   'help               this list',
   '',
@@ -211,11 +229,44 @@ function glob(pattern, name){
   return new RegExp(rx,'i').test(name);
 }
 
-async function snapshot(){
+async function snapshot(includeHidden){
   var list = await files.list();
-  var folders = await files.folders ? await files.folders() : [];
-  return { files: list, folders: folders };
+  var folders = files.folders ? await files.folders() : [];
+  var all = { files: list, folders: folders };
+  lastSnap = all;
+  if (includeHidden || inTrash(cwd)) return all;
+  return { files: list.filter(function(f){ return !inTrash(f.path); }),
+           folders: folders.filter(function(d){ return !inTrash(d); }) };
 }
+/* Where a deleted thing goes. Keeps the original path under .trash so restore
+   is a straight move back; a second delete of the same name gets a suffix. */
+function trashPath(target){
+  var snap = lastSnap || { files: [], folders: [] };   /* the UNFILTERED listing — run()'s hides .trash */
+  var dest = TRASH + '/' + target;
+  var taken = snap.files.some(function(f){ return f.path === dest || f.path.indexOf(dest + '/') === 0; }) || snap.folders.indexOf(dest) >= 0;
+  if (!taken) return dest;
+  var dot = target.lastIndexOf('.'), slash = target.lastIndexOf('/');
+  var stamp = '~' + new Date().toISOString().slice(0,19).replace(/[-:T]/g,'');
+  return TRASH + '/' + (dot > slash ? target.slice(0,dot) + stamp + target.slice(dot) : target + stamp);
+}
+/* After a restore, the folder that held the item may be left empty inside
+   .trash. Sweep those (deepest first) so `trash` never shows hollow folders. */
+async function pruneTrash(){
+  try{
+    var all = await snapshot(true);
+    var dirs = all.folders.filter(function(d){ return inTrash(d) && d !== TRASH; }).sort(function(a,b){ return b.length - a.length; });
+    for (var i = 0; i < dirs.length; i++){
+      var d = dirs[i];
+      var busy = all.files.some(function(f){ return f.path.indexOf(d + '/') === 0; }) ||
+                 all.folders.some(function(x){ return x !== d && x.indexOf(d + '/') === 0 && !dirs.slice(0, i).some(function(gone){ return gone === x; }); });
+      if (!busy) await files.removeFolder(d, false);
+    }
+    var again = await snapshot(true);
+    if (again.folders.indexOf(TRASH) >= 0 && !again.files.some(function(f){ return inTrash(f.path); }) &&
+        !again.folders.some(function(d){ return d !== TRASH && inTrash(d); })) await files.removeFolder(TRASH, false);
+  }catch(e){}
+}
+function pathHTML(p, label){ return '<span class="path" data-path="' + esc(p) + '">' + esc(label == null ? p : label) + '</span>'; }
 
 /* ---------- commands ---------- */
 
@@ -232,7 +283,7 @@ async function run(line){
     ops.push(a);
   }
   var target = ops.length ? resolve(ops[0]) : cwd;
-  var snap = await snapshot();
+  var snap = await snapshot(!!flags.a);
 
   switch (verb){
     case 'help': print(HELP, 'dim'); return;
@@ -276,7 +327,40 @@ async function run(line){
       var hits = snap.files.map(function(f){ return f.path; }).filter(function(p){
         return glob(ops[0], p.split('/').pop()) || glob(ops[0], p);
       });
-      return print(hits.length ? hits.sort().join('\n') : 'No match for ' + ops[0], hits.length ? '' : 'dim');
+      if (!hits.length) return print('No match for ' + ops[0], 'dim');
+      return printHTML(hits.sort().map(function(p){ return pathHTML(p); }).join('\n'));
+    }
+
+    case 'grep': {
+      /* Search INSIDE files — find only knows names. Case-insensitive, because
+         a phone keyboard capitalises the first letter whether you like it or
+         not; -l lists matching files only. Scope with a folder or file path. */
+      if (!ops[0]) return print('grep needs some text, e.g. grep dentist  or  grep -l invoice notes', 'err');
+      var needle = ops[0].toLowerCase();
+      var scope = ops[1] ? resolve(ops[1]) : cwd;
+      var pool = snap.files.filter(function(f){ return !scope || f.path === scope || f.path.indexOf(scope + '/') === 0; });
+      if (!pool.length) return print('Nothing to search in ' + (scope || 'the workspace'), 'dim');
+      var rows = [], hitFiles = 0, shown = 0, LIMIT = 200;
+      for (var fi = 0; fi < pool.length && shown < LIMIT; fi++){
+        var f = pool[fi], txt = await files.read(f.path);
+        if (txt == null || txt.toLowerCase().indexOf(needle) < 0) continue;
+        hitFiles++;
+        if (flags.l){ rows.push(pathHTML(f.path)); continue; }
+        var ls = txt.split('\n');
+        for (var li = 0; li < ls.length && shown < LIMIT; li++){
+          var lower = ls[li].toLowerCase(), at = lower.indexOf(needle);
+          if (at < 0) continue;
+          shown++;
+          var start = Math.max(0, at - 40), snippet = ls[li].slice(start, start + 120);
+          var rel = at - start;
+          var marked = esc(snippet.slice(0, rel)) + '<b>' + esc(snippet.slice(rel, rel + needle.length)) + '</b>' + esc(snippet.slice(rel + needle.length));
+          rows.push(pathHTML(f.path) + '<span class="hit">:' + (li + 1) + ': ' + (start ? '\u2026' : '') + marked + '</span>');
+        }
+      }
+      if (!rows.length) return print('No match for "' + ops[0] + '" in ' + (scope || 'the workspace'), 'dim');
+      printHTML(rows.join('\n'));
+      if (!flags.l) print('[' + shown + (shown >= LIMIT ? '+' : '') + ' line(s) in ' + hitFiles + ' file(s)]', 'dim');
+      return;
     }
 
     case 'du': {
@@ -295,14 +379,22 @@ async function run(line){
 
     case 'mkdir':
       if (!target) return print('mkdir needs a path', 'err');
+      if (snap.folders.indexOf(target) >= 0) return print(target + '/ already exists', 'dim');
       await files.makeFolder(target);
+      remember({ type: 'mkdir', path: target });
       haptic('success');
       return print('created ' + target + '/', 'ok');
 
     case 'mv': {
       if (ops.length < 2) return print('mv needs a source and a destination', 'err');
-      var to = normalise(ops[1]);
+      var to = resolve(ops[1]);
+      if (!to) return print('mv needs a destination name', 'err');
+      var exists = snap.files.some(function(x){ return x.path === to; }) || snap.folders.indexOf(to) >= 0;
+      /* The store replaces a destination silently, and a replaced file cannot be
+         undone — so say so, and make replacing a deliberate flag. */
+      if (exists && !flags.f) return print(to + ' already exists — use  mv -f  to replace it', 'err');
       await files.move(target, to);
+      remember({ type: 'mv', from: target, to: to });
       haptic('success');
       return print(target + ' -> ' + to, 'ok');
     }
@@ -311,21 +403,79 @@ async function run(line){
       if (!target) return print('write needs a path', 'err');
       var body = line.slice(line.indexOf(ops[0]) + ops[0].length).trim();
       if (!body) return print('write <path> <text>  — the text replaces the file', 'err');
+      var prev = await files.read(target);
       await files.write(target, body);
+      remember({ type: 'write', path: target, prev: prev });
       haptic('success');
-      return print('wrote ' + body.length + ' chars to ' + target, 'ok');
+      return print('wrote ' + body.length + ' chars to ' + target + (prev != null ? ' (replaced ' + prev.length + ')' : ''), 'ok');
     }
 
     case 'rm': case 'rmdir': {
       if (!target) return print(verb + ' needs a path', 'err');
       var isDir = snap.folders.indexOf(target) >= 0;
+      var isFile = snap.files.some(function(x){ return x.path === target; });
+      if (!isDir && !isFile) return print('No such file or folder: ' + target, 'err');
       if (verb === 'rm' && isDir) return print(target + ' is a folder — use rmdir', 'err');
       if (verb === 'rmdir' && !isDir) return print(target + ' is not a folder — use rm', 'err');
       var count = isDir ? snap.files.filter(function(x){ return x.path.indexOf(target+'/') === 0; }).length : 1;
-      /* No undo, no trash. A one-word delete of someone's documents should have
-         to be said twice. */
-      pending = { verb: verb, target: target, count: count };
-      return print('delete ' + target + (isDir ? '/ and its ' + count + ' file(s)' : '') + '? there is no undo — type  y  to confirm', 'err');
+      if (inTrash(target) || flags.p){
+        /* Already in the trash, or explicitly permanent: this one really is gone,
+           so it still has to be said twice. */
+        pending = { verb: verb, target: target, count: count };
+        return print('delete ' + target + (isDir ? '/ and its ' + count + ' file(s)' : '') + ' for good? no undo — type  y  to confirm', 'err');
+      }
+      var dest = trashPath(target);
+      await files.move(target, dest);
+      remember({ type: 'rm', from: target, to: dest, isDir: isDir });
+      haptic('warning');
+      return print('moved ' + target + (isDir ? '/ (' + count + ' file(s))' : '') + ' to ' + TRASH + '  \u2014  undo  puts it back', 'ok');
+    }
+
+    case 'undo': {
+      var op = undoStack.pop();
+      if (!op) return print('nothing to undo', 'dim');
+      switch (op.type){
+        case 'rm': await files.move(op.to, op.from); await pruneTrash(); print('restored ' + op.from, 'ok'); break;
+        case 'mv': await files.move(op.to, op.from); print(op.to + ' -> ' + op.from, 'ok'); break;
+        case 'mkdir': await files.removeFolder(op.path, false); print('removed ' + op.path + '/', 'ok'); break;
+        case 'write':
+          if (op.prev == null){ await files.remove(op.path); print('removed ' + op.path, 'ok'); }
+          else { await files.write(op.path, op.prev); print('restored ' + op.path + ' (' + op.prev.length + ' chars)', 'ok'); }
+          break;
+      }
+      haptic('success');
+      return;
+    }
+
+    case 'trash': {
+      if ((ops[0] || '').toLowerCase() === 'empty'){
+        var all = await snapshot(true);
+        var inside = all.files.filter(function(x){ return inTrash(x.path); });
+        if (!inside.length && all.folders.indexOf(TRASH) < 0) return print(TRASH + ' is empty', 'dim');
+        pending = { verb: 'trash-empty', count: inside.length };
+        return print('delete ' + inside.length + ' file(s) in ' + TRASH + ' for good? no undo — type  y  to confirm', 'err');
+      }
+      var allT = await snapshot(true);
+      if (allT.folders.indexOf(TRASH) < 0) return print(TRASH + ' is empty', 'dim');
+      print(TRASH + '/  \u2014  restore <path> puts something back, trash empty clears it', 'dim');
+      return listing(allT, TRASH, true);
+    }
+
+    case 'restore': {
+      if (!ops[0]) return print('restore needs a path as shown by  trash', 'err');
+      var all2 = await snapshot(true);
+      var src = normalise(ops[0]);
+      if (!inTrash(src)) src = TRASH + '/' + src;
+      var back = src.slice(TRASH.length + 1).replace(/~\d{14}(?=\.[^.\/]+$|$)/, '');
+      var known = all2.files.some(function(x){ return x.path === src; }) || all2.folders.indexOf(src) >= 0;
+      if (!known) return print('Not in ' + TRASH + ': ' + src.slice(TRASH.length + 1), 'err');
+      var clash = all2.files.some(function(x){ return x.path === back; }) || all2.folders.indexOf(back) >= 0;
+      if (clash && !flags.f) return print(back + ' already exists — use  restore -f  to replace it', 'err');
+      await files.move(src, back);
+      await pruneTrash();
+      remember({ type: 'mv', from: src, to: back });
+      haptic('success');
+      return print('restored ' + back, 'ok');
     }
 
     default:
@@ -336,11 +486,16 @@ async function run(line){
   }
 }
 
+function remember(op){
+  undoStack.push(op);
+  if (undoStack.length > 30) undoStack.shift();
+}
+
 function listing(snap, root, recursive){
   var prefix = root ? root + '/' : '';
   if (root && snap.folders.indexOf(root) < 0){
     var one = snap.files.filter(function(f){ return f.path === root; })[0];
-    if (one) return print(one.path + '\t' + one.size + 'B\t' + when(one.modified*1000));
+    if (one) return printHTML(pathHTML(one.path) + '\t<span class="dim">' + one.size + 'B\t' + when(one.modified*1000) + '</span>');
     return print('No such file or folder: ' + root, 'err');
   }
   var depth = prefix ? prefix.split('/').length : 1;
@@ -351,9 +506,9 @@ function listing(snap, root, recursive){
     return f.path.indexOf(prefix) === 0 && (recursive || f.path.split('/').length === depth);
   }).sort(function(a,b){ return a.path < b.path ? -1 : 1; });
   if (!subs.length && !here.length) return print(root ? root + '/ is empty' : 'The workspace is empty', 'dim');
-  var html = subs.map(function(d){ return '<span class="dir">' + esc(d) + '/</span>'; })
+  var html = subs.map(function(d){ return '<span class="dir">' + pathHTML(d, d + '/') + '</span>'; })
     .concat(here.map(function(f){
-      return esc(f.path) + '\t<span class="dim">' + f.size + 'B\t' + when(f.modified*1000) + '</span>';
+      return pathHTML(f.path) + '\t<span class="dim">' + f.size + 'B\t' + when(f.modified*1000) + '</span>';
     })).join('\n');
   printHTML(html);
 }
@@ -369,7 +524,7 @@ function listing(snap, root, recursive){
    proposal the user has to accept: a model running rm across someone's
    documents unattended is the one outcome worth designing against. */
 
-var READ_ONLY = ['ls','tree','cat','head','tail','stat','find','du','pwd'];
+var READ_ONLY = ['ls','tree','cat','head','tail','stat','find','grep','du','pwd'];
 var MAX_STEPS = 5;          /* myllmAsk is rate-limited; five is plenty and stays inside it */
 
 function systemPrompt(listing){
@@ -380,13 +535,13 @@ function systemPrompt(listing){
     'Contents right now:',
     listing || '(empty)',
     '',
-    'You may run these READ-ONLY commands: ls [-R] [path], tree [path], cat <path>, head -n N <path>, tail -n N <path>, stat <path>, find <glob>, du.',
+    'You may run these READ-ONLY commands: ls [-R] [path], tree [path], cat <path>, head -n N <path>, tail -n N <path>, stat <path>, find <glob>, grep <text> [path] (searches inside files), du.',
     'Paths are relative to the current directory. There is no cd.',
     '',
     'Reply with ONE JSON object and nothing else:',
     '  {"run":"<command>"}                     to look at something first',
     '  {"say":"<answer>"}                      when you can answer',
-    '  {"propose":"<command>","why":"<reason>"} to CHANGE something (mkdir, mv, write, rm, rmdir) — the user approves it, you never run it',
+    '  {"propose":"<command>","why":"<reason>"} to CHANGE something (mkdir, mv, write, rm, rmdir) — the user approves it, you never run it. rm moves to a trash folder and can be undone.',
     '',
     'Prefer running a command over guessing. Answer in plain prose, briefly. Do not invent file contents.'
   ].join('\n');
@@ -469,20 +624,25 @@ document.getElementById('form').addEventListener('submit', async function(ev){
     if (line.toLowerCase() === 'y' || line.toLowerCase() === 'yes'){
       try{
         if (p.verb === 'raw'){ print('$ ' + p.line, 'cmd'); await run(p.line); }
+        else if (p.verb === 'trash-empty') await files.removeFolder(TRASH, true);
         else if (p.verb === 'rm') await files.remove(p.target);
         else await files.removeFolder(p.target, true);
         haptic('warning');
-        if (p.verb !== 'raw') print('deleted ' + p.target, 'ok');
+        if (p.verb === 'trash-empty') print('emptied ' + TRASH, 'ok');
+        else if (p.verb !== 'raw') print('deleted ' + p.target, 'ok');
       }catch(e){ print(e.message, 'err'); }
     } else print('cancelled', 'dim');
+    paintPrompt(); renderChips();
     return;
   }
 
   cmdHistory.push(line); hIndex = cmdHistory.length;
+  if (cmdHistory.length > 200) cmdHistory.shift();
   print(prompt$() + ' \u276f ' + line, 'cmd');
   try { await run(line); }
   catch(e){ print(String(e && e.message || e), 'err'); }
   paintPrompt();
+  renderChips();
 });
 
 /* Up/down through history, as a shell does. */
@@ -491,17 +651,95 @@ input.addEventListener('keydown', function(e){
   if (e.key === 'ArrowDown'){ if (hIndex < cmdHistory.length-1){ hIndex++; input.value = cmdHistory[hIndex]; } else { hIndex = cmdHistory.length; input.value = ''; } e.preventDefault(); }
 });
 
-['ls -R','du','find *.json','help'].forEach(function(c){
+/* ---------- completion, for a keyboard with no Tab key ----------
+   The chip row follows what you type: verbs while you type the first word,
+   then names from the folder you are pointing at. A folder completes with a
+   trailing slash and keeps going. Empty input shows the usual shortcuts. */
+var chipsEl = document.getElementById('chips');
+var DEFAULT_CHIPS = ['ls','ls -R','grep ','du','trash','help'];
+
+function chip(label, cls, onTap){
   var b = document.createElement('button');
-  b.className = 'chip'; b.type = 'button'; b.textContent = c;
-  b.onclick = function(){ input.value = c; input.focus(); };
-  document.getElementById('chips').appendChild(b);
+  b.className = 'chip' + (cls ? ' ' + cls : ''); b.type = 'button'; b.textContent = label;
+  b.addEventListener('pointerdown', function(e){ e.preventDefault(); });  /* keep the keyboard up */
+  b.addEventListener('click', onTap);
+  return b;
+}
+function setInput(v){ input.value = v; input.focus(); renderChips(); }
+
+function renderChips(){
+  chipsEl.innerHTML = '';
+  var v = input.value, atStart = v.length === 0;
+  if (pending){ [['y','ok'],['n','dim']].forEach(function(x){ chipsEl.appendChild(chip(x[0], '', function(){ setInput(x[0]); })); }); return; }
+  if (atStart){
+    DEFAULT_CHIPS.forEach(function(c){ chipsEl.appendChild(chip(c, '', function(){ setInput(c); })); });
+    if (undoStack.length) chipsEl.appendChild(chip('undo', 'undo', function(){ setInput('undo'); }));
+    if (cwd) chipsEl.appendChild(chip('cd ..', 'dirc', function(){ setInput('cd ..'); }));
+    return;
+  }
+  var endsWithSpace = /\s$/.test(v);
+  var tokens = tokenize(v);
+  var partial = endsWithSpace ? '' : (tokens[tokens.length - 1] || '');
+  var head = endsWithSpace ? v : v.slice(0, v.length - partial.length);
+  var firstWord = tokens.length <= 1 && !endsWithSpace;
+  var items = [];
+  if (firstWord){
+    VERBS.filter(function(x){ return x.indexOf(partial.toLowerCase()) === 0 && x !== partial; })
+      .forEach(function(x){ items.push({ label: x, value: x + ' ', cls: '' }); });
+  } else if (lastSnap){
+    var slash = partial.lastIndexOf('/');
+    var dirPart = slash >= 0 ? partial.slice(0, slash + 1) : '';
+    var namePart = slash >= 0 ? partial.slice(slash + 1) : partial;
+    var base = resolve(dirPart || '.');
+    var prefix = base ? base + '/' : '';
+    var depth = prefix ? prefix.split('/').length : 1;
+    var seen = {};
+    var showHidden = inTrash(base) || namePart.charAt(0) === '.';
+    lastSnap.folders.forEach(function(d){
+      if (d.indexOf(prefix) !== 0 || d === base || d.split('/').length !== depth) return;
+      if (!showHidden && inTrash(d)) return;
+      var name = d.slice(prefix.length);
+      if (name.toLowerCase().indexOf(namePart.toLowerCase()) === 0 && !seen[name]){ seen[name] = 1; items.push({ label: name + '/', value: dirPart + name + '/', cls: 'dirc' }); }
+    });
+    lastSnap.files.forEach(function(f){
+      if (f.path.indexOf(prefix) !== 0 || f.path.split('/').length !== depth) return;
+      if (!showHidden && inTrash(f.path)) return;
+      var name = f.path.slice(prefix.length);
+      if (name.toLowerCase().indexOf(namePart.toLowerCase()) === 0 && !seen[name] && name !== namePart){ seen[name] = 1; items.push({ label: name, value: dirPart + name, cls: 'comp' }); }
+    });
+    if (base && !namePart) items.push({ label: '..', value: dirPart + '../', cls: 'dirc' });
+  }
+  items.slice(0, 12).forEach(function(it){
+    chipsEl.appendChild(chip(it.label, it.cls, function(){
+      var val = /[\s"']/.test(it.value) ? '"' + it.value + '"' : it.value;
+      setInput(head + val);
+    }));
+  });
+  if (!items.length && !firstWord) DEFAULT_CHIPS.slice(0, 3).forEach(function(c){ chipsEl.appendChild(chip(c, 'dim', function(){ setInput(c); })); });
+}
+input.addEventListener('input', renderChips);
+input.addEventListener('focus', renderChips);
+
+/* Tap a path the shell printed and it lands in the prompt — appended after a
+   space if you were mid-command, or on its own if the prompt was empty. */
+out.addEventListener('click', function(e){
+  var el = e.target.closest('.path');
+  if (!el) return;
+  var p = el.getAttribute('data-path');
+  if (cwd && p.indexOf(cwd + '/') === 0) p = p.slice(cwd.length + 1);   /* relative to where you stand */
+  else if (cwd) p = '/' + p;
+  var val = /[\s"']/.test(p) ? '"' + p + '"' : p;
+  var v = input.value;
+  setInput(v && !/\s$/.test(v) ? v + ' ' + val : v + val);
+  haptic('selection');
 });
+renderChips();
 
 paintPrompt();
 print('MyLLMos workspace shell. Type  help  for commands.', 'dim');
 print('Anything that is not a command is a question — MyLLM answers it from here,', 'dim');
 print('running the read-only commands itself and asking before it changes anything.', 'dim');
+print('rm moves things to .trash and  undo  reverses your last change. Tap any path to use it.', 'dim');
 if (!window.myllmFiles) print('\nShared files are off — turn them on in MyLLMos settings.', 'err');
 else run('ls');
 </script>
