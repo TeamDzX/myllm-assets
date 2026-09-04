@@ -92,21 +92,22 @@
       "name": "Shell",
       "emoji": "⌨️",
       "tagline": "A directory you can talk to",
-      "description": "A terminal for your shared workspace — and an assistant standing in it. ls, tree, cat, head, stat, find, du and cd to look around; mkdir, mv, write and rm to change things, with deletes asking first because there is no undo. Type anything that isn't a command and it becomes a question: MyLLM answers from inside the current directory, running the read-only commands itself to find out, and asking your permission before it changes a single file. The same command grammar works when you talk to MyLLM in chat. Nothing leaves your device.",
+      "description": "A terminal for your shared workspace — and an assistant standing in it. ls, tree, cat, head, stat, find, du and cd to look around; mkdir, mv, write and rm to change things; rm moves to a trash folder and undo reverses your last change, so only emptying the trash asks first. grep searches inside files. Type anything that isn't a command and it becomes a question: MyLLM answers from inside the current directory, running the read-only commands itself to find out, and asking your permission before it changes a single file. The same command grammar works when you talk to MyLLM in chat. Nothing leaves your device.",
       "category": "Utilities",
       "iconSymbol": "terminal",
       "iconColor": "gray",
-      "version": 4,
+      "version": 5,
       "featured": true,
       "requiresAI": true,
-      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@a0d40c6fa0b4f3dc47cc7b1cacd871ae3139c1f9/apps-src/shell.html",
+      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@50bf78b236f8334793593f85f372277f54d53fad/apps-src/shell.html",
       "tags": [
         "developer",
         "files",
         "utility",
         "saves data"
       ],
-      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/shell.jpg"
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/shell.jpg",
+      "sizeKB": 35
     },
     {
       "id": "e-grid",
