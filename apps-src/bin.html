@@ -1,0 +1,215 @@
+<!doctype html>
+<!--
+  Bin — MyLLMos™ App Gallery · © 2026 Opticell Ltd
+  Source-available: read it, remix it, run your version inside MyLLM™.
+  Not for redistribution or republication. Terms: https://github.com/TeamDzX/myllm-assets/blob/main/LICENSE
+-->
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Bin</title>
+<style>
+:root{--build-id:"61b52aa067";color-scheme:light dark;
+  --bg:var(--myllm-bg,#f2f2f7);--surface:var(--myllm-surface,#fff);--text:var(--myllm-text,#111);
+  --muted:var(--myllm-muted,#6e6e73);--accent:var(--myllm-accent,#0a84ff);--border:var(--myllm-border,#e3e3e8);
+  --radius:var(--myllm-radius,18px);--bad:#e5484d;--good:#2fb56a}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0}
+body{font-family:var(--myllm-font,-apple-system,system-ui,sans-serif);background:var(--bg);color:var(--text);
+  padding:16px 16px calc(28px + env(safe-area-inset-bottom));max-width:820px;margin:0 auto;-webkit-font-smoothing:antialiased}
+h1{font-size:24px;margin:0;letter-spacing:-.3px}
+.sub{font-size:13px;color:var(--muted);margin:3px 0 12px}
+.top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.btn{border:1px solid var(--border);background:var(--surface);color:var(--text);border-radius:12px;padding:9px 13px;font-size:14px;font-weight:600;white-space:nowrap}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.danger{background:var(--bad);border-color:var(--bad);color:#fff}
+.btn.quiet{color:var(--accent)}
+.btn[disabled]{opacity:.45}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:4px 14px}
+.bar{display:flex;gap:8px;margin-bottom:10px;align-items:center}
+.bar .spacer{flex:1}
+.count{font-size:13px;color:var(--muted)}
+.row{display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid var(--border)}
+.row:first-child{border-top:0}
+.row .ico{width:38px;height:38px;border-radius:10px;background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:18px;flex:none}
+.row .txt{flex:1;min-width:0}
+.row b{display:block;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row span{display:block;font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .chk{width:22px;height:22px;border-radius:50%;border:2px solid var(--border);flex:none}
+.row.sel .chk{background:var(--accent);border-color:var(--accent)}
+.row .chk[hidden]{display:none}
+.acts{display:flex;gap:8px;padding:0 0 12px 50px}
+.acts button{border:0;border-radius:10px;padding:8px 12px;font-size:13px;font-weight:600}
+.acts .restore{background:var(--accent);color:#fff}
+.acts .kill{background:var(--bg);color:var(--bad)}
+.acts .peek{background:var(--bg);color:var(--text)}
+.empty{color:var(--muted);font-size:14px;text-align:center;padding:36px 12px;line-height:1.55}
+.empty .big{font-size:44px;margin-bottom:8px}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:flex-end;justify-content:center;z-index:9;padding:0 12px calc(12px + env(safe-area-inset-bottom))}
+.sheet{background:var(--surface);border-radius:var(--radius);padding:18px;width:100%;max-width:520px}
+.sheet h3{margin:0 0 6px;font-size:17px}
+.sheet p{margin:0 0 14px;font-size:14px;color:var(--muted);line-height:1.5}
+.sheet .opts{display:flex;flex-direction:column;gap:8px}
+.sheet button{border:0;border-radius:12px;padding:12px;font-size:15px;font-weight:600;background:var(--bg);color:var(--text)}
+.sheet button.primary{background:var(--accent);color:#fff}
+.sheet button.danger{background:var(--bad);color:#fff}
+.preview{white-space:pre-wrap;font:13px ui-monospace,Menlo,monospace;background:var(--bg);border-radius:10px;padding:10px;max-height:40vh;overflow:auto;margin-bottom:12px}
+.note{font-size:12px;color:var(--muted);line-height:1.5;margin-top:14px}
+.status{font-size:13px;color:var(--muted);min-height:18px;text-align:center;margin:8px 0}
+[hidden]{display:none!important}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(20px);
+  background:var(--text);color:var(--bg);padding:10px 16px;border-radius:14px;font-size:14px;font-weight:600;opacity:0;pointer-events:none;transition:.25s;z-index:10}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+</style></head><body>
+
+<div class="top">
+  <div><h1>Bin</h1><div class="sub" id="sub">Things you deleted, until you empty it</div></div>
+  <button class="btn danger" id="emptyBtn" hidden>Empty Bin</button>
+</div>
+
+<div class="bar">
+  <span class="count" id="count"></span>
+  <span class="spacer"></span>
+  <button class="btn" id="selectBtn" hidden>Select</button>
+  <button class="btn primary" id="restoreSelBtn" hidden>Restore</button>
+  <button class="btn danger" id="deleteSelBtn" hidden>Delete</button>
+</div>
+
+<div class="status" id="status"></div>
+<div class="card" id="list"></div>
+
+<p class="note">The Bin is the hidden <code>.trash</code> folder in your shared workspace. The Shell app's rm and rmdir put things here instead of deleting them. Restore puts a file back where it came from; Delete and Empty Bin are final.</p>
+
+<div class="modal" id="modal" hidden><div class="sheet" id="sheet"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+'use strict';
+var $=function(id){return document.getElementById(id);};
+function haptic(k){try{if(window.myllmHaptic)window.myllmHaptic(k||'light');}catch(e){}}
+var files=window.myllmFiles||null;
+var TRASH='.trash';
+var items=[],selecting=false,selected={},open=null;
+
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function toast(t){var e=$('toast');e.textContent=t;e.classList.add('on');clearTimeout(toast._t);toast._t=setTimeout(function(){e.classList.remove('on');},1800);}
+function status(t){$('status').textContent=t||'';}
+function bytes(n){return n<1024?n+' B':n<1048576?(n/1024).toFixed(1)+' KB':(n/1048576).toFixed(1)+' MB';}
+function when(sec){var d=new Date(sec*1000);if(!(d.getTime()>0))return '';var now=new Date();var same=d.toDateString()===now.toDateString();return (same?'Today ':d.toLocaleDateString([],{day:'numeric',month:'short'})+' ')+d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});}
+function inTrash(p){return p===TRASH||p.indexOf(TRASH+'/')===0;}
+/* .trash/notes/todo~20260904084617.md -> notes/todo.md */
+function homeOf(trashPath){return trashPath.slice(TRASH.length+1).replace(/~\d{14}(?=\.[^.\/]+$|$)/,'');}
+function iconFor(name){var e=(name.split('.').pop()||'').toLowerCase();
+  return {md:'📝',txt:'📝',json:'🧩',csv:'📊',html:'🌐',js:'🧩',py:'🐍',log:'📜',sh:'⌨️',jpg:'🖼️',jpeg:'🖼️',png:'🖼️',pdf:'📕'}[e]||'📄';}
+
+function load(){
+  if(!files){$('list').innerHTML='<div class="empty"><div class="big">🗑️</div>Shared files are off.<br>Turn on "Shared files" in MyLLMos settings to use the Bin.</div>';return Promise.resolve();}
+  return files.list().then(function(list){
+    items=list.filter(function(f){return inTrash(f.path);}).map(function(f){return {path:f.path,home:homeOf(f.path),size:f.size||0,modified:f.modified||0};})
+      .sort(function(a,b){return b.modified-a.modified;});
+    for(var k in selected)if(!items.some(function(i){return i.path===k;}))delete selected[k];
+    render();
+  }).catch(function(e){status('Could not read the workspace: '+(e&&e.message||e));});
+}
+function render(){
+  var list=$('list'),total=items.reduce(function(a,b){return a+b.size;},0),nSel=Object.keys(selected).length;
+  $('emptyBtn').hidden=!items.length;
+  $('selectBtn').hidden=!items.length;$('selectBtn').textContent=selecting?'Done':'Select';
+  $('restoreSelBtn').hidden=!selecting;$('deleteSelBtn').hidden=!selecting;
+  $('restoreSelBtn').disabled=!nSel;$('deleteSelBtn').disabled=!nSel;
+  $('restoreSelBtn').textContent=nSel?'Restore ('+nSel+')':'Restore';$('deleteSelBtn').textContent=nSel?'Delete ('+nSel+')':'Delete';
+  $('count').textContent=items.length?items.length+(items.length===1?' item':' items')+' · '+bytes(total):'';
+  if(!items.length){list.innerHTML='<div class="empty"><div class="big">🗑️</div>The Bin is empty.<br>Files removed with rm in the Shell app land here.</div>';return;}
+  list.innerHTML=items.map(function(it){
+    var name=it.home.split('/').pop(),dir=it.home.indexOf('/')>=0?it.home.slice(0,it.home.lastIndexOf('/'))+'/':'workspace root';
+    var isOpen=open===it.path;
+    return '<div class="row'+(selected[it.path]?' sel':'')+'" data-path="'+esc(it.path)+'"><i class="chk"'+(selecting?'':' hidden')+'></i><div class="ico">'+iconFor(name)+'</div>'+
+      '<div class="txt"><b>'+esc(name)+'</b><span>from '+esc(dir)+' · '+bytes(it.size)+(it.modified?' · '+esc(when(it.modified)):'')+'</span></div></div>'+
+      (isOpen&&!selecting?'<div class="acts"><button class="restore" data-act="restore">Restore</button><button class="peek" data-act="peek">Look inside</button><button class="kill" data-act="kill">Delete forever</button></div>':'');
+  }).join('');
+}
+
+/* ---------- actions ---------- */
+function sheet(title,text,opts,extraHTML){
+  $('sheet').innerHTML='<h3>'+esc(title)+'</h3>'+(text?'<p>'+esc(text)+'</p>':'')+(extraHTML||'')+'<div class="opts">'+opts.map(function(o,i){return '<button class="'+(o.cls||'')+'" data-i="'+i+'">'+esc(o.label)+'</button>';}).join('')+'</div>';
+  $('modal').hidden=false;
+  return new Promise(function(res){
+    $('sheet').onclick=function(e){var b=e.target.closest('button[data-i]');if(!b)return;$('modal').hidden=true;res(opts[+b.dataset.i].value);};
+    $('modal').onclick=function(e){if(e.target===$('modal')){$('modal').hidden=true;res(null);}};
+  });
+}
+function exists(path){return files.list().then(function(l){return l.some(function(f){return f.path===path;});});}
+function pruneEmptyFolders(){
+  if(!files.folders)return Promise.resolve();
+  return files.list().then(function(list){return files.folders().then(function(folders){
+    var dirs=folders.filter(function(d){return inTrash(d)&&d!==TRASH;}).sort(function(a,b){return b.length-a.length;});
+    var gone={};
+    return dirs.reduce(function(p,d){return p.then(function(){
+      var busy=list.some(function(f){return f.path.indexOf(d+'/')===0;})||folders.some(function(x){return x!==d&&!gone[x]&&x.indexOf(d+'/')===0;});
+      if(busy)return;return files.removeFolder(d,false).then(function(){gone[d]=1;}).catch(function(){});
+    });},Promise.resolve()).then(function(){
+      var anyLeft=list.some(function(f){return inTrash(f.path);})||folders.some(function(d){return d!==TRASH&&inTrash(d)&&!gone[d];});
+      if(!anyLeft&&folders.indexOf(TRASH)>=0)return files.removeFolder(TRASH,false).catch(function(){});
+    });
+  });}).catch(function(){});
+}
+function restoreOne(it,policy){
+  return exists(it.home).then(function(clash){
+    var dest=it.home;
+    if(clash){
+      if(policy==='replace'){/* fall through: the store overwrites */}
+      else if(policy==='both'){var dot=dest.lastIndexOf('.'),slash=dest.lastIndexOf('/');dest=dot>slash?dest.slice(0,dot)+' (restored)'+dest.slice(dot):dest+' (restored)';}
+      else return sheet('A file is already there',it.home+' exists in the workspace. What should happen?',[
+        {label:'Keep both (restore as "… (restored)")',value:'both',cls:'primary'},{label:'Replace the existing file',value:'replace',cls:'danger'},{label:'Cancel',value:null}]).then(function(v){if(!v)return false;return restoreOne(it,v);});
+    }
+    return files.move(it.path,dest).then(function(){return true;});
+  });
+}
+function restore(list){
+  var done=0;
+  return list.reduce(function(p,it){return p.then(function(){return restoreOne(it).then(function(ok){if(ok)done++;});});},Promise.resolve())
+    .then(function(){return pruneEmptyFolders();}).then(function(){haptic('success');toast(done===1?'Restored '+list[0].home.split('/').pop():'Restored '+done);selected={};open=null;return load();})
+    .catch(function(e){status('Restore failed: '+(e&&e.message||e));return load();});
+}
+function destroy(list){
+  return sheet(list.length===1?'Delete forever?':'Delete '+list.length+' items forever?',(list.length===1?list[0].home:'')+' There is no way back from this.',
+    [{label:'Delete forever',value:'yes',cls:'danger'},{label:'Cancel',value:null}]).then(function(v){
+    if(!v)return;
+    return list.reduce(function(p,it){return p.then(function(){return files.remove(it.path);});},Promise.resolve())
+      .then(function(){return pruneEmptyFolders();}).then(function(){haptic('warning');toast('Deleted');selected={};open=null;return load();})
+      .catch(function(e){status('Delete failed: '+(e&&e.message||e));return load();});
+  });
+}
+function emptyBin(){
+  var n=items.length;
+  sheet('Empty the Bin?',n+(n===1?' item':' items')+' will be deleted for good. There is no undo.',[{label:'Empty Bin',value:'yes',cls:'danger'},{label:'Cancel',value:null}]).then(function(v){
+    if(!v)return;
+    return files.removeFolder(TRASH,true).then(function(){haptic('warning');toast('Bin emptied');selected={};open=null;return load();})
+      .catch(function(e){status('Could not empty: '+(e&&e.message||e));return load();});
+  });
+}
+function peek(it){
+  files.read(it.path).then(function(t){
+    var body=t==null?'(could not read)':String(t);
+    sheet(it.home.split('/').pop(),null,[{label:'Restore',value:'restore',cls:'primary'},{label:'Close',value:null}],
+      '<div class="preview">'+esc(body.length>4000?body.slice(0,4000)+'\n…':body)+'</div>').then(function(v){if(v==='restore')restore([it]);});
+  });
+}
+
+/* ---------- wiring ---------- */
+$('list').addEventListener('click',function(e){
+  var act=e.target.closest('button[data-act]');
+  if(act){var row=act.closest('.acts').previousElementSibling;var it=items.filter(function(i){return i.path===row.dataset.path;})[0];if(!it)return;
+    if(act.dataset.act==='restore')restore([it]);else if(act.dataset.act==='kill')destroy([it]);else peek(it);return;}
+  var r=e.target.closest('.row');if(!r)return;
+  if(selecting){if(selected[r.dataset.path])delete selected[r.dataset.path];else selected[r.dataset.path]=1;haptic('selection');render();return;}
+  open=open===r.dataset.path?null:r.dataset.path;haptic('selection');render();
+});
+$('selectBtn').addEventListener('click',function(){selecting=!selecting;selected={};open=null;haptic('light');render();});
+$('restoreSelBtn').addEventListener('click',function(){var l=items.filter(function(i){return selected[i.path];});if(l.length)restore(l);});
+$('deleteSelBtn').addEventListener('click',function(){var l=items.filter(function(i){return selected[i.path];});if(l.length)destroy(l);});
+$('emptyBtn').addEventListener('click',emptyBin);
+document.addEventListener('visibilitychange',function(){if(!document.hidden)load();});
+load();
+})();
+</script>
+</body></html>

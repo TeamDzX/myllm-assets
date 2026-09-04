@@ -17,6 +17,30 @@
   ],
   "apps": [
     {
+      "id": "bin",
+      "name": "Bin",
+      "emoji": "🗑️",
+      "tagline": "Deleted files, until you say so",
+      "description": "The bin for your shared workspace. Anything removed with rm or rmdir in the Shell app lands here instead of vanishing, and this app is the tile that shows it: every file with where it came from, its size and date, newest first. Tap one to restore it to its original place, look inside first, or delete it for good; if a file with the same name is already back in the workspace you choose whether to keep both or replace it. Select several to restore or delete together, and Empty Bin clears the lot when you are sure. It is simply the hidden .trash folder in the workspace, so the assistant can see and restore things too. Nothing leaves your device.",
+      "tags": [
+        "files",
+        "utility",
+        "workspace",
+        "trash"
+      ],
+      "category": "Utilities",
+      "iconSymbol": "trash.fill",
+      "iconColor": "mint",
+      "version": 1,
+      "featured": true,
+      "requiresAI": false,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/bin.jpg",
+      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@main/apps-src/bin.html",
+      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@main/apps-src/bin.myllmapp",
+      "sizeKB": 14,
+      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/icons/bin.jpg"
+    },
+    {
       "id": "substack-reader",
       "name": "Substack Reader",
       "emoji": "📬",
