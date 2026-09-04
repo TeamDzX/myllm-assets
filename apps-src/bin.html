@@ -54,6 +54,13 @@ h1{font-size:24px;margin:0;letter-spacing:-.3px}
 .preview{white-space:pre-wrap;font:13px ui-monospace,Menlo,monospace;background:var(--bg);border-radius:10px;padding:10px;max-height:40vh;overflow:auto;margin-bottom:12px}
 .note{font-size:12px;color:var(--muted);line-height:1.5;margin-top:14px}
 .status{font-size:13px;color:var(--muted);min-height:18px;text-align:center;margin:8px 0}
+.seg{display:flex;background:var(--border);border-radius:12px;padding:3px;margin-bottom:12px}
+.seg button{flex:1;border:0;background:transparent;color:var(--muted);font-weight:600;font-size:14px;padding:8px;border-radius:10px}
+.seg button.on{background:var(--surface);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.vrow{display:flex;align-items:center;gap:10px;padding:8px 0 8px 50px;font-size:13px;border-top:1px dashed var(--border)}
+.vrow .when{flex:1;color:var(--muted)}
+.vrow button{border:0;border-radius:9px;padding:6px 10px;font-size:12px;font-weight:600;background:var(--bg);color:var(--text)}
+.vrow button.primary{background:var(--accent);color:#fff}
 [hidden]{display:none!important}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(20px);
   background:var(--text);color:var(--bg);padding:10px 16px;border-radius:14px;font-size:14px;font-weight:600;opacity:0;pointer-events:none;transition:.25s;z-index:10}
@@ -64,6 +71,8 @@ h1{font-size:24px;margin:0;letter-spacing:-.3px}
   <div><h1>Bin</h1><div class="sub" id="sub">Things you deleted, until you empty it</div></div>
   <button class="btn danger" id="emptyBtn" hidden>Empty Bin</button>
 </div>
+
+<div class="seg"><button class="on" data-tab="deleted">Deleted</button><button data-tab="rewind">Rewind</button></div>
 
 <div class="bar">
   <span class="count" id="count"></span>
@@ -76,7 +85,8 @@ h1{font-size:24px;margin:0;letter-spacing:-.3px}
 <div class="status" id="status"></div>
 <div class="card" id="list"></div>
 
-<p class="note">The Bin is the hidden <code>.trash</code> folder in your shared workspace. The Shell app's rm and rmdir put things here instead of deleting them. Restore puts a file back where it came from; Delete and Empty Bin are final.</p>
+<p class="note" id="noteRewind" hidden>Rewind lists files that have been overwritten or deleted by an app, the Shell or the assistant. The workspace keeps the last few versions of each file in a hidden <code>.history</code> folder; Restore puts one back, and the current version is kept too, so a restore can itself be undone.</p>
+<p class="note" id="noteDeleted">The Bin is the hidden <code>.trash</code> folder in your shared workspace. The Shell app's rm and rmdir put things here instead of deleting them. Restore puts a file back where it came from; Delete and Empty Bin are final.</p>
 
 <div class="modal" id="modal" hidden><div class="sheet" id="sheet"></div></div>
 <div class="toast" id="toast"></div>
@@ -89,6 +99,7 @@ function haptic(k){try{if(window.myllmHaptic)window.myllmHaptic(k||'light');}cat
 var files=window.myllmFiles||null;
 var TRASH='.trash';
 var items=[],selecting=false,selected={},open=null;
+var tab='deleted',rewindItems=[],openRewind=null;
 
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
 function toast(t){var e=$('toast');e.textContent=t;e.classList.add('on');clearTimeout(toast._t);toast._t=setTimeout(function(){e.classList.remove('on');},1800);}
@@ -111,6 +122,8 @@ function load(){
   }).catch(function(e){status('Could not read the workspace: '+(e&&e.message||e));});
 }
 function render(){
+  $('noteRewind').hidden=tab!=='rewind';$('noteDeleted').hidden=tab==='rewind';
+  if(tab==='rewind'){renderRewind();return;}
   var list=$('list'),total=items.reduce(function(a,b){return a+b.size;},0),nSel=Object.keys(selected).length;
   $('emptyBtn').hidden=!items.length;
   $('selectBtn').hidden=!items.length;$('selectBtn').textContent=selecting?'Done':'Select';
@@ -127,6 +140,43 @@ function render(){
       '<div class="txt"><b>'+esc(name)+'</b><span>from '+esc(dir)+' · '+bytes(it.size)+(it.modified?' · '+esc(when(it.modified)):'')+'</span></div></div>'+
       (isOpen&&!selecting?'<div class="acts"><button class="restore" data-act="restore">Restore</button><button class="peek" data-act="peek">Look inside</button><button class="kill" data-act="kill">Delete forever</button></div>':'');
   }).join('');
+}
+
+/* ---------- rewind: previous versions of live files ---------- */
+function loadRewind(){
+  if(!files||!files.versions){rewindItems=[];render();return Promise.resolve();}
+  return files.list().then(function(list){
+    var live=list.filter(function(f){return !inTrash(f.path);});
+    return Promise.all(live.map(function(f){return files.versions(f.path).then(function(v){return {path:f.path,versions:v||[]};}).catch(function(){return {path:f.path,versions:[]};});}));
+  }).then(function(rows){
+    rewindItems=rows.filter(function(r){return r.versions.length;}).sort(function(a,b){return b.versions[0].stamp-a.versions[0].stamp;});
+    render();
+  }).catch(function(e){status('Could not read history: '+(e&&e.message||e));});
+}
+function renderRewind(){
+  var list=$('list');
+  $('emptyBtn').hidden=true;$('selectBtn').hidden=true;$('restoreSelBtn').hidden=true;$('deleteSelBtn').hidden=true;
+  $('count').hidden=false;
+  $('count').textContent=rewindItems.length?rewindItems.length+(rewindItems.length===1?' file with history':' files with history'):'';
+  if(!files||!files.versions){list.innerHTML='<div class="empty"><div class="big">⏪</div>Rewind needs the latest MyLLM build.</div>';return;}
+  if(!rewindItems.length){list.innerHTML='<div class="empty"><div class="big">⏪</div>No previous versions yet.<br>They appear the first time a file is overwritten or deleted.</div>';return;}
+  list.innerHTML=rewindItems.map(function(it){
+    var name=it.path.split('/').pop(),dir=it.path.indexOf('/')>=0?it.path.slice(0,it.path.lastIndexOf('/'))+'/':'workspace root';
+    var isOpen=openRewind===it.path,n=it.versions.length;
+    return '<div class="row" data-rpath="'+esc(it.path)+'"><div class="ico">'+iconFor(name)+'</div><div class="txt"><b>'+esc(name)+'</b><span>'+esc(dir)+' · '+n+(n===1?' version':' versions')+' · latest '+esc(when(it.versions[0].stamp/1000))+'</span></div></div>'+
+      (isOpen?it.versions.map(function(v,i){return '<div class="vrow"><span class="when">#'+(i+1)+' · '+esc(when(v.stamp/1000))+' · '+bytes(v.size)+'</span><button data-vact="peek" data-stamp="'+v.stamp+'">Look</button><button class="primary" data-vact="restore" data-stamp="'+v.stamp+'">Restore</button></div>';}).join(''):'');
+  }).join('');
+}
+function restoreVersion(path,stamp){
+  files.restoreVersion(path,stamp).then(function(){haptic('success');toast('Restored '+path.split('/').pop());return loadRewind();})
+    .catch(function(e){status('Restore failed: '+(e&&e.message||e));});
+}
+function peekVersion(path,stamp){
+  files.readVersion(path,stamp).then(function(t){
+    var body=t==null?'(could not read)':String(t);
+    sheet(path.split('/').pop()+' · '+when(stamp/1000),null,[{label:'Restore this version',value:'restore',cls:'primary'},{label:'Close',value:null}],
+      '<div class="preview">'+esc(body.length>4000?body.slice(0,4000)+'\n…':body)+'</div>').then(function(v){if(v==='restore')restoreVersion(path,stamp);});
+  });
 }
 
 /* ---------- actions ---------- */
@@ -197,7 +247,19 @@ function peek(it){
 }
 
 /* ---------- wiring ---------- */
+document.querySelector('.seg').addEventListener('click',function(e){
+  var b=e.target.closest('button[data-tab]');if(!b)return;
+  tab=b.dataset.tab;document.querySelectorAll('.seg button').forEach(function(x){x.classList.toggle('on',x===b);});
+  selecting=false;selected={};open=null;openRewind=null;haptic('selection');
+  if(tab==='rewind')loadRewind();else load();
+});
 $('list').addEventListener('click',function(e){
+  if(tab==='rewind'){
+    var vb=e.target.closest('button[data-vact]');
+    if(vb){var row=vb.closest('.vrow');var holder=row;while(holder&&!holder.dataset.rpath)holder=holder.previousElementSibling;var rp=holder?holder.dataset.rpath:null;if(!rp)return;
+      if(vb.dataset.vact==='restore')restoreVersion(rp,+vb.dataset.stamp);else peekVersion(rp,+vb.dataset.stamp);return;}
+    var rr=e.target.closest('.row');if(!rr)return;openRewind=openRewind===rr.dataset.rpath?null:rr.dataset.rpath;haptic('selection');render();return;
+  }
   var act=e.target.closest('button[data-act]');
   if(act){var row=act.closest('.acts').previousElementSibling;var it=items.filter(function(i){return i.path===row.dataset.path;})[0];if(!it)return;
     if(act.dataset.act==='restore')restore([it]);else if(act.dataset.act==='kill')destroy([it]);else peek(it);return;}
@@ -209,7 +271,7 @@ $('selectBtn').addEventListener('click',function(){selecting=!selecting;selected
 $('restoreSelBtn').addEventListener('click',function(){var l=items.filter(function(i){return selected[i.path];});if(l.length)restore(l);});
 $('deleteSelBtn').addEventListener('click',function(){var l=items.filter(function(i){return selected[i.path];});if(l.length)destroy(l);});
 $('emptyBtn').addEventListener('click',emptyBin);
-document.addEventListener('visibilitychange',function(){if(!document.hidden)load();});
+document.addEventListener('visibilitychange',function(){if(!document.hidden){if(tab==='rewind')loadRewind();else load();}});
 load();
 })();
 </script>

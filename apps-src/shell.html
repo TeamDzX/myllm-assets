@@ -105,7 +105,7 @@ var cwd = '';            /* current directory, '' = workspace root */
 var TRASH = '.trash';    /* where rm puts things; hidden from ls unless -a or you cd into it */
 var undoStack = [];      /* this session's reversible changes, newest last */
 var lastSnap = null;     /* most recent listing, for completion chips */
-var VERBS = ['ls','tree','cat','head','tail','stat','find','grep','du','mkdir','mv','write','rm','rmdir','undo','trash','restore','cd','pwd','clear','help'];
+var VERBS = ['ls','tree','cat','head','tail','stat','find','grep','history','du','mkdir','mv','write','rm','rmdir','undo','revert','trash','restore','cd','pwd','clear','help'];
 function inTrash(path){ return path === TRASH || path.indexOf(TRASH + '/') === 0; }
 
 /* The APP may be stateful — you are standing somewhere. The assistant's
@@ -156,7 +156,9 @@ var HELP = [
   'mv <from> <to>     move or rename (-f to replace an existing file)',
   'rm <path>          move a file to .trash  (rm -p deletes for good, asks first)',
   'rmdir <path>       move a folder to .trash (rmdir -p deletes for good)',
-  'undo               reverse the last change: rm, rmdir, mv, write, mkdir',
+  'undo               reverse the last change: rm, rmdir, mv, write, mkdir, revert',
+  'history <path>     previous versions, kept on every overwrite or delete',
+  'revert <path> [N]  put version N back (1 = newest); undo reverses it',
   'trash              what is in .trash;  trash empty  deletes it all (asks)',
   'restore <path>     put something back from .trash',
   'write <path>       type a line into a file (replaces it)',
@@ -436,6 +438,12 @@ async function run(line){
       if (!op) return print('nothing to undo', 'dim');
       switch (op.type){
         case 'rm': await files.move(op.to, op.from); await pruneTrash(); print('restored ' + op.from, 'ok'); break;
+        case 'revert': {
+          var rv = files.versions ? await files.versions(op.path) : [];
+          if (rv.length) { await files.restoreVersion(op.path, rv[0].stamp); print('restored ' + op.path + ' to before the revert', 'ok'); }
+          else print('nothing to restore for ' + op.path, 'dim');
+          break;
+        }
         case 'mv': await files.move(op.to, op.from); print(op.to + ' -> ' + op.from, 'ok'); break;
         case 'mkdir': await files.removeFolder(op.path, false); print('removed ' + op.path + '/', 'ok'); break;
         case 'write':
@@ -445,6 +453,30 @@ async function run(line){
       }
       haptic('success');
       return;
+    }
+
+    case 'history': {
+      if (!target) return print('history needs a path', 'err');
+      if (!files.versions) return print('Version history needs the latest MyLLM build.', 'err');
+      var vs = await files.versions(target);
+      if (!vs.length) return print('No previous versions of ' + target + ' \u2014 versions are kept from the first overwrite or delete.', 'dim');
+      print(vs.map(function(v, i){ return '#' + (i + 1) + '\t' + when(v.stamp) + '\t' + bytes(v.size); }).join('\n'));
+      return print('revert ' + target + ' N  puts one back', 'dim');
+    }
+
+    case 'revert': {
+      if (!target) return print('revert needs a path', 'err');
+      if (!files.restoreVersion) return print('Version history needs the latest MyLLM build.', 'err');
+      var vn = ops[1] ? parseInt(ops[1], 10) : 1;
+      var vlist = await files.versions(target);
+      if (!vlist.length) return print('No previous versions of ' + target, 'dim');
+      if (!(vn >= 1 && vn <= vlist.length)) return print('revert: choose 1\u2013' + vlist.length + ' (see  history ' + target + ')', 'err');
+      /* The store snapshots the current bytes before restoring, so undo is
+         simply "restore the newest version". */
+      await files.restoreVersion(target, vlist[vn - 1].stamp);
+      remember({ type: 'revert', path: target });
+      haptic('success');
+      return print('reverted ' + target + ' to #' + vn + ' (' + when(vlist[vn - 1].stamp) + ')  \u2014  undo  puts it back', 'ok');
     }
 
     case 'trash': {
@@ -524,7 +556,7 @@ function listing(snap, root, recursive){
    proposal the user has to accept: a model running rm across someone's
    documents unattended is the one outcome worth designing against. */
 
-var READ_ONLY = ['ls','tree','cat','head','tail','stat','find','grep','du','pwd'];
+var READ_ONLY = ['ls','tree','cat','head','tail','stat','find','grep','history','du','pwd'];
 var MAX_STEPS = 5;          /* myllmAsk is rate-limited; five is plenty and stays inside it */
 
 function systemPrompt(listing){
@@ -535,13 +567,13 @@ function systemPrompt(listing){
     'Contents right now:',
     listing || '(empty)',
     '',
-    'You may run these READ-ONLY commands: ls [-R] [path], tree [path], cat <path>, head -n N <path>, tail -n N <path>, stat <path>, find <glob>, grep <text> [path] (searches inside files), du.',
+    'You may run these READ-ONLY commands: ls [-R] [path], tree [path], cat <path>, head -n N <path>, tail -n N <path>, stat <path>, find <glob>, grep <text> [path] (searches inside files), history <path> (previous versions), du.',
     'Paths are relative to the current directory. There is no cd.',
     '',
     'Reply with ONE JSON object and nothing else:',
     '  {"run":"<command>"}                     to look at something first',
     '  {"say":"<answer>"}                      when you can answer',
-    '  {"propose":"<command>","why":"<reason>"} to CHANGE something (mkdir, mv, write, rm, rmdir) — the user approves it, you never run it. rm moves to a trash folder and can be undone.',
+    '  {"propose":"<command>","why":"<reason>"} to CHANGE something (mkdir, mv, write, rm, rmdir, revert <path> N) — the user approves it, you never run it. rm moves to a trash folder and can be undone; revert puts a previous version back.',
     '',
     'Prefer running a command over guessing. Answer in plain prose, briefly. Do not invent file contents.'
   ].join('\n');
