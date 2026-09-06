@@ -1,5 +1,5 @@
 {
-  "updated": "2026-09-05",
+  "updated": "2026-09-06",
   "categories": [
     "Students",
     "Productivity",
@@ -16,6 +16,30 @@
     "Community"
   ],
   "apps": [
+    {
+      "id": "currency",
+      "name": "Currency",
+      "emoji": "💱",
+      "tagline": "Live exchange rates, simply",
+      "description": "A currency converter that stays out of your way. Type an amount, pick the two currencies from a searchable list of 160 with flags, and the answer is there, with the rate in both directions and when it was last updated. Swap with one tap, jump to common amounts, and star the currencies you use so the same amount shows in all of them at once. Rates are mid-market, refreshed daily from a public exchange-rate feed through MyLLM's network bridge, with the European Central Bank as a fallback; the latest rates are kept on this device so it works offline and tells you how old they are. Share a conversion as text. Indicative only — your bank or card applies its own spread.",
+      "tags": [
+        "utility",
+        "money",
+        "travel",
+        "saves data"
+      ],
+      "category": "Utilities",
+      "iconSymbol": "dollarsign.arrow.circlepath",
+      "iconColor": "mint",
+      "version": 1,
+      "featured": true,
+      "requiresAI": false,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/currency.jpg",
+      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@main/apps-src/currency.html",
+      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@main/apps-src/currency.myllmapp",
+      "sizeKB": 21,
+      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/icons/currency.jpg"
+    },
     {
       "id": "substack-reader",
       "name": "Substack Reader",

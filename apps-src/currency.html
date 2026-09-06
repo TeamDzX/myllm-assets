@@ -1,0 +1,294 @@
+<!doctype html>
+<!--
+  Currency — MyLLMos™ App Gallery · © 2026 Opticell Ltd
+  Source-available: read it, remix it, run your version inside MyLLM™.
+  Not for redistribution or republication. Terms: https://github.com/TeamDzX/myllm-assets/blob/main/LICENSE
+-->
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Currency</title>
+<style>
+:root{--build-id:"529fabcafd";color-scheme:light dark;
+  --bg:var(--myllm-bg,#f2f2f7);--surface:var(--myllm-surface,#fff);--text:var(--myllm-text,#111);
+  --muted:var(--myllm-muted,#6e6e73);--accent:var(--myllm-accent,#0a84ff);--border:var(--myllm-border,#e3e3e8);
+  --radius:var(--myllm-radius,18px);--good:#2fb56a;--warn:#e8a317}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0}
+body{font-family:var(--myllm-font,-apple-system,system-ui,sans-serif);background:var(--bg);color:var(--text);
+  padding:16px 16px calc(28px + env(safe-area-inset-bottom));max-width:820px;margin:0 auto;-webkit-font-smoothing:antialiased}
+h1{font-size:24px;margin:0;letter-spacing:-.3px}
+.sub{font-size:13px;color:var(--muted);margin:3px 0 14px}
+.top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.btn{border:1px solid var(--border);background:var(--surface);color:var(--text);border-radius:12px;padding:9px 13px;font-size:14px;font-weight:600;white-space:nowrap}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px}
+.row{display:flex;align-items:center;gap:10px}
+.cur{flex:1;display:flex;align-items:center;gap:10px;border:1px solid var(--border);background:var(--bg);border-radius:14px;padding:10px 12px;min-width:0}
+.cur .flag{font-size:26px;line-height:1}
+.cur .code{font-size:17px;font-weight:700}
+.cur .name{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cur .txt{min-width:0;flex:1}
+.cur .chev{color:var(--muted);font-size:12px}
+.swap{width:44px;height:44px;border-radius:50%;border:1px solid var(--border);background:var(--surface);font-size:18px;color:var(--accent);flex:none;transition:transform .25s}
+.swap.spin{transform:rotate(180deg)}
+.amount{margin:14px 0 6px}
+.amount input{width:100%;border:0;background:transparent;color:var(--text);font-size:44px;font-weight:700;letter-spacing:-1px;outline:none;padding:0;font-variant-numeric:tabular-nums}
+.amount input::placeholder{color:var(--border)}
+.eq{font-size:13px;color:var(--muted);margin:2px 0 8px}
+.result{font-size:40px;font-weight:700;letter-spacing:-1px;color:var(--accent);font-variant-numeric:tabular-nums;word-break:break-all;line-height:1.1}
+.result small{font-size:18px;color:var(--muted);font-weight:600;margin-left:6px}
+.rate{font-size:13px;color:var(--muted);margin-top:10px;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.rate b{color:var(--text);font-weight:600}
+.status{font-size:12px;color:var(--muted);min-height:16px;margin:8px 2px 0}
+.status.warn{color:var(--warn)}
+.sec{margin-top:16px}
+.sec h2{font-size:15px;margin:0 0 8px;display:flex;align-items:center;justify-content:space-between}
+.sec h2 button{border:0;background:transparent;color:var(--accent);font-size:14px;font-weight:600;padding:4px 0}
+.also{display:flex;flex-direction:column}
+.arow{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--border)}
+.arow:first-child{border-top:0}
+.arow .flag{font-size:22px}
+.arow .code{font-weight:700;min-width:44px}
+.arow .name{flex:1;color:var(--muted);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.arow .val{font-weight:700;font-variant-numeric:tabular-nums}
+.chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px}
+.chip{border:1px solid var(--border);background:var(--surface);color:var(--text);border-radius:999px;padding:7px 12px;font-size:13px;font-weight:600;white-space:nowrap}
+.note{font-size:12px;color:var(--muted);line-height:1.5;margin-top:14px}
+[hidden]{display:none!important}
+/* picker */
+.modal{position:fixed;inset:0;background:var(--bg);z-index:9;display:flex;flex-direction:column;padding-top:env(safe-area-inset-top)}
+.modal .bar{display:flex;gap:8px;align-items:center;padding:12px 14px;border-bottom:1px solid var(--border);background:var(--bg)}
+.modal input{flex:1;min-width:0;padding:11px 12px;border:1px solid var(--border);border-radius:12px;font-size:16px;background:var(--surface);color:var(--text)}
+.modal .list{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:0 14px calc(20px + env(safe-area-inset-bottom))}
+.modal h4{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin:14px 0 4px}
+.prow{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--border)}
+.prow .flag{font-size:26px;width:32px;text-align:center}
+.prow .code{font-weight:700;min-width:46px}
+.prow .name{flex:1;color:var(--muted);font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.prow .star{border:0;background:transparent;font-size:20px;color:var(--border);padding:4px 8px}
+.prow .star.on{color:#f5b301}
+.prow.sel .code{color:var(--accent)}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(20px);
+  background:var(--text);color:var(--bg);padding:10px 16px;border-radius:14px;font-size:14px;font-weight:600;opacity:0;pointer-events:none;transition:.25s;z-index:10}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+</style></head><body>
+
+<div class="top">
+  <div><h1>Currency</h1><div class="sub">Live exchange rates, simply</div></div>
+  <button class="btn" id="shareBtn">Share</button>
+</div>
+
+<div class="card">
+  <div class="row">
+    <button class="cur" id="fromBtn"><span class="flag" id="fromFlag">🇬🇧</span><span class="txt"><span class="code" id="fromCode">GBP</span><br><span class="name" id="fromName">British Pound</span></span><span class="chev">▼</span></button>
+    <button class="swap" id="swapBtn" aria-label="Swap currencies">⇅</button>
+    <button class="cur" id="toBtn"><span class="flag" id="toFlag">🇺🇸</span><span class="txt"><span class="code" id="toCode">USD</span><br><span class="name" id="toName">US Dollar</span></span><span class="chev">▼</span></button>
+  </div>
+  <div class="amount"><input id="amount" inputmode="decimal" placeholder="0" value="100" autocomplete="off"></div>
+  <div class="eq" id="eq">is</div>
+  <div class="result" id="result">—</div>
+  <div class="rate"><span id="rateLine">1 GBP = …</span><span id="updated"></span></div>
+  <div class="status" id="status"></div>
+</div>
+
+<div class="sec">
+  <div class="chips" id="quick"></div>
+</div>
+
+<div class="sec" id="alsoSec">
+  <h2>Also in <button id="editFavs">Edit</button></h2>
+  <div class="card also" id="also"></div>
+</div>
+
+<p class="note">Mid-market rates from the Open Exchange Rate API, refreshed daily and fetched through MyLLM's network bridge, with the European Central Bank as a fallback. Rates are indicative — a bank or card will apply its own spread. The last rates are kept on this device, so the converter still works offline and tells you how old they are.</p>
+
+<div class="modal" id="picker" hidden>
+  <div class="bar"><input id="search" placeholder="Search currency or country" autocapitalize="characters" autocorrect="off"><button class="btn" id="closePicker">Done</button></div>
+  <div class="list" id="plist"></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+'use strict';
+var $=function(id){return document.getElementById(id);};
+function haptic(k){try{if(window.myllmHaptic)window.myllmHaptic(k||'light');}catch(e){}}
+var store=window.myllmStorage||{getItem:function(){return Promise.resolve(null);},setItem:function(){return Promise.resolve();}};
+var hasFetch=typeof window.myllmFetch==='function';
+var KEY='currency.v1';
+
+/* Names for the currencies people actually convert; anything else from the
+   feed shows as its code. Flag = the ISO country from the code's first two
+   letters, which is right for national currencies; the few that are not get
+   a fixed emoji. */
+var NAMES={USD:'US Dollar',EUR:'Euro',GBP:'British Pound',JPY:'Japanese Yen',CHF:'Swiss Franc',CAD:'Canadian Dollar',AUD:'Australian Dollar',NZD:'New Zealand Dollar',
+CNY:'Chinese Yuan',HKD:'Hong Kong Dollar',SGD:'Singapore Dollar',INR:'Indian Rupee',KRW:'South Korean Won',TWD:'Taiwan Dollar',THB:'Thai Baht',MYR:'Malaysian Ringgit',
+IDR:'Indonesian Rupiah',PHP:'Philippine Peso',VND:'Vietnamese Dong',PKR:'Pakistani Rupee',BDT:'Bangladeshi Taka',LKR:'Sri Lankan Rupee',
+SEK:'Swedish Krona',NOK:'Norwegian Krone',DKK:'Danish Krone',ISK:'Icelandic Króna',PLN:'Polish Złoty',CZK:'Czech Koruna',HUF:'Hungarian Forint',RON:'Romanian Leu',
+BGN:'Bulgarian Lev',HRK:'Croatian Kuna',RSD:'Serbian Dinar',UAH:'Ukrainian Hryvnia',RUB:'Russian Ruble',TRY:'Turkish Lira',ILS:'Israeli Shekel',AED:'UAE Dirham',
+SAR:'Saudi Riyal',QAR:'Qatari Riyal',KWD:'Kuwaiti Dinar',BHD:'Bahraini Dinar',OMR:'Omani Rial',JOD:'Jordanian Dinar',EGP:'Egyptian Pound',MAD:'Moroccan Dirham',
+TND:'Tunisian Dinar',NGN:'Nigerian Naira',KES:'Kenyan Shilling',GHS:'Ghanaian Cedi',ZAR:'South African Rand',TZS:'Tanzanian Shilling',UGX:'Ugandan Shilling',
+MXN:'Mexican Peso',BRL:'Brazilian Real',ARS:'Argentine Peso',CLP:'Chilean Peso',COP:'Colombian Peso',PEN:'Peruvian Sol',UYU:'Uruguayan Peso',
+DOP:'Dominican Peso',JMD:'Jamaican Dollar',TTD:'Trinidad Dollar',BBD:'Barbados Dollar',XCD:'East Caribbean Dollar',BSD:'Bahamian Dollar',
+XOF:'West African CFA Franc',XAF:'Central African CFA Franc',XPF:'CFP Franc',MUR:'Mauritian Rupee',MVR:'Maldivian Rufiyaa',FJD:'Fijian Dollar',
+GEL:'Georgian Lari',AMD:'Armenian Dram',AZN:'Azerbaijani Manat',KZT:'Kazakhstani Tenge',UZS:'Uzbekistani Som',MNT:'Mongolian Tögrög',NPR:'Nepalese Rupee',
+MOP:'Macanese Pataca',BND:'Brunei Dollar',KHR:'Cambodian Riel',LAK:'Lao Kip',MMK:'Myanmar Kyat',CUP:'Cuban Peso',GTQ:'Guatemalan Quetzal',CRC:'Costa Rican Colón',
+PAB:'Panamanian Balboa',BOB:'Bolivian Boliviano',PYG:'Paraguayan Guaraní',HNL:'Honduran Lempira',NIO:'Nicaraguan Córdoba',ALL:'Albanian Lek',MKD:'Macedonian Denar',
+BAM:'Bosnian Mark',MDL:'Moldovan Leu',BYN:'Belarusian Ruble',GIP:'Gibraltar Pound',JEP:'Jersey Pound',IMP:'Manx Pound',GGP:'Guernsey Pound',FKP:'Falkland Pound',
+XDR:'IMF Special Drawing Rights'};
+var POPULAR=['USD','EUR','GBP','JPY','CHF','CAD','AUD','CNY','INR','AED','HKD','SGD','NZD','SEK','NOK','DKK','PLN','TRY','ZAR','MXN','BRL','THB','KRW'];
+var FLAG_FIX={EUR:'🇪🇺',XOF:'🌍',XAF:'🌍',XPF:'🌏',XCD:'🏝️',XDR:'🌐',ANG:'🇨🇼',AWG:'🇦🇼'};
+var COUNTRIES='AD AE AF AG AL AM AO AR AT AU AW AZ BA BB BD BE BF BG BH BI BJ BM BN BO BR BS BT BW BY BZ CA CD CF CG CH CI CK CL CM CN CO CR CU CV CW CY CZ DE DJ DK DM DO DZ EC EE EG ER ES ET FI FJ FK FM FO FR GA GB GD GE GG GH GI GM GN GQ GR GT GW GY HK HN HR HT HU ID IE IL IM IN IQ IR IS IT JE JM JO JP KE KG KH KI KM KN KP KR KW KY KZ LA LB LC LI LK LR LS LT LU LV LY MA MC MD ME MG MH MK ML MM MN MO MR MT MU MV MW MX MY MZ NA NE NG NI NL NO NP NR NZ OM PA PE PG PH PK PL PT PW PY QA RO RS RU RW SA SB SC SD SE SG SH SI SK SL SM SN SO SR SS ST SV SY SZ TD TG TH TJ TL TM TN TO TR TT TV TW TZ UA UG US UY UZ VA VC VE VN VU WS YE ZA ZM ZW'.split(' ');
+function flag(code){
+  if(FLAG_FIX[code])return FLAG_FIX[code];
+  var cc=code.slice(0,2);
+  if(COUNTRIES.indexOf(cc)<0)return '🌐';
+  return String.fromCodePoint(0x1F1E6+cc.charCodeAt(0)-65,0x1F1E6+cc.charCodeAt(1)-65);
+}
+function nameOf(code){return NAMES[code]||code;}
+
+/* ---------- state ---------- */
+var state={from:'GBP',to:'USD',amount:'100',favs:['EUR','USD','JPY','CHF'],recent:[],rates:null,base:'USD',updated:0,source:''};
+var pickerTarget=null,editingFavs=false;
+function save(){var s={from:state.from,to:state.to,amount:state.amount,favs:state.favs,recent:state.recent,rates:state.rates,base:state.base,updated:state.updated,source:state.source};return store.setItem(KEY,JSON.stringify(s)).catch(function(){});}
+function load(){return store.getItem(KEY).then(function(s){try{var d=JSON.parse(s||'{}');if(d&&d.from){for(var k in d)state[k]=d[k];}}catch(e){}}).catch(function(){});}
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function toast(t){var e=$('toast');e.textContent=t;e.classList.add('on');clearTimeout(toast._t);toast._t=setTimeout(function(){e.classList.remove('on');},1800);}
+
+/* ---------- rates ---------- */
+function rate(from,to){var r=state.rates;if(!r)return null;var a=from===state.base?1:r[from],b=to===state.base?1:r[to];if(!a||!b)return null;return b/a;}
+function fmt(n,code){
+  if(!isFinite(n))return '—';
+  var abs=Math.abs(n),dp=abs>=1000?0:abs>=1?2:abs>=0.01?4:6;
+  if(['JPY','KRW','VND','IDR','HUF','CLP','PYG','UGX','TZS','LAK','KHR','MMK'].indexOf(code)>=0&&abs>=1)dp=0;
+  return n.toLocaleString(undefined,{minimumFractionDigits:dp,maximumFractionDigits:dp});
+}
+function fmtRate(n){if(!isFinite(n))return '…';var abs=Math.abs(n);return n.toLocaleString(undefined,{maximumFractionDigits:abs>=100?2:abs>=1?4:6});}
+function ageText(){
+  if(!state.updated)return '';
+  var h=(Date.now()-state.updated)/36e5;
+  if(h<1)return 'updated just now';if(h<24)return 'updated '+Math.round(h)+'h ago';
+  return 'rates from '+new Date(state.updated).toLocaleDateString([],{day:'numeric',month:'short'});
+}
+function fetchRates(){
+  if(!hasFetch)return Promise.reject(new Error('This app needs MyLLM\'s network bridge — open it inside the MyLLM app.'));
+  return window.myllmFetch('https://open.er-api.com/v6/latest/USD').then(function(res){
+    var d=JSON.parse(res.body||'{}');
+    if(d.result!=='success'||!d.rates)throw new Error('bad primary');
+    state.rates=d.rates;state.base='USD';state.updated=Date.now();state.source='Open Exchange Rate API';
+  }).catch(function(){
+    return window.myllmFetch('https://api.frankfurter.dev/v1/latest?base=USD').then(function(res){
+      var d=JSON.parse(res.body||'{}');
+      if(!d.rates)throw new Error('bad fallback');
+      d.rates.USD=1;state.rates=d.rates;state.base='USD';state.updated=Date.now();state.source='European Central Bank';
+    });
+  });
+}
+function refresh(force){
+  var fresh=state.rates&&(Date.now()-state.updated)<6*36e5;
+  if(fresh&&!force){render();return Promise.resolve();}
+  $('status').textContent=state.rates?'Refreshing rates…':'Fetching rates…';$('status').className='status';
+  return fetchRates().then(function(){$('status').textContent='';save();render();haptic('selection');})
+    .catch(function(e){
+      var m=(e&&e.message)||'';
+      $('status').className='status warn';
+      if(/turned off/i.test(m))$('status').textContent='Network access for apps is turned off in MyLLM Settings — showing saved rates.';
+      else if(!hasFetch)$('status').textContent=m;
+      else $('status').textContent=(state.rates?'Couldn\'t refresh — showing saved rates ('+ageText()+').':'Couldn\'t fetch rates. Check your connection and tap to retry.');
+      render();
+    });
+}
+
+/* ---------- render ---------- */
+function setCur(which,code){$(which+'Flag').textContent=flag(code);$(which+'Code').textContent=code;$(which+'Name').textContent=nameOf(code);}
+function amountValue(){var v=parseFloat(String(state.amount).replace(/[^0-9.]/g,''));return isFinite(v)?v:0;}
+function render(){
+  setCur('from',state.from);setCur('to',state.to);
+  var r=rate(state.from,state.to),a=amountValue();
+  $('result').innerHTML=r==null?'—':esc(fmt(a*r,state.to))+'<small>'+esc(state.to)+'</small>';
+  $('eq').textContent=fmt(a,state.from)+' '+state.from+' is';
+  $('rateLine').innerHTML=r==null?'1 '+esc(state.from)+' = …':'1 '+esc(state.from)+' = <b>'+esc(fmtRate(r))+' '+esc(state.to)+'</b> · 1 '+esc(state.to)+' = <b>'+esc(fmtRate(1/r))+' '+esc(state.from)+'</b>';
+  $('updated').textContent=ageText();
+  // quick amounts
+  var quick=[1,10,50,100,500,1000];
+  $('quick').innerHTML=quick.map(function(q){return '<button class="chip" data-q="'+q+'">'+q.toLocaleString()+' '+esc(state.from)+'</button>';}).join('')+
+    (state.recent.length?state.recent.map(function(p){return '<button class="chip" data-pair="'+esc(p)+'">'+esc(p.replace('/',' → '))+'</button>';}).join(''):'');
+  // also in
+  var rows=state.favs.filter(function(c){return c!==state.to&&c!==state.from;}).map(function(c){
+    var rr=rate(state.from,c);
+    return '<div class="arow" data-code="'+esc(c)+'"><span class="flag">'+flag(c)+'</span><span class="code">'+esc(c)+'</span><span class="name">'+esc(nameOf(c))+'</span><span class="val">'+(rr==null?'—':esc(fmt(a*rr,c)))+'</span>'+(editingFavs?'<button class="btn" data-unfav="'+esc(c)+'">Remove</button>':'')+'</div>';
+  });
+  $('also').innerHTML=rows.length?rows.join(''):'<div class="arow" style="color:var(--muted);font-size:13px">Star currencies in the picker to see the amount in them here.</div>';
+  $('editFavs').textContent=editingFavs?'Done':'Edit';
+}
+
+/* ---------- picker ---------- */
+function openPicker(which){
+  pickerTarget=which;$('picker').hidden=false;$('search').value='';renderPicker('');
+  document.body.style.overflow='hidden';setTimeout(function(){$('search').focus();},50);haptic('light');
+}
+function closePicker(){$('picker').hidden=true;document.body.style.overflow='';pickerTarget=null;render();save();}
+function allCodes(){var codes=state.rates?Object.keys(state.rates):Object.keys(NAMES);if(codes.indexOf('USD')<0)codes.push('USD');return codes.sort();}
+function renderPicker(q){
+  q=q.trim().toUpperCase();
+  var codes=allCodes().filter(function(c){return !q||c.indexOf(q)>=0||nameOf(c).toUpperCase().indexOf(q)>=0;});
+  var current=state[pickerTarget];
+  function row(c){return '<div class="prow'+(c===current?' sel':'')+'" data-code="'+esc(c)+'"><span class="flag">'+flag(c)+'</span><span class="code">'+esc(c)+'</span><span class="name">'+esc(nameOf(c))+'</span><button class="star'+(state.favs.indexOf(c)>=0?' on':'')+'" data-star="'+esc(c)+'" aria-label="Favourite">★</button></div>';}
+  var html='';
+  if(!q){
+    var favs=state.favs.filter(function(c){return codes.indexOf(c)>=0;});
+    if(favs.length)html+='<h4>Favourites</h4>'+favs.map(row).join('');
+    var pop=POPULAR.filter(function(c){return codes.indexOf(c)>=0;});
+    html+='<h4>Popular</h4>'+pop.map(row).join('');
+    html+='<h4>All currencies</h4>';
+  }
+  html+=codes.map(row).join('');
+  $('plist').innerHTML=html||'<div class="prow" style="color:var(--muted)">No match</div>';
+}
+$('plist').addEventListener('click',function(e){
+  var star=e.target.closest('button[data-star]');
+  if(star){var c=star.dataset.star;var i=state.favs.indexOf(c);if(i>=0)state.favs.splice(i,1);else state.favs.push(c);haptic('selection');renderPicker($('search').value);return;}
+  var row=e.target.closest('.prow[data-code]');if(!row)return;
+  state[pickerTarget]=row.dataset.code;haptic('selection');closePicker();
+});
+$('search').addEventListener('input',function(){renderPicker($('search').value);});
+$('closePicker').addEventListener('click',closePicker);
+
+/* ---------- wiring ---------- */
+$('fromBtn').addEventListener('click',function(){openPicker('from');});
+$('toBtn').addEventListener('click',function(){openPicker('to');});
+$('swapBtn').addEventListener('click',function(){
+  var t=state.from;state.from=state.to;state.to=t;
+  $('swapBtn').classList.toggle('spin');haptic('selection');noteRecent();render();save();
+});
+$('amount').addEventListener('input',function(){state.amount=$('amount').value;render();save();});
+$('amount').addEventListener('focus',function(){$('amount').select();});
+$('quick').addEventListener('click',function(e){
+  var q=e.target.closest('[data-q]');if(q){state.amount=q.dataset.q;$('amount').value=q.dataset.q;render();save();haptic('selection');return;}
+  var p=e.target.closest('[data-pair]');if(p){var parts=p.dataset.pair.split('/');state.from=parts[0];state.to=parts[1];render();save();haptic('selection');}
+});
+$('also').addEventListener('click',function(e){
+  var un=e.target.closest('[data-unfav]');if(un){state.favs=state.favs.filter(function(c){return c!==un.dataset.unfav;});render();save();return;}
+  var r=e.target.closest('.arow[data-code]');if(r&&!editingFavs){state.to=r.dataset.code;noteRecent();render();save();haptic('selection');}
+});
+$('editFavs').addEventListener('click',function(){editingFavs=!editingFavs;render();});
+$('status').addEventListener('click',function(){refresh(true);});
+$('updated').addEventListener('click',function(){refresh(true);});
+$('shareBtn').addEventListener('click',function(){
+  var r=rate(state.from,state.to);if(r==null)return;var a=amountValue();
+  var text=fmt(a,state.from)+' '+state.from+' = '+fmt(a*r,state.to)+' '+state.to+'\n1 '+state.from+' = '+fmtRate(r)+' '+state.to+' ('+ageText()+')\nvia MyLLM';
+  haptic('light');
+  if(window.myllmShare){try{window.myllmShare({text:text});}catch(e){toast('Sharing unavailable');}}
+  else if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(function(){toast('Copied');},function(){toast('Copy failed');});}
+  else toast('Sharing unavailable');
+});
+function noteRecent(){var p=state.from+'/'+state.to;state.recent=[p].concat(state.recent.filter(function(x){return x!==p;})).slice(0,4);}
+
+load().then(function(){
+  $('amount').value=state.amount||'100';
+  render();
+  if(!hasFetch){$('status').className='status warn';$('status').textContent='Open this app inside MyLLM to fetch live rates.';return;}
+  refresh(false);
+});
+document.addEventListener('visibilitychange',function(){if(!document.hidden&&hasFetch)refresh(false);});
+})();
+</script>
+</body></html>
