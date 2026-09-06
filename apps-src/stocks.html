@@ -44,6 +44,13 @@ h1{font-size:24px;margin:0;letter-spacing:-.3px}
 .tot .d{font-size:12px;font-weight:700;margin-top:2px}
 .d.up{color:var(--up)}.d.down{color:var(--down)}
 .note{font-size:12px;color:var(--muted);line-height:1.5;margin-top:14px}
+.ai{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-top:12px}
+.ai h3{font-size:15px;margin:0 0 6px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.ai .hint{font-size:13px;color:var(--muted);line-height:1.45}
+.ai .out{font-size:14px;line-height:1.55;white-space:pre-wrap;margin-top:8px}
+.ai .meta{font-size:11px;color:var(--muted);margin-top:8px}
+.ai button.go{border:0;background:var(--accent);color:#fff;border-radius:10px;padding:8px 12px;font-size:13px;font-weight:700}
+.ai button.go[disabled]{opacity:.5}
 [hidden]{display:none!important}
 /* detail + search sheets */
 .sheet{position:fixed;inset:0;background:var(--bg);z-index:9;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:0 0 calc(28px + env(safe-area-inset-bottom))}
@@ -72,15 +79,38 @@ h1{font-size:24px;margin:0;letter-spacing:-.3px}
   background:var(--text);color:var(--bg);padding:10px 16px;border-radius:14px;font-size:14px;font-weight:600;opacity:0;pointer-events:none;transition:.25s;z-index:10}
 .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
 </style></head><body>
+<style>
+@keyframes myllmAiSpin{to{transform:rotate(360deg)}}
+.myllm-ai-busy{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(18px);z-index:99999;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;display:flex;align-items:center;gap:10px;background:rgba(28,28,30,.96);color:#fff;border-radius:999px;padding:10px 16px 10px 14px;box-shadow:0 6px 22px rgba(0,0,0,.4);font-family:-apple-system,system-ui,sans-serif;font-size:14px;font-weight:600;max-width:92%}
+.myllm-ai-busy.on{opacity:1;transform:translateX(-50%) translateY(0)}
+.myllm-ai-cog{font-size:18px;line-height:1;animation:myllmAiSpin 2.4s linear infinite;filter:drop-shadow(0 0 5px rgba(124,92,255,.85))}
+.myllm-ai-busy small{font-weight:400;opacity:.6}
+@media(min-width:768px){body{max-width:760px;margin-left:auto;margin-right:auto}}
+</style>
+<script>
+(function(){
+  if(window.__myllmAiWrap||typeof window.myllmAsk!=='function')return;
+  window.__myllmAiWrap=true;
+  var orig=window.myllmAsk,depth=0,node=null;
+  function ensure(){if(node)return;node=document.createElement('div');node.className='myllm-ai-busy';
+    node.innerHTML='<span class="myllm-ai-cog">\u2699\uFE0F</span><span>AI is thinking\u2026 <small>privately, on your device</small></span>';
+    (document.body||document.documentElement).appendChild(node);}
+  function show(){ensure();depth++;node.classList.add('on');}
+  function hide(){depth=Math.max(0,depth-1);if(depth===0&&node)node.classList.remove('on');}
+  window.myllmAsk=function(){show();var p;try{p=orig.apply(this,arguments);}catch(e){hide();throw e;}
+    return Promise.resolve(p).then(function(r){hide();return r;},function(e){hide();throw e;});};
+})();
+</script>
 
 <div class="top">
   <div><h1>Stocks</h1><div class="sub">Your watchlist, at a glance</div></div>
-  <div style="display:flex;gap:8px"><button class="btn" id="refreshBtn">Refresh</button><button class="btn primary" id="addBtn">＋ Add</button></div>
+  <div style="display:flex;gap:8px"><button class="btn" id="digestBtn" hidden>AI digest</button><button class="btn" id="refreshBtn">Refresh</button><button class="btn primary" id="addBtn">＋ Add</button></div>
 </div>
 
 <div class="status"><span id="status"></span><span id="asOf"></span></div>
 <div class="card" id="list"></div>
 <div class="totals" id="totals" hidden></div>
+<div class="ai" id="digest" hidden><h3>Watchlist digest <button class="btn" id="digestClose" style="padding:5px 10px;font-size:12px">Hide</button></h3><div class="out" id="digestOut"></div><div class="meta">From today's numbers only · not advice</div></div>
 
 <p class="note">Prices come from Yahoo Finance's public quote feed through MyLLM's network bridge and can be delayed by up to 15 minutes; London prices are shown in pence. Tap a stock for its chart, and enter how many shares you hold to see what your position is worth. Everything stays on this device. Not financial advice.</p>
 
@@ -105,6 +135,8 @@ var hasFetch=typeof window.myllmFetch==='function';
 var KEY='stocks.v1';
 var state={symbols:['^FTSE','^GSPC','AAPL','MSFT','VOD.L'],names:{},holdings:{},cache:{},updated:0};
 var current=null,range='1D',dchartSeries=null;
+var hasAI=typeof window.myllmAsk==='function';
+var analyses={};   /* symbol -> {at, text}, 15-minute memory */
 var RANGES={'1D':{range:'1d',interval:'5m'},'5D':{range:'5d',interval:'30m'},'1M':{range:'1mo',interval:'1d'},'6M':{range:'6mo',interval:'1d'},'1Y':{range:'1y',interval:'1wk'}};
 
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
@@ -234,8 +266,59 @@ function renderDetail(){
     '<div id="dchart">'+chartSVG(series,q,range==='1D'?q.prevClose:null)+'</div>'+
     '<div class="ranges">'+Object.keys(RANGES).map(function(r){return '<button data-r="'+r+'"'+(r===range?' class="on"':'')+'>'+r+'</button>';}).join('')+'</div>'+
     '<div class="stats">'+[['Previous close',fmtPrice(q.prevClose,q)],['Day range',q.dayLow!=null?fmtPrice(q.dayLow,q)+' – '+fmtPrice(q.dayHigh,q):'—'],['52-week range',q.wkLow!=null?fmtPrice(q.wkLow,q)+' – '+fmtPrice(q.wkHigh,q):'—'],['Volume',q.volume!=null?q.volume.toLocaleString():'—'],['Exchange',q.exchange||'—'],['Currency',q.currency==='GBp'?'Pence sterling':(q.currency||'—')]].map(function(x){return '<div class="k">'+esc(x[0])+'</div><div class="v">'+esc(x[1])+'</div>';}).join('')+'</div>'+
-    '<div class="holdings"><label for="shares">Shares you hold (optional)</label><div class="hrow"><input id="shares" inputmode="decimal" placeholder="0" value="'+esc(shares)+'"><button class="btn" id="saveShares">Save</button></div>'+(pv!=null?'<div class="val">Worth <b>'+esc(fmtMoney(pv,positionCurrency(q)))+'</b>'+(q.prevClose!=null?' · '+((q.price-q.prevClose)>=0?'+':'')+esc(fmtMoney(positionValue(q,+shares)-(isPence(q)?q.prevClose*(+shares)/100:q.prevClose*(+shares)),positionCurrency(q)).replace(/^([^0-9-]*)-/,'-$1'))+' today':'')+'</div>':'')+'</div>';
+    '<div class="holdings"><label for="shares">Shares you hold (optional)</label><div class="hrow"><input id="shares" inputmode="decimal" placeholder="0" value="'+esc(shares)+'"><button class="btn" id="saveShares">Save</button></div>'+(pv!=null?'<div class="val">Worth <b>'+esc(fmtMoney(pv,positionCurrency(q)))+'</b>'+(q.prevClose!=null?' · '+((q.price-q.prevClose)>=0?'+':'')+esc(fmtMoney(positionValue(q,+shares)-(isPence(q)?q.prevClose*(+shares)/100:q.prevClose*(+shares)),positionCurrency(q)).replace(/^([^0-9-]*)-/,'-$1'))+' today':'')+'</div>':'')+'</div>'+
+    aiCard(q);
 }
+/* An AI read of the numbers on screen — never news or fundamentals it can't
+   see. Optional: without the AI bridge the card just says how to enable it. */
+function aiCard(q){
+  var a=analyses[current];
+  var body=a?'<div class="out">'+esc(a.text)+'</div><div class="meta">Based on the figures above and the 1-month and 6-month charts · '+esc(new Date(a.at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}))+' · not advice</div>'
+    :(hasAI?'<div class="hint">A plain-English read of the price, today\'s move, the ranges and the recent trend — from these numbers only, no news.</div>'
+           :'<div class="hint">Turn on "Allow apps to use the AI" in MyLLMos settings to get a plain-English read of these numbers.</div>');
+  return '<div class="ai" id="aiCard"><h3>AI read'+(hasAI?'<button class="go" id="aiGo"'+(a?'':'')+'>'+(a?'Refresh':'Explain these numbers')+'</button>':'')+'</h3>'+body+'</div>';
+}
+function seriesStats(series){
+  if(!series||series.length<2)return null;
+  var first=series[0][1],last=series[series.length-1][1],lo=Infinity,hi=-Infinity;
+  series.forEach(function(p){if(p[1]<lo)lo=p[1];if(p[1]>hi)hi=p[1];});
+  return {change:(last-first)/first*100,low:lo,high:hi};
+}
+function ensureRange(sym,r){
+  var c=state.cache[sym];
+  if(c&&c.ranges&&c.ranges[r]&&Date.now()-c.ranges[r].at<15*6e4)return Promise.resolve(c.ranges[r].series);
+  return fetchQuote(sym,r).then(function(q){state.cache[sym].ranges=state.cache[sym].ranges||{};state.cache[sym].ranges[r]={at:Date.now(),series:q.series};return q.series;}).catch(function(){return null;});
+}
+function analyse(sym){
+  var q=state.cache[sym];if(!q||!hasAI)return;
+  var btn=$('aiGo');if(btn){btn.disabled=true;btn.textContent='Thinking…';}
+  Promise.all([ensureRange(sym,'1M'),ensureRange(sym,'6M')]).then(function(rs){
+    var m1=seriesStats(rs[0]),m6=seriesStats(rs[1]);
+    var f=function(v){return v==null?'n/a':fmtPrice(v,q);};
+    var facts=['Symbol: '+sym+' ('+(q.name||'')+') on '+(q.exchange||'?')+', quoted in '+(q.currency==='GBp'?'pence sterling':(q.currency||'?')),
+      'Price: '+f(q.price)+' · previous close '+f(q.prevClose)+' · today '+fmtChg(q),
+      'Day range: '+f(q.dayLow)+' – '+f(q.dayHigh)+' · volume '+(q.volume!=null?q.volume.toLocaleString():'n/a'),
+      '52-week range: '+f(q.wkLow)+' – '+f(q.wkHigh)+(q.wkHigh&&q.wkLow?' (price is '+Math.round((q.price-q.wkLow)/(q.wkHigh-q.wkLow)*100)+'% of the way from the low to the high)':''),
+      m1?'Last month: '+(m1.change>=0?'+':'')+m1.change.toFixed(1)+'% (range '+f(m1.low)+' – '+f(m1.high)+')':'Last month: n/a',
+      m6?'Last six months: '+(m6.change>=0?'+':'')+m6.change.toFixed(1)+'% (range '+f(m6.low)+' – '+f(m6.high)+')':'Last six months: n/a'];
+    var prompt='You are helping someone read a stock quote. Using ONLY the figures below — do not add news, earnings, fundamentals or predictions you cannot see here — write 4 to 6 short sentences in plain English: what today\'s move looks like against the day and 52-week ranges, what the one-month and six-month trends say, and one thing worth watching next (e.g. a level near the range edges). No headings, no bullet points, no advice to buy or sell.\n\n'+facts.join('\n');
+    return Promise.resolve().then(function(){return window.myllmAsk(prompt);}).then(function(r){
+      var text=String(r||'').trim();if(!text)throw new Error('empty');
+      analyses[sym]={at:Date.now(),text:text};
+      if(current===sym)renderDetail();
+    });
+  }).catch(function(e){toast('AI is unavailable right now');if(current===sym)renderDetail();});
+}
+function digest(){
+  if(!hasAI)return;
+  var rows=state.symbols.map(function(s){var q=state.cache[s];if(!q||q.price==null)return null;return s+' ('+(q.name||'')+'): '+fmtPrice(q.price,q)+', today '+fmtChg(q)+(state.holdings[s]?', holding '+state.holdings[s]+' shares':'');}).filter(Boolean);
+  if(!rows.length){toast('No prices yet');return;}
+  $('digestBtn').disabled=true;$('digest').hidden=false;$('digestOut').textContent='Thinking…';
+  var prompt='Summarise this stock watchlist for its owner in 3 to 5 short plain-English sentences, using ONLY the figures below: what moved most today (up and down), whether the list is broadly up or down, and anything that stands out. No news, no predictions, no advice to buy or sell, no bullet points.\n\n'+rows.join('\n');
+  Promise.resolve().then(function(){return window.myllmAsk(prompt);}).then(function(r){$('digestOut').textContent=String(r||'').trim()||'No summary came back.';})
+    .catch(function(){$('digestOut').textContent='AI is unavailable right now.';}).then(function(){$('digestBtn').disabled=false;});
+}
+
 function loadRange(){
   var sym=current,r=range;
   if(r==='1D'){dchartSeries=null;renderDetail();return;}
@@ -246,6 +329,7 @@ function loadRange(){
 }
 $('dBody').addEventListener('click',function(e){
   var rb=e.target.closest('button[data-r]');if(rb){range=rb.dataset.r;haptic('selection');renderDetail();loadRange();return;}
+  if(e.target.id==='aiGo'){haptic('light');analyse(current);return;}
   if(e.target.id==='saveShares'){var v=parseFloat($('shares').value);if(v>0)state.holdings[current]=v;else delete state.holdings[current];save();renderDetail();haptic('success');toast(v>0?'Holding saved':'Holding cleared');}
 });
 $('backBtn').addEventListener('click',closeDetail);
@@ -277,10 +361,13 @@ $('results').addEventListener('click',function(e){
 });
 $('closeSearch').addEventListener('click',closeSearch);
 $('addBtn').addEventListener('click',openSearch);
+$('digestBtn').addEventListener('click',function(){haptic('light');digest();});
+$('digestClose').addEventListener('click',function(){$('digest').hidden=true;});
 $('refreshBtn').addEventListener('click',function(){refreshAll();});
 $('list').addEventListener('click',function(e){var r=e.target.closest('.row[data-sym]');if(r)openDetail(r.dataset.sym);});
 
 load().then(function(){
+  $('digestBtn').hidden=!hasAI;
   render();
   refreshAll();
 });
