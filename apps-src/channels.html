@@ -82,6 +82,14 @@
   .okline{ color:#1a9a5b; font-size:13.5px; margin-top:8px; }
   .note{ font-size:12.5px; color:var(--myllm-muted,#8a8a8e); line-height:1.5; margin-top:9px; }
   .note code{ font-size:12px; background:var(--myllm-bg,#f2f2f7); padding:1px 5px; border-radius:5px; }
+  .chips{ display:flex; flex-wrap:wrap; gap:7px; }
+  .chip{
+    border:1px solid var(--myllm-border,#e3e3e8); background:var(--myllm-bg,#f2f2f7);
+    color:var(--myllm-text,#111); border-radius:999px; padding:8px 13px;
+    font-size:13.5px; font-weight:650; font-family:inherit;
+  }
+  .chip[disabled]{ opacity:.45; }
+  .chip b{ color:var(--myllm-accent,#0a84ff); font-weight:800; margin-left:4px; }
   .bar{ display:flex; align-items:center; gap:8px; margin-bottom:10px; }
   .bar .sp{ flex:1; }
   .small{ font-size:13px; font-weight:700; padding:8px 13px; }
@@ -116,6 +124,11 @@
       or the address of any video feed. Channels are read from the site's own public feed, so there is
       no account and no sign-in. Tapping a video opens it in the app it belongs to.</p>
     </div>
+    <div class="card" id="sugCard">
+      <label>Start with a few</label>
+      <div id="suggest"></div>
+      <p class="note">Tap one to follow it. These are just well-known starting points — remove any of them whenever you like.</p>
+    </div>
     <div class="card">
       <label>Following (<span id="count">0</span>)</label>
       <div id="chlist"></div>
@@ -129,6 +142,19 @@ var NET = window.myllmFetch || null;
 function haptic(k){ if(window.myllmHaptic){ try{ myllmHaptic(k||'light'); }catch(_){} } }
 function el(id){ return document.getElementById(id); }
 function esc(s){ return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+
+/* A short, deliberately uncontroversial set of starting points, so a first run
+   isn't an empty box and a text field. Channel ids, not handles: an id needs no
+   lookup, and unlike a handle it doesn't change when a channel renames itself.
+   Every one was checked live before shipping. */
+var SUGGESTED = [
+  { title: "NASA",             cid: "UCLA_DiR1FfKNvjuUpBHmylQ" },
+  { title: "TED",              cid: "UCAuUUnT6oDeKwE6v1NGQxug" },
+  { title: "Kurzgesagt",       cid: "UCsXVk37bltHxD1rDPwtNM8Q" },
+  { title: "Veritasium",       cid: "UCHnyfMqiRRG1u-2MsSQLbXA" },
+  { title: "BBC Earth",        cid: "UCwmZiChSryoWQCZMIQezgTg" },
+  { title: "Marques Brownlee", cid: "UCBJycsmduvYEL83R_U4JriQ" }
+];
 
 var K_CH = "channels_v1";      /* the follow list */
 var K_CACHE = "cache_v1";      /* last merged feed, so it opens instantly */
@@ -288,6 +314,37 @@ function fetchFeed(feedUrl){
 
 function saveChannels(){ return store.setItem(K_CH, JSON.stringify(channels)); }
 
+/* Shared by the paste field and the suggestion chips: check for a duplicate,
+   read the feed once to learn the channel's real name, then save. */
+function commitChannel(feedUrl){
+  for (var i = 0; i < channels.length; i++){
+    if (channels[i].feed === feedUrl) return Promise.reject(new Error("You already follow that one."));
+  }
+  return fetchFeed(feedUrl).then(function(res){
+    channels.push({ feed: feedUrl, title: res.title });
+    return saveChannels().then(function(){
+      el("addmsg").innerHTML = '<div class="okline">Following ' + esc(res.title) + ' ✓</div>';
+      haptic("success");
+      renderChannels();
+      refresh(false);
+    });
+  });
+}
+
+function followSuggested(i){
+  var s = SUGGESTED[i];
+  if (!s) return;
+  el("addmsg").innerHTML = "";
+  if (!NET){ el("addmsg").innerHTML = '<div class="errline">Needs internet access for apps (MyLLMos settings).</div>'; return; }
+  haptic("light");
+  var btn = el("sug" + i);
+  if (btn){ btn.disabled = true; btn.textContent = "Adding…"; }
+  commitChannel(YT_FEED + s.cid).catch(function(e){
+    el("addmsg").innerHTML = '<div class="errline">' + esc(e && e.message ? e.message : "Couldn't add that one.") + '</div>';
+    renderSuggestions();
+  });
+}
+
 function addChannel(){
   var raw = el("url").value;
   el("addmsg").innerHTML = "";
@@ -298,19 +355,7 @@ function addChannel(){
 
   resolveFeed(raw)
     .then(function(feedUrl){
-      for (var i = 0; i < channels.length; i++){
-        if (channels[i].feed === feedUrl) throw new Error("You already follow that one.");
-      }
-      return fetchFeed(feedUrl).then(function(res){
-        channels.push({ feed: feedUrl, title: res.title });
-        return saveChannels().then(function(){
-          el("url").value = "";
-          el("addmsg").innerHTML = '<div class="okline">Following ' + esc(res.title) + ' ✓</div>';
-          haptic("success");
-          renderChannels();
-          refresh(false);
-        });
-      });
+      return commitChannel(feedUrl).then(function(){ el("url").value = ""; });
     })
     .catch(function(e){
       el("addmsg").innerHTML = '<div class="errline">' + esc(e && e.message ? e.message : "That didn't work — try another address.") + '</div>';
@@ -335,7 +380,24 @@ function undoRemove(){
   saveChannels().then(function(){ renderChannels(); refresh(false); });
 }
 
+function renderSuggestions(){
+  var followed = {};
+  for (var i = 0; i < channels.length; i++) followed[channels[i].feed] = true;
+  var left = [];
+  for (var j = 0; j < SUGGESTED.length; j++){
+    if (!followed[YT_FEED + SUGGESTED[j].cid]) left.push(j);
+  }
+  /* Once they are all followed the block has nothing to say — take it away
+     rather than leave an empty heading. */
+  el("sugCard").style.display = left.length ? "block" : "none";
+  el("suggest").innerHTML = '<div class="chips">' + left.map(function(j){
+    return '<button class="chip" id="sug' + j + '" onclick="followSuggested(' + j + ')">' +
+           esc(SUGGESTED[j].title) + '<b>+</b></button>';
+  }).join("") + '</div>';
+}
+
 function renderChannels(){
+  renderSuggestions();
   el("count").textContent = channels.length;
   var html = channels.map(function(c, i){
     return '<div class="chrow"><div class="n"><b>' + esc(c.title) + '</b>' +
@@ -353,7 +415,7 @@ function renderChannels(){
 
 function renderFeed(){
   if (!channels.length){
-    el("feed").innerHTML = '<p class="status">Nothing here yet.<br>Add a channel and its latest videos land here.</p>';
+    el("feed").innerHTML = '<p class="status">Nothing here yet.<br>Add a channel on the Channels tab — there are a few suggestions there to start you off.</p>';
     return;
   }
   if (!items.length){
