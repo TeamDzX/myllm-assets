@@ -23,6 +23,22 @@ can be swapped for malware after review**. So the single most important rule is:
 **approved apps are self-contained** — all CSS/JS inline, no remote code. Then
 there is nothing to swap. (Remote *images* are allowed — they can't execute.)
 
+**One carve-out: the official video players.** An `<iframe>` whose `src` is
+literally `https://www.youtube-nocookie.com/embed/…` or
+`https://player.vimeo.com/video/…` is allowed, and reported as `player-embed`
+(REVIEW) rather than blocked. The reasoning is narrow and does not generalise:
+the host is fixed, so the author controls only *which video* is shown and cannot
+swap the code behind it; MyLLM already embeds these two players natively
+(`play_video` → `HTMLTools.swift`), so blocking a gallery app for doing exactly
+what the product does made the gate stricter than the thing it guards; and it is
+the only lawful way to play these videos, since the players carry their own ads
+and view counts that pulling a raw stream URL would strip. Any other remote
+iframe still blocks — including `youtube.com/embed`, so apps are pushed onto the
+privacy-enhanced host. **Check the host is literal in the source** — the player
+origin and `/embed/` path written out as text, with only the video id
+interpolated. A src assembled host-and-all from variables defeats the check and
+is a rejection, however innocent it looks.
+
 ## Step 1 — run the scanner (mechanical gate)
 
 ```

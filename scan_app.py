@@ -30,9 +30,23 @@ RULES = [
     (BLOCK, "remote-stylesheet",
      re.compile(r"<link\b[^>]*\bhref\s*=\s*[\"']\s*(?:https?:)?//[^\"']*[\"'][^>]*\brel\s*=\s*[\"']stylesheet|<link\b[^>]*\brel\s*=\s*[\"']stylesheet[\"'][^>]*\bhref\s*=\s*[\"']\s*(?:https?:)?//", re.I),
      "Remote stylesheet — external CSS can change after review (and can exfiltrate via CSS). Inline it."),
+    # The official video players are the one carve-out. An <iframe> at a fixed
+    # player host is not "third-party code the author can swap after review":
+    # the author controls only which video id is shown, and MyLLM itself already
+    # embeds exactly these two natively (play_video, HTMLTools.swift). Blocking a
+    # gallery app for doing what the app does made the gate stricter than the
+    # product. It is also the only lawful way to play these videos — the players
+    # carry their own ads and counts, which extracting a stream URL would strip.
+    # Still surfaced as REVIEW below, so a human always sees it.
     (BLOCK, "remote-iframe",
-     re.compile(r"<iframe\b[^>]*\bsrc\s*=\s*[\"']\s*(?:https?:)?//", re.I),
+     re.compile(r"<iframe\b[^>]*\bsrc\s*=\s*[\"']\s*(?:https?:)?//"
+                r"(?!(?:www\.)?youtube-nocookie\.com/embed/"
+                r"|player\.vimeo\.com/video/)", re.I),
      "Remote <iframe> — loads third-party code/content that can change after review."),
+    (REVIEW, "player-embed",
+     re.compile(r"<iframe\b[^>]*\bsrc\s*=\s*[\"']\s*(?:https?:)?//"
+                r"(?:(?:www\.)?youtube-nocookie\.com/embed/|player\.vimeo\.com/video/)", re.I),
+     "Official video-player embed (allowed). Check the src host is literal, not built from a variable."),
     (BLOCK, "remote-object-embed",
      re.compile(r"<(?:object|embed)\b[^>]*\b(?:data|src)\s*=\s*[\"']\s*(?:https?:)?//", re.I),
      "Remote <object>/<embed> — external plugin content."),

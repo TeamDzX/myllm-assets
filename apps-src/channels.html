@@ -54,6 +54,9 @@
   .vid h3{ font-size:15px; font-weight:700; line-height:1.32; margin:8px 2px 2px; }
   .vid .by{ font-size:12.5px; color:var(--myllm-muted,#8a8a8e); margin:0 2px; display:flex; align-items:center; gap:6px; }
   .dot{ width:7px; height:7px; border-radius:50%; background:var(--myllm-accent,#0a84ff); flex-shrink:0; }
+  .vid .thumbwrap iframe{ position:absolute; inset:0; width:100%; height:100%; border:0; }
+  .vid .out{ margin-left:auto; color:var(--myllm-accent,#0a84ff); text-decoration:none; font-weight:650; }
+  .vid .by a{ color:var(--myllm-accent,#0a84ff); text-decoration:none; }
 
   .chrow{ display:flex; align-items:center; gap:10px; padding:11px 2px; border-bottom:1px solid var(--myllm-border,#e3e3e8); }
   .chrow:last-child{ border-bottom:none; }
@@ -188,6 +191,15 @@ function pick(node, local){
 function pickText(node, local){
   var n = pick(node, local);
   return n ? (n.textContent || "").trim() : "";
+}
+
+/* The id of a YouTube video, if this link is one. Covers watch?v=, /shorts/ and
+   youtu.be/ — the three shapes the feeds actually produce. */
+function videoId(link){
+  var m = String(link).match(/[?&]v=([\w-]{6,})/)
+       || String(link).match(/\/shorts\/([\w-]{6,})/)
+       || String(link).match(/youtu\.be\/([\w-]{6,})/);
+  return m ? m[1] : null;
 }
 
 function netGuard(target){
@@ -422,18 +434,51 @@ function renderFeed(){
     el("feed").innerHTML = '<p class="status">No videos yet — tap Refresh.</p>';
     return;
   }
-  el("feed").innerHTML = items.map(function(v){
+  el("feed").innerHTML = items.map(function(v, i){
     var isNew = v.at > lastSeen;
-    return '<a class="vid" href="' + esc(v.link) + '" target="_blank" rel="noopener">' +
-      '<div class="thumbwrap">' +
+    var vid = videoId(v.link);
+    var meta = (isNew ? '<span class="dot"></span>' : '') +
+               esc(v.by) + (v.when ? ' · ' + esc(timeAgo(v.when)) : '');
+
+    /* Anything we can't play inline stays a plain link out, exactly as before. */
+    if (!vid){
+      return '<a class="vid" href="' + esc(v.link) + '" target="_blank" rel="noopener">' +
+        '<div class="thumbwrap">' +
+          (v.thumb ? '<img src="' + esc(v.thumb) + '" alt="" loading="lazy">' : '') +
+          '<span class="play">Watch ↗</span>' +
+        '</div>' +
+        '<h3>' + esc(v.title) + '</h3>' +
+        '<div class="by">' + meta + '</div>' +
+      '</a>';
+    }
+
+    return '<div class="vid">' +
+      '<div class="thumbwrap" id="tw' + i + '" onclick="play(' + i + ',\'' + esc(vid) + '\')">' +
         (v.thumb ? '<img src="' + esc(v.thumb) + '" alt="" loading="lazy">' : '') +
-        '<span class="play">Watch ↗</span>' +
+        '<span class="play">▶ Play</span>' +
       '</div>' +
       '<h3>' + esc(v.title) + '</h3>' +
-      '<div class="by">' + (isNew ? '<span class="dot"></span>' : '') +
-        esc(v.by) + (v.when ? ' · ' + esc(timeAgo(v.when)) : '') + '</div>' +
-    '</a>';
+      '<div class="by">' + meta +
+        '<a class="out" href="' + esc(v.link) + '" target="_blank" rel="noopener">open ↗</a>' +
+      '</div>' +
+    '</div>';
   }).join("");
+}
+
+/* Swap the still for the official player, in place. The player origin is written
+   out literally here on purpose — only the video id is interpolated. That is the
+   condition the gallery's iframe allowance is granted on (GALLERY-REVIEW.md),
+   and it is also what makes this the lawful way to play: the video arrives with
+   its own ads and its view is counted, which pulling a stream URL would strip.
+   youtube-nocookie is the privacy-enhanced host, the same one MyLLM's own
+   play_video tool uses. */
+function play(i, vid){
+  var wrap = el("tw" + i);
+  if (!wrap || wrap.getAttribute("data-playing")) return;
+  haptic("light");
+  wrap.setAttribute("data-playing", "1");
+  wrap.innerHTML = '<iframe src="https://www.youtube-nocookie.com/embed/' + vid +
+    '?playsinline=1&rel=0&autoplay=1" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen title="Video"></iframe>';
 }
 
 function refresh(manual){

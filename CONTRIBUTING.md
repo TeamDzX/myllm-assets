@@ -25,7 +25,12 @@ Open an issue using the **App submission** template (or a PR adding
 
 1. **One self-contained file.** All CSS and JavaScript inline. **No remote
    `<script src>`, no remote stylesheets, no remote iframes** — a reviewed app
-   must not be able to change after review. Remote *images* are fine.
+   must not be able to change after review. Remote *images* are fine. The one
+   exception is an official video player: an `<iframe>` pointing literally at
+   `https://www.youtube-nocookie.com/embed/…` or `https://player.vimeo.com/video/…`
+   is allowed, because the host is fixed and only the video id is yours to choose.
+   Write the player origin and `/embed/` path out as literal text — interpolate
+   the video id into it, never the host.
 2. **Play nice with the sandbox.** Use the `myllm*` bridges (see
    `GALLERY_HANDOVER.md` §6–7): `myllmStorage` not localStorage, `myllmFetch`
    not fetch, no `alert/confirm/prompt`. Feature-detect every bridge.
