@@ -1,0 +1,440 @@
+<!doctype html>
+<!--
+  Channels — MyLLMos™ App Gallery · © 2026 Opticell Ltd
+  Source-available: read it, remix it, run your version inside MyLLM™.
+  Not for redistribution or republication. Terms: https://github.com/TeamDzX/myllm-assets/blob/main/LICENSE
+--><html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Channels</title>
+<style>
+  :root { color-scheme: light dark; }
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body{
+    font-family:var(--myllm-font,-apple-system,system-ui,sans-serif);
+    background:var(--myllm-bg,#f2f2f7);
+    color:var(--myllm-text,#111);
+    max-width:640px; margin:0 auto; min-height:100dvh;
+    padding-bottom:calc(30px + env(safe-area-inset-bottom));
+  }
+  .hero{
+    height:104px; position:relative; display:flex; align-items:flex-end; padding:12px 16px;
+    background:linear-gradient(135deg,#3b1d5e 0%,#6d28d9 45%,#0ea5e9 100%);
+  }
+  .hero::after{
+    content:""; position:absolute; inset:0; opacity:.5;
+    background:
+      radial-gradient(circle at 18% 30%, rgba(255,255,255,.28) 0 14px, transparent 15px),
+      radial-gradient(circle at 74% 62%, rgba(255,255,255,.20) 0 22px, transparent 23px),
+      radial-gradient(circle at 46% 18%, rgba(255,255,255,.14) 0 9px, transparent 10px);
+  }
+  .hero h1{ position:relative; z-index:1; color:#fff; font-size:23px; font-weight:800; letter-spacing:-.3px; text-shadow:0 2px 10px rgba(0,0,0,.45); }
+  .hero p{ position:relative; z-index:1; color:rgba(255,255,255,.82); font-size:12.5px; margin-left:10px; padding-bottom:3px; }
+  .wrap{ padding:12px 14px; }
+
+  .tabs{ display:flex; background:var(--myllm-surface,#fff); border:1px solid var(--myllm-border,#e3e3e8); border-radius:13px; padding:3px; margin-bottom:12px; }
+  .tabs button{
+    flex:1; border:none; background:none; color:var(--myllm-muted,#8a8a8e);
+    border-radius:10px; padding:9px; font-size:14px; font-weight:700; font-family:inherit;
+  }
+  .tabs button.on{ background:var(--myllm-accent,#0a84ff); color:#fff; }
+
+  .card{
+    background:var(--myllm-surface,#fff); border:1px solid var(--myllm-border,#e3e3e8);
+    border-radius:16px; padding:13px 14px; margin-bottom:10px;
+  }
+  .vid{ display:block; text-decoration:none; color:inherit; margin-bottom:10px; }
+  .vid .thumbwrap{ position:relative; border-radius:14px; overflow:hidden; background:#d9d9de; aspect-ratio:16/9; }
+  .vid img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .vid .play{
+    position:absolute; right:9px; bottom:9px; background:rgba(0,0,0,.62); color:#fff;
+    font-size:11.5px; font-weight:700; padding:3px 8px; border-radius:999px; backdrop-filter:blur(6px);
+  }
+  .vid h3{ font-size:15px; font-weight:700; line-height:1.32; margin:8px 2px 2px; }
+  .vid .by{ font-size:12.5px; color:var(--myllm-muted,#8a8a8e); margin:0 2px; display:flex; align-items:center; gap:6px; }
+  .dot{ width:7px; height:7px; border-radius:50%; background:var(--myllm-accent,#0a84ff); flex-shrink:0; }
+
+  .chrow{ display:flex; align-items:center; gap:10px; padding:11px 2px; border-bottom:1px solid var(--myllm-border,#e3e3e8); }
+  .chrow:last-child{ border-bottom:none; }
+  .chrow .n{ flex:1; min-width:0; }
+  .chrow .n b{ font-size:15px; font-weight:700; display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .chrow .n span{ font-size:12px; color:var(--myllm-muted,#8a8a8e); }
+  .x{ border:none; background:none; color:var(--myllm-muted,#8a8a8e); font-size:19px; padding:4px 8px; font-family:inherit; }
+  .undo{ border:none; background:none; color:var(--myllm-accent,#0a84ff); font-size:14px; font-weight:700; padding:4px 8px; font-family:inherit; }
+
+  label{ display:block; font-size:12.5px; font-weight:700; color:var(--myllm-muted,#8a8a8e); margin-bottom:6px; text-transform:uppercase; letter-spacing:.4px; }
+  input{
+    width:100%; font-size:16px; padding:11px 12px; border-radius:12px;
+    border:1px solid var(--myllm-border,#e3e3e8); background:var(--myllm-bg,#f2f2f7);
+    color:var(--myllm-text,#111); font-family:inherit;
+  }
+  .go{
+    border:none; border-radius:12px; padding:11px 18px; font-size:15px; font-weight:700;
+    background:var(--myllm-accent,#0a84ff); color:#fff; font-family:inherit;
+  }
+  .go[disabled]{ opacity:.5; }
+  .go.wide{ width:100%; margin-top:9px; }
+  .ghost{ background:none; color:var(--myllm-accent,#0a84ff); border:1px solid var(--myllm-border,#e3e3e8); }
+
+  .status{ text-align:center; color:var(--myllm-muted,#8a8a8e); font-size:14px; padding:22px 10px; line-height:1.5; }
+  .errline{ color:#d1345b; font-size:13.5px; margin-top:8px; line-height:1.45; }
+  .okline{ color:#1a9a5b; font-size:13.5px; margin-top:8px; }
+  .note{ font-size:12.5px; color:var(--myllm-muted,#8a8a8e); line-height:1.5; margin-top:9px; }
+  .note code{ font-size:12px; background:var(--myllm-bg,#f2f2f7); padding:1px 5px; border-radius:5px; }
+  .bar{ display:flex; align-items:center; gap:8px; margin-bottom:10px; }
+  .bar .sp{ flex:1; }
+  .small{ font-size:13px; font-weight:700; padding:8px 13px; }
+</style>
+<style>:root{--build-id:"cec64feb0a";}</style>
+</head>
+<body>
+
+<div class="hero"><h1>Channels</h1><p>your creators, no account</p></div>
+
+<div class="wrap">
+  <div class="tabs">
+    <button id="tabL" class="on" onclick="showTab('l')">Latest</button>
+    <button id="tabC" onclick="showTab('c')">Channels</button>
+  </div>
+
+  <div id="paneL">
+    <div class="bar">
+      <span class="sp"></span>
+      <button class="go ghost small" onclick="refresh(true)">Refresh</button>
+    </div>
+    <div id="feed"></div>
+  </div>
+
+  <div id="paneC" style="display:none">
+    <div class="card">
+      <label>Follow a channel</label>
+      <input id="url" placeholder="paste a channel link or @handle" autocapitalize="none" autocorrect="off" spellcheck="false">
+      <button class="go wide" id="addBtn" onclick="addChannel()">Add channel</button>
+      <div id="addmsg"></div>
+      <p class="note">Paste a channel address — <code>@handle</code>, a <code>/channel/…</code> link,
+      or the address of any video feed. Channels are read from the site's own public feed, so there is
+      no account and no sign-in. Tapping a video opens it in the app it belongs to.</p>
+    </div>
+    <div class="card">
+      <label>Following (<span id="count">0</span>)</label>
+      <div id="chlist"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+var store = window.myllmStorage || {getItem:function(){return Promise.resolve(null)}, setItem:function(){return Promise.resolve()}};
+var NET = window.myllmFetch || null;
+function haptic(k){ if(window.myllmHaptic){ try{ myllmHaptic(k||'light'); }catch(_){} } }
+function el(id){ return document.getElementById(id); }
+function esc(s){ return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+
+var K_CH = "channels_v1";      /* the follow list */
+var K_CACHE = "cache_v1";      /* last merged feed, so it opens instantly */
+var K_SEEN = "lastseen_v1";    /* timestamp of the last look, for the new dot */
+
+var channels = [];   /* [{cid, title, feed}] */
+var items = [];      /* merged videos */
+var lastSeen = 0;
+var pendingRemove = null;
+
+/* ---------- small helpers ---------- */
+
+function timeAgo(iso){
+  var t = new Date(iso).getTime();
+  if (!t) return "";
+  var s = (Date.now() - t) / 1000;
+  if (s < 3600) return Math.max(1, Math.floor(s/60)) + "m ago";
+  if (s < 86400) return Math.floor(s/3600) + "h ago";
+  if (s < 2592000) return Math.floor(s/86400) + "d ago";
+  return new Date(iso).toLocaleDateString();
+}
+
+/* XML namespaces make querySelector unreliable across feed dialects, so match
+   on localName instead — media:thumbnail, itunes:image and friends all differ
+   only by prefix. */
+function pick(node, local){
+  var all = node.getElementsByTagName("*");
+  for (var i = 0; i < all.length; i++) if (all[i].localName === local) return all[i];
+  return null;
+}
+function pickText(node, local){
+  var n = pick(node, local);
+  return n ? (n.textContent || "").trim() : "";
+}
+
+function netGuard(target){
+  if (!NET){
+    el(target).innerHTML = '<p class="status">This app needs internet access for apps — turn it on in MyLLMos settings, then reopen.</p>';
+    return false;
+  }
+  return true;
+}
+
+/* ---------- resolving what someone pasted ---------- */
+
+var YT_FEED = "https://www.youtube.com/feeds/videos.xml?channel_id=";
+
+/* Returns a Promise for a feed URL. Handles a channel id we can read straight
+   from the address, a handle or vanity address that needs one page fetch, and
+   any ordinary site that advertises a feed in its <head>. */
+function resolveFeed(raw){
+  var input = raw.trim();
+  if (!input) return Promise.reject(new Error("Paste a channel address first."));
+
+  /* A bare @handle, with no address around it. */
+  if (/^@[\w.-]+$/.test(input)) input = "https://www.youtube.com/" + input;
+  if (!/^https?:\/\//i.test(input)) input = "https://" + input;
+
+  /* Already a feed. */
+  if (/[?&]channel_id=|\.xml(\?|$)|\.rss(\?|$)|\/feed\/?$/i.test(input)) {
+    return Promise.resolve(input);
+  }
+
+  /* A channel id sitting in the address needs no network at all. */
+  var direct = input.match(/\/channel\/(UC[\w-]{20,})/);
+  if (direct) return Promise.resolve(YT_FEED + direct[1]);
+
+  /* Otherwise read the page once and look for the channel id, then for a
+     declared feed. Both are in the markup of the page as served. */
+  return NET(input).then(function(r){
+    var body = r && r.body ? r.body : "";
+    if (!r || r.status >= 400 || !body) throw new Error("That address didn't load — check it and try again.");
+
+    var m = body.match(/"externalId":"(UC[\w-]{20,})"/)
+         || body.match(/channel_id=(UC[\w-]{20,})/)
+         || body.match(/\/channel\/(UC[\w-]{20,})/);
+    if (m) return YT_FEED + m[1];
+
+    var f = body.match(/<link[^>]+type=["']application\/(?:rss|atom)\+xml["'][^>]*>/i);
+    if (f){
+      var href = f[0].match(/href=["']([^"']+)["']/i);
+      if (href) return new URL(href[1], input).href;
+    }
+    throw new Error("Couldn't find a feed for that page. Try the channel's own address, or a direct feed address.");
+  });
+}
+
+/* ---------- reading a feed ---------- */
+
+function parseFeed(xml, feedUrl){
+  var doc = new DOMParser().parseFromString(xml, "application/xml");
+  if (doc.getElementsByTagName("parsererror").length) throw new Error("That feed didn't look like a feed.");
+
+  var root = doc.documentElement;
+  var chTitle = "";
+  var head = pick(root, "channel") || root;
+  var t = head.getElementsByTagName("*");
+  for (var k = 0; k < t.length; k++){
+    if (t[k].localName === "title" && t[k].parentNode === head){ chTitle = (t[k].textContent||"").trim(); break; }
+  }
+  if (!chTitle) chTitle = pickText(root, "title") || "Channel";
+
+  var nodes = root.getElementsByTagName("entry");
+  if (!nodes.length) nodes = root.getElementsByTagName("item");
+
+  var out = [];
+  for (var i = 0; i < nodes.length && i < 25; i++){
+    var e = nodes[i];
+    var title = pickText(e, "title");
+    if (!title) continue;
+
+    /* Atom puts the address on a rel="alternate" link; RSS puts it in the text. */
+    var link = "";
+    var links = e.getElementsByTagName("*");
+    for (var j = 0; j < links.length; j++){
+      if (links[j].localName !== "link") continue;
+      var rel = links[j].getAttribute("rel");
+      if (!rel || rel === "alternate"){ link = links[j].getAttribute("href") || (links[j].textContent||"").trim(); break; }
+    }
+    if (!link) continue;
+
+    var thumb = "";
+    var th = pick(e, "thumbnail");
+    if (th) thumb = th.getAttribute("url") || "";
+    if (!thumb){
+      var mc = pick(e, "content");
+      if (mc && /^image\//.test(mc.getAttribute("type") || "")) thumb = mc.getAttribute("url") || "";
+    }
+    if (!thumb){
+      var enc = pick(e, "enclosure");
+      if (enc && /^image\//.test(enc.getAttribute("type") || "")) thumb = enc.getAttribute("url") || "";
+    }
+
+    var when = pickText(e, "published") || pickText(e, "pubDate") || pickText(e, "updated") || "";
+
+    out.push({
+      title: title,
+      link: link,
+      thumb: thumb,
+      when: when,
+      at: new Date(when).getTime() || 0,
+      by: chTitle,
+      feed: feedUrl
+    });
+  }
+  return { title: chTitle, items: out };
+}
+
+function fetchFeed(feedUrl){
+  return NET(feedUrl).then(function(r){
+    if (!r || r.status >= 400 || !r.body) throw new Error("Feed didn't load.");
+    return parseFeed(r.body, feedUrl);
+  });
+}
+
+/* ---------- the follow list ---------- */
+
+function saveChannels(){ return store.setItem(K_CH, JSON.stringify(channels)); }
+
+function addChannel(){
+  var raw = el("url").value;
+  el("addmsg").innerHTML = "";
+  if (!NET){ el("addmsg").innerHTML = '<div class="errline">Needs internet access for apps (MyLLMos settings).</div>'; return; }
+  haptic("light");
+  el("addBtn").disabled = true;
+  el("addBtn").textContent = "Looking…";
+
+  resolveFeed(raw)
+    .then(function(feedUrl){
+      for (var i = 0; i < channels.length; i++){
+        if (channels[i].feed === feedUrl) throw new Error("You already follow that one.");
+      }
+      return fetchFeed(feedUrl).then(function(res){
+        channels.push({ feed: feedUrl, title: res.title });
+        return saveChannels().then(function(){
+          el("url").value = "";
+          el("addmsg").innerHTML = '<div class="okline">Following ' + esc(res.title) + ' ✓</div>';
+          haptic("success");
+          renderChannels();
+          refresh(false);
+        });
+      });
+    })
+    .catch(function(e){
+      el("addmsg").innerHTML = '<div class="errline">' + esc(e && e.message ? e.message : "That didn't work — try another address.") + '</div>';
+    })
+    .then(function(){
+      el("addBtn").disabled = false;
+      el("addBtn").textContent = "Add channel";
+    });
+}
+
+/* Removal without a dialog: the row becomes its own undo. */
+function removeChannel(i){
+  haptic("light");
+  pendingRemove = { at: i, ch: channels[i] };
+  channels.splice(i, 1);
+  saveChannels().then(function(){ renderChannels(); renderFeed(); });
+}
+function undoRemove(){
+  if (!pendingRemove) return;
+  channels.splice(pendingRemove.at, 0, pendingRemove.ch);
+  pendingRemove = null;
+  saveChannels().then(function(){ renderChannels(); refresh(false); });
+}
+
+function renderChannels(){
+  el("count").textContent = channels.length;
+  var html = channels.map(function(c, i){
+    return '<div class="chrow"><div class="n"><b>' + esc(c.title) + '</b>' +
+           '<span>' + esc((c.feed.match(/channel_id=([\w-]+)/) || [,"feed"])[1]) + '</span></div>' +
+           '<button class="x" onclick="removeChannel(' + i + ')" aria-label="Unfollow">✕</button></div>';
+  }).join("");
+  if (pendingRemove){
+    html += '<div class="chrow"><div class="n"><span>Unfollowed ' + esc(pendingRemove.ch.title) + '</span></div>' +
+            '<button class="undo" onclick="undoRemove()">Undo</button></div>';
+  }
+  el("chlist").innerHTML = html || '<p class="status">No channels yet — add one above.</p>';
+}
+
+/* ---------- the merged feed ---------- */
+
+function renderFeed(){
+  if (!channels.length){
+    el("feed").innerHTML = '<p class="status">Nothing here yet.<br>Add a channel and its latest videos land here.</p>';
+    return;
+  }
+  if (!items.length){
+    el("feed").innerHTML = '<p class="status">No videos yet — tap Refresh.</p>';
+    return;
+  }
+  el("feed").innerHTML = items.map(function(v){
+    var isNew = v.at > lastSeen;
+    return '<a class="vid" href="' + esc(v.link) + '" target="_blank" rel="noopener">' +
+      '<div class="thumbwrap">' +
+        (v.thumb ? '<img src="' + esc(v.thumb) + '" alt="" loading="lazy">' : '') +
+        '<span class="play">Watch ↗</span>' +
+      '</div>' +
+      '<h3>' + esc(v.title) + '</h3>' +
+      '<div class="by">' + (isNew ? '<span class="dot"></span>' : '') +
+        esc(v.by) + (v.when ? ' · ' + esc(timeAgo(v.when)) : '') + '</div>' +
+    '</a>';
+  }).join("");
+}
+
+function refresh(manual){
+  if (!channels.length){ renderFeed(); return; }
+  if (!netGuard("feed")) return;
+  if (manual) haptic("light");
+  if (!items.length) el("feed").innerHTML = '<p class="status">Fetching the latest…</p>';
+
+  var jobs = channels.map(function(c){
+    return fetchFeed(c.feed).then(function(res){
+      if (res.title && res.title !== c.title){ c.title = res.title; saveChannels(); }
+      return res.items;
+    }).catch(function(){ return []; });
+  });
+
+  Promise.all(jobs).then(function(lists){
+    var all = [];
+    for (var i = 0; i < lists.length; i++) all = all.concat(lists[i]);
+    all.sort(function(a, b){ return b.at - a.at; });
+    var fresh = all.slice(0, 60);
+
+    if (!fresh.length && !items.length){
+      el("feed").innerHTML = '<p class="status">Couldn\'t reach those channels just now — tap Refresh to try again.</p>';
+      return;
+    }
+    items = fresh;
+    renderFeed();
+    renderChannels();
+    if (manual) haptic("success");
+
+    /* Cache so the next open paints before the network answers, and move the
+       "new" line forward only once the person has actually seen this batch. */
+    store.setItem(K_CACHE, JSON.stringify(items.slice(0, 40)));
+    var newest = items.length ? items[0].at : 0;
+    if (newest > lastSeen){
+      lastSeen = newest;
+      store.setItem(K_SEEN, String(newest));
+    }
+  });
+}
+
+/* ---------- tabs ---------- */
+
+function showTab(t){
+  haptic("selection");
+  el("paneL").style.display = t === "l" ? "block" : "none";
+  el("paneC").style.display = t === "c" ? "block" : "none";
+  el("tabL").className = t === "l" ? "on" : "";
+  el("tabC").className = t === "c" ? "on" : "";
+}
+
+/* ---------- boot ---------- */
+
+Promise.all([store.getItem(K_CH), store.getItem(K_CACHE), store.getItem(K_SEEN)])
+.then(function(v){
+  try { channels = v[0] ? JSON.parse(v[0]) : []; } catch(e){ channels = []; }
+  try { items = v[1] ? JSON.parse(v[1]) : []; } catch(e){ items = []; }
+  lastSeen = Number(v[2] || 0) || 0;
+  if (!channels.length) showTab("c");
+  renderChannels();
+  renderFeed();
+  refresh(false);
+});
+</script>
+</body>
+</html>
