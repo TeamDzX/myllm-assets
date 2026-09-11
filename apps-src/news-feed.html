@@ -3,41 +3,107 @@
   News — MyLLMos™ App Gallery · © 2026 Opticell Ltd
   Source-available: read it, remix it, run your version inside MyLLM™.
   Not for redistribution or republication. Terms: https://github.com/TeamDzX/myllm-assets/blob/main/LICENSE
---><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<style>:root{--build-id:"c14294ef8c";color-scheme:light dark;--accent:#ff453a}
+--><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>News</title>
+<style>:root{--build-id:"c14294ef8c";color-scheme:light dark;
+  --accent:var(--myllm-accent,#ff453a);
+  --bg:var(--myllm-bg,#f2f2f7); --card:var(--myllm-surface,#fff);
+  --fg:var(--myllm-text,#111); --dim:var(--myllm-muted,#6b6b70);
+  --line:var(--myllm-border,rgba(128,128,128,.22)); --r:var(--myllm-radius,13px);
+  --read:17px}
+@media(prefers-color-scheme:dark){:root{--bg:var(--myllm-bg,#000);--card:var(--myllm-surface,#1c1c1e);--fg:var(--myllm-text,#eee);--dim:var(--myllm-muted,#98989f)}}
 *{box-sizing:border-box}
-body{font-family:-apple-system,system-ui,sans-serif;margin:0;padding:0;background:#f2f2f7;color:#111}
-@media(prefers-color-scheme:dark){body{background:#000;color:#eee}.head{background:rgba(20,20,22,.92)}.item{background:#1c1c1e}.tab{color:#888}input{background:#1c1c1e;color:#eee;border-color:#3a3a3c}}
-.head{position:sticky;top:0;background:rgba(242,242,247,.92);backdrop-filter:saturate(180%) blur(12px);padding:14px 16px 0;z-index:5}
-h1{font-size:20px;margin:0 0 8px}
-.tabs{display:flex;gap:4px;overflow-x:auto;padding-bottom:10px;margin:0 -16px;padding-left:16px;padding-right:16px}
-.tab{flex:none;padding:7px 14px;border-radius:18px;background:none;color:#777;font-size:14px;font-weight:600;border:0;cursor:pointer;white-space:nowrap}
+body{font-family:var(--myllm-font,-apple-system,system-ui,sans-serif);margin:0;background:var(--bg);color:var(--fg);
+     -webkit-text-size-adjust:100%}
+button{font:inherit;color:inherit}
+
+/* ---------- the list ---------- */
+.head{position:sticky;top:0;background:color-mix(in srgb,var(--bg) 92%,transparent);
+      backdrop-filter:saturate(180%) blur(12px);padding:calc(12px + env(safe-area-inset-top)) 16px 0;z-index:5}
+.hrow{display:flex;align-items:center;gap:10px}
+h1{font-size:20px;margin:0 0 8px;flex:1}
+.icon{border:0;background:none;padding:6px;border-radius:9px;opacity:.75;font-size:17px;line-height:1}
+.tabs{display:flex;gap:4px;overflow-x:auto;padding:0 16px 10px;margin:0 -16px}
+.tab{flex:none;padding:7px 14px;border-radius:18px;background:none;color:var(--dim);font-size:14px;font-weight:600;border:0;white-space:nowrap}
 .tab.on{background:var(--accent);color:#fff}
-.wrap{padding:6px 16px 24px}
-.item{background:#fff;border-radius:13px;padding:13px 15px;margin-bottom:9px;box-shadow:0 1px 3px rgba(0,0,0,.07)}
-.title{font-size:16px;font-weight:600;line-height:1.3}
-.meta{font-size:12px;opacity:.55;margin-top:4px}
-.desc{font-size:14px;opacity:.85;margin-top:8px;line-height:1.45;display:none}
-.item.open .desc{display:block}
-.go{display:inline-block;margin-top:9px;font-size:13px;font-weight:600;color:var(--accent);text-decoration:none}
-#status{padding:14px 16px;font-size:14px;opacity:.7;text-align:center}
+.wrap{padding:6px 16px calc(24px + env(safe-area-inset-bottom))}
+.item{background:var(--card);border-radius:var(--r);padding:13px 15px;margin-bottom:9px;
+      box-shadow:0 1px 3px rgba(0,0,0,.07);display:flex;gap:12px;align-items:flex-start;width:100%;text-align:left;border:0}
+.item .body{flex:1;min-width:0}
+.title{font-size:16px;font-weight:600;line-height:1.32}
+.meta{font-size:12px;color:var(--dim);margin-top:5px;display:flex;gap:6px;flex-wrap:wrap}
+.src{font-weight:600;color:var(--accent)}
+.blurb{font-size:14px;color:var(--dim);margin-top:6px;line-height:1.4;
+       display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.thumb{width:76px;height:76px;border-radius:10px;object-fit:cover;flex:none;background:var(--line)}
+#status{padding:18px 16px;font-size:14px;color:var(--dim);text-align:center}
+
+/* ---------- the reader ---------- */
+#reader{display:none;position:fixed;inset:0;background:var(--bg);z-index:20;overflow:auto;-webkit-overflow-scrolling:touch}
+#reader.on{display:block}
+.rbar{position:sticky;top:0;display:flex;align-items:center;gap:4px;padding:calc(8px + env(safe-area-inset-top)) 10px 8px;
+      background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:saturate(180%) blur(12px);border-bottom:1px solid var(--line);z-index:2}
+.rbar .site{flex:1;min-width:0;font-size:13px;font-weight:600;color:var(--dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.art{padding:14px 20px calc(40px + env(safe-area-inset-bottom));max-width:700px;margin:0 auto}
+.art h2{font-size:26px;line-height:1.22;margin:6px 0 10px;letter-spacing:-.01em}
+.byline{font-size:13px;color:var(--dim);margin-bottom:16px;line-height:1.5}
+.art figure{margin:18px 0}
+.art img{width:100%;border-radius:10px;display:block;background:var(--line)}
+.art figcaption{font-size:12.5px;color:var(--dim);margin-top:7px;line-height:1.4}
+.art p{font-size:var(--read);line-height:1.62;margin:0 0 1.05em}
+.art h3{font-size:calc(var(--read) + 3px);line-height:1.3;margin:1.5em 0 .5em}
+.art ul,.art ol{font-size:var(--read);line-height:1.6;padding-left:1.3em;margin:0 0 1.05em}
+.art li{margin-bottom:.4em}
+.art blockquote{margin:1.2em 0;padding-left:14px;border-left:3px solid var(--accent);color:var(--dim);font-size:var(--read)}
+.art pre{background:var(--card);padding:12px;border-radius:9px;overflow-x:auto;font-size:14px}
+.art a{color:var(--accent)}
+.note{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:13px 15px;margin:4px 0 18px;
+      font-size:14px;line-height:1.5;color:var(--dim)}
+.open{display:block;text-align:center;background:var(--accent);color:#fff;text-decoration:none;font-weight:600;
+      padding:14px;border-radius:var(--r);margin-top:26px}
+.skel{height:13px;border-radius:7px;background:var(--line);margin-bottom:11px;animation:pulse 1.3s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:.45}50%{opacity:.8}}
+
+/* ---------- manage feeds ---------- */
 .manage{padding:0 16px 24px}
-.manage h2{font-size:13px;text-transform:uppercase;letter-spacing:.05em;opacity:.55}
+.manage h2{font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:var(--dim)}
 .row{display:flex;gap:8px}
-input{flex:1;padding:10px;border:1px solid #d1d1d6;border-radius:9px;font-size:15px;background:#fff}
+input{flex:1;padding:10px;border:1px solid var(--line);border-radius:9px;font-size:15px;background:var(--card);color:var(--fg)}
 .row button{border:0;background:var(--accent);color:#fff;border-radius:9px;padding:0 16px;font-weight:600}
-.feedrow{display:flex;align-items:center;gap:8px;padding:8px 0;font-size:14px;border-top:1px solid rgba(128,128,128,.2)}
-.feedrow .u{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;opacity:.75}
-.feedrow .x{color:#ff453a;cursor:pointer;font-size:16px}
-@media(min-width:768px){body{max-width:760px;margin-left:auto;margin-right:auto}}
+.feedrow{display:flex;align-items:center;gap:8px;padding:9px 0;font-size:14px;border-top:1px solid var(--line)}
+.feedrow .u{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--dim)}
+.feedrow .x{color:var(--accent);font-size:16px;border:0;background:none}
+@media(min-width:768px){.wrap,.head{max-width:760px;margin-left:auto;margin-right:auto}}
 </style></head><body>
+
 <div class="head">
-  <h1>📰 News</h1>
+  <div class="hrow"><h1>📰 News</h1>
+    <button class="icon" id="refresh" aria-label="Refresh">↻</button></div>
   <div class="tabs" id="tabs"></div>
 </div>
 <div id="status"></div>
 <div class="wrap" id="wrap"></div>
+
+<div id="reader" aria-hidden="true">
+  <div class="rbar">
+    <button class="icon" id="back" aria-label="Back">‹</button>
+    <span class="site" id="rsite"></span>
+    <button class="icon" id="smaller" aria-label="Smaller text">A−</button>
+    <button class="icon" id="bigger" aria-label="Larger text">A+</button>
+    <button class="icon" id="share" aria-label="Share">↗</button>
+  </div>
+  <div class="art" id="art"></div>
+</div>
+
 <script>
+/* News — a feed reader that can also READ the article.
+
+   The list is RSS. The reader is the article's own page, fetched through
+   myllmFetch and reduced to prose here on the device: no reader service in the
+   middle, nothing about what you read leaves the phone. Where a site refuses
+   (plenty do — Reuters, Sky and AP all 403 a non-browser regardless of what
+   user agent it claims) the app says so plainly and offers the original. */
+
 var TOPICS=[
   {name:"Top",url:"https://feeds.bbci.co.uk/news/rss.xml"},
   {name:"World",url:"https://feeds.bbci.co.uk/news/world/rss.xml"},
@@ -48,10 +114,17 @@ var TOPICS=[
   {name:"Sport",url:"https://feeds.bbci.co.uk/sport/rss.xml"}
 ];
 var store=window.myllmStorage||{getItem:function(){return Promise.resolve(null)},setItem:function(){return Promise.resolve()}};
-var custom=[],active=0,cache={};
-function el(i){return document.getElementById(i)}
+var custom=[],active=0,feedCache={},artCache={},readSize=17;
+var CACHE_MS=5*60*1000;
+
+function el(id){return document.getElementById(id)}
 function setStatus(t){var s=el('status');s.style.display=t?'block':'none';s.textContent=t||''}
 function tabs(){return TOPICS.concat(custom).concat([{name:"＋ Feeds",manage:true}])}
+function haptic(k){try{window.myllmHaptic&&myllmHaptic(k)}catch(e){}}
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function host(u){try{return new URL(u).hostname.replace(/^www\./,'')}catch(e){return''}}
+
+/* ============================ the list ============================ */
 
 function renderTabs(){
   var T=el('tabs');T.innerHTML='';
@@ -64,27 +137,27 @@ function route(){
   renderTabs();
   var t=tabs()[active];
   if(t.manage)return renderManage();
-  load(t.url);
+  load(t.url,t.name);
 }
 
-function load(url){
+function load(url,label,force){
   el('wrap').innerHTML='';
-  if(cache[url]){renderItems(cache[url]);return}
+  var hit=feedCache[url];
+  if(hit&&!force&&(Date.now()-hit.at)<CACHE_MS){setStatus('');renderItems(hit.items,label);return}
   if(!window.myllmFetch){setStatus('This app needs network access — update MyLLM and enable app network access in Settings.');return}
   setStatus('Loading…');
   myllmFetch(url,{headers:{Accept:'application/rss+xml,application/xml,text/xml'}})
   .then(function(r){
     if(!r||!r.ok)throw new Error('feed returned '+((r&&r.status)||'no response'));
-    var items=parseFeed(r.body);
+    var items=parseFeed(r.body,url);
     if(!items.length)throw new Error('no stories found in this feed');
-    cache[url]=items;setStatus('');renderItems(items);
+    feedCache[url]={items:items,at:Date.now()};setStatus('');renderItems(items,label);
   }).catch(function(err){setStatus('Couldn’t load this feed: '+err.message)});
 }
 
-function parseFeed(xml){
+function parseFeed(xml,feedUrl){
   var doc=new DOMParser().parseFromString(xml,'text/xml');
-  var nodes=doc.querySelectorAll('item');
-  var atom=false;
+  var nodes=doc.querySelectorAll('item'),atom=false;
   if(!nodes.length){nodes=doc.querySelectorAll('entry');atom=true}
   var out=[];
   Array.prototype.forEach.call(nodes,function(n){
@@ -92,46 +165,439 @@ function parseFeed(xml){
     var link=get('link');
     if(atom){var l=n.querySelector('link');if(l&&l.getAttribute('href'))link=l.getAttribute('href')}
     var desc=get('description')||get('summary')||get('content');
-    out.push({title:get('title'),link:link,date:get('pubDate')||get('updated')||get('published'),desc:strip(desc)});
+    /* content:encoded carries the WHOLE article on many feeds (WordPress,
+       Substack), which saves the reader a fetch — and works on sites that
+       would refuse one. querySelector can't take the namespaced name, so go
+       through the tag list. */
+    var full='';
+    Array.prototype.forEach.call(n.children,function(c){
+      var nm=(c.tagName||'').toLowerCase();
+      if(nm==='content:encoded'||nm==='encoded')full=c.textContent||'';
+    });
+    out.push({
+      title:get('title'),link:link,
+      date:get('pubDate')||get('updated')||get('published'),
+      desc:strip(desc),full:full,
+      image:feedImage(n,desc),
+      source:sourceName(n,feedUrl,link)
+    });
   });
   return out.filter(function(i){return i.title});
 }
-function strip(html){var d=document.createElement('div');d.innerHTML=html;var t=(d.textContent||'').trim();return t.length>320?t.slice(0,320)+'…':t}
+
+/* Feeds hide their picture in one of four places depending on who built them. */
+function feedImage(n,desc){
+  var pick=['media\\:thumbnail','media\\:content','enclosure','thumbnail'];
+  for(var i=0;i<pick.length;i++){
+    var e=null;
+    Array.prototype.forEach.call(n.children,function(c){
+      if(e)return;
+      var nm=(c.tagName||'').toLowerCase();
+      if(nm===pick[i].replace('\\','')||nm===pick[i].split('\\:').pop())e=c;
+    });
+    if(e){
+      var u=e.getAttribute('url')||e.getAttribute('href')||'';
+      var ty=e.getAttribute('type')||'';
+      if(u&&(!ty||/image/i.test(ty)))return u;
+    }
+  }
+  var m=/<img[^>]+src=["']([^"']+)["']/i.exec(desc||'');
+  return m?m[1]:'';
+}
+function sourceName(n,feedUrl,link){
+  var s=n.querySelector('source');
+  if(s&&s.textContent.trim())return s.textContent.trim();
+  return host(link)||host(feedUrl);
+}
+
+function strip(html){var d=document.createElement('div');d.innerHTML=html;var t=(d.textContent||'').replace(/\s+/g,' ').trim();return t.length>300?t.slice(0,300)+'…':t}
 function ago(d){
   if(!d)return'';var t=new Date(d);if(isNaN(t))return'';
   var s=Math.round((new Date()-t)/1000);
+  if(s<60)return'just now';
   if(s<3600)return Math.max(1,Math.round(s/60))+'m ago';
   if(s<86400)return Math.round(s/3600)+'h ago';
   return Math.round(s/86400)+'d ago';
 }
 
-function renderItems(items){
+function renderItems(items,label){
   var W=el('wrap');W.innerHTML='';
   items.forEach(function(it){
-    var c=document.createElement('div');c.className='item';
+    var c=document.createElement('button');c.className='item';c.type='button';
+    var body=document.createElement('div');body.className='body';
     var h=document.createElement('div');h.className='title';h.textContent=it.title;
-    var m=document.createElement('div');m.className='meta';m.textContent=ago(it.date);
-    var d=document.createElement('div');d.className='desc';d.textContent=it.desc||'';
-    c.appendChild(h);c.appendChild(m);if(it.desc)c.appendChild(d);
-    if(it.link){var a=document.createElement('a');a.className='go';a.textContent='Read full story ↗';a.href=it.link;a.target='_top';a.rel='noopener';c.appendChild(a)}
-    h.onclick=function(){c.classList.toggle('open');if(window.myllmHaptic)myllmHaptic('selection')};
+    var m=document.createElement('div');m.className='meta';
+    var src=document.createElement('span');src.className='src';src.textContent=it.source||label||'';
+    var when=document.createElement('span');when.textContent=ago(it.date);
+    m.appendChild(src);if(when.textContent)m.appendChild(when);
+    body.appendChild(h);body.appendChild(m);
+    if(it.desc){var b=document.createElement('div');b.className='blurb';b.textContent=it.desc;body.appendChild(b)}
+    c.appendChild(body);
+    if(it.image){
+      var im=document.createElement('img');im.className='thumb';im.loading='lazy';
+      im.referrerPolicy='no-referrer';im.alt='';im.src=it.image;
+      im.onerror=function(){im.remove()};
+      c.appendChild(im);
+    }
+    c.onclick=function(){openArticle(it)};
     W.appendChild(c);
   });
 }
+
+/* ============================ the reader ============================ */
+
+function showReader(on){
+  var R=el('reader');
+  R.classList.toggle('on',on);
+  R.setAttribute('aria-hidden',on?'false':'true');
+  document.body.style.overflow=on?'hidden':'';
+  if(on)R.scrollTop=0;
+}
+el('back').onclick=function(){showReader(false);haptic('selection')};
+el('bigger').onclick=function(){setRead(readSize+1)};
+el('smaller').onclick=function(){setRead(readSize-1)};
+function setRead(px){
+  readSize=Math.max(14,Math.min(24,px));
+  document.documentElement.style.setProperty('--read',readSize+'px');
+  store.setItem('readSize',String(readSize));
+  haptic('selection');
+}
+
+var current=null;
+el('share').onclick=function(){
+  if(!current)return;
+  var text=current.title+'\n'+current.link;
+  if(window.myllmShare)myllmShare(text)['catch'](function(){});
+  haptic('light');
+};
+
+function openArticle(item){
+  current=item;
+  el('rsite').textContent=item.source||host(item.link);
+  showReader(true);haptic('selection');
+  paintArticle(item,null,'loading');
+  var cached=artCache[item.link];
+  if(cached){paintArticle(item,cached.article,cached.how);return}
+
+  readArticle(item).then(function(res){
+    if(current!==item)return;                     /* they moved on while we fetched */
+    artCache[item.link]={article:res.article,how:res.how};
+    paintArticle(item,res.article,res.how);
+  })['catch'](function(err){
+    if(current!==item)return;
+    paintArticle(item,null,'failed',err&&err.message);
+  });
+}
+
+/* Full text, from the cheapest source that has it. */
+function readArticle(item){
+  if(item.full&&item.full.length>600){
+    var a=extractArticle(item.full,item.link);
+    if(a.blocks.length>=2)return Promise.resolve({article:a,how:'feed'});
+  }
+  if(!item.link)return Promise.reject(new Error('this story has no link'));
+  if(!window.myllmFetch)return Promise.reject(new Error('network access for apps is off'));
+  return myllmFetch(item.link,{headers:{Accept:'text/html,application/xhtml+xml'}}).then(function(r){
+    if(!r)throw new Error('no response');
+    if(!r.ok){
+      /* 401/403 is a publisher refusing a non-browser, not a bug — say which. */
+      if(r.status===401||r.status===403)throw new Error('blocked');
+      throw new Error('the site returned '+r.status);
+    }
+    var a=extractArticle(r.body||'',item.link);
+    if(!a.blocks.length)throw new Error('nothing readable');
+    return {article:a,how:'web'};
+  });
+}
+
+function paintArticle(item,article,how,why){
+  var A=el('art');A.innerHTML='';
+  var h=document.createElement('h2');h.textContent=(article&&article.title)||item.title;A.appendChild(h);
+
+  var bits=[];
+  if(article&&article.author)bits.push(article.author);
+  var when=(article&&article.published)||item.date;
+  if(ago(when))bits.push(ago(when));
+  bits.push(item.source||host(item.link));
+  var by=document.createElement('div');by.className='byline';by.textContent=bits.join(' · ');A.appendChild(by);
+
+  if(how==='loading'){
+    if(item.image)A.appendChild(figure(item.image,''));
+    if(item.desc){var p0=document.createElement('p');p0.textContent=item.desc;A.appendChild(p0)}
+    for(var i=0;i<5;i++){var s=document.createElement('div');s.className='skel';
+      s.style.width=(i===4?'55%':'100%');A.appendChild(s)}
+    return;
+  }
+
+  if(how==='failed'){
+    A.appendChild(note(why==='blocked'
+      ? 'This publisher doesn’t let apps read its articles — only a browser. The summary from the feed is below.'
+      : 'Couldn’t read the full article here (' + (why||'unknown error') + '). The summary from the feed is below.'));
+    if(item.image)A.appendChild(figure(item.image,''));
+    if(item.desc){var p1=document.createElement('p');p1.textContent=item.desc;A.appendChild(p1)}
+    A.appendChild(openLink(item));
+    return;
+  }
+
+  var lead=(article.lead&&article.lead!==item.image)?article.lead:item.image;
+  var first=article.blocks[0];
+  if(lead&&!(first&&first.t==='img'))A.appendChild(figure(lead,''));
+
+  article.blocks.forEach(function(b){
+    if(b.t==='img'){A.appendChild(figure(b.src,b.cap));return}
+    if(b.t==='list'){
+      var l=document.createElement(b.ordered?'ol':'ul');
+      b.items.forEach(function(x){var li=document.createElement('li');li.textContent=x;l.appendChild(li)});
+      A.appendChild(l);return;
+    }
+    var tag=b.t==='h'?'h3':b.t==='quote'?'blockquote':b.t==='pre'?'pre':'p';
+    var n=document.createElement(tag);n.textContent=b.text;A.appendChild(n);
+  });
+
+  /* Say when this came from the feed's own copy rather than the page. */
+  var words=article.blocks.reduce(function(n,b){return n+(b.text?b.text.length:0)},0);
+  if(words<600)A.appendChild(note('That’s all this page gave us — the original may have more.'));
+  A.appendChild(openLink(item));
+}
+
+function figure(src,cap){
+  var f=document.createElement('figure');
+  var im=document.createElement('img');im.loading='lazy';im.referrerPolicy='no-referrer';im.alt=cap||'';im.src=src;
+  im.onerror=function(){f.remove()};
+  f.appendChild(im);
+  if(cap){var c=document.createElement('figcaption');c.textContent=cap;f.appendChild(c)}
+  return f;
+}
+function note(text){var d=document.createElement('div');d.className='note';d.textContent=text;return d}
+function openLink(item){
+  var a=document.createElement('a');a.className='open';a.href=item.link;a.target='_top';a.rel='noopener';
+  a.textContent='Open the original ↗';
+  return a;
+}
+
+/* ===================== reading an article page =====================
+   The readability core, small enough to inline — a gallery app is one
+   self-contained file, so there is no library to reach for. */
+
+var JUNK=/(^|[\s_-])(nav|menu|banner|promo|advert|ads?|sponsor|share|social|comment|related|recirc|newsletter|subscribe|signup|sign-up|cookie|consent|sidebar|breadcrumb|most-read|trending|footer|header|masthead|tags?|meta-nav|skip)([\s_-]|$)/i;
+var BOILER=/^(sign up|subscribe|follow (us|bbc)|share this|read more|advertisement|related (stories|articles)|most read|this article|copyright|all rights reserved|getty images|image source|image caption|posts from this (topic|author)|are you personally affected|a free daily digest|by submitting your email|we use cookies)\b/i;
+var BLOCK='p,h2,h3,h4,ul,ol,blockquote,pre,figure,img';
+
+function txt(node){return node?(node.textContent||'').replace(/\s+/g,' ').trim():''}
+function absolute(url,base){if(!url)return'';try{return new URL(url,base).href}catch(e){return''}}
+function fromSrcset(set,base){
+  var best='',bestW=0;
+  String(set).split(',').forEach(function(part){
+    var bits=part.trim().split(/\s+/);
+    if(!bits[0])return;
+    var w=parseInt((bits[1]||'').replace(/[^\d]/g,''),10)||0;
+    if(w>=bestW){bestW=w;best=bits[0]}
+  });
+  return absolute(best,base);
+}
+function imgSrc(node,base){
+  return fromSrcset(node.getAttribute('srcset')||node.getAttribute('data-srcset')||'',base)
+      || absolute(node.getAttribute('src')||node.getAttribute('data-src')||node.getAttribute('data-lazy-src')||'',base);
+}
+function metaOf(doc,names){
+  for(var i=0;i<names.length;i++){
+    var e=doc.querySelector('meta[property="'+names[i]+'"], meta[name="'+names[i]+'"]');
+    var v=e&&(e.getAttribute('content')||'').trim();
+    if(v)return v;
+  }
+  return'';
+}
+/* schema.org JSON-LD is where a modern news site actually keeps its metadata —
+   the BBC's byline exists ONLY there, not in any meta tag or class name. Sites
+   wrap it in an array, or in an @graph, or both. */
+function jsonLd(doc){
+  var found=null;
+  doc.querySelectorAll('script[type="application/ld+json"]').forEach(function(node){
+    if(found)return;
+    var data;
+    try{data=JSON.parse(node.textContent||'')}catch(e){return}
+    var queue=[data];
+    while(queue.length&&!found){
+      var d=queue.shift();
+      if(Array.isArray(d)){queue=queue.concat(d);continue}
+      if(!d||typeof d!=='object')continue;
+      if(d['@graph'])queue=queue.concat(d['@graph']);
+      var t=[].concat(d['@type']||[]).join(' ');
+      if(/Article|BlogPosting|Report|NewsStory/i.test(t))found=d;
+    }
+  });
+  return found||{};
+}
+/* An author is a string, an object with a name, or an array of either. */
+function ldAuthor(ld){
+  var a=ld.author||ld.creator;
+  if(!a)return'';
+  a=[].concat(a)[0];
+  if(typeof a==='string')return a.trim();
+  return (a&&a.name?String(a.name):'').trim();
+}
+
+/* Bylines arrive as a name, a URL, an @handle or a whole social profile —
+   only the first of those is worth putting under a headline. */
+function byline(doc,ld){
+  var cands=[ldAuthor(ld||{}),
+             metaOf(doc,['author','article:author','parsely-author']),
+             txt(doc.querySelector('[rel="author"]')),
+             txt(doc.querySelector('[itemprop="author"] [itemprop="name"], [itemprop="author"]')),
+             txt(doc.querySelector('.byline, .author-name, [class*="byline" i]'))];
+  for(var i=0;i<cands.length;i++){
+    var c=(cands[i]||'').trim().replace(/^(by|words by)\s+/i,'');
+    if(!c||c.length>60)continue;
+    if(/^https?:\/\//i.test(c)||c.indexOf('@')===0)continue;
+    return c;
+  }
+  return'';
+}
+
+function qualifies(p){
+  var t=txt(p);
+  if(t.length<25)return 0;
+  var links=0;
+  p.querySelectorAll('a').forEach(function(a){links+=txt(a).length});
+  if(t.length&&links/t.length>0.5)return 0;      /* a link list, not a paragraph */
+  return t.length;
+}
+function proseIn(node){
+  var n=0;
+  node.querySelectorAll('p,blockquote,pre').forEach(function(p){n+=qualifies(p)});
+  return n;
+}
+
+/* Picking the article body.
+   Readability credits a paragraph's parent and grandparent. That fails badly on
+   a modern news site: the BBC wraps every THREE paragraphs in their own
+   container six levels below <article>, so the real root is credited by nothing
+   and each little wrapper wins on its own three.
+   So score by PROSE PURITY instead — how much of what an element contains is
+   actual paragraph text — which is scale-free and picks the same node whether
+   the prose sits one level down or eight. <body> loses because it also carries
+   the nav, the footer and the related-stories rail. */
+function pickRoot(doc){
+  var prose=new Map();
+  doc.querySelectorAll('p,blockquote,pre').forEach(function(p){
+    var n=qualifies(p);
+    if(!n)return;
+    var node=p.parentElement,depth=0;
+    while(node&&node.tagName!=='HTML'&&depth<12){
+      prose.set(node,(prose.get(node)||0)+n);
+      node=node.parentElement;depth++;
+    }
+  });
+  var best=null,bestScore=0;
+  prose.forEach(function(len,node){
+    if(len<200)return;
+    var all=txt(node).length;
+    var s=len-(all-len)*0.5;                     /* non-prose is furniture it dragged in */
+    var tag=node.tagName.toLowerCase();
+    if(tag==='article'||node.getAttribute('itemprop')==='articleBody')s*=1.15;
+    else if(tag==='main')s*=1.05;
+    else if(tag==='body')s*=0.9;
+    if(s>bestScore){bestScore=s;best=node}
+  });
+  return best;
+}
+
+function scrub(root){
+  root.querySelectorAll('script,style,noscript,iframe,svg,form,button,input,select,textarea,nav,aside,footer,header,video,audio,object,embed').forEach(function(n){n.remove()});
+  root.querySelectorAll('[aria-hidden="true"],[hidden],[role="navigation"],[role="banner"],[role="complementary"],[role="contentinfo"]').forEach(function(n){n.remove()});
+  /* A junk-named block goes — unless it holds a serious share of the prose, in
+     which case the name is a coincidence and it IS the article. Guarding on
+     "contains no <p>" instead (the obvious version) keeps every native ad and
+     newsletter box on the page, because those are made of paragraphs too.
+     NB: no isConnected check — scrub runs on a DETACHED clone, where
+     isConnected is false for every node, so it would remove nothing at all. */
+  var budget=proseIn(root)*0.25;
+  root.querySelectorAll('*').forEach(function(n){
+    var id=((n.getAttribute('id')||'')+' '+(n.getAttribute('class')||'')).trim();
+    if(!id||!JUNK.test(id))return;
+    if(proseIn(n)>=budget)return;
+    n.remove();
+  });
+}
+
+function extractArticle(html,base){
+  var doc=new DOMParser().parseFromString(html,'text/html');
+  var canonical=doc.querySelector('link[rel="canonical"]');
+  var ld=jsonLd(doc);
+  var info={
+    title:metaOf(doc,['og:title','twitter:title'])||(ld.headline||'').trim()||txt(doc.querySelector('h1'))||(doc.title||'').trim(),
+    site:metaOf(doc,['og:site_name'])||host(base),
+    author:byline(doc,ld),
+    published:metaOf(doc,['article:published_time','datePublished','og:published_time'])
+      ||(typeof ld.datePublished==='string'?ld.datePublished:'')
+      ||(doc.querySelector('time[datetime]')&&doc.querySelector('time[datetime]').getAttribute('datetime'))||'',
+    lead:metaOf(doc,['og:image','twitter:image']),
+    url:(canonical&&canonical.getAttribute('href'))||base,
+    blocks:[]
+  };
+  if(info.lead)info.lead=absolute(info.lead,base);
+
+  var root=pickRoot(doc);
+  if(!root)return info;
+  root=root.cloneNode(true);
+  scrub(root);
+
+  var seen={},out=[];
+  root.querySelectorAll(BLOCK).forEach(function(node){
+    /* Only the outermost of a nest — a <p> inside a <figure> is the caption. */
+    if(node.tagName!=='FIGURE'&&node.closest&&node.closest('figure'))return;
+    var tag=node.tagName.toLowerCase();
+    if(tag==='img'){
+      var s=imgSrc(node,base);
+      if(s&&!seen['i'+s]){seen['i'+s]=1;out.push({t:'img',src:s,cap:(node.getAttribute('alt')||'').trim()})}
+      return;
+    }
+    if(tag==='figure'){
+      var im=node.querySelector('img'),s2=im&&imgSrc(im,base),cap=txt(node.querySelector('figcaption'));
+      if(s2&&!seen['i'+s2]){seen['i'+s2]=1;out.push({t:'img',src:s2,cap:cap})}
+      return;
+    }
+    if(tag==='ul'||tag==='ol'){
+      var items=[];
+      node.querySelectorAll(':scope > li').forEach(function(li){var t=txt(li);if(t)items.push(t)});
+      if(items.length)out.push({t:'list',items:items,ordered:tag==='ol'});
+      return;
+    }
+    var t=txt(node);
+    if(!t||t.length<2)return;
+    if(BOILER.test(t))return;
+    if(seen['t'+t])return;
+    seen['t'+t]=1;
+    if(tag==='p'||tag==='pre'){
+      if(t.length<25&&node.querySelectorAll('a').length)return;   /* a short link is furniture */
+      out.push({t:tag==='pre'?'pre':'p',text:t});
+    }else if(tag==='blockquote'){
+      out.push({t:'quote',text:t});
+    }else{
+      out.push({t:'h',text:t});
+    }
+  });
+  while(out.length&&out[out.length-1].t==='h')out.pop();   /* a trailing heading heads nothing */
+  info.blocks=out;
+  return info;
+}
+
+/* ============================ feeds ============================ */
 
 function renderManage(){
   setStatus('');
   var W=el('wrap');
   W.innerHTML='<div class="manage"><h2>Add a feed</h2>'+
     '<div class="row"><input id="fname" placeholder="Name"><input id="furl" placeholder="https://…/rss"></div>'+
-    '<div class="row" style="margin-top:8px"><button onclick="addFeed()" style="flex:1;padding:11px;border-radius:9px">Add RSS feed</button></div>'+
+    '<div class="row" style="margin-top:8px"><button id="addbtn" style="flex:1;padding:11px;border-radius:9px">Add RSS feed</button></div>'+
     '<h2 style="margin-top:20px">Your feeds</h2><div id="feeds"></div>'+
-    '<p style="font-size:12px;opacity:.5">Paste any site’s RSS/Atom feed URL. Many sites have one at /rss or /feed.</p></div>';
+    '<p style="font-size:12px;color:var(--dim)">Paste any site’s RSS or Atom feed URL — most have one at /rss or /feed.</p></div>';
+  el('addbtn').onclick=addFeed;
   var F=el('feeds');
-  if(!custom.length)F.innerHTML='<p style="opacity:.5;font-size:14px">None yet.</p>';
+  if(!custom.length)F.innerHTML='<p style="color:var(--dim);font-size:14px">None yet.</p>';
   custom.forEach(function(c,i){
     var r=document.createElement('div');r.className='feedrow';
-    r.innerHTML='<b>'+escapeHtml(c.name)+'</b><span class="u">'+escapeHtml(c.url)+'</span><span class="x">✕</span>';
+    r.innerHTML='<b>'+esc(c.name)+'</b><span class="u">'+esc(c.url)+'</span><button class="x" aria-label="Remove">✕</button>';
     r.querySelector('.x').onclick=function(){custom.splice(i,1);saveCustom();renderManage();renderTabs()};
     F.appendChild(r);
   });
@@ -142,10 +608,18 @@ function addFeed(){
   setStatus('');custom.push({name:n,url:u});saveCustom();renderManage();renderTabs();
 }
 function saveCustom(){store.setItem('feeds',JSON.stringify(custom))}
-function escapeHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 
-store.getItem('feeds').then(function(v){
-  if(v)try{custom=JSON.parse(v)||[]}catch(e){}
+el('refresh').onclick=function(){
+  var t=tabs()[active];
+  if(t.manage)return;
+  feedCache={};artCache={};
+  haptic('light');
+  load(t.url,t.name,true);
+};
+
+Promise.all([store.getItem('feeds'),store.getItem('readSize')]).then(function(v){
+  if(v[0])try{custom=JSON.parse(v[0])||[]}catch(e){}
+  if(v[1])setRead(parseInt(v[1],10)||17);
   route();
 });
 </script></body></html>

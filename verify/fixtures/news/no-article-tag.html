@@ -1,0 +1,17 @@
+<!doctype html><html><head><meta charset="utf-8">
+<title>No article tag — divs all the way down</title>
+<meta property="og:site_name" content="Shape Daily">
+</head><body>
+<div id="page">
+  <div class="masthead"><p><a href="/">Shape Daily</a> — the paper of record for made-up places</p></div>
+  <div class="sidebar"><p><a href="/x">Most read: the thing everyone clicked on</a></p><p><a href="/y">Trending: another thing entirely</a></p></div>
+  <div class="content-well"><div class="story">
+    <h1>An old-fashioned page with no semantic markup at all</h1>
+    <p>Some sites still ship a page built entirely from unnamed divs, with nothing an extractor can key on except the shape of the prose itself.</p>
+    <p>That is the case this fixture covers: no article element, no itemprop, no role, just a well of text surrounded by navigation.</p>
+    <p>A density score handles it, because the well contains almost nothing but paragraphs while the page around it is mostly links.</p>
+    <p>If the scoring ever regresses to keying on tag names, this is the fixture that will notice before anybody's phone does.</p>
+  </div></div>
+  <div class="footer-nav"><p><a href="/about">About</a></p><p><a href="/terms">Terms</a></p></div>
+</div>
+</body></html>

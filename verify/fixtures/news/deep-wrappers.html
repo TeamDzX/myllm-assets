@@ -1,0 +1,52 @@
+<!doctype html><html><head><meta charset="utf-8">
+<title>Deep wrappers — the BBC shape</title>
+<meta property="og:title" content="Spies, strategies and missed opportunities">
+<meta property="og:site_name" content="Shape News">
+<meta property="og:image" content="/img/lead.jpg">
+<!-- The byline exists ONLY here. No meta tag, no class name carries it: this is
+     what the BBC actually does, and why the extractor must read JSON-LD. -->
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"NewsArticle",
+ "headline":"Spies, strategies and missed opportunities",
+ "datePublished":"2026-09-10T23:21:00.476Z",
+ "author":[{"@type":"Person","name":"Frank Gardner"}]}
+</script>
+</head><body>
+<header class="site-header"><nav><a href="/">Home</a> <a href="/uk">UK</a> <a href="/world">World</a></nav></header>
+<article class="ArticleWrapper">
+  <div class="Stack">
+    <!-- Every THREE paragraphs get their own container, six levels below
+         <article>. Parent/grandparent scoring credits the real root with
+         nothing, so each little wrapper wins on its own three. -->
+    <div class="Wrap"><div class="ComponentWrapper"><div class="Spacer"><div><div class="RichTextContainer">
+      <p>The first duty of a government, countless leaders over the decades have said, is to safeguard its population and to do so without fear or favour.</p>
+      <p>On 11 September 2001 the United States manifestly failed to do that, and the consequences reshaped a generation of policy.</p>
+      <p>The intelligence was there, scattered across agencies that did not speak to one another, yet nobody joined up the dots in time.</p>
+    </div></div></div></div></div>
+    <!-- Relative src on purpose: the extractor must resolve it against the
+         article URL. It will never LOAD in a harness with no network, so the
+         second figure below carries an inline pixel that does, and the two
+         together separate "did not extract" from "did not load". -->
+    <figure><img src="/img/towers.jpg" alt="Smoke over the skyline"><figcaption>Smoke over the skyline that morning</figcaption></figure>
+    <figure><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="A chart of the budget"><figcaption>Budgets, before and after</figcaption></figure>
+    <div class="Wrap"><div class="ComponentWrapper"><div class="Spacer"><div><div class="RichTextContainer">
+      <h2>What changed afterwards</h2>
+      <p>Budgets tripled, agencies were merged, and a whole architecture of surveillance was built in under three years.</p>
+      <p>Whether any of it would have stopped the plot itself remains the question nobody in the building likes being asked.</p>
+      <p>Two decades on, the same structural problem recurs in a different shape, with different agencies failing to share.</p>
+    </div></div></div></div></div>
+    <div class="Wrap"><div class="ComponentWrapper"><div class="Spacer"><div><div class="RichTextContainer">
+      <ul><li>Budgets tripled within three years of the attacks</li><li>Sixteen agencies were folded into one department</li></ul>
+      <p>The lesson, if there is one, is that collection was never the constraint — analysis and the willingness to act on it were.</p>
+      <p>Are you personally affected by the issues raised in this story?</p>
+    </div></div></div></div></div>
+  </div>
+</article>
+<!-- Furniture that must not reach the reader. -->
+<aside class="related-stories"><h2>Related stories</h2>
+  <p><a href="/a">Analysis: what the review actually found</a></p>
+  <p><a href="/b">The agencies that were merged, and what happened next</a></p>
+</aside>
+<div class="newsletter-signup"><p>Sign up for our morning briefing and get the day's headlines before breakfast, every weekday.</p></div>
+<footer class="site-footer"><p>Copyright 2026 Shape News. All rights reserved worldwide.</p></footer>
+</body></html>

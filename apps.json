@@ -1158,8 +1158,8 @@
       "id": "news-feed",
       "name": "News",
       "emoji": "📰",
-      "tagline": "Headlines by topic, live",
-      "description": "A live news reader: switch between Top, World, UK, Tech, Business, Science and Sport in the header, tap a story to expand it or open the full article. Add any site's own RSS feed too. Needs app network access (on by default; toggle in Settings).",
+      "tagline": "Headlines, and the whole story",
+      "description": "A live news reader that also reads the article to you — tap a headline and the full story opens inside the app: text, pictures, headings and byline, in a clean reader with adjustable type, not a 300-character RSS blurb. The page is fetched and reduced to prose on your own device, so nothing about what you read leaves the phone. The original is always one tap away, and when a publisher won't let an app read its pages the app says so plainly instead of failing. Switch between Top, World, UK, Tech, Business, Science and Sport, or add any site's own RSS feed. Needs app network access (on by default; toggle in Settings).",
       "tags": [
         "news",
         "network"
@@ -1167,13 +1167,13 @@
       "category": "News & Web",
       "iconSymbol": "newspaper.fill",
       "iconColor": "red",
-      "version": 4,
+      "version": 5,
       "featured": true,
       "requiresAI": false,
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/news-feed.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@00e8001b4a32b6d62b6d9c4fd4056b2b3d17f92a/apps-src/news-feed.html",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@00e8001b4a32b6d62b6d9c4fd4056b2b3d17f92a/apps-src/news-feed.myllmapp",
-      "sizeKB": 8,
+      "sizeKB": 28,
       "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/icons/news-feed.jpg"
     },
     {
