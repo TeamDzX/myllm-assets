@@ -105,7 +105,14 @@ var cwd = '';            /* current directory, '' = workspace root */
 var TRASH = '.trash';    /* where rm puts things; hidden from ls unless -a or you cd into it */
 var undoStack = [];      /* this session's reversible changes, newest last */
 var lastSnap = null;     /* most recent listing, for completion chips */
-var VERBS = ['ls','tree','cat','head','tail','stat','find','grep','history','du','mkdir','mv','write','rm','rmdir','undo','revert','trash','restore','cd','pwd','clear','help'];
+var stdin = null;        /* text piped into the next stage of a pipeline */
+var aliases = {};        /* name -> expansion, kept in myllmStorage */
+var store = window.myllmStorage || null;
+var HISTORY_KEY = 'shell.history', ALIAS_KEY = 'shell.aliases';
+var RC = '.shellrc';     /* optional startup script, in the workspace root */
+var ASK_MAX = 8000;      /* how much material one `ask` may carry; a small on-device model has a small window */
+var VERBS = ['ls','tree','cat','head','tail','stat','find','grep','history','du','ask','dictate','open','share','mkdir','mv','write','rm','rmdir','undo','revert','trash','restore','alias','unalias','cd','pwd','clear','help'];
+var KNOWN = VERBS.concat(['dir']);   /* everything the switch below answers to */
 function inTrash(path){ return path === TRASH || path.indexOf(TRASH + '/') === 0; }
 
 /* The APP may be stateful — you are standing somewhere. The assistant's
@@ -142,41 +149,87 @@ async function paintPrompt(){
   }
 }
 
+/* Two lines an entry, not one padded to a column. The old shape assumed a
+   terminal ~78 characters wide; this one is ~44 on a phone, so every line wrapped
+   and the list read as rubble. A command and its description, each on its own
+   line, never wraps raggedly however long the description gets. */
 var HELP = [
-  'ls [-R] [path]     list a folder (-R for the whole tree)',
-  'tree [path]        same as ls -R',
-  'cat <path>         print a file',
-  'head [-n N] <path> first N lines (default 20)',
-  'tail [-n N] <path> last N lines',
-  'stat <path>        size, modified, type',
-  'find <glob>        match filenames, e.g. find *.json',
-  'grep <text> [path] search inside files (add -l for names only)',
-  'du                 space used per folder',
-  'mkdir <path>       create a folder',
-  'mv <from> <to>     move or rename (-f to replace an existing file)',
-  'rm <path>          move a file to .trash  (rm -p deletes for good, asks first)',
-  'rmdir <path>       move a folder to .trash (rmdir -p deletes for good)',
-  'undo               reverse the last change: rm, rmdir, mv, write, mkdir, revert',
-  'history <path>     previous versions, kept on every overwrite or delete',
-  'revert <path> [N]  put version N back (1 = newest); undo reverses it',
-  'trash              what is in .trash;  trash empty  deletes it all (asks)',
-  'restore <path>     put something back from .trash',
-  'write <path>       type a line into a file (replaces it)',
-  'cd <path>          change directory (cd .. to go up); ls -a shows .trash',
-  'clear              clear the screen',
-  'help               this list',
+  ['ls [-R] [path]', 'list a folder (-R for the whole tree)'],
+  ['tree [path]', 'same as ls -R'],
+  ['cat <path>', 'print a file'],
+  ['head [-n N] <path>', 'the first N lines (default 20)'],
+  ['tail [-n N] <path>', 'the last N lines'],
+  ['stat <path>', 'size, modified, type'],
+  ['find <glob>', 'match filenames, e.g. find *.json'],
+  ['grep <text> [path]', 'search inside files (-l for names)'],
+  ['du', 'space used per folder'],
   '',
-  'Anything else is a question for MyLLM. It can run the read-only commands',
-  'above to answer, and will ask before changing anything.'
-].join('\n');
+  ['ask "<question>"', 'ask MyLLM; pipe a file in to work on it'],
+  ['dictate', 'speak instead of typing'],
+  ['open <path>', 'open the file in another app'],
+  ['share <path>', 'send the file out through iOS'],
+  '',
+  ['a | b', 'send a\'s output into b'],
+  ['', 'cat, head, tail, grep, ask all read one'],
+  ['> <path>', 'put the output in a file'],
+  ['>> <path>', 'add it to the end of one instead'],
+  '',
+  ['mkdir <path>', 'create a folder'],
+  ['mv <from> <to>', 'move or rename (-f replaces)'],
+  ['write <path> <text>', 'replace a file with that text'],
+  ['rm <path>', 'move a file to .trash'],
+  ['rmdir <path>', 'move a folder to .trash'],
+  ['rm -p / rmdir -p', 'delete for good; asks first'],
+  ['undo', 'reverse your last change'],
+  ['trash', 'what is in .trash'],
+  ['restore <path>', 'put something back from .trash'],
+  ['trash empty', 'delete all of it for good; asks first'],
+  ['history <path>', 'previous versions of a file'],
+  ['revert <path> [N]', 'put version N back (1 = newest)'],
+  '',
+  ['history', 'the commands you have typed'],
+  ['!!', 'run the last one again'],
+  ['!5   !gr', 'number 5, or the last one starting gr'],
+  ['alias ll "ls -R"', 'make a shortcut'],
+  ['alias / unalias ll', 'list them / remove one'],
+  ['.shellrc', 'its lines run when Shell opens'],
+  ['cd <path>', 'change directory (cd .. goes up)'],
+  ['ls -a', 'show .trash too'],
+  ['clear', 'clear the screen'],
+  ['help', 'this list'],
+  '',
+  'Anything else is a question for MyLLM. It',
+  'can run the read-only commands above to',
+  'answer, and asks before changing anything.',
+  '',
+  'Try:',
+  'cat notes.md | ask "sum this up" > out.md'
+];
+function helpHTML(){
+  return HELP.map(function(row){
+    if (typeof row === 'string') return row ? '<span class="dim">' + esc(row) + '</span>' : '';
+    return '<span class="cmd">' + esc(row[0]) + '</span>\n<span class="dim">   ' + esc(row[1]) + '</span>';
+  }).join('\n');
+}
+
 
 function esc(s){ return String(s==null?'':s)
   .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
-var capture = null;   /* when set, print() also collects text for the agent loop */
+/* capture: when set, print() also COLLECTS text — for the agent loop, and for
+   each stage of a pipeline. quiet: and does not put it on screen, which is what
+   makes `cat big.md | ask "summarise"` show the summary and not the file. */
+var capture = null;
+var quiet = false;
+var captureHadError = false;   /* did this capture print anything in red? */
+var lastCaptureError = false;  /* ...read by the caller straight after captureOf */
 
 function print(text, cls){
-  if (capture !== null) capture.push(String(text));
+  if (capture !== null){
+    capture.push(String(text));
+    if (cls === 'err') captureHadError = true;
+  }
+  if (quiet) return;
   var d = document.createElement('div');
   if (cls) d.className = cls;
   d.innerHTML = esc(text);
@@ -185,11 +238,21 @@ function print(text, cls){
 }
 function printHTML(html){
   if (capture !== null) capture.push(html.replace(/<[^>]+>/g, ''));
+  if (quiet) return;
   var d = document.createElement('div');
   d.innerHTML = html;
   out.appendChild(d);
   out.scrollTop = out.scrollHeight;
 }
+/* On screen only: never captured, never piped, removable. For "asking\u2026",
+   which belongs to the person watching and not to the file being written. */
+function status(text){
+  var d = document.createElement('div');
+  d.className = 'dim'; d.textContent = text;
+  out.appendChild(d); out.scrollTop = out.scrollHeight;
+  return d;
+}
+function unstatus(d){ if (d && d.parentNode) d.parentNode.removeChild(d); }
 function haptic(k){ try{ window.myllmHaptic && myllmHaptic(k); }catch(e){} }
 
 /* ---------- helpers that mirror the tool ---------- */
@@ -216,6 +279,211 @@ function normalise(p){
 }
 
 function bytes(n){ return n < 1024 ? n + 'B' : (n/1024).toFixed(1) + 'K'; }
+
+/* ---------- the line, before it is a command ----------
+   A pipeline is split here rather than in run(), so every command stays a
+   command: it reads stdin if there is any, prints as it always did, and knows
+   nothing about where its output is going. */
+
+function restOf(line){
+  var t = String(line || '').trim();
+  var sp = t.search(/\s/);
+  return sp < 0 ? '' : t.slice(sp + 1).trim();
+}
+function unquote(s){
+  var t = String(s || '').trim(), a = t.charAt(0);
+  if (t.length > 1 && (a === '"' || a === "'") && t.charAt(t.length - 1) === a) return t.slice(1, -1);
+  return t;
+}
+/* Models fence their output even when told not to; a fence in a saved file is
+   the kind of thing you only notice a week later. */
+function stripFence(t){
+  var s2 = String(t || '').trim();
+  if (s2.indexOf('```') !== 0) return s2;
+  s2 = s2.replace(/^```[a-z]*\s*\n?/i, '');
+  var end = s2.lastIndexOf('```');
+  return (end >= 0 ? s2.slice(0, end) : s2).trim();
+}
+
+/* `a | b > c` -> { stages:['a','b'], redirect:{path:'c', append:false} }
+   Quotes are respected, so  grep "a > b"  is a search and not a redirect. */
+function splitPipeline(line){
+  var stages = [], cur = '', q = null, redirect = null;
+  var text = String(line || '');
+  for (var i = 0; i < text.length; i++){
+    var c = text.charAt(i);
+    if (q){ cur += c; if (c === q) q = null; continue; }
+    if (c === '"' || c === "'"){ q = c; cur += c; continue; }
+    if (c === '|'){ stages.push(cur); cur = ''; continue; }
+    if (c === '>'){
+      var append = text.charAt(i + 1) === '>';
+      redirect = { path: unquote(text.slice(i + (append ? 2 : 1)).trim()), append: append };
+      break;
+    }
+    cur += c;
+  }
+  stages.push(cur);
+  stages = stages.map(function(x){ return x.trim(); }).filter(function(x){ return x.length; });
+  return { stages: stages, redirect: redirect };
+}
+
+/* One pass only: an alias that expands to another alias is a loop waiting to
+   happen, and nobody needs two levels on a phone. */
+function expandAlias(stage){
+  var first = (tokenize(stage)[0] || '').toLowerCase();
+  if (!Object.prototype.hasOwnProperty.call(aliases, first)) return stage;
+  var rest = restOf(stage);
+  return aliases[first] + (rest ? ' ' + rest : '');
+}
+
+/* Only a line that STARTS with a command is parsed as a pipeline. "which files
+   are > 1 kB?" is a sentence, and splitting it on the > would quietly eat it. */
+function isCommandLine(line){
+  var first = (tokenize(line)[0] || '').toLowerCase();
+  if (!first) return false;
+  if (first.charAt(0) === '!') return true;
+  return KNOWN.indexOf(first) >= 0 || Object.prototype.hasOwnProperty.call(aliases, first);
+}
+
+/* Every stage read-only, and nothing being written to a file. Both callers run
+   without anyone typing y — the agent, and .shellrc at launch — so a redirect
+   has to count as a mutation here even though every verb in it is read-only. */
+function unsafeReason(line, allowed){
+  var pl = splitPipeline(line);
+  if (pl.redirect) return 'writing to a file with > or >> is a change — propose it instead';
+  if (!pl.stages.length) return 'empty command';
+  for (var i = 0; i < pl.stages.length; i++){
+    var v = (tokenize(expandAlias(pl.stages[i]))[0] || '').toLowerCase();
+    if (allowed.indexOf(v) < 0) return 'only ' + allowed.join(', ') + ' may run without asking';
+  }
+  return null;
+}
+
+/* Run something with its output collected instead of (or as well as) shown.
+   Saves and restores, so a pipeline inside the agent loop nests correctly. */
+async function captureOf(fn, silent){
+  var savedCap = capture, savedQuiet = quiet, savedErr = captureHadError;
+  capture = []; quiet = !!silent; captureHadError = false;
+  try { await fn(); }
+  catch(e){ capture.push('error: ' + (e && e.message || e)); captureHadError = true; }
+  var text = capture.join('\n');
+  lastCaptureError = captureHadError;
+  capture = savedCap; quiet = savedQuiet; captureHadError = savedErr;
+  return text;
+}
+function runner(stage){ return function(){ return run(stage); }; }
+
+function mimeFor(name){
+  var n = String(name).toLowerCase(), dot = n.lastIndexOf('.');
+  var ext = dot > 0 ? n.slice(dot + 1) : '';
+  if (ext === 'json') return 'application/json';
+  if (ext === 'csv') return 'text/csv';
+  if (ext === 'html' || ext === 'htm') return 'text/html';
+  if (ext === 'md' || ext === 'markdown') return 'text/markdown';
+  return 'text/plain';
+}
+/* UTF-8 safe: btoa alone mangles anything above ASCII, and notes have accents
+   and em dashes in them. Chunked so a 5 MB file does not blow the stack. */
+function dataURL(text, mime){
+  var bs = new TextEncoder().encode(String(text == null ? '' : text));
+  var bin = '', CH = 0x8000;
+  for (var i = 0; i < bs.length; i += CH) bin += String.fromCharCode.apply(null, bs.subarray(i, i + CH));
+  return 'data:' + mime + ';base64,' + btoa(bin);
+}
+
+/* ---------- what persists between sessions (myllmStorage, not the workspace) ----------
+   History and aliases are the shell's own memory, not the user's documents, so
+   they live in per-app storage where they cannot clutter a file listing. */
+async function loadState(){
+  if (!store) return;
+  try {
+    var h = await store.getItem(HISTORY_KEY);
+    if (h){ var arr = JSON.parse(h); if (Array.isArray(arr)) cmdHistory = arr.slice(-200); }
+  } catch(e){}
+  try {
+    var a = await store.getItem(ALIAS_KEY);
+    if (a){ var obj = JSON.parse(a); if (obj && typeof obj === 'object') aliases = obj; }
+  } catch(e){}
+  hIndex = cmdHistory.length;
+}
+/* Written on every command rather than debounced: a command is something a
+   person typed, not a per-frame event, and a debounce only buys the chance to
+   lose the last one when the app is closed straight after running it. */
+function saveHistory(){
+  if (!store) return;
+  try { store.setItem(HISTORY_KEY, JSON.stringify(cmdHistory.slice(-200))); } catch(e){}
+}
+function saveAliases(){
+  if (!store) return;
+  try { store.setItem(ALIAS_KEY, JSON.stringify(aliases)); } catch(e){}
+}
+
+/* !! / !5 / !gr — resolved before the line is echoed, so what you see in the
+   scrollback and what goes into history is the command that actually ran. */
+function expandBang(line){
+  if (line.charAt(0) !== '!') return line;
+  var rest = line.slice(1);
+  if (!rest || rest === '!') return cmdHistory.length ? cmdHistory[cmdHistory.length - 1] : null;
+  if (/^\d+$/.test(rest)) return cmdHistory[parseInt(rest, 10) - 1] || null;
+  for (var i = cmdHistory.length - 1; i >= 0; i--)
+    if (cmdHistory[i].toLowerCase().indexOf(rest.toLowerCase()) === 0) return cmdHistory[i];
+  return null;
+}
+
+/* .shellrc: the lines that run when Shell opens. Nobody is at the prompt yet,
+   so it is held to the same bar as the agent — look around, set up, change
+   nothing. A rm in a startup file would run before you could stop it. */
+var RC_SAFE = ['cd','alias','unalias','clear','ls','dir','tree','pwd','du','cat','head','tail','stat','find','grep','history'];
+async function runRC(){
+  var text = null;
+  try { text = await files.read(RC); } catch(e){}
+  if (text == null) return;
+  var lines = text.split('\n'), ran = 0;
+  for (var i = 0; i < lines.length; i++){
+    var l = lines[i].trim();
+    if (!l || l.charAt(0) === '#') continue;
+    var why = unsafeReason(l, RC_SAFE);
+    if (why){ print(RC + ':' + (i + 1) + ': skipped — ' + why, 'err'); continue; }
+    try { await runLine(l); } catch(e){ print(RC + ':' + (i + 1) + ': ' + (e && e.message || e), 'err'); }
+    if (++ran >= 20){ print(RC + ': stopped after 20 lines', 'dim'); break; }
+  }
+}
+
+/* ---------- a line, end to end ---------- */
+async function runLine(line){
+  var text = String(line || '').trim();
+  if (!text) return;
+  if (!isCommandLine(text)){ stdin = null; return run(text); }
+
+  var pl = splitPipeline(text);
+  if (!pl.stages.length) return;
+  if (pl.redirect && !pl.redirect.path) return print('> needs a file name, e.g.  ls > list.txt', 'err');
+
+  var piped = null;
+  for (var i = 0; i < pl.stages.length; i++){
+    var stage = expandAlias(pl.stages[i]);
+    stdin = piped;
+    /* The last stage of a plain pipeline prints for itself — in colour, with
+       its paths still tappable. Only what is on its way to a file is captured. */
+    if (i === pl.stages.length - 1 && !pl.redirect) return run(stage);
+    piped = await captureOf(runner(stage), true);
+    if (lastCaptureError){ print(piped, 'err'); return; }   /* a failed stage never reaches a file */
+  }
+
+  var dest = resolve(pl.redirect.path);
+  if (!dest) return print('> needs a file name, e.g.  ls > list.txt', 'err');
+  var body = piped == null ? '' : piped;
+  var added = body.length;
+  var prev = await files.read(dest);
+  if (pl.redirect.append && prev != null && prev.length)
+    body = prev + (prev.charAt(prev.length - 1) === '\n' ? '' : '\n') + body;
+  await files.write(dest, body);
+  remember({ type: 'write', path: dest, prev: prev });
+  haptic('success');
+  print((pl.redirect.append ? 'appended ' : 'wrote ') + added + ' chars to ' + dest +
+        (prev != null && !pl.redirect.append ? ' (replaced ' + prev.length + ')' : '') +
+        '  —  undo  puts it back', 'ok');
+}
 
 function when(ms){
   var d = new Date(ms);
@@ -274,6 +542,9 @@ function pathHTML(p, label){ return '<span class="path" data-path="' + esc(p) + 
 
 async function run(line){
   if (!files){ print('Shared files are off. Turn on "Shared files" in MyLLMos settings.', 'err'); return; }
+  /* Taken and cleared in one go: whatever this command does next — including
+     running another command — must not inherit the text piped into this one. */
+  var sin = stdin; stdin = null;
   var argv = tokenize(line);
   var verb = (argv.shift()||'').toLowerCase();
 
@@ -288,7 +559,7 @@ async function run(line){
   var snap = await snapshot(!!flags.a);
 
   switch (verb){
-    case 'help': print(HELP, 'dim'); return;
+    case 'help': printHTML(helpHTML()); return;
     case 'clear': out.innerHTML = ''; return;
     case 'pwd': print('/' + cwd, 'dim'); return;
 
@@ -303,9 +574,13 @@ async function run(line){
       return listing(snap, target, verb === 'tree' || flags.R || flags.r);
 
     case 'cat': case 'head': case 'tail': {
-      if (!target) return print(verb + ' needs a path', 'err');
-      var text = await files.read(target);
-      if (text == null) return print('No such file: ' + target, 'err');
+      var text;
+      if (sin != null && !ops.length) text = sin;          /* ... | head -n 5 */
+      else {
+        if (!target) return print(verb + ' needs a path', 'err');
+        text = await files.read(target);
+        if (text == null) return print('No such file: ' + target, 'err');
+      }
       if (verb === 'cat') return print(text);
       var lines = text.split('\n');
       print((verb === 'head' ? lines.slice(0, n) : lines.slice(-n)).join('\n'));
@@ -339,6 +614,17 @@ async function run(line){
          not; -l lists matching files only. Scope with a folder or file path. */
       if (!ops[0]) return print('grep needs some text, e.g. grep dentist  or  grep -l invoice notes', 'err');
       var needle = ops[0].toLowerCase();
+      /* Piped in: there are no files here, just lines. */
+      if (sin != null && ops.length < 2){
+        var sl = sin.split('\n'), keep = [];
+        for (var si = 0; si < sl.length; si++){
+          var sLower = sl[si].toLowerCase(), sAt = sLower.indexOf(needle);
+          if (sAt < 0) continue;
+          keep.push(esc(sl[si].slice(0, sAt)) + '<b>' + esc(sl[si].slice(sAt, sAt + needle.length)) + '</b>' + esc(sl[si].slice(sAt + needle.length)));
+        }
+        if (!keep.length) return print('No match for "' + ops[0] + '"', 'dim');
+        return printHTML(keep.join('\n'));
+      }
       var scope = ops[1] ? resolve(ops[1]) : cwd;
       var pool = snap.files.filter(function(f){ return !scope || f.path === scope || f.path.indexOf(scope + '/') === 0; });
       if (!pool.length) return print('Nothing to search in ' + (scope || 'the workspace'), 'dim');
@@ -375,6 +661,103 @@ async function run(line){
         .map(function(d){ return bytes(byDir[d]) + '\t' + d; });
       var total = snap.files.reduce(function(a,b){ return a + b.size; }, 0);
       return print(rows.concat([bytes(total) + '\ttotal of 25 MB']).join('\n'));
+    }
+
+    /* ---- the model as a filter, and the phone as an input device ---- */
+
+    case 'ask': {
+      /* The agent (anything that is not a command) EXPLORES: it runs commands
+         and decides what to do next. This verb TRANSFORMS: one call, no tools,
+         whatever came down the pipe as its material, and the answer is just
+         text — so it can be piped onward or redirected into a file. */
+      if (!window.myllmAsk) return print('AI is off for apps — turn on "Allow apps to use the AI" in MyLLMos settings.', 'err');
+      var q = unquote(restOf(line));
+      if (!q && sin == null) return print('ask "a question"  —  or pipe something in:  cat notes.md | ask "summarise"', 'err');
+      var material = sin;
+      var clipped = false;
+      if (material != null && material.length > ASK_MAX){ material = material.slice(0, ASK_MAX); clipped = true; }
+      var prompt = material != null
+        ? (q || 'Summarise this.') + '\n\n--- material ---\n' + material + (clipped ? '\n[truncated]' : '')
+        : q;
+      var spin = status('asking\u2026');
+      var answer;
+      try { answer = await myllmAsk(prompt, { system: FILTER_SYSTEM }); }
+      catch(e){ unstatus(spin); return print('ask failed: ' + (e && e.message || e), 'err'); }
+      unstatus(spin);
+      var clean = stripFence(String(answer == null ? '' : answer));
+      if (!clean) return print('(no answer)', 'dim');
+      if (clipped) print('[used the first ' + ASK_MAX + ' characters]', 'dim');
+      return print(clean, 'say');
+    }
+
+    case 'dictate': {
+      /* Typing at a prompt is the worst thing about a terminal on a phone.
+         No path argument: it prints, and  >  is how anything gets saved. */
+      if (!window.myllmTranscribe) return print('Dictation needs a newer MyLLM build.', 'err');
+      var heard;
+      try { heard = await myllmTranscribe(); }
+      catch(e){ return print('dictation failed: ' + (e && e.message || e), 'err'); }
+      if (heard == null || !String(heard).trim()) return print('nothing heard', 'dim');
+      haptic('success');
+      return print(String(heard).trim());
+    }
+
+    case 'open': {
+      /* The intent bus, with the same action name the Files app uses, so Shell
+         reaches exactly the apps that already declare they can take text. */
+      if (!ops.length) return print('open <path>  — hands the file to an app that can open text', 'err');
+      if (!snap.files.some(function(x){ return x.path === target; })) return print('No such file: ' + target, 'err');
+      var body = await files.read(target);
+      if (body == null) return print('Cannot read ' + target + ' — Shell handles text files.', 'err');
+      if (!window.myllmIntent) return print('Handing files to other apps needs a newer MyLLM build.', 'err');
+      var oName = target.split('/').pop(), oDot = oName.lastIndexOf('.');
+      try {
+        var routed = await myllmIntent.send('open-text', {
+          name: oName, path: target, ext: oDot > 0 ? oName.slice(oDot + 1).toLowerCase() : '', text: body
+        });
+        haptic('success');
+        return print('opened ' + oName + (routed && routed.handlers > 1 ? ' — pick an app' : ''), 'ok');
+      } catch(e){
+        /* Nothing installed takes text yet. An error here would read as broken
+           rather than un-adopted, so do the useful thing instead. */
+        print('No installed app can open text yet — here it is instead.', 'dim');
+        return print(body);
+      }
+    }
+
+    case 'share': {
+      if (!ops.length) return print('share <path>  — sends the file out through iOS', 'err');
+      var sBody = await files.read(target);
+      if (sBody == null) return print('No such file: ' + target, 'err');
+      if (!window.myllmShareFile) return print('Sharing needs a newer MyLLM build.', 'err');
+      var sName = target.split('/').pop(), sMime = mimeFor(sName);
+      try { await myllmShareFile(dataURL(sBody, sMime), { filename: sName, mime: sMime }); }
+      catch(e){ return print('share failed: ' + (e && e.message || e), 'err'); }
+      haptic('success');
+      return print('shared ' + sName, 'ok');
+    }
+
+    case 'alias': {
+      var aRest = restOf(line);
+      if (!aRest){
+        var names = Object.keys(aliases).sort();
+        if (!names.length) return print('no aliases yet — e.g.  alias ll "ls -R"', 'dim');
+        return print(names.map(function(k){ return k + '\t' + aliases[k]; }).join('\n'));
+      }
+      var aName = (tokenize(aRest)[0] || '').toLowerCase();
+      var aBody = unquote(restOf(aRest));
+      if (!aBody) return print(aliases[aName] ? aName + '\t' + aliases[aName] : 'no alias ' + aName, aliases[aName] ? '' : 'dim');
+      if (KNOWN.indexOf(aName) >= 0) return print(aName + ' is already a command — pick another name', 'err');
+      aliases[aName] = aBody; saveAliases();
+      return print('alias ' + aName + ' -> ' + aBody, 'ok');
+    }
+
+    case 'unalias': {
+      var uName = (ops[0] || '').toLowerCase();
+      if (!uName) return print('unalias <name>', 'err');
+      if (!Object.prototype.hasOwnProperty.call(aliases, uName)) return print('no alias ' + uName, 'dim');
+      delete aliases[uName]; saveAliases();
+      return print('removed alias ' + uName, 'ok');
     }
 
     /* ---- mutations: this is a person at a prompt, so they are allowed ---- */
@@ -456,7 +839,15 @@ async function run(line){
     }
 
     case 'history': {
-      if (!target) return print('history needs a path', 'err');
+      /* No path? Then you meant the other kind of history — the commands you
+         typed. With a path it is the file's own versions, as the native
+         workspace_shell tool spells it, and that meaning does not move. */
+      if (!ops.length){
+        if (!cmdHistory.length) return print('no commands yet', 'dim');
+        var hStart = Math.max(0, cmdHistory.length - 30);
+        print(cmdHistory.slice(hStart).map(function(c, i){ return (hStart + i + 1) + '\t' + c; }).join('\n'));
+        return print('!5 runs number 5, !! runs the last one again', 'dim');
+      }
       if (!files.versions) return print('Version history needs the latest MyLLM build.', 'err');
       var vs = await files.versions(target);
       if (!vs.length) return print('No previous versions of ' + target + ' \u2014 versions are kept from the first overwrite or delete.', 'dim');
@@ -514,7 +905,7 @@ async function run(line){
       /* Not a command? Then it was a question. This is the line that turns a
          terminal into an assistant that happens to live in a directory. */
       print('thinking…', 'dim');
-      return ask(line);
+      return agent(line);
   }
 }
 
@@ -556,8 +947,17 @@ function listing(snap, root, recursive){
    proposal the user has to accept: a model running rm across someone's
    documents unattended is the one outcome worth designing against. */
 
-var READ_ONLY = ['ls','tree','cat','head','tail','stat','find','grep','history','du','pwd'];
+var READ_ONLY = ['ls','dir','tree','cat','head','tail','stat','find','grep','history','du','pwd'];
 var MAX_STEPS = 5;          /* myllmAsk is rate-limited; five is plenty and stays inside it */
+
+/* The system prompt for the `ask` VERB — a filter, not an assistant. Anything
+   it says that is not the answer ends up in the user's file, so say none of it. */
+var FILTER_SYSTEM = [
+  'You are a filter in a command-line pipeline, inside the user\'s file workspace.',
+  'Do exactly what the instruction asks of the material you are given, and output ONLY the result.',
+  'No preamble, no sign-off, no explanation of what you did, no markdown code fences.',
+  'Plain text unless the instruction asks for another format. Never invent material you were not given.'
+].join('\n');
 
 function systemPrompt(listing){
   return [
@@ -568,7 +968,9 @@ function systemPrompt(listing){
     listing || '(empty)',
     '',
     'You may run these READ-ONLY commands: ls [-R] [path], tree [path], cat <path>, head -n N <path>, tail -n N <path>, stat <path>, find <glob>, grep <text> [path] (searches inside files), history <path> (previous versions), du.',
+    'You may pipe them: `a | b` sends a\'s output into b, and cat, head, tail and grep all read what is piped in — e.g. `grep invoice notes | head -n 5`. One pipeline is one step, so prefer it over three separate looks.',
     'Paths are relative to the current directory. There is no cd.',
+    'Writing output to a file with > or >> is a CHANGE: propose it, never run it.',
     '',
     'Reply with ONE JSON object and nothing else:',
     '  {"run":"<command>"}                     to look at something first',
@@ -580,10 +982,9 @@ function systemPrompt(listing){
 }
 
 async function runCaptured(line){
-  capture = [];
-  try { await run(line); } catch(e){ capture.push('error: ' + (e.message || e)); }
-  var text = capture.join('\n');
-  capture = null;
+  /* The agent's steps stay visible on screen (silent: false) — watching it look
+     around is most of why the loop is trustworthy. */
+  var text = await captureOf(function(){ return runLine(line); }, false);
   return text.length > 4000 ? text.slice(0, 4000) + '\n[truncated]' : text;
 }
 
@@ -596,7 +997,7 @@ function parseReply(raw){
   try { return JSON.parse(t.slice(a, b + 1)); } catch(e){ return null; }
 }
 
-async function ask(question){
+async function agent(question){
   if (!window.myllmAsk){
     print('AI is off for apps — turn on "Allow apps to use the AI" in MyLLMos settings.', 'err');
     return;
@@ -627,9 +1028,12 @@ async function ask(question){
     }
     if (reply.run){
       var cmd = String(reply.run).trim();
-      var verb = cmd.split(/\s+/)[0].toLowerCase();
-      if (READ_ONLY.indexOf(verb) < 0){
-        transcript += '\n\nAssistant tried: ' + cmd + '\nBlocked: only ' + READ_ONLY.join(', ') + ' may run automatically. Use "propose" for anything that changes files.';
+      /* Every stage, not just the first verb — and a redirect turns a pipeline
+         of read-only commands into a write, which is exactly the hole worth
+         closing before the model finds it. */
+      var why = unsafeReason(cmd, READ_ONLY);
+      if (why){
+        transcript += '\n\nAssistant tried: ' + cmd + '\nBlocked: ' + why + '. Use "propose" for anything that changes files.';
         continue;
       }
       print('$ ' + cmd, 'step');
@@ -655,7 +1059,7 @@ document.getElementById('form').addEventListener('submit', async function(ev){
     var p = pending; pending = null;
     if (line.toLowerCase() === 'y' || line.toLowerCase() === 'yes'){
       try{
-        if (p.verb === 'raw'){ print('$ ' + p.line, 'cmd'); await run(p.line); }
+        if (p.verb === 'raw'){ print('$ ' + p.line, 'cmd'); await runLine(p.line); }
         else if (p.verb === 'trash-empty') await files.removeFolder(TRASH, true);
         else if (p.verb === 'rm') await files.remove(p.target);
         else await files.removeFolder(p.target, true);
@@ -668,11 +1072,21 @@ document.getElementById('form').addEventListener('submit', async function(ev){
     return;
   }
 
+  /* !! and friends resolve here, so the scrollback and the history both record
+     the command that actually ran rather than the shorthand for it. */
+  if (line.charAt(0) === '!'){
+    var recalled = expandBang(line);
+    if (!recalled){ print(prompt$() + ' \u276f ' + line, 'cmd'); print('no matching command in history', 'err'); renderChips(); return; }
+    line = recalled;
+  }
+
   cmdHistory.push(line); hIndex = cmdHistory.length;
   if (cmdHistory.length > 200) cmdHistory.shift();
+  saveHistory();
   print(prompt$() + ' \u276f ' + line, 'cmd');
-  try { await run(line); }
+  try { await runLine(line); }
   catch(e){ print(String(e && e.message || e), 'err'); }
+  stdin = null;
   paintPrompt();
   renderChips();
 });
@@ -688,7 +1102,20 @@ input.addEventListener('keydown', function(e){
    then names from the folder you are pointing at. A folder completes with a
    trailing slash and keeps going. Empty input shows the usual shortcuts. */
 var chipsEl = document.getElementById('chips');
-var DEFAULT_CHIPS = ['ls','ls -R','grep ','du','trash','help'];
+var DEFAULT_CHIPS = ['ls','ls -R','ask ','grep ','open ','help'];
+var SINKS = ['ask','grep','head','tail','cat'];   /* the commands that read a pipe */
+/* The last | that is not inside quotes. */
+function lastPipe(v){
+  var q = null, at = -1;
+  for (var i = 0; i < v.length; i++){
+    var c = v.charAt(i);
+    if (q){ if (c === q) q = null; continue; }
+    if (c === '"' || c === "'") q = c;
+    else if (c === '|') at = i;
+    else if (c === '>') return at;   /* past a redirect you are naming a file again */
+  }
+  return at;
+}
 
 function chip(label, cls, onTap){
   var b = document.createElement('button');
@@ -713,10 +1140,21 @@ function renderChips(){
   var tokens = tokenize(v);
   var partial = endsWithSpace ? '' : (tokens[tokens.length - 1] || '');
   var head = endsWithSpace ? v : v.slice(0, v.length - partial.length);
-  var firstWord = tokens.length <= 1 && !endsWithSpace;
+  /* Completion follows the STAGE, not the line: after a pipe you are naming a
+     command again, so offering file names there would be offering the one thing
+     that cannot go next. */
+  var pipeAt = lastPipe(v);
+  var stageTokens = tokenize(pipeAt >= 0 ? v.slice(pipeAt + 1) : v);
+  var firstWord = stageTokens.length === 0 || (stageTokens.length === 1 && !endsWithSpace);
   var items = [];
   if (firstWord){
-    VERBS.filter(function(x){ return x.indexOf(partial.toLowerCase()) === 0 && x !== partial; })
+    /* Straight after a pipe, lead with the commands that can actually read one. */
+    if (pipeAt >= 0 && !partial)
+      SINKS.forEach(function(x){ items.push({ label: x, value: x + ' ', cls: 'comp' }); });
+    Object.keys(aliases).sort().filter(function(x){ return x.indexOf(partial.toLowerCase()) === 0 && x !== partial; })
+      .forEach(function(x){ items.push({ label: x, value: x + ' ', cls: 'undo' }); });
+    VERBS.filter(function(x){ return x.indexOf(partial.toLowerCase()) === 0 && x !== partial
+                                     && !(pipeAt >= 0 && !partial && SINKS.indexOf(x) >= 0); })
       .forEach(function(x){ items.push({ label: x, value: x + ' ', cls: '' }); });
   } else if (lastSnap){
     var slash = partial.lastIndexOf('/');
@@ -741,8 +1179,17 @@ function renderChips(){
     });
     if (base && !namePart) items.push({ label: '..', value: dirPart + '../', cls: 'dirc' });
   }
+  /* On a phone | and > live two taps down in the symbol plane, which is enough
+     friction to stop anyone discovering pipelines at all. */
+  if (!firstWord && isCommandLine(v) && !/[|>]/.test(v)){
+    var base = v.replace(/\s+$/, '');
+    items.unshift({ label: '>', value: null, cls: 'undo', raw: base + ' > ' });
+    items.unshift({ label: '|', value: null, cls: 'undo', raw: base + ' | ' });
+  }
+
   items.slice(0, 12).forEach(function(it){
     chipsEl.appendChild(chip(it.label, it.cls, function(){
+      if (it.raw != null) return setInput(it.raw);
       var val = /[\s"']/.test(it.value) ? '"' + it.value + '"' : it.value;
       setInput(head + val);
     }));
@@ -771,8 +1218,19 @@ paintPrompt();
 print('MyLLMos workspace shell. Type  help  for commands.', 'dim');
 print('Anything that is not a command is a question — MyLLM answers it from here,', 'dim');
 print('running the read-only commands itself and asking before it changes anything.', 'dim');
+print('Pipe things about:  cat notes.md | ask "summarise this" > summary.md', 'dim');
 print('rm moves things to .trash and  undo  reverses your last change. Tap any path to use it.', 'dim');
-if (!window.myllmFiles) print('\nShared files are off — turn them on in MyLLMos settings.', 'err');
-else run('ls');
+
+/* History and aliases come back from storage before anything runs, so .shellrc
+   can use an alias it defined last time and !! works on the first line typed. */
+(async function boot(){
+  await loadState();
+  renderChips();
+  if (!window.myllmFiles){ print('\nShared files are off — turn them on in MyLLMos settings.', 'err'); return; }
+  try { await runRC(); } catch(e){ print('.shellrc: ' + (e && e.message || e), 'err'); }
+  await runLine('ls');
+  paintPrompt();
+  renderChips();
+})();
 </script>
 </body></html>
