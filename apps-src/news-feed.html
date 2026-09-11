@@ -59,7 +59,9 @@ h1{font-size:20px;margin:0 0 8px;flex:1}
 .art a{color:var(--accent)}
 .note{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:13px 15px;margin:4px 0 18px;
       font-size:14px;line-height:1.5;color:var(--dim)}
-.open{display:block;text-align:center;background:var(--accent);color:#fff;text-decoration:none;font-weight:600;
+/* .art a is (0,1,1) and would out-specify a bare .open — which paints this
+   label in the accent colour ON the accent colour. Match the specificity. */
+.art a.open{display:block;text-align:center;background:var(--accent);color:#fff;text-decoration:none;font-weight:600;
       padding:14px;border-radius:var(--r);margin-top:26px}
 .skel{height:13px;border-radius:7px;background:var(--line);margin-bottom:11px;animation:pulse 1.3s ease-in-out infinite}
 @keyframes pulse{0%,100%{opacity:.45}50%{opacity:.8}}

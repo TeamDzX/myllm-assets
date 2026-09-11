@@ -156,6 +156,23 @@ await check('the original is one tap away, and leaves for Safari', async () => {
   return ((await a.getAttribute('href')) === 'https://shape.test/deep-wrappers'
        && (await a.getAttribute('target')) === '_top') || 'href: ' + await a.getAttribute('href');
 });
+await check('...and the button can actually be read', async () => {
+  // It said "Open the original" in accent-on-accent for one release: `.art a`
+  // is (0,1,1) and quietly out-specified a bare `.open`. Only a screenshot
+  // caught it, so the contrast is asserted here now.
+  const r = await page.evaluate(() => {
+    const a = document.querySelector('#art a.open');
+    if (!a) return null;
+    const cs = getComputedStyle(a);
+    const rgb = s => (s.match(/\d+/g) || []).slice(0, 3).map(Number);
+    const lum = c => { const [r, g, b] = c.map(v => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; });
+                       return 0.2126 * r + 0.7152 * g + 0.0722 * b; };
+    const L1 = lum(rgb(cs.color)), L2 = lum(rgb(cs.backgroundColor));
+    return { text: a.textContent.trim(), ratio: (Math.max(L1, L2) + 0.05) / (Math.min(L1, L2) + 0.05) };
+  });
+  if (!r) return 'no button';
+  return (r.text.length > 0 && r.ratio >= 3) || `"${r.text}" at contrast ${r.ratio.toFixed(2)}:1`;
+});
 await back();
 await check('back returns to the list', async () =>
   (await page.locator('#reader.on').count()) === 0 || 'reader still open');
