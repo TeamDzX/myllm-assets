@@ -1,0 +1,42 @@
+name: Rotate featured apps
+
+# Every Monday, give three different featured apps the front of the gallery's
+# Featured carousel (rotate_featured.py explains the rule) and log what was at
+# the front in featured-rotation.json. That log is what lets the stats page
+# measure whether the front slots change installs. The script only reorders
+# apps that are already featured; it never adds, removes or edits an entry.
+#
+# The commit carries [skip ci] so it does not trigger verify-apps (which runs
+# on apps.json pushes) — nothing about an app's payload changed. pin-jsdelivr
+# only watches apps-src/, so it is unaffected either way.
+on:
+  schedule:
+    - cron: '0 6 * * 1'   # Mondays 06:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: rotate-featured
+  cancel-in-progress: false
+
+jobs:
+  rotate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Plan and apply this week's rotation
+        run: python3 rotate_featured.py --apply
+
+      - name: Commit if anything changed
+        run: |
+          if git diff --quiet -- apps.json featured-rotation.json; then
+            echo "nothing to commit"; exit 0
+          fi
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add apps.json featured-rotation.json
+          git commit -m "chore: rotate featured apps for $(date -u +%F) [skip ci]"
+          git push
