@@ -81,6 +81,46 @@
   .st .fav{ border:none; background:none; font-size:19px; padding:8px 4px 8px 10px; flex-shrink:0; color:var(--myllm-muted,#8a8a8e); }
   .st .fav.on{ color:#ff453a; }
 
+  /* Playing mode: full-screen now-playing, and the dock */
+  .np .info{ cursor:pointer; }
+  .np .track{ font-size:12.5px; color:var(--myllm-text,#111); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:none; }
+  .np .track.on{ display:block; }
+  .full{ display:none; position:fixed; inset:0; z-index:50; background:var(--myllm-bg,#f2f2f7); color:var(--myllm-text,#111);
+    padding:calc(14px + env(safe-area-inset-top)) 22px calc(22px + env(safe-area-inset-bottom)); flex-direction:column; align-items:center; text-align:center; overflow:auto; }
+  .full.on{ display:flex; }
+  .full .top{ width:100%; display:flex; justify-content:space-between; align-items:center; }
+  .full .top button{ border:none; background:var(--myllm-surface,#fff); color:var(--myllm-text,#111); border-radius:99px; padding:8px 14px; font-size:14px; font-weight:700; border:1px solid var(--myllm-border,#e3e3e8); }
+  .full .bigart{ width:min(62vw,240px); height:min(62vw,240px); border-radius:28px; background:var(--myllm-surface,#fff); display:flex; align-items:center; justify-content:center; font-size:96px; overflow:hidden; margin:auto 0 18px; box-shadow:0 14px 40px rgba(0,0,0,.18); }
+  .full .bigart img{ width:100%; height:100%; object-fit:cover; }
+  .full .fname{ font-size:24px; font-weight:800; line-height:1.2; }
+  .full .fmeta{ font-size:14px; color:var(--myllm-muted,#8a8a8e); margin-top:6px; }
+  .full .fstate{ font-size:14px; font-weight:700; margin-top:8px; min-height:18px; }
+  .full .fstate.live{ color:#30d158; } .full .fstate.err{ color:#ff453a; }
+  .full .ftrack{ font-size:15px; margin-top:6px; display:none; }
+  .full .ftrack.on{ display:block; }
+  .full .fbtn{ width:78px; height:78px; border-radius:50%; border:none; background:var(--myllm-accent,#0a84ff); color:#fff; font-size:30px; margin:24px 0 14px; }
+  .full .sub{ display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin-bottom:auto; }
+  .full .sub button{ border:1px solid var(--myllm-border,#e3e3e8); background:var(--myllm-surface,#fff); color:var(--myllm-text,#111); border-radius:99px; padding:9px 16px; font-size:14px; font-weight:650; }
+  .full .sub button.hot{ background:var(--myllm-accent,#0a84ff); border-color:var(--myllm-accent,#0a84ff); color:#fff; }
+
+  .dock{ display:none; position:fixed; inset:0; z-index:60; background:#000; color:#fff; overflow:hidden; }
+  .dock.on{ display:block; }
+  .dock .drift{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px;
+    transition:transform 20s ease-in-out; }
+  .dock .dart{ width:min(40vw,180px); height:min(40vw,180px); border-radius:24px; overflow:hidden; display:flex; align-items:center; justify-content:center; font-size:80px; opacity:.55; background:#111; }
+  .dock .dart img{ width:100%; height:100%; object-fit:cover; }
+  .dock .dclock{ font-size:min(22vw,112px); font-weight:200; letter-spacing:.02em; line-height:1; color:#bbb; font-variant-numeric:tabular-nums; }
+  .dock .dname{ font-size:17px; color:#888; font-weight:600; }
+  .dock .dtrack{ font-size:15px; color:#666; display:none; max-width:80vw; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .dock .dtrack.on{ display:block; }
+  .dock .dstate{ font-size:13px; color:#555; }
+  .dock .dstate.err{ color:#ff453a; }
+  .dock .ctl{ position:absolute; left:0; right:0; bottom:calc(28px + env(safe-area-inset-bottom)); display:flex; justify-content:center; gap:12px;
+    opacity:0; transition:opacity .3s; pointer-events:none; }
+  .dock .ctl.on{ opacity:1; pointer-events:auto; }
+  .dock .ctl button{ border:1px solid #333; background:#111; color:#eee; border-radius:99px; padding:11px 20px; font-size:15px; font-weight:700; }
+  .dock .hint{ position:absolute; top:calc(16px + env(safe-area-inset-top)); left:0; right:0; text-align:center; font-size:12px; color:#444; }
+
   .status{ text-align:center; font-size:13.5px; color:var(--myllm-muted,#8a8a8e); padding:20px 12px; line-height:1.6; }
   .note{ font-size:12.5px; color:var(--myllm-muted,#8a8a8e); margin:8px 2px; line-height:1.5; }
 </style>
@@ -93,9 +133,10 @@
 <div class="card np paused" id="np">
   <div class="row">
     <div class="art" id="npArt">📻</div>
-    <div class="info">
+    <div class="info" onclick="openFull()" title="Open playing mode">
       <div class="name" id="npName"></div>
       <div class="meta" id="npMeta"></div>
+      <div class="track" id="npTrack"></div>
       <div class="state" id="npState"></div>
     </div>
     <button class="npbtn" id="npBtn" onclick="toggle()">▶</button>
@@ -103,6 +144,41 @@
   <div class="sub">
     <button id="npFav" onclick="favCurrent()">♥ Favourite</button>
     <button id="npSleep" onclick="cycleSleep()">Sleep: off</button>
+    <button onclick="openFull()">Playing mode</button>
+  </div>
+</div>
+
+<!-- Playing mode: full-screen now-playing -->
+<div class="full" id="full">
+  <div class="top">
+    <button onclick="closeFull()">▾ Back</button>
+    <button onclick="openDock()">Dock</button>
+  </div>
+  <div class="bigart" id="fArt">📻</div>
+  <div class="fname" id="fName"></div>
+  <div class="fmeta" id="fMeta"></div>
+  <div class="ftrack" id="fTrack"></div>
+  <div class="fstate" id="fState"></div>
+  <button class="fbtn" id="fBtn" onclick="toggle()">▶</button>
+  <div class="sub">
+    <button id="fFav" onclick="favCurrent()">♡ Favourite</button>
+    <button id="fSleep" onclick="cycleSleep()">Sleep: off</button>
+  </div>
+</div>
+
+<!-- Dock mode: dark, dimmed, drifts to avoid burn-in, keeps the screen awake -->
+<div class="dock" id="dock" onclick="dockTap()">
+  <div class="hint" id="dHint">Tap for controls</div>
+  <div class="drift" id="dDrift">
+    <div class="dart" id="dArt">📻</div>
+    <div class="dclock" id="dClock">--:--</div>
+    <div class="dname" id="dName"></div>
+    <div class="dtrack" id="dTrack"></div>
+    <div class="dstate" id="dState"></div>
+  </div>
+  <div class="ctl" id="dCtl">
+    <button onclick="toggle();event.stopPropagation()" id="dBtn">◼ Stop</button>
+    <button onclick="closeDock();event.stopPropagation()">Exit dock</button>
   </div>
 </div>
 
@@ -284,6 +360,7 @@ function play(s){
   el("npArt").innerHTML = artHtml(s).replace(/^<div class="art">|<\/div>$/g, "");
   el("npBtn").textContent = "◼";
   setState("Connecting…", "");
+  syncPlaying();
   updateNpFav();
   renderList(); renderFavs();
   store.setItem("radio_last", JSON.stringify(s));
@@ -299,6 +376,8 @@ function stop(){
   el("npBtn").textContent = "▶";
   el("np").classList.add("paused");
   setState("Stopped", "");
+  syncPlaying();
+  if (dockOn) closeDock();     /* a silent dock is just a dark screen burning battery */
 }
 
 function toggle(){
@@ -310,6 +389,10 @@ function toggle(){
 function setState(txt, cls){
   el("npState").textContent = txt;
   el("npState").className = "state" + (cls ? " " + cls : "");
+  el("fState").textContent = txt;
+  el("fState").className = "fstate" + (cls ? " " + cls : "");
+  el("dState").textContent = txt;
+  el("dState").className = "dstate" + (cls === "err" ? " err" : "");
 }
 
 audio.addEventListener("waiting", function(){ setState("Buffering…", ""); el("np").classList.add("paused"); });
@@ -319,6 +402,7 @@ audio.addEventListener("error", function(){
   setState("Station didn't respond — try another", "err");
   el("npBtn").textContent = "▶";
   el("np").classList.add("paused");
+  syncPlaying();
 });
 
 /* ---------- favourites ---------- */
@@ -349,6 +433,8 @@ function updateNpFav(){
   var on = isFav(current);
   el("npFav").textContent = on ? "♥ Favourited" : "♡ Favourite";
   el("npFav").className = on ? "hot" : "";
+  el("fFav").textContent = el("npFav").textContent;
+  el("fFav").className = el("npFav").className;
 }
 
 /* ---------- sleep timer ---------- */
@@ -363,7 +449,107 @@ function cycleSleep(){
   }
   el("npSleep").textContent = sleepMins ? "Sleep: " + sleepMins + "m" : "Sleep: off";
   el("npSleep").className = sleepMins ? "hot" : "";
+  el("fSleep").textContent = el("npSleep").textContent;
+  el("fSleep").className = el("npSleep").className;
 }
+
+/* ---------- playing mode ---------- */
+
+/* Full-screen now-playing. Everything shown here is already in the station
+   record (name, tags, country, codec, bitrate) plus the live state; the only
+   thing the web player cannot know is what track is on, which arrives via
+   myllmNowPlaying() once MyLLM reads the stream's metadata (5.6). */
+function stationDetail(s){
+  var bits = [];
+  if (s.tags){ var t = String(s.tags).split(",").slice(0,3).join(", "); if (t) bits.push(t); }
+  if (s.countrycode) bits.push(s.countrycode);
+  var q = [];
+  if (s.codec) q.push(String(s.codec).toUpperCase());
+  if (s.bitrate) q.push(s.bitrate + " kbps");
+  if (q.length) bits.push(q.join(" "));
+  return bits.join(" · ");
+}
+function bigArt(s){ return artHtml(s).replace(/^<div class="art">|<\/div>$/g, ""); }
+
+function openFull(){
+  if (!current) return;
+  haptic("light");
+  el("fName").textContent = current.name;
+  el("fMeta").textContent = stationDetail(current);
+  el("fArt").innerHTML = bigArt(current);
+  updateNpFav();
+  syncPlaying();
+  el("full").classList.add("on");
+}
+function closeFull(){ haptic("light"); el("full").classList.remove("on"); }
+
+function syncPlaying(){
+  var playing = current && !audio.paused;
+  el("fBtn").textContent = playing ? "◼" : "▶";
+  el("dBtn").textContent = playing ? "◼ Stop" : "▶ Play";
+}
+
+/* The 5.6 hook: MyLLM calls this with the stream's StreamTitle. */
+window.myllmNowPlaying = function(title){
+  var t = String(title || "").trim();
+  ["npTrack","fTrack","dTrack"].forEach(function(id){
+    var n = el(id); n.textContent = t; n.classList.toggle("on", !!t);
+  });
+};
+
+/* Dock: black screen, dimmed art, a large clock, everything drifting a
+   little every minute so nothing burns in. The screen is kept awake with
+   the Wake Lock API where the web view offers it; where it doesn't, the
+   phone's own auto-lock applies and the audio carries on regardless. */
+var dockOn = false, dockClock = null, dockDrift = null, dockCtlTimer = null, wakeLock = null;
+
+function dockTime(){
+  var d = new Date(), h = d.getHours(), m = d.getMinutes();
+  el("dClock").textContent = (h < 10 ? "0" : "") + h + ":" + (m < 10 ? "0" : "") + m;
+}
+function driftOnce(){
+  var x = Math.round((Math.random() - 0.5) * 36), y = Math.round((Math.random() - 0.5) * 36);
+  el("dDrift").style.transform = "translate(" + x + "px," + y + "px)";
+}
+function requestWake(){
+  if (!("wakeLock" in navigator)) return;
+  navigator.wakeLock.request("screen").then(function(l){ wakeLock = l; }).catch(function(){ wakeLock = null; });
+}
+function releaseWake(){
+  if (wakeLock){ try { wakeLock.release(); } catch(_){} wakeLock = null; }
+}
+function openDock(){
+  if (!current) return;
+  haptic("medium");
+  el("dName").textContent = current.name;
+  el("dArt").innerHTML = bigArt(current);
+  dockOn = true;
+  dockTime(); driftOnce(); syncPlaying();
+  el("dock").classList.add("on");
+  el("dCtl").classList.remove("on");
+  el("dHint").style.display = "block";
+  setTimeout(function(){ el("dHint").style.display = "none"; }, 4000);
+  dockClock = setInterval(dockTime, 15000);
+  dockDrift = setInterval(driftOnce, 60000);
+  requestWake();
+}
+function closeDock(){
+  dockOn = false;
+  el("dock").classList.remove("on");
+  clearInterval(dockClock); clearInterval(dockDrift); clearTimeout(dockCtlTimer);
+  dockClock = dockDrift = dockCtlTimer = null;
+  releaseWake();
+}
+function dockTap(){
+  if (!dockOn) return;
+  el("dCtl").classList.add("on");
+  clearTimeout(dockCtlTimer);
+  dockCtlTimer = setTimeout(function(){ el("dCtl").classList.remove("on"); }, 5000);
+}
+document.addEventListener("visibilitychange", function(){
+  if (document.hidden){ releaseWake(); }
+  else if (dockOn){ dockTime(); requestWake(); }
+});
 
 /* ---------- boot ---------- */
 
