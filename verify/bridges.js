@@ -125,6 +125,10 @@
   window.myllmShare = (text) => later(null);
   window.myllmSaveImage = (data) => later({ saved: true });
   window.myllmShareFile = (data, opts) => later({ saved: true });
+  // 5.7 bridges. The harness has no chrome to hide and no stream to read, so
+  // these answer as a build would for a stream without metadata.
+  window.myllmImmersive = (on, opts) => later(!!on);
+  window.myllmStreamTitle = (url) => later({ title: '', station: '', metadata: false }, 40);
   window.myllmPickImage = (opts) => later(null).then(() => { throw new Error('Cancelled'); });
   window.myllmGenerateImage = (prompt, opts) =>
     later('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 40);

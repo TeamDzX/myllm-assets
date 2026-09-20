@@ -577,7 +577,7 @@ function syncSleep(){
    is fetched for nothing. MyLLM can also push a title in at any time
    through window.myllmNowPlaying(title). */
 var TITLE_EVERY = 20000;
-var titles = { timer:null, seq:0, how:{}, misses:{}, abort:null };
+var titles = { timer:null, seq:0, how:{}, misses:{}, abort:null, blanks:0, skip:0, ever:false };
 var track = "";            /* cleaned title now showing */
 var heard = [];            /* this session's earlier tracks, newest first */
 
@@ -590,12 +590,13 @@ function stopTitles(){
   clearInterval(titles.timer); titles.timer = null; titles.seq++;
   if (titles.abort){ try { titles.abort.abort(); } catch(_){} titles.abort = null; }
 }
-function resetTrack(keepHeard){ stopTitles(); track = ""; if (!keepHeard) heard = []; paintTrack(false); }
+function resetTrack(keepHeard){ stopTitles(); titles.blanks = titles.skip = 0; titles.ever = false; track = ""; if (!keepHeard) heard = []; paintTrack(false); }
 
 function pollTitle(){
   if (!current || audio.paused || document.hidden) return;
   var s = current, id = s.stationuuid, my = ++titles.seq;
   if (/\.m3u8(\?|$)/i.test(s.url_resolved) || titles.how[id] === "none") return;
+  if (titles.skip > 0){ titles.skip--; return; }         /* backing off a station that keeps answering blank */
   var order = titles.how[id] ? [titles.how[id]] : (window.myllmStreamTitle ? ["native","status"] : ["sniff","status"]);
   var i = 0;
   (function next(){
@@ -609,7 +610,16 @@ function pollTitle(){
       if (my !== titles.seq || current !== s) return;
       if (raw == null){ if (titles.how[id]) return; return next(); }
       titles.how[id] = how;
-      setTrack(cleanTitle(raw, s.name));
+      var t = cleanTitle(raw, s.name);
+      /* Blank again and again: ask less often. A station that has named tracks
+         this session is in a break — settle at once a minute. One that never
+         has is talk radio, or plays every new connection an ad pre-roll with
+         no title (KEXP does); a short look can't get past that, so drift out
+         to every five minutes rather than keep knocking. */
+      if (t) titles.ever = true;
+      titles.blanks = t ? 0 : titles.blanks + 1;
+      titles.skip = Math.min(Math.max(titles.blanks - 1, 0), titles.ever ? 2 : 14);
+      setTrack(t);
     });
   })();
 }
@@ -684,7 +694,11 @@ function utf8(latin1){ try { return decodeURIComponent(escape(latin1)); } catch(
 function cleanTitle(raw, stationName){
   var t = String(raw || "").replace(/\s+/g, " ").trim();
   var m = /^(.*?) - text="([^"]*)"/.exec(t);              /* iHeart / StreamTheWorld wrap the song in attributes */
-  if (m) t = (m[1] ? m[1] + " - " : "") + m[2];
+  if (m){
+    var spot = /song_spot="(\w)"/.exec(t);                /* "M" is music; "T" and the rest are ads and idents */
+    if ((spot && spot[1] !== "M") || m[1] === m[2]) return "";
+    t = (m[1] ? m[1] + " - " : "") + m[2];
+  }
   t = t.replace(/^[\s\-–|_]+|[\s\-–|_]+$/g, "");
   if (t.length < 2 || /^https?:/i.test(t) || /^(unknown|untitled|n\/a|advert|adbreak|ad break|commercial)/i.test(t)) return "";
   var norm = function(x){ return String(x).toLowerCase().replace(/[^a-z0-9]+/g, ""); };
