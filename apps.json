@@ -35,6 +35,9 @@
       "version": 5,
       "featured": true,
       "requiresAI": false,
+      "aiUses": [
+        "ask"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/substack-reader.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@2255deff23f83a08a7a0707623ba2a44f99e4e72/apps-src/substack-reader.html",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@2255deff23f83a08a7a0707623ba2a44f99e4e72/apps-src/substack-reader.myllmapp",
@@ -77,6 +80,9 @@
       "version": 2,
       "featured": true,
       "requiresAI": false,
+      "aiUses": [
+        "ask"
+      ],
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@3f66551d942e61af40b7f0152683a018053a4bb4/apps-src/workbench.html",
       "tags": [
         "files",
@@ -155,6 +161,9 @@
       "version": 3,
       "featured": true,
       "requiresAI": false,
+      "aiUses": [
+        "ask"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/stocks.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@5a318773316598fda0ff82ea262dcdbbe0a2b02e/apps-src/stocks.html",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@5a318773316598fda0ff82ea262dcdbbe0a2b02e/apps-src/stocks.myllmapp",
@@ -173,6 +182,9 @@
       "version": 7,
       "featured": true,
       "requiresAI": true,
+      "aiUses": [
+        "ask"
+      ],
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@c226ee9d326b5ff8024b82162a19cb5d36a1b769/apps-src/shell.html",
       "tags": [
         "developer",
@@ -253,6 +265,13 @@
       "version": 2,
       "featured": false,
       "requiresAI": true,
+      "aiUses": [
+        "ask",
+        "vision"
+      ],
+      "aiNeeds": [
+        "vision"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/nutrition-lens.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@00e8001b4a32b6d62b6d9c4fd4056b2b3d17f92a/apps-src/nutrition-lens.html",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@00e8001b4a32b6d62b6d9c4fd4056b2b3d17f92a/apps-src/nutrition-lens.myllmapp",
@@ -275,13 +294,13 @@
       ],
       "iconSymbol": "hand.wave.fill",
       "iconColor": "mint",
-      "version": 11,
+      "version": 12,
       "featured": true,
       "requiresAI": false,
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/welcome-to-myllmos.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@00e8001b4a32b6d62b6d9c4fd4056b2b3d17f92a/apps-src/welcome-to-myllmos.html?v=9",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@00e8001b4a32b6d62b6d9c4fd4056b2b3d17f92a/apps-src/welcome-to-myllmos.myllmapp?v=9",
-      "sizeKB": 1238,
+      "sizeKB": 1243,
       "category": "Utilities"
     },
     {
@@ -301,6 +320,9 @@
       "version": 1,
       "featured": true,
       "requiresAI": false,
+      "aiUses": [
+        "ask"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/reflect.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@00e8001b4a32b6d62b6d9c4fd4056b2b3d17f92a/apps-src/reflect.html",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@00e8001b4a32b6d62b6d9c4fd4056b2b3d17f92a/apps-src/reflect.myllmapp",
@@ -325,6 +347,10 @@
       "version": 6,
       "featured": true,
       "requiresAI": true,
+      "aiUses": [
+        "ask",
+        "image"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/everquill.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@00e8001b4a32b6d62b6d9c4fd4056b2b3d17f92a/apps-src/everquill.html",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@00e8001b4a32b6d62b6d9c4fd4056b2b3d17f92a/apps-src/everquill.myllmapp",
@@ -374,6 +400,10 @@
       "version": 14,
       "featured": true,
       "requiresAI": false,
+      "aiUses": [
+        "ask",
+        "image"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/social-studio.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@00e8001b4a32b6d62b6d9c4fd4056b2b3d17f92a/apps-src/social-studio.html",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@00e8001b4a32b6d62b6d9c4fd4056b2b3d17f92a/apps-src/social-studio.myllmapp",
@@ -444,6 +474,9 @@
       "version": 1,
       "featured": false,
       "requiresAI": true,
+      "aiUses": [
+        "ask"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/receipt-logger.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@00e8001b4a32b6d62b6d9c4fd4056b2b3d17f92a/apps-src/receipt-logger.html",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@00e8001b4a32b6d62b6d9c4fd4056b2b3d17f92a/apps-src/receipt-logger.myllmapp",
@@ -467,6 +500,12 @@
       "version": 1,
       "featured": false,
       "requiresAI": true,
+      "aiUses": [
+        "vision"
+      ],
+      "aiNeeds": [
+        "vision"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/fridge-chef.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@00e8001b4a32b6d62b6d9c4fd4056b2b3d17f92a/apps-src/fridge-chef.html",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@00e8001b4a32b6d62b6d9c4fd4056b2b3d17f92a/apps-src/fridge-chef.myllmapp",
@@ -490,6 +529,12 @@
       "version": 1,
       "featured": true,
       "requiresAI": true,
+      "aiUses": [
+        "vision"
+      ],
+      "aiNeeds": [
+        "vision"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/plant-doctor.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@00e8001b4a32b6d62b6d9c4fd4056b2b3d17f92a/apps-src/plant-doctor.html",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@00e8001b4a32b6d62b6d9c4fd4056b2b3d17f92a/apps-src/plant-doctor.myllmapp",
@@ -513,6 +558,12 @@
       "version": 1,
       "featured": true,
       "requiresAI": true,
+      "aiUses": [
+        "image"
+      ],
+      "aiNeeds": [
+        "image"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/colouring-pages.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@00e8001b4a32b6d62b6d9c4fd4056b2b3d17f92a/apps-src/colouring-pages.html",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@00e8001b4a32b6d62b6d9c4fd4056b2b3d17f92a/apps-src/colouring-pages.myllmapp",
@@ -537,6 +588,9 @@
       "version": 2,
       "featured": true,
       "requiresAI": true,
+      "aiUses": [
+        "ask"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/trivia-night.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@00e8001b4a32b6d62b6d9c4fd4056b2b3d17f92a/apps-src/trivia-night.html",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@00e8001b4a32b6d62b6d9c4fd4056b2b3d17f92a/apps-src/trivia-night.myllmapp",
@@ -585,6 +639,9 @@
       "version": 2,
       "featured": true,
       "requiresAI": true,
+      "aiUses": [
+        "ask"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/day-out-planner.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@00e8001b4a32b6d62b6d9c4fd4056b2b3d17f92a/apps-src/day-out-planner.html",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@00e8001b4a32b6d62b6d9c4fd4056b2b3d17f92a/apps-src/day-out-planner.myllmapp",
@@ -656,6 +713,9 @@
       "version": 7,
       "featured": true,
       "requiresAI": true,
+      "aiUses": [
+        "ask"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/flashcard-forge.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@8f5a8926df1749b5e2c34e2c9e0d5129496d5634/apps-src/flashcard-forge.html",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@8f5a8926df1749b5e2c34e2c9e0d5129496d5634/apps-src/flashcard-forge.myllmapp",
@@ -678,6 +738,9 @@
       "version": 6,
       "featured": false,
       "requiresAI": true,
+      "aiUses": [
+        "ask"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/language-lab.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@00e8001b4a32b6d62b6d9c4fd4056b2b3d17f92a/apps-src/language-lab.html",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@00e8001b4a32b6d62b6d9c4fd4056b2b3d17f92a/apps-src/language-lab.myllmapp",
@@ -701,6 +764,9 @@
       "version": 4,
       "featured": false,
       "requiresAI": false,
+      "aiUses": [
+        "ask"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/learn-spanish.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@00e8001b4a32b6d62b6d9c4fd4056b2b3d17f92a/apps-src/learn-spanish.html?v=2",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@00e8001b4a32b6d62b6d9c4fd4056b2b3d17f92a/apps-src/learn-spanish.myllmapp?v=2",
@@ -724,6 +790,9 @@
       "version": 4,
       "featured": false,
       "requiresAI": false,
+      "aiUses": [
+        "ask"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/learn-french.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@00e8001b4a32b6d62b6d9c4fd4056b2b3d17f92a/apps-src/learn-french.html?v=2",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@00e8001b4a32b6d62b6d9c4fd4056b2b3d17f92a/apps-src/learn-french.myllmapp?v=2",
@@ -747,6 +816,9 @@
       "version": 4,
       "featured": false,
       "requiresAI": false,
+      "aiUses": [
+        "ask"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/learn-german.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@00e8001b4a32b6d62b6d9c4fd4056b2b3d17f92a/apps-src/learn-german.html?v=2",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@00e8001b4a32b6d62b6d9c4fd4056b2b3d17f92a/apps-src/learn-german.myllmapp?v=2",
@@ -770,6 +842,9 @@
       "version": 3,
       "featured": false,
       "requiresAI": false,
+      "aiUses": [
+        "ask"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/action-items.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@00e8001b4a32b6d62b6d9c4fd4056b2b3d17f92a/apps-src/action-items.html",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@00e8001b4a32b6d62b6d9c4fd4056b2b3d17f92a/apps-src/action-items.myllmapp",
@@ -1015,6 +1090,9 @@
       "version": 1,
       "featured": true,
       "requiresAI": true,
+      "aiUses": [
+        "ask"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/story-studio.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@00e8001b4a32b6d62b6d9c4fd4056b2b3d17f92a/apps-src/story-studio.html",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@00e8001b4a32b6d62b6d9c4fd4056b2b3d17f92a/apps-src/story-studio.myllmapp",
@@ -1104,6 +1182,9 @@
       "version": 6,
       "featured": true,
       "requiresAI": true,
+      "aiUses": [
+        "ask"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/meal-planner.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@00e8001b4a32b6d62b6d9c4fd4056b2b3d17f92a/apps-src/meal-planner.html",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@00e8001b4a32b6d62b6d9c4fd4056b2b3d17f92a/apps-src/meal-planner.myllmapp",
@@ -1126,6 +1207,9 @@
       "version": 6,
       "featured": false,
       "requiresAI": false,
+      "aiUses": [
+        "ask"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/homework-tracker.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@00e8001b4a32b6d62b6d9c4fd4056b2b3d17f92a/apps-src/homework-tracker.html",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@00e8001b4a32b6d62b6d9c4fd4056b2b3d17f92a/apps-src/homework-tracker.myllmapp",
@@ -1193,6 +1277,9 @@
       "version": 11,
       "featured": false,
       "requiresAI": false,
+      "aiUses": [
+        "ask"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/rss-dashboard.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@00e8001b4a32b6d62b6d9c4fd4056b2b3d17f92a/apps-src/rss-dashboard.html?v=11",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@00e8001b4a32b6d62b6d9c4fd4056b2b3d17f92a/apps-src/rss-dashboard.myllmapp?v=11",
@@ -1215,6 +1302,9 @@
       "version": 3,
       "featured": false,
       "requiresAI": false,
+      "aiUses": [
+        "ask"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/reader.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@00e8001b4a32b6d62b6d9c4fd4056b2b3d17f92a/apps-src/reader.html",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@00e8001b4a32b6d62b6d9c4fd4056b2b3d17f92a/apps-src/reader.myllmapp",
@@ -1321,6 +1411,9 @@
       "version": 4,
       "featured": true,
       "requiresAI": false,
+      "aiUses": [
+        "ask"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/plant-care.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@00e8001b4a32b6d62b6d9c4fd4056b2b3d17f92a/apps-src/plant-care.html",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@00e8001b4a32b6d62b6d9c4fd4056b2b3d17f92a/apps-src/plant-care.myllmapp",
@@ -1343,6 +1436,9 @@
       "version": 4,
       "featured": false,
       "requiresAI": true,
+      "aiUses": [
+        "ask"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/garden-coach.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@00e8001b4a32b6d62b6d9c4fd4056b2b3d17f92a/apps-src/garden-coach.html",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@00e8001b4a32b6d62b6d9c4fd4056b2b3d17f92a/apps-src/garden-coach.myllmapp",
@@ -1366,6 +1462,9 @@
       "version": 4,
       "featured": true,
       "requiresAI": true,
+      "aiUses": [
+        "ask"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/daily-horoscope.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@00e8001b4a32b6d62b6d9c4fd4056b2b3d17f92a/apps-src/daily-horoscope.html",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@00e8001b4a32b6d62b6d9c4fd4056b2b3d17f92a/apps-src/daily-horoscope.myllmapp",
@@ -1409,6 +1508,9 @@
       "version": 3,
       "featured": false,
       "requiresAI": false,
+      "aiUses": [
+        "ask"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/star-match.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@00e8001b4a32b6d62b6d9c4fd4056b2b3d17f92a/apps-src/star-match.html",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@00e8001b4a32b6d62b6d9c4fd4056b2b3d17f92a/apps-src/star-match.myllmapp",
@@ -1431,6 +1533,9 @@
       "version": 4,
       "featured": false,
       "requiresAI": false,
+      "aiUses": [
+        "ask"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/weather.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@00e8001b4a32b6d62b6d9c4fd4056b2b3d17f92a/apps-src/weather.html",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@00e8001b4a32b6d62b6d9c4fd4056b2b3d17f92a/apps-src/weather.myllmapp",
@@ -1498,6 +1603,9 @@
       "version": 6,
       "featured": true,
       "requiresAI": true,
+      "aiUses": [
+        "ask"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/recipe-finder.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@00e8001b4a32b6d62b6d9c4fd4056b2b3d17f92a/apps-src/recipe-finder.html",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@00e8001b4a32b6d62b6d9c4fd4056b2b3d17f92a/apps-src/recipe-finder.myllmapp",
@@ -1832,6 +1940,9 @@
       "version": 2,
       "featured": true,
       "requiresAI": true,
+      "aiUses": [
+        "ask"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/social-story.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@00e8001b4a32b6d62b6d9c4fd4056b2b3d17f92a/apps-src/social-story.html",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@00e8001b4a32b6d62b6d9c4fd4056b2b3d17f92a/apps-src/social-story.myllmapp",
@@ -1947,6 +2058,9 @@
       "version": 11,
       "featured": true,
       "requiresAI": false,
+      "aiUses": [
+        "ask"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/hanyu.jpg",
       "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/hanyu-icon.png",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@00e8001b4a32b6d62b6d9c4fd4056b2b3d17f92a/apps-src/hanyu.html?v=10",
@@ -2020,6 +2134,9 @@
       "version": 6,
       "featured": true,
       "requiresAI": false,
+      "aiUses": [
+        "ask"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/code-lab.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@00e8001b4a32b6d62b6d9c4fd4056b2b3d17f92a/apps-src/code-lab.html?v=5",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@00e8001b4a32b6d62b6d9c4fd4056b2b3d17f92a/apps-src/code-lab.myllmapp?v=5",
@@ -2043,6 +2160,9 @@
       "version": 3,
       "featured": true,
       "requiresAI": false,
+      "aiUses": [
+        "ask"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/stretch.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@00e8001b4a32b6d62b6d9c4fd4056b2b3d17f92a/apps-src/stretch.html?v=2",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@00e8001b4a32b6d62b6d9c4fd4056b2b3d17f92a/apps-src/stretch.myllmapp?v=2",
@@ -2208,6 +2328,9 @@
       "version": 2,
       "featured": false,
       "requiresAI": false,
+      "aiUses": [
+        "ask"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/subscription-tracker.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@00e8001b4a32b6d62b6d9c4fd4056b2b3d17f92a/apps-src/subscription-tracker.html",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@00e8001b4a32b6d62b6d9c4fd4056b2b3d17f92a/apps-src/subscription-tracker.myllmapp",
@@ -2236,6 +2359,9 @@
       "version": 3,
       "featured": false,
       "requiresAI": false,
+      "aiUses": [
+        "ask"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/packing-planner.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@00e8001b4a32b6d62b6d9c4fd4056b2b3d17f92a/apps-src/packing-planner.html",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@00e8001b4a32b6d62b6d9c4fd4056b2b3d17f92a/apps-src/packing-planner.myllmapp",
@@ -2264,6 +2390,9 @@
       "version": 1,
       "featured": false,
       "requiresAI": false,
+      "aiUses": [
+        "ask"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/sky-tonight.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@00e8001b4a32b6d62b6d9c4fd4056b2b3d17f92a/apps-src/sky-tonight.html",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@00e8001b4a32b6d62b6d9c4fd4056b2b3d17f92a/apps-src/sky-tonight.myllmapp",
@@ -2424,6 +2553,9 @@
       "version": 2,
       "featured": false,
       "requiresAI": false,
+      "aiUses": [
+        "ask"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/post-studio.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@00e8001b4a32b6d62b6d9c4fd4056b2b3d17f92a/apps-src/post-studio.html",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@00e8001b4a32b6d62b6d9c4fd4056b2b3d17f92a/apps-src/post-studio.myllmapp",
@@ -2553,6 +2685,9 @@
       "version": 4,
       "featured": true,
       "requiresAI": false,
+      "aiUses": [
+        "ask"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/travel-phrasebook.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@00e8001b4a32b6d62b6d9c4fd4056b2b3d17f92a/apps-src/travel-phrasebook.html?v=2",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@00e8001b4a32b6d62b6d9c4fd4056b2b3d17f92a/apps-src/travel-phrasebook.myllmapp?v=2",
@@ -2580,6 +2715,9 @@
       "version": 3,
       "featured": false,
       "requiresAI": false,
+      "aiUses": [
+        "ask"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/book-nook.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@00e8001b4a32b6d62b6d9c4fd4056b2b3d17f92a/apps-src/book-nook.html",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@00e8001b4a32b6d62b6d9c4fd4056b2b3d17f92a/apps-src/book-nook.myllmapp",
@@ -2607,6 +2745,9 @@
       "version": 3,
       "featured": false,
       "requiresAI": true,
+      "aiUses": [
+        "ask"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/study-buddy.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@00e8001b4a32b6d62b6d9c4fd4056b2b3d17f92a/apps-src/study-buddy.html",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@00e8001b4a32b6d62b6d9c4fd4056b2b3d17f92a/apps-src/study-buddy.myllmapp",
@@ -2659,6 +2800,9 @@
       "version": 3,
       "featured": false,
       "requiresAI": false,
+      "aiUses": [
+        "ask"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/birthday-book.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@00e8001b4a32b6d62b6d9c4fd4056b2b3d17f92a/apps-src/birthday-book.html",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@00e8001b4a32b6d62b6d9c4fd4056b2b3d17f92a/apps-src/birthday-book.myllmapp",
@@ -2766,6 +2910,9 @@
       "version": 2,
       "featured": true,
       "requiresAI": true,
+      "aiUses": [
+        "ask"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/talk-tutor.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@00e8001b4a32b6d62b6d9c4fd4056b2b3d17f92a/apps-src/talk-tutor.html",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@00e8001b4a32b6d62b6d9c4fd4056b2b3d17f92a/apps-src/talk-tutor.myllmapp",
@@ -2793,6 +2940,9 @@
       "version": 3,
       "featured": true,
       "requiresAI": true,
+      "aiUses": [
+        "ask"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/comic-box.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@00e8001b4a32b6d62b6d9c4fd4056b2b3d17f92a/apps-src/comic-box.html",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@00e8001b4a32b6d62b6d9c4fd4056b2b3d17f92a/apps-src/comic-box.myllmapp",
@@ -2820,6 +2970,9 @@
       "version": 13,
       "featured": true,
       "requiresAI": false,
+      "aiUses": [
+        "ask"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/mochi.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@8e4c97dbe41a5a72c9f36c260573f5a99abbc253/apps-src/mochi.html",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@8e4c97dbe41a5a72c9f36c260573f5a99abbc253/apps-src/mochi.myllmapp",
@@ -2847,6 +3000,10 @@
       "version": 3,
       "featured": false,
       "requiresAI": false,
+      "aiUses": [
+        "ask",
+        "vision"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/brick-studio.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@00e8001b4a32b6d62b6d9c4fd4056b2b3d17f92a/apps-src/brick-studio.html",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@00e8001b4a32b6d62b6d9c4fd4056b2b3d17f92a/apps-src/brick-studio.myllmapp",
@@ -2870,6 +3027,9 @@
       "version": 2,
       "featured": false,
       "requiresAI": false,
+      "aiUses": [
+        "ask"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/petra.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@00e8001b4a32b6d62b6d9c4fd4056b2b3d17f92a/apps-src/petra.html",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@00e8001b4a32b6d62b6d9c4fd4056b2b3d17f92a/apps-src/petra.myllmapp",
