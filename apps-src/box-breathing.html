@@ -3,30 +3,238 @@
   Box Breathing — MyLLMos™ App Gallery · © 2026 Opticell Ltd
   Source-available: read it, remix it, run your version inside MyLLM™.
   Not for redistribution or republication. Terms: https://github.com/TeamDzX/myllm-assets/blob/main/LICENSE
---><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<style>:root{--build-id:"488773e508";color-scheme:dark}
-body{font-family:-apple-system,system-ui,sans-serif;margin:0;min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#0b2a33;color:#dff7ff;text-align:center}
-h1{font-size:20px;font-weight:600;opacity:.85;margin:0 0 30px}
-#box{width:160px;height:160px;border-radius:24px;background:rgba(100,210,255,.18);border:2px solid #64d2ff;transition:transform 3.8s ease-in-out;transform:scale(.72)}
-#phase{font-size:26px;font-weight:700;margin:30px 0 6px;min-height:32px}
-#count{font-size:15px;opacity:.6;min-height:20px}
-button{margin-top:26px;border:0;border-radius:12px;padding:13px 34px;font-size:16px;font-weight:600;background:#64d2ff;color:#06222b}
-@media(min-width:768px){#box{width:240px;height:240px}h1{font-size:26px}#phase{font-size:34px}}
+--><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Box Breathing</title>
+<style>:root{--build-id:"488773e508";color-scheme:light dark}
+  @property --h{ syntax:'<number>'; inherits:true; initial-value:192; }
+  *{ margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body{ height:100%; }
+  body{ font-family:var(--myllm-font,-apple-system,system-ui,sans-serif); background:#0b0b10; color:#fff; overflow:hidden;
+    -webkit-user-select:none; user-select:none; }
+
+  /* The stage: a hue-tinted backdrop that cools on the out-breath. Two layers,
+     dark and light, so the change between them can fade. */
+  .stage{ position:fixed; inset:0; --h:192; transition:--h 3.2s ease-in-out; color:#fff; }
+  .bg{ position:absolute; inset:0; transition:opacity .8s ease; }
+  .bg.d{ background:radial-gradient(120% 90% at 20% 10%, hsl(var(--h) 70% 32%), transparent 60%),
+      radial-gradient(120% 90% at 85% 95%, hsl(calc(var(--h) + 50) 60% 26%), transparent 62%), #0b0b10; }
+  .bg.l{ opacity:0; background:radial-gradient(120% 90% at 20% 0%, hsl(var(--h) 80% 84%), transparent 60%),
+      radial-gradient(120% 90% at 85% 100%, hsl(calc(var(--h) + 50) 76% 87%), transparent 62%), #f4f4f8; }
+  .lite{ color:#15151a; } .lite .bg.l{ opacity:1; } .lite .bg.d{ opacity:0; }
+
+  .col{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; text-align:center;
+    padding:calc(12px + env(safe-area-inset-top)) calc(20px + env(safe-area-inset-right)) calc(20px + env(safe-area-inset-bottom)) calc(20px + env(safe-area-inset-left)); }
+  .top{ width:100%; max-width:520px; height:44px; display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
+  .lbl{ font-size:11px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; opacity:.62; }
+  .glass{ border:1px solid rgba(255,255,255,.16); background:rgba(255,255,255,.12); color:inherit;
+    -webkit-backdrop-filter:blur(18px); backdrop-filter:blur(18px); }
+  .lite .glass{ border-color:rgba(0,0,0,.09); background:rgba(255,255,255,.62); }
+  svg.i{ width:1.25em; height:1.25em; fill:currentColor; flex-shrink:0; }
+  .rnd{ width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:15px; }
+  .hide{ visibility:hidden; }
+  button{ font:inherit; } button:active{ transform:scale(.96); }
+
+  /* The box is drawn one side per phase; the orb inside it is the breath. */
+  .mid{ flex:1; min-height:0; width:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+  .box{ position:relative; width:var(--s,260px); height:var(--s,260px); flex-shrink:0; }
+  .box svg{ position:absolute; inset:0; width:100%; height:100%; overflow:visible; }
+  .track{ fill:none; stroke:currentColor; stroke-opacity:.16; stroke-width:2; }
+  .trail{ fill:none; stroke:hsl(var(--h) 90% 72%); stroke-width:3.5; stroke-linecap:round; opacity:0; transition:opacity .5s; }
+  .lite .trail{ stroke:hsl(var(--h) 80% 42%); }
+  .dot{ fill:#fff; opacity:0; transition:opacity .5s; filter:drop-shadow(0 0 8px hsl(var(--h) 95% 70%)); }
+  .lite .dot{ fill:hsl(var(--h) 85% 40%); filter:none; }
+  .run .trail, .run .dot{ opacity:1; }
+  .orb{ position:absolute; left:22%; top:22%; width:56%; height:56%; border-radius:50%; transform:scale(.62);
+    background:radial-gradient(circle at 35% 30%, hsl(var(--h) 95% 80%), hsl(var(--h) 80% 54%) 55%, hsl(calc(var(--h) + 30) 72% 38%));
+    box-shadow:0 0 70px hsl(var(--h) 90% 58% / .5), inset 0 0 0 1px rgba(255,255,255,.18);
+    display:flex; align-items:center; justify-content:center; will-change:transform; }
+  .lite .orb{ box-shadow:0 18px 50px hsl(var(--h) 70% 40% / .3), inset 0 0 0 1px rgba(255,255,255,.4); }
+  .count{ font-size:calc(var(--s,260px) * .2); font-weight:750; color:#fff; font-variant-numeric:tabular-nums; text-shadow:0 2px 14px rgba(0,0,0,.25); }
+
+  .phase{ font-size:27px; font-weight:800; letter-spacing:-.01em; margin-top:30px; min-height:34px; flex-shrink:0; }
+  .phase.swap{ animation:swap .5s ease both; }
+  @keyframes swap{ from{ opacity:0; transform:translateY(8px); } to{ opacity:1; transform:none; } }
+  .meta{ font-size:13.5px; opacity:.6; margin-top:6px; min-height:18px; font-variant-numeric:tabular-nums; flex-shrink:0; }
+
+  .ctl{ width:100%; max-width:380px; flex-shrink:0; }
+  .chips{ display:flex; justify-content:center; gap:7px; margin-bottom:14px; flex-wrap:wrap; }
+  .chips button{ height:36px; border-radius:99px; padding:0 14px; font-size:13px; font-weight:700; display:inline-flex; align-items:center; gap:6px; }
+  .chips button.hot{ background:#fff; border-color:#fff; color:#0b0b10; }
+  .lite .chips button.hot{ background:#15151a; border-color:#15151a; color:#fff; }
+  .run .chips{ visibility:hidden; }          /* keeps its room, so the box doesn't jump on Start */
+  .go{ width:100%; height:54px; border-radius:99px; border:none; font-size:17px; font-weight:750; background:#fff; color:#0b0b10;
+    box-shadow:0 10px 30px rgba(0,0,0,.3); display:flex; align-items:center; justify-content:center; gap:8px; }
+  .lite .go{ background:#15151a; color:#fff; box-shadow:0 10px 26px rgba(20,20,40,.22); }
+  .run .go{ background:rgba(255,255,255,.12); color:inherit; border:1px solid rgba(255,255,255,.16); box-shadow:none;
+    -webkit-backdrop-filter:blur(18px); backdrop-filter:blur(18px); }
+  .lite.run .go{ background:rgba(255,255,255,.62); border-color:rgba(0,0,0,.09); color:#15151a; }
+
+  @media (max-height:520px){                       /* phone on its side: box left, words right */
+    .mid{ flex-direction:row; justify-content:center; gap:26px; padding:0 calc(min(260px,34vw) + 22px) 0 2vw; }
+    .phase{ margin-top:0; font-size:24px; } .words{ text-align:left; min-width:150px; }
+    .ctl{ position:absolute; right:calc(20px + env(safe-area-inset-right)); top:50%; transform:translateY(-50%); width:min(260px,34vw); }
+    .chips{ margin-bottom:12px; } .go{ height:48px; font-size:16px; }
+  }
+  @media (prefers-reduced-motion:reduce){ .phase.swap{ animation:none; } .stage{ transition:none; } }
 </style></head><body>
-<h1>Box Breathing · 4 · 4 · 4 · 4</h1>
-<div id="box"></div>
-<div id="phase">Ready?</div>
-<div id="count"></div>
-<button id="go" onclick="toggle()">Start</button>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5.5v13a1 1 0 0 0 1.52.85l10.4-6.5a1 1 0 0 0 0-1.7L9.52 4.65A1 1 0 0 0 8 5.5z"/></symbol>
+  <symbol id="i-stop" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2.6"/></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24"><path d="M6.4 5a1 1 0 0 0-1.4 1.4L10.6 12 5 17.6A1 1 0 0 0 6.4 19l5.6-5.6 5.6 5.6a1 1 0 0 0 1.4-1.4L13.4 12 19 6.4A1 1 0 0 0 17.6 5L12 10.6z"/></symbol>
+  <symbol id="i-tap" viewBox="0 0 24 24"><path d="M8 3.5a1 1 0 0 0-1 1v15a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-15a1 1 0 0 0-1-1zm1 2h6v13H9zM3.3 8.2a1 1 0 0 0-1 1v5.6a1 1 0 0 0 2 0V9.2a1 1 0 0 0-1-1zm17.4 0a1 1 0 0 0-1 1v5.6a1 1 0 0 0 2 0V9.2a1 1 0 0 0-1-1z"/></symbol>
+</defs></svg>
+
+<div class="stage" id="stage">
+  <div class="bg d"></div><div class="bg l"></div>
+  <div class="col">
+    <div class="top">
+      <button class="glass rnd hide" id="bClose" aria-label="Stop"><svg class="i"><use href="#i-close"/></svg></button>
+      <div class="lbl">Box Breathing</div>
+      <div class="rnd hide"></div>
+    </div>
+    <div class="mid">
+      <div class="box" id="box">
+        <svg viewBox="0 0 200 200" aria-hidden="true">
+          <path class="track" id="track"/><path class="trail" id="trail"/><circle class="dot" id="dot" r="5.5"/>
+        </svg>
+        <div class="orb" id="orb"><span class="count" id="count"></span></div>
+      </div>
+      <div class="words">
+        <div class="phase" id="phase">Ready?</div>
+        <div class="meta" id="meta">In 4 · hold 4 · out 4 · hold 4</div>
+      </div>
+    </div>
+    <div class="ctl">
+      <div class="chips" id="chips"></div>
+      <button class="go" id="go"><svg class="i"><use href="#i-play"/></svg><span>Start</span></button>
+    </div>
+  </div>
+</div>
+
 <script>
-var phases=[['Breathe in','scale(1)'],['Hold','scale(1)'],['Breathe out','scale(.72)'],['Hold','scale(.72)']];
-var timer=null,step=0,tick=0;
-function toggle(){if(timer){clearInterval(timer);timer=null;document.getElementById('go').textContent='Start';
-document.getElementById('phase').textContent='Nice work 🌊';document.getElementById('count').textContent='';return}
-step=-1;next();timer=setInterval(function(){tick--;if(tick<=0)next();else document.getElementById('count').textContent=tick},1000);
-document.getElementById('go').textContent='Stop'}
-function next(){step=(step+1)%4;tick=4;
-document.getElementById('phase').textContent=phases[step][0];
-document.getElementById('count').textContent=4;
-document.getElementById('box').style.transform=phases[step][1]}
+function el(i){ return document.getElementById(i); }
+/* Bridges are looked up when used, never kept: MyLLM can add them after this
+   script has run. */
+function haptic(s){ if (buzz && window.myllmHaptic) try { myllmHaptic(s); } catch(_){} }
+function load(k){ var s = window.myllmStorage; return s ? s.getItem(k).catch(function(){ return null; }) : Promise.resolve(null); }
+function keep(k, v){ var s = window.myllmStorage; if (s) try { s.setItem(k, v).catch(function(){}); } catch(_){} }
+
+var SIDE = 4000, ROUND = SIDE * 4;
+/* One side of the box each: up the left on the in-breath, across the top on
+   the hold, down the right on the out-breath, back along the bottom. */
+var PHASES = [["Breathe in", 192, "medium"], ["Hold", 206, "light"], ["Breathe out", 228, "medium"], ["Hold", 206, "light"]];
+var LENGTHS = [[0, "Open"], [1, "1 min"], [3, "3 min"], [5, "5 min"]];
+var running = false, t0 = 0, phase = -1, mins = 0, buzz = true, raf = 0, LEN = 0;
+
+/* The track starts in the middle of the bottom-left corner, so every quarter
+   of its length is exactly one side and the dot turns a corner as the phase turns. */
+(function(){
+  var a = 14, b = 186, r = 26, k = r * (1 - Math.SQRT1_2);
+  var d = "M" + (a + k) + " " + (b - k) + " A" + r + " " + r + " 0 0 1 " + a + " " + (b - r) +
+    " L" + a + " " + (a + r) + " A" + r + " " + r + " 0 0 1 " + (a + r) + " " + a +
+    " L" + (b - r) + " " + a + " A" + r + " " + r + " 0 0 1 " + b + " " + (a + r) +
+    " L" + b + " " + (b - r) + " A" + r + " " + r + " 0 0 1 " + (b - r) + " " + b +
+    " L" + (a + r) + " " + b + " A" + r + " " + r + " 0 0 1 " + (a + k) + " " + (b - k);
+  el("track").setAttribute("d", d); el("trail").setAttribute("d", d);
+  LEN = el("track").getTotalLength();
+})();
+
+/* ---------- look ---------- */
+function isLight(){ return !(window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches); }
+/* A session takes the whole display and dims the room. Where MyLLM can't hide
+   its own title bar, a dark stage under a white bar looks cut in half — so in
+   light mode, without myllmImmersive, the stage stays light. */
+function syncLook(){
+  var s = el("stage");
+  s.classList.toggle("lite", isLight() && !(running && window.myllmImmersive));
+  s.classList.toggle("run", running);
+}
+function syncChrome(){
+  if (!window.myllmImmersive) return;
+  try { myllmImmersive(running, {keepAwake:running}).catch(function(){}); } catch(_){}   /* a session shouldn't end because the screen slept */
+}
+function setHue(h){ el("stage").style.setProperty("--h", String(h)); }
+function fit(){
+  var m = document.querySelector(".mid"), wide = window.innerHeight <= 520;
+  var s = wide ? Math.min(m.clientHeight - 8, 300) : Math.min(m.clientWidth * .74, m.clientHeight - 110, 320);
+  el("stage").style.setProperty("--s", Math.max(120, Math.floor(s)) + "px");
+}
+function say(id, text, swap){
+  var e = el(id); e.textContent = text;
+  if (swap){ e.classList.remove("swap"); void e.offsetWidth; e.classList.add("swap"); }
+}
+function clock(ms){ var s = Math.floor(ms / 1000), m = Math.floor(s / 60); s %= 60; return m + ":" + (s < 10 ? "0" : "") + s; }
+
+function chips(){
+  var c = el("chips"); c.innerHTML = "";
+  LENGTHS.forEach(function(l){
+    var b = document.createElement("button"); b.className = "glass" + (mins === l[0] ? " hot" : ""); b.textContent = l[1];
+    b.onclick = function(){ mins = l[0]; keep("bb.len", String(mins)); haptic("selection"); chips(); };
+    c.appendChild(b);
+  });
+  var h = document.createElement("button"); h.className = "glass" + (buzz ? " hot" : ""); h.setAttribute("aria-pressed", buzz);
+  h.innerHTML = '<svg class="i"><use href="#i-tap"/></svg>Taps';
+  h.onclick = function(){ buzz = !buzz; keep("bb.buzz", buzz ? "1" : "0"); haptic("selection"); chips(); };
+  c.appendChild(h);
+}
+
+/* ---------- session ---------- */
+function ease(k){ return .5 - .5 * Math.cos(Math.PI * k); }
+function paint(now){
+  var t = now - t0, p = Math.floor(t / SIDE) % 4, k = (t % SIDE) / SIDE, lap = (t % ROUND) / ROUND;
+  /* whole rounds only: a timed session ends on the last hold, never mid-breath */
+  if (mins && t >= Math.ceil(mins * 60000 / ROUND) * ROUND){ stop(true); return; }
+  if (p !== phase){
+    phase = p; say("phase", PHASES[p][0], true); setHue(PHASES[p][1]); haptic(PHASES[p][2]);
+  }
+  var sc = p === 0 ? .62 + .38 * ease(k) : p === 1 ? 1 : p === 2 ? 1 - .38 * ease(k) : .62;
+  el("orb").style.transform = "scale(" + sc.toFixed(4) + ")";
+  el("count").textContent = Math.max(1, Math.ceil(4 - k * 4));
+  el("trail").setAttribute("stroke-dasharray", (lap * LEN).toFixed(1) + " " + LEN);
+  var pt = el("track").getPointAtLength(lap * LEN);
+  el("dot").setAttribute("cx", pt.x); el("dot").setAttribute("cy", pt.y);
+  el("meta").textContent = "Round " + (Math.floor(t / ROUND) + 1) + " · " + clock(t);
+  raf = requestAnimationFrame(paint);
+}
+function start(){
+  running = true; phase = -1; t0 = performance.now();
+  el("go").innerHTML = '<svg class="i"><use href="#i-stop"/></svg><span>Stop</span>';
+  el("bClose").classList.remove("hide");
+  syncLook(); syncChrome(); fit();
+  raf = requestAnimationFrame(paint);
+}
+function stop(finished){
+  if (!running) return;
+  var t = performance.now() - t0, rounds = Math.floor(t / ROUND);
+  running = false; cancelAnimationFrame(raf);
+  el("orb").style.transition = "transform 1.2s ease"; el("orb").style.transform = "scale(.62)";
+  setTimeout(function(){ el("orb").style.transition = ""; }, 1300);
+  el("count").textContent = "";
+  el("go").innerHTML = '<svg class="i"><use href="#i-play"/></svg><span>' + (finished || rounds ? "Again" : "Start") + '</span>';
+  el("bClose").classList.add("hide");
+  setHue(192);
+  if (finished || rounds){
+    say("phase", "Nice work", true);
+    say("meta", rounds + (rounds === 1 ? " round · " : " rounds · ") + clock(t));
+    if (finished) haptic("success");
+  } else { say("phase", "Ready?", true); say("meta", "In 4 · hold 4 · out 4 · hold 4"); }
+  syncLook(); syncChrome(); fit();
+}
+el("go").onclick = function(){ if (running) stop(false); else start(); };
+el("bClose").onclick = function(){ stop(false); };
+
+document.addEventListener("visibilitychange", function(){ if (document.hidden) stop(false); });   /* leaving ends the session and lets the screen sleep */
+if (window.matchMedia){
+  var mq = matchMedia("(prefers-color-scheme: dark)");
+  if (mq.addEventListener) mq.addEventListener("change", syncLook); else if (mq.addListener) mq.addListener(syncLook);
+}
+window.addEventListener("resize", fit);
+
+/* ---------- boot ---------- */
+fit(); syncLook(); chips();
+Promise.all([load("bb.len"), load("bb.buzz")]).then(function(v){
+  if (v[0] != null && !isNaN(parseInt(v[0], 10))) mins = parseInt(v[0], 10);
+  if (v[1] === "0") buzz = false;
+  chips();
+});
 </script></body></html>

@@ -3,95 +3,322 @@
   Focus Timer — MyLLMos™ App Gallery · © 2026 Opticell Ltd
   Source-available: read it, remix it, run your version inside MyLLM™.
   Not for redistribution or republication. Terms: https://github.com/TeamDzX/myllm-assets/blob/main/LICENSE
---><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<style>:root{--build-id:"93ddf507fd";color-scheme:light dark;--accent:#ff453a}
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
-body{font-family:-apple-system,system-ui,sans-serif;margin:0;padding:20px 16px;background:#f2f2f7;color:#111;text-align:center}
-@media(prefers-color-scheme:dark){body{background:#000;color:#eee}.tab,input{background:#1c1c1e;color:#eee}.set{background:#1c1c1e}}
-h1{font-size:21px;margin:0 0 12px}
-.tabs{display:inline-flex;background:#e5e5ea;border-radius:11px;padding:3px;margin-bottom:14px}
-.tab{border:0;background:transparent;color:#555;border-radius:9px;padding:8px 16px;font-size:14px;font-weight:600}
-.tab.on{background:#fff;color:#111;box-shadow:0 1px 2px rgba(0,0,0,.12)}
-@media(prefers-color-scheme:dark){.tabs{background:#1c1c1e}.tab.on{background:#3a3a3c;color:#fff}}
-.ringwrap{position:relative;width:260px;height:260px;margin:6px auto 8px}
-canvas{width:260px;height:260px}
-.center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
-.time{font-size:56px;font-weight:200;font-variant-numeric:tabular-nums}
-.phase{font-size:13px;text-transform:uppercase;letter-spacing:.1em;opacity:.55;margin-top:2px}
-.pom{font-size:15px;min-height:20px;margin:4px 0 14px;letter-spacing:2px}
-.ctrl{display:flex;gap:10px;justify-content:center}
-.ctrl button{border:0;border-radius:13px;padding:14px 26px;font-size:16px;font-weight:600;background:var(--accent);color:#fff}
-.ctrl .sec{background:#e5e5ea;color:#333;padding:14px 18px}
-@media(prefers-color-scheme:dark){.ctrl .sec{background:#2c2c2e;color:#eee}}
-.set{margin-top:20px;background:#fff;border-radius:14px;padding:12px 14px;display:inline-flex;gap:16px;box-shadow:0 1px 3px rgba(0,0,0,.07)}
-.set label{font-size:11px;opacity:.6;display:block}
-.set input{width:54px;padding:7px;border:1px solid #d1d1d6;border-radius:8px;font-size:16px;text-align:center;background:#fff;color:#111;-webkit-user-select:text;user-select:text}
+--><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Focus Timer</title>
+<style>:root{--build-id:"93ddf507fd";color-scheme:light dark;
+    --bg:var(--myllm-bg,#f2f2f7); --surface:var(--myllm-surface,#fff); --text:var(--myllm-text,#111); --muted:var(--myllm-muted,#8a8a8e); --border:var(--myllm-border,#e3e3e8); }
+  @media (prefers-color-scheme:dark){ :root{ --bg:var(--myllm-bg,#000); --surface:var(--myllm-surface,#1c1c1e); --text:var(--myllm-text,#eee); --muted:var(--myllm-muted,#98989f); --border:var(--myllm-border,#2c2c2e); } }
+  @property --h{ syntax:'<number>'; inherits:true; initial-value:228; }
+  *{ margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; -webkit-user-select:none; user-select:none; }
+  body{ --h:228; transition:--h 1.2s ease; --acc:hsl(var(--h) 72% 54%);
+    font-family:var(--myllm-font,-apple-system,system-ui,sans-serif); background:var(--bg); color:var(--text);
+    min-height:100dvh; text-align:center; padding:18px 16px calc(28px + env(safe-area-inset-bottom)); }
+  body.lock{ overflow:hidden; }
+  svg.i{ width:1.25em; height:1.25em; fill:currentColor; flex-shrink:0; }
+  button{ font:inherit; }
+
+  /* ---------- setup ---------- */
+  h1{ font-size:22px; font-weight:800; margin:2px 0 14px; }
+  .tabs{ display:inline-flex; background:var(--surface); border:1px solid var(--border); border-radius:99px; padding:3px; margin-bottom:18px; }
+  .tab{ border:0; background:transparent; color:var(--muted); border-radius:99px; padding:8px 15px; font-size:13.5px; font-weight:650; }
+  .tab.on{ background:var(--acc); color:#fff; }
+  .ringwrap{ position:relative; width:min(250px,66vw); aspect-ratio:1; margin:0 auto 10px; }
+  .ring{ width:100%; height:100%; transform:rotate(-90deg); display:block; overflow:visible; }
+  .ring circle{ fill:none; stroke-width:9; stroke-linecap:round; }
+  .ring .trk{ stroke:var(--border); }
+  .ring .arc{ stroke:var(--acc); stroke-dasharray:565.49; transition:stroke-dashoffset .25s linear; }
+  .center{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+  .time{ font-size:54px; font-weight:200; font-variant-numeric:tabular-nums; letter-spacing:-.01em; line-height:1; }
+  .phase{ font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.14em; color:var(--muted); margin-top:8px; }
+  .pom{ display:flex; align-items:center; justify-content:center; gap:6px; min-height:20px; margin:4px 0 16px; font-size:12px; font-weight:700; color:var(--muted); }
+  .pom i{ width:8px; height:8px; border-radius:50%; background:var(--acc); display:block; }
+  .ctrl{ display:flex; gap:10px; justify-content:center; }
+  .ctrl button{ border:0; border-radius:99px; height:50px; padding:0 30px; font-size:16px; font-weight:750; background:var(--acc); color:#fff;
+    display:inline-flex; align-items:center; gap:8px; box-shadow:0 8px 22px hsl(var(--h) 72% 54% / .3); }
+  .ctrl .sec{ background:var(--surface); color:var(--text); border:1px solid var(--border); padding:0 22px; box-shadow:none; }
+  .ctrl button:active{ transform:scale(.96); }
+  .set{ margin-top:24px; background:var(--surface); border:1px solid var(--border); border-radius:18px; padding:13px 16px; display:inline-flex; gap:16px; }
+  .set label{ font-size:10.5px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); display:block; margin-bottom:6px; }
+  .set input{ width:58px; padding:8px 4px; border:1px solid var(--border); border-radius:10px; font:inherit; font-size:16px; text-align:center;
+    background:var(--bg); color:var(--text); -webkit-user-select:text; user-select:text; }
+  .set input::-webkit-inner-spin-button, .set input::-webkit-outer-spin-button{ -webkit-appearance:none; margin:0; }
+  .set small{ display:block; font-size:10.5px; color:var(--muted); margin-top:4px; }
+
+  /* ---------- the stage: a session in progress takes the whole display ---------- */
+  .stage{ display:none; position:fixed; inset:0; z-index:40; color:#fff; overflow:hidden; }
+  .stage.on{ display:block; }
+  .bg{ position:absolute; inset:0; }
+  .bg.d{ background:radial-gradient(120% 90% at 20% 10%, hsl(var(--h) 66% 36%), transparent 60%),
+      radial-gradient(120% 90% at 85% 95%, hsl(calc(var(--h) + 50) 60% 26%), transparent 62%), #0b0b10; }
+  .bg.l{ display:none; background:radial-gradient(120% 90% at 20% 0%, hsl(var(--h) 85% 86%), transparent 60%),
+      radial-gradient(120% 90% at 85% 100%, hsl(calc(var(--h) + 50) 80% 88%), transparent 62%), #f4f4f8; }
+  /* Where MyLLM can't hide its own title bar, a dark stage under a white bar
+     looks cut in half — so in light mode, without myllmImmersive, it stays light. */
+  .stage.lite{ color:#15151a; } .stage.lite .bg.l{ display:block; } .stage.lite .bg.d{ display:none; }
+  .col{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center;
+    padding:calc(12px + env(safe-area-inset-top)) calc(20px + env(safe-area-inset-right)) calc(26px + env(safe-area-inset-bottom)) calc(20px + env(safe-area-inset-left)); }
+  .top{ width:100%; max-width:560px; height:44px; display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
+  .lbl{ font-size:11px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; opacity:.62; }
+  .glass{ border:1px solid rgba(255,255,255,.16); background:rgba(255,255,255,.12); color:inherit;
+    -webkit-backdrop-filter:blur(18px); backdrop-filter:blur(18px); }
+  .lite .glass{ border-color:rgba(0,0,0,.09); background:rgba(255,255,255,.62); }
+  .rnd{ width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:15px; }
+  .ghost{ visibility:hidden; }
+  .body{ flex:1; min-height:0; width:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:30px; }
+  .big{ --r:min(78vw,340px,46vh); position:relative; width:var(--r); height:var(--r); flex-shrink:0; }
+  .big .ring circle{ stroke-width:6; }
+  .big .ring .trk{ stroke:rgba(255,255,255,.13); }
+  .big .ring .arc{ stroke:hsl(var(--h) 95% 76%); filter:drop-shadow(0 0 10px hsl(var(--h) 95% 62% / .55)); }
+  .lite .big .ring .trk{ stroke:rgba(20,20,40,.09); }
+  .lite .big .ring .arc{ stroke:hsl(var(--h) 72% 48%); filter:none; }
+  .big .phase{ color:inherit; opacity:.66; margin:0 0 10px; }
+  .big .time{ font-size:calc(var(--r) * .255); }
+  .big .note{ font-size:12.5px; font-weight:650; opacity:.55; margin-top:10px; min-height:16px; }
+  .big .pom{ position:absolute; left:0; right:0; bottom:17%; margin:0; min-height:0; color:inherit; }
+  .big .pom i{ width:6px; height:6px; background:currentColor; opacity:.7; }
+  .ctl{ display:flex; align-items:center; justify-content:center; gap:26px; flex-shrink:0; }
+  .ctl button{ border-radius:50%; display:flex; align-items:center; justify-content:center; flex-direction:column; }
+  .ctl .side{ width:56px; height:56px; font-size:19px; }
+  .ctl .main{ width:84px; height:84px; border:none; background:#fff; color:#0b0b10; font-size:28px; box-shadow:0 10px 30px rgba(0,0,0,.35); }
+  .lite .ctl .main{ background:#15151a; color:#fff; box-shadow:0 10px 26px rgba(20,20,40,.25); }
+  .ctl button:active, .rnd:active{ transform:scale(.94); }
+  .cap{ display:flex; justify-content:center; gap:26px; margin-top:-22px; font-size:10.5px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; opacity:.5; flex-shrink:0; }
+  .cap span{ width:56px; } .cap span:nth-child(2){ width:84px; }
+  .side-col{ display:flex; flex-direction:column; gap:30px; align-items:center; }
+
+  /* Dock: true black, only the time and the phase, drifting against burn-in. */
+  .dk{ display:none; position:absolute; inset:0; z-index:5; background:#000; color:#fff; }
+  .stage.dock .dk{ display:block; }
+  .dk .drift{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px; transition:transform 2.5s ease-in-out; }
+  .dk .dtime{ font-size:min(30vw,52vh,220px); font-weight:200; line-height:1; color:#c9c9cf; font-variant-numeric:tabular-nums; }
+  .dk .dphase{ font-size:14px; font-weight:600; letter-spacing:.12em; text-transform:uppercase; color:#5d5d66; }
+  .dk .hint{ position:absolute; left:0; right:0; bottom:calc(34px + env(safe-area-inset-bottom)); text-align:center; font-size:12px; color:#4a4a52; transition:opacity .6s; }
+
+  @media (orientation:landscape) and (max-height:560px){
+    .body{ flex-direction:row; gap:9vw; }
+    .big{ --r:min(40vw,68vh); }
+  }
+  @media (prefers-reduced-motion:reduce){ body{ transition:none; } .ring .arc{ transition:none; } .dk .drift{ transition:none; } }
 </style></head><body>
-<h1>🍅 Focus Timer</h1>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5.5v13a1 1 0 0 0 1.52.85l10.4-6.5a1 1 0 0 0 0-1.7L9.52 4.65A1 1 0 0 0 8 5.5z"/></symbol>
+  <symbol id="i-pause" viewBox="0 0 24 24"><rect x="6" y="5" width="4.2" height="14" rx="1.4"/><rect x="13.8" y="5" width="4.2" height="14" rx="1.4"/></symbol>
+  <symbol id="i-reset" viewBox="0 0 24 24"><path d="M12 5V2.6a.6.6 0 0 0-1-.45L7.2 5.55a.6.6 0 0 0 0 .9L11 9.85a.6.6 0 0 0 1-.45V7a5.5 5.5 0 1 1-5.5 5.5 1 1 0 0 0-2 0A7.5 7.5 0 1 0 12 5z"/></symbol>
+  <symbol id="i-stop" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2.6"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20.3 14.6a1 1 0 0 0-1.2-.6 7.3 7.3 0 0 1-9.1-9.1 1 1 0 0 0-1.3-1.2 9.3 9.3 0 1 0 12.2 12.2 1 1 0 0 0-.6-1.3z"/></symbol>
+</defs></svg>
+
+<h1>Focus Timer</h1>
 <div class="tabs" id="tabs"></div>
-<div class="ringwrap"><canvas id="ring"></canvas><div class="center"><div class="time" id="time">25:00</div><div class="phase" id="phase">Focus</div></div></div>
-<div class="pom" id="pom"></div>
-<div class="ctrl"><button id="go" onclick="toggle()">Start</button><button class="sec" onclick="reset()">Reset</button></div>
-<div class="set">
-  <div><label>Focus</label><input id="dFocus" type="number" min="1" max="90" value="25"></div>
-  <div><label>Short break</label><input id="dShort" type="number" min="1" max="30" value="5"></div>
-  <div><label>Long break</label><input id="dLong" type="number" min="1" max="60" value="15"></div>
+<div class="ringwrap">
+  <svg class="ring" viewBox="0 0 200 200"><circle class="trk" cx="100" cy="100" r="90"/><circle class="arc" id="arcA" cx="100" cy="100" r="90"/></svg>
+  <div class="center"><div class="time" id="time">25:00</div><div class="phase" id="phase">Focus</div></div>
 </div>
+<div class="pom" id="pom"></div>
+<div class="ctrl"><button id="go"></button><button class="sec" id="rs">Reset</button></div>
+<div class="set">
+  <div><label>Focus</label><input id="dFocus" type="number" min="1" max="90" value="25"><small>min</small></div>
+  <div><label>Short break</label><input id="dShort" type="number" min="1" max="30" value="5"><small>min</small></div>
+  <div><label>Long break</label><input id="dLong" type="number" min="1" max="60" value="15"><small>min</small></div>
+</div>
+
+<div class="stage" id="stage">
+  <div class="bg d"></div><div class="bg l"></div>
+  <div class="col">
+    <div class="top">
+      <span class="rnd ghost"></span>
+      <div class="lbl">Focus Timer</div>
+      <button class="glass rnd" id="sDock" aria-label="Dim the screen"><svg class="i"><use href="#i-moon"/></svg></button>
+    </div>
+    <div class="body">
+      <div class="big">
+        <svg class="ring" viewBox="0 0 200 200"><circle class="trk" cx="100" cy="100" r="90"/><circle class="arc" id="arcB" cx="100" cy="100" r="90"/></svg>
+        <div class="center"><div class="phase" id="sPhase">Focus</div><div class="time" id="sTime">25:00</div><div class="note" id="sNote"></div></div>
+        <div class="pom" id="sPom"></div>
+      </div>
+      <div class="side-col">
+        <div class="ctl">
+          <button class="glass side" id="sReset" aria-label="Reset"><svg class="i"><use href="#i-reset"/></svg></button>
+          <button class="main" id="sGo" aria-label="Pause"></button>
+          <button class="glass side" id="sEnd" aria-label="End"><svg class="i"><use href="#i-stop"/></svg></button>
+        </div>
+        <div class="cap"><span>Reset</span><span id="sGoCap">Pause</span><span>End</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="dk" id="dk"><div class="drift" id="dDrift"><div class="dtime" id="dTime">25:00</div><div class="dphase" id="dPhase">Focus</div></div><div class="hint" id="dHint">Tap to bring it back</div></div>
+</div>
+
 <script>
-var store=window.myllmStorage||{getItem:function(){return Promise.resolve(null)},setItem:function(){return Promise.resolve()}};
-var MODES=[['focus','Focus','dFocus'],['short','Short break','dShort'],['long','Long break','dLong']];
-var COLOR={focus:'#ff453a',short:'#30d158',long:'#0a84ff'};
-var dur={focus:25,short:5,long:15};
-var mode='focus',running=false,endTime=0,remaining=25*60,cycle=0,pom=0,actx=null,loop=null;
-var cv=document.getElementById('ring'),ctx2=cv.getContext('2d'),DPR=Math.min(window.devicePixelRatio||1,3);
-cv.width=260*DPR;cv.height=260*DPR;ctx2.scale(DPR,DPR);
-function el(i){return document.getElementById(i)}
-function mmss(s){s=Math.max(0,Math.round(s));return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')}
-function total(){return dur[mode]*60}
+function el(i){ return document.getElementById(i); }
+/* Bridges are looked up when used, never kept: MyLLM can add them after this
+   script has run. */
+function haptic(s){ if (window.myllmHaptic) try { myllmHaptic(s); } catch(_){} }
+function load(k){ var s = window.myllmStorage; return s ? s.getItem(k).catch(function(){ return null; }) : Promise.resolve(null); }
+function keep(k, v){ var s = window.myllmStorage; if (s) try { s.setItem(k, v).catch(function(){}); } catch(_){} }
 
+var MODES = [['focus','Focus','dFocus'],['short','Short break','dShort'],['long','Long break','dLong']];
+var HUE = {focus:228, short:158, long:188};
+var C = 565.49;
+var dur = {focus:25, short:5, long:15};
+var mode = 'focus', running = false, endTime = 0, remaining = 25*60, cycle = 0, pom = 0, actx = null, loop = null;
+var stageOn = false, dockOn = false, dockDrift = null, wakeLock = null;
+var ICON = { play:'<svg class="i"><use href="#i-play"/></svg>', pause:'<svg class="i"><use href="#i-pause"/></svg>' };
+
+function mmss(s){ s = Math.max(0, Math.ceil(s - 0.05)); return String(Math.floor(s/60)).padStart(2,'0') + ':' + String(s%60).padStart(2,'0'); }
+function total(){ return dur[mode]*60; }
+function label(){ return MODES.filter(function(m){ return m[0] === mode; })[0][1]; }
+function fresh(){ return remaining >= total() - 0.5; }
+
+/* ---------- painting ---------- */
 function draw(){
-  var frac=Math.max(0,Math.min(1,remaining/total()));
-  ctx2.clearRect(0,0,260,260);
-  ctx2.lineWidth=14;ctx2.lineCap='round';
-  ctx2.strokeStyle='rgba(127,127,127,.18)';ctx2.beginPath();ctx2.arc(130,130,112,0,Math.PI*2);ctx2.stroke();
-  ctx2.strokeStyle=COLOR[mode];ctx2.beginPath();ctx2.arc(130,130,112,-Math.PI/2,-Math.PI/2+frac*Math.PI*2);ctx2.stroke();
-  el('time').textContent=mmss(remaining);
-  document.documentElement.style.setProperty('--accent',COLOR[mode]);
+  var frac = Math.max(0, Math.min(1, remaining/total())), off = String(C*(1 - frac)), t = mmss(remaining);
+  el('arcA').style.strokeDashoffset = off; el('arcB').style.strokeDashoffset = off;
+  el('time').textContent = t; el('sTime').textContent = t; el('dTime').textContent = t;
 }
-function renderTabs(){var T=el('tabs');T.innerHTML='';MODES.forEach(function(m){var b=document.createElement('button');b.className='tab'+(mode===m[0]?' on':'');b.textContent=m[1];b.onclick=function(){setMode(m[0])};T.appendChild(b)});el('phase').textContent=MODES.filter(function(m){return m[0]===mode})[0][1]}
-function renderPom(){el('pom').textContent=pom>0?('🍅'.repeat(Math.min(pom,8))+(pom>8?' +'+(pom-8):'')):''}
+function pomHTML(){
+  if (pom <= 0) return '';
+  var h = ''; for (var i = 0; i < Math.min(pom, 8); i++) h += '<i></i>';
+  return h + (pom > 8 ? '<span>+' + (pom - 8) + '</span>' : '');
+}
+function paint(){
+  document.body.style.setProperty('--h', String(HUE[mode]));
+  var T = el('tabs'); T.innerHTML = '';
+  MODES.forEach(function(m){ var b = document.createElement('button'); b.className = 'tab' + (mode === m[0] ? ' on' : ''); b.textContent = m[1]; b.onclick = function(){ haptic('selection'); setMode(m[0]); }; T.appendChild(b); });
+  el('phase').textContent = el('sPhase').textContent = label();
+  el('dPhase').textContent = label() + (running ? '' : ' · paused');
+  el('pom').innerHTML = el('sPom').innerHTML = pomHTML();
+  el('go').innerHTML = ICON.play + (fresh() ? 'Start' : 'Resume');
+  el('sGo').innerHTML = running ? ICON.pause : ICON.play;
+  el('sGo').setAttribute('aria-label', running ? 'Pause' : 'Start');
+  el('sGoCap').textContent = running ? 'Pause' : (fresh() ? 'Start' : 'Resume');
+  el('sNote').textContent = running ? '' : (fresh() ? 'Ready when you are' : 'Paused');
+  draw();
+}
 
-function setMode(m){mode=m;running=false;remaining=total();el('go').textContent='Start';renderTabs();draw();save()}
-function toggle(){
-  if(running){running=false;remaining=(endTime-Date.now())/1000;el('go').textContent='Start';if(loop){clearInterval(loop);loop=null}}
-  else{ensureAudio();running=true;endTime=Date.now()+remaining*1000;el('go').textContent='Pause';loop=setInterval(tick,250);if(window.myllmHaptic)myllmHaptic('light')}
-  save();
+/* ---------- timer ----------
+   The time left always comes from the end timestamp, never from counting
+   ticks, so it is right however long the app spent in the background. */
+function stopLoop(){ if (loop){ clearInterval(loop); loop = null; } }
+function setMode(m){ mode = m; running = false; stopLoop(); remaining = total(); paint(); save(); syncChrome(); }
+function startRun(){
+  ensureAudio();
+  running = true; endTime = Date.now() + remaining*1000;
+  stopLoop(); loop = setInterval(tick, 250);
+  haptic('light');
 }
-function reset(){running=false;if(loop){clearInterval(loop);loop=null}remaining=total();el('go').textContent='Start';draw();save()}
+function pauseRun(){ running = false; remaining = Math.max(0, (endTime - Date.now())/1000); stopLoop(); }
+function toggle(){
+  if (running) pauseRun(); else startRun();
+  if (running && !stageOn) openStage();
+  paint(); save(); syncChrome();
+}
+function reset(){ running = false; stopLoop(); remaining = total(); paint(); save(); syncChrome(); }
 function tick(){
-  remaining=(endTime-Date.now())/1000;
-  if(remaining<=0){remaining=0;draw();complete();return}
+  if (!running) return;
+  remaining = (endTime - Date.now())/1000;
+  if (remaining <= 0){ remaining = 0; draw(); complete(); return; }
   draw();
 }
 function complete(){
-  running=false;if(loop){clearInterval(loop);loop=null}chime();if(window.myllmHaptic)myllmHaptic('success');
-  if(mode==='focus'){pom++;cycle++;renderPom();setMode(cycle%4===0?'long':'short')}
+  running = false; stopLoop(); chime(); haptic('success');
+  if (dockOn) closeDock();
+  if (mode === 'focus'){ pom++; cycle++; setMode(cycle % 4 === 0 ? 'long' : 'short'); }
   else setMode('focus');
-  el('go').textContent='Start';save();
 }
-function ensureAudio(){if(!actx){try{actx=new(window.AudioContext||window.webkitAudioContext)()}catch(e){}}if(actx&&actx.state==='suspended')actx.resume()}
+function ensureAudio(){ if (!actx){ try { actx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e){} } if (actx && actx.state === 'suspended') actx.resume(); }
 function chime(){
-  if(!actx)return;var t=actx.currentTime;[0,0.18,0.36].forEach(function(off,i){
-    var o=actx.createOscillator(),g=actx.createGain();o.type='sine';o.frequency.value=[660,880,990][i];
-    g.gain.setValueAtTime(0.0001,t+off);g.gain.exponentialRampToValueAtTime(0.3,t+off+0.02);g.gain.exponentialRampToValueAtTime(0.0001,t+off+0.4);
-    o.connect(g);g.connect(actx.destination);o.start(t+off);o.stop(t+off+0.42)});
+  if (!actx) return; var t = actx.currentTime; [0,0.18,0.36].forEach(function(off,i){
+    var o = actx.createOscillator(), g = actx.createGain(); o.type = 'sine'; o.frequency.value = [660,880,990][i];
+    g.gain.setValueAtTime(0.0001,t+off); g.gain.exponentialRampToValueAtTime(0.3,t+off+0.02); g.gain.exponentialRampToValueAtTime(0.0001,t+off+0.4);
+    o.connect(g); g.connect(actx.destination); o.start(t+off); o.stop(t+off+0.42); });
 }
-function readDur(){MODES.forEach(function(m){var v=parseInt(el(m[2]).value,10);if(v>0)dur[m[0]]=v});if(!running)remaining=total();draw();save()}
-function save(){store.setItem('focus',JSON.stringify({dur:dur,pom:pom,cycle:cycle}))}
+function readDur(){ MODES.forEach(function(m){ var v = parseInt(el(m[2]).value,10); if (v > 0) dur[m[0]] = v; }); if (!running) remaining = total(); paint(); save(); }
+function save(){ keep('focus', JSON.stringify({dur:dur, pom:pom, cycle:cycle, mode:mode, running:running, endTime:running ? endTime : 0, remaining:remaining})); }
 
-MODES.forEach(function(m){el(m[2]).addEventListener('change',readDur)});
-store.getItem('focus').then(function(v){
-  if(v)try{var o=JSON.parse(v);if(o.dur)dur=o.dur;pom=o.pom||0;cycle=o.cycle||0;el('dFocus').value=dur.focus;el('dShort').value=dur.short;el('dLong').value=dur.long}catch(e){}
-  remaining=total();renderTabs();renderPom();draw();
+/* ---------- stage, dock, chrome ---------- */
+function isLight(){ return !(window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches); }
+function syncLook(){ el('stage').classList.toggle('lite', isLight() && !window.myllmImmersive); }
+/* A session takes the whole display (myllmImmersive hides MyLLM's own title
+   bar). The screen is held awake only while the clock is actually running:
+   by MyLLM where it can, else by the Wake Lock API where the web view has it. */
+function syncChrome(){
+  var awake = stageOn && running;
+  if (awake) requestWake(); else releaseWake();
+  if (!window.myllmImmersive) return;
+  try { myllmImmersive(stageOn, {keepAwake:awake}).catch(function(){}); } catch(_){}
+}
+function requestWake(){
+  if (wakeLock || !('wakeLock' in navigator)) return;
+  try { navigator.wakeLock.request('screen').then(function(l){ wakeLock = l; }).catch(function(){ wakeLock = null; }); } catch(_){}
+}
+function releaseWake(){ if (wakeLock){ try { wakeLock.release(); } catch(_){} wakeLock = null; } }
+function openStage(){
+  stageOn = true; syncLook();
+  el('stage').classList.add('on'); document.body.classList.add('lock');
+  if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+}
+function endStage(){
+  haptic('light');
+  if (running) pauseRun();
+  if (dockOn) closeDock();
+  stageOn = false;
+  el('stage').classList.remove('on'); document.body.classList.remove('lock');
+  paint(); save(); syncChrome();
+}
+function driftOnce(){
+  var x = Math.round((Math.random() - 0.5)*44), y = Math.round((Math.random() - 0.5)*44);
+  el('dDrift').style.transform = 'translate(' + x + 'px,' + y + 'px)';
+}
+function openDock(){
+  haptic('medium');
+  dockOn = true; driftOnce(); paint();
+  el('stage').classList.add('dock');
+  el('dHint').style.opacity = '1'; setTimeout(function(){ el('dHint').style.opacity = '0'; }, 4000);
+  dockDrift = setInterval(driftOnce, 60000);
+}
+function closeDock(){
+  dockOn = false; el('stage').classList.remove('dock');
+  clearInterval(dockDrift); dockDrift = null;
+}
+
+el('go').onclick = toggle;
+el('rs').onclick = function(){ haptic('light'); reset(); };
+el('sGo').onclick = toggle;
+el('sReset').onclick = function(){ haptic('light'); reset(); };
+el('sEnd').onclick = endStage;
+el('sDock').onclick = openDock;
+el('dk').onclick = function(){ haptic('light'); closeDock(); };
+MODES.forEach(function(m){ el(m[2]).addEventListener('change', readDur); });
+
+document.addEventListener('visibilitychange', function(){
+  if (document.hidden){ releaseWake(); return; }
+  if (running) tick();                          /* catches a phase that ended while away */
+  if (stageOn) syncChrome();                    /* MyLLM puts its bars back when the app is left */
+});
+if (window.matchMedia){
+  var mq = matchMedia('(prefers-color-scheme: dark)');
+  if (mq.addEventListener) mq.addEventListener('change', syncLook); else if (mq.addListener) mq.addListener(syncLook);
+}
+
+/* ---------- boot ---------- */
+paint();
+load('focus').then(function(v){
+  var o = null; if (v) try { o = JSON.parse(v); } catch(e){}
+  if (o){
+    if (o.dur) dur = o.dur; pom = o.pom || 0; cycle = o.cycle || 0;
+    el('dFocus').value = dur.focus; el('dShort').value = dur.short; el('dLong').value = dur.long;
+    if (o.mode && HUE[o.mode] != null) mode = o.mode;
+  }
+  remaining = total();
+  if (o && o.running && o.endTime){             /* the app was closed mid-session */
+    if (o.endTime > Date.now()){
+      running = true; endTime = o.endTime; remaining = (endTime - Date.now())/1000;
+      loop = setInterval(tick, 250); openStage(); paint(); syncChrome(); return;
+    }
+    remaining = 0; running = true; endTime = o.endTime; tick(); return;
+  }
+  if (o && typeof o.remaining === 'number' && o.remaining > 0 && o.remaining < total()) remaining = o.remaining;
+  paint();
 });
 </script></body></html>

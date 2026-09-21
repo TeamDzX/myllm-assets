@@ -135,8 +135,61 @@ body{font-family:var(--font);margin:0;padding:0 16px calc(40px + env(safe-area-i
 .empty h3{margin:12px 0 5px;font-size:17px;color:var(--ink);font-weight:700}
 .empty p{margin:0 auto;font-size:13.5px;line-height:1.5;max-width:270px}
 
-@media(prefers-reduced-motion:reduce){.rec.on{animation:none}.wave i{transition:none}}
+/* inline symbols (iOS draws \25B6 and friends as emoji and ignores colour) */
+.play svg,#trimPrev svg{width:18px;height:18px;fill:currentColor;flex:0 0 auto}
+.play svg.pl{transform:translateX(1px)}
+.mi .dt .chev{width:11px;height:11px;fill:none;stroke:var(--faint);stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round;transition:transform .2s}
+.mi .dt .chev.dn{transform:rotate(90deg)}
+#trimPrev{display:flex;align-items:center;justify-content:center;gap:7px}
+
+/* Recording stage: the whole display while a memo is being taken. Two
+   backdrop layers in the app's own violet and magenta. On a MyLLM that can't
+   hide its title bar, light mode keeps the stage light so it doesn't sit dark
+   under a white bar. */
+body.rs-lock{overflow:hidden}
+.rs{position:fixed;inset:0;z-index:80;color:#fff;opacity:0;visibility:hidden;pointer-events:none;
+  transition:opacity .3s ease,visibility 0s linear .3s;-webkit-user-select:none;user-select:none}
+.rs.on{opacity:1;visibility:visible;pointer-events:auto;transition:opacity .3s ease}
+.rs-bg{position:absolute;inset:0}
+.rs-bg.d{background:radial-gradient(120% 90% at 20% 10%,hsl(265 70% 38%),transparent 60%),
+  radial-gradient(120% 90% at 85% 95%,hsl(325 65% 30%),transparent 62%),#0b0b10}
+.rs-bg.l{display:none;background:radial-gradient(120% 90% at 20% 0%,hsl(265 85% 88%),transparent 60%),
+  radial-gradient(120% 90% at 85% 100%,hsl(325 80% 88%),transparent 62%),#f4f4f8}
+.rs.lite{color:#15151a}.rs.lite .rs-bg.l{display:block}.rs.lite .rs-bg.d{display:none}
+.rs-col{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;text-align:center;
+  padding:calc(18px + env(safe-area-inset-top)) calc(20px + env(safe-area-inset-right)) calc(26px + env(safe-area-inset-bottom)) calc(20px + env(safe-area-inset-left))}
+.rs-state{display:inline-flex;align-items:center;gap:8px;height:34px;padding:0 14px;border-radius:99px;flex-shrink:0;
+  font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase}
+.rs .glass{border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.12);
+  -webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px)}
+.rs.lite .glass{border-color:rgba(0,0,0,.09);background:rgba(255,255,255,.62)}
+.rs-dot{width:9px;height:9px;border-radius:50%;background:var(--rec);animation:rsdot 1.4s ease-in-out infinite}
+@keyframes rsdot{50%{opacity:.25;transform:scale(.8)}}
+.rs-time{margin-top:auto;font-size:min(23vw,96px);font-weight:200;line-height:1;letter-spacing:.01em;font-variant-numeric:tabular-nums;flex-shrink:0}
+.rs-meta{margin-top:10px;font-size:13px;font-weight:600;opacity:.6;font-variant-numeric:tabular-nums;min-height:18px;flex-shrink:0}
+.rs-wave{width:100%;max-width:560px;height:110px;margin:30px 0 auto;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.rs-wave i{flex:0 0 auto;width:3px;height:100%;border-radius:2px;background:linear-gradient(hsl(265 95% 76%),hsl(325 90% 68%));
+  transform:scaleY(.04);transform-origin:center;transition:transform .09s linear}
+.rs.lite .rs-wave i{background:linear-gradient(var(--acc),var(--acc2))}
+.rs-stop{width:84px;height:84px;border-radius:50%;border:0;background:#fff;color:var(--rec);cursor:pointer;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;box-shadow:0 10px 30px rgba(0,0,0,.35);margin-top:26px}
+.rs.lite .rs-stop{background:#15151a;color:#ff5a50;box-shadow:0 10px 26px rgba(20,20,40,.25)}
+.rs-stop:active{transform:scale(.94)}
+.rs-stop svg{width:32px;height:32px;fill:currentColor}
+.rs-hint{margin-top:14px;font-size:12.5px;font-weight:600;opacity:.55;flex-shrink:0}
+@media(max-height:430px){
+  .rs-col{padding-top:calc(10px + env(safe-area-inset-top));padding-bottom:calc(12px + env(safe-area-inset-bottom))}
+  .rs-time{font-size:50px}.rs-meta{margin-top:4px}.rs-wave{height:54px;margin-top:12px}
+  .rs-stop{width:64px;height:64px;margin-top:10px}.rs-stop svg{width:24px;height:24px}.rs-hint{margin-top:6px}
+}
+
+@media(prefers-reduced-motion:reduce){.rec.on{animation:none}.wave i{transition:none}.rs-dot{animation:none}.rs-wave i{transition:none}.rs,.rs.on{transition:none}}
 </style></head><body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5.5v13a1 1 0 0 0 1.52.85l10.4-6.5a1 1 0 0 0 0-1.7L9.52 4.65A1 1 0 0 0 8 5.5z"/></symbol>
+  <symbol id="i-pause" viewBox="0 0 24 24"><rect x="6" y="5" width="4.2" height="14" rx="1.4"/><rect x="13.8" y="5" width="4.2" height="14" rx="1.4"/></symbol>
+  <symbol id="i-stop" viewBox="0 0 24 24"><rect x="5.5" y="5.5" width="13" height="13" rx="3"/></symbol>
+</defs></svg>
 <div class="hero"><div class="hero-inner"><h1>Voice Memos</h1><p>Record a thought — keep it, or send it to anyone.</p></div></div>
 
 <div class="recorder" id="recorder">
@@ -166,7 +219,19 @@ body{font-family:var(--font);margin:0;padding:0 16px calc(40px + env(safe-area-i
     <div class="tlabels"><span id="tS">0:00</span><b id="tKeep"></b><span id="tE">0:00</span></div>
     <div id="trimMsg"></div>
     <div class="tprog" id="tprog"><i id="tbar"></i></div>
-    <div class="tbtns"><button id="trimPrev" onclick="trimPreview()">▶ Preview</button><button id="trimGo" onclick="trimSave()">Save trim</button></div>
+    <div class="tbtns"><button id="trimPrev" onclick="trimPreview()"><svg><use href="#i-play"/></svg>Preview</button><button id="trimGo" onclick="trimSave()">Save trim</button></div>
+  </div>
+</div>
+
+<div class="rs" id="rs" aria-hidden="true">
+  <div class="rs-bg d"></div><div class="rs-bg l"></div>
+  <div class="rs-col">
+    <div class="rs-state glass"><i class="rs-dot"></i>Recording</div>
+    <div class="rs-time" id="rsTime">00:00</div>
+    <div class="rs-meta" id="rsMeta"></div>
+    <div class="rs-wave" id="rsWave"></div>
+    <button class="rs-stop" id="rsStop" onclick="stop()" aria-label="Stop recording"><svg><use href="#i-stop"/></svg></button>
+    <div class="rs-hint">Tap to stop and save</div>
   </div>
 </div>
 
@@ -183,6 +248,8 @@ var TXOK=!!window.myllmTranscribeFile;
 var TRIMOK=(function(){var AC=window.AudioContext||window.webkitAudioContext;
   return !!(AC&&AC.prototype.createMediaStreamDestination&&typeof MediaRecorder!=='undefined')})();
 var WAVEBARS=18;
+var ICON={play:'<svg class="pl"><use href="#i-play"/></svg>',pause:'<svg><use href="#i-pause"/></svg>',stop:'<svg><use href="#i-stop"/></svg>'};
+var PREVIEW_HTML=ICON.play+'Preview',STOPPREV_HTML=ICON.stop+'Stop';
 function el(i){return document.getElementById(i)}
 function setStatus(t){el('status').innerHTML=t||''}
 function haptic(k){if(window.myllmHaptic)try{myllmHaptic(k)}catch(e){}}
@@ -202,6 +269,55 @@ function pickMime(){
 }
 function toggle(){recording?stop():start()}
 
+/* Recording stage. Opens only once a recording is really running, and takes
+   the whole display: myllmImmersive hides MyLLM's bars and keeps the screen
+   awake, so auto-lock can't cut a memo short. The bridge is looked up when
+   used, never kept. MyLLM puts its bars back by itself if the app is left. */
+var stageOn=false,RSBARS=56,rsHist=[],rsAcc=0,rsLast=0;
+(function(){var w=el('rsWave');for(var i=0;i<RSBARS;i++)w.appendChild(document.createElement('i'));})();
+function syncChrome(){
+  if(!window.myllmImmersive)return;
+  try{myllmImmersive(stageOn,{keepAwake:stageOn}).catch(function(){})}catch(e){}
+}
+function openStage(){
+  try{
+    stageOn=true;rsHist=[];rsAcc=0;rsLast=0;paintStage();
+    el('rsTime').textContent='00:00';el('rsMeta').textContent='Up to '+Math.floor(MAXSECS/60)+':'+pad(MAXSECS%60);
+    el('rs').classList.toggle('lite',!window.myllmImmersive&&
+      !(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches));
+    el('rs').classList.add('on');el('rs').setAttribute('aria-hidden','false');
+    document.body.classList.add('rs-lock');
+  }catch(e){}
+  syncChrome();
+}
+function closeStage(){
+  if(!stageOn)return;
+  stageOn=false;
+  el('rs').classList.remove('on');el('rs').setAttribute('aria-hidden','true');
+  document.body.classList.remove('rs-lock');
+  syncChrome();
+}
+/* The stage shows loudness over time, newest on the right, read from the same
+   analyser as the small bars. It uses the raw signal, not the spectrum: the
+   spectrum is in decibels and sits at full height for any normal voice. */
+var rsBuf=null;
+function stageLevel(){
+  if(!stageOn||!analyser)return;
+  if(!rsBuf||rsBuf.length!==analyser.fftSize)rsBuf=new Uint8Array(analyser.fftSize);
+  analyser.getByteTimeDomainData(rsBuf);
+  var pk=0;for(var i=0;i<rsBuf.length;i++){var a=Math.abs(rsBuf[i]-128);if(a>pk)pk=a}
+  if(pk/128>rsAcc)rsAcc=pk/128;                       /* loudest moment in this slice */
+  var now=Date.now();if(now-rsLast<70)return;
+  rsLast=now;rsHist.push(Math.min(1,Math.pow(rsAcc,.6)*1.15));rsAcc=0;
+  if(rsHist.length>RSBARS)rsHist.shift();
+  paintStage();
+}
+function paintStage(){
+  var bars=el('rsWave').children,off=RSBARS-rsHist.length;
+  for(var i=0;i<RSBARS;i++)bars[i].style.transform='scaleY('+Math.max(.04,i<off?0:rsHist[i-off])+')';
+}
+document.addEventListener('visibilitychange',function(){if(!document.hidden&&stageOn)syncChrome()});
+
 /* live mic waveform via Web Audio (feature-detected; harmless if absent) */
 var actx=null,analyser=null,rafId=null;
 function startWave(s){
@@ -214,6 +330,7 @@ function startWave(s){
       if(!recording){return}
       analyser.getByteFrequencyData(data);
       for(var i=0;i<bars.length;i++){var v=(data[i]||0)/255;bars[i].style.transform='scaleY('+Math.max(.14,Math.min(1,v*1.4))+')';}
+      stageLevel();
       rafId=requestAnimationFrame(draw);
     })();
   }catch(e){}
@@ -234,19 +351,21 @@ function start(){
     rec.onstop=finish;rec.start();
     recording=true;t0=Date.now();
     el('rec').classList.add('on');el('recorder').classList.add('live');
-    setStatus('Recording… tap to stop');startWave(s);tick();haptic('medium');
+    setStatus('Recording… tap to stop');openStage();startWave(s);tick();haptic('medium');
   }).catch(function(){
+    closeStage();
     setStatus('Microphone blocked. Turn on <b>Allow apps to use the microphone</b> in Settings → MyLLMos Apps, then reopen this app. <span class="link">(iOS also asks once.)</span>');
   });
 }
 function tick(){
   if(!recording)return;var s=(Date.now()-t0)/1000;el('timer').textContent=mmss(s);
+  el('rsTime').textContent=mmss(s);if(MAXSECS-s<=20)el('rsMeta').textContent='Stops in 0:'+pad(Math.max(0,Math.ceil(MAXSECS-s)));
   if(s>=MAXSECS){stop();return}
   tHandle=setTimeout(tick,200);
 }
 function stop(){
   if(!rec||!recording)return;recording=false;if(tHandle)clearTimeout(tHandle);
-  el('rec').classList.remove('on');el('recorder').classList.remove('live');stopWave();
+  el('rec').classList.remove('on');el('recorder').classList.remove('live');stopWave();closeStage();
   try{rec.stop()}catch(e){}
   if(stream)stream.getTracks().forEach(function(t){t.stop()});
 }
@@ -371,7 +490,7 @@ function closeTrim(){
   if(t.phRaf)cancelAnimationFrame(t.phRaf);
   el('trimSheet').classList.remove('show');
   el('tbar').style.width='0';el('tprog').style.display='none';el('ph').style.display='none';
-  el('trimPrev').textContent='▶ Preview';setTrimMsg('');
+  el('trimPrev').innerHTML=PREVIEW_HTML;setTrimMsg('');
 }
 function drawWave(){
   if(!tr||!tr.buf)return;
@@ -434,18 +553,18 @@ function trimUI(){
 function trimPreview(){
   if(!tr||!tr.buf||tr.saving)return;
   if(tr.ac.state==='suspended')try{tr.ac.resume()}catch(e){}
-  if(tr.psrc){try{tr.psrc.stop()}catch(e){}tr.psrc=null;el('trimPrev').textContent='▶ Preview';hidePh();return}
+  if(tr.psrc){try{tr.psrc.stop()}catch(e){}tr.psrc=null;el('trimPrev').innerHTML=PREVIEW_HTML;hidePh();return}
   var src=tr.ac.createBufferSource();src.buffer=tr.buf;src.connect(tr.ac.destination);
-  src.onended=function(){if(tr&&tr.psrc===src){tr.psrc=null;el('trimPrev').textContent='▶ Preview';hidePh()}};
+  src.onended=function(){if(tr&&tr.psrc===src){tr.psrc=null;el('trimPrev').innerHTML=PREVIEW_HTML;hidePh()}};
   src.start(0,tr.s,Math.max(.1,tr.e-tr.s));
   tr.psrc=src;tr.pt0=tr.ac.currentTime;
   el('ph').style.left=(tr.s/tr.buf.duration*100)+'%';el('ph').style.display='block';
   phTick();
-  el('trimPrev').textContent='■ Stop';haptic('light');
+  el('trimPrev').innerHTML=STOPPREV_HTML;haptic('light');
 }
 function trimSave(){
   if(!tr||!tr.buf||tr.saving)return;
-  if(tr.psrc){try{tr.psrc.stop()}catch(e){}tr.psrc=null;el('trimPrev').textContent='▶ Preview';hidePh()}
+  if(tr.psrc){try{tr.psrc.stop()}catch(e){}tr.psrc=null;el('trimPrev').innerHTML=PREVIEW_HTML;hidePh()}
   if(tr.ac.state==='suspended')try{tr.ac.resume()}catch(e){}
   var dur=Math.max(.1,tr.e-tr.s);
   var dest=tr.ac.createMediaStreamDestination();
@@ -570,10 +689,10 @@ function render(){
     var playing=(playingId===m.id),open=(openId===m.id);
     var d=document.createElement('div');d.className='memo'+(playing?' playing':'')+(open?' open':'');
     var row=document.createElement('div');row.className='mrow';
-    var pl=document.createElement('button');pl.className='play';pl.textContent=playing?'❚❚':'▶';pl.setAttribute('aria-label','Play');pl.onclick=function(){play(m.id)};
+    var pl=document.createElement('button');pl.className='play';pl.innerHTML=playing?ICON.pause:ICON.play;pl.setAttribute('aria-label',playing?'Pause':'Play');pl.onclick=function(){play(m.id)};
     var info=document.createElement('div');info.className='mi';
     info.innerHTML='<div class="nm">'+esc(m.name)+'</div><div class="dt">'+(playing?'<b>Playing</b>':mmss(m.dur))
-      +(m.txt?' · 💬':'')+' <span style="color:var(--faint)">'+(open?'▾':'▸')+'</span></div>';
+      +(m.txt?' · 💬':'')+' <svg class="chev'+(open?' dn':'')+'" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></div>';
     info.onclick=function(){toggleOpen(m.id)};
     row.appendChild(pl);row.appendChild(info);
     if(CANSHARE){

@@ -1240,14 +1240,30 @@
             saveState();
         }
 
-        function handleResize() {
-            const imageData = canvas.toDataURL('image/png');
-            const oldWidth = canvas.style.width ? parseInt(canvas.style.width) : window.innerWidth;
-            const oldHeight = canvas.style.height ? parseInt(canvas.style.height) : window.innerHeight;
-            const dpr = window.devicePixelRatio || 1;
-            const width = window.innerWidth;
-            const height = window.innerHeight;
+        // The paper only ever grows. The view changes size when MyLLM's bars
+        // come and go (focus mode) or the phone turns; a canvas that shrank with
+        // it would crop whatever was drawn in the extra room, for good. So the
+        // canvas keeps the largest size it has had and #app clips the overhang.
+        // The copy is synchronous on purpose: resize events arrive in bursts
+        // while the bars animate, and an image still loading from the last one
+        // would be snapshotted as a blank sheet by the next.
+        function paperSize() {
+            return { width: parseInt(canvas.style.width) || window.innerWidth,
+                     height: parseInt(canvas.style.height) || window.innerHeight };
+        }
 
+        function handleResize() {
+            const old = paperSize();
+            const width = Math.max(old.width, window.innerWidth);
+            const height = Math.max(old.height, window.innerHeight);
+            if (width === old.width && height === old.height) return;
+
+            const keep = document.createElement('canvas');
+            keep.width = canvas.width;
+            keep.height = canvas.height;
+            keep.getContext('2d').drawImage(canvas, 0, 0);
+
+            const dpr = window.devicePixelRatio || 1;
             canvas.width = width * dpr;
             canvas.height = height * dpr;
             canvas.style.width = width + 'px';
@@ -1255,17 +1271,9 @@
             ctx.scale(dpr, dpr);
             ctx.lineCap = 'round';
             ctx.lineJoin = 'round';
-
-            // Fill white background immediately
             ctx.fillStyle = '#ffffff';
             ctx.fillRect(0, 0, width, height);
-
-            const img = new Image();
-            img.onload = () => {
-                // Draw the old content preserving aspect
-                ctx.drawImage(img, 0, 0, oldWidth, oldHeight);
-            };
-            img.src = imageData;
+            ctx.drawImage(keep, 0, 0, old.width, old.height);
         }
 
         function saveState() {
@@ -1297,9 +1305,13 @@
         function restoreState(imageData) {
             const img = new Image();
             img.onload = () => {
+                // A step saved before the paper grew is smaller than it: put it
+                // back at its own size, never stretched to fit.
+                const paper = paperSize();
+                const scale = canvas.width / paper.width;
                 ctx.fillStyle = '#ffffff';
-                ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
-                ctx.drawImage(img, 0, 0, window.innerWidth, window.innerHeight);
+                ctx.fillRect(0, 0, paper.width, paper.height);
+                ctx.drawImage(img, 0, 0, img.naturalWidth / scale, img.naturalHeight / scale);
             };
             img.src = imageData;
         }
@@ -1933,8 +1945,9 @@
                 return;
             }
             clearArmed = false;
+            const paper = paperSize();
             ctx.fillStyle = '#ffffff';
-            ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
+            ctx.fillRect(0, 0, paper.width, paper.height);
             saveState();
             showToast('Canvas cleared');
         }
@@ -1955,8 +1968,24 @@
             }
         }
 
-        // Fullscreen
+        // Fullscreen. Inside MyLLM the button hides the app's own title bar and
+        // the status bar (myllmImmersive) — the web Fullscreen API does nothing
+        // in its web view. The bridge is looked up on each tap, never kept:
+        // MyLLM can add it after this script has run.
+        function syncChrome() {
+            if (!window.myllmImmersive) return;
+            try { myllmImmersive(state.isFullscreen, { keepAwake: false }).catch(function () {}); } catch (_) {}
+        }
+
         function toggleFullscreen() {
+            if (window.myllmImmersive) {
+                state.isFullscreen = !state.isFullscreen;
+                fullscreenBtn.classList.toggle('active', state.isFullscreen);
+                if (state.isFullscreen) showToast('Full screen — tap again to leave');
+                syncChrome();
+                setTimeout(handleResize, 400);      // in case the view grew without a resize event
+                return;
+            }
             if (!state.isFullscreen) {
                 const elem = document.documentElement;
                 if (elem.requestFullscreen) elem.requestFullscreen().catch(()=>{});
@@ -2186,6 +2215,10 @@
         });
 
         window.addEventListener('resize', handleResize);
+        document.addEventListener('visibilitychange', () => {
+            // MyLLM puts its bars back when the app is left; ask again on return.
+            if (!document.hidden && state.isFullscreen) syncChrome();
+        });
         window.addEventListener('orientationchange', () => setTimeout(handleResize, 100));
         canvas.addEventListener('contextmenu', e => e.preventDefault());
 
