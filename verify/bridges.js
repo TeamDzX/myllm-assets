@@ -125,7 +125,7 @@
   window.myllmShare = (text) => later(null);
   window.myllmSaveImage = (data) => later({ saved: true });
   window.myllmShareFile = (data, opts) => later({ saved: true });
-  // 5.7 bridges. The harness has no chrome to hide and no stream to read, so
+  // 5.6.1 bridges. The harness has no chrome to hide and no stream to read, so
   // these answer as a build would for a stream without metadata.
   window.myllmImmersive = (on, opts) => later(!!on);
   window.myllmStreamTitle = (url) => later({ title: '', station: '', metadata: false }, 40);
