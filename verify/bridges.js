@@ -128,6 +128,7 @@
   // 5.6.1 bridges. The harness has no chrome to hide and no stream to read, so
   // these answer as a build would for a stream without metadata.
   window.myllmImmersive = (on, opts) => later(!!on);
+  window.myllmClose = () => { (window.__closed = (window.__closed || 0) + 1); return later(true); };
   window.myllmStreamTitle = (url) => later({ title: '', station: '', metadata: false }, 40);
   window.myllmPickImage = (opts) => later(null).then(() => { throw new Error('Cancelled'); });
   window.myllmGenerateImage = (prompt, opts) =>

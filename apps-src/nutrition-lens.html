@@ -5,6 +5,10 @@
   Not for redistribution or republication. Terms: https://github.com/TeamDzX/myllm-assets/blob/main/LICENSE
 --><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Nutrition Lens</title>
+<!-- MyLLM 5.6.2+: open full screen from the first frame (MyLLM's bar would
+     only repeat the title above). Needs myllmClose for the way out, which
+     builds that read this tag all have. -->
+<meta name="myllm:immersive" content="on">
 <style>
 :root{--build-id:"18ea565e3b";
   color-scheme:light dark;
@@ -55,7 +59,27 @@ button{font-family:var(--font)}
   width:44px;height:44px;border-radius:13px;font-size:19px}
 .head .ht{flex:1;min-width:0}
 .head h1{font-size:22px;font-weight:800;letter-spacing:-.01em;margin:0}
-.head p{font-size:13px;color:var(--muted);margin:1px 0 0}
+.head p{font-size:13px;color:var(--muted);margin:1px 0 0;text-wrap:balance}   /* no lone "it." when the close button narrows the row */
+.head .acts{display:none;gap:8px;flex-shrink:0}
+.head .acts button{width:40px;height:40px;border-radius:12px;border:1px solid var(--border);background:var(--surface);
+  color:var(--ink);display:grid;place-items:center;padding:0;cursor:pointer;box-shadow:var(--shadow);transition:transform .12s}
+.head .acts button:active{transform:scale(.94)}
+.head .acts svg.i{width:18px;height:18px}
+
+/* ---- full screen ----
+   With MyLLM's bar gone the page reaches every edge, so it gets the stage
+   backdrop the rest of the gallery uses (Radio, Snake, White Noise): the
+   app's hue glowing out of the corners, dark or light with the phone. The
+   close button in the header replaces MyLLM's Done. */
+.bg{position:fixed;inset:0;z-index:-1;pointer-events:none;display:none;transition:opacity .6s ease}
+.bg.d{background:radial-gradient(120% 90% at 20% 10%,hsl(var(--h) 70% 34%),transparent 60%),
+    radial-gradient(120% 90% at 85% 95%,hsl(calc(var(--h) + 60) 65% 26%),transparent 62%),#0b0b10}
+.bg.l{background:radial-gradient(120% 90% at 20% 0%,hsl(var(--h) 80% 84%),transparent 60%),
+    radial-gradient(120% 90% at 85% 100%,hsl(calc(var(--h) + 60) 78% 86%),transparent 62%),#f4f4f8}
+body.imm{background:transparent}
+body.imm .head .acts{display:flex}
+body.imm .bg.l{display:block}
+@media(prefers-color-scheme:dark){ body.imm .bg.l{display:none} body.imm .bg.d{display:block} }
 
 .surface{background:var(--surface);border:1px solid var(--border);border-radius:18px;
   padding:14px;margin-bottom:12px;box-shadow:var(--shadow)}
@@ -204,10 +228,12 @@ button{font-family:var(--font)}
   <symbol id="i-info" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 4.700a1.300 1.300 0 1 1 0 2.600 1.300 1.300 0 0 1 0-2.600zm-1 4.800a1 1 0 0 1 2 0v5a1 1 0 0 1-2 0z"/></symbol>
   <symbol id="i-warn" viewBox="0 0 24 24"><path d="M13.700 3.500a2 2 0 0 0-3.400 0L2.300 17a2 2 0 0 0 1.700 3h16a2 2 0 0 0 1.700-3zM12 8a1 1 0 0 1 1 1v4.500a1 1 0 0 1-2 0V9a1 1 0 0 1 1-1zm0 7.700a1.200 1.200 0 1 1 0 2.400 1.200 1.200 0 0 1 0-2.400z"/></symbol>
 </defs></svg>
+<div class="bg d"></div><div class="bg l"></div>
 
 <div class="head">
   <div class="tile"><svg class="i"><use href="#i-leaf"/></svg></div>
   <div class="ht"><h1>Nutrition Lens</h1><p>Photograph an ingredient, see what's in it.</p></div>
+  <div class="acts"><button type="button" id="closeBtn" aria-label="Close Nutrition Lens" onclick="closeApp()"><svg class="i"><use href="#i-close"/></svg></button></div>
 </div>
 
 <div class="surface">
@@ -700,7 +726,26 @@ el('q').addEventListener('keydown',function(e){
   this.value='';buildSuggestions();show(v);
 });
 
+/* ---------------- full screen ----------------
+   Only where MyLLM can also close the app for us: full screen hides the Done
+   button, and a page with no way out is worse than a repeated title. So on a
+   build without myllmClose nothing changes. Looked up each time, never kept. */
+function canGoFull(){ return !!(window.myllmClose && window.myllmImmersive); }
+function syncChrome(){
+  var full=canGoFull();
+  document.body.classList.toggle('imm',full);
+  if(!full)return;
+  try{ myllmImmersive(true,{keepAwake:false}).catch(function(){}); }catch(e){}
+}
+function closeApp(){
+  haptic('light');
+  try{ myllmClose().catch(function(){}); }catch(e){}
+}
+// MyLLM puts its bar back whenever the app is left; ask again on return.
+document.addEventListener('visibilitychange',function(){ if(!document.hidden)syncChrome(); });
+
 /* ---------------- boot ---------------- */
+syncChrome();
 buildSuggestions();
 if(!window.myllmVision){
   setStatus('Camera scanning needs the latest MyLLM. You can still look anything up by typing it.');
