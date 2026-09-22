@@ -3,90 +3,154 @@
   Recipe Finder — MyLLMos™ App Gallery · © 2026 Opticell Ltd
   Source-available: read it, remix it, run your version inside MyLLM™.
   Not for redistribution or republication. Terms: https://github.com/TeamDzX/myllm-assets/blob/main/LICENSE
---><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<style>
-/* all theme colours live in variables so light/dark can never be undone by
-   rule order (a later `background:#fff` once beat the dark override — the
-   "grey text on white card" bug) */
-:root{--build-id:"37d9ffc5dc";color-scheme:light dark;--accent:#ff453a;
-  --bg:#f2f2f7;--card:#fff;--ink:#111;--line:#d1d1d6;--alt:#e5e5ea;--alt-ink:#333;--save-bg:#ffe5e3;
-  --diet-bg:#e3f4e7;--diet-ink:#1e7d3c}
-@media(prefers-color-scheme:dark){:root{
-  --bg:#000;--card:#1c1c1e;--ink:#eee;--line:#3a3a3c;--alt:#1c1c1e;--alt-ink:#eee;--save-bg:#3a1f1e;
-  --diet-bg:#173322;--diet-ink:#7ed99a}}
-*{box-sizing:border-box}
-body{font-family:-apple-system,system-ui,sans-serif;margin:0;padding:18px;background:var(--bg);color:var(--ink)}
-h1{font-size:22px;margin:0 0 4px}
-.sub{font-size:13px;opacity:.6;margin-bottom:14px}
-.row{display:flex;gap:8px;margin-bottom:8px}
-input{flex:1;min-width:0;padding:12px;border:1px solid var(--line);border-radius:10px;font-size:16px;background:var(--card);color:var(--ink)}
-button.go{border:0;background:var(--accent);color:#fff;border-radius:10px;padding:0 16px;font-size:15px;font-weight:600}
-.alt{display:flex;gap:8px;margin-bottom:6px}
-.alt button{flex:1;border:0;background:var(--alt);color:var(--alt-ink);border-radius:9px;padding:9px;font-size:13px;font-weight:600}
-.diet{border:1.5px solid var(--line);background:none;color:var(--alt-ink);border-radius:999px;padding:7px 14px;font-size:13px;font-weight:600;margin-bottom:6px}
-.diet.on{border-color:#34a853;background:var(--diet-bg);color:var(--diet-ink)}
-#status{font-size:13px;opacity:.7;min-height:16px;margin:8px 0}
-.recipe{background:var(--card);color:var(--ink);border-radius:16px;padding:18px;margin-top:6px;box-shadow:0 1px 4px rgba(0,0,0,.1);display:none}
-.recipe h2{margin:0 0 2px;font-size:20px}
-.recipe .serv{font-size:12px;opacity:.6;margin-bottom:12px}
-.recipe h3{font-size:13px;text-transform:uppercase;letter-spacing:.05em;opacity:.55;margin:14px 0 6px}
-.recipe ul,.recipe ol{margin:0;padding-left:20px}.recipe li{margin:4px 0;line-height:1.45;font-size:15px}
-.save{margin-top:14px;border:0;background:var(--save-bg);color:var(--accent);border-radius:10px;padding:11px 16px;font-size:14px;font-weight:600;width:100%}
-h4{font-size:13px;text-transform:uppercase;letter-spacing:.05em;opacity:.55;margin:22px 0 8px}
-.saved{background:var(--card);color:var(--ink);border-radius:11px;padding:11px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px;box-shadow:0 1px 2px rgba(0,0,0,.07)}
-.saved span{flex:1;font-size:15px;font-weight:600}
-.saved .del{background:none;color:#ff453a;font-size:17px;padding:2px}
-@media(min-width:768px){body{max-width:760px;margin-left:auto;margin-right:auto}}
+--><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Recipe Finder</title>
+<style>:root{--build-id:"37d9ffc5dc";color-scheme:light dark;
+  --bg:var(--myllm-bg,#f2f2f7); --surface:var(--myllm-surface,#fff); --ink:var(--myllm-text,#111);
+  --muted:var(--myllm-muted,#8a8a8e); --line:var(--myllm-border,#e3e3e8); --acc:var(--myllm-accent,#0a84ff);
+  --fill:rgba(120,120,128,.12); --h:6; }
+@media (prefers-color-scheme:dark){ :root{ --bg:var(--myllm-bg,#000); --surface:var(--myllm-surface,#1c1c1e);
+  --ink:var(--myllm-text,#f2f2f7); --muted:var(--myllm-muted,#8e8e93); --line:var(--myllm-border,#2c2c2e); --fill:rgba(120,120,128,.24); } }
+  *{ margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body{ font-family:var(--myllm-font,-apple-system,system-ui,sans-serif); background:var(--bg); color:var(--ink);
+    max-width:600px; margin:0 auto; min-height:100dvh; font-size:15.5px; line-height:1.4;
+    padding:calc(16px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) calc(30px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left)); }
+  @media (min-width:768px){ body{ max-width:760px; } .rgrid{ display:grid; grid-template-columns:.85fr 1.15fr; gap:12px; align-items:start; } }
+  svg.i{ width:1.25em; height:1.25em; fill:currentColor; flex-shrink:0; }
+  button{ font:inherit; color:inherit; cursor:pointer; } button:active{ transform:scale(.96); }
+
+  .head{ display:flex; align-items:center; gap:12px; margin:2px 2px 14px; }
+  .tile{ display:flex; align-items:center; justify-content:center; color:#fff; flex-shrink:0;
+    background:linear-gradient(145deg, hsl(var(--h) 80% 54%), hsl(calc(var(--h) + 24) 80% 40%)); }
+  .head .tile{ width:44px; height:44px; border-radius:13px; font-size:19px; }
+  .head .ht{ flex:1; min-width:0; }
+  h1{ font-size:22px; font-weight:800; letter-spacing:-.01em; }
+  .head p{ font-size:13px; color:var(--muted); margin-top:1px; }
+  h2{ font-size:12px; font-weight:800; letter-spacing:.07em; text-transform:uppercase; color:var(--muted); margin:20px 2px 10px; }
+
+  .card{ background:var(--surface); border:1px solid var(--line); border-radius:18px; padding:14px; margin-bottom:12px; }
+  label{ display:block; font-size:12px; font-weight:800; letter-spacing:.07em; text-transform:uppercase; color:var(--muted); margin:0 2px 7px; }
+  .row{ display:flex; gap:8px; }
+  input{ flex:1; min-width:0; font:inherit; font-size:16px; padding:12px; border-radius:12px; border:1px solid var(--line); background:var(--bg); color:var(--ink); outline:none; }
+  input:focus{ border-color:var(--acc); }
+  .go{ min-height:48px; border:none; border-radius:12px; background:var(--acc); color:#fff; font-size:15.5px; font-weight:700; padding:0 18px;
+    display:flex; align-items:center; justify-content:center; gap:7px; flex-shrink:0; }
+  .go:disabled{ opacity:.55; }
+  .chips{ display:flex; gap:7px; flex-wrap:wrap; margin-top:10px; }
+  .chip{ min-height:38px; border:1px solid var(--line); background:var(--bg); border-radius:99px; padding:0 13px; font-size:13.5px; font-weight:650;
+    display:inline-flex; align-items:center; gap:6px; }
+  .chip svg{ font-size:14px; }
+  .chip.hot{ background:#1f9d55; border-color:#1f9d55; color:#fff; }
+  .status{ font-size:13px; color:var(--muted); min-height:18px; margin-top:10px; text-align:center; }
+  .status.err{ color:#ff453a; }
+  .spin{ width:16px; height:16px; border-radius:50%; border:2.4px solid currentColor; border-right-color:transparent; animation:spin .8s linear infinite; flex-shrink:0; }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+
+  .hero{ border-radius:20px; padding:16px 18px; color:#fff; margin-bottom:12px;
+    background:linear-gradient(145deg, hsl(var(--h) 72% 46%), hsl(calc(var(--h) + 24) 70% 30%)); box-shadow:0 10px 28px hsl(var(--h) 60% 28% / .25); }
+  .hero .k{ font-size:11px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; opacity:.8; }
+  .hero h3{ font-size:22px; font-weight:800; line-height:1.2; letter-spacing:-.01em; margin-top:3px; overflow-wrap:anywhere; }
+  .hero .meta{ display:flex; gap:7px; flex-wrap:wrap; margin-top:10px; }
+  .hero .pill{ display:inline-flex; align-items:center; gap:6px; border-radius:99px; padding:5px 11px; font-size:13px; font-weight:650;
+    background:rgba(255,255,255,.16); border:1px solid rgba(255,255,255,.2); }
+  .hero .pill svg{ font-size:14px; }
+  .ing{ list-style:none; }
+  .ing li{ display:flex; gap:10px; padding:8px 0; border-bottom:1px solid var(--line); font-size:15px; line-height:1.4; }
+  .ing li:last-child{ border-bottom:none; padding-bottom:2px; } .ing li:first-child{ padding-top:2px; }
+  .ing li::before{ content:""; width:7px; height:7px; border-radius:50%; background:hsl(var(--h) 75% 52%); margin-top:.5em; flex-shrink:0; }
+  .steps{ list-style:none; counter-reset:s; }
+  .steps li{ counter-increment:s; display:flex; gap:12px; padding:10px 0; border-bottom:1px solid var(--line); font-size:15.5px; line-height:1.5; }
+  .steps li:last-child{ border-bottom:none; padding-bottom:2px; } .steps li:first-child{ padding-top:2px; }
+  .steps li::before{ content:counter(s); flex-shrink:0; width:28px; height:28px; border-radius:9px; display:flex; align-items:center; justify-content:center;
+    font-size:13px; font-weight:800; background:hsl(var(--h) 75% 50% / .14); color:hsl(var(--h) 70% 40%); }
+  @media (prefers-color-scheme:dark){ .steps li::before{ color:hsl(var(--h) 85% 66%); } }
+  .save{ width:100%; min-height:48px; border:none; border-radius:14px; font-size:15.5px; font-weight:700; margin-bottom:12px;
+    display:flex; align-items:center; justify-content:center; gap:8px; background:hsl(var(--h) 80% 55% / .14); color:hsl(var(--h) 72% 42%); }
+  @media (prefers-color-scheme:dark){ .save{ color:hsl(var(--h) 90% 66%); } }
+  .save:disabled{ opacity:.7; }
+
+  .srow{ display:flex; align-items:center; gap:11px; min-height:48px; padding:4px 0; border-bottom:1px solid var(--line); }
+  .srow:last-child{ border-bottom:none; }
+  .srow .tile{ width:34px; height:34px; border-radius:10px; font-size:14px; }
+  .srow span{ flex:1; min-width:0; font-size:15px; font-weight:650; cursor:pointer; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .srow .del{ width:44px; height:44px; margin-right:-8px; border:none; background:none; color:var(--muted); font-size:14px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+
+  .skel{ border-radius:18px; margin-bottom:12px; background:var(--fill); animation:shimmer 1.4s ease-in-out infinite; }
+  @keyframes shimmer{ 50%{ opacity:.45; } }
+  [hidden]{ display:none !important; }
+  @media (prefers-reduced-motion:reduce){ .spin{ animation-duration:2.4s; } .skel{ animation:none; } button:active{ transform:none; } }
+
+  @keyframes myllmAiSpin{to{transform:rotate(360deg)}}
+  .myllm-ai-busy{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(18px);z-index:99999;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;display:flex;align-items:center;gap:10px;background:rgba(28,28,30,.96);color:#fff;border-radius:999px;padding:10px 16px 10px 14px;box-shadow:0 6px 22px rgba(0,0,0,.4);font-size:14px;font-weight:600;max-width:92%}
+  .myllm-ai-busy.on{opacity:1;transform:translateX(-50%) translateY(0)}
+  .myllm-ai-cog{width:16px;height:16px;border-radius:50%;border:2.4px solid #a78bfa;border-right-color:transparent;animation:myllmAiSpin .9s linear infinite;flex-shrink:0}
+  .myllm-ai-busy small{font-weight:400;opacity:.6}
 </style></head><body>
-<style>
-@keyframes myllmAiSpin{to{transform:rotate(360deg)}}
-.myllm-ai-busy{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(18px);z-index:99999;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;display:flex;align-items:center;gap:10px;background:rgba(28,28,30,.96);color:#fff;border-radius:999px;padding:10px 16px 10px 14px;box-shadow:0 6px 22px rgba(0,0,0,.4);font-family:-apple-system,system-ui,sans-serif;font-size:14px;font-weight:600;max-width:92%}
-.myllm-ai-busy.on{opacity:1;transform:translateX(-50%) translateY(0)}
-.myllm-ai-cog{font-size:18px;line-height:1;animation:myllmAiSpin 2.4s linear infinite;filter:drop-shadow(0 0 5px rgba(124,92,255,.85))}
-.myllm-ai-busy small{font-weight:400;opacity:.6}
-</style>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-pan" viewBox="0 0 24 24"><path d="M2.5 12h14v.6a5.4 5.4 0 0 1-5.4 5.4H7.9a5.4 5.4 0 0 1-5.4-5.4z" fill="currentColor"/><path d="M16.5 13.2h5M7 3.8c-1.1 1.2 1.1 2.2 0 3.6M11.5 3.8c-1.1 1.2 1.1 2.2 0 3.6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+  <symbol id="i-dice" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3.5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="9" cy="9" r="1.4" fill="currentColor"/><circle cx="15" cy="15" r="1.4" fill="currentColor"/><circle cx="15" cy="9" r="1.4" fill="currentColor"/><circle cx="9" cy="15" r="1.4" fill="currentColor"/></symbol>
+  <symbol id="i-bolt" viewBox="0 0 24 24"><path d="M13 2L4.5 13.5H11L10 22l8.5-11.5H12z" fill="currentColor"/></symbol>
+  <symbol id="i-leaf" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19c0-8 5-13 14-14 0 9-5 14-13 14"/><path d="M5 19l7-7"/></g></symbol>
+  <symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 20.5s-8-4.7-8-10.6A4.4 4.4 0 0 1 12 7.3a4.4 4.4 0 0 1 8 2.6c0 5.9-8 10.6-8 10.6z" fill="currentColor"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></g></symbol>
+  <symbol id="i-people" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c0-3.2 2.5-5.2 5.5-5.2s5.5 2 5.5 5.2"/><path d="M16 5.2a3 3 0 0 1 0 5.8M17.5 14c1.9.6 3 2.4 3 5"/></g></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></symbol>
+</defs></svg>
 <script>
-(function(){
-  if(window.__myllmAiWrap||typeof window.myllmAsk!=='function')return;
-  window.__myllmAiWrap=true;
-  var orig=window.myllmAsk,depth=0,node=null;
-  function ensure(){if(node)return;node=document.createElement('div');node.className='myllm-ai-busy';
-    node.innerHTML='<span class="myllm-ai-cog">\u2699\uFE0F</span><span>AI is thinking\u2026 <small>privately, on your device</small></span>';
-    (document.body||document.documentElement).appendChild(node);}
-  function show(){ensure();depth++;node.classList.add('on');}
-  function hide(){depth=Math.max(0,depth-1);if(depth===0&&node)node.classList.remove('on');}
-  window.myllmAsk=function(){show();var p;try{p=orig.apply(this,arguments);}catch(e){hide();throw e;}
-    return Promise.resolve(p).then(function(r){hide();return r;},function(e){hide();throw e;});};
-})();
+(function(){if(window.__myllmAiWrap||typeof window.myllmAsk!=='function')return;window.__myllmAiWrap=true;
+var orig=window.myllmAsk,depth=0,node=null;
+function ensure(){if(node)return;node=document.createElement('div');node.className='myllm-ai-busy';
+node.innerHTML='<span class="myllm-ai-cog"></span><span>AI is thinking… <small>privately, on your device</small></span>';
+(document.body||document.documentElement).appendChild(node);}
+function show(){ensure();depth++;node.classList.add('on');}
+function hide(){depth=Math.max(0,depth-1);if(depth===0&&node)node.classList.remove('on');}
+window.myllmAsk=function(){show();var p;try{p=orig.apply(this,arguments);}catch(e){hide();throw e;}
+return Promise.resolve(p).then(function(r){hide();return r;},function(e){hide();throw e;});};})();
 </script>
 
-<h1>🍳 Recipe Finder</h1>
-<div class="sub">Tell it what's in your fridge, or a dish you fancy — get a recipe.</div>
-<div class="row"><input id="q" placeholder="e.g. chicken, rice, peppers — or “lasagne”" enterkeyhint="search"><button class="go" id="go" onclick="find()">Cook</button></div>
-<div class="alt"><button onclick="surprise()">🎲 Surprise me</button><button onclick="find(' make it quick (under 20 minutes)')">⚡ Something quick</button></div>
-<button class="diet" id="dietBtn" onclick="toggleDiet()">🌱 Plant-based</button>
-<div id="status"></div>
-<div class="recipe" id="recipe"></div>
-<h4 id="savedHead" style="display:none">Saved recipes</h4>
-<div id="saved"></div>
+<div class="head">
+  <div class="tile"><svg class="i"><use href="#i-pan"/></svg></div>
+  <div class="ht"><h1>Recipe Finder</h1><p>Tell it what's in your fridge, or a dish you fancy — get a recipe</p></div>
+</div>
+
+<div class="card">
+  <label for="q">What have you got?</label>
+  <div class="row"><input id="q" placeholder="e.g. chicken, rice, peppers — or “lasagne”" enterkeyhint="search" autocomplete="off"><button class="go" id="go" type="button">Cook</button></div>
+  <div class="chips">
+    <button class="chip" type="button" id="surpriseBtn"><svg class="i"><use href="#i-dice"/></svg>Surprise me</button>
+    <button class="chip" type="button" id="quickBtn"><svg class="i"><use href="#i-bolt"/></svg>Something quick</button>
+    <button class="chip" type="button" id="dietBtn"></button>
+  </div>
+  <div class="status" id="status"></div>
+</div>
+
+<div id="skeleton" hidden><div class="skel" style="height:110px"></div><div class="skel" style="height:200px"></div></div>
+<div id="recipe" hidden></div>
+<h2 id="savedHead" hidden>Saved recipes</h2>
+<div class="card" id="saved" hidden></div>
+
 <script>
-var store=window.myllmStorage||{getItem:function(){return Promise.resolve(null)},setItem:function(){return Promise.resolve()}};
+function el(i){return document.getElementById(i)}
+/* Bridges are looked up when used, never kept: MyLLM can add them after this
+   script has run. */
+function store(){return window.myllmStorage||{getItem:function(){return Promise.resolve(null)},setItem:function(){return Promise.resolve()}}}
+function haptic(k){if(window.myllmHaptic)try{myllmHaptic(k)}catch(e){}}
+function icon(n){return '<svg class="i"><use href="#i-'+n+'"/></svg>'}
 var saved=[],current=null,plant=false;
 function toggleDiet(){
-  plant=!plant;renderDiet();store.setItem('recipes.plant',plant?'1':'');
-  if(window.myllmHaptic)myllmHaptic('selection');
+  plant=!plant;renderDiet();store().setItem('recipes.plant',plant?'1':'');
+  haptic('selection');
 }
 function renderDiet(){
-  var b=el('dietBtn');b.classList.toggle('on',plant);
-  b.textContent=plant?'🌱 Plant-based — on (eggs ok)':'🌱 Plant-based';
+  var b=el('dietBtn');b.classList.toggle('hot',plant);b.setAttribute('aria-pressed',plant);
+  b.innerHTML=icon('leaf')+(plant?'Plant-based · eggs ok':'Plant-based');
 }
-function el(i){return document.getElementById(i)}
-function setStatus(t){el('status').textContent=t||''}
+function setStatus(t,err){var s=el('status');s.textContent=t||'';s.classList.toggle('err',!!err)}
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
 
 function find(extra){
   var q=el('q').value.trim();
-  if(!q){setStatus('Type some ingredients or a dish first.');return}
+  if(!q){setStatus('Type some ingredients or a dish first.',true);return}
   ask('Create a recipe based on: "'+q+'".'+(typeof extra==='string'?extra:''));
 }
 function surprise(){ask('Invent one appealing dinner recipe (your choice, something a home cook would enjoy).')}
@@ -121,9 +185,11 @@ function parseRecipe(reply){
     throw new Error('the chef didn’t return a proper recipe');
   return r;
 }
+function goBtn(busy){var b=el('go');b.disabled=!!busy;b.innerHTML=busy?'<i class="spin"></i>':'Cook';b.setAttribute('aria-label',busy?'Cooking':'Cook')}
 function ask(prompt){
-  if(!window.myllmAsk){setStatus('Recipes need AI — update MyLLM and enable “Allow apps to use the AI” in Settings.');return}
-  el('go').disabled=true;setStatus('Cooking something up…');
+  if(!window.myllmAsk){setStatus('Recipes need AI — update MyLLM and enable “Allow apps to use the AI” in Settings.',true);return}
+  goBtn(true);setStatus('Cooking something up…');
+  el('skeleton').hidden=false;el('recipe').hidden=true;
   var diet=plant?' The recipe MUST be fully plant-based: no meat, poultry, fish, seafood, dairy, gelatine or honey. Eggs ARE allowed.':'';
   var p=prompt+diet+' Reply with EXACTLY these labelled lines and nothing else:\n'+
     'TITLE: the recipe name\nSERVES: how many people it serves\nTIME: total cooking time\n'+
@@ -134,42 +200,54 @@ function ask(prompt){
   .catch(function(){return myllmAsk(p+'\nIMPORTANT: fill each line with the real recipe — never repeat the instruction text.',sys)
     .then(function(r){return parseRecipe(r||'')})})
   .then(function(r){
-    current=r;renderRecipe(r);setStatus('');if(window.myllmHaptic)myllmHaptic('success');
-  }).catch(function(err){setStatus('Could not find a recipe: '+err.message)})
-  .then(function(){el('go').disabled=false});
+    current=r;el('skeleton').hidden=true;renderRecipe(r);setStatus('');haptic('success');
+  }).catch(function(err){
+    el('skeleton').hidden=true;if(current)el('recipe').hidden=false;
+    setStatus('Could not find a recipe: '+err.message,true);
+  })
+  .then(function(){goBtn(false)});
 }
 
 function renderRecipe(r){
-  var box=el('recipe');box.style.display='block';
-  var meta=[r.servings,r.time].filter(Boolean).join(' · ');
-  box.innerHTML='<h2>'+esc(r.title)+'</h2>'+(meta?'<div class="serv">'+esc(meta)+'</div>':'')+
-    '<h3>Ingredients</h3><ul>'+(r.ingredients||[]).map(function(x){return '<li>'+esc(x)+'</li>'}).join('')+'</ul>'+
-    '<h3>Method</h3><ol>'+(r.steps||[]).map(function(x){return '<li>'+esc(x)+'</li>'}).join('')+'</ol>'+
-    '<button class="save" id="saveBtn">♥ Save recipe</button>';
+  var box=el('recipe');box.hidden=false;
+  var pills=(r.servings?'<span class="pill">'+icon('people')+esc(r.servings)+'</span>':'')+(r.time?'<span class="pill">'+icon('clock')+esc(r.time)+'</span>':'');
+  var isSaved=saved.some(function(s){return s.title===r.title});
+  box.innerHTML='<div class="hero"><div class="k">Recipe</div><h3>'+esc(r.title)+'</h3>'+(pills?'<div class="meta">'+pills+'</div>':'')+'</div>'+
+    '<div class="rgrid"><div class="card"><label>Ingredients</label><ul class="ing">'+(r.ingredients||[]).map(function(x){return '<li>'+esc(x)+'</li>'}).join('')+'</ul></div>'+
+    '<div class="card"><label>Method</label><ol class="steps">'+(r.steps||[]).map(function(x){return '<li><span>'+esc(x)+'</span></li>'}).join('')+'</ol></div></div>'+
+    '<button class="save" id="saveBtn" type="button">'+icon('heart')+(isSaved?'Saved':'Save recipe')+'</button>';
+  if(isSaved)el('saveBtn').disabled=true;
   el('saveBtn').onclick=function(){saveCurrent()};
   box.scrollIntoView({behavior:'smooth',block:'start'});
 }
 function saveCurrent(){
   if(!current)return;
   if(!saved.some(function(r){return r.title===current.title})){saved.unshift(current);persist();renderSaved()}
-  el('saveBtn').textContent='♥ Saved';el('saveBtn').disabled=true;
-  if(window.myllmHaptic)myllmHaptic('success');
+  el('saveBtn').innerHTML=icon('heart')+'Saved';el('saveBtn').disabled=true;
+  haptic('success');
 }
-function persist(){store.setItem('recipes',JSON.stringify(saved))}
+function persist(){store().setItem('recipes',JSON.stringify(saved))}
 function renderSaved(){
-  var S=el('saved');S.innerHTML='';el('savedHead').style.display=saved.length?'block':'none';
+  var S=el('saved');S.innerHTML='';el('savedHead').hidden=S.hidden=!saved.length;
   saved.forEach(function(r,i){
-    var d=document.createElement('div');d.className='saved';
+    var d=document.createElement('div');d.className='srow';
+    var t=document.createElement('div');t.className='tile';t.innerHTML=icon('pan');
     var sp=document.createElement('span');sp.textContent=r.title;sp.onclick=function(){current=r;renderRecipe(r)};
-    var x=document.createElement('button');x.className='del';x.textContent='✕';x.onclick=function(){saved.splice(i,1);persist();renderSaved()};
-    d.appendChild(sp);d.appendChild(x);S.appendChild(d);
+    var x=document.createElement('button');x.className='del';x.type='button';x.innerHTML=icon('x');x.setAttribute('aria-label','Delete '+r.title);
+    x.onclick=function(){saved.splice(i,1);persist();renderSaved();haptic('warning')};
+    d.appendChild(t);d.appendChild(sp);d.appendChild(x);S.appendChild(d);
   });
 }
+el('go').onclick=function(){find()};
+el('surpriseBtn').onclick=surprise;
+el('quickBtn').onclick=function(){find(' make it quick (under 20 minutes)')};
+el('dietBtn').onclick=toggleDiet;
 el('q').addEventListener('keydown',function(e){if(e.key==='Enter')find()});
-store.getItem('recipes').then(function(v){
+renderDiet();
+store().getItem('recipes').then(function(v){
   if(v)try{saved=JSON.parse(v)}catch(e){}
   renderSaved();
   if(!window.myllmAsk)setStatus('Heads-up: this app needs the latest MyLLM with apps-AI enabled.');
-  return store.getItem('recipes.plant');
+  return store().getItem('recipes.plant');
 }).then(function(v){ plant=!!v; renderDiet(); });
 </script></body></html>

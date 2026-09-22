@@ -22,92 +22,97 @@
 </script>
 
 <style>
-  :root{--build-id:"ce49e3f95d";
-    --bg: var(--myllm-bg, #f6f7f9);
-    --surface: var(--myllm-surface, #ffffff);
-    --text: var(--myllm-text, #11131a);
-    --muted: var(--myllm-muted, #6b7280);
-    --accent: var(--myllm-accent, #4f7cff);
-    --border: var(--myllm-border, rgba(0,0,0,.10));
-    --radius: var(--myllm-radius, 14px);
-  }
-  @media (prefers-color-scheme: dark){
-    :root{ --bg: var(--myllm-bg,#0e0f13); --surface: var(--myllm-surface,#1a1c22); --text: var(--myllm-text,#f3f4f7); --muted: var(--myllm-muted,#a4abba); --border: var(--myllm-border,rgba(255,255,255,.14)); }
-  }
-  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-  html,body{ margin:0; height:100%; }
-  body{
-    background:var(--bg); color:var(--text);
-    font-family:var(--myllm-font, -apple-system,system-ui,'Segoe UI',Roboto,sans-serif);
-    display:flex; flex-direction:column; padding:max(16px,env(safe-area-inset-top)) 16px 16px;
-    user-select:none; -webkit-user-select:none;
-  }
-  header{ margin-bottom:14px; }
-  h1{ font-size:24px; margin:0 0 2px; display:flex; align-items:center; gap:8px; }
-  .sub{ color:var(--muted); font-size:13px; }
-  .add{ display:flex; gap:8px; margin-bottom:14px; }
-  input[type=text]{
-    flex:1; min-width:0; font:inherit; font-size:16px; color:var(--text);
-    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
-    padding:12px 14px; outline:none; user-select:text; -webkit-user-select:text;
-  }
-  input[type=text]:focus{ border-color:var(--accent); }
-  button{ font:inherit; cursor:pointer; border:0; }
-  .btn{
-    background:var(--accent); color:#fff; font-weight:700; font-size:16px;
-    border-radius:var(--radius); padding:12px 16px;
-  }
-  ul{ list-style:none; margin:0; padding:0; flex:1; overflow:auto; }
-  li{
-    display:flex; align-items:center; gap:12px; background:var(--surface);
-    border:1px solid var(--border); border-radius:var(--radius); padding:13px 14px; margin-bottom:9px;
-  }
-  li .check{
-    width:24px; height:24px; border-radius:50%; border:2px solid var(--accent);
-    flex:none; display:flex; align-items:center; justify-content:center; color:#fff; font-size:14px;
-  }
-  li.done .check{ background:var(--accent); }
-  li.done .label{ text-decoration:line-through; color:var(--muted); }
-  .label{ flex:1; min-width:0; font-size:17px; word-break:break-word; }
-  .del{ background:transparent; color:var(--muted); font-size:20px; padding:4px 6px; }
-  .empty{ color:var(--muted); text-align:center; padding:40px 16px; font-size:15px; }
-  footer{ display:flex; justify-content:space-between; align-items:center; padding-top:8px; color:var(--muted); font-size:13px; }
-  .clear{ background:transparent; color:var(--accent); font-weight:600; font-size:13px; }
-  .toast{
-    position:fixed; left:50%; bottom:22px; transform:translateX(-50%) translateY(20px);
-    background:var(--text); color:var(--bg); padding:10px 16px; border-radius:999px; font-size:14px;
-    opacity:0; transition:opacity .2s, transform .2s; pointer-events:none; max-width:80%;
-  }
-  .toast.show{ opacity:1; transform:translateX(-50%); }
+  :root{--build-id:"ce49e3f95d";color-scheme:light dark;
+    --bg:var(--myllm-bg,#f2f2f7); --surface:var(--myllm-surface,#fff); --ink:var(--myllm-text,#111);
+    --muted:var(--myllm-muted,#8a8a8e); --line:var(--myllm-border,#e3e3e8); --acc:var(--myllm-accent,#0a84ff);
+    --fill:rgba(120,120,128,.12); --h:140; }
+  @media (prefers-color-scheme:dark){ :root{ --bg:var(--myllm-bg,#000); --surface:var(--myllm-surface,#1c1c1e);
+    --ink:var(--myllm-text,#f2f2f7); --muted:var(--myllm-muted,#8e8e93); --line:var(--myllm-border,#2c2c2e); --fill:rgba(120,120,128,.24); } }
+  *{ margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body{ font-family:var(--myllm-font,-apple-system,system-ui,sans-serif); background:var(--bg); color:var(--ink);
+    max-width:600px; margin:0 auto; min-height:100dvh; font-size:15.5px; line-height:1.4; user-select:none; -webkit-user-select:none;
+    padding:calc(16px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) calc(30px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left)); }
+  @media (min-width:768px){ body{ max-width:760px; } }
+  svg.i{ width:1.25em; height:1.25em; fill:currentColor; flex-shrink:0; }
+  button{ font:inherit; color:inherit; cursor:pointer; border:none; background:none; } button:active{ transform:scale(.96); }
 
-  /* iPad / large screens: a centred, comfortable column instead of full-width
-     rows (which look stretched) or a tiny stamp. Scales type up a touch. */
-  @media (min-width: 768px){
-    body{ max-width: 740px; margin-inline: auto; padding-left:24px; padding-right:24px; }
-    h1{ font-size:30px; }
-    .label{ font-size:19px; }
-    input[type=text]{ font-size:18px; padding:14px 16px; }
-    .btn{ font-size:18px; }
-  }
+  .head{ display:flex; align-items:center; gap:12px; margin:2px 2px 14px; }
+  .tile{ display:flex; align-items:center; justify-content:center; color:#fff; flex-shrink:0;
+    background:linear-gradient(145deg, hsl(var(--h) 62% 50%), hsl(calc(var(--h) + 40) 58% 28%)); }
+  .head .tile{ width:44px; height:44px; border-radius:13px; font-size:19px; }
+  .head .ht{ flex:1; min-width:0; }
+  h1{ font-size:22px; font-weight:800; letter-spacing:-.01em; }
+  .head p{ font-size:13px; color:var(--muted); margin-top:1px; }
+  h2{ display:flex; align-items:center; font-size:12px; font-weight:800; letter-spacing:.07em; text-transform:uppercase; color:var(--muted); margin:20px 2px 10px; }
+  h2 .sp{ flex:1; }
+  .clear{ min-height:32px; padding:0 4px; font-size:13px; font-weight:700; letter-spacing:0; text-transform:none; color:var(--acc); }
+  .clear:disabled{ opacity:.4; }
+
+  .hero{ border-radius:20px; padding:16px 18px; color:#fff; margin-bottom:12px;
+    background:linear-gradient(145deg, hsl(var(--h) 55% 40%), hsl(calc(var(--h) + 40) 55% 24%)); box-shadow:0 10px 28px hsl(var(--h) 60% 24% / .25); }
+  .hero .k{ font-size:11px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; opacity:.8; }
+  .hero .n{ font-size:44px; font-weight:800; line-height:1.05; letter-spacing:-.03em; font-variant-numeric:tabular-nums; }
+  .hero .l{ font-size:13px; opacity:.82; margin-top:1px; }
+  .hero .bar{ height:6px; border-radius:99px; background:rgba(255,255,255,.25); margin-top:10px; overflow:hidden; }
+  .hero .bar i{ display:block; height:100%; border-radius:99px; background:#fff; transition:width .35s cubic-bezier(.2,.8,.2,1); }
+
+  .card{ background:var(--surface); border:1px solid var(--line); border-radius:18px; padding:14px; margin-bottom:12px; }
+  .add{ display:flex; gap:8px; }
+  input[type=text]{ flex:1; min-width:0; font:inherit; font-size:16px; padding:12px; border-radius:12px; border:1px solid var(--line); background:var(--bg); color:var(--ink); outline:none; user-select:text; -webkit-user-select:text; }
+  input[type=text]:focus{ border-color:var(--acc); }
+  .btn{ flex-shrink:0; min-height:46px; border-radius:12px; background:var(--acc); color:#fff; font-weight:700; padding:0 16px; display:flex; align-items:center; gap:6px; }
+
+  ul{ list-style:none; display:grid; gap:8px; }
+  ul{ grid-template-columns:minmax(0,1fr); }
+  @media (min-width:768px){ ul{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
+  li{ display:flex; align-items:center; gap:12px; background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:8px 6px 8px 8px; }
+  li .check{ width:44px; height:44px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center; }
+  li .check i{ width:26px; height:26px; border-radius:50%; border:2.4px solid var(--line); display:flex; align-items:center; justify-content:center; color:transparent; font-size:14px; transition:background .2s, border-color .2s; }
+  li.done .check i{ background:hsl(var(--h) 60% 42%); border-color:hsl(var(--h) 60% 42%); color:#fff; }
+  li.done .label{ text-decoration:line-through; color:var(--muted); }
+  .label{ flex:1; min-width:0; font-size:17px; overflow-wrap:anywhere; }
+  .del{ width:44px; height:44px; flex-shrink:0; color:var(--muted); display:flex; align-items:center; justify-content:center; font-size:14px; }
+
+  .empty{ grid-column:1/-1; text-align:center; padding:26px 20px 14px; background:var(--surface); border:1px solid var(--line); border-radius:18px; }
+  .empty .tile{ width:48px; height:48px; border-radius:14px; font-size:21px; margin:0 auto 10px; opacity:.9; }
+  .empty b{ display:block; font-size:16px; font-weight:750; }
+  .empty p{ font-size:13.5px; color:var(--muted); line-height:1.5; max-width:290px; margin:5px auto 0; }
+
+  .toast{ position:fixed; left:50%; bottom:calc(22px + env(safe-area-inset-bottom)); transform:translateX(-50%) translateY(20px);
+    background:var(--ink); color:var(--bg); padding:10px 16px; border-radius:999px; font-size:14px; font-weight:600;
+    opacity:0; transition:opacity .2s, transform .2s; pointer-events:none; max-width:80%; }
+  .toast.show{ opacity:1; transform:translateX(-50%); }
+  @media (prefers-reduced-motion:reduce){ .hero .bar i, li .check i{ transition:none; } button:active{ transform:none; } }
 </style>
+
 </head>
 <body>
-<header>
-  <h1>🛒 Shopping List</h1>
-  <div class="sub">Saved to your shared files — other apps and the assistant can add to it.</div>
-</header>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-cart" viewBox="0 0 24 24"><path d="M2.5 3.5a1 1 0 0 1 1-1h1.6a1.5 1.5 0 0 1 1.46 1.16L6.8 5H20a1 1 0 0 1 .97 1.24l-1.6 6.5A1.5 1.5 0 0 1 17.92 14H8.4l.3 1.5H18a1 1 0 0 1 0 2H8.3a1.5 1.5 0 0 1-1.47-1.2L4.86 4.5H3.5a1 1 0 0 1-1-1zM9 21.5a1.6 1.6 0 1 1 0-3.2 1.6 1.6 0 0 1 0 3.2zm8 0a1.6 1.6 0 1 1 0-3.2 1.6 1.6 0 0 1 0 3.2z" fill="currentColor"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.6l4.6 4.6L19.2 7.4" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></symbol>
+</defs></svg>
 
-<form class="add" id="addForm">
+<div class="head">
+  <div class="tile"><svg class="i"><use href="#i-cart"/></svg></div>
+  <div class="ht"><h1>Shopping List</h1><p>Saved to your shared files — other apps and the assistant can add to it</p></div>
+</div>
+
+<div class="hero">
+  <div class="k">Left to get</div>
+  <div class="n" id="left">0</div>
+  <div class="l" id="count">0 items</div>
+  <div class="bar"><i id="prog" style="width:0"></i></div>
+</div>
+
+<form class="card add" id="addForm">
   <input type="text" id="text" placeholder="Add an item…" autocomplete="off" enterkeyhint="done">
-  <button class="btn" type="submit">Add</button>
+  <button class="btn" type="submit"><svg class="i"><use href="#i-plus"/></svg>Add</button>
 </form>
 
+<h2><span>On the list</span><span class="sp"></span><button class="clear" id="clearDone" type="button">Clear ticked</button></h2>
 <ul id="list"></ul>
-
-<footer>
-  <span id="count">0 items</span>
-  <button class="clear" id="clearDone" type="button">Clear ticked</button>
-</footer>
 
 <div class="toast" id="toast"></div>
 
@@ -142,19 +147,22 @@
     var ul = document.getElementById('list');
     ul.innerHTML = '';
     if(!items.length){
-      ul.innerHTML = '<div class="empty">Nothing on the list yet.<br>Add an item, ask the assistant, or send one from Quick Capture.</div>';
+      ul.innerHTML = '<li class="empty"><div class="tile"><svg class="i"><use href="#i-cart"/></svg></div><b>Nothing on the list yet</b><p>Add an item, ask the assistant, or send one from Quick Capture.</p></li>';
     }
     items.forEach(function(it, i){
       var li = document.createElement('li');
       if(it.done) li.className = 'done';
-      li.innerHTML = '<div class="check">'+(it.done?'✓':'')+'</div><div class="label"></div><button class="del" aria-label="Delete">×</button>';
+      li.innerHTML = '<button class="check" type="button" aria-label="'+(it.done?'Untick':'Tick')+'"><i><svg class="i"><use href="#i-check"/></svg></i></button><div class="label"></div><button class="del" type="button" aria-label="Delete"><svg class="i"><use href="#i-x"/></svg></button>';
       li.querySelector('.label').textContent = it.text;
       li.querySelector('.check').onclick = function(){ items[i].done = !items[i].done; haptic('selection'); save(); render(); };
       li.querySelector('.del').onclick = function(){ items.splice(i,1); haptic('light'); save(); render(); };
       ul.appendChild(li);
     });
-    var n = items.length;
-    document.getElementById('count').textContent = n + (n===1?' item':' items');
+    var n = items.length, ticked = items.filter(function(it){ return it.done; }).length;
+    document.getElementById('count').textContent = n + (n===1?' item':' items') + (ticked ? ' · ' + ticked + ' ticked' : '');
+    document.getElementById('left').textContent = n - ticked;
+    document.getElementById('prog').style.width = (n ? ticked / n * 100 : 0) + '%';
+    document.getElementById('clearDone').disabled = !ticked;
   }
 
   function addItem(text, opts){

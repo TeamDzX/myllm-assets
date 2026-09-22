@@ -8,124 +8,162 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Travel Phrasebook</title>
-<style>
-  :root { color-scheme: light dark; }
-  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-  body{
-    font-family:var(--myllm-font,-apple-system,system-ui,sans-serif);
-    background:var(--myllm-bg,#f2f2f7);
-    color:var(--myllm-text,#111);
-    max-width:640px; margin:0 auto; min-height:100dvh;
-    padding:14px 14px calc(30px + env(safe-area-inset-bottom));
-  }
-  h1{ font-size:22px; font-weight:800; margin:4px 2px 10px; }
-  .langs{ display:flex; gap:7px; overflow-x:auto; padding-bottom:10px; scrollbar-width:none; -webkit-overflow-scrolling:touch; }
-  .langs::-webkit-scrollbar{ display:none; }
-  .lang{
-    flex:none; border:1px solid var(--myllm-border,#e3e3e8); background:var(--myllm-surface,#fff);
-    color:var(--myllm-text,#111); border-radius:999px; padding:8px 14px; font-size:14px; font-weight:650;
-  }
-  .lang.on{ background:var(--myllm-accent,#0a84ff); border-color:transparent; color:#fff; }
+<style>:root{--build-id:"13358ecba2";color-scheme:light dark; --h:176;
+  --bg:var(--myllm-bg,#f2f2f7); --surface:var(--myllm-surface,#fff); --ink:var(--myllm-text,#111);
+  --muted:var(--myllm-muted,#8a8a8e); --line:var(--myllm-border,#e3e3e8); --acc:var(--myllm-accent,#0a84ff);
+  --fill:rgba(120,120,128,.12); }
+@media (prefers-color-scheme:dark){ :root{ --bg:var(--myllm-bg,#000); --surface:var(--myllm-surface,#1c1c1e);
+  --ink:var(--myllm-text,#f2f2f7); --muted:var(--myllm-muted,#8e8e93); --line:var(--myllm-border,#2c2c2e); --fill:rgba(120,120,128,.24); } }
+  *{ margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body{ font-family:var(--myllm-font,-apple-system,system-ui,sans-serif); background:var(--bg); color:var(--ink);
+    max-width:600px; margin:0 auto; min-height:100dvh; font-size:15.5px; line-height:1.4;
+    padding:calc(16px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) calc(30px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left)); }
+  @media (min-width:768px){ body{ max-width:760px; } }
+  svg.i{ width:1.25em; height:1.25em; fill:currentColor; flex-shrink:0; }
+  button{ font:inherit; color:inherit; cursor:pointer; } button:active{ transform:scale(.96); }
+  a{ color:inherit; }
 
-  .card{
-    background:var(--myllm-surface,#fff); border:1px solid var(--myllm-border,#e3e3e8);
-    border-radius:16px; padding:13px 14px; margin-bottom:12px;
-  }
-  label{ display:block; font-size:11.5px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; color:var(--myllm-muted,#8a8a8e); margin-bottom:7px; }
-  .airow{ display:flex; gap:8px; }
-  .airow input{
-    flex:1; font-size:15px; padding:11px 12px; border-radius:12px;
-    border:1px solid var(--myllm-border,#e3e3e8); background:var(--myllm-bg,#f2f2f7); color:var(--myllm-text,#111);
-  }
-  .airow button{
-    border:none; border-radius:12px; padding:0 16px; font-size:15px; font-weight:700;
-    background:var(--myllm-accent,#0a84ff); color:#fff;
-  }
-  .airow button:disabled{ opacity:.5; }
-  .aiout{ margin-top:10px; display:none; }
-  .aiout .big{ font-size:21px; font-weight:750; line-height:1.35; }
-  .aiout .rom{ font-size:13.5px; color:var(--myllm-muted,#8a8a8e); margin-top:3px; }
-  .ainote{ font-size:12px; color:var(--myllm-muted,#8a8a8e); margin-top:8px; line-height:1.45; }
+  .head{ display:flex; align-items:center; gap:12px; margin:2px 2px 14px; }
+  .tile{ display:flex; align-items:center; justify-content:center; color:#fff; flex-shrink:0;
+    background:linear-gradient(145deg, hsl(var(--h) 62% 50%), hsl(calc(var(--h) + 40) 58% 28%)); }
+  .head .tile{ width:44px; height:44px; border-radius:13px; font-size:19px; }
+  .head .ht{ flex:1; min-width:0; }
+  h1{ font-size:22px; font-weight:800; letter-spacing:-.01em; }
+  .head p{ font-size:13px; color:var(--muted); margin-top:1px; }
+  .head .acts{ display:flex; gap:8px; flex-shrink:0; }
+  .head .acts button{ min-width:40px; height:40px; border-radius:12px; border:1px solid var(--line); background:var(--surface);
+    display:flex; align-items:center; justify-content:center; gap:6px; padding:0 10px; font-size:13.5px; font-weight:650; }
+  h2{ font-size:12px; font-weight:800; letter-spacing:.07em; text-transform:uppercase; color:var(--muted); margin:20px 2px 10px; display:flex; align-items:center; gap:6px; }
 
-  input#q{
-    width:100%; font-size:15px; padding:11px 12px; border-radius:12px; margin-bottom:12px;
-    border:1px solid var(--myllm-border,#e3e3e8); background:var(--myllm-surface,#fff); color:var(--myllm-text,#111);
-  }
-  .cat{ font-size:12px; font-weight:800; letter-spacing:.07em; text-transform:uppercase; color:var(--myllm-muted,#8a8a8e); margin:16px 2px 8px; }
-  .ph{
-    display:flex; align-items:center; gap:10px;
-    background:var(--myllm-surface,#fff); border:1px solid var(--myllm-border,#e3e3e8);
-    border-radius:14px; padding:11px 12px; margin-bottom:8px;
-  }
-  .ph .tx{ flex:1; min-width:0; }
-  .ph .en{ font-size:12.5px; color:var(--myllm-muted,#8a8a8e); }
-  .ph .tr{ font-size:17px; font-weight:750; line-height:1.3; margin-top:1px; }
-  .ph .rom{ font-size:12.5px; color:var(--myllm-muted,#8a8a8e); margin-top:1px; }
-  .ph button{
-    flex:none; border:none; background:var(--myllm-bg,#f2f2f7); color:var(--myllm-text,#111);
-    width:38px; height:38px; border-radius:50%; font-size:16px;
-  }
-  .ph button.fav.on{ background:#ffd60a22; }
-  .empty{ text-align:center; color:var(--myllm-muted,#8a8a8e); font-size:13.5px; padding:20px; }
+  .card{ background:var(--surface); border:1px solid var(--line); border-radius:18px; padding:14px; margin-bottom:12px; }
+  label{ display:block; font-size:12px; font-weight:800; letter-spacing:.07em; text-transform:uppercase; color:var(--muted); margin:14px 2px 7px; }
+  label:first-child{ margin-top:0; }
+  input{ width:100%; font:inherit; font-size:16px; padding:12px; border-radius:12px; border:1px solid var(--line); background:var(--bg); color:var(--ink); outline:none; }
+  input:focus{ border-color:var(--acc); }
+  .field{ position:relative; } .field svg.i{ position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--muted); font-size:15px; pointer-events:none; }
+  .field input{ padding-left:38px; }
+  .inrow{ display:flex; gap:8px; } .inrow input{ flex:1; min-width:0; }
+  .chips{ display:flex; gap:7px; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none; margin:10px -14px 0; padding:0 14px 2px; }
+  .chips::-webkit-scrollbar{ display:none; }
+  .chip{ flex:0 0 auto; min-height:36px; border:1px solid var(--line); background:var(--bg); border-radius:99px; padding:0 14px; font-size:13.5px; font-weight:650; white-space:nowrap; }
+  .chip.hot{ background:var(--acc); border-color:var(--acc); color:#fff; }
+  .go{ min-height:48px; border:none; border-radius:14px; background:var(--acc); color:#fff; font-size:16px; font-weight:700;
+    display:flex; align-items:center; justify-content:center; gap:8px; padding:0 18px; }
+  .go.wide{ width:100%; margin-top:14px; }
+  .go.soft{ background:var(--fill); color:var(--acc); }
+  .go:disabled{ opacity:.55; }
+  .pillbtn{ display:inline-flex; align-items:center; gap:6px; min-height:36px; border:none; border-radius:10px; padding:0 12px;
+    background:hsl(var(--h) 70% 50% / .13); color:hsl(var(--h) 70% 38%); font-size:13.5px; font-weight:700; text-decoration:none; }
+  @media (prefers-color-scheme:dark){ .pillbtn{ color:hsl(var(--h) 80% 70%); } }
+  .spin{ width:16px; height:16px; border-radius:50%; border:2.4px solid currentColor; border-right-color:transparent; animation:spin .8s linear infinite; flex-shrink:0; }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+  .skel{ border-radius:16px; margin-bottom:10px; background:var(--fill); animation:shimmer 1.4s ease-in-out infinite; }
+  @keyframes shimmer{ 50%{ opacity:.45; } }
 
-  /* full-screen "show a local" */
-  #bigveil{
-    position:fixed; inset:0; z-index:300; display:none;
-    background:var(--myllm-surface,#fff);
-    flex-direction:column; align-items:center; justify-content:center; gap:14px;
-    padding:30px; text-align:center;
+  .notice{ display:flex; gap:12px; align-items:flex-start; background:var(--surface); border:1px solid var(--line); border-radius:18px; padding:14px; margin-bottom:12px; }
+  .notice .tile{ width:36px; height:36px; border-radius:10px; font-size:16px; }
+  .notice.warn .tile{ background:linear-gradient(145deg,#ff9f0a,#c25e00); }
+  .notice b{ display:block; font-size:15px; font-weight:750; }
+  .notice p{ font-size:13.5px; color:var(--muted); line-height:1.45; margin-top:2px; }
+  .notice p b{ display:inline; font-size:inherit; font-weight:700; color:var(--ink); }
+  .notice .go{ margin-top:10px; min-height:40px; font-size:14.5px; border-radius:12px; }
+  .hint{ text-align:center; font-size:13px; color:var(--muted); line-height:1.5; padding:18px 12px 6px; }
+
+  [hidden]{ display:none !important; }
+  @media (prefers-reduced-motion:reduce){ .spin{ animation-duration:2.4s; } .skel{ animation:none; } button:active{ transform:none; } }
+
+  .langbar{ display:flex; gap:7px; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none;
+    margin:0 calc(-16px - env(safe-area-inset-right)) 12px calc(-16px - env(safe-area-inset-left)); padding:0 calc(16px + env(safe-area-inset-right)) 2px calc(16px + env(safe-area-inset-left)); }
+  .langbar::-webkit-scrollbar{ display:none; }
+  .langbar .chip{ background:var(--surface); }
+
+  .aigo{ width:48px; height:48px; flex-shrink:0; border:none; border-radius:13px; background:var(--acc); color:#fff; display:flex; align-items:center; justify-content:center; font-size:19px; }
+  .aigo:disabled{ opacity:.55; }
+  .aiout{ margin-top:12px; border-radius:14px; padding:12px 13px; background:hsl(var(--h) 70% 45% / .1); cursor:pointer; }
+  .aiout .big{ font-size:21px; font-weight:750; line-height:1.35; overflow-wrap:anywhere; }
+  .aiout .rom{ font-size:14px; font-weight:550; color:hsl(var(--h) 70% 32%); margin-top:3px; }
+  @media (prefers-color-scheme:dark){ .aiout .rom{ color:hsl(var(--h) 75% 66%); } }
+  .aiout .pillbtn{ margin-top:10px; }
+  .ainote{ font-size:12.5px; color:var(--muted); margin-top:9px; line-height:1.45; }
+
+  .ph{ display:flex; align-items:center; gap:8px; background:var(--surface); border:1px solid var(--line); border-radius:15px; padding:9px 8px 9px 13px; margin-bottom:8px; }
+  .ph .tx{ flex:1; min-width:0; cursor:pointer; }
+  .ph .en{ font-size:12.5px; color:var(--muted); }
+  .ph .tr{ font-size:17px; font-weight:750; line-height:1.3; margin-top:1px; overflow-wrap:anywhere; }
+  .ph .rom{ font-size:13px; font-weight:550; color:hsl(var(--h) 70% 32%); margin-top:1px; }
+  @media (prefers-color-scheme:dark){ .ph .rom{ color:hsl(var(--h) 75% 66%); } }
+  .ib{ flex-shrink:0; width:44px; height:44px; border:none; border-radius:12px; background:var(--fill); display:flex; align-items:center; justify-content:center; font-size:17px; color:hsl(var(--h) 70% 36%); }
+  @media (prefers-color-scheme:dark){ .ib{ color:hsl(var(--h) 75% 66%); } }
+  .ib.on{ background:hsl(var(--h) 65% 40%); color:#fff; }
+  .ib.on svg{ animation:pulse 1s ease-in-out infinite; }
+  @keyframes pulse{ 50%{ opacity:.45; } }
+  .ib.fav{ color:var(--muted); background:none; width:40px; }
+  .ib.fav.on{ color:#ffb400; background:none; }
+  .ib.fav.on svg{ animation:none; }
+  .empty{ text-align:center; color:var(--muted); font-size:13.5px; padding:22px; }
+  #voiceNote{ margin-top:4px; }
+
+  /* ---------- show a local: a full-screen stage ---------- */
+  .stage{ position:fixed; inset:0; z-index:300; color:#fff; overflow:hidden; }
+  .stage .bg{ position:absolute; inset:0; transition:opacity .6s ease; }
+  .stage .bg.d{ background:radial-gradient(120% 90% at 20% 10%, hsl(var(--h) 70% 30%), transparent 60%),
+      radial-gradient(120% 90% at 85% 95%, hsl(calc(var(--h) + 50) 60% 26%), transparent 62%), #0b0b10; }
+  .stage .bg.l{ opacity:0; background:radial-gradient(120% 90% at 20% 0%, hsl(var(--h) 80% 84%), transparent 60%),
+      radial-gradient(120% 90% at 85% 100%, hsl(calc(var(--h) + 50) 76% 87%), transparent 62%), #f4f4f8; }
+  .stage.lite{ color:#15151a; } .stage.lite .bg.l{ opacity:1; } .stage.lite .bg.d{ opacity:0; }
+  .stage .col{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; text-align:center;
+    padding:calc(12px + env(safe-area-inset-top)) calc(20px + env(safe-area-inset-right)) calc(22px + env(safe-area-inset-bottom)) calc(20px + env(safe-area-inset-left)); }
+  .stage .top{ width:100%; max-width:640px; height:48px; display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
+  .stage .lbl{ font-size:11px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; opacity:.62; }
+  .glass{ border:1px solid rgba(255,255,255,.16); background:rgba(255,255,255,.12); color:inherit;
+    -webkit-backdrop-filter:blur(18px); backdrop-filter:blur(18px); }
+  .stage.lite .glass{ border-color:rgba(0,0,0,.09); background:rgba(255,255,255,.62); }
+  .stage .close{ height:48px; border-radius:99px; padding:0 18px; display:flex; align-items:center; gap:8px; font-size:15px; font-weight:750; }
+  .stage .mid{ flex:1; min-height:0; width:100%; max-width:760px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; overflow-y:auto; }
+  #bigtr{ font-size:clamp(34px, 11vw, 76px); font-weight:800; line-height:1.18; letter-spacing:-.01em; overflow-wrap:anywhere; }
+  #bigrom{ font-size:clamp(18px, 5vw, 26px); font-weight:600; color:hsl(var(--h) 80% 72%); }
+  .stage.lite #bigrom{ color:hsl(var(--h) 70% 30%); }
+  #bigen{ font-size:16px; opacity:.62; }
+  .stage .foot{ display:flex; flex-direction:column; align-items:center; gap:10px; flex-shrink:0; }
+  .stage .say{ width:84px; height:84px; border-radius:50%; border:none; background:#fff; color:#0b0b10; font-size:30px; display:flex; align-items:center; justify-content:center; box-shadow:0 10px 30px rgba(0,0,0,.35); }
+  .stage.lite .say{ background:#15151a; color:#fff; box-shadow:0 10px 26px rgba(20,20,40,.22); }
+  .stage .say.on svg{ animation:pulse 1s ease-in-out infinite; }
+  .stage .saylbl{ font-size:13px; font-weight:700; opacity:.7; }
+  #bigNote{ max-width:420px; font-size:13px; line-height:1.45; opacity:.85; }
+  @media (max-height:520px){                       /* phone on its side: phrase left, speaker right */
+    .stage .col{ display:grid; grid-template-columns:minmax(0,1fr) auto; grid-template-rows:48px minmax(0,1fr); column-gap:24px; }
+    .stage .top{ grid-column:1 / -1; max-width:none; }
+    .stage .mid{ grid-column:1; grid-row:2; max-width:none; }
+    .stage .foot{ grid-column:2; grid-row:2; align-self:center; width:min(220px,30vw); }
   }
-  #bigveil.on{ display:flex; }
-  #bigtr{ font-size:min(11vw, 54px); font-weight:800; line-height:1.25; }
-  #bigrom{ font-size:18px; color:var(--myllm-muted,#8a8a8e); }
-  #bigen{ font-size:15px; color:var(--myllm-muted,#8a8a8e); }
-  #bigveil .close{ position:absolute; top:calc(14px + env(safe-area-inset-top)); right:16px; border:none; background:var(--myllm-bg,#f2f2f7); color:var(--myllm-text,#111); width:40px; height:40px; border-radius:50%; font-size:17px; }
-  #bigveil .speakbig{ border:none; border-radius:999px; padding:13px 26px; font-size:16px; font-weight:700; background:var(--myllm-accent,#0a84ff); color:#fff; }
+  @media (prefers-reduced-motion:reduce){ .ib.on svg, .stage .say.on svg{ animation:none; } .stage .bg{ transition:none; } }
+
+  @keyframes myllmAiSpin{to{transform:rotate(360deg)}}
+  .myllm-ai-busy{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(18px);z-index:99999;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;display:flex;align-items:center;gap:10px;background:rgba(28,28,30,.96);color:#fff;border-radius:999px;padding:10px 16px 10px 14px;box-shadow:0 6px 22px rgba(0,0,0,.4);font-size:14px;font-weight:600;max-width:92%}
+  .myllm-ai-busy.on{opacity:1;transform:translateX(-50%) translateY(0)}
+  .myllm-ai-cog{width:16px;height:16px;border-radius:50%;border:2.4px solid #a78bfa;border-right-color:transparent;animation:myllmAiSpin .9s linear infinite;flex-shrink:0}
+  .myllm-ai-busy small{font-weight:400;opacity:.6}
 </style>
-<style>:root{--build-id:"13358ecba2";}</style>
 </head>
 <body>
-
-<h1>🗺️ Travel Phrasebook</h1>
-<div class="langs" id="langs"></div>
-
-<div class="card" id="aicard">
-  <label>Say anything — translated on this phone, even offline</label>
-  <div class="airow">
-    <input id="aiq" placeholder="e.g. Is this train going to the airport?" onkeydown="if(event.key==='Enter')aiTranslate()">
-    <button id="aigo" onclick="aiTranslate()">→</button>
-  </div>
-  <div class="aiout" id="aiout">
-    <div class="big" id="aitr" onclick="openBig({tr:this.textContent,rom:el('airom').textContent,en:el('aiq').value})"></div>
-    <div class="rom" id="airom"></div>
-  </div>
-  <p class="ainote" id="ainote"></p>
-</div>
-
-<input id="q" placeholder="Search phrases…" oninput="render()">
-<div id="list"></div>
-
-<div id="bigveil" onclick="closeBig(event)">
-  <button class="close" onclick="closeBig()">✕</button>
-  <div id="bigtr"></div>
-  <div id="bigrom"></div>
-  <div id="bigen"></div>
-  <button class="speakbig" id="bigspeak" onclick="event.stopPropagation()">🔊 Say it</button>
-</div>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-globe" viewBox="0 0 24 24"><path d="M12 2.5a9.5 9.5 0 1 0 0 19 9.5 9.5 0 0 0 0-19zm6.9 8.5h-3.1a15.4 15.4 0 0 0-1.4-5.9A7.5 7.5 0 0 1 18.9 11zM12 4.6c.8 1 1.9 3.2 2.1 6.4H9.9C10.1 7.8 11.2 5.6 12 4.6zM9.6 5.1A15.4 15.4 0 0 0 8.2 11H5.1a7.5 7.5 0 0 1 4.5-5.9zM5.1 13h3.1c.1 2.2.6 4.2 1.4 5.9A7.5 7.5 0 0 1 5.1 13zm6.9 6.4c-.8-1-1.9-3.2-2.1-6.4h4.2c-.2 3.2-1.3 5.4-2.1 6.4zm2.4-.5c.8-1.7 1.3-3.7 1.4-5.9h3.1a7.5 7.5 0 0 1-4.5 5.9z" fill="currentColor"/></symbol>
+  <symbol id="i-speaker" viewBox="0 0 24 24"><path d="M11 4.6a.9.9 0 0 1 1.5.7v13.4a.9.9 0 0 1-1.5.7L6.6 15.6H4a1 1 0 0 1-1-1V9.4a1 1 0 0 1 1-1h2.6z" fill="currentColor"/><path d="M15.6 8.6a4.6 4.6 0 0 1 0 6.8M18.4 5.9a8.6 8.6 0 0 1 0 12.2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><path d="M12 2.8l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 16.8l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z" fill="currentColor"/></symbol>
+  <symbol id="i-staro" viewBox="0 0 24 24"><path d="M12 3.8l2.4 4.9 5.3.8-3.8 3.7.9 5.3L12 16l-4.8 2.5.9-5.3-3.8-3.7 5.3-.8z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h13M13 6.5l5.5 5.5-5.5 5.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-expand" viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M15.5 15.5L20 20" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></symbol>
+  <symbol id="i-warn" viewBox="0 0 24 24"><path d="M10.3 3.9a2 2 0 0 1 3.4 0l8 13.6a2 2 0 0 1-1.7 3H4a2 2 0 0 1-1.7-3zM12 9a1 1 0 0 0-1 1v4a1 1 0 0 0 2 0v-4a1 1 0 0 0-1-1zm0 7.2a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 0 0 0-2.4z" fill="currentColor"/></symbol>
+</defs></svg>
 
 <!-- AI thinking pill (house convention) -->
-<style>
-@keyframes myllmAiSpin{to{transform:rotate(360deg)}}
-.myllm-ai-busy{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(18px);z-index:99999;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;display:flex;align-items:center;gap:10px;background:rgba(28,28,30,.96);color:#fff;border-radius:999px;padding:10px 16px 10px 14px;box-shadow:0 6px 22px rgba(0,0,0,.4);font-size:14px;font-weight:600;max-width:92%}
-.myllm-ai-busy.on{opacity:1;transform:translateX(-50%) translateY(0)}
-.myllm-ai-cog{font-size:18px;animation:myllmAiSpin 2.4s linear infinite;filter:drop-shadow(0 0 5px rgba(124,92,255,.85))}
-.myllm-ai-busy small{font-weight:400;opacity:.6}
-</style>
 <script>
 (function(){if(window.__myllmAiWrap||typeof window.myllmAsk!=='function')return;window.__myllmAiWrap=true;
 var orig=window.myllmAsk,depth=0,node=null;
 function ensure(){if(node)return;node=document.createElement('div');node.className='myllm-ai-busy';
-node.innerHTML='<span class="myllm-ai-cog">⚙️</span><span>AI is thinking… <small>privately, on your device</small></span>';
+node.innerHTML='<span class="myllm-ai-cog"></span><span>AI is thinking… <small>privately, on your device</small></span>';
 (document.body||document.documentElement).appendChild(node);}
 function show(){ensure();depth++;node.classList.add('on');}
 function hide(){depth=Math.max(0,depth-1);if(depth===0&&node)node.classList.remove('on');}
@@ -133,12 +171,60 @@ window.myllmAsk=function(){show();var p;try{p=orig.apply(this,arguments);}catch(
 return Promise.resolve(p).then(function(r){hide();return r;},function(e){hide();throw e;});};})();
 </script>
 
+<div class="head">
+  <div class="tile"><svg class="i"><use href="#i-globe"/></svg></div>
+  <div class="ht"><h1>Travel Phrasebook</h1><p>Speak the language — even offline</p></div>
+</div>
+<div class="langbar" id="langs"></div>
+
+<div class="card" id="aicard">
+  <label for="aiq">Say anything — translated on this phone, even offline</label>
+  <div class="inrow">
+    <input id="aiq" placeholder="e.g. Is this train going to the airport?" autocomplete="off" enterkeyhint="go">
+    <button class="aigo" id="aigo" type="button" aria-label="Translate"><svg class="i"><use href="#i-arrow"/></svg></button>
+  </div>
+  <div class="aiout" id="aiout" hidden>
+    <div class="big" id="aitr"></div>
+    <div class="rom" id="airom"></div>
+    <span class="pillbtn"><svg class="i"><use href="#i-expand"/></svg>Show it full screen</span>
+  </div>
+  <p class="ainote" id="ainote"></p>
+</div>
+
+<div class="notice warn" id="voiceNote" hidden><div class="tile"><svg class="i"><use href="#i-warn"/></svg></div><div style="flex:1;min-width:0"><b>No voice played</b><p id="voiceNoteText"></p></div></div>
+<div class="field"><svg class="i"><use href="#i-search"/></svg><input id="q" placeholder="Search phrases…" autocomplete="off" enterkeyhint="search"></div>
+<div id="list"></div>
+
+<div class="stage" id="bigveil" hidden>
+  <div class="bg d"></div><div class="bg l"></div>
+  <div class="col">
+    <div class="top">
+      <button class="glass close" id="bigclose" type="button"><svg class="i"><use href="#i-x"/></svg>Done</button>
+      <div class="lbl" id="biglbl"></div>
+      <div style="width:48px"></div>
+    </div>
+    <div class="mid">
+      <div id="bigtr"></div>
+      <div id="bigrom"></div>
+      <div id="bigen"></div>
+    </div>
+    <div class="foot">
+      <button class="say" id="bigspeak" type="button" aria-label="Say it"><svg class="i"><use href="#i-speaker"/></svg></button>
+      <div class="saylbl" id="biglabel">Say it</div>
+      <div id="bigNote" hidden></div>
+    </div>
+  </div>
+</div>
+
 <script>
-var store = window.myllmStorage || {getItem:function(){return Promise.resolve(null)}, setItem:function(){return Promise.resolve()}};
-function haptic(k){ if(window.myllmHaptic){ try{ myllmHaptic(k||'light'); }catch(_){} } }
-var ASK = window.myllmAsk || null;
 function el(id){ return document.getElementById(id); }
+/* Bridges are looked up when used, never kept: MyLLM can add them after this
+   script has run. */
+function store(){ return window.myllmStorage || {getItem:function(){return Promise.resolve(null)}, setItem:function(){return Promise.resolve()}}; }
+function ASK(){ return window.myllmAsk || null; }
+function haptic(k){ if(window.myllmHaptic){ try{ myllmHaptic(k||'light'); }catch(_){} } }
 function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+function icon(n){ return '<svg class="i"><use href="#i-' + n + '"/></svg>'; }
 
 var LANGS = [
   {id:"es", name:"Spanish",    flag:"🇪🇸", tts:"es-ES"},
@@ -221,51 +307,93 @@ el:{hello:"yia sas",bye:"andío",yes:"ne",no:"óchi",please:"parakaló",thanks:"
 var lang = LANGS[0];
 var favs = {};       /* "es|hello" -> true */
 
-/* Voice: prefer a native myllmSpeak bridge if one ever ships; today WKWebView's
-   built-in speechSynthesis does the job (same iOS voices underneath). Triggered
-   from a tap, which satisfies the user-gesture requirement. */
-var CAN_SPEAK = !!(window.myllmSpeak || (window.speechSynthesis && window.SpeechSynthesisUtterance));
-function speak(text){
+/* ---------- voice ----------
+   Prefer a native myllmSpeak bridge if one ever ships; today the web view's
+   built-in speechSynthesis does the job (same iOS voices underneath). As in
+   Language Lab: pick the language's voice explicitly, cancel only when
+   something is actually speaking, and say so when no voice played. */
+function hasSynth(){ return !!(window.speechSynthesis && window.SpeechSynthesisUtterance); }
+function canSpeak(){ return !!(window.myllmSpeak || hasSynth()); }
+var voiceCache = {}, speakToken = 0, speakBtns = [];
+if (hasSynth()) try{ speechSynthesis.onvoiceschanged = function(){ voiceCache = {}; }; }catch(_){}
+function pickVoice(code){
+  if (voiceCache[code] !== undefined) return voiceCache[code];
+  var all = []; try{ all = speechSynthesis.getVoices() || []; }catch(_){}
+  function norm(v){ return String(v.lang || "").replace("_", "-").toLowerCase(); }
+  var want = code.toLowerCase(), base = want.slice(0, 2);
+  var inLang = all.filter(function(v){ return norm(v).slice(0, 2) === base; });
+  var better = function(list){ return list.filter(function(v){ return /enhanced|premium/i.test(v.name); })[0] || list[0]; };
+  var exact = inLang.filter(function(v){ return norm(v) === want; });
+  voiceCache[code] = better(exact) || better(inLang) || null;
+  return voiceCache[code];
+}
+function markSpeaking(btns, on){
+  speakBtns.forEach(function(b){ b.classList.remove("on"); });
+  speakBtns = on ? btns : [];
+  speakBtns.forEach(function(b){ b.classList.add("on"); });
+}
+function noVoice(){
+  var t = "Couldn't play " + lang.name + " out loud. Check the volume, or add a voice in iPhone Settings → Accessibility → Spoken Content → Voices.";
+  el("voiceNoteText").textContent = t; el("voiceNote").hidden = false;
+  el("bigNote").textContent = t; el("bigNote").hidden = el("bigveil").hidden;
+}
+function speak(text, btns){
+  btns = (btns || []).filter(Boolean);
   haptic("selection");
   if (window.myllmSpeak){
     try{ myllmSpeak(text, {lang:lang.tts}); return; }catch(_){}
   }
-  if (window.speechSynthesis){
-    try{
-      speechSynthesis.cancel();
-      var u = new SpeechSynthesisUtterance(text);
-      u.lang = lang.tts;
-      u.rate = 0.9;
-      speechSynthesis.speak(u);
-    }catch(_){}
-  }
+  if (!hasSynth() || !text) return;
+  var ss = window.speechSynthesis, token = ++speakToken, started = false;
+  var u = new SpeechSynthesisUtterance(text);
+  u.lang = lang.tts; var v = pickVoice(lang.tts); if (v) u.voice = v;
+  u.rate = 0.9; u.volume = 1;
+  u.onstart = function(){ started = true; if (token === speakToken){ markSpeaking(btns, true); el("voiceNote").hidden = true; el("bigNote").hidden = true; } };
+  u.onend = function(){ if (token === speakToken) markSpeaking(btns, false); };
+  u.onerror = function(e){
+    if (token !== speakToken) return;
+    markSpeaking(btns, false);
+    var why = e && e.error;
+    if (!started && why !== "interrupted" && why !== "canceled") noVoice();
+  };
+  function go(){ try{ if (ss.paused) ss.resume(); ss.speak(u); }catch(_){ noVoice(); } }
+  try{
+    if (ss.speaking || ss.pending){ ss.cancel(); setTimeout(go, 80); }
+    else go();                                    /* first line stays inside the tap, which iOS requires */
+  }catch(_){ noVoice(); return; }
+  setTimeout(function(){
+    if (token === speakToken && !started && !ss.speaking){ markSpeaking(btns, false); noVoice(); }
+  }, 2500);
 }
+function stopSpeaking(){ speakToken++; markSpeaking([], false); if (hasSynth()) try{ speechSynthesis.cancel(); }catch(_){} }
 
 function renderLangs(){
   el("langs").innerHTML = LANGS.map(function(l){
-    return '<button class="lang' + (l.id === lang.id ? ' on' : '') + '" onclick="setLang(\'' + l.id + '\')">' + l.flag + ' ' + l.name + '</button>';
+    return '<button type="button" class="chip' + (l.id === lang.id ? ' hot' : '') + '" data-lang="' + l.id + '">' + l.flag + ' ' + esc(l.name) + '</button>';
   }).join("");
 }
 function setLang(id){
-  lang = LANGS.filter(function(l){ return l.id === id; })[0];
+  var l = LANGS.filter(function(x){ return x.id === id; })[0]; if (!l) return;
+  lang = l;
   haptic("selection");
-  store.setItem("pb_lang", id);
-  el("aiout").style.display = "none";
+  stopSpeaking();
+  store().setItem("pb_lang", id);
+  el("aiout").hidden = true; el("voiceNote").hidden = true;
   renderLangs(); render();
 }
 
 function phraseRow(p){
   var tr = T[lang.id][p.k] || "";
   var rom = R[lang.id] ? (R[lang.id][p.k] || "") : "";
-  var fk = lang.id + "|" + p.k;
-  return '<div class="ph">' +
-    '<div class="tx" onclick=\'openBig({tr:"' + esc(tr).replace(/'/g,"\\'") + '",rom:"' + esc(rom) + '",en:"' + esc(p.en) + '"})\'>' +
+  var fk = lang.id + "|" + p.k, on = !!favs[fk];
+  return '<div class="ph" data-k="' + p.k + '">' +
+    '<div class="tx" data-act="big">' +
       '<div class="en">' + esc(p.en) + '</div>' +
       '<div class="tr">' + esc(tr) + '</div>' +
       (rom ? '<div class="rom">' + esc(rom) + '</div>' : '') +
     '</div>' +
-    (CAN_SPEAK ? '<button onclick="speak(' + JSON.stringify(tr).replace(/"/g,"&quot;") + ')">🔊</button>' : '') +
-    '<button class="fav' + (favs[fk] ? ' on' : '') + '" onclick="toggleFav(\'' + fk + '\')">' + (favs[fk] ? '⭐' : '☆') + '</button>' +
+    (canSpeak() ? '<button type="button" class="ib" data-act="say" aria-label="Hear it">' + icon("speaker") + '</button>' : '') +
+    '<button type="button" class="ib fav' + (on ? ' on' : '') + '" data-act="fav" aria-label="' + (on ? 'Remove from your phrases' : 'Keep in your phrases') + '" aria-pressed="' + on + '">' + icon(on ? "star" : "staro") + '</button>' +
   '</div>';
 }
 
@@ -274,7 +402,7 @@ function render(){
   var html = "";
   var favList = P.filter(function(p){ return favs[lang.id + "|" + p.k]; });
   if (favList.length && !q){
-    html += '<div class="cat">⭐ Your phrases</div>' + favList.map(phraseRow).join("");
+    html += '<h2><svg class="i" style="color:#ffb400"><use href="#i-star"/></svg>Your phrases</h2>' + favList.map(phraseRow).join("");
   }
   CATS.forEach(function(c){
     var rows = P.filter(function(p){
@@ -283,7 +411,7 @@ function render(){
       var tr = (T[lang.id][p.k] || "").toLowerCase();
       return p.en.toLowerCase().indexOf(q) >= 0 || tr.indexOf(q) >= 0;
     });
-    if (rows.length) html += '<div class="cat">' + c.name + '</div>' + rows.map(phraseRow).join("");
+    if (rows.length) html += '<h2>' + esc(c.name) + '</h2>' + rows.map(phraseRow).join("");
   });
   el("list").innerHTML = html || '<p class="empty">No phrases match — try the translator above.</p>';
 }
@@ -291,26 +419,83 @@ function render(){
 function toggleFav(fk){
   favs[fk] = !favs[fk];
   if (!favs[fk]) delete favs[fk];
-  store.setItem("pb_favs", JSON.stringify(favs));
+  store().setItem("pb_favs", JSON.stringify(favs));
   haptic(favs[fk] ? "success" : "light");
   render();
 }
 
-/* ---------- big screen ---------- */
-var bigText = "";
+el("langs").addEventListener("click", function(e){
+  var b = e.target.closest("[data-lang]"); if (b) setLang(b.dataset.lang);
+});
+el("list").addEventListener("click", function(e){
+  var act = e.target.closest("[data-act]"); if (!act) return;
+  var row = act.closest(".ph"), k = row && row.dataset.k;
+  var p = P.filter(function(x){ return x.k === k; })[0]; if (!p) return;
+  var tr = T[lang.id][p.k] || "", rom = R[lang.id] ? (R[lang.id][p.k] || "") : "";
+  if (act.dataset.act === "say") speak(tr, [act]);
+  else if (act.dataset.act === "fav") toggleFav(lang.id + "|" + p.k);
+  else openBig({tr:tr, rom:rom, en:p.en});
+});
+
+/* ---------- show a local: the stage ---------- */
+var bigText = "", bigOn = false;
+function isLight(){ return !(window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches); }
+/* A dark stage under MyLLM's white title bar looks cut in half, so without
+   myllmImmersive the stage stays light in light mode. */
+function syncLook(){ el("bigveil").classList.toggle("lite", isLight() && !window.myllmImmersive); }
+function syncChrome(){
+  if (!window.myllmImmersive) return;
+  try{ myllmImmersive(bigOn, {keepAwake:bigOn}).catch(function(){}); }catch(_){}   /* the screen stays on while a local reads it */
+}
 function openBig(o){
   bigText = o.tr;
   el("bigtr").textContent = o.tr;
+  el("bigtr").lang = lang.tts;
+  el("bigtr").style.fontSize = "";
   el("bigrom").textContent = o.rom || "";
   el("bigen").textContent = o.en || "";
-  el("bigspeak").style.display = CAN_SPEAK ? "inline-block" : "none";
-  el("bigspeak").onclick = function(e){ e.stopPropagation(); speak(bigText); };
-  el("bigveil").classList.add("on");
+  el("biglbl").textContent = lang.name;
+  var talk = canSpeak();
+  el("bigspeak").hidden = !talk; el("biglabel").hidden = !talk; el("bigNote").hidden = true;
+  bigOn = true; syncLook();
+  el("bigveil").hidden = false;
+  fitBig();
+  document.body.style.overflow = "hidden";
+  syncChrome();
   haptic("light");
 }
-function closeBig(e){
-  if (e && e.target && e.target.id === "bigspeak") return;
-  el("bigveil").classList.remove("on");
+/* A short phrase reads best on one line: shrink it (not below 26px) until it
+   fits. A long one keeps the full size and wraps. */
+function fitBig(){
+  var t = el("bigtr"); t.style.fontSize = "";
+  var max = parseFloat(getComputedStyle(t).fontSize) || 48, lh = 1.18;
+  for (var s = max; s >= 26; s -= 2){
+    t.style.fontSize = s + "px";
+    if (t.scrollHeight <= s * lh * 1.25) return;
+  }
+  t.style.fontSize = "";
+}
+window.addEventListener("resize", function(){ if (bigOn) fitBig(); });
+function closeBig(){
+  if (!bigOn) return;
+  bigOn = false; stopSpeaking();
+  el("bigveil").hidden = true;
+  document.body.style.overflow = "";
+  syncChrome();
+  haptic("light");
+}
+el("bigspeak").onclick = function(e){ e.stopPropagation(); speak(bigText, [el("bigspeak")]); };
+el("bigclose").onclick = function(e){ e.stopPropagation(); closeBig(); };
+/* as before: a tap anywhere else on the screen closes it */
+el("bigveil").addEventListener("click", function(e){ if (!e.target.closest("button")) closeBig(); });
+document.addEventListener("keydown", function(e){ if (e.key === "Escape") closeBig(); });
+document.addEventListener("visibilitychange", function(){
+  if (document.hidden){ stopSpeaking(); return; }
+  if (bigOn) syncChrome();                        /* MyLLM puts its bars back when the app is left */
+});
+if (window.matchMedia){
+  var mq = matchMedia("(prefers-color-scheme: dark)");
+  if (mq.addEventListener) mq.addEventListener("change", syncLook); else if (mq.addListener) mq.addListener(syncLook);
 }
 
 /* ---------- AI translation ---------- */
@@ -350,45 +535,54 @@ function parseTranslation(reply, wantRom){
     throw new Error("the translator didn't return a real translation");
   return {tr: tr, rom: rom};
 }
+function aiBtn(on){ var b = el("aigo"); b.disabled = !!on; b.innerHTML = on ? '<i class="spin"></i>' : icon("arrow"); }
 function aiTranslate(){
   var q = el("aiq").value.trim();
   if (!q){ haptic("light"); return; }
-  if (!ASK){
+  var ask = ASK();
+  if (!ask){
     el("ainote").textContent = "Freeform translation needs AI — enable it in Settings. The phrases below always work.";
     haptic("light"); return;
   }
   haptic("light");
-  el("aigo").disabled = true;
+  aiBtn(true);
+  el("ainote").textContent = "Translating into " + lang.name + "…";
   var wantRom = !!R[lang.id];
   var p = "Translate this into " + lang.name + " for a polite traveller: \"" + q + "\"\n" +
       (wantRom ? "Reply with EXACTLY these labelled lines and nothing else:\nTRANSLATION: the translated phrase in " + lang.name + "\nROMAN: how a traveller would pronounce it, written in latin letters"
                : "Reply with EXACTLY this labelled line and nothing else:\nTRANSLATION: the translated phrase in " + lang.name);
   var sys = {system:"You are a precise translator. No commentary, no alternatives, no quotes."};
-  ASK(p, sys)
+  ask(p, sys)
   .then(function(r){ return parseTranslation(r || "", wantRom); })
   .catch(function(){
-    return ASK(p + "\nIMPORTANT: fill each labelled line with real content — never repeat the instruction text.", sys)
+    return ask(p + "\nIMPORTANT: fill each labelled line with real content — never repeat the instruction text.", sys)
       .then(function(r){ return parseTranslation(r || "", wantRom); });
   })
   .then(function(o){
     el("aitr").textContent = o.tr;
     el("airom").textContent = o.rom;
-    el("aiout").style.display = "block";
-    el("ainote").textContent = "Tap the translation to show it full-screen.";
-    el("aigo").disabled = false;
+    el("airom").hidden = !o.rom;
+    el("aiout").hidden = false;
+    el("ainote").textContent = "";
+    aiBtn(false);
     haptic("success");
   })
   .catch(function(){
     el("ainote").textContent = "Translation didn't run — try again.";
-    el("aigo").disabled = false;
+    aiBtn(false);
   });
 }
+el("aigo").onclick = aiTranslate;
+el("aiq").addEventListener("keydown", function(e){ if (e.key === "Enter") aiTranslate(); });
+el("aiout").onclick = function(){ openBig({tr:el("aitr").textContent, rom:el("airom").textContent, en:el("aiq").value}); };
+el("q").addEventListener("input", render);
 
 /* ---------- boot ---------- */
-Promise.all([store.getItem("pb_lang"), store.getItem("pb_favs")]).then(function(v){
+aiBtn(false);
+Promise.all([store().getItem("pb_lang"), store().getItem("pb_favs")]).then(function(v){
   if (v[0]){ var l = LANGS.filter(function(x){ return x.id === v[0]; })[0]; if (l) lang = l; }
   if (v[1]){ try{ favs = JSON.parse(v[1]) || {}; }catch(e){} }
-  if (!ASK) el("ainote").textContent = "Tip: enable AI in Settings and this box translates anything — even with no signal.";
+  if (!ASK()) el("ainote").textContent = "Tip: enable AI in Settings and this box translates anything — even with no signal.";
   renderLangs(); render();
 });
 </script>

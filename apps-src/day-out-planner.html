@@ -3,41 +3,121 @@
   Day Out Planner — MyLLMos™ App Gallery · © 2026 Opticell Ltd
   Source-available: read it, remix it, run your version inside MyLLM™.
   Not for redistribution or republication. Terms: https://github.com/TeamDzX/myllm-assets/blob/main/LICENSE
---><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<style>:root{--build-id:"f3fb5b3cfc";color-scheme:light dark}
-*{box-sizing:border-box}
-body{font-family:var(--myllm-font,-apple-system,system-ui,sans-serif);margin:0;padding:16px;background:var(--myllm-bg,#f2f2f7);color:var(--myllm-text,#111)}
-h1{font-size:22px;margin:0 0 2px}
-.sub{font-size:13px;color:var(--myllm-muted,#8a8a8e);margin:0 0 14px}
-.row{display:flex;gap:8px;margin-bottom:10px}
-input{flex:1;padding:12px;border:1px solid var(--myllm-border,#d1d1d6);border-radius:12px;font-size:16px;background:var(--myllm-surface,#fff);color:var(--myllm-text,#111)}
-button.go{border:0;background:var(--myllm-accent,#0a84ff);color:#fff;border-radius:12px;padding:0 18px;font-size:15px;font-weight:700}
-.chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;margin-bottom:6px;-webkit-overflow-scrolling:touch}
-.chip{flex:0 0 auto;background:var(--myllm-surface,#fff);border:1px solid var(--myllm-border,#d1d1d6);color:var(--myllm-text,#111);border-radius:999px;padding:8px 13px;font-size:14px}
-.step{background:var(--myllm-surface,#fff);border-radius:14px;padding:12px 14px;margin-bottom:10px;display:flex;gap:12px;align-items:flex-start}
-.step .n{width:26px;height:26px;border-radius:50%;background:var(--myllm-accent,#0a84ff);color:#fff;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px}
-.step .body{flex:1}
-.step .name{font-size:16px;font-weight:600}
-.step .meta{font-size:13px;color:var(--myllm-muted,#8a8a8e);margin:2px 0 8px}
-.step .dist{color:var(--myllm-accent,#0a84ff);font-weight:600}
-.step a{font-size:13px;font-weight:600;text-decoration:none;background:rgba(10,132,255,.12);color:var(--myllm-accent,#0a84ff);border-radius:9px;padding:6px 11px;display:inline-block}
-.note{text-align:center;color:var(--myllm-muted,#8a8a8e);font-size:14px;margin-top:20px;line-height:1.5;padding:0 8px}
-@media(min-width:768px){body{max-width:780px;margin-left:auto;margin-right:auto}}
+--><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Day Out Planner</title>
+<style>:root{--build-id:"f3fb5b3cfc";color-scheme:light dark; --h:26;
+  --bg:var(--myllm-bg,#f2f2f7); --surface:var(--myllm-surface,#fff); --ink:var(--myllm-text,#111);
+  --muted:var(--myllm-muted,#8a8a8e); --line:var(--myllm-border,#e3e3e8); --acc:var(--myllm-accent,#0a84ff);
+  --fill:rgba(120,120,128,.12); }
+@media (prefers-color-scheme:dark){ :root{ --bg:var(--myllm-bg,#000); --surface:var(--myllm-surface,#1c1c1e);
+  --ink:var(--myllm-text,#f2f2f7); --muted:var(--myllm-muted,#8e8e93); --line:var(--myllm-border,#2c2c2e); --fill:rgba(120,120,128,.24); } }
+  *{ margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body{ font-family:var(--myllm-font,-apple-system,system-ui,sans-serif); background:var(--bg); color:var(--ink);
+    max-width:600px; margin:0 auto; min-height:100dvh; font-size:15.5px; line-height:1.4;
+    padding:calc(16px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) calc(30px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left)); }
+  @media (min-width:768px){ body{ max-width:760px; } }
+  svg.i{ width:1.25em; height:1.25em; fill:currentColor; flex-shrink:0; }
+  button{ font:inherit; color:inherit; cursor:pointer; } button:active{ transform:scale(.96); }
+  a{ color:inherit; }
+
+  .head{ display:flex; align-items:center; gap:12px; margin:2px 2px 14px; }
+  .tile{ display:flex; align-items:center; justify-content:center; color:#fff; flex-shrink:0;
+    background:linear-gradient(145deg, hsl(var(--h) 62% 50%), hsl(calc(var(--h) + 40) 58% 28%)); }
+  .head .tile{ width:44px; height:44px; border-radius:13px; font-size:19px; }
+  .head .ht{ flex:1; min-width:0; }
+  h1{ font-size:22px; font-weight:800; letter-spacing:-.01em; }
+  .head p{ font-size:13px; color:var(--muted); margin-top:1px; }
+  .head .acts{ display:flex; gap:8px; flex-shrink:0; }
+  .head .acts button{ min-width:40px; height:40px; border-radius:12px; border:1px solid var(--line); background:var(--surface);
+    display:flex; align-items:center; justify-content:center; gap:6px; padding:0 10px; font-size:13.5px; font-weight:650; }
+  h2{ font-size:12px; font-weight:800; letter-spacing:.07em; text-transform:uppercase; color:var(--muted); margin:20px 2px 10px; display:flex; align-items:center; gap:6px; }
+
+  .card{ background:var(--surface); border:1px solid var(--line); border-radius:18px; padding:14px; margin-bottom:12px; }
+  label{ display:block; font-size:12px; font-weight:800; letter-spacing:.07em; text-transform:uppercase; color:var(--muted); margin:14px 2px 7px; }
+  label:first-child{ margin-top:0; }
+  input{ width:100%; font:inherit; font-size:16px; padding:12px; border-radius:12px; border:1px solid var(--line); background:var(--bg); color:var(--ink); outline:none; }
+  input:focus{ border-color:var(--acc); }
+  .field{ position:relative; } .field svg.i{ position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--muted); font-size:15px; pointer-events:none; }
+  .field input{ padding-left:38px; }
+  .inrow{ display:flex; gap:8px; } .inrow input{ flex:1; min-width:0; }
+  .chips{ display:flex; gap:7px; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none; margin:10px -14px 0; padding:0 14px 2px; }
+  .chips::-webkit-scrollbar{ display:none; }
+  .chip{ flex:0 0 auto; min-height:36px; border:1px solid var(--line); background:var(--bg); border-radius:99px; padding:0 14px; font-size:13.5px; font-weight:650; white-space:nowrap; }
+  .chip.hot{ background:var(--acc); border-color:var(--acc); color:#fff; }
+  .go{ min-height:48px; border:none; border-radius:14px; background:var(--acc); color:#fff; font-size:16px; font-weight:700;
+    display:flex; align-items:center; justify-content:center; gap:8px; padding:0 18px; }
+  .go.wide{ width:100%; margin-top:14px; }
+  .go.soft{ background:var(--fill); color:var(--acc); }
+  .go:disabled{ opacity:.55; }
+  .pillbtn{ display:inline-flex; align-items:center; gap:6px; min-height:36px; border:none; border-radius:10px; padding:0 12px;
+    background:hsl(var(--h) 70% 50% / .13); color:hsl(var(--h) 70% 38%); font-size:13.5px; font-weight:700; text-decoration:none; }
+  @media (prefers-color-scheme:dark){ .pillbtn{ color:hsl(var(--h) 80% 70%); } }
+  .spin{ width:16px; height:16px; border-radius:50%; border:2.4px solid currentColor; border-right-color:transparent; animation:spin .8s linear infinite; flex-shrink:0; }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+  .skel{ border-radius:16px; margin-bottom:10px; background:var(--fill); animation:shimmer 1.4s ease-in-out infinite; }
+  @keyframes shimmer{ 50%{ opacity:.45; } }
+
+  .notice{ display:flex; gap:12px; align-items:flex-start; background:var(--surface); border:1px solid var(--line); border-radius:18px; padding:14px; margin-bottom:12px; }
+  .notice .tile{ width:36px; height:36px; border-radius:10px; font-size:16px; }
+  .notice.warn .tile{ background:linear-gradient(145deg,#ff9f0a,#c25e00); }
+  .notice b{ display:block; font-size:15px; font-weight:750; }
+  .notice p{ font-size:13.5px; color:var(--muted); line-height:1.45; margin-top:2px; }
+  .notice p b{ display:inline; font-size:inherit; font-weight:700; color:var(--ink); }
+  .notice .go{ margin-top:10px; min-height:40px; font-size:14.5px; border-radius:12px; }
+  .hint{ text-align:center; font-size:13px; color:var(--muted); line-height:1.5; padding:18px 12px 6px; }
+
+  [hidden]{ display:none !important; }
+  @media (prefers-reduced-motion:reduce){ .spin{ animation-duration:2.4s; } .skel{ animation:none; } button:active{ transform:none; } }
+
+  /* the plan: a numbered route with a line joining the stops */
+  .route{ position:relative; }
+  .step{ position:relative; display:flex; gap:12px; align-items:flex-start; padding-bottom:12px; }
+  .step:not(:last-child)::before{ content:""; position:absolute; left:17px; top:40px; bottom:0; width:2px; border-radius:2px; background:hsl(var(--h) 60% 50% / .35); }
+  .step .n{ width:36px; height:36px; border-radius:11px; font-size:15px; font-weight:800; font-variant-numeric:tabular-nums; }
+  .step .body{ flex:1; min-width:0; background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:12px 13px; }
+  .step .name{ font-size:16px; font-weight:700; line-height:1.3; overflow-wrap:anywhere; }
+  .step .meta{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; font-size:13px; color:var(--muted); margin:5px 0 10px; }
+  .step .d{ font-size:12px; font-weight:800; font-variant-numeric:tabular-nums; color:hsl(var(--h) 70% 38%); background:hsl(var(--h) 70% 50% / .13); border-radius:99px; padding:2px 8px; }
+  @media (prefers-color-scheme:dark){ .step .d{ color:hsl(var(--h) 80% 68%); } }
+  .step .addr{ min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1; }
+  .skstep{ display:flex; gap:12px; margin-bottom:12px; }
+  .skstep .skel{ margin:0; }
+  @media (min-width:700px){ .route{ display:grid; grid-template-columns:1fr 1fr; column-gap:14px; } .step::before{ display:none; } }
 </style></head><body>
-<h1>🗺 Day Out Planner</h1>
-<p class="sub" id="here">Finding your location…</p>
-<div class="chips" id="chips"></div>
-<div class="row"><input id="vibe" placeholder="A vibe… e.g. rainy day with kids"><button class="go" onclick="plan()">Plan</button></div>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-map" viewBox="0 0 24 24"><path d="M3.5 6.5L9 4l6 2.5L20.5 4v13.5L15 20l-6-2.5-5.5 2.5zM9 4v13.5M15 6.5V20" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+  <symbol id="i-spark" viewBox="0 0 24 24"><path d="M10 2.5l1.9 5.6 5.6 1.9-5.6 1.9L10 17.5l-1.9-5.6L2.5 10l5.6-1.9zM18.5 14l.95 2.55L22 17.5l-2.55.95L18.5 21l-.95-2.55L15 17.5l2.55-.95z" fill="currentColor"/></symbol>
+  <symbol id="i-dir" viewBox="0 0 24 24"><path d="M11.3 2.7a1 1 0 0 1 1.4 0l8.6 8.6a1 1 0 0 1 0 1.4l-8.6 8.6a1 1 0 0 1-1.4 0l-8.6-8.6a1 1 0 0 1 0-1.4zM13 8.5v2.2H9.5a1 1 0 0 0-1 1V15h2v-2.3H13v2.2l3.2-3.2z" fill="currentColor" fill-rule="evenodd"/></symbol>
+  <symbol id="i-share" viewBox="0 0 24 24"><path d="M12 3v12M7.5 7.5L12 3l4.5 4.5M5 12v6.5A1.5 1.5 0 0 0 6.5 20h11a1.5 1.5 0 0 0 1.5-1.5V12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 2a7 7 0 0 0-7 7c0 5.2 6.1 12.2 6.4 12.5a.8.8 0 0 0 1.2 0C12.9 21.2 19 14.2 19 9a7 7 0 0 0-7-7zm0 9.6a2.6 2.6 0 1 1 0-5.2 2.6 2.6 0 0 1 0 5.2z" fill="currentColor"/></symbol>
+  <symbol id="i-warn" viewBox="0 0 24 24"><path d="M10.3 3.9a2 2 0 0 1 3.4 0l8 13.6a2 2 0 0 1-1.7 3H4a2 2 0 0 1-1.7-3zM12 9a1 1 0 0 0-1 1v4a1 1 0 0 0 2 0v-4a1 1 0 0 0-1-1zm0 7.2a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 0 0 0-2.4z" fill="currentColor"/></symbol>
+</defs></svg>
+
+<div class="head">
+  <div class="tile"><svg class="i"><use href="#i-map"/></svg></div>
+  <div class="ht"><h1>Day Out Planner</h1><p id="here">Finding your location…</p></div>
+</div>
+
+<div class="card">
+  <label for="vibe">Your vibe</label>
+  <input id="vibe" placeholder="A vibe… e.g. rainy day with kids" autocomplete="off" enterkeyhint="go">
+  <div class="chips" id="chips"></div>
+  <button class="go wide" id="bPlan" type="button"></button>
+</div>
 <div id="out"></div>
 
 <script>
-var LOC = window.myllmLocation || null;
-var ASK = window.myllmAsk || null;
-var haptic = window.myllmHaptic || function(){};
-var here = null;
+function el(id){return document.getElementById(id)}
+/* Bridges are looked up when used, never kept: MyLLM can add them after this
+   script has run. */
+function LOC(){ return window.myllmLocation || null; }
+function ASK(){ return window.myllmAsk || null; }
+function haptic(k){ if(window.myllmHaptic){ try{ myllmHaptic(k); }catch(_){} } }
+function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+function icon(n){ return '<svg class="i"><use href="#i-' + n + '"/></svg>'; }
+var here = null, busy = false;
 var IDEAS = ["rainy day with kids","date night","lazy Sunday","tourist for a day","active outdoors","foodie crawl"];
 
-function el(id){return document.getElementById(id)}
 function dist(m){ if(m==null)return ""; return m<1000?Math.round(m)+" m":(m/1000).toFixed(m<10000?1:0)+" km"; }
 
 function emojiFor(q){
@@ -50,14 +130,23 @@ function emojiFor(q){
   return "📍";
 }
 
+function notice(kind, title, text){
+  el("out").innerHTML='<div class="notice'+(kind==="warn"?" warn":"")+'"><div class="tile">'+icon(kind==="warn"?"warn":"map")+'</div>'+
+    '<div style="flex:1;min-width:0"><b>'+esc(title)+'</b><p>'+text+'</p></div></div>';
+}
+function planBtn(on){
+  var b=el("bPlan"); b.disabled=!!on;
+  b.innerHTML=on?'<i class="spin"></i><span>Planning your day…</span>':icon("spark")+'<span>Plan my day</span>';
+}
 function chips(){
   var c=el("chips");
   IDEAS.forEach(function(v){
-    var b=document.createElement("button");b.className="chip";b.textContent=v;
+    var b=document.createElement("button");b.type="button";b.className="chip";b.textContent=v;
     b.onclick=function(){haptic("selection");el("vibe").value=v;plan()};
     c.appendChild(b);
   });
 }
+function markChip(v){ [].forEach.call(el("chips").children,function(c){ c.classList.toggle("hot",c.textContent===v); }); }
 
 /* Labelled lines, not JSON — small models (Apple Intelligence) echo JSON
    templates back verbatim. Echoed instructions are rejected and retried. */
@@ -84,38 +173,41 @@ function parseQueries(text){
 
 function plan(){
   var vibe=el("vibe").value.trim();
-  if(!vibe) return;
-  if(!LOC){ el("out").innerHTML='<p class="note">This needs the latest MyLLM with <b>Allow apps to use your location</b> on.</p>'; return; }
-  haptic("light");
-  el("out").innerHTML='<p class="note">Planning your day…</p>';
+  if(!vibe||busy) return;
+  var loc=LOC();
+  if(!loc){ notice("warn","Location is off",'This needs the latest MyLLM with <b>Allow apps to use your location</b> on.'); return; }
+  haptic("light"); markChip(vibe);
+  busy=true; planBtn(true);
+  el("out").innerHTML='<h2>Your day</h2>'+[0,1,2].map(function(){return '<div class="skstep"><div class="skel" style="width:36px;height:36px;border-radius:11px"></div><div class="skel" style="flex:1;height:92px"></div></div>'}).join("");
 
   getQueries(vibe).then(function(queries){
-    if(!queries||!queries.length){ el("out").innerHTML='<p class="note">Couldn’t plan that one — try another vibe.</p>'; return; }
+    if(!queries||!queries.length){ notice("warn","Couldn’t plan that one","Try another vibe."); return; }
     // Resolve each step to its nearest real place, in order.
     var jobs=queries.map(function(q){
-      return LOC.search(q,{limit:1}).then(function(list){
+      return loc.search(q,{limit:1}).then(function(list){
         var p=(list&&list[0])||null; return p?{q:q,place:p}:null;
       }).catch(function(){return null});
     });
-    Promise.all(jobs).then(function(steps){
+    return Promise.all(jobs).then(function(steps){
       steps=steps.filter(Boolean);
-      if(!steps.length){ el("out").innerHTML='<p class="note">No matching places nearby for that idea.</p>'; return; }
-      render(steps);
+      if(!steps.length){ notice("warn","Nothing nearby for that idea","No matching places turned up — try another vibe."); return; }
+      render(steps,vibe);
     });
-  });
+  }).then(function(){ busy=false; planBtn(false); },function(){ busy=false; planBtn(false); notice("warn","Couldn’t plan that one","Try another vibe."); });
 }
 
 function getQueries(vibe){
-  if(!ASK){
+  var ask=ASK();
+  if(!ask){
     return Promise.resolve(presets(vibe));
   }
   var prompt='Plan a short local outing for this vibe: "'+vibe+'". Reply with EXACTLY these labelled lines and nothing else:\n'+
     'QUERY: one short place search query, Apple-Maps style — repeat this line for each stop (3 to 5 stops, in a sensible visiting order)';
   var sys={system:"You plan short local outings as a list of place search queries."};
-  return ASK(prompt,sys)
+  return ask(prompt,sys)
     .then(function(reply){ return parseQueries(reply||""); })
     .catch(function(){
-      return ASK(prompt+'\nIMPORTANT: fill each labelled line with real content — never repeat the instruction text.',sys)
+      return ask(prompt+'\nIMPORTANT: fill each labelled line with real content — never repeat the instruction text.',sys)
         .then(function(reply){ return parseQueries(reply||""); });
     })
     .catch(function(){ return presets(vibe); });
@@ -130,41 +222,46 @@ function presets(vibe){
   return ["coffee shop","park","restaurant","museum"];
 }
 
-function render(steps){
-  var O=el("out");O.innerHTML="";
+function render(steps,vibe){
+  var O=el("out");O.innerHTML='<h2>Your day · '+esc(vibe)+'</h2>';
+  var R=document.createElement("div");R.className="route";O.appendChild(R);
   var share=[];
   steps.forEach(function(st,i){
     var p=st.place, dest=p.latitude+","+p.longitude;
     var d=document.createElement("div");d.className="step";
-    d.innerHTML='<div class="n">'+(i+1)+'</div><div class="body">'+
+    d.innerHTML='<div class="tile n">'+(i+1)+'</div><div class="body">'+
       '<div class="name">'+emojiFor(st.q)+' </div>'+
-      '<div class="meta"><span class="dist">'+dist(p.distance)+'</span> · </div>'+
-      '<a href="https://maps.apple.com/?daddr='+dest+'">Directions</a></div>';
+      '<div class="meta">'+(p.distance!=null?'<span class="d">'+dist(p.distance)+'</span>':'')+'<span class="addr"></span></div>'+
+      '<a class="pillbtn" href="https://maps.apple.com/?daddr='+dest+'">'+icon("dir")+'Directions</a></div>';
     d.querySelector(".name").appendChild(document.createTextNode(p.name));
-    d.querySelector(".meta").appendChild(document.createTextNode(p.address||st.q));
-    O.appendChild(d);
+    d.querySelector(".addr").textContent=p.address||st.q;
+    R.appendChild(d);
     share.push((i+1)+". "+p.name+(p.address?" ("+p.address+")":""));
   });
   if(window.myllmShare){
-    var sb=document.createElement("button");sb.className="go";sb.style.width="100%";sb.style.padding="12px";sb.textContent="Share this plan";
+    var sb=document.createElement("button");sb.type="button";sb.className="go soft wide";sb.innerHTML=icon("share")+'<span>Share this plan</span>';
     sb.onclick=function(){haptic("light");myllmShare("My day out:\n"+share.join("\n"))};
     O.appendChild(sb);
   }
+  haptic("success");
 }
 
 function start(){
-  chips();
-  if(!LOC){
+  chips(); planBtn(false);
+  el("bPlan").onclick=plan;
+  el("vibe").addEventListener("keydown",function(e){ if(e.key==="Enter") plan(); });
+  var loc=LOC();
+  if(!loc){
     el("here").textContent="Location unavailable";
-    el("out").innerHTML='<p class="note">This needs the latest MyLLM with <b>Settings → Allow apps to use your location</b> on (and <b>Allow apps to use the AI</b> for smarter plans).</p>';
+    notice("warn","Location is off",'This needs the latest MyLLM with <b>Settings → Allow apps to use your location</b> on (and <b>Allow apps to use the AI</b> for smarter plans).');
     return;
   }
-  el("out").innerHTML='<p class="note">Pick a vibe or type your own, and I’ll build a route from places around you.</p>';
-  LOC.current().then(function(p){
+  el("out").innerHTML='<p class="hint">Pick a vibe or type your own, and I’ll build a route from places around you.</p>';
+  loc.current().then(function(p){
     here=p; el("here").textContent=p.address?("Around "+p.address):"Got your location";
   }).catch(function(e){
     el("here").textContent="Location off";
-    el("out").innerHTML='<p class="note">'+(e&&e.message?e.message:"Couldn’t get your location")+'<br>Turn on <b>Settings → Allow apps to use your location</b>, then reopen.</p>';
+    notice("warn","Couldn’t get your location",esc(e&&e.message?e.message:"Location isn’t available")+'<br>Turn on <b>Settings → Allow apps to use your location</b>, then reopen.');
   });
 }
 start();

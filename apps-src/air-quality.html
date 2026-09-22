@@ -8,107 +8,187 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Air Quality</title>
-<style>
-  :root { color-scheme: light dark; }
-  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-  body{
-    font-family:var(--myllm-font,-apple-system,system-ui,sans-serif);
-    background:var(--myllm-bg,#f2f2f7);
-    color:var(--myllm-text,#111);
-    max-width:600px; margin:0 auto; min-height:100dvh;
-    padding:16px 16px calc(30px + env(safe-area-inset-bottom));
-  }
-  h1{ font-size:22px; font-weight:800; margin:4px 2px 2px; }
-  .where{ font-size:13px; color:var(--myllm-muted,#8a8a8e); margin:0 2px 14px; display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
-  .where button{ border:1px solid var(--myllm-border,#e3e3e8); background:var(--myllm-surface,#fff); color:var(--myllm-text,#111); border-radius:99px; padding:4px 11px; font-size:12px; font-weight:650; }
+<style>:root{--build-id:"520e7488e3";color-scheme:light dark; --h:142;
+  --bg:var(--myllm-bg,#f2f2f7); --surface:var(--myllm-surface,#fff); --ink:var(--myllm-text,#111);
+  --muted:var(--myllm-muted,#8a8a8e); --line:var(--myllm-border,#e3e3e8); --acc:var(--myllm-accent,#0a84ff);
+  --fill:rgba(120,120,128,.12); }
+@media (prefers-color-scheme:dark){ :root{ --bg:var(--myllm-bg,#000); --surface:var(--myllm-surface,#1c1c1e);
+  --ink:var(--myllm-text,#f2f2f7); --muted:var(--myllm-muted,#8e8e93); --line:var(--myllm-border,#2c2c2e); --fill:rgba(120,120,128,.24); } }
+  *{ margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body{ font-family:var(--myllm-font,-apple-system,system-ui,sans-serif); background:var(--bg); color:var(--ink);
+    max-width:600px; margin:0 auto; min-height:100dvh; font-size:15.5px; line-height:1.4;
+    padding:calc(16px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) calc(30px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left)); }
+  @media (min-width:768px){ body{ max-width:760px; } }
+  svg.i{ width:1.25em; height:1.25em; fill:currentColor; flex-shrink:0; }
+  button{ font:inherit; color:inherit; cursor:pointer; } button:active{ transform:scale(.96); }
+  a{ color:inherit; }
 
-  .card{
-    background:var(--myllm-surface,#fff); border:1px solid var(--myllm-border,#e3e3e8);
-    border-radius:18px; padding:16px; margin-bottom:12px;
-  }
-  .hero{ text-align:center; }
-  .aqiv{ font-size:64px; font-weight:800; line-height:1; }
-  .aqlbl{ font-size:17px; font-weight:750; margin-top:4px; }
-  .aqadv{ font-size:13.5px; color:var(--myllm-muted,#8a8a8e); margin-top:8px; line-height:1.5; }
-  .scale{ display:flex; height:9px; border-radius:99px; overflow:hidden; margin-top:14px; }
-  .scale i{ flex:1; }
-  .scale-dot{ position:relative; height:0; }
-  .scale-dot i{
-    position:absolute; top:-13px; width:15px; height:15px; border-radius:50%;
-    background:var(--myllm-surface,#fff); border:3px solid var(--myllm-text,#111);
-    transform:translateX(-50%);
-  }
+  .head{ display:flex; align-items:center; gap:12px; margin:2px 2px 14px; }
+  .tile{ display:flex; align-items:center; justify-content:center; color:#fff; flex-shrink:0;
+    background:linear-gradient(145deg, hsl(var(--h) 62% 50%), hsl(calc(var(--h) + 40) 58% 28%)); }
+  .head .tile{ width:44px; height:44px; border-radius:13px; font-size:19px; }
+  .head .ht{ flex:1; min-width:0; }
+  h1{ font-size:22px; font-weight:800; letter-spacing:-.01em; }
+  .head p{ font-size:13px; color:var(--muted); margin-top:1px; }
+  .head .acts{ display:flex; gap:8px; flex-shrink:0; }
+  .head .acts button{ min-width:40px; height:40px; border-radius:12px; border:1px solid var(--line); background:var(--surface);
+    display:flex; align-items:center; justify-content:center; gap:6px; padding:0 10px; font-size:13.5px; font-weight:650; }
+  h2{ font-size:12px; font-weight:800; letter-spacing:.07em; text-transform:uppercase; color:var(--muted); margin:20px 2px 10px; display:flex; align-items:center; gap:6px; }
 
-  h2{ font-size:12px; font-weight:800; letter-spacing:.07em; text-transform:uppercase; color:var(--myllm-muted,#8a8a8e); margin:0 0 10px; }
-  .grid{ display:grid; grid-template-columns:1fr 1fr; gap:9px; }
-  .pol{ background:var(--myllm-bg,#f2f2f7); border-radius:13px; padding:11px 12px; }
-  .pol small{ display:block; font-size:11px; font-weight:700; color:var(--myllm-muted,#8a8a8e); }
-  .pol b{ font-size:19px; font-variant-numeric:tabular-nums; }
-  .pol span{ font-size:11px; color:var(--myllm-muted,#8a8a8e); }
-  .pol .lv{ display:inline-block; margin-left:6px; width:9px; height:9px; border-radius:50%; }
+  .card{ background:var(--surface); border:1px solid var(--line); border-radius:18px; padding:14px; margin-bottom:12px; }
+  label{ display:block; font-size:12px; font-weight:800; letter-spacing:.07em; text-transform:uppercase; color:var(--muted); margin:14px 2px 7px; }
+  label:first-child{ margin-top:0; }
+  input{ width:100%; font:inherit; font-size:16px; padding:12px; border-radius:12px; border:1px solid var(--line); background:var(--bg); color:var(--ink); outline:none; }
+  input:focus{ border-color:var(--acc); }
+  .field{ position:relative; } .field svg.i{ position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--muted); font-size:15px; pointer-events:none; }
+  .field input{ padding-left:38px; }
+  .inrow{ display:flex; gap:8px; } .inrow input{ flex:1; min-width:0; }
+  .chips{ display:flex; gap:7px; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none; margin:10px -14px 0; padding:0 14px 2px; }
+  .chips::-webkit-scrollbar{ display:none; }
+  .chip{ flex:0 0 auto; min-height:36px; border:1px solid var(--line); background:var(--bg); border-radius:99px; padding:0 14px; font-size:13.5px; font-weight:650; white-space:nowrap; }
+  .chip.hot{ background:var(--acc); border-color:var(--acc); color:#fff; }
+  .go{ min-height:48px; border:none; border-radius:14px; background:var(--acc); color:#fff; font-size:16px; font-weight:700;
+    display:flex; align-items:center; justify-content:center; gap:8px; padding:0 18px; }
+  .go.wide{ width:100%; margin-top:14px; }
+  .go.soft{ background:var(--fill); color:var(--acc); }
+  .go:disabled{ opacity:.55; }
+  .pillbtn{ display:inline-flex; align-items:center; gap:6px; min-height:36px; border:none; border-radius:10px; padding:0 12px;
+    background:hsl(var(--h) 70% 50% / .13); color:hsl(var(--h) 70% 38%); font-size:13.5px; font-weight:700; text-decoration:none; }
+  @media (prefers-color-scheme:dark){ .pillbtn{ color:hsl(var(--h) 80% 70%); } }
+  .spin{ width:16px; height:16px; border-radius:50%; border:2.4px solid currentColor; border-right-color:transparent; animation:spin .8s linear infinite; flex-shrink:0; }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+  .skel{ border-radius:16px; margin-bottom:10px; background:var(--fill); animation:shimmer 1.4s ease-in-out infinite; }
+  @keyframes shimmer{ 50%{ opacity:.45; } }
 
-  .bars{ display:flex; align-items:flex-end; gap:3px; height:76px; }
-  .bars i{ flex:1; border-radius:3px 3px 0 0; min-height:4px; }
-  .barlbl{ display:flex; justify-content:space-between; font-size:10.5px; color:var(--myllm-muted,#8a8a8e); margin-top:5px; }
+  .notice{ display:flex; gap:12px; align-items:flex-start; background:var(--surface); border:1px solid var(--line); border-radius:18px; padding:14px; margin-bottom:12px; }
+  .notice .tile{ width:36px; height:36px; border-radius:10px; font-size:16px; }
+  .notice.warn .tile{ background:linear-gradient(145deg,#ff9f0a,#c25e00); }
+  .notice b{ display:block; font-size:15px; font-weight:750; }
+  .notice p{ font-size:13.5px; color:var(--muted); line-height:1.45; margin-top:2px; }
+  .notice p b{ display:inline; font-size:inherit; font-weight:700; color:var(--ink); }
+  .notice .go{ margin-top:10px; min-height:40px; font-size:14.5px; border-radius:12px; }
+  .hint{ text-align:center; font-size:13px; color:var(--muted); line-height:1.5; padding:18px 12px 6px; }
 
-  .status{ text-align:center; font-size:13.5px; color:var(--myllm-muted,#8a8a8e); padding:22px 12px; line-height:1.6; }
-  .setup input{
-    width:100%; font-size:16px; padding:11px 12px; border-radius:12px;
-    border:1px solid var(--myllm-border,#e3e3e8); background:var(--myllm-bg,#f2f2f7); color:var(--myllm-text,#111);
-  }
-  .setup .row{ display:flex; gap:8px; }
-  .setup .row button{ border:none; border-radius:12px; padding:0 16px; font-size:15px; font-weight:700; background:var(--myllm-accent,#0a84ff); color:#fff; }
-  .setup .gps{ width:100%; border:1px solid var(--myllm-border,#e3e3e8); border-radius:12px; padding:12px; margin-top:9px; background:var(--myllm-bg,#f2f2f7); color:var(--myllm-text,#111); font-size:15px; font-weight:650; }
-  .note{ font-size:12.5px; color:var(--myllm-muted,#8a8a8e); margin-top:9px; line-height:1.5; }
-  .refresh{ width:100%; border:1px solid var(--myllm-border,#e3e3e8); background:var(--myllm-surface,#fff); color:var(--myllm-text,#111); border-radius:13px; padding:12px; font-size:14px; font-weight:650; }
+  [hidden]{ display:none !important; }
+  @media (prefers-reduced-motion:reduce){ .spin{ animation-duration:2.4s; } .skel{ animation:none; } button:active{ transform:none; } }
+
+  /* the reading: a hero in the band's own colour */
+  .hero{ border-radius:20px; padding:18px 18px 16px; color:#fff; margin-bottom:12px;
+    background:linear-gradient(145deg, var(--b1,#1f9d55), var(--b2,#136b3a)); box-shadow:0 10px 28px rgba(0,0,0,.14); }
+  .hero .k{ font-size:11px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; opacity:.8; }
+  .hero .row{ display:flex; align-items:flex-end; gap:14px; margin-top:4px; }
+  .hero .n{ font-size:64px; font-weight:800; line-height:.95; letter-spacing:-.03em; font-variant-numeric:tabular-nums; }
+  .hero .bn{ font-size:21px; font-weight:800; line-height:1.15; padding-bottom:6px; }
+  .hero .adv{ font-size:14px; line-height:1.45; opacity:.92; margin-top:10px; }
+  .scale{ position:relative; display:flex; gap:3px; height:8px; margin-top:16px; }
+  .scale i{ flex:1; border-radius:99px; background:rgba(255,255,255,.28); }
+  .scale i.on{ background:rgba(255,255,255,.95); }
+  .scale b{ position:absolute; top:50%; width:16px; height:16px; border-radius:50%; background:#fff; border:3px solid var(--b2,#136b3a);
+    transform:translate(-50%,-50%); box-shadow:0 2px 6px rgba(0,0,0,.25); }
+  .scalelbl{ display:flex; justify-content:space-between; font-size:10.5px; font-weight:700; opacity:.75; margin-top:6px; }
+
+  /* pollutants as bars against their health guideline */
+  .pol{ padding:11px 0; border-bottom:1px solid var(--line); }
+  .pol:first-child{ padding-top:0; } .pol:last-child{ border-bottom:none; padding-bottom:0; }
+  .pol .t{ display:flex; align-items:baseline; gap:8px; }
+  .pol .nm{ flex:1; min-width:0; font-size:14.5px; font-weight:650; }
+  .pol .nm small{ font-weight:500; color:var(--muted); }
+  .pol .v{ font-size:16px; font-weight:800; font-variant-numeric:tabular-nums; }
+  .pol .v small{ font-size:11.5px; font-weight:600; color:var(--muted); margin-left:2px; }
+  .bar{ position:relative; height:8px; border-radius:99px; background:var(--fill); margin-top:8px; overflow:visible; }
+  .bar i{ position:absolute; left:0; top:0; bottom:0; border-radius:99px; }
+  .bar u{ position:absolute; left:50%; top:-3px; bottom:-3px; width:2px; border-radius:2px; background:var(--muted); opacity:.55; }
+  .pol .lvl{ font-size:12px; color:var(--muted); margin-top:5px; }
+  .tag{ display:inline-flex; align-items:center; font-size:11.5px; font-weight:800; letter-spacing:.03em; border-radius:99px; padding:3px 9px; color:#fff; }
+  .uvico{ display:inline-flex; vertical-align:-3px; margin-right:4px; color:#ff9f0a; }
+
+  .pgrid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:8px; }
+  .pgrid div{ display:flex; align-items:center; justify-content:space-between; gap:8px; background:var(--bg); border-radius:12px; padding:10px 12px; font-size:14px; font-weight:650; }
+
+  .bars{ display:flex; align-items:flex-end; gap:3px; height:84px; }
+  .bars i{ flex:1; border-radius:4px 4px 1px 1px; min-height:4px; }
+  .bars i.now{ box-shadow:0 0 0 2px var(--surface), 0 0 0 3.5px var(--ink); }
+  .barlbl{ display:flex; justify-content:space-between; font-size:11px; font-weight:600; color:var(--muted); margin-top:7px; }
+  .src{ text-align:center; font-size:11.5px; color:var(--muted); margin-top:4px; }
 </style>
-<style>:root{--build-id:"520e7488e3";}</style>
 </head>
 <body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-leaf" viewBox="0 0 24 24"><path d="M20.5 3.5a.9.9 0 0 0-.9-.9C11.2 2.6 4.6 6.3 4.6 13.4c0 1.6.4 3 1.1 4.2l-2.4 2.4a1 1 0 1 0 1.4 1.4l2.4-2.4c1.2.7 2.6 1.1 4.2 1.1 7.1 0 10.8-6.6 10.8-15zM8.9 16.5a1 1 0 0 1-1.4-1.4c2.4-2.4 5-4 7.9-5a1 1 0 0 1 .7 1.9c-2.6.9-5 2.3-7.2 4.5z" fill="currentColor"/></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 2a7 7 0 0 0-7 7c0 5.2 6.1 12.2 6.4 12.5a.8.8 0 0 0 1.2 0C12.9 21.2 19 14.2 19 9a7 7 0 0 0-7-7zm0 9.6a2.6 2.6 0 1 1 0-5.2 2.6 2.6 0 0 1 0 5.2z" fill="currentColor"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.6-5.9M20 4v5h-5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M15.5 15.5L20 20" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.2" fill="currentColor"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+  <symbol id="i-offline" viewBox="0 0 24 24"><path d="M2 8.8a15 15 0 0 1 20 0M5.3 12.2a10.5 10.5 0 0 1 13.4 0M8.6 15.6a6 6 0 0 1 6.8 0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="19" r="1.6" fill="currentColor"/><path d="M3.5 3.5l17 17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+  <symbol id="i-warn" viewBox="0 0 24 24"><path d="M10.3 3.9a2 2 0 0 1 3.4 0l8 13.6a2 2 0 0 1-1.7 3H4a2 2 0 0 1-1.7-3zM12 9a1 1 0 0 0-1 1v4a1 1 0 0 0 2 0v-4a1 1 0 0 0-1-1zm0 7.2a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 0 0 0-2.4z" fill="currentColor"/></symbol>
+</defs></svg>
 
-<h1>🌿 Air Quality</h1>
-<div class="where" id="where"></div>
-<div id="app"><p class="status">Finding your air…</p></div>
+<div class="head">
+  <div class="tile"><svg class="i"><use href="#i-leaf"/></svg></div>
+  <div class="ht"><h1>Air Quality</h1><p id="where">Know what you're breathing</p></div>
+  <div class="acts" id="acts" hidden>
+    <button type="button" id="bPlace" aria-label="Change place"><svg class="i"><use href="#i-pin"/></svg></button>
+    <button type="button" id="bRefresh" aria-label="Refresh"><svg class="i"><use href="#i-refresh"/></svg></button>
+  </div>
+</div>
+<div id="app"></div>
 
 <script>
-var store = window.myllmStorage || {getItem:function(){return Promise.resolve(null)}, setItem:function(){return Promise.resolve()}};
-function haptic(k){ if(window.myllmHaptic){ try{ myllmHaptic(k||'light'); }catch(_){} } }
-var NET = window.myllmFetch || null;
-var LOC = window.myllmLocation || null;
 function el(id){ return document.getElementById(id); }
-function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+/* Bridges are looked up when used, never kept: MyLLM can add them after this
+   script has run. */
+function store(){ return window.myllmStorage || {getItem:function(){return Promise.resolve(null)}, setItem:function(){return Promise.resolve()}}; }
+function NET(){ return window.myllmFetch ? window.myllmFetch.apply(window, arguments) : Promise.reject(new Error("offline")); }
+function LOC(){ return window.myllmLocation || null; }
+function haptic(k){ if(window.myllmHaptic){ try{ myllmHaptic(k||'light'); }catch(_){} } }
+function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+function icon(n){ return '<svg class="i"><use href="#i-' + n + '"/></svg>'; }
 
 var obs = null;
-/* European AQI bands */
+/* European AQI bands. b1/b2 = the hero's gradient, deep enough for white text. */
 var BANDS = [
-  {max:20,  name:"Good",           color:"#30d158", adv:"Beautiful air. Windows open, lungs happy — enjoy being outside."},
-  {max:40,  name:"Fair",           color:"#63c78b", adv:"Perfectly fine for everyone. Sensitive folks won't notice a thing."},
-  {max:60,  name:"Moderate",       color:"#ffd60a", adv:"Fine for most. If you're very sensitive, take intense exercise a little easier."},
-  {max:80,  name:"Poor",           color:"#ff9500", adv:"Consider lighter outdoor exercise; sensitive groups should limit time in traffic."},
-  {max:100, name:"Very poor",      color:"#ff3b30", adv:"Keep outdoor exertion short; close windows on busy roads."},
-  {max:1e9, name:"Extremely poor", color:"#af52de", adv:"Stay indoors where you can; masks help if you must be out long."}
+  {max:20,  name:"Good",           color:"#30d158", b1:"#1f9d55", b2:"#0f6a37", adv:"Beautiful air. Windows open, lungs happy — enjoy being outside."},
+  {max:40,  name:"Fair",           color:"#63c78b", b1:"#3b9c6b", b2:"#1f6a47", adv:"Perfectly fine for everyone. Sensitive folks won't notice a thing."},
+  {max:60,  name:"Moderate",       color:"#ffd60a", b1:"#c89400", b2:"#8a5f00", adv:"Fine for most. If you're very sensitive, take intense exercise a little easier."},
+  {max:80,  name:"Poor",           color:"#ff9500", b1:"#e07400", b2:"#984600", adv:"Consider lighter outdoor exercise; sensitive groups should limit time in traffic."},
+  {max:100, name:"Very poor",      color:"#ff3b30", b1:"#d9342b", b2:"#8c1b15", adv:"Keep outdoor exertion short; close windows on busy roads."},
+  {max:1e9, name:"Extremely poor", color:"#af52de", b1:"#9b44c9", b2:"#5a2080", adv:"Stay indoors where you can; masks help if you must be out long."}
 ];
 function band(aqi){ for (var i = 0; i < BANDS.length; i++) if (aqi <= BANDS[i].max) return BANDS[i]; return BANDS[BANDS.length-1]; }
 function pollenLevel(v){
   if (v == null) return null;
   if (v < 25) return {name:"Low", color:"#30d158"};
-  if (v < 75) return {name:"Moderate", color:"#ffd60a"};
+  if (v < 75) return {name:"Moderate", color:"#e0a800"};
   return {name:"High", color:"#ff3b30"};
 }
 function uvBand(u){
   if (u < 3) return {name:"Low", color:"#30d158", adv:"no protection needed"};
-  if (u < 6) return {name:"Moderate", color:"#ffd60a", adv:"hat and SPF if out long"};
+  if (u < 6) return {name:"Moderate", color:"#e0a800", adv:"hat and SPF if out long"};
   if (u < 8) return {name:"High", color:"#ff9500", adv:"SPF, shade in the middle of the day"};
   if (u < 11) return {name:"Very high", color:"#ff3b30", adv:"cover up, seek shade 11–3"};
   return {name:"Extreme", color:"#af52de", adv:"avoid midday sun entirely"};
 }
 
+function notice(kind, title, text, action){
+  el("app").innerHTML = '<div class="notice' + (kind === "warn" ? " warn" : "") + '"><div class="tile">' + icon(kind === "offline" ? "offline" : kind === "warn" ? "warn" : "leaf") +
+    '</div><div style="flex:1;min-width:0"><b>' + esc(title) + '</b><p>' + text + '</p>' +
+    (action ? '<button class="go" type="button" id="noticeGo">' + icon("refresh") + '<span>' + esc(action.label) + '</span></button>' : '') + '</div></div>';
+  if (action) el("noticeGo").onclick = action.run;
+}
+function loading(label){
+  el("app").innerHTML = '<div class="skel" style="height:196px;border-radius:20px"></div><div class="skel" style="height:210px"></div><div class="skel" style="height:120px"></div>' +
+    '<p class="hint">' + esc(label) + '</p>';
+}
+
 function load(){
-  if (!NET){
-    el("app").innerHTML = '<p class="status">Air Quality needs internet access for apps — turn it on in MyLLMos settings, then reopen.</p>';
+  if (!window.myllmFetch){
+    el("acts").hidden = false;
+    notice("offline", "Internet access is off", "Air Quality needs internet access for apps — turn it on in MyLLMos settings, then reopen.", {label:"Try again", run:load});
     return;
   }
-  el("app").innerHTML = '<p class="status">Reading the air around ' + esc(obs.label) + '…</p>';
+  el("where").textContent = obs.label;
+  el("acts").hidden = false;
+  loading("Reading the air around " + obs.label + "…");
   var aq = "https://air-quality-api.open-meteo.com/v1/air-quality?latitude=" + obs.lat + "&longitude=" + obs.lon +
     "&current=european_aqi,us_aqi,pm2_5,pm10,ozone,nitrogen_dioxide,grass_pollen,birch_pollen,ragweed_pollen,olive_pollen,mugwort_pollen,alder_pollen" +
     "&hourly=european_aqi&forecast_days=2&timezone=auto";
@@ -119,26 +199,37 @@ function load(){
     var u = JSON.parse(rs[1].body);
     render(a, (u.daily && u.daily.uv_index_max && u.daily.uv_index_max[0]) || null);
   }).catch(function(){
-    el("app").innerHTML = '<p class="status">Couldn\'t reach the air-quality service — tap to retry.</p>' +
-      '<button class="refresh" onclick="load()">↻ Try again</button>';
+    notice("offline", "Couldn't reach the air-quality service", "Check your connection — the reading comes from Open-Meteo.", {label:"Try again", run:function(){ haptic("light"); load(); }});
   });
+}
+
+/* A pollutant's bar is drawn against its WHO-style guideline: the tick sits at
+   the guideline, the bar turns amber past it and red past twice it. */
+function polRow(p){
+  var ratio = p.v / p.g, pct = Math.min(100, ratio * 50);
+  var col = ratio <= 1 ? "#30d158" : ratio <= 2 ? "#ff9f0a" : "#ff3b30";
+  var word = ratio <= .5 ? "Well below the guideline" : ratio <= 1 ? "Below the guideline" : ratio <= 2 ? "Above the guideline" : "Well above the guideline";
+  return '<div class="pol"><div class="t"><div class="nm">' + esc(p.n) + (p.d ? ' <small>' + esc(p.d) + '</small>' : '') + '</div>' +
+    '<div class="v">' + Math.round(p.v) + '<small>' + p.u + '</small></div></div>' +
+    '<div class="bar"><i style="width:' + pct.toFixed(1) + '%;background:' + col + '"></i><u></u></div>' +
+    '<div class="lvl">' + word + ' (' + p.g + ' ' + p.u + ')</div></div>';
 }
 
 function render(a, uvMax){
   var c = a.current || {};
   var aqi = Math.round(c.european_aqi != null ? c.european_aqi : -1);
   if (aqi < 0){
-    el("app").innerHTML = '<p class="status">No air-quality data for this spot — try a nearby town.</p>';
+    notice("warn", "No reading for this spot", "The service has no air-quality data here — try a nearby town.", {label:"Choose another place", run:function(){ setupUI(); }});
     return;
   }
-  var b = band(aqi);
+  var b = band(aqi), bi = BANDS.indexOf(b);
   var pos = Math.min(100, aqi / 120 * 100);
 
   var pols = [
-    {n:"PM2.5 — fine particles", v:c.pm2_5,  u:"µg/m³", warn:c.pm2_5 > 15},
-    {n:"PM10 — dust",            v:c.pm10,   u:"µg/m³", warn:c.pm10 > 45},
-    {n:"Ozone",                  v:c.ozone,  u:"µg/m³", warn:c.ozone > 120},
-    {n:"NO₂ — traffic",          v:c.nitrogen_dioxide, u:"µg/m³", warn:c.nitrogen_dioxide > 40}
+    {n:"PM2.5", d:"fine particles", v:c.pm2_5,  u:"µg/m³", g:15},
+    {n:"PM10",  d:"dust",           v:c.pm10,   u:"µg/m³", g:45},
+    {n:"Ozone", d:"",               v:c.ozone,  u:"µg/m³", g:120},
+    {n:"NO₂",   d:"traffic",        v:c.nitrogen_dioxide, u:"µg/m³", g:40}
   ].filter(function(p){ return p.v != null; });
 
   var pollens = [
@@ -159,62 +250,63 @@ function render(a, uvMax){
       slice.push({t:a.hourly.time[j], v:a.hourly.european_aqi[j] || 0});
     }
     var maxV = Math.max(60, Math.max.apply(null, slice.map(function(s){ return s.v; })));
-    barsHtml = '<div class="card"><h2>Next 24 hours</h2><div class="bars">' +
-      slice.map(function(s){
-        return '<i style="height:' + Math.max(5, s.v / maxV * 100) + '%;background:' + band(s.v).color + '"></i>';
-      }).join("") + '</div><div class="barlbl"><span>now</span><span>+12h</span><span>+24h</span></div></div>';
+    barsHtml = '<h2>Next 24 hours</h2><div class="card"><div class="bars">' +
+      slice.map(function(s, k){
+        return '<i' + (k === 0 ? ' class="now"' : '') + ' style="height:' + Math.max(5, s.v / maxV * 100) + '%;background:' + band(s.v).color + '" title="' + Math.round(s.v) + '"></i>';
+      }).join("") + '</div><div class="barlbl"><span>Now</span><span>+12h</span><span>+24h</span></div></div>';
   }
 
   var uvHtml = "";
   if (uvMax != null){
-    var ub = uvBand(uvMax);
-    uvHtml = '<div class="pol"><small>UV index (today\'s max)</small><b>' + Math.round(uvMax * 10) / 10 +
-      '<span class="lv" style="background:' + ub.color + '"></span></b><span> ' + ub.name + ' — ' + ub.adv + '</span></div>';
+    var ub = uvBand(uvMax), uvv = Math.round(uvMax * 10) / 10;
+    uvHtml = '<div class="pol"><div class="t"><div class="nm"><span class="uvico">' + icon("sun") + '</span>UV index <small>today\'s max</small></div>' +
+      '<div class="v">' + uvv + '</div></div>' +
+      '<div class="bar"><i style="width:' + Math.min(100, uvMax / 11 * 100).toFixed(1) + '%;background:' + ub.color + '"></i></div>' +
+      '<div class="lvl"><span class="tag" style="background:' + ub.color + '">' + ub.name + '</span> ' + ub.adv + '</div></div>';
   }
 
   el("app").innerHTML =
-    '<div class="card hero">' +
-      '<div class="aqiv" style="color:' + b.color + '">' + aqi + '</div>' +
-      '<div class="aqlbl">' + b.name + ' <span style="color:var(--myllm-muted,#8a8a8e);font-weight:500">· European AQI</span></div>' +
-      '<div class="aqadv">' + b.adv + '</div>' +
-      '<div class="scale">' + BANDS.slice(0,5).map(function(x){ return '<i style="background:' + x.color + '"></i>'; }).join("") +
-        '<i style="background:' + BANDS[5].color + '"></i></div>' +
-      '<div class="scale-dot"><i style="left:' + pos + '%"></i></div>' +
+    '<div class="hero" style="--b1:' + b.b1 + ';--b2:' + b.b2 + '">' +
+      '<div class="k">European AQI · now</div>' +
+      '<div class="row"><div class="n">' + aqi + '</div><div class="bn">' + b.name + '</div></div>' +
+      '<div class="adv">' + b.adv + '</div>' +
+      '<div class="scale">' + BANDS.map(function(x, k){ return '<i' + (k === bi ? ' class="on"' : '') + '></i>'; }).join("") +
+        '<b style="left:' + pos + '%"></b></div>' +
+      '<div class="scalelbl"><span>Good</span><span>Moderate</span><span>Very poor</span></div>' +
     '</div>' +
-    '<div class="card"><h2>What\'s in the air</h2><div class="grid">' +
-      pols.map(function(p){
-        return '<div class="pol"><small>' + p.n + '</small><b>' + Math.round(p.v) +
-          '<span class="lv" style="background:' + (p.warn ? "#ff9500" : "#30d158") + '"></span></b><span> ' + p.u + '</span></div>';
-      }).join("") + uvHtml + '</div></div>' +
+    '<h2>What\'s in the air</h2><div class="card">' + pols.map(polRow).join("") + uvHtml + '</div>' +
     (pollens.length ?
-      '<div class="card"><h2>Pollen</h2><div class="grid">' +
+      '<h2>Pollen</h2><div class="card"><div class="pgrid">' +
       pollens.map(function(p){
-        return '<div class="pol"><small>' + p.n + '</small><b style="font-size:15px">' + p.lv.name +
-          '<span class="lv" style="background:' + p.lv.color + '"></span></b></div>';
+        return '<div><span>' + p.n + '</span><span class="tag" style="background:' + p.lv.color + '">' + p.lv.name + '</span></div>';
       }).join("") + '</div></div>' : "") +
     barsHtml +
-    '<button class="refresh" onclick="load()">↻ Refresh</button>';
+    '<p class="src">Data: Open-Meteo air-quality forecast</p>';
 
-  el("where").innerHTML = '📍 ' + esc(obs.label) + ' <button onclick="setupUI()">Change</button>';
+  el("where").textContent = obs.label;
   haptic("selection");
 }
 
 /* ---------- location (sky-tonight pattern) ---------- */
 function setupUI(msg){
-  el("where").innerHTML = "";
+  el("acts").hidden = true;
+  el("where").textContent = "Know what you're breathing";
   el("app").innerHTML =
-    '<div class="card setup"><h2>Where are you breathing?</h2>' +
-    '<div class="row"><input id="q" placeholder="e.g. Bristol" onkeydown="if(event.key===\'Enter\')findPlace()">' +
-    '<button onclick="findPlace()">Go</button></div>' +
-    (LOC ? '<button class="gps" onclick="useGps()">📍 Use my location</button>' : "") +
-    '<p class="note" id="setupnote">' + (msg || "Your location is used only on this device, to fetch the right forecast.") + '</p></div>';
+    '<div class="card"><label for="q">Where are you breathing?</label>' +
+    '<div class="inrow"><div class="field" style="flex:1">' + icon("search") + '<input id="q" placeholder="e.g. Bristol" enterkeyhint="search" autocomplete="off"></div>' +
+    '<button class="go" type="button" id="bFind">Go</button></div>' +
+    (LOC() ? '<button class="go soft wide" type="button" id="bGps">' + icon("pin") + '<span>Use my location</span></button>' : "") +
+    '<p class="hint" id="setupnote" style="padding:12px 4px 0;text-align:left">' + esc(msg || "Your location is used only on this device, to fetch the right forecast.") + '</p></div>';
+  el("q").onkeydown = function(e){ if (e.key === "Enter") findPlace(); };
+  el("bFind").onclick = findPlace;
+  if (el("bGps")) el("bGps").onclick = useGps;
 }
 function useGps(){
   haptic("light");
   el("setupnote").textContent = "Locating…";
-  LOC.current().then(function(p){
+  LOC().current().then(function(p){
     obs = {lat:p.latitude, lon:p.longitude, label:(p.address || "Your location")};
-    store.setItem("aq_obs", JSON.stringify(obs));
+    store().setItem("aq_obs", JSON.stringify(obs));
     load();
   }).catch(function(e){
     el("setupnote").textContent = (e && e.message ? e.message + " — " : "") + "Try typing a place instead.";
@@ -227,32 +319,36 @@ function findPlace(){
   var m = q.match(/^\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*$/);
   if (m){
     obs = {lat:parseFloat(m[1]), lon:parseFloat(m[2]), label:"Lat " + m[1] + ", Lon " + m[2]};
-    store.setItem("aq_obs", JSON.stringify(obs));
+    store().setItem("aq_obs", JSON.stringify(obs));
     load(); return;
   }
-  if (!NET){ el("setupnote").textContent = "Needs internet access for apps (MyLLMos settings)."; return; }
+  if (!window.myllmFetch){ el("setupnote").textContent = "Needs internet access for apps (MyLLMos settings)."; return; }
   el("setupnote").textContent = "Searching…";
   NET("https://geocoding-api.open-meteo.com/v1/search?count=1&name=" + encodeURIComponent(q)).then(function(r){
     var j = JSON.parse(r.body);
     if (j.results && j.results.length){
       var p = j.results[0];
       obs = {lat:p.latitude, lon:p.longitude, label:p.name + (p.country_code ? ", " + p.country_code : "")};
-      store.setItem("aq_obs", JSON.stringify(obs));
+      store().setItem("aq_obs", JSON.stringify(obs));
       load();
     } else el("setupnote").textContent = "Couldn't find that place — try another spelling.";
   }).catch(function(){
     el("setupnote").textContent = "Search didn't work — try \"lat, lon\" instead.";
   });
 }
+el("bPlace").onclick = function(){ haptic("light"); setupUI(); };
+el("bRefresh").onclick = function(){ haptic("light"); if (obs) load(); };
 
 /* ---------- boot ---------- */
-store.getItem("aq_obs").then(function(v){
+loading("Finding your air…");
+store().getItem("aq_obs").then(function(v){
   if (v){ try{ obs = JSON.parse(v); }catch(e){} }
   if (obs && typeof obs.lat === "number"){ load(); return; }
-  if (LOC){
-    LOC.current().then(function(p){
+  var loc = LOC();
+  if (loc){
+    loc.current().then(function(p){
       obs = {lat:p.latitude, lon:p.longitude, label:(p.address || "Your location")};
-      store.setItem("aq_obs", JSON.stringify(obs));
+      store().setItem("aq_obs", JSON.stringify(obs));
       load();
     }).catch(function(){ setupUI(); });
   } else setupUI();

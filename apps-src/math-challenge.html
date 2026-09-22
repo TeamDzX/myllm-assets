@@ -3,65 +3,202 @@
   Math Challenge — MyLLMos™ App Gallery · © 2026 Opticell Ltd
   Source-available: read it, remix it, run your version inside MyLLM™.
   Not for redistribution or republication. Terms: https://github.com/TeamDzX/myllm-assets/blob/main/LICENSE
---><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<style>:root{--build-id:"b8890383c7";color-scheme:light dark;--bg:#f2f2f7;--fg:#111;--card:#fff;--accent:#4a7bf0}
-@media(prefers-color-scheme:dark){:root{--bg:#000;--fg:#eee;--card:#1c1c1e}}
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
-html,body{margin:0;min-height:100%}
-body{font-family:-apple-system,system-ui,sans-serif;background:var(--bg);color:var(--fg);margin:0 auto;max-width:560px;min-height:100dvh;display:flex;flex-direction:column;padding:calc(16px + env(safe-area-inset-top)) 16px calc(20px + env(safe-area-inset-bottom))}
-h1{font-size:22px;margin:0 0 2px;font-weight:700}
-.sub{font-size:13px;opacity:.6;margin-bottom:16px}
-.levels{display:flex;flex-direction:column;gap:10px}
-.lvl{display:flex;align-items:center;gap:14px;background:var(--card);border:0;border-radius:16px;padding:15px;box-shadow:0 1px 3px rgba(0,0,0,.08);text-align:left;color:var(--fg)}
-.lvl:active{background:rgba(74,123,240,.12)}
-.lvl .n{font-size:30px;width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--accent),#7aa0ff);color:#fff;font-weight:800;flex:none}
-.lvl .t{flex:1}.lvl .t b{font-size:17px}.lvl .t small{display:block;opacity:.6;font-size:13px}
-.lvl .bst{font-size:11px;opacity:.55;text-align:right}
-/* quiz */
-.quiz{flex:1;display:none;flex-direction:column}
-.quiz.show{display:flex}
-.qtop{display:flex;justify-content:space-between;align-items:center;font-size:14px;font-weight:600;margin-bottom:6px}
-.bar{height:8px;border-radius:6px;background:rgba(127,127,127,.18);overflow:hidden;margin-bottom:6px}
-.bar>div{height:100%;background:var(--accent);width:0;transition:width .3s}
-.streak{font-size:13px;opacity:.7;min-height:18px;margin-bottom:10px}
-.qbox{flex:1;display:flex;align-items:center;justify-content:center}
-.q{font-size:52px;font-weight:800;letter-spacing:1px}
-.opts{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
-.opt{border:0;background:var(--card);color:var(--fg);border-radius:16px;padding:22px;font-size:26px;font-weight:800;box-shadow:0 1px 3px rgba(0,0,0,.1)}
-.opt.right{background:#34a853;color:#fff}.opt.wrong{background:#ea4335;color:#fff}
-.opt:disabled{opacity:1}
-/* results */
-.res{flex:1;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:8px}
-.res.show{display:flex}
-.res .big{font-size:60px}
-.res .sc{font-size:40px;font-weight:800}
-.res .stars{font-size:34px;letter-spacing:4px}
-.res .best{font-size:14px;opacity:.6}
-.btn{border:0;background:var(--accent);color:#fff;border-radius:16px;padding:14px 34px;font-size:17px;font-weight:700;margin-top:8px}
-.ghost{background:rgba(127,127,127,.18);color:var(--fg)}
-@media(min-width:768px){body{max-width:720px}.q{font-size:64px}.opt{font-size:30px;padding:26px}}
+--><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Math Challenge</title>
+<style>:root{--build-id:"b8890383c7";color-scheme:light dark;
+  --bg:var(--myllm-bg,#f2f2f7); --surface:var(--myllm-surface,#fff); --ink:var(--myllm-text,#111);
+  --muted:var(--myllm-muted,#8a8a8e); --line:var(--myllm-border,#e3e3e8); --acc:var(--myllm-accent,#0a84ff);
+  --fill:rgba(120,120,128,.12); --h:220; }
+@media (prefers-color-scheme:dark){ :root{ --bg:var(--myllm-bg,#000); --surface:var(--myllm-surface,#1c1c1e);
+  --ink:var(--myllm-text,#f2f2f7); --muted:var(--myllm-muted,#8e8e93); --line:var(--myllm-border,#2c2c2e); --fill:rgba(120,120,128,.24); } }
+  *{ margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body{ font-family:var(--myllm-font,-apple-system,system-ui,sans-serif); background:var(--bg); color:var(--ink); min-height:100dvh; font-size:15.5px; line-height:1.4; }
+  body.lock{ overflow:hidden; }
+  .home{ max-width:600px; margin:0 auto;
+    padding:calc(16px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) calc(30px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left)); }
+  @media (min-width:768px){ .home{ max-width:760px; } }
+  svg.i{ width:1.25em; height:1.25em; fill:currentColor; flex-shrink:0; }
+  button{ font:inherit; color:inherit; cursor:pointer; } button:active{ transform:scale(.96); }
+  [hidden]{ display:none !important; }
+
+  .head{ display:flex; align-items:center; gap:12px; margin:2px 2px 14px; }
+  .tile{ display:flex; align-items:center; justify-content:center; color:#fff; flex-shrink:0;
+    background:linear-gradient(145deg, hsl(var(--h) 62% 50%), hsl(calc(var(--h) + 40) 58% 28%)); }
+  .head .tile{ width:44px; height:44px; border-radius:13px; font-size:19px; }
+  .head .ht{ flex:1; min-width:0; }
+  h1{ font-size:22px; font-weight:800; letter-spacing:-.01em; }
+  .head p{ font-size:13px; color:var(--muted); margin-top:1px; }
+  .head .acts{ display:flex; gap:8px; flex-shrink:0; }
+  h2.sec{ font-size:12px; font-weight:800; letter-spacing:.07em; text-transform:uppercase; color:var(--muted); margin:20px 2px 9px; }
+
+  .hero{ border-radius:20px; padding:16px 18px; color:#fff; margin-bottom:12px; display:flex; align-items:center; gap:16px;
+    background:linear-gradient(145deg, hsl(var(--h) 62% 46%), hsl(calc(var(--h) + 40) 58% 24%)); box-shadow:0 10px 28px hsl(var(--h) 60% 30% / .25); }
+  .hero .n{ font-size:44px; font-weight:800; line-height:1; letter-spacing:-.03em; font-variant-numeric:tabular-nums; flex-shrink:0; }
+  .hero .k{ display:block; font-size:11px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; opacity:.78; }
+  .hero b{ display:block; font-size:17px; font-weight:750; line-height:1.25; overflow-wrap:anywhere; }
+  .hero span.s{ display:block; font-size:12.5px; line-height:1.4; opacity:.82; margin-top:3px; overflow-wrap:anywhere; }
+  .hero .grow{ flex:1; min-width:0; }
+
+  .card{ background:var(--surface); border:1px solid var(--line); border-radius:18px; padding:14px; margin-bottom:12px; }
+  label{ display:block; font-size:12px; font-weight:800; letter-spacing:.07em; text-transform:uppercase; color:var(--muted); margin:14px 2px 7px; }
+  label:first-child{ margin-top:0; }
+  input, textarea, select{ width:100%; font:inherit; font-size:16px; padding:12px; border-radius:12px; border:1px solid var(--line); background:var(--bg); color:var(--ink); outline:none; }
+  input:focus, textarea:focus{ border-color:hsl(var(--h) 60% 55%); }
+  .go{ width:100%; min-height:50px; margin-top:14px; border:none; border-radius:14px; background:hsl(var(--h) 62% 52%); color:#fff; font-size:16px; font-weight:700;
+    display:flex; align-items:center; justify-content:center; gap:8px; box-shadow:0 8px 20px hsl(var(--h) 60% 40% / .25); }
+  .go.soft{ background:var(--fill); color:var(--ink); box-shadow:none; }
+  .go:disabled{ opacity:.55; }
+  .status{ font-size:13px; color:var(--muted); min-height:18px; margin-top:10px; text-align:center; line-height:1.45; }
+  .status.err{ color:#ff453a; }
+  .spin{ width:16px; height:16px; border-radius:50%; border:2.4px solid currentColor; border-right-color:transparent; animation:spin .8s linear infinite; flex-shrink:0; display:inline-block; }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+  .empty{ text-align:center; padding:24px 18px 14px; }
+  .empty .tile{ width:48px; height:48px; border-radius:14px; font-size:21px; margin:0 auto 10px; opacity:.9; }
+  .empty b{ display:block; font-size:16px; font-weight:750; }
+  .empty p{ font-size:13.5px; color:var(--muted); line-height:1.5; max-width:280px; margin:5px auto 0; }
+  @media (prefers-reduced-motion:reduce){ .spin{ animation-duration:2.4s; } button:active{ transform:none; } }
+  /* ---------- the full-screen stage ---------- */
+  .stage{ display:none; position:fixed; inset:0; z-index:50; color:#fff; }
+  .stage.on{ display:block; }
+  .bg{ position:absolute; inset:0; transition:opacity .6s ease; }
+  .bg.d{ background:radial-gradient(120% 90% at 20% 10%, hsl(var(--h) 64% 34%), transparent 60%),
+      radial-gradient(120% 90% at 85% 95%, hsl(calc(var(--h) + 60) 60% 26%), transparent 62%), #0b0b10; }
+  .bg.l{ opacity:0; background:radial-gradient(120% 90% at 20% 0%, hsl(var(--h) 85% 88%), transparent 60%),
+      radial-gradient(120% 90% at 85% 100%, hsl(calc(var(--h) + 60) 80% 88%), transparent 62%), #f4f4f8; }
+  .lite{ color:#15151a; } .lite .bg.l{ opacity:1; } .lite .bg.d{ opacity:0; }
+  .col{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; overflow-y:auto; -webkit-overflow-scrolling:touch;
+    padding:calc(10px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) calc(16px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left)); }
+  .top{ width:100%; max-width:560px; height:44px; display:flex; align-items:center; justify-content:space-between; gap:8px; flex-shrink:0; }
+  .glass{ border:1px solid rgba(255,255,255,.16); background:rgba(255,255,255,.12); color:inherit;
+    -webkit-backdrop-filter:blur(18px); backdrop-filter:blur(18px); }
+  .lite .glass{ border-color:rgba(0,0,0,.09); background:rgba(255,255,255,.62); }
+  .rnd{ width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:15px; flex-shrink:0; }
+  .pill{ min-width:44px; height:44px; border-radius:99px; padding:0 15px; display:flex; align-items:center; justify-content:center; gap:5px;
+    font-size:17px; font-weight:800; font-variant-numeric:tabular-nums; }
+  .pill small{ font-size:10.5px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; opacity:.7; }
+  .pill.hide{ visibility:hidden; }
+  .dots{ display:flex; gap:6px; align-items:center; flex-wrap:wrap; justify-content:center; }
+  .dots i{ width:8px; height:8px; border-radius:50%; background:currentColor; opacity:.22; transition:all .3s; }
+  .dots i.now{ opacity:1; transform:scale(1.35); } .dots i.ok{ opacity:1; background:#34c759; } .dots i.no{ opacity:1; background:#ff6259; }
+  .body{ flex:1 0 auto; width:100%; max-width:560px; display:flex; flex-direction:column; gap:12px; padding:12px 0 4px;
+    transition:opacity .3s, filter .3s; }
+  /* centred when there's room, top-aligned when there isn't: two growing spacers
+     instead of justify-content:center, which pushes tall content up under the bar */
+  .body::before, .body::after{ content:""; flex:1 1 0; }
+  .veil .body{ opacity:.3; filter:blur(7px); pointer-events:none; }
+  .kick{ font-size:11px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; opacity:.62; }
+  .pri{ width:100%; height:54px; border:none; border-radius:99px; font-size:16.5px; font-weight:750; background:#fff; color:#0b0b10;
+    box-shadow:0 10px 30px rgba(0,0,0,.3); display:flex; align-items:center; justify-content:center; gap:8px; flex-shrink:0; }
+  .lite .pri{ background:#15151a; color:#fff; box-shadow:0 10px 26px rgba(20,20,40,.22); }
+  .pri:disabled{ opacity:.5; }
+  .sec2{ width:100%; height:50px; border-radius:99px; font-size:15.5px; font-weight:750; display:flex; align-items:center; justify-content:center; gap:8px; flex-shrink:0; }
+  .center{ position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); border-radius:26px; padding:24px 20px 18px; text-align:center;
+    width:min(340px, calc(100% - 32px)); max-height:calc(100% - 40px); overflow-y:auto; z-index:5;
+    box-shadow:0 24px 60px rgba(0,0,0,.35); animation:pop .28s cubic-bezier(.2,.8,.2,1) both; }
+  .lite .center{ box-shadow:0 22px 50px rgba(20,20,40,.18); }
+  @keyframes pop{ from{ opacity:0; transform:translate(-50%,-50%) scale(.96); } to{ opacity:1; transform:translate(-50%,-50%); } }
+  .center h2{ font-size:24px; font-weight:800; letter-spacing:-.015em; margin-top:6px; }
+  .center p{ font-size:14px; line-height:1.45; opacity:.76; margin-top:8px; }
+  .center .big{ font-size:64px; font-weight:800; line-height:1.05; letter-spacing:-.03em; font-variant-numeric:tabular-nums; margin-top:4px; }
+  .center .big small{ font-size:.42em; opacity:.55; font-weight:750; }
+  .center .best{ display:inline-block; margin-top:10px; font-size:11.5px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; color:#0b0b10; background:#ffd60a; border-radius:99px; padding:5px 11px; }
+  .center .pri{ margin-top:18px; } .center .sec2{ margin-top:10px; }
+  .stars3{ display:flex; justify-content:center; gap:6px; margin-top:10px; font-size:30px; }
+  .stars3 svg{ width:1em; height:1em; fill:currentColor; opacity:.22; } .stars3 svg.on{ opacity:1; color:#ffd60a; }
+  @media (prefers-reduced-motion:reduce){ .center{ animation:none; } .dots i{ transition:none; } }
+
+  *{ -webkit-user-select:none; user-select:none; }
+  .lvl{ width:100%; display:flex; align-items:center; gap:13px; padding:10px 0; border:none; background:none; border-bottom:1px solid var(--line); text-align:left; }
+  .lvl:first-child{ padding-top:2px; } .lvl:last-child{ border-bottom:none; padding-bottom:2px; }
+  .lvl:active{ transform:none; opacity:.7; }
+  .lvl .tile{ width:46px; height:46px; border-radius:13px; font-size:21px; font-weight:800; }
+  .lvl .t{ flex:1; min-width:0; } .lvl .t b{ display:block; font-size:16px; font-weight:700; } .lvl .t small{ display:block; font-size:13px; color:var(--muted); margin-top:1px; }
+  .lvl .bst{ flex-shrink:0; font-size:12px; font-weight:750; color:hsl(var(--h) 60% 45%); background:hsl(var(--h) 70% 50% / .12); border-radius:99px; padding:4px 9px; font-variant-numeric:tabular-nums; }
+  @media (prefers-color-scheme:dark){ .lvl .bst{ color:hsl(var(--h) 80% 72%); } }
+  .lvl .go2{ flex-shrink:0; color:var(--muted); font-size:14px; }
+
+  .bar{ width:100%; max-width:560px; height:6px; border-radius:99px; background:rgba(255,255,255,.14); overflow:hidden; margin-top:10px; flex-shrink:0; }
+  .lite .bar{ background:rgba(20,20,40,.08); }
+  .bar i{ display:block; height:100%; width:0; border-radius:99px; background:currentColor; opacity:.85; transition:width .3s; }
+  .streak{ min-height:26px; display:flex; align-items:center; justify-content:center; gap:6px; font-size:14px; font-weight:750; }
+  .streak svg{ color:#ff9f0a; }
+  .qcard{ border-radius:26px; padding:22px 16px 26px; text-align:center; }
+  .q{ font-size:clamp(40px, 13vw, 64px); font-weight:800; letter-spacing:.01em; line-height:1.1; margin-top:8px; font-variant-numeric:tabular-nums; }
+  .opts{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .opt{ min-height:84px; border-radius:22px; font-size:clamp(26px, 8vw, 34px); font-weight:800; font-variant-numeric:tabular-nums; position:relative;
+    display:flex; align-items:center; justify-content:center; transition:background .2s, border-color .2s, opacity .2s; }
+  .opt:disabled{ opacity:.45; } .opt:disabled:active{ transform:none; }
+  .opt.right, .lite .opt.right{ background:#2fb350; border-color:#2fb350; color:#fff; opacity:1; }
+  .opt.wrong, .lite .opt.wrong{ background:#e5453b; border-color:#e5453b; color:#fff; opacity:1; }
+  .opt .mk{ position:absolute; right:12px; top:10px; font-size:16px; }
+  @media (max-height:520px){
+    .body{ display:grid; grid-template-columns:1fr 1fr; grid-template-rows:auto 1fr; column-gap:18px; align-items:center; }
+    .streak{ grid-column:1; } .qcard{ grid-column:1; grid-row:2; } .opts{ grid-column:2; grid-row:1 / span 2; }
+    .opt{ min-height:64px; }
+    .q{ font-size:clamp(34px, 11vh, 50px); white-space:nowrap; }
+    .body::before, .body::after{ display:none; } .body{ align-content:center; }
+  }
 </style></head><body>
-<div id="home">
-  <h1>➗ Math Challenge</h1>
-  <div class="sub">Pick a level. Ten questions, four answers — how many can you get?</div>
-  <div class="levels" id="levels"></div>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-pm" viewBox="0 0 24 24"><path d="M7 3.5v7M3.5 7h7M14 7h7M14.5 20.5l6-6M14.5 14.5l6 6M4 17.5h6.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24"><path d="M6.4 5a1 1 0 0 0-1.4 1.4L10.6 12 5 17.6A1 1 0 0 0 6.4 19l5.6-5.6 5.6 5.6a1 1 0 0 0 1.4-1.4L13.4 12 19 6.4A1 1 0 0 0 17.6 5L12 10.6z" fill="currentColor"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.6l4.6 4.6L19.2 7.4" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5.5v13a1 1 0 0 0 1.52.85l10.4-6.5a1 1 0 0 0 0-1.7L9.52 4.65A1 1 0 0 0 8 5.5z" fill="currentColor"/></symbol>
+  <symbol id="i-again" viewBox="0 0 24 24"><path d="M12 5V2.6a.6.6 0 0 0-1-.45L7.2 5.55a.6.6 0 0 0 0 .9L11 9.85a.6.6 0 0 0 1-.45V7a5.5 5.5 0 1 1-5.5 5.5 1 1 0 0 0-2 0A7.5 7.5 0 1 0 12 5z" fill="currentColor"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><path d="M12 2.8l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 16.8l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z" fill="currentColor"/></symbol>
+  <symbol id="i-flame" viewBox="0 0 24 24"><path d="M12.6 2.4c.3 3-1.3 4.6-2.8 6.1C8.4 9.9 7 11.4 7 14a5 5 0 0 0 10 0c0-1.6-.6-2.9-1.3-3.9-.2 1.2-.9 2.2-2 2.6.6-3.3-.3-7.7-1.1-10.3zM12 21.5A7 7 0 0 1 5 14.5c0-3.4 1.9-5.3 3.4-6.8C9.9 6.2 11 5 10.7 2.3A1 1 0 0 1 12 1.2c3.6 1.6 7 6.4 7 13.3a7 7 0 0 1-7 7z" fill="currentColor"/></symbol>
+  <symbol id="i-chevl" viewBox="0 0 24 24"><path d="M14.5 5.5L8 12l6.5 6.5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+</defs></svg>
+<div class="home" id="home">
+  <div class="head">
+    <div class="tile"><svg class="i"><use href="#i-pm"/></svg></div>
+    <div class="ht"><h1>Math Challenge</h1><p>Six levels of mental maths</p></div>
+  </div>
+  <p style="font-size:13.5px;color:var(--muted);margin:-4px 2px 12px">Pick a level. Ten questions, four answers — how many can you get?</p>
+  <div class="card" id="levels"></div>
 </div>
 
-<div class="quiz" id="quiz">
-  <div class="qtop"><span id="qprog">1 / 10</span><span id="qscore">0</span></div>
-  <div class="bar"><div id="qfill"></div></div>
-  <div class="streak" id="streak"></div>
-  <div class="qbox"><div class="q" id="q"></div></div>
-  <div class="opts" id="opts"></div>
+<div class="stage" id="stage">
+  <div class="bg d"></div><div class="bg l"></div>
+  <div class="col" id="col">
+    <div class="top">
+      <button class="glass rnd" id="bClose" type="button" aria-label="Pause"><svg class="i"><use href="#i-close"/></svg></button>
+      <div class="glass pill" id="qprog">1 / 10</div>
+      <div class="glass pill" id="qscore">0<small>pts</small></div>
+    </div>
+    <div class="bar"><i id="qfill"></i></div>
+    <div class="body">
+      <div class="streak" id="streak"></div>
+      <div class="qcard glass"><div class="kick" id="lvName"></div><div class="q" id="q"></div></div>
+      <div class="opts" id="opts"></div>
+    </div>
+    <div class="center glass" id="card" hidden></div>
+  </div>
 </div>
-
-<div class="res" id="res"></div>
 
 <script>
-var store=window.myllmStorage||{getItem:function(){return Promise.resolve(null)},setItem:function(){return Promise.resolve()}};
-function haptic(s){if(window.myllmHaptic)try{myllmHaptic(s)}catch(e){}}
-function ri(a,b){return Math.floor(Math.random()*(b-a+1))+a}
 function el(i){return document.getElementById(i)}
+/* Bridges are looked up when used, never kept: MyLLM can add them after this
+   script has run. */
+function store(){return window.myllmStorage||{getItem:function(){return Promise.resolve(null)},setItem:function(){return Promise.resolve()}}}
+function haptic(k){if(window.myllmHaptic)try{myllmHaptic(k)}catch(e){}}
+function icon(n){return '<svg class="i"><use href="#i-'+n+'"/></svg>'}
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+/* The quiz takes the whole display. Where MyLLM can't hide its own title
+   bar, a dark stage under a white bar looks cut in half — so in light mode,
+   without myllmImmersive, the stage stays light. */
+var stageOn=false;
+function isLight(){return !(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches)}
+function syncLook(){el('stage').classList.toggle('lite',isLight()&&!window.myllmImmersive)}
+function syncChrome(){
+  if(!window.myllmImmersive)return;
+  try{myllmImmersive(stageOn,{keepAwake:false}).catch(function(){})}catch(_){}
+}
+function openStage(){if(stageOn)return;stageOn=true;syncLook();el('stage').classList.add('on');document.body.classList.add('lock');syncChrome()}
+function closeStage(){if(!stageOn)return;stageOn=false;el('stage').classList.remove('on','veil');document.body.classList.remove('lock');syncChrome()}
+if(window.matchMedia){var mq=matchMedia('(prefers-color-scheme: dark)');if(mq.addEventListener)mq.addEventListener('change',syncLook);else if(mq.addListener)mq.addListener(syncLook)}
+function ri(a,b){return Math.floor(Math.random()*(b-a+1))+a}
 var ROUND=10,best={};
 var LEVELS=[
  {n:'1',t:'Starter',d:'Add & take away to 10',gen:function(){return addsub(0,10)}},
@@ -73,20 +210,24 @@ var LEVELS=[
 ];
 function addsub(lo,hi){var a=ri(lo,hi),b=ri(lo,hi);if(Math.random()<0.5)return{txt:a+' + '+b,ans:a+b};if(a<b){var t=a;a=b;b=t}return{txt:a+' − '+b,ans:a-b}}
 
-var lvl=0,qi=0,score=0,correct=0,streak=0,cur=null,locked=false;
+var lvl=0,qi=0,score=0,correct=0,streak=0,cur=null,locked=false,paused=false,pending=null,advT=null;
 
 function renderHome(){
   var L=el('levels');L.innerHTML='';
   LEVELS.forEach(function(lv,i){
-    var b=document.createElement('button');b.className='lvl';
-    var bs=best['m'+i]?('Best '+best['m'+i]):'';
-    b.innerHTML='<div class="n">'+lv.n+'</div><div class="t"><b>'+lv.t+'</b><small>'+lv.d+'</small></div><div class="bst">'+bs+'</div>';
+    var b=document.createElement('button');b.type='button';b.className='lvl';
+    var bs=best['m'+i]?('<span class="bst">Best '+best['m'+i]+'</span>'):'';
+    b.innerHTML='<div class="tile">'+lv.n+'</div><div class="t"><b>'+esc(lv.t)+'</b><small>'+esc(lv.d)+'</small></div>'+bs;
     b.onclick=function(){startQuiz(i)};
     L.appendChild(b);
   });
 }
-function show(id){el('home').style.display=id==='home'?'block':'none';el('quiz').className='quiz'+(id==='quiz'?' show':'');el('res').className='res'+(id==='res'?' show':'')}
-function startQuiz(i){lvl=i;qi=0;score=0;correct=0;streak=0;show('quiz');nextQ()}
+function showCard(html){var c=el('card');c.innerHTML=html;c.hidden=false;el('stage').classList.add('veil')}
+function hideCard(){el('card').hidden=true;el('stage').classList.remove('veil')}
+function startQuiz(i){
+  lvl=i;qi=0;score=0;correct=0;streak=0;paused=false;pending=null;clearTimeout(advT);
+  hideCard();openStage();el('lvName').textContent=LEVELS[i].t;haptic('light');nextQ();
+}
 function makeOpts(ans){
   var s={};s[ans]=1;var cand=[ans+1,ans-1,ans+2,ans-2,ans+10,ans-10,ans+ri(1,6),ans-ri(1,6),ans+ri(7,20)];
   var out=[ans];
@@ -99,43 +240,58 @@ function nextQ(){
   locked=false;
   cur=LEVELS[lvl].gen();
   el('qprog').textContent=(qi+1)+' / '+ROUND;
-  el('qscore').textContent=score;
+  el('qscore').innerHTML=score+'<small>pts</small>';
   el('qfill').style.width=(qi/ROUND*100)+'%';
-  el('streak').textContent=streak>=2?('🔥 '+streak+' in a row!'):'';
+  el('streak').innerHTML=streak>=2?(icon('flame')+'<span>'+streak+' in a row!</span>'):'';
   el('q').textContent=cur.txt+' = ?';
   var opts=makeOpts(cur.ans),O=el('opts');O.innerHTML='';
-  opts.forEach(function(v){var b=document.createElement('button');b.className='opt';b.textContent=v;b.onclick=function(){answer(v,b)};O.appendChild(b)});
+  opts.forEach(function(v){var b=document.createElement('button');b.type='button';b.className='opt glass';b.textContent=v;b.dataset.v=v;b.onclick=function(){answer(v,b)};O.appendChild(b)});
 }
 function answer(v,btn){
-  if(locked)return;locked=true;
+  if(locked||paused)return;locked=true;
   var buttons=el('opts').querySelectorAll('.opt');
   buttons.forEach(function(b){b.disabled=true});
-  if(v===cur.ans){
-    btn.className='opt right';score+=10+Math.min(streak,5);streak++;correct++;
+  var ok=v===cur.ans;
+  if(ok){
+    btn.className='opt glass right';btn.insertAdjacentHTML('beforeend','<span class="mk">'+icon('check')+'</span>');
+    score+=10+Math.min(streak,5);streak++;correct++;
     haptic('success');beep(true);
   }else{
-    btn.className='opt wrong';streak=0;haptic('error');beep(false);
-    buttons.forEach(function(b){if(+b.textContent===cur.ans)b.className='opt right'});
+    btn.className='opt glass wrong';btn.insertAdjacentHTML('beforeend','<span class="mk">'+icon('x')+'</span>');
+    streak=0;haptic('error');beep(false);
+    buttons.forEach(function(b){if(+b.dataset.v===cur.ans){b.className='opt glass right';b.insertAdjacentHTML('beforeend','<span class="mk">'+icon('check')+'</span>')}});
   }
-  el('qscore').textContent=score;
-  setTimeout(function(){qi++;if(qi>=ROUND)finish();else nextQ()},v===cur.ans?550:1100);
+  el('qscore').innerHTML=score+'<small>pts</small>';
+  pending=function(){pending=null;qi++;if(qi>=ROUND)finish();else nextQ()};
+  advT=setTimeout(function(){if(!paused&&pending)pending()},ok?550:1100);
 }
+function pause(){
+  if(paused||!stageOn||!el('card').hidden)return;
+  paused=true;clearTimeout(advT);
+  showCard('<div class="kick">Paused · '+esc(LEVELS[lvl].t)+'</div><div class="big">'+(qi+(locked?1:0))+'<small>/'+ROUND+'</small></div><p>'+score+' points so far</p>'+
+    '<button class="pri" id="cA" type="button">'+icon('play')+'Resume</button><button class="sec2 glass" id="cB" type="button">End round</button>');
+  el('cA').onclick=resume;el('cB').onclick=goHome;
+}
+function resume(){
+  if(!paused)return;paused=false;hideCard();haptic('light');
+  if(pending)advT=setTimeout(function(){if(!paused&&pending)pending()},350);
+}
+function goHome(){paused=false;pending=null;clearTimeout(advT);hideCard();closeStage();renderHome();haptic('light')}
 function finish(){
-  show('res');
+  el('qfill').style.width='100%';
   var pct=correct/ROUND;
-  var stars=pct>=1?'⭐⭐⭐':pct>=0.7?'⭐⭐':pct>=0.4?'⭐':'';
+  var n=pct>=1?3:pct>=0.7?2:pct>=0.4?1:0;
   var key='m'+lvl,isBest=!best[key]||score>best[key];
-  if(isBest){best[key]=score;store.setItem('mc_best',JSON.stringify(best))}
+  if(isBest){best[key]=score;store().setItem('mc_best',JSON.stringify(best))}
   haptic(pct>=0.7?'success':'warning');
-  el('res').innerHTML='<div class="big">'+(pct>=0.7?'🎉':'💪')+'</div>'+
-    '<div class="stars">'+stars+'</div>'+
-    '<div class="sc">'+correct+' / '+ROUND+'</div>'+
-    '<div>Score '+score+(isBest?' · New best!':'')+'</div>'+
-    '<div class="best">'+LEVELS[lvl].t+(best[key]?' · best '+best[key]:'')+'</div>'+
-    '<button class="btn" id="again">Play again</button>'+
-    '<button class="btn ghost" id="menu">Change level</button>';
-  el('again').onclick=function(){startQuiz(lvl)};
-  el('menu').onclick=function(){renderHome();show('home')};
+  var stars='';for(var i=0;i<3;i++)stars+='<svg class="'+(i<n?'on':'')+'"><use href="#i-star"/></svg>';
+  showCard('<div class="kick">'+esc(LEVELS[lvl].t)+'</div><div class="stars3">'+stars+'</div>'+
+    '<div class="big">'+correct+'<small>/'+ROUND+'</small></div>'+
+    '<p>Score '+score+(best[key]&&!isBest?' · best '+best[key]:'')+'</p>'+(isBest?'<div class="best">New best</div>':'')+
+    '<button class="pri" id="cA" type="button">'+icon('again')+'Play again</button>'+
+    '<button class="sec2 glass" id="cB" type="button">Change level</button>');
+  el('cA').onclick=function(){startQuiz(lvl)};
+  el('cB').onclick=goHome;
 }
 var actx=null;
 function beep(ok){try{if(!actx){var AC=window.AudioContext||window.webkitAudioContext;actx=new AC()}if(actx.state==='suspended')actx.resume();
@@ -143,5 +299,12 @@ function beep(ok){try{if(!actx){var AC=window.AudioContext||window.webkitAudioCo
   if(ok){o.frequency.setValueAtTime(660,t);o.frequency.setValueAtTime(880,t+0.09)}else{o.frequency.setValueAtTime(200,t);o.frequency.exponentialRampToValueAtTime(120,t+0.18)}
   g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(0.25,t+0.01);g.gain.exponentialRampToValueAtTime(0.0001,t+(ok?0.2:0.22));
   o.connect(g);g.connect(actx.destination);o.start(t);o.stop(t+0.25)}catch(e){}}
-store.getItem('mc_best').then(function(v){if(v){try{best=JSON.parse(v)||{}}catch(e){}}renderHome();show('home')});
+
+el('bClose').onclick=function(){haptic('light');pause()};
+document.addEventListener('visibilitychange',function(){
+  if(document.hidden){pause();return}
+  if(stageOn)syncChrome();          /* MyLLM puts its bars back when the app is left */
+});
+renderHome();
+store().getItem('mc_best').then(function(v){if(v){try{best=JSON.parse(v)||{}}catch(e){}}renderHome()});
 </script></body></html>

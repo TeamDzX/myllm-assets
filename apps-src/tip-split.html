@@ -3,42 +3,107 @@
   Tip Split — MyLLMos™ App Gallery · © 2026 Opticell Ltd
   Source-available: read it, remix it, run your version inside MyLLM™.
   Not for redistribution or republication. Terms: https://github.com/TeamDzX/myllm-assets/blob/main/LICENSE
---><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<style>:root{--build-id:"b9cec52650";color-scheme:light dark}
-body{font-family:-apple-system,system-ui,sans-serif;margin:0;padding:20px;background:#f2f2f7;color:#111;text-align:center}
-@media(prefers-color-scheme:dark){body{background:#000;color:#eee}.panel{background:#1c1c1e}input{background:#2c2c2e;color:#eee;border-color:#3a3a3c}.tipbtn{background:#2c2c2e;color:#eee}}
-h1{font-size:22px}
-.panel{background:#fff;border-radius:14px;padding:18px;margin:0 auto 14px;max-width:380px;text-align:left}
-label{font-size:13px;opacity:.6;display:block;margin-bottom:4px}
-input{width:100%;box-sizing:border-box;padding:12px;font-size:20px;border:1px solid #d1d1d6;border-radius:10px;background:#fff}
-.tips{display:flex;gap:8px;margin:12px 0}
-.tipbtn{flex:1;padding:10px 0;border:0;border-radius:10px;background:#e5e5ea;font-size:14px;font-weight:600;color:#111}
-.tipbtn.on{background:#30d158;color:#fff}
-.ppl{display:flex;align-items:center;gap:14px;justify-content:center;margin:8px 0 0}
-.ppl button{width:40px;height:40px;border-radius:20px;border:0;background:#30d158;color:#fff;font-size:20px;font-weight:700}
-.ppl b{font-size:20px;min-width:64px;text-align:center}
-.out{font-size:15px;line-height:1.9;text-align:center}
-.out .big{font-size:30px;font-weight:700;color:#30d158}
-@media(min-width:768px){.panel{max-width:480px}}
+--><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Tip Split</title>
+<style>:root{--build-id:"b9cec52650";color-scheme:light dark;
+  --bg:var(--myllm-bg,#f2f2f7); --surface:var(--myllm-surface,#fff); --ink:var(--myllm-text,#111);
+  --muted:var(--myllm-muted,#8a8a8e); --line:var(--myllm-border,#e3e3e8); --acc:var(--myllm-accent,#0a84ff);
+  --fill:rgba(120,120,128,.12); --h:145; }
+@media (prefers-color-scheme:dark){ :root{ --bg:var(--myllm-bg,#000); --surface:var(--myllm-surface,#1c1c1e);
+  --ink:var(--myllm-text,#f2f2f7); --muted:var(--myllm-muted,#8e8e93); --line:var(--myllm-border,#2c2c2e); --fill:rgba(120,120,128,.24); } }
+  *{ margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body{ font-family:var(--myllm-font,-apple-system,system-ui,sans-serif); background:var(--bg); color:var(--ink);
+    max-width:600px; margin:0 auto; min-height:100dvh; font-size:15.5px; line-height:1.4;
+    padding:calc(16px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) calc(30px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left)); }
+  svg.i{ width:1.25em; height:1.25em; fill:currentColor; flex-shrink:0; }
+  button{ font:inherit; color:inherit; cursor:pointer; } button:active{ transform:scale(.96); }
+
+  .head{ display:flex; align-items:center; gap:12px; margin:2px 2px 14px; }
+  .tile{ display:flex; align-items:center; justify-content:center; color:#fff; flex-shrink:0;
+    background:linear-gradient(145deg, hsl(var(--h) 62% 44%), hsl(calc(var(--h) + 40) 58% 26%)); }
+  .head .tile{ width:44px; height:44px; border-radius:13px; font-size:19px; }
+  .head .ht{ flex:1; min-width:0; }
+  h1{ font-size:22px; font-weight:800; letter-spacing:-.01em; }
+  .head p{ font-size:13px; color:var(--muted); margin-top:1px; }
+
+  .hero{ border-radius:20px; padding:16px 18px; color:#fff; margin-bottom:12px;
+    background:linear-gradient(145deg, hsl(var(--h) 58% 40%), hsl(calc(var(--h) + 40) 58% 22%)); box-shadow:0 10px 28px hsl(var(--h) 60% 24% / .25); }
+  .hero .k{ font-size:11px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; opacity:.8; }
+  .hero .big{ font-size:52px; font-weight:800; line-height:1.05; letter-spacing:-.03em; font-variant-numeric:tabular-nums; margin-top:2px; overflow-wrap:anywhere; }
+  .hero .row{ display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; }
+  .hero .pill{ display:inline-flex; align-items:center; gap:6px; border-radius:99px; padding:5px 11px; font-size:13px; font-weight:650;
+    background:rgba(255,255,255,.16); border:1px solid rgba(255,255,255,.2); font-variant-numeric:tabular-nums; }
+  .hero .pill b{ font-weight:800; }
+
+  .card{ background:var(--surface); border:1px solid var(--line); border-radius:18px; padding:14px; margin-bottom:12px; }
+  label{ display:block; font-size:12px; font-weight:800; letter-spacing:.07em; text-transform:uppercase; color:var(--muted); margin:14px 2px 7px; }
+  label:first-child{ margin-top:0; }
+  .money{ display:flex; align-items:center; gap:8px; border:1px solid var(--line); border-radius:12px; background:var(--bg); padding:0 12px; }
+  .money:focus-within{ border-color:var(--acc); }
+  .money svg{ color:var(--muted); }
+  .money input{ flex:1; min-width:0; border:0; background:none; outline:none; color:var(--ink); font:inherit; font-size:24px; font-weight:700; padding:10px 0; font-variant-numeric:tabular-nums; }
+  .seg{ display:flex; gap:6px; }
+  .seg button{ flex:1; min-height:44px; border:1px solid var(--line); background:var(--bg); border-radius:12px; font-size:14.5px; font-weight:700; font-variant-numeric:tabular-nums; padding:0 2px; }
+  .seg button.hot{ background:hsl(var(--h) 60% 40%); border-color:hsl(var(--h) 60% 40%); color:#fff; }
+  .step{ display:flex; align-items:center; justify-content:space-between; gap:12px; }
+  .step button{ width:48px; height:48px; border-radius:14px; border:1px solid var(--line); background:var(--bg); display:flex; align-items:center; justify-content:center; font-size:18px; }
+  .step button:disabled{ opacity:.4; }
+  .step .n{ display:flex; align-items:center; gap:8px; font-size:22px; font-weight:800; font-variant-numeric:tabular-nums; }
+  .step .n svg{ color:var(--muted); font-size:17px; }
+  .note{ font-size:12.5px; color:var(--muted); text-align:center; margin-top:4px; }
+  @media (max-width:340px){ .hero .big{ font-size:44px; } .seg button{ font-size:13px; } }
+  @media (prefers-reduced-motion:reduce){ button:active{ transform:none; } }
+  input[type=number]{ -moz-appearance:textfield; appearance:textfield; }
+  input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button{ -webkit-appearance:none; margin:0; }
 </style></head><body>
-<h1>💷 Tip Split</h1>
-<div class="panel">
-<label>Bill amount</label><input id="bill" type="number" inputmode="decimal" placeholder="0.00">
-<div class="tips" id="tips"></div>
-<div class="ppl"><button onclick="ppl(-1)">−</button><b id="n">👥 2</b><button onclick="ppl(1)">+</button></div>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-pct" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 18L18 6"/><circle cx="7.5" cy="7.5" r="2.3"/><circle cx="16.5" cy="16.5" r="2.3"/></g></symbol>
+  <symbol id="i-people" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c0-3.2 2.5-5.2 5.5-5.2s5.5 2 5.5 5.2"/><path d="M16 5.2a3 3 0 0 1 0 5.8M17.5 14c1.9.6 3 2.4 3 5"/></g></symbol>
+  <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></symbol>
+  <symbol id="i-receipt" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12v18l-2-1.4L14 21l-2-1.4L10 21l-2-1.4L6 21z"/><path d="M9 8h6M9 12h6M9 16h3"/></g></symbol>
+</defs></svg>
+
+<div class="head">
+  <div class="tile"><svg class="i"><use href="#i-pct"/></svg></div>
+  <div class="ht"><h1>Tip Split</h1><p>Settle the bill in seconds</p></div>
 </div>
-<div class="panel out" id="out"></div>
+
+<div class="hero" aria-live="polite">
+  <div class="k">Each pays</div>
+  <div class="big" id="each">0.00</div>
+  <div class="row"><span class="pill">Tip <b id="tipAmt">0.00</b></span><span class="pill">Total <b id="total">0.00</b></span></div>
+</div>
+
+<div class="card">
+  <label for="bill">Bill amount</label>
+  <div class="money"><svg class="i"><use href="#i-receipt"/></svg><input id="bill" type="number" inputmode="decimal" placeholder="0.00" enterkeyhint="done"></div>
+  <label>Tip</label>
+  <div class="seg" id="tips"></div>
+  <label>People</label>
+  <div class="step">
+    <button type="button" id="less" aria-label="One fewer person"><svg class="i"><use href="#i-minus"/></svg></button>
+    <div class="n"><svg class="i"><use href="#i-people"/></svg><span id="n">2</span></div>
+    <button type="button" id="more" aria-label="One more person"><svg class="i"><use href="#i-plus"/></svg></button>
+  </div>
+</div>
+<div class="note" id="note"></div>
+
 <script>
 var tip=10,people=2,opts=[0,5,10,12.5,20];
-var T=document.getElementById('tips');
-opts.forEach(function(p){var b=document.createElement('button');b.className='tipbtn';b.textContent=p+'%';
-b.onclick=function(){tip=p;upd()};T.appendChild(b)});
-function ppl(d){people=Math.max(1,people+d);upd()}
-function upd(){var bill=parseFloat(document.getElementById('bill').value)||0;
-Array.prototype.forEach.call(T.children,function(b,i){b.className='tipbtn'+(opts[i]===tip?' on':'')});
-document.getElementById('n').textContent='👥 '+people;
+function el(i){return document.getElementById(i)}
+function haptic(k){if(window.myllmHaptic)try{myllmHaptic(k)}catch(e){}}
+var T=el('tips');
+opts.forEach(function(p){var b=document.createElement('button');b.type='button';b.textContent=p+'%';
+b.onclick=function(){tip=p;haptic('selection');upd()};T.appendChild(b)});
+function ppl(d){people=Math.max(1,people+d);haptic('selection');upd()}
+function upd(){var bill=parseFloat(el('bill').value)||0;
+Array.prototype.forEach.call(T.children,function(b,i){b.className=opts[i]===tip?'hot':''});
+el('n').textContent=people;el('less').disabled=people<=1;
 var tipAmt=bill*tip/100,total=bill+tipAmt;
-document.getElementById('out').innerHTML='Tip: <b>'+tipAmt.toFixed(2)+'</b> · Total: <b>'+total.toFixed(2)+
-'</b><br>Each pays<br><span class="big">'+(total/people).toFixed(2)+'</span>'}
-document.getElementById('bill').addEventListener('input',upd);upd();
+el('tipAmt').textContent=tipAmt.toFixed(2);el('total').textContent=total.toFixed(2);
+el('each').textContent=(total/people).toFixed(2);
+el('note').textContent=people>1?'Split '+people+' ways, '+tip+'% tip':'One person, '+tip+'% tip'}
+el('less').onclick=function(){ppl(-1)};el('more').onclick=function(){ppl(1)};
+el('bill').addEventListener('input',upd);upd();
 </script></body></html>

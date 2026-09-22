@@ -3,60 +3,145 @@
   Essentials Finder — MyLLMos™ App Gallery · © 2026 Opticell Ltd
   Source-available: read it, remix it, run your version inside MyLLM™.
   Not for redistribution or republication. Terms: https://github.com/TeamDzX/myllm-assets/blob/main/LICENSE
---><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<style>:root{--build-id:"dbceaeade6";color-scheme:light dark}
-*{box-sizing:border-box}
-body{font-family:var(--myllm-font,-apple-system,system-ui,sans-serif);margin:0;padding:16px;background:var(--myllm-bg,#f2f2f7);color:var(--myllm-text,#111)}
-h1{font-size:22px;margin:0 0 2px}
-.sub{font-size:13px;color:var(--myllm-muted,#8a8a8e);margin:0 0 16px}
-.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:18px}
-.tile{background:var(--myllm-surface,#fff);border:1px solid var(--myllm-border,#e3e3e8);border-radius:16px;padding:18px 12px;text-align:center;font-size:15px;font-weight:600;color:var(--myllm-text,#111)}
-.tile .ic{font-size:30px;display:block;margin-bottom:6px}
-.tile.on{background:var(--myllm-accent,#0a84ff);color:#fff;border-color:transparent}
-.card{background:var(--myllm-surface,#fff);border-radius:14px;padding:12px 14px;margin-bottom:10px}
-.card.first{outline:2px solid var(--myllm-accent,#0a84ff)}
-.card .top{display:flex;align-items:baseline;gap:8px}
-.card .name{font-size:16px;font-weight:600;flex:1}
-.card .dist{font-size:13px;color:var(--myllm-accent,#0a84ff);font-weight:700;white-space:nowrap}
-.card .addr{font-size:13px;color:var(--myllm-muted,#8a8a8e);margin:4px 0 8px}
-.card a{font-size:13px;font-weight:600;text-decoration:none;background:rgba(10,132,255,.12);color:var(--myllm-accent,#0a84ff);border-radius:9px;padding:7px 12px;display:inline-block}
-.note{text-align:center;color:var(--myllm-muted,#8a8a8e);font-size:14px;margin-top:8px;line-height:1.5;padding:0 6px}
-@media(min-width:768px){body{max-width:780px;margin-left:auto;margin-right:auto}.grid{grid-template-columns:repeat(4,1fr)}}
+--><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Essentials Finder</title>
+<style>:root{--build-id:"dbceaeade6";color-scheme:light dark; --h:356;
+  --bg:var(--myllm-bg,#f2f2f7); --surface:var(--myllm-surface,#fff); --ink:var(--myllm-text,#111);
+  --muted:var(--myllm-muted,#8a8a8e); --line:var(--myllm-border,#e3e3e8); --acc:var(--myllm-accent,#0a84ff);
+  --fill:rgba(120,120,128,.12); }
+@media (prefers-color-scheme:dark){ :root{ --bg:var(--myllm-bg,#000); --surface:var(--myllm-surface,#1c1c1e);
+  --ink:var(--myllm-text,#f2f2f7); --muted:var(--myllm-muted,#8e8e93); --line:var(--myllm-border,#2c2c2e); --fill:rgba(120,120,128,.24); } }
+  *{ margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body{ font-family:var(--myllm-font,-apple-system,system-ui,sans-serif); background:var(--bg); color:var(--ink);
+    max-width:600px; margin:0 auto; min-height:100dvh; font-size:15.5px; line-height:1.4;
+    padding:calc(16px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) calc(30px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left)); }
+  @media (min-width:768px){ body{ max-width:760px; } }
+  svg.i{ width:1.25em; height:1.25em; fill:currentColor; flex-shrink:0; }
+  button{ font:inherit; color:inherit; cursor:pointer; } button:active{ transform:scale(.96); }
+  a{ color:inherit; }
+
+  .head{ display:flex; align-items:center; gap:12px; margin:2px 2px 14px; }
+  .tile{ display:flex; align-items:center; justify-content:center; color:#fff; flex-shrink:0;
+    background:linear-gradient(145deg, hsl(var(--h) 62% 50%), hsl(calc(var(--h) + 40) 58% 28%)); }
+  .head .tile{ width:44px; height:44px; border-radius:13px; font-size:19px; }
+  .head .ht{ flex:1; min-width:0; }
+  h1{ font-size:22px; font-weight:800; letter-spacing:-.01em; }
+  .head p{ font-size:13px; color:var(--muted); margin-top:1px; }
+  .head .acts{ display:flex; gap:8px; flex-shrink:0; }
+  .head .acts button{ min-width:40px; height:40px; border-radius:12px; border:1px solid var(--line); background:var(--surface);
+    display:flex; align-items:center; justify-content:center; gap:6px; padding:0 10px; font-size:13.5px; font-weight:650; }
+  h2{ font-size:12px; font-weight:800; letter-spacing:.07em; text-transform:uppercase; color:var(--muted); margin:20px 2px 10px; display:flex; align-items:center; gap:6px; }
+
+  .card{ background:var(--surface); border:1px solid var(--line); border-radius:18px; padding:14px; margin-bottom:12px; }
+  label{ display:block; font-size:12px; font-weight:800; letter-spacing:.07em; text-transform:uppercase; color:var(--muted); margin:14px 2px 7px; }
+  label:first-child{ margin-top:0; }
+  input{ width:100%; font:inherit; font-size:16px; padding:12px; border-radius:12px; border:1px solid var(--line); background:var(--bg); color:var(--ink); outline:none; }
+  input:focus{ border-color:var(--acc); }
+  .field{ position:relative; } .field svg.i{ position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--muted); font-size:15px; pointer-events:none; }
+  .field input{ padding-left:38px; }
+  .inrow{ display:flex; gap:8px; } .inrow input{ flex:1; min-width:0; }
+  .chips{ display:flex; gap:7px; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none; margin:10px -14px 0; padding:0 14px 2px; }
+  .chips::-webkit-scrollbar{ display:none; }
+  .chip{ flex:0 0 auto; min-height:36px; border:1px solid var(--line); background:var(--bg); border-radius:99px; padding:0 14px; font-size:13.5px; font-weight:650; white-space:nowrap; }
+  .chip.hot{ background:var(--acc); border-color:var(--acc); color:#fff; }
+  .go{ min-height:48px; border:none; border-radius:14px; background:var(--acc); color:#fff; font-size:16px; font-weight:700;
+    display:flex; align-items:center; justify-content:center; gap:8px; padding:0 18px; }
+  .go.wide{ width:100%; margin-top:14px; }
+  .go.soft{ background:var(--fill); color:var(--acc); }
+  .go:disabled{ opacity:.55; }
+  .pillbtn{ display:inline-flex; align-items:center; gap:6px; min-height:36px; border:none; border-radius:10px; padding:0 12px;
+    background:hsl(var(--h) 70% 50% / .13); color:hsl(var(--h) 70% 38%); font-size:13.5px; font-weight:700; text-decoration:none; }
+  @media (prefers-color-scheme:dark){ .pillbtn{ color:hsl(var(--h) 80% 70%); } }
+  .spin{ width:16px; height:16px; border-radius:50%; border:2.4px solid currentColor; border-right-color:transparent; animation:spin .8s linear infinite; flex-shrink:0; }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+  .skel{ border-radius:16px; margin-bottom:10px; background:var(--fill); animation:shimmer 1.4s ease-in-out infinite; }
+  @keyframes shimmer{ 50%{ opacity:.45; } }
+
+  .notice{ display:flex; gap:12px; align-items:flex-start; background:var(--surface); border:1px solid var(--line); border-radius:18px; padding:14px; margin-bottom:12px; }
+  .notice .tile{ width:36px; height:36px; border-radius:10px; font-size:16px; }
+  .notice.warn .tile{ background:linear-gradient(145deg,#ff9f0a,#c25e00); }
+  .notice b{ display:block; font-size:15px; font-weight:750; }
+  .notice p{ font-size:13.5px; color:var(--muted); line-height:1.45; margin-top:2px; }
+  .notice p b{ display:inline; font-size:inherit; font-weight:700; color:var(--ink); }
+  .notice .go{ margin-top:10px; min-height:40px; font-size:14.5px; border-radius:12px; }
+  .hint{ text-align:center; font-size:13px; color:var(--muted); line-height:1.5; padding:18px 12px 6px; }
+
+  [hidden]{ display:none !important; }
+  @media (prefers-reduced-motion:reduce){ .spin{ animation-duration:2.4s; } .skel{ animation:none; } button:active{ transform:none; } }
+
+  .grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:9px; margin-bottom:6px; }
+  @media (min-width:600px){ .grid{ grid-template-columns:repeat(5,1fr); } }
+  .kind{ display:flex; flex-direction:column; align-items:center; gap:8px; min-height:96px; padding:13px 6px 11px; border:1px solid var(--line); background:var(--surface);
+    border-radius:16px; font-size:13.5px; font-weight:700; text-align:center; line-height:1.2; }
+  .kind .tile{ width:40px; height:40px; border-radius:12px; font-size:18px; }
+  .kind.on{ border-color:hsl(var(--kh) 60% 48%); box-shadow:0 0 0 2px hsl(var(--kh) 60% 48%) inset; }
+  .res{ background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:12px 13px; margin-bottom:9px; }
+  .res.first{ border-color:hsl(var(--kh,356) 60% 48%); box-shadow:0 0 0 1px hsl(var(--kh,356) 60% 48%) inset; }
+  .res .top{ display:flex; align-items:center; gap:8px; }
+  .res .name{ flex:1; min-width:0; font-size:16px; font-weight:700; line-height:1.3; overflow-wrap:anywhere; }
+  .res .d{ font-size:12.5px; font-weight:800; font-variant-numeric:tabular-nums; white-space:nowrap; }
+  .res .near{ font-size:10.5px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:#fff; background:hsl(var(--kh,356) 60% 45%); border-radius:99px; padding:3px 8px; }
+  .res .addr{ font-size:13px; color:var(--muted); margin:3px 0 10px; }
+  .res .pillbtn{ --h:var(--kh,356); }
 </style></head><body>
-<h1>🧭 Essentials Finder</h1>
-<p class="sub" id="here">Finding your location…</p>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-kit" viewBox="0 0 24 24"><path d="M9 3.5h6A1.5 1.5 0 0 1 16.5 5v1.5H19A2.5 2.5 0 0 1 21.5 9v9a2.5 2.5 0 0 1-2.5 2.5H5A2.5 2.5 0 0 1 2.5 18V9A2.5 2.5 0 0 1 5 6.5h2.5V5A1.5 1.5 0 0 1 9 3.5zm.5 2v1h5v-1zM11 10v2.5H8.5v2H11V17h2v-2.5h2.5v-2H13V10z" fill="currentColor" fill-rule="evenodd"/></symbol>
+  <symbol id="k-pharmacy" viewBox="0 0 24 24"><g transform="rotate(-45 12 12)"><rect x="3" y="8" width="18" height="8" rx="4" fill="none" stroke="currentColor" stroke-width="2"/><path d="M7 8h5v8H7a4 4 0 0 1 0-8z" fill="currentColor"/></g></symbol>
+  <symbol id="k-atm" viewBox="0 0 24 24"><rect x="2.5" y="6" width="19" height="12" rx="2.5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="2.6" fill="currentColor"/><path d="M6 9.5v5M18 9.5v5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
+  <symbol id="k-hospital" viewBox="0 0 24 24"><path d="M9.5 3h5v6.5H21v5h-6.5V21h-5v-6.5H3v-5h6.5z" fill="currentColor"/></symbol>
+  <symbol id="k-petrol" viewBox="0 0 24 24"><path d="M5 4.5A1.5 1.5 0 0 1 6.5 3h7A1.5 1.5 0 0 1 15 4.5V20H5zM7 5.5v4h6v-4z" fill="currentColor" fill-rule="evenodd"/><path d="M15 9h1.5a1.5 1.5 0 0 1 1.5 1.5v6a1.5 1.5 0 0 0 3 0V8l-2.5-2.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M3.5 20.5h13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+  <symbol id="k-ev" viewBox="0 0 24 24"><path d="M13.5 2.5L5 13.5h6l-1.5 8 8.5-11h-6z" fill="currentColor"/></symbol>
+  <symbol id="k-supermarket" viewBox="0 0 24 24"><path d="M3 4h2.2l2.2 10.2a1.5 1.5 0 0 0 1.5 1.2h8.3a1.5 1.5 0 0 0 1.5-1.1L20.5 8H6.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9.5" cy="19.5" r="1.6" fill="currentColor"/><circle cx="17" cy="19.5" r="1.6" fill="currentColor"/></symbol>
+  <symbol id="k-police" viewBox="0 0 24 24"><path d="M12 2.5l8 3v6c0 5-3.4 8.7-8 10-4.6-1.3-8-5-8-10v-6z" fill="currentColor"/><path d="M12 7.5l1.2 2.5 2.7.3-2 1.9.5 2.7-2.4-1.3-2.4 1.3.5-2.7-2-1.9 2.7-.3z" fill="rgba(0,0,0,.28)"/></symbol>
+  <symbol id="k-toilets" viewBox="0 0 24 24"><circle cx="7.5" cy="4.8" r="2.2" fill="currentColor"/><circle cx="16.5" cy="4.8" r="2.2" fill="currentColor"/><path d="M5.5 8.5h4l.8 6H9v6H6v-6H4.7zM14.8 8.5h3.4l2.3 7.5h-2v4.5h-4V16h-2z" fill="currentColor"/><path d="M12 3v18" stroke="currentColor" stroke-width="1.2" opacity=".5"/></symbol>
+  <symbol id="k-hotel" viewBox="0 0 24 24"><path d="M3 6v13M3 14h18v5M21 14v-2.5A3.5 3.5 0 0 0 17.5 8H11v6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="7" cy="11" r="2" fill="currentColor"/></symbol>
+  <symbol id="i-dir" viewBox="0 0 24 24"><path d="M11.3 2.7a1 1 0 0 1 1.4 0l8.6 8.6a1 1 0 0 1 0 1.4l-8.6 8.6a1 1 0 0 1-1.4 0l-8.6-8.6a1 1 0 0 1 0-1.4zM13 8.5v2.2H9.5a1 1 0 0 0-1 1V15h2v-2.3H13v2.2l3.2-3.2z" fill="currentColor" fill-rule="evenodd"/></symbol>
+  <symbol id="i-warn" viewBox="0 0 24 24"><path d="M10.3 3.9a2 2 0 0 1 3.4 0l8 13.6a2 2 0 0 1-1.7 3H4a2 2 0 0 1-1.7-3zM12 9a1 1 0 0 0-1 1v4a1 1 0 0 0 2 0v-4a1 1 0 0 0-1-1zm0 7.2a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 0 0 0-2.4z" fill="currentColor"/></symbol>
+</defs></svg>
+
+<div class="head">
+  <div class="tile"><svg class="i"><use href="#i-kit"/></svg></div>
+  <div class="ht"><h1>Essentials Finder</h1><p id="here">Finding your location…</p></div>
+</div>
 <div class="grid" id="grid"></div>
 <div id="results"></div>
 
 <script>
-var LOC = window.myllmLocation || null;
-var haptic = window.myllmHaptic || function(){};
+function el(id){return document.getElementById(id)}
+/* Bridges are looked up when used, never kept: MyLLM can add them after this
+   script has run. */
+function LOC(){ return window.myllmLocation || null; }
+function haptic(k){ if(window.myllmHaptic){ try{ myllmHaptic(k); }catch(_){} } }
+function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+function icon(n){ return '<svg class="i"><use href="#i-' + n + '"/></svg>'; }
 var here = null;
 var KINDS = [
-  {ic:"💊", label:"Pharmacy", q:"pharmacy"},
-  {ic:"🏧", label:"ATM", q:"atm"},
-  {ic:"🏥", label:"Hospital", q:"hospital"},
-  {ic:"⛽", label:"Petrol", q:"petrol station"},
-  {ic:"🔌", label:"EV Charger", q:"ev charging station"},
-  {ic:"🛒", label:"Supermarket", q:"supermarket"},
-  {ic:"🚓", label:"Police", q:"police station"},
-  {ic:"🚻", label:"Toilets", q:"public toilet"},
-  {ic:"🏨", label:"Hotel", q:"hotel"}
+  {id:"pharmacy",    label:"Pharmacy",    q:"pharmacy",            h:150},
+  {id:"atm",         label:"ATM",         q:"atm",                 h:210},
+  {id:"hospital",    label:"Hospital",    q:"hospital",            h:356},
+  {id:"petrol",      label:"Petrol",      q:"petrol station",      h:30},
+  {id:"ev",          label:"EV Charger",  q:"ev charging station", h:172},
+  {id:"supermarket", label:"Supermarket", q:"supermarket",         h:96},
+  {id:"police",      label:"Police",      q:"police station",      h:226},
+  {id:"toilets",     label:"Toilets",     q:"public toilet",       h:262},
+  {id:"hotel",       label:"Hotel",       q:"hotel",               h:318}
 ];
-
-function el(id){return document.getElementById(id)}
 
 function dist(m){
   if(m==null) return "";
   if(m<1000) return Math.round(m)+" m";
   return (m/1000).toFixed(m<10000?1:0)+" km";
 }
+function notice(kind, title, text){
+  el("results").innerHTML='<div class="notice'+(kind==="warn"?" warn":"")+'"><div class="tile">'+icon(kind==="warn"?"warn":"kit")+'</div>'+
+    '<div style="flex:1;min-width:0"><b>'+esc(title)+'</b><p>'+text+'</p></div></div>';
+}
 
 function tiles(){
   var g=el("grid");
   KINDS.forEach(function(k){
-    var b=document.createElement("button");b.className="tile";
-    b.innerHTML='<span class="ic">'+k.ic+'</span>'+k.label;
+    var b=document.createElement("button");b.type="button";b.className="kind";b.style.setProperty("--kh",k.h);
+    b.innerHTML='<span class="tile" style="--h:'+k.h+'"><svg class="i"><use href="#k-'+k.id+'"/></svg></span>'+k.label;
     b.onclick=function(){
       haptic("selection");
       [].forEach.call(g.children,function(c){c.classList.remove("on")});
@@ -68,41 +153,45 @@ function tiles(){
 }
 
 function find(k){
-  if(!LOC) return;
-  el("results").innerHTML='<p class="note">Finding the nearest '+k.label.toLowerCase()+'…</p>';
-  LOC.search(k.q,{limit:5}).then(function(list){
+  var loc=LOC();
+  if(!loc) return;
+  var R=el("results");R.style.setProperty("--kh",k.h);
+  R.innerHTML='<h2>Nearest '+esc(k.label.toLowerCase())+'</h2><div class="skel" style="height:104px"></div><div class="skel" style="height:86px"></div><div class="skel" style="height:86px"></div>';
+  loc.search(k.q,{limit:5}).then(function(list){
     list=(list||[]).sort(function(a,b){return (a.distance||1e12)-(b.distance||1e12)});
-    if(!list.length){el("results").innerHTML='<p class="note">Nothing found nearby.</p>';return}
-    var R=el("results");R.innerHTML="";
+    if(!list.length){notice("warn","Nothing found nearby","No "+esc(k.label.toLowerCase())+" turned up around you.");return}
+    R.innerHTML='<h2>Nearest '+esc(k.label.toLowerCase())+'</h2>';
     list.forEach(function(p,i){
-      var d=document.createElement("div");d.className="card"+(i===0?" first":"");
+      var d=document.createElement("div");d.className="res"+(i===0?" first":"");
       var dest=p.latitude+","+p.longitude;
-      d.innerHTML='<div class="top"><div class="name"></div><div class="dist">'+dist(p.distance)+'</div></div>'+
+      d.innerHTML='<div class="top"><div class="name"></div>'+(i===0?'<span class="near">Nearest</span>':'')+'<div class="d">'+dist(p.distance)+'</div></div>'+
         '<div class="addr"></div>'+
-        '<a href="https://maps.apple.com/?daddr='+dest+'">Directions</a>';
+        '<a class="pillbtn" href="https://maps.apple.com/?daddr='+dest+'">'+icon("dir")+'Directions</a>';
       d.querySelector(".name").textContent=p.name;
       d.querySelector(".addr").textContent=p.address||"";
       R.appendChild(d);
     });
+    haptic("light");
   }).catch(function(e){
-    el("results").innerHTML='<p class="note">'+(e&&e.message?e.message:"Search failed")+'</p>';
+    notice("warn","Search didn’t work",esc(e&&e.message?e.message:"Search failed")+" — try again in a moment.");
   });
 }
 
 function start(){
   tiles();
-  if(!LOC){
+  var loc=LOC();
+  if(!loc){
     el("here").textContent="Location unavailable";
-    el("results").innerHTML='<p class="note">This needs the latest MyLLM with <b>Settings → Allow apps to use your location</b> turned on.</p>';
+    notice("warn","Location is off",'This needs the latest MyLLM with <b>Settings → Allow apps to use your location</b> turned on.');
     return;
   }
-  el("results").innerHTML='<p class="note">Tap what you need — it finds the nearest, with directions.</p>';
-  LOC.current().then(function(p){
+  el("results").innerHTML='<p class="hint">Tap what you need — it finds the nearest, with directions.</p>';
+  loc.current().then(function(p){
     here=p;
     el("here").textContent=p.address?("Near "+p.address):"Got your location";
   }).catch(function(e){
     el("here").textContent="Location off";
-    el("results").innerHTML='<p class="note">'+(e&&e.message?e.message:"Couldn’t get your location")+'<br>Turn on <b>Settings → Allow apps to use your location</b>, then reopen.</p>';
+    notice("warn","Couldn’t get your location",esc(e&&e.message?e.message:"Location isn’t available")+'<br>Turn on <b>Settings → Allow apps to use your location</b>, then reopen.');
   });
 }
 start();

@@ -3,82 +3,161 @@
   Homework Tracker — MyLLMos™ App Gallery · © 2026 Opticell Ltd
   Source-available: read it, remix it, run your version inside MyLLM™.
   Not for redistribution or republication. Terms: https://github.com/TeamDzX/myllm-assets/blob/main/LICENSE
---><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<style>:root{--build-id:"1731d0b893";color-scheme:light dark;--accent:#5e5ce6}
-*{box-sizing:border-box}
-body{font-family:-apple-system,system-ui,sans-serif;margin:0;padding:18px;background:#f2f2f7;color:#111}
-@media(prefers-color-scheme:dark){body{background:#000;color:#eee}.item,input,select{background:#1c1c1e;color:#eee;border-color:#3a3a3c}.steps{background:#0e0e10}}
-h1{font-size:22px;margin:0 0 4px}
-.sub{font-size:13px;opacity:.6;margin-bottom:14px}
-input,select{width:100%;padding:11px;border:1px solid #d1d1d6;border-radius:10px;font-size:15px;background:#fff;font-family:inherit;margin-bottom:8px}
-.grid{display:flex;gap:8px}.grid>*{flex:1}
-button{border:0;background:var(--accent);color:#fff;border-radius:10px;padding:11px 16px;font-size:15px;font-weight:600;width:100%}
-button:disabled{opacity:.5}
-.item{background:#fff;border-radius:13px;padding:12px 14px;margin-bottom:9px;box-shadow:0 1px 3px rgba(0,0,0,.08);border-left:4px solid var(--accent)}
-.item.done{opacity:.55}.item.overdue{border-left-color:#ff453a}
-.top{display:flex;align-items:flex-start;gap:10px}
-.chk{width:24px;height:24px;border-radius:7px;border:2px solid #c7c7cc;flex:none;margin-top:1px;display:flex;align-items:center;justify-content:center;font-size:15px;cursor:pointer}
-.chk.on{background:var(--accent);border-color:var(--accent);color:#fff}
-.body{flex:1;min-width:0}
-.title{font-size:16px;font-weight:600}.done .title{text-decoration:line-through}
-.meta{font-size:12px;opacity:.65;margin-top:2px}
-.due.soon{color:#ff9f0a;font-weight:600}.due.late{color:#ff453a;font-weight:600}
-.del{background:none;color:#ff453a;font-size:18px;width:auto;padding:0 2px;flex:none}
-.tools{display:flex;gap:14px;margin-top:8px}
-.tools a{font-size:13px;color:var(--accent);font-weight:600;cursor:pointer}
-.steps{background:#f2f2f7;border-radius:9px;padding:8px 10px;margin-top:8px;font-size:14px}
-.steps div{padding:3px 0;display:flex;gap:7px}
-.steps .s{cursor:pointer}.steps .s.on{opacity:.5;text-decoration:line-through}
-#status{font-size:13px;opacity:.7;min-height:16px;margin:6px 0}
-.empty{text-align:center;opacity:.5;font-size:14px;padding:30px 0}
-h2{font-size:13px;text-transform:uppercase;letter-spacing:.05em;opacity:.55;margin:18px 0 8px}
-</style></head><body>
-<style>
-@keyframes myllmAiSpin{to{transform:rotate(360deg)}}
-.myllm-ai-busy{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(18px);z-index:99999;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;display:flex;align-items:center;gap:10px;background:rgba(28,28,30,.96);color:#fff;border-radius:999px;padding:10px 16px 10px 14px;box-shadow:0 6px 22px rgba(0,0,0,.4);font-family:-apple-system,system-ui,sans-serif;font-size:14px;font-weight:600;max-width:92%}
-.myllm-ai-busy.on{opacity:1;transform:translateX(-50%) translateY(0)}
-.myllm-ai-cog{font-size:18px;line-height:1;animation:myllmAiSpin 2.4s linear infinite;filter:drop-shadow(0 0 5px rgba(124,92,255,.85))}
-.myllm-ai-busy small{font-weight:400;opacity:.6}
-@media(min-width:768px){body{max-width:760px;margin-left:auto;margin-right:auto}}
-</style>
-<script>
-(function(){
-  if(window.__myllmAiWrap||typeof window.myllmAsk!=='function')return;
-  window.__myllmAiWrap=true;
-  var orig=window.myllmAsk,depth=0,node=null;
-  function ensure(){if(node)return;node=document.createElement('div');node.className='myllm-ai-busy';
-    node.innerHTML='<span class="myllm-ai-cog">\u2699\uFE0F</span><span>AI is thinking\u2026 <small>privately, on your device</small></span>';
-    (document.body||document.documentElement).appendChild(node);}
-  function show(){ensure();depth++;node.classList.add('on');}
-  function hide(){depth=Math.max(0,depth-1);if(depth===0&&node)node.classList.remove('on');}
-  window.myllmAsk=function(){show();var p;try{p=orig.apply(this,arguments);}catch(e){hide();throw e;}
-    return Promise.resolve(p).then(function(r){hide();return r;},function(e){hide();throw e;});};
-})();
-</script>
+--><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Homework Tracker</title>
+<style>:root{--build-id:"1731d0b893";color-scheme:light dark;
+  --bg:var(--myllm-bg,#f2f2f7); --surface:var(--myllm-surface,#fff); --ink:var(--myllm-text,#111);
+  --muted:var(--myllm-muted,#8a8a8e); --line:var(--myllm-border,#e3e3e8); --acc:var(--myllm-accent,#0a84ff);
+  --fill:rgba(120,120,128,.12); --h:238; }
+@media (prefers-color-scheme:dark){ :root{ --bg:var(--myllm-bg,#000); --surface:var(--myllm-surface,#1c1c1e);
+  --ink:var(--myllm-text,#f2f2f7); --muted:var(--myllm-muted,#8e8e93); --line:var(--myllm-border,#2c2c2e); --fill:rgba(120,120,128,.24); } }
+  *{ margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body{ font-family:var(--myllm-font,-apple-system,system-ui,sans-serif); background:var(--bg); color:var(--ink); min-height:100dvh; font-size:15.5px; line-height:1.4; }
+  body.lock{ overflow:hidden; }
+  .home{ max-width:600px; margin:0 auto;
+    padding:calc(16px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) calc(30px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left)); }
+  @media (min-width:768px){ .home{ max-width:760px; } }
+  svg.i{ width:1.25em; height:1.25em; fill:currentColor; flex-shrink:0; }
+  button{ font:inherit; color:inherit; cursor:pointer; } button:active{ transform:scale(.96); }
+  [hidden]{ display:none !important; }
 
-<h1>📚 Homework Tracker</h1>
-<div class="sub">Keep every assignment, deadline and study step in one place.</div>
-<input id="t" placeholder="Assignment (e.g. History essay: the Tudors)">
-<div class="grid"><input id="subj" placeholder="Subject"><input id="due" type="date"></div>
-<button onclick="add()">Add assignment</button>
-<div id="status"></div>
-<div id="list"></div>
+  .head{ display:flex; align-items:center; gap:12px; margin:2px 2px 14px; }
+  .tile{ display:flex; align-items:center; justify-content:center; color:#fff; flex-shrink:0;
+    background:linear-gradient(145deg, hsl(var(--h) 62% 50%), hsl(calc(var(--h) + 40) 58% 28%)); }
+  .head .tile{ width:44px; height:44px; border-radius:13px; font-size:19px; }
+  .head .ht{ flex:1; min-width:0; }
+  h1{ font-size:22px; font-weight:800; letter-spacing:-.01em; }
+  .head p{ font-size:13px; color:var(--muted); margin-top:1px; }
+  .head .acts{ display:flex; gap:8px; flex-shrink:0; }
+  h2.sec{ font-size:12px; font-weight:800; letter-spacing:.07em; text-transform:uppercase; color:var(--muted); margin:20px 2px 9px; }
+
+  .hero{ border-radius:20px; padding:16px 18px; color:#fff; margin-bottom:12px; display:flex; align-items:center; gap:16px;
+    background:linear-gradient(145deg, hsl(var(--h) 62% 46%), hsl(calc(var(--h) + 40) 58% 24%)); box-shadow:0 10px 28px hsl(var(--h) 60% 30% / .25); }
+  .hero .n{ font-size:44px; font-weight:800; line-height:1; letter-spacing:-.03em; font-variant-numeric:tabular-nums; flex-shrink:0; }
+  .hero .k{ display:block; font-size:11px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; opacity:.78; }
+  .hero b{ display:block; font-size:17px; font-weight:750; line-height:1.25; overflow-wrap:anywhere; }
+  .hero span.s{ display:block; font-size:12.5px; line-height:1.4; opacity:.82; margin-top:3px; overflow-wrap:anywhere; }
+  .hero .grow{ flex:1; min-width:0; }
+
+  .card{ background:var(--surface); border:1px solid var(--line); border-radius:18px; padding:14px; margin-bottom:12px; }
+  label{ display:block; font-size:12px; font-weight:800; letter-spacing:.07em; text-transform:uppercase; color:var(--muted); margin:14px 2px 7px; }
+  label:first-child{ margin-top:0; }
+  input, textarea, select{ width:100%; font:inherit; font-size:16px; padding:12px; border-radius:12px; border:1px solid var(--line); background:var(--bg); color:var(--ink); outline:none; }
+  input:focus, textarea:focus{ border-color:hsl(var(--h) 60% 55%); }
+  .go{ width:100%; min-height:50px; margin-top:14px; border:none; border-radius:14px; background:hsl(var(--h) 62% 52%); color:#fff; font-size:16px; font-weight:700;
+    display:flex; align-items:center; justify-content:center; gap:8px; box-shadow:0 8px 20px hsl(var(--h) 60% 40% / .25); }
+  .go.soft{ background:var(--fill); color:var(--ink); box-shadow:none; }
+  .go:disabled{ opacity:.55; }
+  .status{ font-size:13px; color:var(--muted); min-height:18px; margin-top:10px; text-align:center; line-height:1.45; }
+  .status.err{ color:#ff453a; }
+  .spin{ width:16px; height:16px; border-radius:50%; border:2.4px solid currentColor; border-right-color:transparent; animation:spin .8s linear infinite; flex-shrink:0; display:inline-block; }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+  .empty{ text-align:center; padding:24px 18px 14px; }
+  .empty .tile{ width:48px; height:48px; border-radius:14px; font-size:21px; margin:0 auto 10px; opacity:.9; }
+  .empty b{ display:block; font-size:16px; font-weight:750; }
+  .empty p{ font-size:13.5px; color:var(--muted); line-height:1.5; max-width:280px; margin:5px auto 0; }
+  @media (prefers-reduced-motion:reduce){ .spin{ animation-duration:2.4s; } button:active{ transform:none; } }
+  @keyframes myllmAiSpin{to{transform:rotate(360deg)}}
+  .myllm-ai-busy{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(18px);z-index:99999;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;display:flex;align-items:center;gap:10px;background:rgba(28,28,30,.96);color:#fff;border-radius:999px;padding:10px 16px 10px 14px;box-shadow:0 6px 22px rgba(0,0,0,.4);font-size:14px;font-weight:600;max-width:92%}
+  .myllm-ai-busy.on{opacity:1;transform:translateX(-50%) translateY(0)}
+  .myllm-ai-cog{width:16px;height:16px;border-radius:50%;border:2.4px solid #a78bfa;border-right-color:transparent;animation:myllmAiSpin .9s linear infinite;flex-shrink:0}
+  .myllm-ai-busy small{font-weight:400;opacity:.6}
+
+  .grid2{ display:flex; gap:10px; } .grid2 > div{ flex:1; min-width:0; }
+  input[type=date]{ min-height:46px; -webkit-appearance:none; appearance:none; }
+  .item{ display:flex; align-items:flex-start; gap:10px; padding:11px 0; border-bottom:1px solid var(--line); }
+  .item:first-child{ padding-top:2px; } .item:last-child{ border-bottom:none; padding-bottom:2px; }
+  .chk{ width:44px; height:44px; margin:-8px -6px -8px -10px; border:none; background:none; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .chk span{ width:26px; height:26px; border-radius:8px; border:2px solid var(--line); display:flex; align-items:center; justify-content:center; color:#fff; font-size:14px; transition:background .2s, border-color .2s; }
+  .chk.on span{ background:hsl(var(--h) 62% 52%); border-color:hsl(var(--h) 62% 52%); }
+  .body{ flex:1; min-width:0; }
+  .title{ font-size:16px; font-weight:650; line-height:1.3; overflow-wrap:anywhere; }
+  .item.done .title{ text-decoration:line-through; color:var(--muted); }
+  .meta{ display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin-top:5px; font-size:12px; }
+  .subj{ font-weight:700; color:hsl(var(--h) 60% 45%); background:hsl(var(--h) 70% 50% / .12); border-radius:99px; padding:2px 8px; }
+  @media (prefers-color-scheme:dark){ .subj{ color:hsl(var(--h) 80% 72%); } }
+  .due{ color:var(--muted); font-weight:600; }
+  .due.soon{ color:#c77700; } .due.late{ color:#e0342a; }
+  @media (prefers-color-scheme:dark){ .due.soon{ color:#ffb340; } .due.late{ color:#ff6b62; } }
+  .item.late{ box-shadow:inset 3px 0 0 #ff453a; padding-left:12px; }
+  .tool{ margin-top:8px; min-height:36px; border:none; border-radius:10px; padding:0 12px; background:var(--fill); color:hsl(var(--h) 62% 48%);
+    font-size:13.5px; font-weight:700; display:inline-flex; align-items:center; gap:6px; }
+  @media (prefers-color-scheme:dark){ .tool{ color:hsl(var(--h) 80% 74%); } }
+  .tool:disabled{ opacity:.7; }
+  .steps{ margin-top:9px; border-radius:12px; background:var(--bg); padding:4px 6px; }
+  .s{ width:100%; display:flex; align-items:flex-start; gap:9px; border:none; background:none; text-align:left; padding:8px 4px; font-size:14.5px; line-height:1.35; }
+  .s .box{ width:20px; height:20px; border-radius:6px; border:2px solid var(--line); flex-shrink:0; display:flex; align-items:center; justify-content:center; color:#fff; font-size:11px; margin-top:1px; }
+  .s.on{ color:var(--muted); text-decoration:line-through; }
+  .s.on .box{ background:hsl(var(--h) 62% 52%); border-color:hsl(var(--h) 62% 52%); }
+  .s:active{ transform:none; }
+  .del{ width:44px; height:44px; margin:-8px -10px -8px 0; border:none; background:none; color:var(--muted); font-size:14px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .del:active{ color:#ff453a; }
+</style></head><body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-books" viewBox="0 0 24 24"><path d="M4 3.5h3.2a1 1 0 0 1 1 1v15a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-15a1 1 0 0 1 1-1zm5.8 0H13a1 1 0 0 1 1 1v15a1 1 0 0 1-1 1H9.8a1 1 0 0 1-1-1v-15a1 1 0 0 1 1-1zm6.1 1.1l3-.8a1 1 0 0 1 1.2.7l3.6 13.9a1 1 0 0 1-.7 1.2l-3 .8a1 1 0 0 1-1.2-.7L15.2 5.8a1 1 0 0 1 .7-1.2z" fill="currentColor"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.6l4.6 4.6L19.2 7.4" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></symbol>
+  <symbol id="i-spark" viewBox="0 0 24 24"><path d="M10 2.5l1.9 5.6 5.6 1.9-5.6 1.9L10 17.5l-1.9-5.6L2.5 10l5.6-1.9zM18.5 14l.95 2.55L22 17.5l-2.55.95L18.5 21l-.95-2.55L15 17.5l2.55-.95z" fill="currentColor"/></symbol>
+  <symbol id="i-again" viewBox="0 0 24 24"><path d="M12 5V2.6a.6.6 0 0 0-1-.45L7.2 5.55a.6.6 0 0 0 0 .9L11 9.85a.6.6 0 0 0 1-.45V7a5.5 5.5 0 1 1-5.5 5.5 1 1 0 0 0-2 0A7.5 7.5 0 1 0 12 5z" fill="currentColor"/></symbol>
+</defs></svg>
 <script>
-var store=window.myllmStorage||{getItem:function(){return Promise.resolve(null)},setItem:function(){return Promise.resolve()}};
-var items=[];
+(function(){if(window.__myllmAiWrap||typeof window.myllmAsk!=='function')return;window.__myllmAiWrap=true;
+var orig=window.myllmAsk,depth=0,node=null;
+function ensure(){if(node)return;node=document.createElement('div');node.className='myllm-ai-busy';
+node.innerHTML='<span class="myllm-ai-cog"></span><span>AI is thinking… <small>privately, on your device</small></span>';
+(document.body||document.documentElement).appendChild(node);}
+function show(){ensure();depth++;node.classList.add('on');}
+function hide(){depth=Math.max(0,depth-1);if(depth===0&&node)node.classList.remove('on');}
+window.myllmAsk=function(){show();var p;try{p=orig.apply(this,arguments);}catch(e){hide();throw e;}
+return Promise.resolve(p).then(function(r){hide();return r;},function(e){hide();throw e;});};})();
+</script>
+<div class="home">
+  <div class="head">
+    <div class="tile"><svg class="i"><use href="#i-books"/></svg></div>
+    <div class="ht"><h1>Homework Tracker</h1><p>Every assignment and deadline, sorted</p></div>
+  </div>
+
+  <div class="hero" id="hero">
+    <div class="n" id="hN">0</div>
+    <div class="grow"><b id="hT">Nothing to do</b><span class="s" id="hS">Add your first assignment below.</span></div>
+  </div>
+
+  <div class="card">
+    <label for="t">Assignment</label>
+    <input id="t" placeholder="e.g. History essay: the Tudors" autocomplete="off" enterkeyhint="done">
+    <div class="grid2">
+      <div><label for="subj">Subject</label><input id="subj" placeholder="e.g. History" autocomplete="off" enterkeyhint="done"></div>
+      <div><label for="due">Due</label><input id="due" type="date"></div>
+    </div>
+    <button class="go" id="addBtn" type="button"><svg class="i"><use href="#i-plus"/></svg>Add assignment</button>
+    <div id="status" class="status"></div>
+  </div>
+
+  <div id="list"></div>
+</div>
+
+<script>
 function el(i){return document.getElementById(i)}
-function save(){store.setItem('items',JSON.stringify(items))}
-function setStatus(t){el('status').textContent=t||''}
+/* Bridges are looked up when used, never kept: MyLLM can add them after this
+   script has run. */
+function store(){return window.myllmStorage||{getItem:function(){return Promise.resolve(null)},setItem:function(){return Promise.resolve()}}}
+function haptic(k){if(window.myllmHaptic)try{myllmHaptic(k)}catch(e){}}
+function icon(n){return '<svg class="i"><use href="#i-'+n+'"/></svg>'}
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+var items=[],planning=null;
+function save(){store().setItem('items',JSON.stringify(items))}
+function setStatus(t,err){var s=el('status');s.textContent=t||'';s.classList.toggle('err',!!err)}
 function uid(){return'a'+items.reduce(function(m,i){return Math.max(m,+i.id.slice(1)||0)},0)+1}
 function todayStr(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
 
 function add(){
-  var t=el('t').value.trim();if(!t)return;
+  var t=el('t').value.trim();if(!t){el('t').focus();return}
   items.push({id:uid(),title:t,subj:el('subj').value.trim(),due:el('due').value,done:false,steps:null});
   el('t').value='';el('subj').value='';el('due').value='';
-  save();render();if(window.myllmHaptic)myllmHaptic('light');
+  save();render();haptic('light');
 }
-function toggle(id){var i=byId(id);i.done=!i.done;save();render();if(window.myllmHaptic)myllmHaptic(i.done?'success':'selection')}
+function toggle(id){var i=byId(id);i.done=!i.done;save();render();haptic(i.done?'success':'selection')}
 function del(id){items=items.filter(function(i){return i.id!==id});save();render()}
 function byId(id){return items.filter(function(i){return i.id===id})[0]}
 
@@ -88,11 +167,11 @@ function dueInfo(due){
   var d=new Date(due+'T00:00'),n=new Date(today+'T00:00');
   var days=Math.round((d-n)/86400000);
   var label=d.toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'});
-  if(days<0)return{txt:'Overdue · '+label,cls:'late',over:true};
-  if(days===0)return{txt:'Due today',cls:'late'};
-  if(days===1)return{txt:'Due tomorrow',cls:'soon'};
-  if(days<=3)return{txt:'Due in '+days+' days · '+label,cls:'soon'};
-  return{txt:'Due '+label,cls:''};
+  if(days<0)return{txt:'Overdue · '+label,cls:'late',over:true,days:days};
+  if(days===0)return{txt:'Due today',cls:'late',days:0};
+  if(days===1)return{txt:'Due tomorrow',cls:'soon',days:1};
+  if(days<=3)return{txt:'Due in '+days+' days · '+label,cls:'soon',days:days};
+  return{txt:'Due '+label,cls:'',days:days};
 }
 
 /* Labelled lines, not JSON — small models (Apple Intelligence) echo JSON
@@ -120,7 +199,8 @@ function parseSteps(reply){
 }
 function plan(id){
   var i=byId(id);
-  if(!window.myllmAsk){setStatus('Step-by-step planning needs AI — enable “Allow apps to use the AI” in Settings.');return}
+  if(!window.myllmAsk){setStatus('Step-by-step planning needs AI — enable “Allow apps to use the AI” in Settings.',true);return}
+  planning=id;render();
   setStatus('Breaking “'+i.title+'” into steps…');
   var p='Break this school assignment into 3-6 concrete, ordered steps a student can tick off. Assignment: "'+i.title+'"'+(i.subj?(' (subject: '+i.subj+')'):'')+'. Reply with EXACTLY these labelled lines and nothing else:\n'+
     'STEP: one short, concrete step the student can do (repeat this line for every step, in order)';
@@ -128,59 +208,83 @@ function plan(id){
   .catch(function(){return myllmAsk(p+'\nIMPORTANT: fill each labelled line with real content — never repeat the instruction text.')
     .then(function(r){return parseSteps(r||'')})})
   .then(function(arr){
-    i.steps=arr.map(function(x){return{t:x,done:false}});save();render();setStatus('');
-  }).catch(function(err){setStatus('Could not plan: '+err.message)});
+    i.steps=arr.map(function(x){return{t:x,done:false}});save();setStatus('');
+  }).catch(function(err){setStatus('Could not plan: '+err.message,true)})
+  .then(function(){planning=null;render()});
 }
-function toggleStep(id,si){var i=byId(id);i.steps[si].done=!i.steps[si].done;save();render();if(window.myllmHaptic)myllmHaptic('selection')}
+function toggleStep(id,si){var i=byId(id);i.steps[si].done=!i.steps[si].done;save();render();haptic('selection')}
 
+function renderHero(){
+  var open=items.filter(function(i){return!i.done});
+  var over=open.filter(function(i){return dueInfo(i.due).over});
+  var dated=open.filter(function(i){return i.due&&!dueInfo(i.due).over}).sort(function(a,b){return a.due<b.due?-1:1});
+  el('hN').textContent=open.length;
+  el('hT').textContent=!items.length?'Nothing to do yet':open.length===1?'assignment to do':open.length?'assignments to do':'All done';
+  var s;
+  if(!items.length)s='Add your first assignment below.';
+  else if(!open.length)s='Every assignment is ticked off. Nice work.';
+  else if(over.length)s=over.length+' overdue'+(dated[0]?' · next: '+dated[0].title+', '+dueInfo(dated[0].due).txt.toLowerCase():'');
+  else if(dated[0])s='Next: '+dated[0].title+' — '+dueInfo(dated[0].due).txt.toLowerCase();
+  else s='No due dates set.';
+  el('hS').textContent=s;
+}
 function render(){
+  renderHero();
   var L=el('list');L.innerHTML='';
-  if(!items.length){L.innerHTML='<div class="empty">No assignments yet — add your first above.</div>';return}
+  if(!items.length){
+    L.innerHTML='<div class="card empty"><div class="tile">'+icon('books')+'</div><b>No assignments yet</b><p>Add one above — you can break any of them into small steps with AI.</p></div>';
+    return;
+  }
   var open=items.filter(function(i){return!i.done}),done=items.filter(function(i){return i.done});
   var byDue=function(a,b){return(a.due||'9999')<(b.due||'9999')?-1:1};
   open.sort(byDue);
   function block(list,heading){
     if(!list.length)return;
-    var h=document.createElement('h2');h.textContent=heading;L.appendChild(h);
+    var h=document.createElement('h2');h.className='sec';h.textContent=heading;L.appendChild(h);
+    var card=document.createElement('div');card.className='card';
     list.forEach(function(i){
       var di=dueInfo(i.due);
-      var card=document.createElement('div');card.className='item'+(i.done?' done':'')+(di.over&&!i.done?' overdue':'');
-      var top=document.createElement('div');top.className='top';
-      var chk=document.createElement('div');chk.className='chk'+(i.done?' on':'');chk.textContent=i.done?'✓':'';chk.onclick=function(){toggle(i.id)};
+      var row=document.createElement('div');row.className='item'+(i.done?' done':'')+(di.over&&!i.done?' late':'');
+      var chk=document.createElement('button');chk.type='button';chk.className='chk'+(i.done?' on':'');chk.setAttribute('aria-label',i.done?'Mark not done':'Mark done');
+      chk.innerHTML='<span>'+(i.done?icon('check'):'')+'</span>';chk.onclick=function(){toggle(i.id)};
       var body=document.createElement('div');body.className='body';
       var tt=document.createElement('div');tt.className='title';tt.textContent=i.title;body.appendChild(tt);
-      var meta=[];if(i.subj)meta.push(i.subj);
       var m=document.createElement('div');m.className='meta';
-      m.innerHTML=(i.subj?'<span>'+escapeHtml(i.subj)+'</span> · ':'')+'<span class="due '+di.cls+'">'+escapeHtml(di.txt||'No date')+'</span>';
+      m.innerHTML=(i.subj?'<span class="subj">'+esc(i.subj)+'</span>':'')+'<span class="due '+di.cls+'">'+esc(di.txt||'No date')+'</span>';
       body.appendChild(m);
       if(!i.done){
-        var tools=document.createElement('div');tools.className='tools';
-        var a=document.createElement('a');a.textContent=i.steps?'↻ Re-plan steps':'✨ Break into steps';a.onclick=function(){plan(i.id)};
-        tools.appendChild(a);body.appendChild(tools);
+        var b=document.createElement('button');b.type='button';b.className='tool';
+        if(planning===i.id){b.disabled=true;b.innerHTML='<i class="spin"></i>Breaking into steps…'}
+        else{b.innerHTML=i.steps?icon('again')+'Re-plan steps':icon('spark')+'Break into steps';b.disabled=!!planning}
+        b.onclick=function(){plan(i.id)};
+        body.appendChild(b);
       }
       if(i.steps&&i.steps.length){
         var st=document.createElement('div');st.className='steps';
         i.steps.forEach(function(s,si){
-          var r=document.createElement('div');r.className='s'+(s.done?' on':'');r.textContent=(s.done?'☑ ':'☐ ')+s.t;
+          var r=document.createElement('button');r.type='button';r.className='s'+(s.done?' on':'');
+          r.innerHTML='<span class="box">'+(s.done?icon('check'):'')+'</span><span>'+esc(s.t)+'</span>';
           r.onclick=function(){toggleStep(i.id,si)};st.appendChild(r);
         });
         body.appendChild(st);
       }
-      var x=document.createElement('button');x.className='del';x.textContent='✕';x.onclick=function(){del(i.id)};
-      top.appendChild(chk);top.appendChild(body);top.appendChild(x);
-      card.appendChild(top);L.appendChild(card);
+      var x=document.createElement('button');x.type='button';x.className='del';x.innerHTML=icon('x');x.setAttribute('aria-label','Delete assignment');x.onclick=function(){del(i.id)};
+      row.appendChild(chk);row.appendChild(body);row.appendChild(x);
+      card.appendChild(row);
     });
+    L.appendChild(card);
   }
   block(open,'To do');block(done,'Done');
 }
-function escapeHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 
+el('addBtn').onclick=add;
 // Add on Return from the keyboard — the on-screen keyboard would otherwise eat
 // the first tap on the Add button (you'd have to tap it twice).
 ['t','subj'].forEach(function(id){el(id).addEventListener('keydown',function(e){if(e.key==='Enter')add()})});
 
-store.getItem('items').then(function(v){
-  if(v)try{items=JSON.parse(v)}catch(e){}
+render();
+store().getItem('items').then(function(v){
+  if(v)try{items=JSON.parse(v)||[]}catch(e){}
   render();
 });
 </script></body></html>

@@ -3,45 +3,127 @@
   Habit Streaks — MyLLMos™ App Gallery · © 2026 Opticell Ltd
   Source-available: read it, remix it, run your version inside MyLLM™.
   Not for redistribution or republication. Terms: https://github.com/TeamDzX/myllm-assets/blob/main/LICENSE
---><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<style>:root{--build-id:"f4f010511c";color-scheme:light dark}
-body{font-family:-apple-system,system-ui,sans-serif;margin:0;padding:20px;background:#f2f2f7;color:#111}
-@media(prefers-color-scheme:dark){body{background:#000;color:#eee}.card{background:#1c1c1e}input{background:#2c2c2e;color:#eee;border-color:#3a3a3c}.done-btn.off{background:#3a3a3c;color:#aaa}}
-h1{font-size:22px;margin:0 0 14px}
-.row{display:flex;gap:8px;margin-bottom:14px}
-input{flex:1;padding:12px;border:1px solid #d1d1d6;border-radius:10px;font-size:16px;background:#fff}
-button{border:0;background:#ff9f0a;color:#fff;border-radius:10px;padding:0 16px;font-size:15px;font-weight:600}
-.card{background:#fff;border-radius:12px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px}
-.card b{flex:1;font-size:16px;font-weight:600}
-.streak{font-size:14px;opacity:.8}
-.done-btn{padding:8px 12px;border-radius:8px;font-size:14px}
-.done-btn.off{background:#d1d1d6;color:#555}
-.del{background:none;color:#ff453a;font-size:17px;padding:6px}
-.empty{text-align:center;opacity:.5;margin-top:30px}
-@media(min-width:768px){body{max-width:760px;margin-left:auto;margin-right:auto}}
+--><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Habit Streaks</title>
+<style>:root{--build-id:"f4f010511c";color-scheme:light dark;
+  --bg:var(--myllm-bg,#f2f2f7); --surface:var(--myllm-surface,#fff); --ink:var(--myllm-text,#111);
+  --muted:var(--myllm-muted,#8a8a8e); --line:var(--myllm-border,#e3e3e8); --acc:var(--myllm-accent,#0a84ff);
+  --fill:rgba(120,120,128,.12); --h:26; }
+@media (prefers-color-scheme:dark){ :root{ --bg:var(--myllm-bg,#000); --surface:var(--myllm-surface,#1c1c1e);
+  --ink:var(--myllm-text,#f2f2f7); --muted:var(--myllm-muted,#8e8e93); --line:var(--myllm-border,#2c2c2e); --fill:rgba(120,120,128,.24); } }
+  *{ margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body{ font-family:var(--myllm-font,-apple-system,system-ui,sans-serif); background:var(--bg); color:var(--ink);
+    max-width:600px; margin:0 auto; min-height:100dvh; font-size:15.5px; line-height:1.4;
+    padding:calc(16px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) calc(30px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left)); }
+  @media (min-width:768px){ body{ max-width:760px; } }
+  svg.i{ width:1.25em; height:1.25em; fill:currentColor; flex-shrink:0; }
+  button{ font:inherit; color:inherit; cursor:pointer; border:none; background:none; } button:active{ transform:scale(.96); }
+
+  .head{ display:flex; align-items:center; gap:12px; margin:2px 2px 14px; }
+  .tile{ display:flex; align-items:center; justify-content:center; color:#fff; flex-shrink:0;
+    background:linear-gradient(145deg, hsl(var(--h) 62% 50%), hsl(calc(var(--h) + 40) 58% 28%)); }
+  .head .tile{ width:44px; height:44px; border-radius:13px; font-size:19px; }
+  .head .ht{ flex:1; min-width:0; }
+  h1{ font-size:22px; font-weight:800; letter-spacing:-.01em; }
+  .head p{ font-size:13px; color:var(--muted); margin-top:1px; }
+  h2{ font-size:12px; font-weight:800; letter-spacing:.07em; text-transform:uppercase; color:var(--muted); margin:20px 2px 10px; }
+
+  .hero{ border-radius:20px; padding:16px 18px; color:#fff; margin-bottom:12px; display:flex; align-items:center; gap:16px;
+    background:linear-gradient(145deg, hsl(var(--h) 72% 50%), hsl(calc(var(--h) - 22) 66% 32%)); box-shadow:0 10px 28px hsl(var(--h) 60% 30% / .25); }
+  .hero .k{ font-size:11px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; opacity:.8; }
+  .hero .n{ font-size:44px; font-weight:800; line-height:1.05; letter-spacing:-.03em; font-variant-numeric:tabular-nums; }
+  .hero .n small{ font-size:22px; opacity:.7; font-weight:750; }
+  .hero .main{ flex:1; min-width:0; }
+  .hero .bar{ height:6px; border-radius:99px; background:rgba(255,255,255,.25); margin-top:8px; overflow:hidden; }
+  .hero .bar i{ display:block; height:100%; border-radius:99px; background:#fff; transition:width .35s cubic-bezier(.2,.8,.2,1); }
+  .hero .best{ flex-shrink:0; text-align:center; background:rgba(255,255,255,.16); border:1px solid rgba(255,255,255,.22); border-radius:16px; padding:10px 12px; min-width:84px; }
+  .hero .best b{ display:flex; align-items:center; justify-content:center; gap:4px; font-size:24px; font-weight:800; font-variant-numeric:tabular-nums; }
+  .hero .best em{ font-style:normal; }
+  .hero .best span{ display:block; font-size:10.5px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; opacity:.8; margin-top:1px; }
+
+  .card{ background:var(--surface); border:1px solid var(--line); border-radius:18px; padding:14px; margin-bottom:12px; }
+  .add{ display:flex; gap:8px; }
+  input{ flex:1; min-width:0; font:inherit; font-size:16px; padding:12px; border-radius:12px; border:1px solid var(--line); background:var(--bg); color:var(--ink); outline:none; }
+  input:focus{ border-color:var(--acc); }
+  .go{ flex-shrink:0; min-height:46px; border-radius:12px; background:var(--acc); color:#fff; font-weight:700; padding:0 16px; display:flex; align-items:center; gap:6px; }
+
+  .list{ display:grid; gap:8px; }
+  .list{ grid-template-columns:minmax(0,1fr); }
+  @media (min-width:768px){ .list{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
+  .habit{ display:flex; align-items:center; gap:12px; background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:10px 8px 10px 12px; }
+  .habit.on{ border-color:hsl(var(--h) 70% 55% / .7); }
+  .check{ width:44px; height:44px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center;
+    border:2.4px solid var(--line); color:transparent; font-size:18px; transition:background .2s, border-color .2s, color .2s; }
+  .habit.on .check{ background:hsl(var(--h) 72% 50%); border-color:hsl(var(--h) 72% 50%); color:#fff; }
+  .habit .nm{ flex:1; min-width:0; }
+  .habit .nm b{ display:block; font-size:16px; font-weight:650; overflow-wrap:anywhere; }
+  .habit .nm small{ display:flex; align-items:center; gap:4px; font-size:12.5px; color:var(--muted); margin-top:2px; font-variant-numeric:tabular-nums; }
+  .habit.on .nm small{ color:hsl(var(--h) 70% 42%); }
+  @media (prefers-color-scheme:dark){ .habit.on .nm small{ color:hsl(var(--h) 85% 64%); } }
+  .habit .nm small svg{ width:13px; height:13px; }
+  .del{ width:44px; height:44px; flex-shrink:0; color:var(--muted); display:flex; align-items:center; justify-content:center; font-size:14px; }
+
+  .empty{ text-align:center; padding:26px 20px 14px; }
+  .empty .tile{ width:48px; height:48px; border-radius:14px; font-size:21px; margin:0 auto 10px; opacity:.9; }
+  .empty b{ display:block; font-size:16px; font-weight:750; }
+  .empty p{ font-size:13.5px; color:var(--muted); line-height:1.5; max-width:280px; margin:5px auto 0; }
+  [hidden]{ display:none !important; }
+  @media (prefers-reduced-motion:reduce){ .hero .bar i, .check{ transition:none; } button:active{ transform:none; } }
 </style></head><body>
-<h1>🔥 Habit Streaks</h1>
-<div class="row"><input id="h" placeholder="New habit (e.g. Read 10 pages)"><button onclick="add()">Add</button></div>
-<div id="list"></div>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-flame" viewBox="0 0 24 24"><path d="M12.6 2.2c.4 2.8-.7 4.6-2 6.2-1.2 1.5-2.6 3-2.6 5.4a2.9 2.9 0 0 0 1.5 2.6c-.3-1.9.5-3.2 1.7-4.4.2 1.8 1.4 2.7 2.4 3.6.9.8 1.6 1.6 1.6 3.1A4.6 4.6 0 0 0 19 14.2c0-4.4-3.2-6.2-3.8-9.5-.3 1.3-.9 2.3-1.7 3 .3-2.4-.1-4.1-.9-5.5zM5.5 13.5c0 4.6 3 8.3 6.8 8.3-3.5-.4-6-3.5-5.9-7.2 0-.5 0-.9.1-1.4-.6.1-1 .1-1 .3z" fill="currentColor"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.6l4.6 4.6L19.2 7.4" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></symbol>
+</defs></svg>
+
+<div class="head">
+  <div class="tile"><svg class="i"><use href="#i-flame"/></svg></div>
+  <div class="ht"><h1>Habit Streaks</h1><p>Keep the flame alive</p></div>
+</div>
+
+<div class="hero" id="hero" hidden>
+  <div class="main"><div class="k">Today</div><div class="n" id="hDone">0<small>/0</small></div><div class="bar"><i id="hBar" style="width:0"></i></div></div>
+  <div class="best"><b><svg class="i" style="width:.8em;height:.8em"><use href="#i-flame"/></svg><em id="hBest">0</em></b><span>Top streak</span></div>
+</div>
+
+<div class="card"><div class="add"><input id="h" placeholder="New habit (e.g. Read 10 pages)" autocomplete="off" enterkeyhint="done"><button class="go" id="addBtn" type="button"><svg class="i"><use href="#i-plus"/></svg>Add</button></div></div>
+
+<h2 id="listLbl" hidden>Your habits</h2>
+<div class="list" id="list"></div>
+
 <script>
-var store=window.myllmStorage||{getItem:function(){return Promise.resolve(null)},setItem:function(){return Promise.resolve()}};
+function el(i){return document.getElementById(i)}
+/* Bridges are looked up when used, never kept: MyLLM can add them after this
+   script has run. */
+function store(){return window.myllmStorage||{getItem:function(){return Promise.resolve(null)},setItem:function(){return Promise.resolve()}}}
+function haptic(k){if(window.myllmHaptic)try{myllmHaptic(k)}catch(e){}}
 var habits=[];
 function today(){return new Date().toISOString().slice(0,10)}
-function save(){store.setItem('habits',JSON.stringify(habits))}
+function save(){store().setItem('habits',JSON.stringify(habits))}
 function streak(h){var n=0;var d=new Date();if(h.days.indexOf(today())<0)d.setDate(d.getDate()-1);
 while(h.days.indexOf(d.toISOString().slice(0,10))>=0){n++;d.setDate(d.getDate()-1)}return n}
-function render(){var L=document.getElementById('list');L.innerHTML='';
-if(!habits.length){L.innerHTML='<p class="empty">Add a habit, then tap Done each day to grow the streak.</p>';return}
-habits.forEach(function(h,i){var doneToday=h.days.indexOf(today())>=0;
-var d=document.createElement('div');d.className='card';
-var nm=document.createElement('b');nm.textContent=h.name;
-var st=document.createElement('span');st.className='streak';st.textContent='🔥 '+streak(h)+'d';
-var b=document.createElement('button');b.className='done-btn'+(doneToday?'':' off');b.textContent=doneToday?'Done ✓':'Done?';
-b.onclick=function(){if(doneToday)h.days=h.days.filter(function(x){return x!==today()});else h.days.push(today());save();render()};
-var x=document.createElement('button');x.className='del';x.textContent='✕';
-x.onclick=function(){habits.splice(i,1);save();render()};
-d.appendChild(nm);d.appendChild(st);d.appendChild(b);d.appendChild(x);L.appendChild(d)})}
-function add(){var t=document.getElementById('h');var v=t.value.trim();if(!v)return;habits.push({name:v,days:[]});t.value='';save();render()}
-document.getElementById('h').addEventListener('keydown',function(e){if(e.key==='Enter')add()});
-store.getItem('habits').then(function(v){if(v)try{habits=JSON.parse(v)}catch(e){}render()});
+function icon(n){return '<svg class="i"><use href="#i-'+n+'"/></svg>'}
+function render(){var L=el('list');L.innerHTML='';
+el('hero').hidden=!habits.length;el('listLbl').hidden=!habits.length;
+if(!habits.length){L.innerHTML='<div class="card empty"><div class="tile">'+icon('flame')+'</div><b>Start your first streak</b><p>Add a habit, then tick it off each day to grow the streak.</p></div>';return}
+var done=0,best=0;
+habits.forEach(function(h,i){var doneToday=h.days.indexOf(today())>=0,s=streak(h);if(doneToday)done++;if(s>best)best=s;
+var d=document.createElement('div');d.className='habit'+(doneToday?' on':'');
+var b=document.createElement('button');b.className='check';b.type='button';b.innerHTML=icon('check');
+b.setAttribute('aria-label',doneToday?'Done today — tap to undo':'Mark done today');b.setAttribute('aria-pressed',doneToday);
+b.onclick=function(){if(doneToday)h.days=h.days.filter(function(x){return x!==today()});else h.days.push(today());haptic(doneToday?'light':'success');save();render()};
+var nm=document.createElement('div');nm.className='nm';
+var t=document.createElement('b');t.textContent=h.name;nm.appendChild(t);
+var st=document.createElement('small');st.innerHTML=icon('flame')+'<span></span>';st.querySelector('span').textContent=s+(s===1?' day':' days')+(doneToday?' · done today':'');nm.appendChild(st);
+var x=document.createElement('button');x.className='del';x.type='button';x.innerHTML=icon('x');x.setAttribute('aria-label','Delete habit');
+x.onclick=function(){habits.splice(i,1);haptic('light');save();render()};
+d.appendChild(b);d.appendChild(nm);d.appendChild(x);L.appendChild(d)});
+el('hDone').innerHTML=done+'<small>/'+habits.length+'</small>';
+el('hBar').style.width=(habits.length?done/habits.length*100:0)+'%';
+el('hBest').textContent=best}
+function add(){var t=el('h');var v=t.value.trim();if(!v)return;habits.push({name:v,days:[]});t.value='';haptic('success');save();render()}
+el('addBtn').onclick=add;
+el('h').addEventListener('keydown',function(e){if(e.key==='Enter')add()});
+store().getItem('habits').then(function(v){if(v)try{habits=JSON.parse(v)}catch(e){}render()});
 </script></body></html>

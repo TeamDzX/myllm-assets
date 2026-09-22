@@ -4,7 +4,8 @@
   Source-available: read it, remix it, run your version inside MyLLM™.
   Not for redistribution or republication. Terms: https://github.com/TeamDzX/myllm-assets/blob/main/LICENSE
   Includes Leaflet (BSD-2-Clause) — see THIRD-PARTY.md.
---><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+--><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Near Me</title>
 <style>/* vendored: Leaflet 1.9.4 CSS — see libs/leaflet-1.9.4.css */
 /* required styles */
 
@@ -669,34 +670,101 @@ svg.leaflet-image-layer.leaflet-interactive path {
 	}
 
 </style>
-<style>:root{--build-id:"b512231196";color-scheme:light dark}
-*{box-sizing:border-box}
-body{font-family:var(--myllm-font,-apple-system,system-ui,sans-serif);margin:0;padding:16px;background:var(--myllm-bg,#f2f2f7);color:var(--myllm-text,#111)}
-h1{font-size:22px;margin:0 0 2px;display:flex;align-items:center;gap:8px}
-.sub{font-size:13px;color:var(--myllm-muted,#8a8a8e);margin:0 0 14px}
-#map{height:190px;border-radius:var(--myllm-radius,14px);margin-bottom:14px;display:none;background:#dfe3e8}
-.row{display:flex;gap:8px;margin-bottom:10px}
-input{flex:1;padding:12px;border:1px solid var(--myllm-border,#d1d1d6);border-radius:12px;font-size:16px;background:var(--myllm-surface,#fff);color:var(--myllm-text,#111)}
-button{border:0;background:var(--myllm-accent,#0a84ff);color:#fff;border-radius:12px;padding:0 16px;font-size:15px;font-weight:600}
-.chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;margin-bottom:8px;-webkit-overflow-scrolling:touch}
-.chip{flex:0 0 auto;background:var(--myllm-surface,#fff);border:1px solid var(--myllm-border,#d1d1d6);color:var(--myllm-text,#111);border-radius:999px;padding:8px 14px;font-size:14px;font-weight:600}
-.card{background:var(--myllm-surface,#fff);border-radius:14px;padding:12px 14px;margin-bottom:10px}
-.card .top{display:flex;align-items:baseline;gap:8px}
-.card .name{font-size:16px;font-weight:600;flex:1}
-.card .dist{font-size:13px;color:var(--myllm-accent,#0a84ff);font-weight:600;white-space:nowrap}
-.card .addr{font-size:13px;color:var(--myllm-muted,#8a8a8e);margin:4px 0 8px}
-.card .acts{display:flex;gap:8px}
-.card .acts a,.card .acts button{font-size:13px;font-weight:600;text-decoration:none;background:rgba(10,132,255,.12);color:var(--myllm-accent,#0a84ff);border-radius:9px;padding:7px 12px;display:inline-block}
-.note{text-align:center;color:var(--myllm-muted,#8a8a8e);font-size:14px;margin-top:26px;line-height:1.5;padding:0 10px}
-.spin{text-align:center;color:var(--myllm-muted,#8a8a8e);margin-top:24px}
-@media(min-width:768px){body{max-width:780px;margin-left:auto;margin-right:auto}#map{height:260px}}
+<style>:root{--build-id:"b512231196";color-scheme:light dark; --h:212;
+  --bg:var(--myllm-bg,#f2f2f7); --surface:var(--myllm-surface,#fff); --ink:var(--myllm-text,#111);
+  --muted:var(--myllm-muted,#8a8a8e); --line:var(--myllm-border,#e3e3e8); --acc:var(--myllm-accent,#0a84ff);
+  --fill:rgba(120,120,128,.12); }
+@media (prefers-color-scheme:dark){ :root{ --bg:var(--myllm-bg,#000); --surface:var(--myllm-surface,#1c1c1e);
+  --ink:var(--myllm-text,#f2f2f7); --muted:var(--myllm-muted,#8e8e93); --line:var(--myllm-border,#2c2c2e); --fill:rgba(120,120,128,.24); } }
+  *{ margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body{ font-family:var(--myllm-font,-apple-system,system-ui,sans-serif); background:var(--bg); color:var(--ink);
+    max-width:600px; margin:0 auto; min-height:100dvh; font-size:15.5px; line-height:1.4;
+    padding:calc(16px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) calc(30px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left)); }
+  @media (min-width:768px){ body{ max-width:760px; } }
+  svg.i{ width:1.25em; height:1.25em; fill:currentColor; flex-shrink:0; }
+  button{ font:inherit; color:inherit; cursor:pointer; } button:active{ transform:scale(.96); }
+  a{ color:inherit; }
+
+  .head{ display:flex; align-items:center; gap:12px; margin:2px 2px 14px; }
+  .tile{ display:flex; align-items:center; justify-content:center; color:#fff; flex-shrink:0;
+    background:linear-gradient(145deg, hsl(var(--h) 62% 50%), hsl(calc(var(--h) + 40) 58% 28%)); }
+  .head .tile{ width:44px; height:44px; border-radius:13px; font-size:19px; }
+  .head .ht{ flex:1; min-width:0; }
+  h1{ font-size:22px; font-weight:800; letter-spacing:-.01em; }
+  .head p{ font-size:13px; color:var(--muted); margin-top:1px; }
+  .head .acts{ display:flex; gap:8px; flex-shrink:0; }
+  .head .acts button{ min-width:40px; height:40px; border-radius:12px; border:1px solid var(--line); background:var(--surface);
+    display:flex; align-items:center; justify-content:center; gap:6px; padding:0 10px; font-size:13.5px; font-weight:650; }
+  h2{ font-size:12px; font-weight:800; letter-spacing:.07em; text-transform:uppercase; color:var(--muted); margin:20px 2px 10px; display:flex; align-items:center; gap:6px; }
+
+  .card{ background:var(--surface); border:1px solid var(--line); border-radius:18px; padding:14px; margin-bottom:12px; }
+  label{ display:block; font-size:12px; font-weight:800; letter-spacing:.07em; text-transform:uppercase; color:var(--muted); margin:14px 2px 7px; }
+  label:first-child{ margin-top:0; }
+  input{ width:100%; font:inherit; font-size:16px; padding:12px; border-radius:12px; border:1px solid var(--line); background:var(--bg); color:var(--ink); outline:none; }
+  input:focus{ border-color:var(--acc); }
+  .field{ position:relative; } .field svg.i{ position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--muted); font-size:15px; pointer-events:none; }
+  .field input{ padding-left:38px; }
+  .inrow{ display:flex; gap:8px; } .inrow input{ flex:1; min-width:0; }
+  .chips{ display:flex; gap:7px; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none; margin:10px -14px 0; padding:0 14px 2px; }
+  .chips::-webkit-scrollbar{ display:none; }
+  .chip{ flex:0 0 auto; min-height:36px; border:1px solid var(--line); background:var(--bg); border-radius:99px; padding:0 14px; font-size:13.5px; font-weight:650; white-space:nowrap; }
+  .chip.hot{ background:var(--acc); border-color:var(--acc); color:#fff; }
+  .go{ min-height:48px; border:none; border-radius:14px; background:var(--acc); color:#fff; font-size:16px; font-weight:700;
+    display:flex; align-items:center; justify-content:center; gap:8px; padding:0 18px; }
+  .go.wide{ width:100%; margin-top:14px; }
+  .go.soft{ background:var(--fill); color:var(--acc); }
+  .go:disabled{ opacity:.55; }
+  .pillbtn{ display:inline-flex; align-items:center; gap:6px; min-height:36px; border:none; border-radius:10px; padding:0 12px;
+    background:hsl(var(--h) 70% 50% / .13); color:hsl(var(--h) 70% 38%); font-size:13.5px; font-weight:700; text-decoration:none; }
+  @media (prefers-color-scheme:dark){ .pillbtn{ color:hsl(var(--h) 80% 70%); } }
+  .spin{ width:16px; height:16px; border-radius:50%; border:2.4px solid currentColor; border-right-color:transparent; animation:spin .8s linear infinite; flex-shrink:0; }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+  .skel{ border-radius:16px; margin-bottom:10px; background:var(--fill); animation:shimmer 1.4s ease-in-out infinite; }
+  @keyframes shimmer{ 50%{ opacity:.45; } }
+
+  .notice{ display:flex; gap:12px; align-items:flex-start; background:var(--surface); border:1px solid var(--line); border-radius:18px; padding:14px; margin-bottom:12px; }
+  .notice .tile{ width:36px; height:36px; border-radius:10px; font-size:16px; }
+  .notice.warn .tile{ background:linear-gradient(145deg,#ff9f0a,#c25e00); }
+  .notice b{ display:block; font-size:15px; font-weight:750; }
+  .notice p{ font-size:13.5px; color:var(--muted); line-height:1.45; margin-top:2px; }
+  .notice p b{ display:inline; font-size:inherit; font-weight:700; color:var(--ink); }
+  .notice .go{ margin-top:10px; min-height:40px; font-size:14.5px; border-radius:12px; }
+  .hint{ text-align:center; font-size:13px; color:var(--muted); line-height:1.5; padding:18px 12px 6px; }
+
+  [hidden]{ display:none !important; }
+  @media (prefers-reduced-motion:reduce){ .spin{ animation-duration:2.4s; } .skel{ animation:none; } button:active{ transform:none; } }
+
+  #map{ height:200px; border-radius:18px; margin-bottom:12px; border:1px solid var(--line); background:var(--fill); overflow:hidden; }
+  @media (min-width:768px) and (min-height:600px){ #map{ height:280px; } }
+  @media (max-height:520px){ #map{ height:150px; } }
+  .res{ background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:12px 13px; margin-bottom:9px; }
+  .res .top{ display:flex; align-items:center; gap:10px; }
+  .res .num{ width:28px; height:28px; border-radius:9px; font-size:13px; font-weight:800; font-variant-numeric:tabular-nums; }
+  .res .name{ flex:1; min-width:0; font-size:16px; font-weight:700; line-height:1.3; overflow-wrap:anywhere; }
+  .res .d{ font-size:12.5px; font-weight:800; font-variant-numeric:tabular-nums; white-space:nowrap; color:hsl(var(--h) 70% 40%); }
+  @media (prefers-color-scheme:dark){ .res .d{ color:hsl(var(--h) 80% 70%); } }
+  .res .addr{ font-size:13px; color:var(--muted); margin:3px 0 10px 38px; }
+  .res .acts{ display:flex; gap:8px; margin-left:38px; }
 </style></head><body>
-<h1>📍 Near Me</h1>
-<p class="sub" id="here">Finding your location…</p>
-<div id="map"></div>
-<div class="chips" id="chips"></div>
-<div class="row"><input id="q" placeholder="Search places…"><button onclick="go()">Go</button></div>
-<div id="results"><p class="spin">…</p></div>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 2a7 7 0 0 0-7 7c0 5.2 6.1 12.2 6.4 12.5a.8.8 0 0 0 1.2 0C12.9 21.2 19 14.2 19 9a7 7 0 0 0-7-7zm0 9.6a2.6 2.6 0 1 1 0-5.2 2.6 2.6 0 0 1 0 5.2z" fill="currentColor"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M15.5 15.5L20 20" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></symbol>
+  <symbol id="i-dir" viewBox="0 0 24 24"><path d="M11.3 2.7a1 1 0 0 1 1.4 0l8.6 8.6a1 1 0 0 1 0 1.4l-8.6 8.6a1 1 0 0 1-1.4 0l-8.6-8.6a1 1 0 0 1 0-1.4zM13 8.5v2.2H9.5a1 1 0 0 0-1 1V15h2v-2.3H13v2.2l3.2-3.2z" fill="currentColor" fill-rule="evenodd"/></symbol>
+  <symbol id="i-share" viewBox="0 0 24 24"><path d="M12 3v12M7.5 7.5L12 3l4.5 4.5M5 12v6.5A1.5 1.5 0 0 0 6.5 20h11a1.5 1.5 0 0 0 1.5-1.5V12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-warn" viewBox="0 0 24 24"><path d="M10.3 3.9a2 2 0 0 1 3.4 0l8 13.6a2 2 0 0 1-1.7 3H4a2 2 0 0 1-1.7-3zM12 9a1 1 0 0 0-1 1v4a1 1 0 0 0 2 0v-4a1 1 0 0 0-1-1zm0 7.2a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 0 0 0-2.4z" fill="currentColor"/></symbol>
+</defs></svg>
+
+<div class="head">
+  <div class="tile"><svg class="i"><use href="#i-pin"/></svg></div>
+  <div class="ht"><h1>Near Me</h1><p id="here">Finding your location…</p></div>
+</div>
+<div id="map" hidden></div>
+<div class="card">
+  <div class="inrow"><div class="field" style="flex:1"><svg class="i"><use href="#i-search"/></svg><input id="q" placeholder="Search places…" autocomplete="off" enterkeyhint="search"></div>
+    <button class="go" type="button" id="bGo">Go</button></div>
+  <div class="chips" id="chips"></div>
+</div>
+<div id="results"></div>
 
 <script>/* vendored: Leaflet 1.9.4 — see libs/leaflet-1.9.4.js */
 /* @preserve
@@ -708,9 +776,12 @@ button{border:0;background:var(--myllm-accent,#0a84ff);color:#fff;border-radius:
 </script>
 <script>
 // Defensive bridge access — degrade gracefully if the host is older or the
-// "Allow apps to use your location" setting is off.
-var LOC = window.myllmLocation || null;
-var haptic = window.myllmHaptic || function(){};
+// "Allow apps to use your location" setting is off. Looked up when used,
+// never kept: MyLLM can add bridges after this script has run.
+function LOC(){ return window.myllmLocation || null; }
+function haptic(k){ if(window.myllmHaptic){ try{ myllmHaptic(k); }catch(_){} } }
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function icon(n){ return '<svg class="i"><use href="#i-'+n+'"/></svg>'; }
 var here = null;           // {latitude, longitude, address}
 var map = null, layer = null;
 var CATS = [
@@ -720,6 +791,7 @@ var CATS = [
   {label:'🅿️ Parking', q:'parking'}, {label:'🍺 Bars', q:'bar'},
   {label:'🏨 Hotels', q:'hotel'}, {label:'🏞 Parks', q:'park'}
 ];
+var PIN = '#0a84ff', HIT = '#ff453a';
 
 function el(id){return document.getElementById(id)}
 
@@ -728,22 +800,27 @@ function dist(m){
   if(m<1000) return Math.round(m)+' m';
   return (m/1000).toFixed(m<10000?1:0)+' km';
 }
+function notice(kind, title, text){
+  el('results').innerHTML='<div class="notice'+(kind==='warn'?' warn':'')+'"><div class="tile">'+icon(kind==='warn'?'warn':'pin')+'</div>'+
+    '<div style="flex:1;min-width:0"><b>'+esc(title)+'</b><p>'+text+'</p></div></div>';
+}
 
 function chips(){
   var c=el('chips');
   CATS.forEach(function(cat){
-    var b=document.createElement('button');b.className='chip';b.textContent=cat.label;
+    var b=document.createElement('button');b.type='button';b.className='chip';b.textContent=cat.label;b.dataset.q=cat.q;
     b.onclick=function(){haptic('selection');el('q').value=cat.q;go()};
     c.appendChild(b);
   });
 }
+function markChip(q){ [].forEach.call(el('chips').children,function(c){ c.classList.toggle('hot',c.dataset.q===q); }); }
 
 function ensureMap(){
   if(map||typeof L==='undefined'||!here) return;
-  el('map').style.display='block';
+  el('map').hidden=false;
   map=L.map('map',{attributionControl:false,zoomControl:false}).setView([here.latitude,here.longitude],14);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(map);
-  L.circleMarker([here.latitude,here.longitude],{radius:7,color:'#fff',weight:2,fillColor:'#0a84ff',fillOpacity:1}).addTo(map);
+  L.circleMarker([here.latitude,here.longitude],{radius:7,color:'#fff',weight:2,fillColor:PIN,fillOpacity:1}).addTo(map);
 }
 
 function plot(places){
@@ -752,7 +829,7 @@ function plot(places){
   layer=L.layerGroup().addTo(map);
   var pts=[[here.latitude,here.longitude]];
   places.forEach(function(p){
-    L.circleMarker([p.latitude,p.longitude],{radius:6,color:'#fff',weight:2,fillColor:'#ff3b30',fillOpacity:1})
+    L.circleMarker([p.latitude,p.longitude],{radius:6,color:'#fff',weight:2,fillColor:HIT,fillOpacity:1})
       .bindPopup(p.name).addTo(layer);
     pts.push([p.latitude,p.longitude]);
   });
@@ -761,52 +838,58 @@ function plot(places){
 
 function render(places){
   var R=el('results');R.innerHTML='';
-  if(!places.length){R.innerHTML='<p class="note">No places found. Try another search.</p>';return}
-  places.forEach(function(p){
-    var d=document.createElement('div');d.className='card';
+  if(!places.length){notice('warn','No places found','Try another search, or pick a category above.');return}
+  R.innerHTML='<h2>'+places.length+(places.length===1?' place':' places')+' nearby</h2>';
+  places.forEach(function(p,i){
+    var d=document.createElement('div');d.className='res';
     var dest=p.latitude+','+p.longitude;
-    d.innerHTML='<div class="top"><div class="name"></div><div class="dist">'+dist(p.distance)+'</div></div>'+
+    d.innerHTML='<div class="top"><span class="tile num">'+(i+1)+'</span><div class="name"></div><div class="d">'+dist(p.distance)+'</div></div>'+
       '<div class="addr"></div>'+
-      '<div class="acts"><a href="https://maps.apple.com/?daddr='+dest+'&dirflg=w">Directions</a>'+
-      '<button class="sh">Share</button></div>';
+      '<div class="acts"><a class="pillbtn" href="https://maps.apple.com/?daddr='+dest+'&dirflg=w">'+icon('dir')+'Directions</a>'+
+      (window.myllmShare?'<button type="button" class="pillbtn sh">'+icon('share')+'Share</button>':'')+'</div>';
     d.querySelector('.name').textContent=(p.category?'':'')+p.name;
     d.querySelector('.addr').textContent=p.address||'';
-    d.querySelector('.sh').onclick=function(){haptic('light');
+    var sh=d.querySelector('.sh');
+    if(sh) sh.onclick=function(){haptic('light');
       if(window.myllmShare) myllmShare(p.name+(p.address?' — '+p.address:'')+'\nhttps://maps.apple.com/?q='+dest)};
     R.appendChild(d);
   });
 }
 
 function go(){
-  var q=el('q').value.trim();
-  if(!q||!LOC) return;
-  haptic('light');
-  el('results').innerHTML='<p class="spin">Searching…</p>';
+  var q=el('q').value.trim(), loc=LOC();
+  if(!q||!loc) return;
+  haptic('light'); markChip(q);
+  el('results').innerHTML='<h2>Searching…</h2><div class="skel" style="height:98px"></div><div class="skel" style="height:98px"></div><div class="skel" style="height:98px"></div>';
   var opts=here?{}:{near:el('q').dataset.near||''};
-  LOC.search(q,opts).then(function(list){
+  loc.search(q,opts).then(function(list){
     list=list||[];
     list.sort(function(a,b){return (a.distance||1e12)-(b.distance||1e12)});
     render(list);plot(list);
   }).catch(function(e){
-    el('results').innerHTML='<p class="note">'+(e&&e.message?e.message:'Search failed')+'</p>';
+    notice('warn','Search didn’t work',esc(e&&e.message?e.message:'Search failed')+' — try again in a moment.');
   });
 }
 
 function start(){
   chips();
-  if(!LOC){
+  el('bGo').onclick=go;
+  el('q').addEventListener('keydown',function(e){ if(e.key==='Enter') go(); });
+  var loc=LOC();
+  if(!loc){
     el('here').textContent='Location unavailable';
-    el('results').innerHTML='<p class="note">This needs the latest MyLLM with <b>Settings → Allow apps to use your location</b> turned on. You can still search by typing a place name and a category.</p>';
+    notice('warn','Location is off','This needs the latest MyLLM with <b>Settings → Allow apps to use your location</b> turned on. You can still search by typing a place name and a category.');
     return;
   }
-  LOC.current().then(function(p){
+  el('results').innerHTML='<p class="hint">Finding where you are…</p>';
+  loc.current().then(function(p){
     here=p;
     el('here').textContent=p.address?('Near '+p.address):'Got your location';
     ensureMap();
-    el('results').innerHTML='<p class="note">Pick a category above or search to see what\'s nearby.</p>';
+    el('results').innerHTML='<p class="hint">Pick a category above or search to see what\'s nearby.</p>';
   }).catch(function(e){
     el('here').textContent='Location off';
-    el('results').innerHTML='<p class="note">'+(e&&e.message?e.message:'Couldn\'t get your location')+'<br>Turn on <b>Settings → Allow apps to use your location</b>, then reopen.</p>';
+    notice('warn','Couldn’t get your location',esc(e&&e.message?e.message:'Location isn’t available')+'<br>Turn on <b>Settings → Allow apps to use your location</b>, then reopen.');
   });
 }
 start();

@@ -3,55 +3,127 @@
   Fridge Chef — MyLLMos™ App Gallery · © 2026 Opticell Ltd
   Source-available: read it, remix it, run your version inside MyLLM™.
   Not for redistribution or republication. Terms: https://github.com/TeamDzX/myllm-assets/blob/main/LICENSE
---><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<style>:root{--build-id:"62148eb5a3";color-scheme:light dark}
-*{box-sizing:border-box}
-body{font-family:var(--myllm-font,-apple-system,system-ui,sans-serif);margin:0;padding:16px;background:var(--myllm-bg,#f2f2f7);color:var(--myllm-text,#111)}
-h1{font-size:22px;margin:0 0 2px}
-.sub{font-size:13px;color:var(--myllm-muted,#8a8a8e);margin:0 0 18px}
-.tile{width:100%;border:0;border-radius:16px;padding:20px;font-size:18px;font-weight:700;color:#fff;background:linear-gradient(135deg,#ff9500,#ff5e3a);text-align:center}
-.tile span{font-size:30px;display:block;margin-bottom:6px}
-.answer{background:var(--myllm-surface,#fff);border-radius:16px;padding:16px;margin-top:14px}
-.answer h2{font-size:17px;margin:0 0 8px}
-.answer p{font-size:16px;line-height:1.55;white-space:pre-wrap;margin:0}
-.answer button{margin-top:14px;width:100%;border:0;border-radius:10px;padding:11px;font-size:14px;font-weight:600;background:rgba(255,149,0,.16);color:#c2410c}
-.note{color:var(--myllm-muted,#8a8a8e);font-size:14px;text-align:center;margin-top:18px;line-height:1.5;padding:0 6px}
-@media(min-width:768px){body{max-width:680px;margin-left:auto;margin-right:auto}}
+--><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Fridge Chef</title>
+<style>:root{--build-id:"62148eb5a3";color-scheme:light dark;
+  --bg:var(--myllm-bg,#f2f2f7); --surface:var(--myllm-surface,#fff); --ink:var(--myllm-text,#111);
+  --muted:var(--myllm-muted,#8a8a8e); --line:var(--myllm-border,#e3e3e8); --acc:var(--myllm-accent,#0a84ff);
+  --fill:rgba(120,120,128,.12); --h:28; }
+@media (prefers-color-scheme:dark){ :root{ --bg:var(--myllm-bg,#000); --surface:var(--myllm-surface,#1c1c1e);
+  --ink:var(--myllm-text,#f2f2f7); --muted:var(--myllm-muted,#8e8e93); --line:var(--myllm-border,#2c2c2e); --fill:rgba(120,120,128,.24); } }
+  *{ margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body{ font-family:var(--myllm-font,-apple-system,system-ui,sans-serif); background:var(--bg); color:var(--ink);
+    max-width:600px; margin:0 auto; min-height:100dvh; font-size:15.5px; line-height:1.4;
+    padding:calc(16px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) calc(30px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left)); }
+  @media (min-width:768px){ body{ max-width:680px; } }
+  svg.i{ width:1.25em; height:1.25em; fill:currentColor; flex-shrink:0; }
+  button{ font:inherit; color:inherit; cursor:pointer; } button:active{ transform:scale(.96); }
+
+  .head{ display:flex; align-items:center; gap:12px; margin:2px 2px 14px; }
+  .tile{ display:flex; align-items:center; justify-content:center; color:#fff; flex-shrink:0;
+    background:linear-gradient(145deg, hsl(var(--h) 90% 52%), hsl(calc(var(--h) - 22) 80% 44%)); }
+  .head .tile{ width:44px; height:44px; border-radius:13px; font-size:19px; }
+  .head .ht{ flex:1; min-width:0; }
+  h1{ font-size:22px; font-weight:800; letter-spacing:-.01em; }
+  .head p{ font-size:13px; color:var(--muted); margin-top:1px; }
+
+  .snap{ width:100%; border:0; border-radius:20px; padding:22px 18px; color:#fff; text-align:left; display:flex; align-items:center; gap:14px;
+    background:linear-gradient(145deg, hsl(var(--h) 92% 54%), hsl(calc(var(--h) - 22) 82% 46%)); box-shadow:0 12px 30px hsl(var(--h) 80% 40% / .3); }
+  .snap .cam{ width:56px; height:56px; border-radius:18px; background:rgba(255,255,255,.2); border:1px solid rgba(255,255,255,.3);
+    display:flex; align-items:center; justify-content:center; font-size:24px; flex-shrink:0; }
+  .snap b{ display:block; font-size:19px; font-weight:800; letter-spacing:-.01em; }
+  .snap span{ display:block; font-size:13px; opacity:.88; margin-top:2px; }
+  .note{ font-size:12.5px; color:var(--muted); text-align:center; line-height:1.5; margin:12px 8px 0; }
+
+  .card{ background:var(--surface); border:1px solid var(--line); border-radius:18px; padding:16px; margin-top:12px; }
+  .card .top{ display:flex; align-items:center; gap:11px; margin-bottom:10px; }
+  .card .top .tile{ width:36px; height:36px; border-radius:10px; font-size:15px; }
+  .card .top b{ font-size:17px; font-weight:750; }
+  .answer{ font-size:16px; line-height:1.6; white-space:pre-wrap; overflow-wrap:anywhere; }
+  .go{ width:100%; min-height:48px; margin-top:14px; border:none; border-radius:14px; font-size:15.5px; font-weight:700;
+    display:flex; align-items:center; justify-content:center; gap:8px; background:hsl(var(--h) 90% 50% / .14); color:hsl(var(--h) 85% 34%); }
+  @media (prefers-color-scheme:dark){ .go{ color:hsl(var(--h) 95% 62%); } }
+
+  .busy .top b{ display:flex; align-items:center; gap:9px; }
+  .spin{ width:16px; height:16px; border-radius:50%; border:2.4px solid currentColor; border-right-color:transparent; animation:spin .8s linear infinite; flex-shrink:0; }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+  .skel{ height:14px; border-radius:7px; background:var(--fill); margin-top:10px; animation:shimmer 1.4s ease-in-out infinite; }
+  .skel.w8{ width:80%; } .skel.w6{ width:60%; } .skel.w9{ width:92%; }
+  @keyframes shimmer{ 50%{ opacity:.45; } }
+  .warn{ display:flex; gap:10px; align-items:flex-start; }
+  .warn svg{ color:#ff9f0a; margin-top:2px; font-size:18px; }
+  .warn p{ font-size:14.5px; line-height:1.5; }
+  .warn p b{ display:block; font-size:15.5px; margin-bottom:2px; }
+
+  [hidden]{ display:none !important; }
+  @media (prefers-reduced-motion:reduce){ .spin{ animation-duration:2.4s; } .skel{ animation:none; } button:active{ transform:none; } }
 </style></head><body>
-<h1>🍳 Fridge Chef</h1>
-<p class="sub">Snap what's in your fridge and get recipe ideas from it.</p>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-fork" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3v6a2 2 0 0 0 4 0V3M9 11v10"/><path d="M17 21V3c-2 1.2-3 3.8-3 7.5h3"/></g></symbol>
+  <symbol id="i-cam" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 8.5A1.5 1.5 0 0 1 5.5 7H8l1.5-2h5L16 7h2.5A1.5 1.5 0 0 1 20 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 17.5z"/><circle cx="12" cy="13" r="3.5"/></g></symbol>
+  <symbol id="i-warn" viewBox="0 0 24 24"><path d="M10.3 3.9a2 2 0 0 1 3.4 0l8 13.6a2 2 0 0 1-1.7 3H4a2 2 0 0 1-1.7-3zM12 9a1 1 0 0 0-1 1v4a1 1 0 0 0 2 0v-4a1 1 0 0 0-1-1zm0 7.2a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 0 0 0-2.4z" fill="currentColor"/></symbol>
+</defs></svg>
+
+<div class="head">
+  <div class="tile"><svg class="i"><use href="#i-fork"/></svg></div>
+  <div class="ht"><h1>Fridge Chef</h1><p>Snap what's in your fridge and get recipe ideas from it</p></div>
+</div>
+
 <div id="home">
-  <button class="tile" onclick="cook()"><span>📸</span>Snap my fridge</button>
+  <button class="snap" id="snapBtn" type="button">
+    <span class="cam"><svg class="i"><use href="#i-cam"/></svg></span>
+    <span><b>Snap my fridge</b><span>Or your cupboard — whatever you've got</span></span>
+  </button>
   <p class="note" id="hint">Uses your camera and your AI, privately on your device. Needs the latest MyLLM with “Allow apps to use the AI” on.</p>
 </div>
 <div id="out"></div>
 
 <script>
-var VISION = window.myllmVision || null;
-var haptic = window.myllmHaptic || function(){};
+function el(id){return document.getElementById(id)}
+/* Bridges are looked up when used, never kept: MyLLM can add them after this
+   script has run. */
+function haptic(k){if(window.myllmHaptic)try{myllmHaptic(k)}catch(e){}}
 
 var PROMPT = 'You are a resourceful home cook. Look at this photo of fridge or pantry contents and list the main ingredients you can identify. Then suggest 3 quick recipes I could make mostly from them, each as a title plus a one-line description. Keep it concise and practical; note if a common staple is assumed.';
 
-function el(id){return document.getElementById(id)}
+function icon(n){return '<svg class="i"><use href="#i-'+n+'"/></svg>'}
+function card(html){el('out').innerHTML='';var d=document.createElement('div');d.className='card';d.innerHTML=html;el('out').appendChild(d);return d}
+function home(){el('out').innerHTML='';el('home').hidden=false}
 
 function cook(){
-  if(!VISION){ el('hint').textContent='This needs the latest MyLLM with “Allow apps to use the AI” enabled in Settings.'; return; }
+  var VISION=window.myllmVision;
+  if(!VISION){
+    var d=card('<div class="warn">'+icon('warn')+'<p><b>Your AI can’t see photos here yet</b>This needs the latest MyLLM with “Allow apps to use the AI” enabled in Settings.</p></div>');
+    return;
+  }
   haptic('light');
+  /* The camera opens over the page; this card waits underneath for the answer. */
+  el('home').hidden=true;
+  card('<div class="busy"><div class="top"><div class="tile">'+icon('fork')+'</div><b><i class="spin"></i>Looking at your photo…</b></div>'+
+    '<div class="skel w9"></div><div class="skel w8"></div><div class="skel w6"></div><div class="skel w8"></div></div>');
   VISION(PROMPT).then(function(answer){
-    if(answer == null) return; // cancelled
+    if(answer == null){ home(); return; } // cancelled
     show(answer);
   }).catch(function(e){
-    show((e && e.message) ? e.message : 'Something went wrong.');
+    fail((e && e.message) ? e.message : 'Something went wrong.');
   });
 }
 
 function show(text){
-  el('home').style.display='none';
-  var d = document.createElement('div'); d.className='answer';
-  d.innerHTML='<h2>🍳 What you can cook</h2><p></p><button>← Snap again</button>';
-  d.querySelector('p').textContent = text;
-  d.querySelector('button').onclick = function(){ el('out').innerHTML=''; el('home').style.display='block'; };
-  el('out').innerHTML=''; el('out').appendChild(d);
+  el('home').hidden=true;
+  var d=card('<div class="top"><div class="tile">'+icon('fork')+'</div><b>What you can cook</b></div><div class="answer"></div>'+
+    '<button class="go" type="button">'+icon('cam')+'Snap again</button>');
+  d.querySelector('.answer').textContent = text;
+  d.querySelector('button').onclick = function(){ home(); cook(); };
+  haptic('success');
   window.scrollTo(0,0);
 }
+function fail(msg){
+  el('home').hidden=true;
+  var d=card('<div class="warn">'+icon('warn')+'<p><b>Couldn’t read that photo</b><span></span></p></div>'+
+    '<button class="go" type="button">'+icon('cam')+'Try again</button>');
+  d.querySelector('.warn span').textContent=msg;
+  d.querySelector('button').onclick=function(){ home(); cook(); };
+}
+el('snapBtn').onclick=cook;
 </script></body></html>

@@ -8,152 +8,252 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Study Buddy</title>
-<style>
-  :root { color-scheme: light dark; }
-  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-  body{
-    font-family:var(--myllm-font,-apple-system,system-ui,sans-serif);
-    background:var(--myllm-bg,#f2f2f7);
-    color:var(--myllm-text,#111);
-    max-width:640px; margin:0 auto; min-height:100dvh;
-    padding:14px 14px calc(30px + env(safe-area-inset-bottom));
-  }
-  h1{ font-size:22px; font-weight:800; margin:4px 2px 2px; }
-  .statline{ font-size:13px; color:var(--myllm-muted,#8a8a8e); margin:0 2px 12px; }
-  .card{
-    background:var(--myllm-surface,#fff); border:1px solid var(--myllm-border,#e3e3e8);
-    border-radius:16px; padding:14px; margin-bottom:12px;
-  }
-  label{ display:block; font-size:11.5px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; color:var(--myllm-muted,#8a8a8e); margin-bottom:7px; }
-  textarea{
-    width:100%; min-height:160px; font-size:15px; line-height:1.5; padding:12px; resize:vertical;
-    border-radius:12px; border:1px solid var(--myllm-border,#e3e3e8);
-    background:var(--myllm-bg,#f2f2f7); color:var(--myllm-text,#111); font-family:inherit;
-  }
-  .go{
-    width:100%; border:none; border-radius:13px; padding:15px; margin-top:12px;
-    font-size:16px; font-weight:750; background:#5e5ce6; color:#fff;
-  }
-  .go:disabled{ opacity:.5; }
-  .hint{ font-size:12.5px; color:var(--myllm-muted,#8a8a8e); margin-top:9px; line-height:1.5; }
+<style>:root{--build-id:"c51f394801";color-scheme:light dark;
+  --bg:var(--myllm-bg,#f2f2f7); --surface:var(--myllm-surface,#fff); --ink:var(--myllm-text,#111);
+  --muted:var(--myllm-muted,#8a8a8e); --line:var(--myllm-border,#e3e3e8); --acc:var(--myllm-accent,#0a84ff);
+  --fill:rgba(120,120,128,.12); --h:248; }
+@media (prefers-color-scheme:dark){ :root{ --bg:var(--myllm-bg,#000); --surface:var(--myllm-surface,#1c1c1e);
+  --ink:var(--myllm-text,#f2f2f7); --muted:var(--myllm-muted,#8e8e93); --line:var(--myllm-border,#2c2c2e); --fill:rgba(120,120,128,.24); } }
+  *{ margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body{ font-family:var(--myllm-font,-apple-system,system-ui,sans-serif); background:var(--bg); color:var(--ink); min-height:100dvh; font-size:15.5px; line-height:1.4; }
+  body.lock{ overflow:hidden; }
+  .home{ max-width:600px; margin:0 auto;
+    padding:calc(16px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) calc(30px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left)); }
+  @media (min-width:768px){ .home{ max-width:760px; } }
+  svg.i{ width:1.25em; height:1.25em; fill:currentColor; flex-shrink:0; }
+  button{ font:inherit; color:inherit; cursor:pointer; } button:active{ transform:scale(.96); }
+  [hidden]{ display:none !important; }
 
-  /* quiz */
-  #quiz{ display:none; }
-  .qtop{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px; }
-  .qtop b{ font-size:14px; }
-  .qtop span{ font-size:13px; color:var(--myllm-muted,#8a8a8e); font-variant-numeric:tabular-nums; }
-  .qbar{ height:6px; border-radius:99px; background:var(--myllm-bg,#f2f2f7); overflow:hidden; margin-bottom:14px; }
-  .qbar div{ height:100%; border-radius:99px; background:#5e5ce6; transition:width .25s; }
-  .qtext{ font-size:18px; font-weight:750; line-height:1.4; margin-bottom:14px; }
-  .opt{
-    width:100%; text-align:left; border:1.5px solid var(--myllm-border,#e3e3e8);
-    background:var(--myllm-bg,#f2f2f7); color:var(--myllm-text,#111);
-    border-radius:13px; padding:13px 14px; font-size:15px; font-weight:600; margin-bottom:9px;
-    font-family:inherit; line-height:1.35;
-  }
-  .opt.correct{ border-color:#30a14e; background:rgba(48,161,78,.14); }
-  .opt.wrong{ border-color:#ff3b30; background:rgba(255,59,48,.12); }
-  .opt:disabled{ opacity:.92; }
-  .why{
-    display:none; font-size:13.5px; line-height:1.5; color:var(--myllm-muted,#8a8a8e);
-    background:var(--myllm-bg,#f2f2f7); border-radius:12px; padding:11px 12px; margin-top:4px;
-  }
-  .why.on{ display:block; }
-  .nextbtn{ display:none; }
-  .nextbtn.on{ display:block; }
+  .head{ display:flex; align-items:center; gap:12px; margin:2px 2px 14px; }
+  .tile{ display:flex; align-items:center; justify-content:center; color:#fff; flex-shrink:0;
+    background:linear-gradient(145deg, hsl(var(--h) 62% 50%), hsl(calc(var(--h) + 40) 58% 28%)); }
+  .head .tile{ width:44px; height:44px; border-radius:13px; font-size:19px; }
+  .head .ht{ flex:1; min-width:0; }
+  h1{ font-size:22px; font-weight:800; letter-spacing:-.01em; }
+  .head p{ font-size:13px; color:var(--muted); margin-top:1px; }
+  .head .acts{ display:flex; gap:8px; flex-shrink:0; }
+  h2.sec{ font-size:12px; font-weight:800; letter-spacing:.07em; text-transform:uppercase; color:var(--muted); margin:20px 2px 9px; }
 
-  /* results */
-  #result{ display:none; text-align:center; }
-  #result .big{ font-size:52px; margin:12px 0 4px; }
-  #result h2{ font-size:24px; font-weight:800; }
-  #result p{ color:var(--myllm-muted,#8a8a8e); font-size:14.5px; margin-top:4px; }
-  .review{ text-align:left; margin-top:14px; }
-  .review .rv{ padding:10px 0; border-bottom:1px solid var(--myllm-border,#e3e3e8); font-size:14px; }
-  .review .rv:last-child{ border-bottom:none; }
-  .review .rv b{ display:block; }
-  .review .rv small{ display:block; color:var(--myllm-muted,#8a8a8e); margin-top:3px; line-height:1.45; }
-  .row2{ display:flex; gap:9px; margin-top:14px; }
-  .row2 .go{ margin-top:0; }
-  .go.ghost{ background:var(--myllm-bg,#f2f2f7); color:var(--myllm-text,#111); border:1px solid var(--myllm-border,#e3e3e8); }
+  .hero{ border-radius:20px; padding:16px 18px; color:#fff; margin-bottom:12px; display:flex; align-items:center; gap:16px;
+    background:linear-gradient(145deg, hsl(var(--h) 62% 46%), hsl(calc(var(--h) + 40) 58% 24%)); box-shadow:0 10px 28px hsl(var(--h) 60% 30% / .25); }
+  .hero .n{ font-size:44px; font-weight:800; line-height:1; letter-spacing:-.03em; font-variant-numeric:tabular-nums; flex-shrink:0; }
+  .hero .k{ display:block; font-size:11px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; opacity:.78; }
+  .hero b{ display:block; font-size:17px; font-weight:750; line-height:1.25; overflow-wrap:anywhere; }
+  .hero span.s{ display:block; font-size:12.5px; line-height:1.4; opacity:.82; margin-top:3px; overflow-wrap:anywhere; }
+  .hero .grow{ flex:1; min-width:0; }
+
+  .card{ background:var(--surface); border:1px solid var(--line); border-radius:18px; padding:14px; margin-bottom:12px; }
+  label{ display:block; font-size:12px; font-weight:800; letter-spacing:.07em; text-transform:uppercase; color:var(--muted); margin:14px 2px 7px; }
+  label:first-child{ margin-top:0; }
+  input, textarea, select{ width:100%; font:inherit; font-size:16px; padding:12px; border-radius:12px; border:1px solid var(--line); background:var(--bg); color:var(--ink); outline:none; }
+  input:focus, textarea:focus{ border-color:hsl(var(--h) 60% 55%); }
+  .go{ width:100%; min-height:50px; margin-top:14px; border:none; border-radius:14px; background:hsl(var(--h) 62% 52%); color:#fff; font-size:16px; font-weight:700;
+    display:flex; align-items:center; justify-content:center; gap:8px; box-shadow:0 8px 20px hsl(var(--h) 60% 40% / .25); }
+  .go.soft{ background:var(--fill); color:var(--ink); box-shadow:none; }
+  .go:disabled{ opacity:.55; }
+  .status{ font-size:13px; color:var(--muted); min-height:18px; margin-top:10px; text-align:center; line-height:1.45; }
+  .status.err{ color:#ff453a; }
+  .spin{ width:16px; height:16px; border-radius:50%; border:2.4px solid currentColor; border-right-color:transparent; animation:spin .8s linear infinite; flex-shrink:0; display:inline-block; }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+  .empty{ text-align:center; padding:24px 18px 14px; }
+  .empty .tile{ width:48px; height:48px; border-radius:14px; font-size:21px; margin:0 auto 10px; opacity:.9; }
+  .empty b{ display:block; font-size:16px; font-weight:750; }
+  .empty p{ font-size:13.5px; color:var(--muted); line-height:1.5; max-width:280px; margin:5px auto 0; }
+  @media (prefers-reduced-motion:reduce){ .spin{ animation-duration:2.4s; } button:active{ transform:none; } }
+  @keyframes myllmAiSpin{to{transform:rotate(360deg)}}
+  .myllm-ai-busy{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(18px);z-index:99999;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;display:flex;align-items:center;gap:10px;background:rgba(28,28,30,.96);color:#fff;border-radius:999px;padding:10px 16px 10px 14px;box-shadow:0 6px 22px rgba(0,0,0,.4);font-size:14px;font-weight:600;max-width:92%}
+  .myllm-ai-busy.on{opacity:1;transform:translateX(-50%) translateY(0)}
+  .myllm-ai-cog{width:16px;height:16px;border-radius:50%;border:2.4px solid #a78bfa;border-right-color:transparent;animation:myllmAiSpin .9s linear infinite;flex-shrink:0}
+  .myllm-ai-busy small{font-weight:400;opacity:.6}
+  /* ---------- the full-screen stage ---------- */
+  .stage{ display:none; position:fixed; inset:0; z-index:50; color:#fff; }
+  .stage.on{ display:block; }
+  .bg{ position:absolute; inset:0; transition:opacity .6s ease; }
+  .bg.d{ background:radial-gradient(120% 90% at 20% 10%, hsl(var(--h) 64% 34%), transparent 60%),
+      radial-gradient(120% 90% at 85% 95%, hsl(calc(var(--h) + 60) 60% 26%), transparent 62%), #0b0b10; }
+  .bg.l{ opacity:0; background:radial-gradient(120% 90% at 20% 0%, hsl(var(--h) 85% 88%), transparent 60%),
+      radial-gradient(120% 90% at 85% 100%, hsl(calc(var(--h) + 60) 80% 88%), transparent 62%), #f4f4f8; }
+  .lite{ color:#15151a; } .lite .bg.l{ opacity:1; } .lite .bg.d{ opacity:0; }
+  .col{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; overflow-y:auto; -webkit-overflow-scrolling:touch;
+    padding:calc(10px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) calc(16px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left)); }
+  .top{ width:100%; max-width:560px; height:44px; display:flex; align-items:center; justify-content:space-between; gap:8px; flex-shrink:0; }
+  .glass{ border:1px solid rgba(255,255,255,.16); background:rgba(255,255,255,.12); color:inherit;
+    -webkit-backdrop-filter:blur(18px); backdrop-filter:blur(18px); }
+  .lite .glass{ border-color:rgba(0,0,0,.09); background:rgba(255,255,255,.62); }
+  .rnd{ width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:15px; flex-shrink:0; }
+  .pill{ min-width:44px; height:44px; border-radius:99px; padding:0 15px; display:flex; align-items:center; justify-content:center; gap:5px;
+    font-size:17px; font-weight:800; font-variant-numeric:tabular-nums; }
+  .pill small{ font-size:10.5px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; opacity:.7; }
+  .pill.hide{ visibility:hidden; }
+  .dots{ display:flex; gap:6px; align-items:center; flex-wrap:wrap; justify-content:center; }
+  .dots i{ width:8px; height:8px; border-radius:50%; background:currentColor; opacity:.22; transition:all .3s; }
+  .dots i.now{ opacity:1; transform:scale(1.35); } .dots i.ok{ opacity:1; background:#34c759; } .dots i.no{ opacity:1; background:#ff6259; }
+  .body{ flex:1 0 auto; width:100%; max-width:560px; display:flex; flex-direction:column; gap:12px; padding:12px 0 4px;
+    transition:opacity .3s, filter .3s; }
+  /* centred when there's room, top-aligned when there isn't: two growing spacers
+     instead of justify-content:center, which pushes tall content up under the bar */
+  .body::before, .body::after{ content:""; flex:1 1 0; }
+  .veil .body{ opacity:.3; filter:blur(7px); pointer-events:none; }
+  .kick{ font-size:11px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; opacity:.62; }
+  .pri{ width:100%; height:54px; border:none; border-radius:99px; font-size:16.5px; font-weight:750; background:#fff; color:#0b0b10;
+    box-shadow:0 10px 30px rgba(0,0,0,.3); display:flex; align-items:center; justify-content:center; gap:8px; flex-shrink:0; }
+  .lite .pri{ background:#15151a; color:#fff; box-shadow:0 10px 26px rgba(20,20,40,.22); }
+  .pri:disabled{ opacity:.5; }
+  .sec2{ width:100%; height:50px; border-radius:99px; font-size:15.5px; font-weight:750; display:flex; align-items:center; justify-content:center; gap:8px; flex-shrink:0; }
+  .center{ position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); border-radius:26px; padding:24px 20px 18px; text-align:center;
+    width:min(340px, calc(100% - 32px)); max-height:calc(100% - 40px); overflow-y:auto; z-index:5;
+    box-shadow:0 24px 60px rgba(0,0,0,.35); animation:pop .28s cubic-bezier(.2,.8,.2,1) both; }
+  .lite .center{ box-shadow:0 22px 50px rgba(20,20,40,.18); }
+  @keyframes pop{ from{ opacity:0; transform:translate(-50%,-50%) scale(.96); } to{ opacity:1; transform:translate(-50%,-50%); } }
+  .center h2{ font-size:24px; font-weight:800; letter-spacing:-.015em; margin-top:6px; }
+  .center p{ font-size:14px; line-height:1.45; opacity:.76; margin-top:8px; }
+  .center .big{ font-size:64px; font-weight:800; line-height:1.05; letter-spacing:-.03em; font-variant-numeric:tabular-nums; margin-top:4px; }
+  .center .big small{ font-size:.42em; opacity:.55; font-weight:750; }
+  .center .best{ display:inline-block; margin-top:10px; font-size:11.5px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; color:#0b0b10; background:#ffd60a; border-radius:99px; padding:5px 11px; }
+  .center .pri{ margin-top:18px; } .center .sec2{ margin-top:10px; }
+  .stars3{ display:flex; justify-content:center; gap:6px; margin-top:10px; font-size:30px; }
+  .stars3 svg{ width:1em; height:1em; fill:currentColor; opacity:.22; } .stars3 svg.on{ opacity:1; color:#ffd60a; }
+  @media (prefers-reduced-motion:reduce){ .center{ animation:none; } .dots i{ transition:none; } }
+
+  textarea{ min-height:170px; line-height:1.5; resize:vertical; -webkit-user-select:text; user-select:text; }
+  .hero .n small{ font-size:.45em; opacity:.7; font-weight:750; margin-left:1px; }
+  .qcard{ border-radius:24px; padding:20px 18px; }
+  .qcard h2{ font-size:20px; font-weight:750; line-height:1.32; margin-top:8px; letter-spacing:-.005em; overflow-wrap:anywhere; }
+  .opts{ display:flex; flex-direction:column; gap:9px; }
+  .opt{ width:100%; min-height:58px; border-radius:18px; padding:10px 14px; display:flex; align-items:center; gap:12px; text-align:left; font-size:16px; font-weight:650; line-height:1.3;
+    transition:background .25s, border-color .25s, opacity .25s; }
+  .opt .k{ width:30px; height:30px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:800; background:rgba(255,255,255,.14); }
+  .lite .opt .k{ background:rgba(20,20,40,.08); }
+  .opt .t{ flex:1; min-width:0; overflow-wrap:anywhere; }
+  .opt .mk{ font-size:15px; display:none; }
+  .opt:disabled{ opacity:.5; } .opt:disabled:active{ transform:none; }
+  .opt.correct, .lite .opt.correct{ background:#2fb350; border-color:#2fb350; color:#fff; opacity:1; }
+  .opt.wrong, .lite .opt.wrong{ background:#e5453b; border-color:#e5453b; color:#fff; opacity:1; }
+  .opt.correct .mk, .opt.wrong .mk{ display:flex; }
+  .opt.correct .k, .opt.wrong .k{ background:rgba(255,255,255,.25); }
+  .why{ display:none; border-radius:18px; padding:12px 14px; font-size:14px; line-height:1.45; gap:10px; align-items:flex-start; }
+  .why.on{ display:flex; animation:rise .4s ease both; } .why svg{ font-size:15px; margin-top:2px; opacity:.8; }
+  @keyframes rise{ from{ opacity:0; transform:translateY(8px); } to{ opacity:1; transform:none; } }
+  #nextBtn{ visibility:hidden; } #nextBtn.on{ visibility:visible; }
+  .review{ text-align:left; margin-top:14px; border-radius:16px; padding:4px 12px; background:rgba(255,255,255,.08); }
+  .lite .review{ background:rgba(20,20,40,.05); }
+  .review .h{ font-size:10.5px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; opacity:.6; margin:10px 0 2px; }
+  .review .rv{ padding:9px 0; border-top:1px solid rgba(255,255,255,.12); font-size:13.5px; line-height:1.4; }
+  .lite .review .rv{ border-top-color:rgba(0,0,0,.08); }
+  .review .rv:first-of-type{ border-top:none; }
+  .review .rv b{ display:block; font-weight:700; }
+  .review .rv small{ display:flex; gap:5px; align-items:flex-start; margin-top:3px; opacity:.78; font-size:13px; }
+  .review .rv small svg{ color:#34c759; margin-top:1px; font-size:12px; }
+  .center .ring{ width:44px; height:44px; margin:4px auto 0; border-radius:50%; border:3px solid currentColor; border-right-color:transparent; animation:spin .9s linear infinite; opacity:.8; }
+  .center .tile2{ width:52px; height:52px; border-radius:16px; margin:0 auto; display:flex; align-items:center; justify-content:center; font-size:24px; color:#fff;
+    background:linear-gradient(145deg, hsl(var(--h) 62% 55%), hsl(calc(var(--h) + 40) 58% 32%)); }
+  @media (max-height:520px){ .qcard{ padding:14px 16px; } .qcard h2{ font-size:17px; } .opt{ min-height:46px; } .body{ gap:8px; } }
+  @media (prefers-reduced-motion:reduce){ .why.on{ animation:none; } .center .ring{ animation-duration:2.4s; } }
 </style>
-<style>:root{--build-id:"c51f394801";}</style>
 </head>
 <body>
-
-<h1>🎓 Study Buddy</h1>
-<p class="statline" id="stats"></p>
-
-<div id="setup">
-  <div class="card">
-    <label>Your notes — or just a topic</label>
-    <textarea id="notes" placeholder="Paste your revision notes, a textbook passage, vocabulary…&#10;&#10;Or simply type a topic: 'GCSE photosynthesis', 'French passé composé', 'the French Revolution'"></textarea>
-    <button class="go" id="quizBtn" onclick="startQuiz()">Quiz me</button>
-    <p class="hint" id="setuphint">Questions are generated privately, on this device — your notes never leave your phone.</p>
-  </div>
-</div>
-
-<div id="quiz">
-  <div class="card">
-    <div class="qtop"><b id="qnum"></b><span id="qscore"></span></div>
-    <div class="qbar"><div id="qfill"></div></div>
-    <div class="qtext" id="qtext"></div>
-    <div id="opts"></div>
-    <div class="why" id="why"></div>
-    <button class="go nextbtn" id="nextBtn" onclick="nextQ()">Next</button>
-  </div>
-</div>
-
-<div id="result">
-  <div class="card">
-    <div class="big" id="remoji"></div>
-    <h2 id="rtitle"></h2>
-    <p id="rsub"></p>
-    <div class="review" id="review"></div>
-    <div class="row2">
-      <button class="go ghost" onclick="backToNotes()">Edit notes</button>
-      <button class="go" onclick="startQuiz()">Quiz me again</button>
-    </div>
-  </div>
-</div>
-
-<!-- AI thinking pill (house convention) -->
-<style>
-@keyframes myllmAiSpin{to{transform:rotate(360deg)}}
-.myllm-ai-busy{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(18px);z-index:99999;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;display:flex;align-items:center;gap:10px;background:rgba(28,28,30,.96);color:#fff;border-radius:999px;padding:10px 16px 10px 14px;box-shadow:0 6px 22px rgba(0,0,0,.4);font-size:14px;font-weight:600;max-width:92%}
-.myllm-ai-busy.on{opacity:1;transform:translateX(-50%) translateY(0)}
-.myllm-ai-cog{font-size:18px;animation:myllmAiSpin 2.4s linear infinite;filter:drop-shadow(0 0 5px rgba(124,92,255,.85))}
-.myllm-ai-busy small{font-weight:400;opacity:.6}
-</style>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-cap" viewBox="0 0 24 24"><path d="M11.5 3.6a1.2 1.2 0 0 1 1 0l10 4.6a.8.8 0 0 1 0 1.5l-10 4.6a1.2 1.2 0 0 1-1 0l-10-4.6a.8.8 0 0 1 0-1.5zM5.5 12.6l5.6 2.6a2.2 2.2 0 0 0 1.8 0l5.6-2.6v3.6c0 1.8-3 3.6-6.5 3.6s-6.5-1.8-6.5-3.6zM21 10.4v5.4a1 1 0 0 1-2 0v-4.5z" fill="currentColor"/></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24"><path d="M6.4 5a1 1 0 0 0-1.4 1.4L10.6 12 5 17.6A1 1 0 0 0 6.4 19l5.6-5.6 5.6 5.6a1 1 0 0 0 1.4-1.4L13.4 12 19 6.4A1 1 0 0 0 17.6 5L12 10.6z" fill="currentColor"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.6l4.6 4.6L19.2 7.4" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></symbol>
+  <symbol id="i-bulb" viewBox="0 0 24 24"><path d="M12 2.5a6.5 6.5 0 0 1 4 11.6c-.7.6-1 1.2-1 1.9v.5a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1V16c0-.7-.3-1.3-1-1.9A6.5 6.5 0 0 1 12 2.5zM9.5 19.5h5a1 1 0 0 1 0 2h-5a1 1 0 0 1 0-2z" fill="currentColor"/></symbol>
+  <symbol id="i-again" viewBox="0 0 24 24"><path d="M12 5V2.6a.6.6 0 0 0-1-.45L7.2 5.55a.6.6 0 0 0 0 .9L11 9.85a.6.6 0 0 0 1-.45V7a5.5 5.5 0 1 1-5.5 5.5 1 1 0 0 0-2 0A7.5 7.5 0 1 0 12 5z" fill="currentColor"/></symbol>
+  <symbol id="i-pen" viewBox="0 0 24 24"><path d="M15.2 4.3a2.2 2.2 0 0 1 3.1 0l1.4 1.4a2.2 2.2 0 0 1 0 3.1L9.4 19.1 4 20l.9-5.4z" fill="currentColor"/></symbol>
+  <symbol id="i-spark" viewBox="0 0 24 24"><path d="M10 2.5l1.9 5.6 5.6 1.9-5.6 1.9L10 17.5l-1.9-5.6L2.5 10l5.6-1.9zM18.5 14l.95 2.55L22 17.5l-2.55.95L18.5 21l-.95-2.55L15 17.5l2.55-.95z" fill="currentColor"/></symbol>
+  <symbol id="i-trophy" viewBox="0 0 24 24"><path d="M7 3h10a1 1 0 0 1 1 1v1h2.5a1 1 0 0 1 1 1v1.5A4.5 4.5 0 0 1 17.3 12a5.5 5.5 0 0 1-4.3 3.4V18h3a1 1 0 0 1 0 2H8a1 1 0 0 1 0-2h3v-2.6A5.5 5.5 0 0 1 6.7 12 4.5 4.5 0 0 1 2.5 7.5V6a1 1 0 0 1 1-1H6V4a1 1 0 0 1 1-1zM4.5 7v.5A2.5 2.5 0 0 0 6.1 9.8 7 7 0 0 1 6 8.5V7zm13.5 0v1.5a7 7 0 0 1-.1 1.3A2.5 2.5 0 0 0 19.5 7.5V7z" fill="currentColor"/></symbol>
+</defs></svg>
 <script>
 (function(){if(window.__myllmAiWrap||typeof window.myllmAsk!=='function')return;window.__myllmAiWrap=true;
 var orig=window.myllmAsk,depth=0,node=null;
 function ensure(){if(node)return;node=document.createElement('div');node.className='myllm-ai-busy';
-node.innerHTML='<span class="myllm-ai-cog">⚙️</span><span>AI is thinking… <small>privately, on your device</small></span>';
+node.innerHTML='<span class="myllm-ai-cog"></span><span>AI is thinking… <small>privately, on your device</small></span>';
 (document.body||document.documentElement).appendChild(node);}
 function show(){ensure();depth++;node.classList.add('on');}
 function hide(){depth=Math.max(0,depth-1);if(depth===0&&node)node.classList.remove('on');}
 window.myllmAsk=function(){show();var p;try{p=orig.apply(this,arguments);}catch(e){hide();throw e;}
 return Promise.resolve(p).then(function(r){hide();return r;},function(e){hide();throw e;});};})();
 </script>
+<div class="home">
+  <div class="head">
+    <div class="tile"><svg class="i"><use href="#i-cap"/></svg></div>
+    <div class="ht"><h1>Study Buddy</h1><p>Paste your notes, get quizzed</p></div>
+  </div>
+
+  <div class="hero" id="hero" hidden>
+    <div class="n" id="hPct">0<small>%</small></div>
+    <div class="grow"><span class="k">Lifetime</span><b id="hT"></b><span class="s">Every quiz you take adds up here.</span></div>
+  </div>
+
+  <div class="card">
+    <label for="notes">Your notes — or just a topic</label>
+    <textarea id="notes" placeholder="Paste your revision notes, a textbook passage, vocabulary…&#10;&#10;Or simply type a topic: 'GCSE photosynthesis', 'French passé composé', 'the French Revolution'"></textarea>
+    <button class="go" id="quizBtn" type="button"></button>
+    <p class="status" id="setuphint">Questions are generated privately, on this device — your notes never leave your phone.</p>
+  </div>
+</div>
+
+<div class="stage" id="stage">
+  <div class="bg d"></div><div class="bg l"></div>
+  <div class="col" id="col">
+    <div class="top">
+      <button class="glass rnd" id="bClose" type="button" aria-label="Leave quiz"><svg class="i"><use href="#i-close"/></svg></button>
+      <div class="dots" id="dots"></div>
+      <div class="glass pill" id="pScore">0<small>right</small></div>
+    </div>
+    <div class="body" id="qbody">
+      <div class="qcard glass"><div class="kick" id="qnum"></div><h2 id="qtext"></h2></div>
+      <div class="opts" id="opts"></div>
+      <div class="why glass" id="why"><svg class="i"><use href="#i-bulb"/></svg><span id="whyText"></span></div>
+      <button class="pri" id="nextBtn" type="button">Next</button>
+    </div>
+    <div class="center glass" id="card" hidden></div>
+  </div>
+</div>
 
 <script>
-var store = window.myllmStorage || {getItem:function(){return Promise.resolve(null)}, setItem:function(){return Promise.resolve()}};
-function haptic(k){ if(window.myllmHaptic){ try{ myllmHaptic(k||'light'); }catch(_){} } }
-var ASK = window.myllmAsk || null;
-function el(id){ return document.getElementById(id); }
-function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+function el(i){return document.getElementById(i)}
+/* Bridges are looked up when used, never kept: MyLLM can add them after this
+   script has run. */
+function store(){return window.myllmStorage||{getItem:function(){return Promise.resolve(null)},setItem:function(){return Promise.resolve()}}}
+function haptic(k){if(window.myllmHaptic)try{myllmHaptic(k)}catch(e){}}
+function icon(n){return '<svg class="i"><use href="#i-'+n+'"/></svg>'}
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+/* The quiz takes the whole display. Where MyLLM can't hide its own title
+   bar, a dark stage under a white bar looks cut in half — so in light mode,
+   without myllmImmersive, the stage stays light. */
+var stageOn=false;
+function isLight(){return !(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches)}
+function syncLook(){el('stage').classList.toggle('lite',isLight()&&!window.myllmImmersive)}
+function syncChrome(){
+  if(!window.myllmImmersive)return;
+  try{myllmImmersive(stageOn,{keepAwake:false}).catch(function(){})}catch(_){}
+}
+function openStage(){if(stageOn)return;stageOn=true;syncLook();el('stage').classList.add('on');document.body.classList.add('lock');syncChrome()}
+function closeStage(){if(!stageOn)return;stageOn=false;el('stage').classList.remove('on','veil');document.body.classList.remove('lock');syncChrome()}
+if(window.matchMedia){var mq=matchMedia('(prefers-color-scheme: dark)');if(mq.addEventListener)mq.addEventListener('change',syncLook);else if(mq.addListener)mq.addListener(syncLook)}
+function ASK(){return window.myllmAsk||null}
 
 var quiz = [];        /* [{q, options[4], correct, why}] */
-var qi = 0, score = 0, answered = false;
+var qi = 0, score = 0, answered = false, busy = false;
 var wrong = [];       /* review list */
+var results = [];     /* true/false per question, for the dots */
 var lifetime = {asked:0, right:0};
 var askedBefore = []; /* question texts from this session, to avoid repeats on "again" */
 
 function renderStats(){
-  el("stats").textContent = lifetime.asked
-    ? lifetime.right + " / " + lifetime.asked + " lifetime · " + Math.round(lifetime.right / lifetime.asked * 100) + "% right"
-    : "Paste notes, get quizzed, actually remember it.";
+  var has = lifetime.asked > 0;
+  el("hero").hidden = !has;
+  if (has){
+    el("hPct").innerHTML = Math.round(lifetime.right / lifetime.asked * 100) + "<small>%</small>";
+    el("hT").textContent = lifetime.right + " of " + lifetime.asked + " answered right";
+  }
 }
+function quizBtn(on){
+  var b = el("quizBtn"); b.disabled = !!on;
+  b.innerHTML = on ? '<i class="spin"></i><span>Writing your questions…</span>' : icon("spark") + "<span>Quiz me</span>";
+}
+function hint(t, err){ var h = el("setuphint"); h.textContent = t; h.classList.toggle("err", !!err); }
 
 /* ---------- generate ---------- */
 /* Labelled lines, not JSON — small models (Apple Intelligence) echo JSON
@@ -223,14 +323,24 @@ function parseQuizReply(reply){
   return clean.slice(0, 5);
 }
 
+function showCard(html){ var c = el("card"); c.innerHTML = html; c.hidden = false; el("stage").classList.add("veil"); }
+function hideCard(){ el("card").hidden = true; el("stage").classList.remove("veil"); }
+
 function startQuiz(){
+  if (busy) return;
   var notes = el("notes").value.trim();
-  if (!notes){ el("setuphint").textContent = "Paste some notes or a topic first."; haptic("light"); return; }
-  if (!ASK){ el("setuphint").textContent = "Study Buddy needs AI — enable it in Settings, then come back."; haptic("light"); return; }
+  if (!notes){
+    if (stageOn){ leave(); }
+    hint("Paste some notes or a topic first.", true); haptic("light"); return;
+  }
+  var ask = ASK();
+  if (!ask){ hint("Study Buddy needs AI — enable it in Settings, then come back.", true); haptic("light"); return; }
   haptic("light");
-  store.setItem("sb_notes", notes);
-  el("quizBtn").disabled = true;
-  el("setuphint").textContent = "Writing your questions…";
+  store().setItem("sb_notes", notes);
+  busy = true;
+  quizBtn(true);
+  hint("Writing your questions…");
+  if (stageOn) showCard('<div class="ring"></div><h2>Writing new questions</h2><p>From the same notes — usually a few seconds.</p>');
   var avoid = askedBefore.length ? "\nDo NOT reuse these questions: " + askedBefore.slice(-10).map(function(q){ return '"' + q + '"'; }).join(", ") : "";
   var prompt = "Create exactly 5 multiple-choice questions to test understanding of this material. Mix recall and understanding; make wrong options plausible.\n\nMATERIAL:\n" + notes.slice(0, 6000) + avoid +
       "\n\nReply with EXACTLY these labelled lines and nothing else, repeating the block for each of the 5 questions:\n" +
@@ -240,46 +350,56 @@ function startQuiz(){
       "WHY: a one-sentence explanation of the right answer\n" +
       "Vary which position is correct.";
   var sys = {system:"You are an excellent quiz writer. Output only the labelled lines — no commentary, no code fences."};
-  ASK(prompt, sys)
+  ask(prompt, sys)
   .then(function(r){ return parseQuizReply(r); })
   .catch(function(){
-    return ASK(prompt + "\nIMPORTANT: fill each labelled line with real content — never repeat the instruction text.", sys)
+    return ASK()(prompt + "\nIMPORTANT: fill each labelled line with real content — never repeat the instruction text.", sys)
       .then(function(r){ return parseQuizReply(r); });
   })
   .then(function(parsed){
-    el("quizBtn").disabled = false;
+    busy = false; quizBtn(false);
     quiz = parsed;
     quiz.forEach(function(x){ askedBefore.push(x.q); });
-    qi = 0; score = 0; wrong = [];
-    el("setup").style.display = "none";
-    el("result").style.display = "none";
-    el("quiz").style.display = "block";
-    el("setuphint").textContent = "";
+    qi = 0; score = 0; wrong = []; results = [];
+    hint("");
     haptic("success");
+    hideCard(); openStage();
     showQ();
-    window.scrollTo(0, 0);
   })
   .catch(function(){
-    el("quizBtn").disabled = false;
-    el("setuphint").textContent = "The questions didn't come through cleanly — that happens with smaller models. Tap Quiz me to try again.";
+    busy = false; quizBtn(false);
+    var msg = "The questions didn't come through cleanly — that happens with smaller models. Tap Quiz me to try again.";
+    hint(msg, true);
+    if (stageOn){
+      showCard('<div class="tile2">' + icon("again") + '</div><h2>No quiz this time</h2><p>' + esc(msg.replace("Tap Quiz me", "Try again")) + '</p>' +
+        '<button class="pri" id="cA" type="button">' + icon("again") + 'Try again</button><button class="sec2 glass" id="cB" type="button">' + icon("pen") + 'Edit notes</button>');
+      el("cA").onclick = startQuiz; el("cB").onclick = backToNotes;
+    }
     haptic("light");
   });
 }
 
 /* ---------- play ---------- */
+function renderDots(){
+  el("dots").innerHTML = quiz.map(function(_, i){
+    return '<i class="' + (i < results.length ? (results[i] ? "ok" : "no") : i === qi ? "now" : "") + '"></i>';
+  }).join("");
+}
 function showQ(){
   var x = quiz[qi];
   answered = false;
   el("qnum").textContent = "Question " + (qi + 1) + " of " + quiz.length;
-  el("qscore").textContent = score + " right";
-  el("qfill").style.width = (qi / quiz.length * 100) + "%";
+  el("pScore").innerHTML = score + "<small>right</small>";
   el("qtext").textContent = x.q;
-  el("why").className = "why";
-  el("nextBtn").className = "go nextbtn";
-  el("nextBtn").textContent = qi === quiz.length - 1 ? "See my score" : "Next";
+  el("why").className = "why glass";
+  el("nextBtn").className = "pri";
+  el("nextBtn").innerHTML = qi === quiz.length - 1 ? "See my score" : "Next";
   el("opts").innerHTML = x.options.map(function(o, i){
-    return '<button class="opt" id="opt' + i + '" onclick="answer(' + i + ')">' + esc(o) + '</button>';
+    return '<button class="opt glass" type="button" id="opt' + i + '"><span class="k">' + "ABCD"[i] + '</span><span class="t">' + esc(o) + '</span><span class="mk"></span></button>';
   }).join("");
+  x.options.forEach(function(_, i){ el("opt" + i).onclick = function(){ answer(i); }; });
+  renderDots();
+  el("col").scrollTop = 0;
 }
 function answer(i){
   if (answered) return;
@@ -289,58 +409,64 @@ function answer(i){
   for (var k = 0; k < 4; k++){
     var btn = el("opt" + k);
     btn.disabled = true;
-    if (k === x.correct) btn.className = "opt correct";
-    else if (k === i) btn.className = "opt wrong";
+    if (k === x.correct){ btn.className = "opt glass correct"; btn.querySelector(".mk").innerHTML = icon("check"); }
+    else if (k === i){ btn.className = "opt glass wrong"; btn.querySelector(".mk").innerHTML = icon("x"); }
   }
   if (i === x.correct){ score++; haptic("success"); }
   else { wrong.push(x); haptic("light"); }
+  results.push(i === x.correct);
   lifetime.right += (i === x.correct) ? 1 : 0;
-  store.setItem("sb_life", JSON.stringify(lifetime));
+  store().setItem("sb_life", JSON.stringify(lifetime));
   if (x.why){
-    el("why").textContent = x.why;
-    el("why").className = "why on";
+    el("whyText").textContent = x.why;
+    el("why").className = "why glass on";
   }
-  el("qscore").textContent = score + " right";
-  el("nextBtn").className = "go nextbtn on";
+  el("pScore").innerHTML = score + "<small>right</small>";
+  el("nextBtn").className = "pri on";
+  renderDots();
 }
 function nextQ(){
   haptic("selection");
-  if (qi < quiz.length - 1){ qi++; showQ(); window.scrollTo(0, 0); }
+  if (qi < quiz.length - 1){ qi++; showQ(); }
   else finish();
 }
 
 /* ---------- results ---------- */
 function finish(){
-  el("quiz").style.display = "none";
-  el("result").style.display = "block";
   var pct = Math.round(score / quiz.length * 100);
-  el("remoji").textContent = pct === 100 ? "🏆" : pct >= 60 ? "💪" : "📖";
-  el("rtitle").textContent = score + " out of " + quiz.length;
-  el("rsub").textContent = pct === 100 ? "Perfect — you own this material."
+  var head = pct === 100 ? "Perfect score" : pct >= 60 ? "Nicely done" : "Keep going";
+  var sub = pct === 100 ? "Perfect — you own this material."
     : pct >= 60 ? "Solid. One more round and it sticks."
     : "That's what practice is for — review below, then go again.";
-  el("review").innerHTML = wrong.length
-    ? '<label>Worth another look</label>' + wrong.map(function(x){
-        return '<div class="rv"><b>' + esc(x.q) + '</b><small>✓ ' + esc(x.options[x.correct]) +
-          (x.why ? ' — ' + esc(x.why) : '') + '</small></div>';
-      }).join("")
+  var review = wrong.length
+    ? '<div class="review"><div class="h">Worth another look</div>' + wrong.map(function(x){
+        return '<div class="rv"><b>' + esc(x.q) + '</b><small>' + icon("check") + '<span>' + esc(x.options[x.correct]) +
+          (x.why ? ' — ' + esc(x.why) : '') + '</span></small></div>';
+      }).join("") + '</div>'
     : "";
+  showCard('<div class="kick">' + head + '</div><div class="big">' + score + '<small>/' + quiz.length + '</small></div><p>' + sub + '</p>' + review +
+    '<button class="pri" id="cA" type="button">' + icon("again") + 'Quiz me again</button><button class="sec2 glass" id="cB" type="button">' + icon("pen") + 'Edit notes</button>');
+  el("cA").onclick = startQuiz; el("cB").onclick = backToNotes;
   renderStats();
   haptic(pct >= 60 ? "success" : "light");
-  window.scrollTo(0, 0);
 }
+function leave(){ hideCard(); closeStage(); }
 function backToNotes(){
   haptic("selection");
-  el("result").style.display = "none";
-  el("quiz").style.display = "none";
-  el("setup").style.display = "block";
+  leave();
 }
 
+el("quizBtn").onclick = startQuiz;
+el("nextBtn").onclick = nextQ;
+el("bClose").onclick = function(){ if (busy) return; haptic("light"); leave(); };
+document.addEventListener("visibilitychange", function(){ if (!document.hidden && stageOn) syncChrome(); });
+
 /* ---------- boot ---------- */
-Promise.all([store.getItem("sb_notes"), store.getItem("sb_life")]).then(function(v){
+quizBtn(false);
+Promise.all([store().getItem("sb_notes"), store().getItem("sb_life")]).then(function(v){
   if (v[0]) el("notes").value = v[0];
   if (v[1]){ try{ lifetime = JSON.parse(v[1]) || lifetime; }catch(e){} }
-  if (!ASK) el("setuphint").textContent = "Study Buddy needs AI — enable it in Settings to get quizzed.";
+  if (!ASK()) hint("Study Buddy needs AI — enable it in Settings to get quizzed.", true);
   renderStats();
 });
 </script>

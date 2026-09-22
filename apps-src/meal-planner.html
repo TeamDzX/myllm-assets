@@ -3,77 +3,135 @@
   Meal Planner — MyLLMos™ App Gallery · © 2026 Opticell Ltd
   Source-available: read it, remix it, run your version inside MyLLM™.
   Not for redistribution or republication. Terms: https://github.com/TeamDzX/myllm-assets/blob/main/LICENSE
---><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<style>:root{--build-id:"52979fc2fa";color-scheme:light dark;--accent:#ff9f0a}
-*{box-sizing:border-box}
-body{font-family:-apple-system,system-ui,sans-serif;margin:0;padding:18px;background:#f2f2f7;color:#111}
-@media(prefers-color-scheme:dark){body{background:#000;color:#eee}.card,input,textarea{background:#1c1c1e;color:#eee;border-color:#3a3a3c}.meal{border-color:#2c2c2e}}
-h1{font-size:22px;margin:0 0 4px}
-.sub{font-size:13px;opacity:.6;margin-bottom:14px}
-input,textarea{width:100%;padding:11px;border:1px solid #d1d1d6;border-radius:10px;font-size:15px;background:#fff;font-family:inherit}
-textarea{min-height:42px;resize:vertical}
-.row{display:flex;gap:8px;margin-bottom:10px}
-button{border:0;background:var(--accent);color:#fff;border-radius:10px;padding:11px 16px;font-size:15px;font-weight:600;white-space:nowrap}
-button.sec{background:#e5e5ea;color:#111}
-@media(prefers-color-scheme:dark){button.sec{background:#2c2c2e;color:#eee}}
-button:disabled{opacity:.5}
-#status{font-size:13px;opacity:.7;min-height:18px;margin:8px 0}
-.card{background:#fff;border-radius:14px;padding:12px 14px;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
-.day{font-size:13px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--accent);margin-bottom:8px}
-.meal{display:flex;align-items:baseline;gap:8px;padding:7px 0;border-top:1px solid #eee;cursor:pointer}
-.meal:first-of-type{border-top:0}
-.meal .lbl{font-size:11px;text-transform:uppercase;letter-spacing:.05em;opacity:.5;width:64px;flex:none}
-.meal .dish{font-size:15px;flex:1}
-.actions{display:flex;gap:8px;margin-top:6px}
-.actions button{flex:1;padding:12px}
-.hint{font-size:11px;opacity:.4;text-align:center;margin-top:14px}
-@media(min-width:768px){body{max-width:760px;margin-left:auto;margin-right:auto}}
+--><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Meal Planner</title>
+<style>:root{--build-id:"52979fc2fa";color-scheme:light dark;
+  --bg:var(--myllm-bg,#f2f2f7); --surface:var(--myllm-surface,#fff); --ink:var(--myllm-text,#111);
+  --muted:var(--myllm-muted,#8a8a8e); --line:var(--myllm-border,#e3e3e8); --acc:var(--myllm-accent,#0a84ff);
+  --fill:rgba(120,120,128,.12); --h:36; }
+@media (prefers-color-scheme:dark){ :root{ --bg:var(--myllm-bg,#000); --surface:var(--myllm-surface,#1c1c1e);
+  --ink:var(--myllm-text,#f2f2f7); --muted:var(--myllm-muted,#8e8e93); --line:var(--myllm-border,#2c2c2e); --fill:rgba(120,120,128,.24); } }
+  *{ margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body{ font-family:var(--myllm-font,-apple-system,system-ui,sans-serif); background:var(--bg); color:var(--ink);
+    max-width:600px; margin:0 auto; min-height:100dvh; font-size:15.5px; line-height:1.4;
+    padding:calc(16px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) calc(30px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left)); }
+  @media (min-width:768px){ body{ max-width:760px; } #week{ display:grid; grid-template-columns:1fr 1fr; gap:0 12px; } }
+  svg.i{ width:1.25em; height:1.25em; fill:currentColor; flex-shrink:0; }
+  button{ font:inherit; color:inherit; cursor:pointer; } button:active{ transform:scale(.96); }
+
+  .head{ display:flex; align-items:center; gap:12px; margin:2px 2px 14px; }
+  .tile{ display:flex; align-items:center; justify-content:center; color:#fff; flex-shrink:0;
+    background:linear-gradient(145deg, hsl(var(--h) 90% 50%), hsl(calc(var(--h) - 24) 80% 42%)); }
+  .head .tile{ width:44px; height:44px; border-radius:13px; font-size:19px; }
+  .head .ht{ flex:1; min-width:0; }
+  h1{ font-size:22px; font-weight:800; letter-spacing:-.01em; }
+  .head p{ font-size:13px; color:var(--muted); margin-top:1px; }
+
+  .card{ background:var(--surface); border:1px solid var(--line); border-radius:18px; padding:14px; margin-bottom:12px; }
+  label{ display:block; font-size:12px; font-weight:800; letter-spacing:.07em; text-transform:uppercase; color:var(--muted); margin:0 2px 7px; }
+  textarea{ width:100%; font:inherit; font-size:16px; padding:11px 12px; border-radius:12px; border:1px solid var(--line); background:var(--bg); color:var(--ink); outline:none; min-height:48px; resize:vertical; line-height:1.4; }
+  textarea:focus{ border-color:var(--acc); }
+  .actions{ display:flex; gap:8px; margin-top:12px; }
+  .go{ flex:1; min-height:50px; border:none; border-radius:14px; background:var(--acc); color:#fff; font-size:16px; font-weight:700;
+    display:flex; align-items:center; justify-content:center; gap:8px; padding:0 14px; }
+  .go.soft{ flex:0 1 auto; background:var(--fill); color:var(--acc); }
+  .go:disabled{ opacity:.55; }
+  @media (max-width:360px){ .actions{ flex-direction:column; } .go.soft{ flex:1; } }
+  .status{ font-size:13px; color:var(--muted); min-height:18px; margin-top:10px; text-align:center; }
+  .status.err{ color:#ff453a; }
+  .spin{ width:16px; height:16px; border-radius:50%; border:2.4px solid currentColor; border-right-color:transparent; animation:spin .8s linear infinite; flex-shrink:0; }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+
+  .day{ background:var(--surface); border:1px solid var(--line); border-radius:18px; padding:4px 6px 4px 14px; margin-bottom:10px; }
+  .day h3{ font-size:12px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:hsl(var(--h) 85% 38%); margin:10px 0 2px; }
+  @media (prefers-color-scheme:dark){ .day h3{ color:hsl(var(--h) 95% 62%); } }
+  .meal{ display:flex; align-items:center; gap:10px; min-height:48px; padding:6px 0; border-top:1px solid var(--line); cursor:pointer; }
+  .meal:first-of-type{ border-top:none; }
+  .meal .lbl{ flex-shrink:0; width:74px; font-size:10.5px; font-weight:800; letter-spacing:.07em; text-transform:uppercase; color:var(--muted); }
+  .meal .dish{ flex:1; min-width:0; font-size:15px; line-height:1.35; overflow-wrap:anywhere; }
+  .meal .sw{ flex-shrink:0; width:40px; height:40px; border-radius:11px; display:flex; align-items:center; justify-content:center; color:var(--muted); font-size:15px; }
+  .meal.busy .dish{ opacity:.5; }
+  .meal.busy .sw{ color:hsl(var(--h) 85% 45%); }
+  .hint{ font-size:12px; color:var(--muted); text-align:center; margin:4px 0 8px; }
+
+  .skel{ height:150px; border-radius:18px; margin-bottom:10px; background:var(--fill); animation:shimmer 1.4s ease-in-out infinite; }
+  @keyframes shimmer{ 50%{ opacity:.45; } }
+  .empty{ text-align:center; padding:26px 20px 14px; }
+  .empty .tile{ width:48px; height:48px; border-radius:14px; font-size:21px; margin:0 auto 10px; opacity:.9; }
+  .empty b{ display:block; font-size:16px; font-weight:750; }
+  .empty p{ font-size:13.5px; color:var(--muted); line-height:1.5; max-width:280px; margin:5px auto 0; }
+  [hidden]{ display:none !important; }
+  @media (prefers-reduced-motion:reduce){ .spin{ animation-duration:2.4s; } .skel{ animation:none; } button:active{ transform:none; } }
+
+  @keyframes myllmAiSpin{to{transform:rotate(360deg)}}
+  .myllm-ai-busy{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(18px);z-index:99999;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;display:flex;align-items:center;gap:10px;background:rgba(28,28,30,.96);color:#fff;border-radius:999px;padding:10px 16px 10px 14px;box-shadow:0 6px 22px rgba(0,0,0,.4);font-size:14px;font-weight:600;max-width:92%}
+  .myllm-ai-busy.on{opacity:1;transform:translateX(-50%) translateY(0)}
+  .myllm-ai-cog{width:16px;height:16px;border-radius:50%;border:2.4px solid #a78bfa;border-right-color:transparent;animation:myllmAiSpin .9s linear infinite;flex-shrink:0}
+  .myllm-ai-busy small{font-weight:400;opacity:.6}
 </style></head><body>
-<style>
-@keyframes myllmAiSpin{to{transform:rotate(360deg)}}
-.myllm-ai-busy{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(18px);z-index:99999;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;display:flex;align-items:center;gap:10px;background:rgba(28,28,30,.96);color:#fff;border-radius:999px;padding:10px 16px 10px 14px;box-shadow:0 6px 22px rgba(0,0,0,.4);font-family:-apple-system,system-ui,sans-serif;font-size:14px;font-weight:600;max-width:92%}
-.myllm-ai-busy.on{opacity:1;transform:translateX(-50%) translateY(0)}
-.myllm-ai-cog{font-size:18px;line-height:1;animation:myllmAiSpin 2.4s linear infinite;filter:drop-shadow(0 0 5px rgba(124,92,255,.85))}
-.myllm-ai-busy small{font-weight:400;opacity:.6}
-</style>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-fork" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3v6a2 2 0 0 0 4 0V3M9 11v10"/><path d="M17 21V3c-2 1.2-3 3.8-3 7.5h3"/></g></symbol>
+  <symbol id="i-spark" viewBox="0 0 24 24"><path d="M10 2.5l1.9 5.6 5.6 1.9-5.6 1.9L10 17.5l-1.9-5.6L2.5 10l5.6-1.9zM18.5 14l.95 2.55L22 17.5l-2.55.95L18.5 21l-.95-2.55L15 17.5l2.55-.95z" fill="currentColor"/></symbol>
+  <symbol id="i-cart" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h2.2l2.2 11h10.4l2-8H6.3"/><circle cx="9.5" cy="19" r="1.4"/><circle cx="16.5" cy="19" r="1.4"/></g></symbol>
+  <symbol id="i-swap" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.6-5.9"/><path d="M20 4v5h-5"/></g></symbol>
+  <symbol id="i-cal" viewBox="0 0 24 24"><path d="M7 2.8a1 1 0 0 1 1 1V5h8V3.8a1 1 0 0 1 2 0V5h.5A2.5 2.5 0 0 1 21 7.5v11a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 18.5v-11A2.5 2.5 0 0 1 5.5 5H6V3.8a1 1 0 0 1 1-1zM5 10.2v8.3c0 .3.2.5.5.5h13c.3 0 .5-.2.5-.5v-8.3z" fill="currentColor"/></symbol>
+</defs></svg>
 <script>
-(function(){
-  if(window.__myllmAiWrap||typeof window.myllmAsk!=='function')return;
-  window.__myllmAiWrap=true;
-  var orig=window.myllmAsk,depth=0,node=null;
-  function ensure(){if(node)return;node=document.createElement('div');node.className='myllm-ai-busy';
-    node.innerHTML='<span class="myllm-ai-cog">\u2699\uFE0F</span><span>AI is thinking\u2026 <small>privately, on your device</small></span>';
-    (document.body||document.documentElement).appendChild(node);}
-  function show(){ensure();depth++;node.classList.add('on');}
-  function hide(){depth=Math.max(0,depth-1);if(depth===0&&node)node.classList.remove('on');}
-  window.myllmAsk=function(){show();var p;try{p=orig.apply(this,arguments);}catch(e){hide();throw e;}
-    return Promise.resolve(p).then(function(r){hide();return r;},function(e){hide();throw e;});};
-})();
+(function(){if(window.__myllmAiWrap||typeof window.myllmAsk!=='function')return;window.__myllmAiWrap=true;
+var orig=window.myllmAsk,depth=0,node=null;
+function ensure(){if(node)return;node=document.createElement('div');node.className='myllm-ai-busy';
+node.innerHTML='<span class="myllm-ai-cog"></span><span>AI is thinking… <small>privately, on your device</small></span>';
+(document.body||document.documentElement).appendChild(node);}
+function show(){ensure();depth++;node.classList.add('on');}
+function hide(){depth=Math.max(0,depth-1);if(depth===0&&node)node.classList.remove('on');}
+window.myllmAsk=function(){show();var p;try{p=orig.apply(this,arguments);}catch(e){hide();throw e;}
+return Promise.resolve(p).then(function(r){hide();return r;},function(e){hide();throw e;});};})();
 </script>
 
-<h1>🍽️ Meal Planner</h1>
-<div class="sub">A week of meals, written by your AI — tap any meal to swap it.</div>
-<textarea id="prefs" placeholder="Any preferences? e.g. vegetarian, quick dinners, no nuts, budget-friendly (optional)"></textarea>
-<div class="actions">
-  <button id="gen" onclick="generate()">Plan my week</button>
-  <button class="sec" id="shop" onclick="shoppingList()" style="display:none">Shopping list</button>
+<div class="head">
+  <div class="tile"><svg class="i"><use href="#i-fork"/></svg></div>
+  <div class="ht"><h1>Meal Planner</h1><p>A week of meals, written by your AI — tap any meal to swap it</p></div>
 </div>
-<div id="status"></div>
-<div id="week"></div>
+
+<div class="card">
+  <label for="prefs">Preferences</label>
+  <textarea id="prefs" placeholder="e.g. vegetarian, quick dinners, no nuts, budget-friendly (optional)"></textarea>
+  <div class="actions">
+    <button class="go" id="gen" type="button"></button>
+    <button class="go soft" id="shop" type="button" hidden><svg class="i"><use href="#i-cart"/></svg>Shopping list</button>
+  </div>
+  <div class="status" id="status"></div>
+</div>
+
+<div class="card empty" id="empty" hidden>
+  <div class="tile"><svg class="i"><use href="#i-cal"/></svg></div>
+  <b>Your week lives here</b>
+  <p>Add any preferences above, then plan — breakfast, lunch and dinner for seven days.</p>
+</div>
+<div id="skeleton" hidden><div class="skel"></div><div class="skel"></div><div class="skel"></div></div>
 <div class="hint" id="hint"></div>
+<div id="week"></div>
+
 <script>
-var store=window.myllmStorage||{getItem:function(){return Promise.resolve(null)},setItem:function(){return Promise.resolve()}};
+function el(i){return document.getElementById(i)}
+/* Bridges are looked up when used, never kept: MyLLM can add them after this
+   script has run. */
+function store(){return window.myllmStorage||{getItem:function(){return Promise.resolve(null)},setItem:function(){return Promise.resolve()}}}
+function haptic(k){if(window.myllmHaptic)try{myllmHaptic(k)}catch(e){}}
 var DAYS=["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
 var MEALS=["breakfast","lunch","dinner"];
-var plan=null;
-function el(i){return document.getElementById(i)}
-function setStatus(t){el('status').textContent=t||''}
-function save(){store.setItem('plan',JSON.stringify({prefs:el('prefs').value,plan:plan}))}
+var plan=null,busyMeal=null;
+function setStatus(t,err){var s=el('status');s.textContent=t||'';s.classList.toggle('err',!!err)}
+function save(){store().setItem('plan',JSON.stringify({prefs:el('prefs').value,plan:plan}))}
 function prefsText(){var p=el('prefs').value.trim();return p?('Preferences: '+p+'. '):''}
+function genBtn(busy){
+  var b=el('gen');b.disabled=!!busy;
+  b.innerHTML=busy?'<i class="spin"></i><span>Cooking up a week…</span>':'<svg class="i"><use href="#i-spark"/></svg><span>'+(plan?'Refresh week':'Plan my week')+'</span>';
+}
 
 function needAI(){
   if(window.myllmAsk)return true;
-  setStatus('This app needs AI — update MyLLM and turn on “Allow apps to use the AI” in Settings.');
+  setStatus('This app needs AI — update MyLLM and turn on “Allow apps to use the AI” in Settings.',true);
   return false;
 }
 
@@ -110,56 +168,64 @@ function parsePlan(reply){
 
 function generate(){
   if(!needAI())return;
-  el('gen').disabled=true;setStatus('Cooking up a week of meals…');
+  genBtn(true);setStatus('');
+  el('skeleton').hidden=false;el('week').hidden=true;el('empty').hidden=true;el('hint').textContent='';
   var p=prefsText()+'Create a 7-day meal plan (Monday to Sunday). Keep each meal under 9 words. Reply with EXACTLY these labelled lines and nothing else:\n'+
     DAYS.map(function(d){return d.toUpperCase()+': the breakfast dish | the lunch dish | the dinner dish'}).join('\n');
   myllmAsk(p).then(function(r){return parsePlan(r||'')})
   .catch(function(){return myllmAsk(p+'\nIMPORTANT: fill each labelled line with real content — never repeat the instruction text.')
     .then(function(r){return parsePlan(r||'')})})
   .then(function(days){
-    plan=days;save();render();setStatus('');
-    if(window.myllmHaptic)myllmHaptic('success');
-  }).catch(function(err){setStatus('Could not plan: '+err.message)})
-  .then(function(){el('gen').disabled=false});
+    plan=days;save();setStatus('');haptic('success');
+  }).catch(function(err){setStatus('Could not plan: '+err.message,true)})
+  .then(function(){el('skeleton').hidden=true;el('week').hidden=false;render()});
 }
 
 function swap(di,meal){
-  if(!needAI())return;
+  if(!needAI()||busyMeal)return;
   var d=plan[di];setStatus('Swapping '+meal+' for '+d.day+'…');
+  busyMeal=di+':'+meal;render();
   myllmAsk(prefsText()+'Suggest ONE different '+meal+' idea to replace "'+d[meal]+'" for '+d.day+'. Reply with ONLY the dish name, under 9 words, no trailing punctuation.')
   .then(function(reply){
     var dish=reply.trim().replace(/^["'\-\s]+|["'\.\s]+$/g,'').split('\n')[0];
-    if(dish){d[meal]=dish;save();render();if(window.myllmHaptic)myllmHaptic('light')}
+    if(dish){d[meal]=dish;save();haptic('light')}
     setStatus('');
-  }).catch(function(err){setStatus('Could not swap: '+err.message)});
+  }).catch(function(err){setStatus('Could not swap: '+err.message,true)})
+  .then(function(){busyMeal=null;render()});
 }
 
 function shoppingList(){
   if(!needAI()||!plan)return;
+  var b=el('shop');b.disabled=true;b.innerHTML='<i class="spin"></i>Building…';
   setStatus('Building your shopping list…');
   myllmAsk('From this 7-day meal plan, write a concise grocery shopping list grouped under simple aisle headings (Produce, Dairy, etc.). Plan JSON: '+JSON.stringify(plan)+'. Reply as plain text, headings on their own line, one item per line with a "- " bullet.')
   .then(function(list){
     setStatus('');
     if(window.myllmShare)myllmShare('🛒 Shopping list\n\n'+list.trim());
-    else setStatus('Update MyLLM to share your shopping list.');
-  }).catch(function(err){setStatus('Could not build list: '+err.message)});
+    else setStatus('Update MyLLM to share your shopping list.',true);
+  }).catch(function(err){setStatus('Could not build list: '+err.message,true)})
+  .then(function(){b.disabled=false;b.innerHTML='<svg class="i"><use href="#i-cart"/></svg>Shopping list'});
 }
 
 function render(){
   var W=el('week');W.innerHTML='';
-  el('shop').style.display=plan?'block':'none';
-  el('gen').textContent=plan?'Refresh week':'Plan my week';
-  if(!plan){el('hint').textContent=window.myllmAsk?'':'Needs the latest MyLLM with apps-AI enabled.';return}
+  el('shop').hidden=!plan;
+  genBtn(!el('skeleton').hidden);
+  el('empty').hidden=!!plan||!el('skeleton').hidden;
+  if(!plan){el('hint').textContent='';if(!window.myllmAsk&&!el('status').textContent)setStatus('Needs the latest MyLLM with apps-AI enabled.');return}
   el('hint').textContent='Tap any meal to swap just that one.';
   plan.forEach(function(d,di){
-    var c=document.createElement('div');c.className='card';
-    var h=document.createElement('div');h.className='day';h.textContent=d.day;c.appendChild(h);
+    var c=document.createElement('div');c.className='day';
+    var h=document.createElement('h3');h.textContent=d.day;c.appendChild(h);
     MEALS.forEach(function(m){
       if(!d[m])return;
-      var r=document.createElement('div');r.className='meal';
+      var busy=busyMeal===di+':'+m;
+      var r=document.createElement('div');r.className='meal'+(busy?' busy':'');r.setAttribute('role','button');
+      r.setAttribute('aria-label','Swap '+m+' on '+d.day);
       var l=document.createElement('span');l.className='lbl';l.textContent=m;
       var t=document.createElement('span');t.className='dish';t.textContent=d[m];
-      r.appendChild(l);r.appendChild(t);
+      var s=document.createElement('span');s.className='sw';s.innerHTML=busy?'<i class="spin"></i>':'<svg class="i"><use href="#i-swap"/></svg>';
+      r.appendChild(l);r.appendChild(t);r.appendChild(s);
       r.onclick=function(){swap(di,m)};
       c.appendChild(r);
     });
@@ -167,7 +233,10 @@ function render(){
   });
 }
 
-store.getItem('plan').then(function(v){
+el('gen').onclick=generate;
+el('shop').onclick=shoppingList;
+genBtn(false);
+store().getItem('plan').then(function(v){
   if(v)try{var o=JSON.parse(v);el('prefs').value=o.prefs||'';plan=o.plan||null}catch(e){}
   render();
 });
