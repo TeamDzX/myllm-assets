@@ -8,36 +8,51 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Art Studio</title>
-<style>
-:root{--build-id:"416d1482b6";
+<style>:root{--build-id:"416d1482b6";
   color-scheme:light dark;
   --bg:var(--myllm-bg,#f2f2f7);--surface:var(--myllm-surface,#fff);
   --text:var(--myllm-text,#111);--muted:var(--myllm-muted,#6b6b72);
   --accent:var(--myllm-accent,#0b5ed7);--border:var(--myllm-border,rgba(120,120,128,.25));
-  --radius:var(--myllm-radius,14px);--font:var(--myllm-font,-apple-system,system-ui,sans-serif);
+  --fill:rgba(120,120,128,.12);--font:var(--myllm-font,-apple-system,system-ui,sans-serif);--h:330;
 }
-@media(prefers-color-scheme:dark){:root{--bg:var(--myllm-bg,#000);--surface:var(--myllm-surface,#1c1c1e);--text:var(--myllm-text,#eee);--muted:var(--myllm-muted,#98989f)}}
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
-body{margin:0;font-family:var(--font);background:var(--bg);color:var(--text);overflow-x:hidden}
-.stage{display:flex;justify-content:center;padding:12px 12px 0}
-canvas{width:100%;max-width:430px;border-radius:var(--radius);box-shadow:0 6px 24px rgba(0,0,0,.18);display:block;touch-action:none}
-.panel{max-width:430px;margin:0 auto;padding:10px 14px 28px}
-.row{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}.row::-webkit-scrollbar{display:none}
-button{font:inherit;cursor:pointer;border:0;border-radius:10px}
-.chip{flex:none;padding:9px 14px;border-radius:999px;background:var(--surface);border:1px solid var(--border);color:var(--muted);font-weight:600;font-size:14px}
-.chip.on{background:var(--accent);color:#fff;border-color:transparent}
-label{display:block;font-size:11px;font-weight:700;color:var(--muted);margin:11px 0 3px;text-transform:uppercase;letter-spacing:.03em}
-input[type=range]{width:100%;accent-color:var(--accent)}
-.pals{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}.pals::-webkit-scrollbar{display:none}
-.pal{flex:none;width:42px;height:26px;border-radius:8px;border:2px solid transparent;overflow:hidden;display:flex}
+@media(prefers-color-scheme:dark){:root{--bg:var(--myllm-bg,#000);--surface:var(--myllm-surface,#1c1c1e);--text:var(--myllm-text,#eee);--muted:var(--myllm-muted,#98989f);--fill:rgba(120,120,128,.24)}}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+body{font-family:var(--font);background:var(--bg);color:var(--text);overflow-x:hidden;font-size:15.5px;
+  max-width:600px;margin:0 auto;min-height:100dvh;
+  padding:calc(16px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) calc(28px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left))}
+svg.i{width:1.25em;height:1.25em;fill:currentColor;flex-shrink:0}
+button{font:inherit;color:inherit;cursor:pointer;border:0;border-radius:12px}
+button:active{transform:scale(.96)}
+button:disabled{opacity:.5}
+
+.head{display:flex;align-items:center;gap:12px;margin:2px 2px 14px}
+.tile{display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0;
+  background:linear-gradient(145deg,hsl(var(--h) 62% 50%),hsl(calc(var(--h) + 40) 58% 28%))}
+.head .tile{width:44px;height:44px;border-radius:13px;font-size:19px}
+.head .ht{flex:1;min-width:0}
+h1{font-size:22px;font-weight:800;letter-spacing:-.01em}
+.head p{font-size:13px;color:var(--muted);margin-top:1px}
+.head .acts{display:flex;gap:8px;flex-shrink:0}
+.ib{width:40px;height:40px;border-radius:12px;border:1px solid var(--border);background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:16px}
+
+.stage{display:flex;justify-content:center}
+canvas{width:100%;max-width:430px;aspect-ratio:3/4;border-radius:18px;box-shadow:0 6px 24px rgba(0,0,0,.18);display:block;touch-action:none}
+.panel{max-width:430px;margin:12px auto 0;background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:14px}
+.row{display:flex;gap:7px;overflow-x:auto;scrollbar-width:none;margin:0 -14px;padding:0 14px 2px}.row::-webkit-scrollbar{display:none}
+.chip{flex:none;min-height:36px;padding:0 14px;border-radius:99px;background:var(--bg);border:1px solid var(--border);font-weight:650;font-size:13.5px}
+.chip.on{background:hsl(var(--h) 60% 45%);color:#fff;border-color:transparent}
+label{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:800;color:var(--muted);margin:14px 2px 4px;text-transform:uppercase;letter-spacing:.07em}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:28px;background:transparent;accent-color:hsl(var(--h) 60% 46%)}input[type=range]::-webkit-slider-runnable-track{height:5px;border-radius:99px;background:rgba(120,120,128,.28)}input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;margin-top:-9.5px;border-radius:50%;background:#fff;border:2px solid hsl(var(--h) 60% 46%);box-shadow:0 2px 6px rgba(0,0,0,.25)}
+.pals{display:flex;gap:8px;overflow-x:auto;padding:2px 0;scrollbar-width:none}.pals::-webkit-scrollbar{display:none}
+.pal{flex:none;width:46px;height:30px;border-radius:9px;border:2px solid transparent;overflow:hidden;display:flex;padding:0}
 .pal.on{border-color:var(--text)}.pal span{flex:1}
-.hint{font-size:12px;color:var(--muted);text-align:center;margin:8px 0 0}
-.actions{display:flex;gap:8px;margin-top:14px}
-.actions button{flex:1;padding:13px;font-weight:700;font-size:14px}
-.primary{background:var(--accent);color:#fff}.ghost{background:var(--surface);border:1px solid var(--border);color:var(--text)}
+.hint{display:flex;align-items:center;justify-content:center;gap:6px;font-size:12.5px;color:var(--muted);margin:12px 0 0}
+.actions{display:flex;gap:8px;margin-top:12px}
+.actions button{flex:1;min-height:46px;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center;gap:6px}
+.primary{background:var(--accent);color:#fff}.ghost{background:var(--fill)}
 .actions2{display:flex;gap:8px;margin-top:8px}
-.actions2 button{flex:1;padding:12px;font-weight:600;font-size:14px;background:var(--surface);border:1px solid var(--border);color:var(--text)}
-#toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(20px);background:rgba(0,0,0,.85);color:#fff;padding:10px 18px;border-radius:999px;font-size:14px;opacity:0;transition:.25s;pointer-events:none;z-index:50}
+.actions2 button{flex:1;min-height:46px;font-weight:650;font-size:14px;background:var(--fill);display:flex;align-items:center;justify-content:center;gap:6px}
+#toast{position:fixed;left:50%;bottom:calc(22px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(20px);background:rgba(0,0,0,.85);color:#fff;padding:10px 18px;border-radius:999px;font-size:14px;opacity:0;transition:.25s;pointer-events:none;z-index:50}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 #ov{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:60;color:#fff;font-weight:700;font-size:16px;flex-direction:column;gap:14px}
 #ov.show{display:flex}
@@ -47,9 +62,43 @@ input[type=range]{width:100%;accent-color:var(--accent)}
 @keyframes bl{50%{opacity:.2}}
 #vrec{position:fixed;top:calc(14px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);z-index:60;display:none;align-items:center;gap:2px;background:rgba(20,10,30,.92);color:#fff;padding:8px 15px;border-radius:999px;font-size:13px;font-weight:700;letter-spacing:.04em;box-shadow:0 6px 20px rgba(0,0,0,.45)}
 #vrec.show{display:flex}
+
+/* Focus: MyLLM's bars go (myllmImmersive), the header and panel step aside,
+   and the canvas takes the screen over a dark stage with a small glass bar. */
+.fbar{display:none}
+body.focus{max-width:none;overflow:hidden;
+  background:radial-gradient(120% 90% at 20% 10%,hsl(var(--h) 55% 22%),transparent 60%),radial-gradient(120% 90% at 85% 95%,hsl(calc(var(--h) + 60) 55% 18%),transparent 62%),#0b0b10}
+body.focus .head,body.focus .panel{display:none}
+body.focus .stage{position:fixed;inset:0;align-items:center;
+  padding:calc(12px + env(safe-area-inset-top)) calc(12px + env(safe-area-inset-right)) calc(84px + env(safe-area-inset-bottom)) calc(12px + env(safe-area-inset-left))}
+body.focus canvas{max-width:none;width:min(100%,calc((100dvh - 100px - env(safe-area-inset-top) - env(safe-area-inset-bottom)) * .75))}
+body.focus .fbar{display:flex;position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom));gap:6px;padding:6px;border-radius:99px;
+  background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.16);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);color:#fff;z-index:20}
+.fbar button{height:44px;min-width:44px;border-radius:99px;background:transparent;padding:0 12px;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center;gap:6px}
+@media (max-height:520px){body.focus .stage{padding-bottom:calc(12px + env(safe-area-inset-bottom));padding-right:calc(84px + env(safe-area-inset-right))}
+  body.focus canvas{width:min(100%,calc((100dvh - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom)) * .75))}
+  body.focus .fbar{flex-direction:column;left:auto;right:calc(14px + env(safe-area-inset-right));bottom:50%;transform:translateY(50%)}}
+@media (prefers-reduced-motion:reduce){button:active{transform:none}}
 </style>
 </head>
 <body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-palette" viewBox="0 0 24 24"><path d="M12 2.5a9.5 9.5 0 0 0 0 19c1.5 0 2.3-1 2.3-2.2 0-.6-.2-1-.5-1.4-.3-.4-.5-.8-.5-1.3 0-1 .8-1.8 1.8-1.8h2.2a4.2 4.2 0 0 0 4.2-4.2C21.5 6.1 17.2 2.5 12 2.5zM6.8 12.6a1.6 1.6 0 1 1 0-3.2 1.6 1.6 0 0 1 0 3.2zm2.8-4a1.6 1.6 0 1 1 0-3.2 1.6 1.6 0 0 1 0 3.2zm4.8 0a1.6 1.6 0 1 1 0-3.2 1.6 1.6 0 0 1 0 3.2zm2.8 4a1.6 1.6 0 1 1 0-3.2 1.6 1.6 0 0 1 0 3.2z" fill="currentColor"/></symbol>
+  <symbol id="i-expand" viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-shrink" viewBox="0 0 24 24"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5.5v13a1 1 0 0 0 1.52.85l10.4-6.5a1 1 0 0 0 0-1.7L9.52 4.65A1 1 0 0 0 8 5.5z" fill="currentColor"/></symbol>
+  <symbol id="i-pause" viewBox="0 0 24 24"><rect x="6" y="5" width="4.2" height="14" rx="1.4" fill="currentColor"/><rect x="13.8" y="5" width="4.2" height="14" rx="1.4" fill="currentColor"/></symbol>
+  <symbol id="i-again" viewBox="0 0 24 24"><path d="M12 5V2.6a.6.6 0 0 0-1-.45L7.2 5.55a.6.6 0 0 0 0 .9L11 9.85a.6.6 0 0 0 1-.45V7a5.5 5.5 0 1 1-5.5 5.5 1 1 0 0 0-2 0A7.5 7.5 0 1 0 12 5z" fill="currentColor"/></symbol>
+  <symbol id="i-pen" viewBox="0 0 24 24"><path d="M15.2 4.3a2.2 2.2 0 0 1 3.1 0l1.4 1.4a2.2 2.2 0 0 1 0 3.1L9.4 19.1 4 20l.9-5.4z" fill="currentColor"/></symbol>
+  <symbol id="i-photo" viewBox="0 0 24 24"><path d="M5 4h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zm0 12.6V18h14v-3.4l-3.8-3.8-4.4 4.4-2.4-2.4zM8.5 7a2 2 0 1 0 0 4 2 2 0 0 0 0-4z" fill="currentColor"/></symbol>
+  <symbol id="i-film" viewBox="0 0 24 24"><path d="M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zm0 2v2h2V5zm12 0v2h2V5zM5 9v2h2V9zm12 0v2h2V9zM5 13v2h2v-2zm12 0v2h2v-2zM5 17v2h2v-2zm12 0v2h2v-2zM9 5v14h6V5z" fill="currentColor"/></symbol>
+  <symbol id="i-rec" viewBox="0 0 24 24"><path d="M4 6h11a2 2 0 0 1 2 2v1.7l3.4-2.3a1 1 0 0 1 1.6.8v7.6a1 1 0 0 1-1.6.8L17 14.3V16a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z" fill="currentColor"/></symbol>
+</defs></svg>
+<div class="head">
+  <div class="tile"><svg class="i"><use href="#i-palette"/></svg></div>
+  <div class="ht"><h1>Art Studio</h1><p>Living generative art you finger-paint</p></div>
+  <div class="acts" id="acts"></div>
+</div>
 <div class="stage"><canvas id="c"></canvas></div>
 <div class="panel">
   <div class="row" id="modes"></div>
@@ -58,22 +107,28 @@ input[type=range]{width:100%;accent-color:var(--accent)}
   <label>Trails</label><input type="range" id="trail" min="1" max="100" value="55">
   <label>Stroke</label><input type="range" id="stroke" min="1" max="100" value="28">
   <label>Palette</label><div class="pals" id="pals"></div>
-  <p class="hint">✎ Drag on the canvas to paint and pull the flow.</p>
+  <p class="hint"><svg class="i"><use href="#i-pen"/></svg>Drag on the canvas to paint and pull the flow.</p>
   <div class="actions">
-    <button class="ghost" id="playBtn">⏸ Pause</button>
-    <button class="ghost" id="newBtn">↻ New</button>
+    <button class="ghost" id="playBtn"><svg class="i"><use href="#i-pause"/></svg>Pause</button>
+    <button class="ghost" id="newBtn"><svg class="i"><use href="#i-again"/></svg>New</button>
     <button class="ghost" id="clearBtn">Clear</button>
   </div>
   <div class="actions2">
-    <button id="saveBtn">📷 Save image</button>
-    <button id="gifBtn">🎞️ Save GIF</button>
+    <button id="saveBtn"><svg class="i"><use href="#i-photo"/></svg>Save image</button>
+    <button id="gifBtn"><svg class="i"><use href="#i-film"/></svg>Save GIF</button>
   </div>
-  <label id="clipLbl" style="display:none">🎬 Record a clip to share</label>
+  <label id="clipLbl" style="display:none"><svg class="i"><use href="#i-rec"/></svg>Record a clip to share</label>
   <div class="actions2" id="videoRow" style="display:none">
     <button data-s="5">5 sec</button>
     <button data-s="10">10 sec</button>
     <button data-s="15">15 sec</button>
   </div>
+</div>
+<div class="fbar" id="fbar">
+  <button type="button" id="fPlay" aria-label="Pause"></button>
+  <button type="button" id="fNew" aria-label="New"></button>
+  <button type="button" id="fSave" aria-label="Save image"></button>
+  <button type="button" id="fExit" aria-label="Leave full screen"></button>
 </div>
 <div id="vrec"><span class="recdot"></span>REC <span id="vrecT"></span></div>
 <div id="toast"></div>
@@ -1029,7 +1084,7 @@ function encodeGIF(){
       else toast('Update MyLLM to save');
     }catch(e){toast('GIF failed: '+e.message)}
     document.getElementById('ov').classList.remove('show');
-    document.getElementById('gifBtn').textContent='🎞️ Save GIF';
+    document.getElementById('gifBtn').innerHTML=ICO('film')+'Save GIF';
   },60);
 }
 document.getElementById('gifBtn').onclick=function(){
@@ -1082,7 +1137,7 @@ function recordVideo(secs){
 function buildModes(){var m=document.getElementById('modes');m.innerHTML='';MODES.forEach(function(name,i){var b=document.createElement('button');b.className='chip'+(i===state.mode?' on':'');b.textContent=name;b.onclick=function(){state.mode=i;haptic('selection');buildModes();reseed();clearCanvas();save()};m.appendChild(b)})}
 function buildPals(){var p=document.getElementById('pals');p.innerHTML='';PALETTES.forEach(function(pal,i){var d=document.createElement('button');d.className='pal'+(i===state.pal?' on':'');pal.forEach(function(c){var s=document.createElement('span');s.style.background=c;d.appendChild(s)});d.onclick=function(){state.pal=i;haptic('selection');buildPals();clearCanvas();save()};p.appendChild(d)})}
 ['density','speed','trail','stroke'].forEach(function(id){var el=document.getElementById(id);el.oninput=function(){state[id]=+this.value};el.onchange=save});
-function togglePlay(){paused=!paused;document.getElementById('playBtn').textContent=paused?'▶ Play':'⏸ Pause';if(!paused&&!raf)raf=requestAnimationFrame(step);if(paused&&raf){cancelAnimationFrame(raf);raf=null}haptic('selection')}
+function togglePlay(){paused=!paused;syncPlay();if(!paused&&!raf)raf=requestAnimationFrame(step);if(paused&&raf){cancelAnimationFrame(raf);raf=null}haptic('selection')}
 document.getElementById('playBtn').onclick=togglePlay;
 document.getElementById('newBtn').onclick=function(){reseed();clearCanvas();save();haptic('light')};
 document.getElementById('clearBtn').onclick=function(){clearCanvas();haptic('warning')};
@@ -1099,6 +1154,37 @@ function load(){
   });
 }
 function init(){buildModes();buildPals();clearCanvas();reseed();raf=requestAnimationFrame(step)}
+
+/* ---------- focus ----------
+   The canvas bitmap is a fixed 540×720; focus mode only changes its CSS size,
+   so the running picture carries on untouched when MyLLM's bars go. */
+function ICO(n){return '<svg class="i"><use href="#i-'+n+'"/></svg>'}
+function syncPlay(){
+  document.getElementById('playBtn').innerHTML=paused?ICO('play')+'Play':ICO('pause')+'Pause';
+  var f=document.getElementById('fPlay');f.innerHTML=paused?ICO('play'):ICO('pause');f.setAttribute('aria-label',paused?'Play':'Pause');
+}
+var focusOn=false;
+function syncChrome(){
+  if(!window.myllmImmersive)return;
+  try{myllmImmersive(focusOn,{keepAwake:false}).catch(function(){})}catch(e){}
+}
+function setFocus(on){
+  if(on&&!window.myllmImmersive)return;
+  focusOn=on;document.body.classList.toggle('focus',on);haptic('light');syncChrome();
+}
+function buildActs(){
+  var a=document.getElementById('acts');
+  if(!window.myllmImmersive||a.firstChild)return;
+  var b=document.createElement('button');b.type='button';b.className='ib';b.innerHTML=ICO('expand');b.setAttribute('aria-label','Full screen');
+  b.onclick=function(){setFocus(true)};a.appendChild(b);
+}
+document.getElementById('fNew').innerHTML=ICO('again');document.getElementById('fSave').innerHTML=ICO('photo');document.getElementById('fExit').innerHTML=ICO('shrink');
+document.getElementById('fPlay').onclick=togglePlay;
+document.getElementById('fNew').onclick=function(){document.getElementById('newBtn').click()};
+document.getElementById('fSave').onclick=function(){document.getElementById('saveBtn').click()};
+document.getElementById('fExit').onclick=function(){setFocus(false)};
+document.addEventListener('visibilitychange',function(){if(!document.hidden&&focusOn)syncChrome()});   /* MyLLM restores its bars when the app is left */
+syncPlay();buildActs();setTimeout(buildActs,600);setTimeout(buildActs,2500);   /* the bridge can arrive after this script */
 load();
 </script>
 </body>

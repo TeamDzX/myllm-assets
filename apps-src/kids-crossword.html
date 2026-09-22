@@ -3,152 +3,323 @@
   Spell the Picture — MyLLMos™ App Gallery · © 2026 Opticell Ltd
   Source-available: read it, remix it, run your version inside MyLLM™.
   Not for redistribution or republication. Terms: https://github.com/TeamDzX/myllm-assets/blob/main/LICENSE
---><html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+--><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,viewport-fit=cover">
 <title>Spell the Picture</title>
-<style>
-:root{--build-id:"d9edd23fd0";
-  color-scheme:light dark;
-  --bg:var(--myllm-bg,#f2f2f7);--surface:var(--myllm-surface,#fff);
-  --text:var(--myllm-text,#111);--muted:var(--myllm-muted,#6b6b72);
-  --accent:var(--myllm-accent,#ff8c42);--border:var(--myllm-border,rgba(120,120,128,.3));
-  --font:var(--myllm-font,-apple-system,system-ui,sans-serif);
-  --box:#fff;--ok:#34c759;--tile:#fff;
-}
-@media(prefers-color-scheme:dark){:root{--bg:var(--myllm-bg,#000);--surface:var(--myllm-surface,#1c1c1e);--text:var(--myllm-text,#eee);--muted:var(--myllm-muted,#98989f);--box:#26262b;--tile:#26262b}}
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
-body{margin:0;font-family:var(--font);background:var(--bg);color:var(--text)}
-.wrap{max-width:440px;margin:0 auto;padding:12px 16px 22px;text-align:center;display:flex;flex-direction:column;min-height:100dvh}
-.top{display:flex;align-items:center;gap:10px;margin-bottom:6px}
-.stars{font-size:18px;font-weight:800;color:var(--accent)}
-.top .sp{flex:1}
-.top button{border:0;background:var(--surface);border:1px solid var(--border);color:var(--accent);border-radius:12px;padding:9px 14px;font:inherit;font-weight:700;font-size:14px;cursor:pointer}
-.modeseg{display:flex;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:3px;width:200px;margin:2px auto 0}
-.modeseg button{flex:1;border:0;background:none;color:var(--muted);font:inherit;font-weight:700;font-size:14px;padding:8px;border-radius:9px;cursor:pointer}
-.modeseg button.on{background:var(--accent);color:#fff}
-.pic{flex:none;margin:6px auto 2px;width:62%;max-width:240px;aspect-ratio:1;background:var(--surface);border:2px solid var(--border);border-radius:24px;display:flex;align-items:center;justify-content:center;overflow:hidden}
-.pic img{width:100%;height:100%;object-fit:contain}
-.boxes{display:flex;gap:8px;justify-content:center;margin:18px auto;max-width:100%}
-.box{flex:1 1 0;max-width:64px;aspect-ratio:1;border:3px solid var(--border);border-radius:16px;background:var(--box);display:flex;align-items:center;justify-content:center;font-size:min(8.5vw,32px);font-weight:800;cursor:pointer}
-.box.filled{border-color:var(--accent)}
-.box.ok{border-color:var(--ok);background:var(--ok);color:#fff}
-.box.bad{border-color:#ff3b30;animation:shake .4s}
-@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
-.bank{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:8px}
-.tile{width:58px;height:58px;border:2px solid var(--border);border-radius:14px;background:var(--tile);color:var(--text);font:inherit;font-size:30px;font-weight:800;cursor:pointer;box-shadow:0 3px 0 rgba(0,0,0,.12)}
-.tile:active{transform:translateY(2px);box-shadow:none}
-.tile.used{visibility:hidden}
-.spacer{flex:1}
-.cheer{font-size:22px;font-weight:800;color:var(--ok);min-height:30px;margin-top:14px}
-.win{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:40}
-.win.show{display:flex}
-.winB{background:var(--bg);border-radius:24px;padding:30px 26px;max-width:300px}
-.winB .big{font-size:66px}.winB h2{margin:6px 0 4px;font-size:24px}.winB p{color:var(--muted);margin:0 0 16px}
-.winB button{width:100%;border:0;background:var(--accent);color:#fff;border-radius:14px;padding:14px;font:inherit;font-weight:800;font-size:16px;cursor:pointer}
-</style>
-</head>
-<body>
-<div class="wrap">
-  <div class="top"><span class="stars" id="stars">⭐ 0</span><span class="sp"></span>
-    <button id="hintBtn">💡 Hint</button><button id="skipBtn">Skip ›</button></div>
-  <div class="modeseg" id="modeseg"><button data-m="little" class="on">Little words</button><button data-m="big">Big words</button></div>
-  <div class="pic"><img id="pic" alt=""></div>
-  <div class="boxes" id="boxes"></div>
-  <div class="cheer" id="cheer"></div>
-  <div class="spacer"></div>
-  <div class="bank" id="bank"></div>
-</div>
-<div class="win" id="win"><div class="winB"><div class="big">🌟</div><h2>Well done!</h2><p id="winSub">You spelled them all!</p><button id="winBtn">Play again</button></div></div>
+<style>:root{--build-id:"d9edd23fd0";color-scheme:light dark}
+  @property --h{ syntax:'<number>'; inherits:true; initial-value:28; }
+  *{ margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body{ height:100%; }
+  body{ font-family:var(--myllm-font,-apple-system,system-ui,sans-serif); background:#0b0b10; color:#fff; overflow:hidden;
+    touch-action:none; overscroll-behavior:none; -webkit-user-select:none; user-select:none; }
+  button{ font:inherit; color:inherit; }
 
+  /* The stage: a hue-tinted backdrop in two layers, dark and light, so the
+     change between them can fade. */
+  .stage{ position:fixed; inset:0; --h:28; transition:--h 1.4s ease; color:#fff; }
+  .bg{ position:absolute; inset:0; transition:opacity .6s ease; }
+  .bg.d{ background:radial-gradient(120% 90% at 20% 10%, hsl(var(--h) 70% 34%), transparent 60%),
+      radial-gradient(120% 90% at 85% 95%, hsl(calc(var(--h) + 60) 65% 26%), transparent 62%), #0b0b10; }
+  .bg.l{ opacity:0; background:radial-gradient(120% 90% at 20% 0%, hsl(var(--h) 80% 84%), transparent 60%),
+      radial-gradient(120% 90% at 85% 100%, hsl(calc(var(--h) + 60) 78% 86%), transparent 62%), #f4f4f8; }
+  .lite{ color:#15151a; } .lite .bg.l{ opacity:1; } .lite .bg.d{ opacity:0; }
+
+  .col{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center;
+    padding:calc(12px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) calc(14px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left)); }
+  .top{ width:100%; max-width:560px; height:44px; display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
+  .lbl{ font-size:11px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; opacity:.62; white-space:nowrap; }
+  .glass{ border:1px solid rgba(255,255,255,.16); background:rgba(255,255,255,.12); color:inherit;
+    -webkit-backdrop-filter:blur(18px); backdrop-filter:blur(18px); }
+  .lite .glass{ border-color:rgba(0,0,0,.09); background:rgba(255,255,255,.62); }
+  svg{ width:1.25em; height:1.25em; fill:currentColor; flex-shrink:0; }
+  .rnd{ width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:15px; flex-shrink:0; }
+  .pill{ min-width:44px; height:44px; border-radius:99px; padding:0 16px; display:flex; align-items:center; justify-content:center; gap:6px;
+    font-size:19px; font-weight:800; font-variant-numeric:tabular-nums; flex-shrink:0; }
+  .pill small{ font-size:10px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; opacity:.6; }
+  .pill.bump{ animation:bump .28s ease; }
+  @keyframes bump{ 40%{ transform:scale(1.18); } }
+  .top .hide{ visibility:hidden; }
+
+  .wrap{ flex:1; width:100%; min-height:0; position:relative; display:flex; align-items:center; justify-content:center; margin:10px 0 34px; }
+  .foot{ position:absolute; left:0; right:0; top:calc(50% + var(--bh,320px) / 2 + 12px); text-align:center; font-size:12px; font-weight:600;
+    letter-spacing:.02em; opacity:.55; font-variant-numeric:tabular-nums; white-space:nowrap; }
+
+  /* One glass card over the board: title, paused, finished. */
+  .sheet{ position:absolute; left:50%; top:50%; width:max(232px, min(300px, calc(var(--b,320px) - 44px))); transform:translate(-50%,-50%) scale(.96);
+    opacity:0; pointer-events:none; border-radius:26px; padding:22px 20px 18px; text-align:center; box-shadow:0 24px 60px rgba(0,0,0,.35); z-index:5;
+    transition:opacity .28s ease, transform .28s cubic-bezier(.2,.8,.2,1); }
+  .sheet.on{ opacity:1; transform:translate(-50%,-50%); pointer-events:auto; }
+  /* whatever sits under an open card steps back, so the card reads */
+  .under{ transition:opacity .3s, filter .3s; } .veil .under{ opacity:.28; filter:blur(2px); }
+  .lite .sheet{ box-shadow:0 22px 50px rgba(20,20,40,.18); }
+  .sheet h1{ font-size:30px; font-weight:800; letter-spacing:-.02em; }
+  .sheet p{ font-size:13.5px; line-height:1.4; opacity:.72; margin-top:6px; }
+  .kick{ font-size:11px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; opacity:.62; }
+  .big{ font-size:64px; font-weight:800; line-height:1.05; letter-spacing:-.03em; font-variant-numeric:tabular-nums; margin-top:4px; }
+  .big small{ display:block; font-size:12px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; opacity:.6; margin-top:2px; }
+  .best{ display:inline-block; margin-top:10px; font-size:11.5px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; opacity:.7; }
+  .best.new{ opacity:1; color:#0b0b10; background:#ffd60a; border-radius:99px; padding:5px 11px; }
+  .sheet .act{ width:100%; height:50px; border-radius:99px; margin-top:10px; font-size:16px; font-weight:750;
+    display:flex; align-items:center; justify-content:center; gap:8px; }
+  .sheet .act:first-of-type{ margin-top:18px; }
+  .sheet .act:active, .rnd:active{ transform:scale(.96); }
+  .pri{ border:none; background:#fff; color:#0b0b10; box-shadow:0 10px 30px rgba(0,0,0,.3); }
+  .lite .pri{ background:#15151a; color:#fff; box-shadow:0 10px 26px rgba(20,20,40,.22); }
+
+  @media (max-height:430px){
+    .sheet{ padding:14px 18px 14px; } .sheet h1{ font-size:24px; } .big{ font-size:42px; }
+    .sheet .act{ height:44px; margin-top:8px; } .sheet .act:first-of-type{ margin-top:12px; } .sheet p{ display:none; }
+    .wrap{ margin:6px 0 26px; }
+  }
+  @media (prefers-reduced-motion:reduce){ .pill.bump{ animation:none; } .stage{ transition:none; } }
+
+  .main{ flex:1; width:100%; max-width:520px; min-height:0; display:flex; flex-direction:column; align-items:center; }
+  .wrap{ margin:6px 0 4px; }
+  .veil .under{ pointer-events:none; opacity:.3; filter:blur(7px) saturate(.8); }
+  .play{ width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px; }
+  .pic{ width:var(--pic,220px); height:var(--pic,220px); border-radius:30px; background:#fff; overflow:hidden; position:relative; flex-shrink:0;
+    box-shadow:0 20px 50px rgba(0,0,0,.35), 0 0 0 1px rgba(255,255,255,.14); }
+  .lite .pic{ box-shadow:0 18px 40px rgba(20,20,40,.16), 0 0 0 1px rgba(0,0,0,.05); }
+  .pic img{ width:100%; height:100%; object-fit:contain; display:block; }
+  .pic .miss{ position:absolute; inset:0; display:none; align-items:center; justify-content:center; font-size:64px; color:#fff;
+    background:linear-gradient(145deg, hsl(var(--h) 80% 60%), hsl(calc(var(--h) + 30) 70% 42%)); }
+  .pic.nopic .miss{ display:flex; } .pic.nopic img{ display:none; }
+  .boxes{ display:flex; gap:9px; justify-content:center; width:100%; max-width:380px; }
+  .box{ flex:1 1 0; max-width:66px; aspect-ratio:1; border-radius:18px; display:flex; align-items:center; justify-content:center;
+    font-size:min(9vw,34px); font-weight:800; cursor:pointer; border:3px solid rgba(255,255,255,.3); background:rgba(255,255,255,.08); }
+  .lite .box{ border-color:rgba(0,0,0,.14); background:rgba(255,255,255,.7); }
+  .box.filled{ border-color:hsl(var(--h) 95% 60%); background:#fff; color:#15151a; }
+  .box.ok{ border-color:#34c759; background:#34c759; color:#fff; }
+  .box.bad{ border-color:#ff9f6b; animation:shake .45s ease; }
+  @keyframes shake{ 0%,100%{ transform:translateX(0); } 25%{ transform:translateX(-7px); } 75%{ transform:translateX(7px); } }
+  .cheer{ min-height:30px; font-size:22px; font-weight:800; color:#4be07d; }
+  .lite .cheer{ color:#1c9a4a; }
+  .bank{ display:flex; gap:12px; justify-content:center; flex-wrap:wrap; width:100%; max-width:420px; flex-shrink:0; }
+  .tile{ width:62px; height:62px; border:0; border-radius:18px; background:#fff; color:#15151a; font-size:32px; font-weight:800;
+    box-shadow:0 4px 0 rgba(0,0,0,.18), 0 10px 22px rgba(0,0,0,.18); cursor:pointer; }
+  .tile:active{ transform:translateY(3px); box-shadow:0 1px 0 rgba(0,0,0,.18); }
+  .tile.used{ visibility:hidden; }
+  .dock{ width:100%; max-width:420px; flex-shrink:0; display:flex; flex-direction:column; align-items:center; gap:14px; transition:opacity .3s; }
+  .home .dock, .veil .dock{ opacity:0; pointer-events:none; }
+  .aux{ display:flex; gap:12px; }
+  .aux button{ min-width:120px; height:52px; border-radius:99px; padding:0 20px; font-size:16px; font-weight:750; display:flex; align-items:center; justify-content:center; gap:8px; }
+  .aux button:active{ transform:scale(.96); }
+  .pill.stars svg{ color:#ffd60a; }
+  .seg{ display:flex; border-radius:16px; padding:4px; gap:4px; margin-top:16px; }
+  .seg button{ flex:1; height:46px; border:0; background:none; border-radius:12px; font-size:15px; font-weight:750; opacity:.75; }
+  .seg button.on{ background:#fff; color:#0b0b10; opacity:1; }
+  .lite .seg button.on{ background:#15151a; color:#fff; }
+  .bigstar{ width:76px; height:76px; margin:0 auto 4px; color:#ffd60a; filter:drop-shadow(0 6px 16px rgba(255,190,0,.45)); }
+  .bigstar svg{ width:100%; height:100%; }
+  .sheet .act{ height:56px; font-size:17px; }
+  @media (max-height:520px){
+    .main{ flex-direction:row; max-width:none; gap:20px; align-items:center; }
+    .play{ flex-direction:row; gap:18px; } .right{ display:flex; flex-direction:column; align-items:center; gap:12px; }
+    .dock{ width:auto; } .aux{ flex-direction:column; } .tile{ width:54px; height:54px; font-size:28px; }
+    .bigstar{ width:52px; height:52px; } .seg{ margin-top:10px; } .seg button{ height:40px; }
+  }
+  @media (max-height:640px){ .home .lbl{ visibility:hidden; } }
+  @media (prefers-reduced-motion:reduce){ .box.bad{ animation:none; } }
+</style></head><body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5.5v13a1 1 0 0 0 1.52.85l10.4-6.5a1 1 0 0 0 0-1.7L9.52 4.65A1 1 0 0 0 8 5.5z"/></symbol>
+  <symbol id="i-pause" viewBox="0 0 24 24"><rect x="6" y="5" width="4.2" height="14" rx="1.4"/><rect x="13.8" y="5" width="4.2" height="14" rx="1.4"/></symbol>
+  <symbol id="i-again" viewBox="0 0 24 24"><path d="M12 5V2.6a.6.6 0 0 0-1-.45L7.2 5.55a.6.6 0 0 0 0 .9L11 9.85a.6.6 0 0 0 1-.45V7a5.5 5.5 0 1 1-5.5 5.5 1 1 0 0 0-2 0A7.5 7.5 0 1 0 12 5z"/></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24"><path d="M6.4 5a1 1 0 0 0-1.4 1.4L10.6 12 5 17.6A1 1 0 0 0 6.4 19l5.6-5.6 5.6 5.6a1 1 0 0 0 1.4-1.4L13.4 12 19 6.4A1 1 0 0 0 17.6 5L12 10.6z"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><path d="M12 2.8l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 16.8l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></symbol>
+  <symbol id="i-bulb" viewBox="0 0 24 24"><path d="M12 2.5a6.8 6.8 0 0 0-4 12.3c.6.5 1 1.2 1 2V17h6v-.2c0-.8.4-1.5 1-2A6.8 6.8 0 0 0 12 2.5zM9.2 18.8h5.6v.8a2 2 0 0 1-2 2h-1.6a2 2 0 0 1-2-2z"/></symbol>
+  <symbol id="i-skip" viewBox="0 0 24 24"><path d="M5 5.8v12.4a.8.8 0 0 0 1.25.66L15 12.66a.8.8 0 0 0 0-1.32L6.25 5.14A.8.8 0 0 0 5 5.8zM17 5h2.2v14H17z"/></symbol>
+  <symbol id="i-pic" viewBox="0 0 24 24"><path d="M4.5 4h15A1.5 1.5 0 0 1 21 5.5v13a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 18.5v-13A1.5 1.5 0 0 1 4.5 4zM5 17h14l-4.6-6-3.4 4.4-2.2-2.8z"/><circle cx="8.5" cy="8.5" r="1.8"/></symbol>
+</defs></svg>
+<div class="stage home" id="stage">
+  <div class="bg d"></div><div class="bg l"></div>
+  <div class="col">
+    <div class="top">
+      <button class="glass rnd hide" id="bHome" aria-label="Menu"><svg><use href="#i-close"/></svg></button>
+      <div class="lbl" id="lbl">Spell the Picture</div>
+      <div class="glass pill stars hide" id="starPill"><svg><use href="#i-star"/></svg><span id="stars">0</span></div>
+    </div>
+    <div class="main">
+      <div class="wrap" id="wrap">
+        <div class="play under" id="play">
+          <div class="pic" id="picBox"><img id="pic" alt=""><div class="miss"><svg><use href="#i-pic"/></svg></div></div>
+          <div class="right">
+            <div class="boxes" id="boxes"></div>
+            <div class="cheer" id="cheer"></div>
+            <div class="bank" id="bank"></div>
+          </div>
+        </div>
+        <div class="sheet glass" id="sheet"></div>
+      </div>
+      <div class="dock under" id="dock">
+        <div class="aux"><button class="glass" id="hintBtn"><svg><use href="#i-bulb"/></svg>Hint</button><button class="glass" id="skipBtn"><svg><use href="#i-skip"/></svg>Skip</button></div>
+      </div>
+    </div>
+  </div>
+</div>
 <script>
-var IMG="https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/kids/";
-var WORDS_LITTLE=["CAT","DOG","PIG","COW","SUN","BEE","BUS","CAR","HAT","FOX","OWL","CAP","CUP","BAT"];
-var WORDS_BIG=["FISH","STAR","FROG","DUCK","CAKE","MOON","TREE","BEAR","APPLE","TRAIN","ROBOT","SNAKE","TIGER","HOUSE"];
-var mode="little";
-function WORDS(){return mode==="big"?WORDS_BIG:WORDS_LITTLE}
-var order=[],qi=0,word="",bank=[],used=[],placed=[],stars=0,locked=false;
-function $(i){return document.getElementById(i)}
-function haptic(k){if(window.myllmHaptic)try{myllmHaptic(k)}catch(e){}}
-function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t}return a}
+function el(i){ return document.getElementById(i); }
+/* Bridges are looked up when used, never kept: MyLLM can add them after this
+   script has run. */
+function haptic(s){ if (window.myllmHaptic) try { myllmHaptic(s); } catch(_){} }
+function load(k){ var s = window.myllmStorage; return s ? s.getItem(k).catch(function(){ return null; }) : Promise.resolve(null); }
+function keep(k, v){ var s = window.myllmStorage; if (s) try { s.setItem(k, v).catch(function(){}); } catch(_){} }
+var calm = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/* ---------- look ---------- */
+function isLight(){ return !(window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches); }
+/* A game in progress takes the whole display and goes dark. Where MyLLM can't
+   hide its own title bar, a dark stage under a white bar looks cut in half —
+   so in light mode, without myllmImmersive, the stage stays light. */
+function syncLook(){
+  el("stage").classList.toggle("lite", isLight() && !(state !== "home" && window.myllmImmersive));
+  if (typeof onLook === "function") onLook();
+}
+function syncChrome(){
+  if (!window.myllmImmersive) return;
+  try { myllmImmersive(state !== "home", {keepAwake:false}).catch(function(){}); } catch(_){}
+}
+function setHue(h){ el("stage").style.setProperty("--h", String(h)); }
+function showSheet(html, acts){
+  var s = el("sheet"); s.innerHTML = html;
+  Object.keys(acts).forEach(function(id){ var b = el(id); if (b) b.onclick = acts[id]; });
+  s.classList.add("on"); el("stage").classList.add("veil");
+}
+function hideSheet(){ el("sheet").classList.remove("on"); el("stage").classList.remove("veil"); }
+function bump(id){ var p = el(id); p.classList.remove("bump"); void p.offsetWidth; p.classList.add("bump"); }
+document.addEventListener("visibilitychange", function(){
+  if (document.hidden){ if (typeof onHide === "function") onHide(); return; }
+  if (state !== "home") syncChrome();          /* MyLLM puts its bars back when the app is left */
+});
+if (window.matchMedia){
+  var mq = matchMedia("(prefers-color-scheme: dark)");
+  if (mq.addEventListener) mq.addEventListener("change", syncLook); else if (mq.addListener) mq.addListener(syncLook);
+}
+
+var IMG = "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/kids/";
+var WORDS_LITTLE = ["CAT","DOG","PIG","COW","SUN","BEE","BUS","CAR","HAT","FOX","OWL","CAP","CUP","BAT"];
+var WORDS_BIG = ["FISH","STAR","FROG","DUCK","CAKE","MOON","TREE","BEAR","APPLE","TRAIN","ROBOT","SNAKE","TIGER","HOUSE"];
+var mode = "little";
+function WORDS(){ return mode === "big" ? WORDS_BIG : WORDS_LITTLE; }
+var order = [], qi = 0, word = "", bank = [], used = [], placed = [], stars = 0, locked = false;
+var state = "home";
+function $(i){ return document.getElementById(i); }
+function shuffle(a){ a = a.slice(); for (var i = a.length - 1; i > 0; i--){ var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+
+$('pic').onerror = function(){ $('picBox').classList.add('nopic'); };
+$('pic').onload = function(){ $('picBox').classList.remove('nopic'); };
 
 function loadWord(){
-  locked=false;$('cheer').textContent='';
-  word=order[qi];
-  $('pic').src=IMG+word.toLowerCase()+'.jpg';$('pic').alt=word;
-  bank=shuffle(word.split(''));
+  locked = false; $('cheer').textContent = '';
+  word = order[qi];
+  $('picBox').classList.remove('nopic');
+  $('pic').src = IMG + word.toLowerCase() + '.jpg'; $('pic').alt = word;
+  bank = shuffle(word.split(''));
   // avoid an accidentally-correct shuffle
-  if(bank.join('')===word&&word.length>1)bank=shuffle(bank);
-  used=bank.map(function(){return false});
-  placed=word.split('').map(function(){return null});
+  if (bank.join('') === word && word.length > 1) bank = shuffle(bank);
+  used = bank.map(function(){ return false; });
+  placed = word.split('').map(function(){ return null; });
   render();
 }
 function render(){
-  var B=$('boxes');B.innerHTML='';
-  for(var b=0;b<word.length;b++){
-    var d=document.createElement('div');d.className='box'+(placed[b]!=null?' filled':'');
-    d.textContent=placed[b]!=null?bank[placed[b]]:'';
-    (function(bb){d.onclick=function(){removeAt(bb)}})(b);
+  var B = $('boxes'); B.innerHTML = '';
+  for (var b = 0; b < word.length; b++){
+    var d = document.createElement('div'); d.className = 'box' + (placed[b] != null ? ' filled' : '');
+    d.textContent = placed[b] != null ? bank[placed[b]] : '';
+    (function(bb){ d.onclick = function(){ removeAt(bb); }; })(b);
     B.appendChild(d);
   }
-  var K=$('bank');K.innerHTML='';
+  var K = $('bank'); K.innerHTML = '';
   bank.forEach(function(ch,i){
-    var t=document.createElement('button');t.className='tile'+(used[i]?' used':'');t.textContent=ch;
-    (function(ii){t.onclick=function(){place(ii)}})(i);
+    var t = document.createElement('button'); t.className = 'tile' + (used[i] ? ' used' : ''); t.textContent = ch;
+    (function(ii){ t.onclick = function(){ place(ii); }; })(i);
     K.appendChild(t);
   });
 }
 function place(i){
-  if(locked||used[i])return;
-  var b=placed.indexOf(null);if(b<0)return;
-  placed[b]=i;used[i]=true;haptic('light');render();
-  if(placed.indexOf(null)<0)check();
+  if (locked || used[i] || state !== 'play') return;
+  var b = placed.indexOf(null); if (b < 0) return;
+  placed[b] = i; used[i] = true; haptic('light'); render();
+  if (placed.indexOf(null) < 0) check();
 }
 function removeAt(b){
-  if(locked||placed[b]==null)return;
-  used[placed[b]]=false;placed[b]=null;haptic('selection');render();
+  if (locked || placed[b] == null) return;
+  used[placed[b]] = false; placed[b] = null; haptic('selection'); render();
 }
 function check(){
-  var spelled=placed.map(function(i){return bank[i]}).join('');
-  if(spelled===word){
-    locked=true;haptic('success');
-    var bx=$('boxes').children;for(var k=0;k<bx.length;k++)bx[k].className='box ok';
-    stars++;$('stars').textContent='⭐ '+stars;$('cheer').textContent='Yes! '+word+' 🎉';
-    setTimeout(next,1100);
-  }else{
+  var spelled = placed.map(function(i){ return bank[i]; }).join('');
+  if (spelled === word){
+    locked = true; haptic('success');
+    var bx = $('boxes').children; for (var k = 0; k < bx.length; k++) bx[k].className = 'box ok';
+    stars++; $('stars').textContent = stars; bump('starPill'); $('cheer').textContent = 'Yes! ' + word;
+    setTimeout(next, 1100);
+  } else {
     haptic('warning');
-    var b2=$('boxes').children;for(var k2=0;k2<b2.length;k2++)b2[k2].classList.add('bad');
+    var b2 = $('boxes').children; for (var k2 = 0; k2 < b2.length; k2++) b2[k2].classList.add('bad');
     setTimeout(function(){ // clear and let them retry
-      placed=word.split('').map(function(){return null});used=bank.map(function(){return false});render();
-    },520);
+      placed = word.split('').map(function(){ return null; }); used = bank.map(function(){ return false; }); render();
+    }, 520);
   }
 }
 function next(){
   qi++;
-  if(qi>=order.length){$('winSub').textContent='You spelled all '+order.length+' words! ⭐ '+stars;$('win').classList.add('show');return}
+  if (qi >= order.length){ showWin(); return; }
   loadWord();
 }
-$('hintBtn').onclick=function(){
-  if(locked)return;
-  var b=placed.indexOf(null);if(b<0)return;
+$('hintBtn').onclick = function(){
+  if (locked) return;
+  var b = placed.indexOf(null); if (b < 0) return;
   // place the correct letter for the first empty box
-  var need=word[b];
-  for(var i=0;i<bank.length;i++){if(!used[i]&&bank[i]===need){placed[b]=i;used[i]=true;break}}
-  haptic('light');render();if(placed.indexOf(null)<0)check();
+  var need = word[b];
+  for (var i = 0; i < bank.length; i++){ if (!used[i] && bank[i] === need){ placed[b] = i; used[i] = true; break; } }
+  haptic('light'); render(); if (placed.indexOf(null) < 0) check();
 };
-$('skipBtn').onclick=function(){if(locked)return;haptic('selection');next()};
-$('winBtn').onclick=function(){$('win').classList.remove('show');start(true)};
+$('skipBtn').onclick = function(){ if (locked) return; haptic('selection'); next(); };
+$('bHome').onclick = function(){ haptic('light'); goHome(); };
 
-function save(){if(window.myllmStorage)myllmStorage.setItem('spellpic',JSON.stringify({stars:stars,mode:mode}))}
-function setModeUI(){Array.prototype.forEach.call(document.querySelectorAll('#modeseg button'),function(x){x.classList.toggle('on',x.dataset.m===mode)})}
-Array.prototype.forEach.call(document.querySelectorAll('#modeseg button'),function(b){b.onclick=function(){if(mode===b.dataset.m)return;mode=b.dataset.m;setModeUI();haptic('selection');start(false)}});
+function save(){ keep('spellpic', JSON.stringify({stars:stars, mode:mode})); }
 function start(fresh){
-  order=shuffle(WORDS());qi=0;if(fresh)stars=0;$('stars').textContent='⭐ '+stars;loadWord();save();
+  order = shuffle(WORDS()); qi = 0; if (fresh) stars = 0; $('stars').textContent = stars; loadWord(); save();
 }
-if(window.myllmStorage){myllmStorage.getItem('spellpic').then(function(v){if(v)try{var s=JSON.parse(v);stars=s.stars||0;if(s.mode)mode=s.mode}catch(e){}; $('stars').textContent='⭐ '+stars; setModeUI(); start(false)})}
-else{setModeUI();start(false)}
-setInterval(save,4000);
-</script>
-</body>
-</html>
+
+/* ---------- cards ---------- */
+function modeSeg(){
+  return '<div class="seg glass" id="modeSeg"><button data-m="little"' + (mode === 'little' ? ' class="on"' : '') + '>Little words</button><button data-m="big"' + (mode === 'big' ? ' class="on"' : '') + '>Big words</button></div>';
+}
+function showHome(){
+  showSheet('<div class="bigstar"><svg><use href="#i-star"/></svg></div><h1>Spell the Picture</h1><p>Look at the picture, then tap the letters in order.</p>' + modeSeg() +
+    '<button class="act pri" id="sA"><svg><use href="#i-play"/></svg>Play</button>', {sA: function(){ haptic('medium'); enterPlay(); }});
+  Array.prototype.forEach.call(document.querySelectorAll('#modeSeg button'), function(b){ b.onclick = function(){
+    if (mode === b.dataset.m) return; mode = b.dataset.m; haptic('selection'); start(false); showHome();
+  }; });
+}
+function showWin(){
+  showSheet('<div class="bigstar"><svg><use href="#i-star"/></svg></div><h1>Well done!</h1><p>You spelled all ' + order.length + ' words. You have ' + stars + (stars === 1 ? ' star.' : ' stars.') + '</p>' +
+    '<button class="act pri" id="sA"><svg><use href="#i-again"/></svg>Play again</button><button class="act glass" id="sB">All done</button>',
+    {sA: function(){ haptic('medium'); hideSheet(); start(true); }, sB: function(){ start(true); goHome(); }});
+}
+
+/* ---------- flow ---------- */
+function setState(s){
+  state = s; $('stage').classList.toggle('home', s === 'home');
+  $('bHome').classList.toggle('hide', s !== 'play'); $('starPill').classList.toggle('hide', s !== 'play');
+  $('lbl').textContent = s === 'play' ? (mode === 'big' ? 'Big words' : 'Little words') : 'Spell the Picture';
+  syncLook(); syncChrome();
+}
+function enterPlay(){ hideSheet(); setState('play'); }
+function goHome(){ setState('home'); showHome(); }
+
+function fit(){
+  var w = $('wrap'), land = window.innerHeight <= 520;
+  var room = land ? Math.min(w.clientHeight - 8, w.clientWidth * .42) : Math.min(w.clientWidth * .68, w.clientHeight - 230);
+  $('stage').style.setProperty('--pic', Math.max(120, Math.min(280, Math.floor(room))) + 'px');
+}
+window.addEventListener('resize', fit);
+
+/* ---------- boot ---------- */
+fit(); syncLook();
+load('spellpic').then(function(v){
+  if (v) try { var s = JSON.parse(v); stars = s.stars || 0; if (s.mode) mode = s.mode; } catch(e){}
+  $('stars').textContent = stars; start(false); showHome();
+});
+setInterval(save, 4000);
+</script></body></html>

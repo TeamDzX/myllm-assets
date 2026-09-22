@@ -3,113 +3,173 @@
   Solitaire — MyLLMos™ App Gallery · © 2026 Opticell Ltd
   Source-available: read it, remix it, run your version inside MyLLM™.
   Not for redistribution or republication. Terms: https://github.com/TeamDzX/myllm-assets/blob/main/LICENSE
---><html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+--><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,viewport-fit=cover">
 <title>Solitaire</title>
-<style>
-  :root { color-scheme: dark; }
-  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; user-select:none; -webkit-user-select:none; }
-  body{
-    font-family:var(--myllm-font,-apple-system,system-ui,sans-serif);
-    background:radial-gradient(ellipse at 50% 0%, #1e6b43 0%, #124d2e 55%, #0b3a21 100%);
-    color:#eaf5ee;
-    min-height:100dvh;
-    padding:12px 10px calc(24px + env(safe-area-inset-bottom));
-    max-width:560px; margin:0 auto;
-  }
-  header{ display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; padding:0 2px; }
-  header b{ font-size:17px; font-weight:800; letter-spacing:-0.01em; }
-  .stats{ display:flex; gap:10px; font-size:12px; color:#bcd9c8; font-variant-numeric:tabular-nums; }
-  .btns{ display:flex; gap:6px; }
-  .btns button{
-    border:1px solid rgba(255,255,255,.25); background:rgba(255,255,255,.1); color:#eaf5ee;
-    border-radius:9px; padding:6px 10px; font-size:12.5px; font-weight:700;
-  }
-  .btns button:disabled{ opacity:.4; }
+<style>:root{--build-id:"618233daf6";color-scheme:light dark}
+  @property --h{ syntax:'<number>'; inherits:true; initial-value:150; }
+  *{ margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body{ height:100%; }
+  body{ font-family:var(--myllm-font,-apple-system,system-ui,sans-serif); background:#0b0b10; color:#fff; overflow:hidden;
+    touch-action:none; overscroll-behavior:none; -webkit-user-select:none; user-select:none; }
+  button{ font:inherit; color:inherit; }
 
-  /* card geometry: 7 columns fit the width; height = width * 1.4 */
-  .top, .cols{ display:grid; grid-template-columns:repeat(7, 1fr); gap:5px; }
-  .top{ margin-bottom:10px; }
-  .cell{ position:relative; aspect-ratio: 5 / 7; }
-  .cols .cell{ aspect-ratio:auto; min-height:calc((100vw - 50px) / 7 * 1.4); max-height:70dvh; }
+  /* The stage: a hue-tinted backdrop in two layers, dark and light, so the
+     change between them can fade. */
+  .stage{ position:fixed; inset:0; --h:150; transition:--h 1.4s ease; color:#fff; }
+  .bg{ position:absolute; inset:0; transition:opacity .6s ease; }
+  .bg.d{ background:radial-gradient(120% 90% at 20% 10%, hsl(var(--h) 70% 34%), transparent 60%),
+      radial-gradient(120% 90% at 85% 95%, hsl(calc(var(--h) + 60) 65% 26%), transparent 62%), #0b0b10; }
+  .bg.l{ opacity:0; background:radial-gradient(120% 90% at 20% 0%, hsl(var(--h) 80% 84%), transparent 60%),
+      radial-gradient(120% 90% at 85% 100%, hsl(calc(var(--h) + 60) 78% 86%), transparent 62%), #f4f4f8; }
+  .lite{ color:#15151a; } .lite .bg.l{ opacity:1; } .lite .bg.d{ opacity:0; }
 
-  .card, .slot{
-    position:absolute; left:0; right:0;
-    aspect-ratio: 5 / 7;
-    border-radius:8px;
-  }
-  .slot{
-    border:1.5px dashed rgba(255,255,255,.3);
-    background:rgba(0,0,0,.12);
-    display:flex; align-items:center; justify-content:center;
-    color:rgba(255,255,255,.35); font-size:18px;
-  }
-  .card{
-    background:#fbfbf7;
-    box-shadow:0 1px 3px rgba(0,0,0,.45);
-    border:1px solid rgba(0,0,0,.25);
-    display:flex; flex-direction:column; padding:5% 8%;
-    font-weight:800; line-height:1;
-    transition:transform .12s ease;
-  }
-  .card.red{ color:#c0392b; }
-  .card.black{ color:#1d2a36; }
-  .card .tl{ font-size:clamp(11px, 3.6vw, 17px); display:flex; flex-direction:column; align-items:flex-start; gap:1px; }
-  .card .mid{ flex:1; display:flex; align-items:center; justify-content:center; font-size:clamp(16px, 6.5vw, 30px); opacity:.85; }
-  .card.back{
-    background:#274b8f center/cover no-repeat;
-    border-color:rgba(0,0,0,.4);
-  }
-  .card.sel{ transform:translateY(-6%) scale(1.04); box-shadow:0 8px 18px rgba(0,0,0,.5), 0 0 0 3px #ffd60a; z-index:60 !important; }
-  .count{ position:absolute; bottom:-16px; left:0; right:0; text-align:center; font-size:10.5px; color:#9fc4ae; }
+  .col{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center;
+    padding:calc(12px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) calc(14px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left)); }
+  .top{ width:100%; max-width:560px; height:44px; display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
+  .lbl{ font-size:11px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; opacity:.62; white-space:nowrap; }
+  .glass{ border:1px solid rgba(255,255,255,.16); background:rgba(255,255,255,.12); color:inherit;
+    -webkit-backdrop-filter:blur(18px); backdrop-filter:blur(18px); }
+  .lite .glass{ border-color:rgba(0,0,0,.09); background:rgba(255,255,255,.62); }
+  svg{ width:1.25em; height:1.25em; fill:currentColor; flex-shrink:0; }
+  .rnd{ width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:15px; flex-shrink:0; }
+  .pill{ min-width:44px; height:44px; border-radius:99px; padding:0 16px; display:flex; align-items:center; justify-content:center; gap:6px;
+    font-size:19px; font-weight:800; font-variant-numeric:tabular-nums; flex-shrink:0; }
+  .pill small{ font-size:10px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; opacity:.6; }
+  .pill.bump{ animation:bump .28s ease; }
+  @keyframes bump{ 40%{ transform:scale(1.18); } }
+  .top .hide{ visibility:hidden; }
 
-  .win{
-    position:fixed; inset:0; z-index:200; display:none;
-    align-items:center; justify-content:center; flex-direction:column; gap:12px;
-    background:rgba(6,30,17,.88); -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px);
-    text-align:center; padding:30px;
-  }
-  .win.on{ display:flex; }
-  .win .big{ font-size:52px; }
-  .win h2{ font-size:26px; font-weight:800; }
-  .win p{ color:#bcd9c8; font-size:15px; }
-  .win button{
-    margin-top:8px; border:none; border-radius:13px; padding:13px 26px;
-    font-size:16px; font-weight:750; background:#ffd60a; color:#222;
-  }
-  .confetti{ position:fixed; top:-12px; font-size:20px; z-index:210; animation:fall linear forwards; pointer-events:none; }
-  @keyframes fall{ to{ transform:translateY(105dvh) rotate(720deg); } }
-</style>
-<style>:root{--build-id:"618233daf6";}</style>
-</head>
-<body>
+  .wrap{ flex:1; width:100%; min-height:0; position:relative; display:flex; align-items:center; justify-content:center; margin:10px 0 34px; }
+  .foot{ position:absolute; left:0; right:0; top:calc(50% + var(--bh,320px) / 2 + 12px); text-align:center; font-size:12px; font-weight:600;
+    letter-spacing:.02em; opacity:.55; font-variant-numeric:tabular-nums; white-space:nowrap; }
 
-<header>
-  <b>🃏 Solitaire</b>
-  <div class="stats"><span id="time">0:00</span><span id="moves">0 moves</span></div>
-  <div class="btns">
-    <button id="undoBtn" onclick="undo()">Undo</button>
-    <button onclick="newGame()">New</button>
+  /* One glass card over the board: title, paused, finished. */
+  .sheet{ position:absolute; left:50%; top:50%; width:max(232px, min(300px, calc(var(--b,320px) - 44px))); transform:translate(-50%,-50%) scale(.96);
+    opacity:0; pointer-events:none; border-radius:26px; padding:22px 20px 18px; text-align:center; box-shadow:0 24px 60px rgba(0,0,0,.35); z-index:5;
+    transition:opacity .28s ease, transform .28s cubic-bezier(.2,.8,.2,1); }
+  .sheet.on{ opacity:1; transform:translate(-50%,-50%); pointer-events:auto; }
+  /* whatever sits under an open card steps back, so the card reads */
+  .under{ transition:opacity .3s, filter .3s; } .veil .under{ opacity:.24; filter:blur(7px) saturate(.7); }
+  .lite .sheet{ box-shadow:0 22px 50px rgba(20,20,40,.18); }
+  .sheet h1{ font-size:30px; font-weight:800; letter-spacing:-.02em; }
+  .sheet p{ font-size:13.5px; line-height:1.4; opacity:.72; margin-top:6px; }
+  .kick{ font-size:11px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; opacity:.62; }
+  .big{ font-size:64px; font-weight:800; line-height:1.05; letter-spacing:-.03em; font-variant-numeric:tabular-nums; margin-top:4px; }
+  .big small{ display:block; font-size:12px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; opacity:.6; margin-top:2px; }
+  .best{ display:inline-block; margin-top:10px; font-size:11.5px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; opacity:.7; }
+  .best.new{ opacity:1; color:#0b0b10; background:#ffd60a; border-radius:99px; padding:5px 11px; }
+  .sheet .act{ width:100%; height:50px; border-radius:99px; margin-top:10px; font-size:16px; font-weight:750;
+    display:flex; align-items:center; justify-content:center; gap:8px; }
+  .sheet .act:first-of-type{ margin-top:18px; }
+  .sheet .act:active, .rnd:active{ transform:scale(.96); }
+  .pri{ border:none; background:#fff; color:#0b0b10; box-shadow:0 10px 30px rgba(0,0,0,.3); }
+  .lite .pri{ background:#15151a; color:#fff; box-shadow:0 10px 26px rgba(20,20,40,.22); }
+
+  @media (max-height:430px){
+    .sheet{ padding:14px 18px 14px; } .sheet h1{ font-size:24px; } .big{ font-size:42px; }
+    .sheet .act{ height:44px; margin-top:8px; } .sheet .act:first-of-type{ margin-top:12px; } .sheet p{ display:none; }
+    .wrap{ margin:6px 0 26px; }
+  }
+  @media (prefers-reduced-motion:reduce){ .pill.bump{ animation:none; } .stage{ transition:none; } }
+
+  .wrap{ margin:8px 0 0; align-items:stretch; }
+  #table{ position:relative; width:100%; height:100%; }
+  .stat{ height:44px; border-radius:99px; padding:0 16px; display:flex; align-items:center; gap:10px; font-size:15px; font-weight:750;
+    font-variant-numeric:tabular-nums; white-space:nowrap; }
+  .stat i{ font-style:normal; opacity:.5; font-weight:600; }
+  .rnd:disabled{ opacity:.35; }
+  .top .mid{ flex:1; display:flex; justify-content:center; min-width:0; }
+  [hidden]{ display:none !important; }
+
+  /* cards: absolutely placed by layout(); --cw is the card width in px */
+  .cd, .sl{ position:absolute; width:calc(var(--cw) * 1px); height:calc(var(--cw) * 1.4px); border-radius:calc(var(--cw) * .12px); }
+  .sl{ border:1.5px dashed rgba(255,255,255,.28); background:rgba(0,0,0,.14); display:flex; align-items:center; justify-content:center;
+    color:rgba(255,255,255,.4); font-weight:800; font-size:calc(var(--cw) * .36px); }
+  .lite .sl{ border-color:rgba(0,0,0,.18); background:rgba(255,255,255,.35); color:rgba(0,0,0,.3); }
+  .sl svg{ width:42%; height:42%; }
+  .cd{ background:#fdfdfa; border:1px solid rgba(0,0,0,.18); box-shadow:0 1px 2px rgba(0,0,0,.35), 0 4px 10px rgba(0,0,0,.18);
+    font-weight:800; line-height:1; overflow:hidden; cursor:pointer; transition:transform .12s ease; }
+  .lite .cd{ box-shadow:0 1px 2px rgba(20,20,40,.18), 0 4px 10px rgba(20,20,40,.1); }
+  .cd:active{ transform:translateY(-2px); }
+  .cd.red{ color:#c8322a; } .cd.black{ color:#1c2530; }
+  .cd .rk{ position:absolute; left:8%; top:6%; font-size:calc(var(--cw) * .32px); letter-spacing:-.04em; }
+  .cd .su{ position:absolute; left:9%; top:calc(6% + var(--cw) * .33px); font-size:calc(var(--cw) * .26px); }
+  .cd .mid{ position:absolute; right:8%; bottom:6%; font-size:calc(var(--cw) * .58px); opacity:.9; }
+  .cd.back{ background:#2b5a8f center/cover no-repeat; border-color:rgba(0,0,0,.35); cursor:default; }
+  .cd.back.stock{ cursor:pointer; }
+  .cnt{ position:absolute; right:-6px; top:-6px; min-width:22px; height:20px; border-radius:99px; padding:0 6px; font-size:11px; font-weight:800;
+    display:flex; align-items:center; justify-content:center; background:#fff; color:#0b0b10; z-index:200; font-variant-numeric:tabular-nums; }
+  .lite .cnt{ background:#15151a; color:#fff; }
+
+  .conf{ position:fixed; top:-14px; width:9px; height:14px; border-radius:2px; z-index:40; pointer-events:none; animation:fall linear forwards; }
+  @keyframes fall{ to{ transform:translateY(106dvh) rotate(620deg); } }
+  @media (prefers-reduced-motion:reduce){ .conf{ display:none; } .cd{ transition:none; } }
+</style></head><body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5.5v13a1 1 0 0 0 1.52.85l10.4-6.5a1 1 0 0 0 0-1.7L9.52 4.65A1 1 0 0 0 8 5.5z"/></symbol>
+  <symbol id="i-pause" viewBox="0 0 24 24"><rect x="6" y="5" width="4.2" height="14" rx="1.4"/><rect x="13.8" y="5" width="4.2" height="14" rx="1.4"/></symbol>
+  <symbol id="i-again" viewBox="0 0 24 24"><path d="M12 5V2.6a.6.6 0 0 0-1-.45L7.2 5.55a.6.6 0 0 0 0 .9L11 9.85a.6.6 0 0 0 1-.45V7a5.5 5.5 0 1 1-5.5 5.5 1 1 0 0 0-2 0A7.5 7.5 0 1 0 12 5z"/></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24"><path d="M6.4 5a1 1 0 0 0-1.4 1.4L10.6 12 5 17.6A1 1 0 0 0 6.4 19l5.6-5.6 5.6 5.6a1 1 0 0 0 1.4-1.4L13.4 12 19 6.4A1 1 0 0 0 17.6 5L12 10.6z"/></symbol>
+  <symbol id="i-undo" viewBox="0 0 24 24"><path d="M9.2 5.3a1 1 0 0 1 0 1.4L7.4 8.5H14a6.5 6.5 0 1 1 0 13h-3a1 1 0 0 1 0-2h3a4.5 4.5 0 1 0 0-9H7.4l1.8 1.8a1 1 0 1 1-1.4 1.4L4.3 10.2a1 1 0 0 1 0-1.4l3.5-3.5a1 1 0 0 1 1.4 0z"/></symbol>
+</defs></svg>
+<div class="stage" id="stage">
+  <div class="bg d"></div><div class="bg l"></div>
+  <div class="col">
+    <div class="top">
+      <button class="glass rnd hide" id="bHome" aria-label="Close"><svg><use href="#i-close"/></svg></button>
+      <div class="mid"><div class="lbl" id="lbl">Solitaire</div>
+        <div class="glass stat" id="stat" hidden><span id="time">0:00</span><i>·</i><span id="moves">0</span></div></div>
+      <button class="glass rnd hide" id="bUndo" aria-label="Undo"><svg><use href="#i-undo"/></svg></button>
+    </div>
+    <div class="wrap" id="wrap">
+      <div id="table" class="under"></div>
+      <div class="sheet glass" id="sheet"></div>
+    </div>
   </div>
-</header>
-
-<div class="top" id="top"></div>
-<div class="cols" id="cols"></div>
-
-<div class="win" id="win">
-  <div class="big">🏆</div>
-  <h2>You won!</h2>
-  <p id="winstats"></p>
-  <button onclick="newGame()">Play again</button>
 </div>
-
 <script>
-var store = window.myllmStorage || {getItem:function(){return Promise.resolve(null)}, setItem:function(){return Promise.resolve()}};
-function haptic(k){ if(window.myllmHaptic){ try{ myllmHaptic(k||'light'); }catch(_){} } }
-function el(id){ return document.getElementById(id); }
+function el(i){ return document.getElementById(i); }
+/* Bridges are looked up when used, never kept: MyLLM can add them after this
+   script has run. */
+function haptic(s){ if (window.myllmHaptic) try { myllmHaptic(s); } catch(_){} }
+function load(k){ var s = window.myllmStorage; return s ? s.getItem(k).catch(function(){ return null; }) : Promise.resolve(null); }
+function keep(k, v){ var s = window.myllmStorage; if (s) try { s.setItem(k, v).catch(function(){}); } catch(_){} }
+var calm = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+/* ---------- look ---------- */
+function isLight(){ return !(window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches); }
+/* A game in progress takes the whole display and goes dark. Where MyLLM can't
+   hide its own title bar, a dark stage under a white bar looks cut in half —
+   so in light mode, without myllmImmersive, the stage stays light. */
+function syncLook(){
+  el("stage").classList.toggle("lite", isLight() && !(state !== "home" && window.myllmImmersive));
+  if (typeof onLook === "function") onLook();
+}
+var chromeOn = false;
+function syncChrome(force){
+  var want = state !== "home";
+  if (!window.myllmImmersive || (want === chromeOn && !force)) return;
+  chromeOn = want;
+  try { myllmImmersive(want, {keepAwake:false}).catch(function(){}); } catch(_){}
+}
+function setHue(h){ el("stage").style.setProperty("--h", String(h)); }
+function showSheet(html, acts){
+  var s = el("sheet"); s.innerHTML = html;
+  Object.keys(acts).forEach(function(id){ var b = el(id); if (b) b.onclick = acts[id]; });
+  s.classList.add("on"); el("stage").classList.add("veil");
+}
+function hideSheet(){ el("sheet").classList.remove("on"); el("stage").classList.remove("veil"); }
+function bump(id){ var p = el(id); p.classList.remove("bump"); void p.offsetWidth; p.classList.add("bump"); }
+document.addEventListener("visibilitychange", function(){
+  if (document.hidden){ if (typeof onHide === "function") onHide(); return; }
+  if (state !== "home") syncChrome(true);      /* MyLLM puts its bars back when the app is left */
+});
+if (window.matchMedia){
+  var mq = matchMedia("(prefers-color-scheme: dark)");
+  if (mq.addEventListener) mq.addEventListener("change", syncLook); else if (mq.addListener) mq.addListener(syncLook);
+}
+
+var state = "home";                 /* home · play · done */
 /* U+FE0E forces text presentation so CSS colour applies on iOS (emoji glyphs
    otherwise ignore `color` — the chess lesson). */
 var SUITS = ["♠︎","♥︎","♦︎","♣︎"];   /* ♠ ♥ ♦ ♣ */
@@ -120,8 +180,13 @@ var CARD_BACK = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAcFBQYF
 /* state: stock[], waste[], found[4][], cols[7][] — card = {r:1..13, s:0..3, up:bool} */
 var G = null;
 var undoStack = [];
-var sel = null;            /* {zone, col, idx} */
-var moves = 0, startAt = 0, timerId = null, won = false;
+var moves = 0, won = false, fresh = true;
+/* the clock only runs while you're at the table */
+var acc = 0, runFrom = 0, timerId = null;
+var best = null, newBest = false, autoPending = false;
+
+function elapsed(){ return acc + (state === "play" ? Date.now() - runFrom : 0); }
+function clock(ms){ var s = Math.floor(ms / 1000); return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0"); }
 
 function freshDeck(){
   var d = [];
@@ -134,7 +199,7 @@ function freshDeck(){
   return d;
 }
 
-function newGame(){
+function deal(){
   var deck = freshDeck();
   G = {stock:[], waste:[], found:[[],[],[],[]], cols:[[],[],[],[],[],[],[]]};
   for (var c = 0; c < 7; c++){
@@ -145,18 +210,13 @@ function newGame(){
     }
   }
   G.stock = deck;
-  undoStack = []; sel = null; moves = 0; won = false;
-  startAt = Date.now();
-  el("win").classList.remove("on");
-  if (!timerId) timerId = setInterval(tick, 1000);
-  haptic("light");
-  save(); render();
+  undoStack = []; moves = 0; won = false; acc = 0; fresh = true; newBest = false;
 }
 
-function tick(){
-  if (won || !G) return;
-  var s = Math.floor((Date.now() - startAt) / 1000);
-  el("time").textContent = Math.floor(s/60) + ":" + String(s%60).padStart(2,"0");
+function newGame(){
+  deal();
+  haptic("light");
+  play();
 }
 
 /* ---------- rules ---------- */
@@ -179,23 +239,23 @@ function snapshot(){
   if (undoStack.length > 200) undoStack.shift();
 }
 function undo(){
-  if (!undoStack.length || won) return;
+  if (!undoStack.length || won || state !== "play") return;
   G = JSON.parse(undoStack.pop());
   moves++;
-  sel = null;
   haptic("light");
   save(); render();
 }
 
 /* ---------- interactions (tap-to-move) ---------- */
 function drawStock(){
+  if (state !== "play") return;
   snapshot();
   if (G.stock.length){
     var c = G.stock.pop(); c.up = true; G.waste.push(c);
   } else if (G.waste.length){
     while (G.waste.length){ var w = G.waste.pop(); w.up = false; G.stock.push(w); }
   } else { undoStack.pop(); return; }
-  moves++; sel = null;
+  moves++;
   haptic("selection");
   save(); render();
 }
@@ -258,17 +318,15 @@ function commitMove(zone, colIdx, idx, dest){
     var col = G.cols[colIdx];
     if (col.length && !col[col.length - 1].up) col[col.length - 1].up = true;
   }
-  moves++; sel = null;
+  moves++;
   haptic("selection");
   save(); render();
   checkWin();
 }
 
 function tapCard(zone, colIdx, idx){
-  if (won) return;
-  if (!tryMove(zone, colIdx, idx)) {
-    haptic("light");
-  }
+  if (won || state !== "play") return;
+  if (!tryMove(zone, colIdx, idx)) haptic("light");
 }
 
 /* when everything is face-up, finish the game automatically */
@@ -280,6 +338,8 @@ function canAutocomplete(){
   return true;
 }
 function autocomplete(){
+  autoPending = false;
+  if (state !== "play" || won) return;
   var moved = true;
   while (moved){
     moved = false;
@@ -303,108 +363,159 @@ function checkWin(){
   var total = G.found.reduce(function(a, f){ return a + f.length; }, 0);
   if (total === 52 && !won){
     won = true;
-    var s = Math.floor((Date.now() - startAt) / 1000);
-    el("winstats").textContent = moves + " moves · " + Math.floor(s/60) + ":" + String(s%60).padStart(2,"0");
-    el("win").classList.add("on");
+    acc = elapsed(); state = "done"; stopClock();
+    var secs = Math.floor(acc / 1000);
+    if (!best || secs < best.t){ best = {t:secs, m:moves}; newBest = true; keep("solitaire.best", JSON.stringify(best)); }
     haptic("success");
-    for (var i = 0; i < 26; i++){
-      var conf = document.createElement("div");
-      conf.className = "confetti";
-      conf.textContent = ["🎉","✨","🎊","⭐"][i % 4];
-      conf.style.left = (Math.random() * 100) + "vw";
-      conf.style.animationDuration = (1.6 + Math.random() * 1.6) + "s";
-      conf.style.animationDelay = (Math.random() * 0.8) + "s";
-      document.body.appendChild(conf);
-      setTimeout(function(n){ return function(){ n.remove(); }; }(conf), 4200);
-    }
-    store.setItem("solitaire", "");
+    confetti();
+    keep("solitaire", "");
+    setTimeout(function(){ if (state === "done") card("done"); hud(); }, 450);
+    hud();
+  }
+}
+function confetti(){
+  if (calm) return;
+  for (var i = 0; i < 28; i++){
+    var c = document.createElement("div"); c.className = "conf";
+    c.style.left = (Math.random() * 100) + "vw";
+    c.style.background = "hsl(" + [150, 48, 350, 205][i % 4] + " 85% " + (55 + (i % 3) * 8) + "%)";
+    c.style.animationDuration = (1.7 + Math.random() * 1.5) + "s";
+    c.style.animationDelay = (Math.random() * .7) + "s";
+    document.body.appendChild(c);
+    setTimeout(function(n){ return function(){ n.remove(); }; }(c), 4200);
   }
 }
 
 /* ---------- persistence ---------- */
 function save(){
   if (won || !G) return;
-  store.setItem("solitaire", JSON.stringify({g:G, moves:moves, elapsed:Date.now() - startAt}));
+  fresh = false;
+  keep("solitaire", JSON.stringify({g:G, moves:moves, elapsed:elapsed()}));
 }
 
-/* ---------- render ---------- */
-function cardHTML(card, z, tapAttr){
-  if (!card.up){
-    return '<div class="card back" style="z-index:' + z + ';top:' + card._top + '%' +
-      (CARD_BACK.indexOf("data:") === 0 ? ';background-image:url(' + CARD_BACK + ')' : '') + '"' + tapAttr + '></div>';
+/* ---------- clock ---------- */
+function startClock(){ runFrom = Date.now(); if (!timerId) timerId = setInterval(tick, 1000); tick(); }
+function stopClock(){ if (timerId){ clearInterval(timerId); timerId = null; } }
+function tick(){ el("time").textContent = clock(elapsed()); }
+
+/* ---------- screens ---------- */
+function bestLine(){
+  if (newBest) return '<div class="best new">New best</div>';
+  return best ? '<div class="best">Best ' + clock(best.t * 1000) + ' · ' + best.m + ' moves</div>' : "";
+}
+function card(kind){
+  var h, a = {};
+  if (kind === "home"){
+    var going = !fresh && G && !won;
+    h = '<h1>Solitaire</h1><p>Tap a card to send it where it fits. Clear all four suits to the top.</p>' + bestLine() +
+      (going ? '<button class="act pri" id="sA"><svg><use href="#i-play"/></svg>Resume</button><button class="act glass" id="sB">New game</button>'
+             : '<button class="act pri" id="sA"><svg><use href="#i-play"/></svg>Play</button>');
+    a.sA = function(){ haptic("light"); if (won) deal(); play(); };
+    a.sB = newGame;
+  } else {
+    h = '<div class="kick">Solved in ' + clock(acc) + '</div><div class="big">' + moves + '<small>moves</small></div>' + bestLine() +
+      '<button class="act pri" id="sA"><svg><use href="#i-again"/></svg>Play again</button><button class="act glass" id="sB">Done</button>';
+    a.sA = newGame;
+    a.sB = function(){ haptic("light"); deal(); home(); };
   }
-  var colr = RED[card.s] ? "red" : "black";
-  return '<div class="card ' + colr + (card._sel ? ' sel' : '') + '" style="z-index:' + z + ';top:' + card._top + '%"' + tapAttr + '>' +
-    '<div class="tl"><span>' + RANKS[card.r - 1] + '</span><span>' + SUITS[card.s] + '</span></div>' +
-    '<div class="mid">' + SUITS[card.s] + '</div></div>';
+  showSheet(h, a);
 }
+function play(){
+  state = "play"; hideSheet(); startClock(); syncLook(); syncChrome(); hud(); render();
+}
+function home(){
+  if (state === "play"){ acc = elapsed(); save(); }
+  state = "home"; stopClock(); syncLook(); syncChrome(); card("home"); hud(); render();
+}
+function hud(){
+  var on = state === "play";
+  el("bHome").classList.toggle("hide", !on);
+  el("bUndo").classList.toggle("hide", !on);
+  el("stat").hidden = !on;
+  el("lbl").hidden = on;
+  el("moves").textContent = moves + (moves === 1 ? " move" : " moves");
+  el("bUndo").disabled = !undoStack.length;
+  tick();
+}
+function onHide(){ if (state === "play") home(); }
 
+/* ---------- layout + render ---------- */
+var L = null;
+function layout(){
+  var w = el("wrap"), W = w.clientWidth, H = w.clientHeight;
+  var gap = Math.max(4, Math.min(9, W * .013));
+  var cw = Math.min((W - 6 * gap) / 7, 96), ch = cw * 1.4;
+  /* the top row plus a column of seven fanned cards must fit without scrolling */
+  var need = ch * 2 + gap * 2 + ch * .27 * 7;
+  if (need > H){ cw = Math.max(30, cw * H / need); ch = cw * 1.4; }
+  var tw = cw * 7 + gap * 6;
+  L = {W:W, H:H, gap:gap, cw:cw, ch:ch, x0:(W - tw) / 2};
+  el("table").style.setProperty("--cw", cw.toFixed(2));
+}
+function X(i){ return L.x0 + i * (L.cw + L.gap); }
+function face(card, x, y, z, tap){
+  var pos = 'left:' + x.toFixed(1) + 'px;top:' + y.toFixed(1) + 'px;z-index:' + z;
+  if (!card.up) return '<div class="cd back" style="' + pos + ';background-image:url(' + CARD_BACK + ')"></div>';
+  return '<div class="cd ' + (RED[card.s] ? "red" : "black") + '" style="' + pos + '"' + tap + '>' +
+    '<span class="rk">' + RANKS[card.r - 1] + '</span><span class="su">' + SUITS[card.s] + '</span><span class="mid">' + SUITS[card.s] + '</span></div>';
+}
+function slot(x, y, inner, tap){ return '<div class="sl" style="left:' + x.toFixed(1) + 'px;top:' + y.toFixed(1) + 'px"' + (tap || "") + '>' + inner + '</div>'; }
 function render(){
-  el("moves").textContent = moves + " moves";
-  el("undoBtn").disabled = !undoStack.length;
-
+  if (!G) return;
+  layout();
+  var h = "", y0 = 0, i, c;
   /* top row: stock, waste, gap, 4 foundations */
-  var h = "";
-  h += '<div class="cell" onclick="drawStock()">' +
-    (G.stock.length
-      ? cardHTML({up:false, _top:0}, 1, "")
-      : '<div class="slot">↻</div>') +
-    '<div class="count">' + G.stock.length + '</div></div>';
+  if (G.stock.length){
+    h += '<div class="cd back stock" style="left:' + X(0).toFixed(1) + 'px;top:0;z-index:2;background-image:url(' + CARD_BACK + ')" onclick="drawStock()">' +
+      '<span class="cnt">' + G.stock.length + '</span></div>';
+  } else h += slot(X(0), 0, '<svg><use href="#i-again"/></svg>', ' onclick="drawStock()"');
   var w = G.waste.length ? G.waste[G.waste.length - 1] : null;
-  h += '<div class="cell">' +
-    (w ? (w._top = 0, cardHTML(w, 1, ' onclick="tapCard(\'waste\',0,0)"')) : '<div class="slot"></div>') +
-    '</div>';
-  h += '<div class="cell"></div>';
+  h += w ? face(w, X(1), 0, 2, ' onclick="tapCard(\'waste\',0,0)"') : slot(X(1), 0, "");
   for (var f = 0; f < 4; f++){
     var fc = G.found[f].length ? G.found[f][G.found[f].length - 1] : null;
-    h += '<div class="cell">' +
-      (fc ? (fc._top = 0, cardHTML(fc, 1, ' onclick="tapCard(\'found\',' + f + ',0)"')) : '<div class="slot">' + SUITS[f] + '</div>') +
-      '</div>';
+    h += fc ? face(fc, X(3 + f), 0, 2, ' onclick="tapCard(\'found\',' + f + ',0)"') : slot(X(3 + f), 0, SUITS[f]);
   }
-  el("top").innerHTML = h;
-
-  /* columns */
-  var ch = "";
-  for (var c = 0; c < 7; c++){
+  /* columns: face-down cards fan tighter; a tall column squeezes to fit */
+  var top = L.ch + L.gap * 2, room = L.H - top - L.ch;
+  for (c = 0; c < 7; c++){
     var col = G.cols[c];
-    ch += '<div class="cell">';
-    if (!col.length) ch += '<div class="slot" onclick="tapEmpty(' + c + ')">K</div>';
-    for (var i = 0; i < col.length; i++){
-      var card = col[i];
-      card._top = i * 12;
-      card._sel = false;
-      ch += cardHTML(card, i + 1, card.up ? ' onclick="tapCard(\'col\',' + c + ',' + i + ')"' : "");
+    if (!col.length){ h += slot(X(c), top, "K"); continue; }
+    var sd = L.ch * .13, su = L.ch * .27, total = 0;
+    for (i = 0; i < col.length - 1; i++) total += col[i].up ? su : sd;
+    var k = total > room ? room / total : 1, y = top;
+    for (i = 0; i < col.length; i++){
+      h += face(col[i], X(c), y, i + 1, col[i].up ? ' onclick="tapCard(\'col\',' + c + ',' + i + ')"' : "");
+      y += (col[i].up ? su : sd) * k;
     }
-    ch += '</div>';
   }
-  el("cols").innerHTML = ch;
+  el("table").innerHTML = h;
+  el("moves").textContent = moves + (moves === 1 ? " move" : " moves");
+  el("bUndo").disabled = !undoStack.length;
+  el("stage").style.setProperty("--b", Math.min(L.W, 360) + "px");
 
   /* offer autocomplete */
-  if (canAutocomplete() && !won){
+  if (state === "play" && canAutocomplete() && !won && !autoPending){
+    autoPending = true;
     setTimeout(autocomplete, 350);
   }
 }
 
-/* tapping an empty column: move a king there if one is selected implicitly —
-   handled by tryMove from the king's own tap, so this is just a hint no-op */
-function tapEmpty(c){ haptic("light"); }
+el("bHome").onclick = function(){ haptic("light"); home(); };
+el("bUndo").onclick = undo;
+document.addEventListener("keydown", function(e){
+  if (e.key === "Escape" && state === "play") home();
+  else if ((e.key === "z" && (e.metaKey || e.ctrlKey)) || e.key === "u") undo();
+});
+window.addEventListener("resize", function(){ render(); });
 
 /* ---------- boot ---------- */
-store.getItem("solitaire").then(function(v){
-  if (v){
-    try{
-      var s = JSON.parse(v);
-      if (s && s.g){
-        G = s.g; moves = s.moves || 0;
-        startAt = Date.now() - (s.elapsed || 0);
-        timerId = setInterval(tick, 1000);
-        render();
-        return;
-      }
-    }catch(e){}
-  }
-  newGame();
+syncLook();
+Promise.all([load("solitaire"), load("solitaire.best")]).then(function(v){
+  if (v[1]) try { best = JSON.parse(v[1]); } catch(_){}
+  var s = null;
+  if (v[0]) try { s = JSON.parse(v[0]); } catch(_){}
+  if (s && s.g){ G = s.g; moves = s.moves || 0; acc = s.elapsed || 0; fresh = false; }
+  else deal();
+  home();
 });
-</script>
-</body>
-</html>
+</script></body></html>

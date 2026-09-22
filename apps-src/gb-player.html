@@ -18,7 +18,8 @@
   html,body{ margin:0; height:100%; overflow:hidden; }
   body{ background:var(--bg); color:var(--text);
     font-family:var(--myllm-font,-apple-system,system-ui,'Segoe UI',Roboto,sans-serif);
-    display:flex; flex-direction:column; padding-top:env(safe-area-inset-top); }
+    display:flex; flex-direction:column; padding-top:env(safe-area-inset-top);
+    padding-left:env(safe-area-inset-left); padding-right:env(safe-area-inset-right); }
   .top{ display:flex; align-items:center; gap:10px; padding:10px 14px; }
   .top h1{ font-size:16px; margin:0; font-weight:800; letter-spacing:.2px; }
   .top .sp{ flex:1; }
@@ -28,7 +29,7 @@
   .screen-wrap{ flex:1; display:flex; align-items:center; justify-content:center; min-height:0; background:#000;
     margin:0 0 6px; position:relative; }
   canvas{ image-rendering:pixelated; image-rendering:crisp-edges; width:100%; height:auto;
-    max-width:100%; max-height:100%; display:block; background:#000; }
+    max-width:100%; max-height:100%; display:block; background:#000; object-fit:contain; }
   .hint{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;
     gap:10px; text-align:center; color:var(--muted); font-size:14px; padding:24px; }
   .hint b{ color:var(--text); font-size:16px; }
@@ -46,11 +47,17 @@
   .dpad .right{ right:0; top:46px; border-radius:0 10px 10px 0; }
   .mid{ display:flex; flex-direction:column; gap:8px; }
   .sm{ font:inherit; font-weight:700; font-size:11px; letter-spacing:.5px; color:var(--muted);
-    background:var(--panel2); border:1px solid var(--line); border-radius:20px; padding:8px 14px; }
+    background:var(--panel2); border:1px solid var(--line); border-radius:20px; padding:8px 14px; min-height:40px; }
   .ab{ display:flex; align-items:center; gap:14px; justify-self:end; }
   .ab-btn{ width:64px; height:64px; border-radius:50%; font:inherit; font-weight:800; font-size:22px; color:#fff;
     background:var(--accent); border:0; box-shadow:0 4px 0 rgba(0,0,0,.35); }
   .ab-btn:last-child{ transform:translateY(-14px); }
+  /* Full screen while a game runs, and the way back out (MyLLM's myllmImmersive) */
+  .fs{ display:none; width:40px; height:40px; border-radius:10px; border:1px solid var(--line); background:var(--panel2);
+    color:var(--text); align-items:center; justify-content:center; padding:0; }
+  body.can-imm.playing .fs{ display:inline-flex; }
+  .fs svg{ width:18px; height:18px; } .fs .co{ display:none; } .fs.on .ex{ display:none; } .fs.on .co{ display:block; }
+  .dpad .d svg{ width:18px; height:18px; fill:currentColor; }
   button{ cursor:pointer; }
   button.on{ filter:brightness(1.4); }
   @media (min-width:768px){
@@ -66,6 +73,7 @@
 <div class="top">
   <h1>Pocket Player</h1>
   <span class="sp"></span>
+  <button class="fs" id="fs" type="button" aria-label="Full screen"><svg class="ex" viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg><svg class="co" viewBox="0 0 24 24"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
   <label class="load">Load ROM<input id="file" type="file" accept=".gb,.gbc,.zip,application/zip,application/octet-stream"></label>
 </div>
 
@@ -80,10 +88,10 @@
 
 <div class="pad">
   <div class="dpad">
-    <button class="d up"    data-btn="UP" aria-label="Up">▲</button>
-    <button class="d down"  data-btn="DOWN" aria-label="Down">▼</button>
-    <button class="d left"  data-btn="LEFT" aria-label="Left">◀</button>
-    <button class="d right" data-btn="RIGHT" aria-label="Right">▶</button>
+    <button class="d up"    data-btn="UP" aria-label="Up"><svg viewBox="0 0 24 24"><path d="M12 6l7 10H5z"/></svg></button>
+    <button class="d down"  data-btn="DOWN" aria-label="Down"><svg viewBox="0 0 24 24"><path d="M12 18L5 8h14z"/></svg></button>
+    <button class="d left"  data-btn="LEFT" aria-label="Left"><svg viewBox="0 0 24 24"><path d="M6 12l10-7v14z"/></svg></button>
+    <button class="d right" data-btn="RIGHT" aria-label="Right"><svg viewBox="0 0 24 24"><path d="M18 12L8 19V5z"/></svg></button>
   </div>
   <div class="mid">
     <button class="sm" data-btn="SELECT">SELECT</button>
@@ -117,6 +125,22 @@
   var canvas=document.getElementById('screen'), ctx=canvas.getContext('2d');
   var img=ctx.createImageData(GB_W,GB_H);
   function status(m){ document.getElementById('status').textContent=m||''; }
+
+  // Full screen while a game runs: MyLLM's myllmImmersive hides its own title
+  // bar and the status bar. Looked up when used (the bridge can arrive after
+  // this script); the top-bar button stays as the way back out, because the
+  // native Done button is hidden while it is on.
+  var fsOn=false;
+  function canImm(){ return typeof window.myllmImmersive==='function'; }
+  function syncChrome(){ if(!canImm()) return;
+    try{ var p=window.myllmImmersive(fsOn,{keepAwake:false}); if(p&&p.catch) p.catch(function(){}); }catch(_){} }
+  function setFs(on){ fsOn=!!on && canImm(); var b=document.getElementById('fs');
+    if(b){ b.classList.toggle('on',fsOn); b.setAttribute('aria-label', fsOn?'Leave full screen':'Full screen'); } syncChrome(); }
+  function markCan(){ document.body.classList.toggle('can-imm', canImm()); }
+  markCan(); setTimeout(markCan,600); setTimeout(markCan,2500);
+  document.getElementById('fs').addEventListener('click', function(){ setFs(!fsOn); });
+  document.addEventListener('visibilitychange', function(){ if(document.visibilityState!=='hidden' && fsOn) syncChrome(); });
+
 
   // Inlined core missing/incomplete? Say so instead of dying silently.
   if(typeof Binjgb==='undefined'){
@@ -267,7 +291,7 @@
   function startROM(bytes){
     if(!core){ status('Still starting up — tap Load ROM again in a moment.'); return; }
     try{ core.load(bytes); }catch(e){ status('That doesn’t look like a valid Game Boy ROM.'); return; }
-    running=true; resumeAudio(); document.body.classList.add('playing'); status('');
+    running=true; resumeAudio(); document.body.classList.add('playing'); status(''); markCan(); setFs(true);
     lastSec=0; requestAnimationFrame(loop);
   }
 

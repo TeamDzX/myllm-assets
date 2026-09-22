@@ -19,7 +19,7 @@ body{font-family:-apple-system,system-ui,sans-serif;background:var(--bg);color:v
 #backdrop{position:fixed;inset:0;z-index:0;background:var(--bg)}
 #backdrop img{width:100%;height:100%;object-fit:cover;opacity:.42;display:block;transition:opacity 1.2s}
 #backdrop::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(18,16,26,.25),rgba(18,16,26,.92) 78%)}
-.screen{position:relative;z-index:1;min-height:100dvh;display:none;flex-direction:column;padding:calc(18px + env(safe-area-inset-top)) 18px calc(20px + env(safe-area-inset-bottom))}
+.screen{position:relative;z-index:1;min-height:100dvh;display:none;flex-direction:column;padding:calc(18px + env(safe-area-inset-top)) calc(18px + env(safe-area-inset-right)) calc(20px + env(safe-area-inset-bottom)) calc(18px + env(safe-area-inset-left))}
 .screen.on{display:flex}
 .center{align-items:center;justify-content:center;text-align:center}
 /* title */
@@ -95,14 +95,14 @@ input[type=text]{width:100%;padding:13px 14px;border:1px solid var(--line);borde
 @keyframes myllmAiSpin{to{transform:rotate(360deg)}}
 .myllm-ai-busy{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(18px);z-index:99999;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;display:flex;align-items:center;gap:10px;background:rgba(28,28,30,.96);color:#fff;border-radius:999px;padding:10px 16px 10px 14px;box-shadow:0 6px 22px rgba(0,0,0,.4);font-family:-apple-system,system-ui,sans-serif;font-size:14px;font-weight:600;max-width:92%}
 .myllm-ai-busy.on{opacity:1;transform:translateX(-50%) translateY(0)}
-.myllm-ai-cog{font-size:18px;line-height:1;animation:myllmAiSpin 2.4s linear infinite;filter:drop-shadow(0 0 5px rgba(124,92,255,.85))}
+.myllm-ai-cog{width:16px;height:16px;border-radius:50%;border:2.4px solid #a78bfa;border-right-color:transparent;animation:myllmAiSpin .9s linear infinite;flex-shrink:0}
 .myllm-ai-busy small{font-weight:400;opacity:.6}
 </style>
 <script>
 (function(){if(window.__myllmAiWrap||typeof window.myllmAsk!=='function')return;window.__myllmAiWrap=true;
 var orig=window.myllmAsk,depth=0,node=null;
 function ensure(){if(node)return;node=document.createElement('div');node.className='myllm-ai-busy';
-node.innerHTML='<span class="myllm-ai-cog">⚙️</span><span>The quill writes… <small>privately, on your device</small></span>';
+node.innerHTML='<span class="myllm-ai-cog"></span><span>The quill writes… <small>privately, on your device</small></span>';
 (document.body||document.documentElement).appendChild(node);}
 function show(){ensure();depth++;node.classList.add('on');}
 function hide(){depth=Math.max(0,depth-1);if(depth===0&&node)node.classList.remove('on');}
@@ -163,10 +163,20 @@ return Promise.resolve(p).then(function(r){hide();return r;},function(e){hide();
 
 <script>
 "use strict";
-var store = window.myllmStorage || {
-  getItem:function(k){ try{return Promise.resolve(localStorage.getItem(k));}catch(e){return Promise.resolve(null);} },
-  setItem:function(k,v){ try{localStorage.setItem(k,v);}catch(e){} return Promise.resolve(); }
+/* Looked up when used: MyLLM can add its bridges after this script has run. */
+var store = {
+  getItem:function(k){ if(window.myllmStorage) return window.myllmStorage.getItem(k);
+    try{return Promise.resolve(localStorage.getItem(k));}catch(e){return Promise.resolve(null);} },
+  setItem:function(k,v){ if(window.myllmStorage) return window.myllmStorage.setItem(k,v);
+    try{localStorage.setItem(k,v);}catch(e){} return Promise.resolve(); }
 };
+/* The tale takes the whole display: myllmImmersive hides MyLLM's title bar and
+   the status bar on the play screen, and hands them back everywhere else. The
+   play screen's menu ("Back to the title") is the way out. */
+var immOn=false;
+function syncChrome(on){ if(!on&&!immOn) return; immOn=!!on; if(typeof window.myllmImmersive!=='function') return;
+  try{ var p=window.myllmImmersive(immOn,{keepAwake:false}); if(p&&p.catch) p.catch(function(){}); }catch(e){} }
+document.addEventListener('visibilitychange',function(){ if(!document.hidden&&immOn) syncChrome(true); });
 function el(i){ return document.getElementById(i); }
 function haptic(k){ if(window.myllmHaptic) try{ myllmHaptic(k||'light'); }catch(e){} }
 /* toast: transient pill feedback (image gen has none otherwise). toast(html,0) is
@@ -201,6 +211,7 @@ var busy = false;
 function showScreen(s){
   document.querySelectorAll('.screen').forEach(function(x){ x.classList.remove('on'); });
   el('sc-'+s).classList.add('on'); window.scrollTo(0,0);
+  syncChrome(s==='play');
 }
 function setBackdrop(genre){
   var img=el('bdImg');

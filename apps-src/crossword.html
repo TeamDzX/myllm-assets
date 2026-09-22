@@ -3,68 +3,215 @@
   Crossword — MyLLMos™ App Gallery · © 2026 Opticell Ltd
   Source-available: read it, remix it, run your version inside MyLLM™.
   Not for redistribution or republication. Terms: https://github.com/TeamDzX/myllm-assets/blob/main/LICENSE
---><html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+--><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,viewport-fit=cover">
 <title>Crossword</title>
-<style>
-:root{--build-id:"cd96ba932f";
-  color-scheme:light dark;
-  --bg:var(--myllm-bg,#f2f2f7);--surface:var(--myllm-surface,#fff);
-  --text:var(--myllm-text,#111);--muted:var(--myllm-muted,#6b6b72);
-  --accent:var(--myllm-accent,#0b5ed7);--border:var(--myllm-border,rgba(120,120,128,.3));
-  --radius:var(--myllm-radius,12px);--font:var(--myllm-font,-apple-system,system-ui,sans-serif);
-  --cell:#fff;--block:#2a2a30;--sel:#ffe08a;--word:#cfe6ff;--wrong:#ffd1d1;
-}
-@media(prefers-color-scheme:dark){:root{--bg:var(--myllm-bg,#000);--surface:var(--myllm-surface,#1c1c1e);--text:var(--myllm-text,#eee);--muted:var(--myllm-muted,#98989f);--cell:#26262b;--block:#000;--sel:#7a6420;--word:#1d3a57;--wrong:#5a2030}}
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
-body{margin:0;font-family:var(--font);background:var(--bg);color:var(--text)}
-.wrap{max-width:460px;margin:0 auto;padding:10px 12px 18px}
-.bar{display:flex;align-items:center;gap:8px;margin-bottom:8px}
-.bar .t{font-size:13px;color:var(--muted)}.bar .sp{flex:1}
-.bar button{border:0;background:var(--surface);border:1px solid var(--border);color:var(--accent);border-radius:9px;padding:7px 10px;font:inherit;font-weight:600;font-size:13px;cursor:pointer}
-.grid{display:grid;gap:2px;background:var(--border);border:2px solid var(--border);border-radius:6px;overflow:hidden;margin:0 auto;width:100%;aspect-ratio:1}
-.cell{position:relative;border:0;background:var(--cell);color:var(--text);font:inherit;font-weight:700;font-size:min(7vw,30px);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0}
-.cell.block{background:var(--block);cursor:default}
-.cell.word{background:var(--word)}
-.cell.sel{background:var(--sel)}
-.cell.wrong{background:var(--wrong)}
-.cell .n{position:absolute;top:1px;left:2px;font-size:10px;font-weight:600;color:var(--muted)}
-.clue{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:11px 13px;margin:10px 0;font-size:15px;line-height:1.4;display:flex;align-items:center;gap:8px;min-height:46px}
-.clue .dir{flex:none;font-weight:700;color:var(--accent);font-size:13px}
-.clue .arr{flex:none;border:0;background:none;color:var(--accent);font-size:18px;cursor:pointer;padding:4px}
-.kb{display:flex;flex-direction:column;gap:6px}
-.kbrow{display:flex;gap:5px;justify-content:center}
-.key{flex:1;max-width:34px;height:46px;border:0;border-radius:7px;background:var(--surface);border:1px solid var(--border);color:var(--text);font:inherit;font-weight:600;font-size:17px;cursor:pointer}
-.key.wide{max-width:58px;font-size:14px}
-.key:active{background:var(--accent);color:#fff}
-.win{text-align:center;color:var(--accent);font-weight:700;font-size:16px;padding:8px;display:none}
-.sheet{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:flex-end;z-index:30}
-.sheet.show{display:flex}
-.sheetB{background:var(--bg);width:100%;border-radius:18px 18px 0 0;padding:16px;max-height:70%;overflow:auto}
-.sheetB h3{margin:0 0 12px}
-.pz{display:flex;justify-content:space-between;align-items:center;padding:13px;border:1px solid var(--border);border-radius:11px;margin-bottom:8px;background:var(--surface);cursor:pointer}
-.pz .dn{color:#2bb673;font-size:13px;font-weight:700}
-</style>
-</head>
-<body>
-<div class="wrap">
-  <div class="bar">
-    <span class="t" id="pzName">Mini 1</span><span class="t" id="timer">0:00</span>
-    <span class="sp"></span>
-    <button id="checkBtn">Check</button>
-    <button id="revealBtn">Reveal</button>
-    <button id="puzBtn">Puzzles</button>
-  </div>
-  <div class="grid" id="grid"></div>
-  <div class="win" id="win">Solved! 🎉</div>
-  <div class="clue"><button class="arr" id="prevClue">‹</button><span class="dir" id="clueDir">1A</span><span id="clueText">—</span><button class="arr" id="nextClue">›</button></div>
-  <div class="kb" id="kb"></div>
-</div>
-<div class="sheet" id="sheet"><div class="sheetB"><h3>Puzzles</h3><div id="pzList"></div></div></div>
+<style>:root{--build-id:"cd96ba932f";color-scheme:light dark}
+  @property --h{ syntax:'<number>'; inherits:true; initial-value:214; }
+  *{ margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body{ height:100%; }
+  body{ font-family:var(--myllm-font,-apple-system,system-ui,sans-serif); background:#0b0b10; color:#fff; overflow:hidden;
+    touch-action:none; overscroll-behavior:none; -webkit-user-select:none; user-select:none; }
+  button{ font:inherit; color:inherit; }
 
+  /* The stage: a hue-tinted backdrop in two layers, dark and light, so the
+     change between them can fade. */
+  .stage{ position:fixed; inset:0; --h:214; transition:--h 1.4s ease; color:#fff; }
+  .bg{ position:absolute; inset:0; transition:opacity .6s ease; }
+  .bg.d{ background:radial-gradient(120% 90% at 20% 10%, hsl(var(--h) 70% 34%), transparent 60%),
+      radial-gradient(120% 90% at 85% 95%, hsl(calc(var(--h) + 60) 65% 26%), transparent 62%), #0b0b10; }
+  .bg.l{ opacity:0; background:radial-gradient(120% 90% at 20% 0%, hsl(var(--h) 80% 84%), transparent 60%),
+      radial-gradient(120% 90% at 85% 100%, hsl(calc(var(--h) + 60) 78% 86%), transparent 62%), #f4f4f8; }
+  .lite{ color:#15151a; } .lite .bg.l{ opacity:1; } .lite .bg.d{ opacity:0; }
+
+  .col{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center;
+    padding:calc(12px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) calc(14px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left)); }
+  .top{ width:100%; max-width:560px; height:44px; display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
+  .lbl{ font-size:11px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; opacity:.62; white-space:nowrap; }
+  .glass{ border:1px solid rgba(255,255,255,.16); background:rgba(255,255,255,.12); color:inherit;
+    -webkit-backdrop-filter:blur(18px); backdrop-filter:blur(18px); }
+  .lite .glass{ border-color:rgba(0,0,0,.09); background:rgba(255,255,255,.62); }
+  svg{ width:1.25em; height:1.25em; fill:currentColor; flex-shrink:0; }
+  .rnd{ width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:15px; flex-shrink:0; }
+  .pill{ min-width:44px; height:44px; border-radius:99px; padding:0 16px; display:flex; align-items:center; justify-content:center; gap:6px;
+    font-size:19px; font-weight:800; font-variant-numeric:tabular-nums; flex-shrink:0; }
+  .pill small{ font-size:10px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; opacity:.6; }
+  .pill.bump{ animation:bump .28s ease; }
+  @keyframes bump{ 40%{ transform:scale(1.18); } }
+  .top .hide{ visibility:hidden; }
+
+  .wrap{ flex:1; width:100%; min-height:0; position:relative; display:flex; align-items:center; justify-content:center; margin:10px 0 34px; }
+  .foot{ position:absolute; left:0; right:0; top:calc(50% + var(--bh,320px) / 2 + 12px); text-align:center; font-size:12px; font-weight:600;
+    letter-spacing:.02em; opacity:.55; font-variant-numeric:tabular-nums; white-space:nowrap; }
+
+  /* One glass card over the board: title, paused, finished. */
+  .sheet{ position:absolute; left:50%; top:50%; width:max(232px, min(300px, calc(var(--b,320px) - 44px))); transform:translate(-50%,-50%) scale(.96);
+    opacity:0; pointer-events:none; border-radius:26px; padding:22px 20px 18px; text-align:center; box-shadow:0 24px 60px rgba(0,0,0,.35); z-index:5;
+    transition:opacity .28s ease, transform .28s cubic-bezier(.2,.8,.2,1); }
+  .sheet.on{ opacity:1; transform:translate(-50%,-50%); pointer-events:auto; }
+  /* whatever sits under an open card steps back, so the card reads */
+  .under{ transition:opacity .3s, filter .3s; } .veil .under{ opacity:.28; filter:blur(2px); }
+  .lite .sheet{ box-shadow:0 22px 50px rgba(20,20,40,.18); }
+  .sheet h1{ font-size:30px; font-weight:800; letter-spacing:-.02em; }
+  .sheet p{ font-size:13.5px; line-height:1.4; opacity:.72; margin-top:6px; }
+  .kick{ font-size:11px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; opacity:.62; }
+  .big{ font-size:64px; font-weight:800; line-height:1.05; letter-spacing:-.03em; font-variant-numeric:tabular-nums; margin-top:4px; }
+  .big small{ display:block; font-size:12px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; opacity:.6; margin-top:2px; }
+  .best{ display:inline-block; margin-top:10px; font-size:11.5px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; opacity:.7; }
+  .best.new{ opacity:1; color:#0b0b10; background:#ffd60a; border-radius:99px; padding:5px 11px; }
+  .sheet .act{ width:100%; height:50px; border-radius:99px; margin-top:10px; font-size:16px; font-weight:750;
+    display:flex; align-items:center; justify-content:center; gap:8px; }
+  .sheet .act:first-of-type{ margin-top:18px; }
+  .sheet .act:active, .rnd:active{ transform:scale(.96); }
+  .pri{ border:none; background:#fff; color:#0b0b10; box-shadow:0 10px 30px rgba(0,0,0,.3); }
+  .lite .pri{ background:#15151a; color:#fff; box-shadow:0 10px 26px rgba(20,20,40,.22); }
+
+  @media (max-height:430px){
+    .sheet{ padding:14px 18px 14px; } .sheet h1{ font-size:24px; } .big{ font-size:42px; }
+    .sheet .act{ height:44px; margin-top:8px; } .sheet .act:first-of-type{ margin-top:12px; } .sheet p{ display:none; }
+    .wrap{ margin:6px 0 26px; }
+  }
+  @media (prefers-reduced-motion:reduce){ .pill.bump{ animation:none; } .stage{ transition:none; } }
+
+  .main{ flex:1; width:100%; max-width:760px; min-height:0; display:flex; flex-direction:column; align-items:center; }
+  .wrap{ margin:8px 0 6px; }
+  .veil .under{ pointer-events:none; opacity:.3; filter:blur(7px) saturate(.8); }
+  .dock{ width:100%; max-width:560px; flex-shrink:0; display:flex; flex-direction:column; align-items:center; gap:10px; transition:opacity .3s; }
+  .veil .dock, .home .dock{ opacity:.0; pointer-events:none; }
+  .status{ min-height:24px; font-size:16px; font-weight:750; display:flex; align-items:center; gap:8px; text-align:center; }
+  .status.bad{ color:#ff6b62; } .lite .status.bad{ color:#d92d20; }
+  .sub{ min-height:16px; font-size:12.5px; font-weight:600; opacity:.6; margin-top:-6px; text-align:center; }
+  .ctl{ display:flex; gap:10px; justify-content:center; }
+  .ctl button{ min-width:104px; height:46px; border-radius:99px; padding:0 18px; font-size:15px; font-weight:700; display:flex; align-items:center; justify-content:center; gap:8px; }
+  .ctl button:active{ transform:scale(.96); }
+  .ctl button:disabled{ opacity:.45; }
+  .spin{ width:15px; height:15px; border-radius:50%; border:2.4px solid currentColor; border-right-color:transparent; animation:spin .8s linear infinite; flex-shrink:0; }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+  .seglbl{ font-size:10.5px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; opacity:.6; margin:14px 0 6px; text-align:left; }
+  .seg{ display:flex; border-radius:14px; padding:3px; gap:3px; }
+  .seg button{ flex:1; height:36px; border:0; background:none; border-radius:11px; font-size:13.5px; font-weight:700; opacity:.72; }
+  .seg button.on{ background:#fff; color:#0b0b10; opacity:1; }
+  .lite .seg button.on{ background:#15151a; color:#fff; }
+  .sheet .act.glass{ font-weight:700; }
+  @media (max-height:520px){
+    .main{ flex-direction:row; align-items:stretch; gap:22px; }
+    .wrap{ margin:4px 0; }
+    .dock{ width:230px; justify-content:center; }
+    .ctl{ flex-direction:column; width:100%; } .ctl button{ width:100%; }
+    .seglbl{ margin:8px 0 4px; } .seg button{ height:32px; }
+  }
+  @media (max-height:640px) and (min-height:521px){ .sheet{ padding:16px 16px 14px; } .sheet h1{ font-size:24px; } .sheet p{ display:none; } .sheet .act{ height:44px; margin-top:8px; } .sheet .act:first-of-type{ margin-top:12px; } .seglbl{ margin:10px 0 5px; } .seg button{ height:32px; } }
+  @media (max-height:640px){ .home .lbl{ visibility:hidden; } }
+  @media (prefers-reduced-motion:reduce){ .spin{ animation-duration:2.4s; } }
+
+  .grid{ width:var(--b,300px); height:var(--b,300px); display:grid; gap:2px; padding:2px; border-radius:14px; overflow:hidden;
+    background:hsl(var(--h) 30% 16%); box-shadow:0 20px 50px rgba(0,0,0,.4); }
+  .lite .grid{ box-shadow:0 18px 40px rgba(20,20,40,.18); }
+  .cell{ position:relative; border:0; background:#fbfbfd; color:#15151a; font-weight:800; font-size:calc(var(--b,300px) / var(--n,4) * .5);
+    display:flex; align-items:center; justify-content:center; padding:0; border-radius:4px; cursor:pointer; }
+  .cell.block{ background:hsl(var(--h) 25% 12%); cursor:default; }
+  .cell.word{ background:hsl(var(--h) 95% 90%); }
+  .cell.sel{ background:hsl(46 100% 68%); }
+  .cell.wrong{ background:#ffc6c0; }
+  .cell .n{ position:absolute; top:3px; left:4px; font-size:calc(var(--b,300px) / var(--n,4) * .16); font-weight:700; color:#6a6f86; }
+  .dock{ gap:8px; }
+  .clue{ width:100%; min-height:52px; border-radius:16px; display:flex; align-items:center; gap:6px; padding:4px; font-size:15px; line-height:1.35; }
+  .clue .arr{ width:44px; height:44px; border:0; background:none; border-radius:12px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .clue .arr:active{ background:rgba(127,127,127,.2); }
+  .clue .dir{ font-size:12px; font-weight:800; letter-spacing:.06em; opacity:.7; flex-shrink:0; }
+  .clue .txt{ flex:1; min-width:0; font-weight:600; }
+  .tools{ display:flex; gap:8px; }
+  .tools button{ height:38px; border-radius:99px; padding:0 14px; font-size:13.5px; font-weight:700; display:flex; align-items:center; gap:6px; }
+  .tools button svg{ width:1.05em; height:1.05em; }
+  .kb{ width:100%; display:flex; flex-direction:column; gap:6px; }
+  .kbrow{ display:flex; gap:5px; justify-content:center; }
+  .key{ flex:1; max-width:40px; height:46px; border:0; border-radius:9px; font-size:18px; font-weight:700;
+    background:rgba(255,255,255,.16); border:1px solid rgba(255,255,255,.14); color:inherit; display:flex; align-items:center; justify-content:center; }
+  .lite .key{ background:rgba(255,255,255,.75); border-color:rgba(0,0,0,.07); box-shadow:0 1px 0 rgba(0,0,0,.08); }
+  .key.wide{ max-width:62px; font-size:14px; }
+  .key:active{ background:hsl(var(--h) 80% 55%); color:#fff; }
+  .pz{ display:flex; align-items:center; gap:10px; width:100%; min-height:48px; border-radius:14px; padding:0 14px; margin-top:8px; font-size:15px; font-weight:700; text-align:left; }
+  .pz span{ flex:1; }
+  .pz small{ font-size:12px; font-weight:700; opacity:.65; }
+  .pz.done small{ color:#34c759; opacity:1; }
+  .pz.cur{ box-shadow:inset 0 0 0 2px hsl(var(--h) 80% 60%); }
+  .pz svg{ width:1em; height:1em; }
+  @media (max-height:640px){ .pz{ min-height:40px; margin-top:6px; } }
+  @media (max-height:520px){ .dock{ width:min(360px, 46vw); } .key{ height:40px; } .clue{ min-height:46px; } .pz{ min-height:36px; } }
+</style></head><body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5.5v13a1 1 0 0 0 1.52.85l10.4-6.5a1 1 0 0 0 0-1.7L9.52 4.65A1 1 0 0 0 8 5.5z"/></symbol>
+  <symbol id="i-pause" viewBox="0 0 24 24"><rect x="6" y="5" width="4.2" height="14" rx="1.4"/><rect x="13.8" y="5" width="4.2" height="14" rx="1.4"/></symbol>
+  <symbol id="i-again" viewBox="0 0 24 24"><path d="M12 5V2.6a.6.6 0 0 0-1-.45L7.2 5.55a.6.6 0 0 0 0 .9L11 9.85a.6.6 0 0 0 1-.45V7a5.5 5.5 0 1 1-5.5 5.5 1 1 0 0 0-2 0A7.5 7.5 0 1 0 12 5z"/></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24"><path d="M6.4 5a1 1 0 0 0-1.4 1.4L10.6 12 5 17.6A1 1 0 0 0 6.4 19l5.6-5.6 5.6 5.6a1 1 0 0 0 1.4-1.4L13.4 12 19 6.4A1 1 0 0 0 17.6 5L12 10.6z"/></symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></symbol>
+  <symbol id="i-undo" viewBox="0 0 24 24"><path d="M9 7.5 4.5 12 9 16.5M5 12h9.5a5 5 0 0 1 0 10H12" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-flip" viewBox="0 0 24 24"><path d="M7 4v14m0 0-3.5-3.5M7 18l3.5-3.5M17 20V6m0 0-3.5 3.5M17 6l3.5 3.5" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-prev" viewBox="0 0 24 24"><path d="M14.5 5.5 8 12l6.5 6.5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-next" viewBox="0 0 24 24"><path d="M9.5 5.5 16 12l-6.5 6.5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-del" viewBox="0 0 24 24"><path d="M9 5h10.5A1.5 1.5 0 0 1 21 6.5v11a1.5 1.5 0 0 1-1.5 1.5H9l-6-7z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M11.5 9.5l5 5M16.5 9.5l-5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.6l4.6 4.6L19.2 7.4" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24"><path d="M12 5.5c4.6 0 8.2 3.4 9.5 6.5-1.3 3.1-4.9 6.5-9.5 6.5S3.8 15.1 2.5 12C3.8 8.9 7.4 5.5 12 5.5z" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="3" fill="currentColor"/></symbol>
+  <symbol id="i-grid" viewBox="0 0 24 24"><path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+</defs></svg>
+<div class="stage home" id="stage">
+  <div class="bg d"></div><div class="bg l"></div>
+  <div class="col">
+    <div class="top">
+      <button class="glass rnd hide" id="bMenu" aria-label="Puzzles"><svg><use href="#i-grid"/></svg></button>
+      <div class="lbl" id="pzName">Mini 1</div>
+      <div class="glass pill hide" id="timerPill"><span id="timer">0:00</span></div>
+    </div>
+    <div class="main">
+      <div class="wrap" id="wrap">
+        <div class="grid under" id="grid"></div>
+        <div class="sheet glass" id="sheet"></div>
+      </div>
+      <div class="dock under" id="dock">
+        <div class="clue glass"><button class="arr" id="prevClue" aria-label="Previous clue"><svg><use href="#i-prev"/></svg></button><span class="dir" id="clueDir">1A</span><span class="txt" id="clueText">—</span><button class="arr" id="nextClue" aria-label="Next clue"><svg><use href="#i-next"/></svg></button></div>
+        <div class="tools"><button class="glass" id="checkBtn"><svg><use href="#i-check"/></svg>Check</button><button class="glass" id="revealBtn"><svg><use href="#i-eye"/></svg>Reveal word</button></div>
+        <div class="kb" id="kb"></div>
+      </div>
+    </div>
+  </div>
+</div>
 <script>
+function el(i){ return document.getElementById(i); }
+/* Bridges are looked up when used, never kept: MyLLM can add them after this
+   script has run. */
+function haptic(s){ if (window.myllmHaptic) try { myllmHaptic(s); } catch(_){} }
+function load(k){ var s = window.myllmStorage; return s ? s.getItem(k).catch(function(){ return null; }) : Promise.resolve(null); }
+function keep(k, v){ var s = window.myllmStorage; if (s) try { s.setItem(k, v).catch(function(){}); } catch(_){} }
+var calm = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/* ---------- look ---------- */
+function isLight(){ return !(window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches); }
+/* A game in progress takes the whole display and goes dark. Where MyLLM can't
+   hide its own title bar, a dark stage under a white bar looks cut in half —
+   so in light mode, without myllmImmersive, the stage stays light. */
+function syncLook(){
+  el("stage").classList.toggle("lite", isLight() && !(state !== "home" && window.myllmImmersive));
+  if (typeof onLook === "function") onLook();
+}
+function syncChrome(){
+  if (!window.myllmImmersive) return;
+  try { myllmImmersive(state !== "home", {keepAwake:false}).catch(function(){}); } catch(_){}
+}
+function setHue(h){ el("stage").style.setProperty("--h", String(h)); }
+function showSheet(html, acts){
+  var s = el("sheet"); s.innerHTML = html;
+  Object.keys(acts).forEach(function(id){ var b = el(id); if (b) b.onclick = acts[id]; });
+  s.classList.add("on"); el("stage").classList.add("veil");
+}
+function hideSheet(){ el("sheet").classList.remove("on"); el("stage").classList.remove("veil"); }
+function bump(id){ var p = el(id); p.classList.remove("bump"); void p.offsetWidth; p.classList.add("bump"); }
+document.addEventListener("visibilitychange", function(){
+  if (document.hidden){ if (typeof onHide === "function") onHide(); return; }
+  if (state !== "home") syncChrome();          /* MyLLM puts its bars back when the app is left */
+});
+if (window.matchMedia){
+  var mq = matchMedia("(prefers-color-scheme: dark)");
+  if (mq.addEventListener) mq.addEventListener("change", syncLook); else if (mq.addListener) mq.addListener(syncLook);
+}
 var PUZZLES=[
  {id:"cw1",name:"Mini 1",rows:["THAN","HIRE","IDEA","SEAT"],
   clues:{A:{1:"Comparison word: \u201cbigger ___\u201d",5:"Take on for a job",6:"A bright thought \ud83d\udca1",7:"Where you sit"},
@@ -80,153 +227,208 @@ var PUZZLES=[
          D:{1:"In a little while",2:"A strong impulse",3:"Uncommon",4:"Ran away (past tense)"}}}
 ];
 
-var P=null, N=0, user=[], nums=[], entries=[], cur=null, dir='A', timer=0, tInt=null, solved=false;
-function $(i){return document.getElementById(i)}
-function haptic(k){if(window.myllmHaptic)try{myllmHaptic(k)}catch(e){}}
-function isBlock(r,c){return P.rows[r][c]==='#'}
+var P = null, N = 0, user = [], nums = [], entries = [], cur = null, dir = 'A', timer = 0, tInt = null, solved = false;
+var state = "home";
+function $(i){ return document.getElementById(i); }
+function isBlock(r,c){ return P.rows[r][c] === '#'; }
 
 function build(){
-  N=P.rows.length;
-  user=P.rows.map(function(row){return row.split('').map(function(ch){return ch==='#'?'#':''})});
+  N = P.rows.length;
+  user = P.rows.map(function(row){ return row.split('').map(function(ch){ return ch === '#' ? '#' : ''; }); });
   // numbering + entries
-  nums=P.rows.map(function(row){return row.split('').map(function(){return 0})});
-  entries=[];var n=0;
-  for(var r=0;r<N;r++)for(var c=0;c<N;c++){
-    if(isBlock(r,c))continue;
-    var startA=(c===0||isBlock(r,c-1))&&c+1<N&&!isBlock(r,c+1);
-    var startD=(r===0||isBlock(r-1,c))&&r+1<N&&!isBlock(r+1,c);
-    if(startA||startD){n++;nums[r][c]=n;
-      if(startA){var cells=[];for(var cc=c;cc<N&&!isBlock(r,cc);cc++)cells.push([r,cc]);entries.push({num:n,dir:'A',cells:cells,clue:(P.clues.A[n]||'')})}
-      if(startD){var cd=[];for(var rr=r;rr<N&&!isBlock(rr,c);rr++)cd.push([rr,c]);entries.push({num:n,dir:'D',cells:cd,clue:(P.clues.D[n]||'')})}
+  nums = P.rows.map(function(row){ return row.split('').map(function(){ return 0; }); });
+  entries = []; var n = 0;
+  for (var r = 0; r < N; r++) for (var c = 0; c < N; c++){
+    if (isBlock(r,c)) continue;
+    var startA = (c === 0 || isBlock(r,c-1)) && c + 1 < N && !isBlock(r,c+1);
+    var startD = (r === 0 || isBlock(r-1,c)) && r + 1 < N && !isBlock(r+1,c);
+    if (startA || startD){ n++; nums[r][c] = n;
+      if (startA){ var cells = []; for (var cc = c; cc < N && !isBlock(r,cc); cc++) cells.push([r,cc]); entries.push({num:n, dir:'A', cells:cells, clue:(P.clues.A[n] || '')}); }
+      if (startD){ var cd = []; for (var rr = r; rr < N && !isBlock(rr,c); rr++) cd.push([rr,c]); entries.push({num:n, dir:'D', cells:cd, clue:(P.clues.D[n] || '')}); }
     }
   }
 }
-function entryAt(r,c,d){return entries.find(function(e){return e.dir===d&&e.cells.some(function(x){return x[0]===r&&x[1]===c})})}
-function curEntry(){return cur?entryAt(cur[0],cur[1],dir):null}
+function entryAt(r,c,d){ return entries.find(function(e){ return e.dir === d && e.cells.some(function(x){ return x[0] === r && x[1] === c; }); }); }
+function curEntry(){ return cur ? entryAt(cur[0], cur[1], dir) : null; }
 
 function render(){
-  var g=$('grid');g.style.gridTemplateColumns='repeat('+N+',1fr)';g.innerHTML='';
-  var ce=curEntry();
-  for(var r=0;r<N;r++)for(var c=0;c<N;c++){
-    var b=document.createElement('button');
-    if(isBlock(r,c)){b.className='cell block';g.appendChild(b);continue}
-    b.className='cell';
-    if(ce&&ce.cells.some(function(x){return x[0]===r&&x[1]===c}))b.className+=' word';
-    if(cur&&cur[0]===r&&cur[1]===c)b.className+=' sel';
-    if(nums[r][c]){var s=document.createElement('span');s.className='n';s.textContent=nums[r][c];b.appendChild(s)}
-    var t=document.createTextNode(user[r][c]||'');b.appendChild(t);
-    (function(rr,cc){b.onclick=function(){onCell(rr,cc)}})(r,c);
+  var g = $('grid'); g.style.gridTemplateColumns = 'repeat(' + N + ',1fr)'; g.style.setProperty('--n', N); g.innerHTML = '';
+  var ce = curEntry();
+  for (var r = 0; r < N; r++) for (var c = 0; c < N; c++){
+    var b = document.createElement('button');
+    if (isBlock(r,c)){ b.className = 'cell block'; g.appendChild(b); continue; }
+    b.className = 'cell';
+    if (ce && !solved && ce.cells.some(function(x){ return x[0] === r && x[1] === c; })) b.className += ' word';
+    if (cur && !solved && cur[0] === r && cur[1] === c) b.className += ' sel';
+    if (nums[r][c]){ var s = document.createElement('span'); s.className = 'n'; s.textContent = nums[r][c]; b.appendChild(s); }
+    b.appendChild(document.createTextNode(user[r][c] || ''));
+    (function(rr,cc){ b.onclick = function(){ onCell(rr,cc); }; })(r,c);
     g.appendChild(b);
   }
-  var e=curEntry();
-  $('clueDir').textContent=e?(e.num+(e.dir==='A'?'A':'D')):'';
-  $('clueText').textContent=e?e.clue:'';
+  var e = curEntry();
+  $('clueDir').textContent = solved ? '' : (e ? (e.num + (e.dir === 'A' ? ' ACROSS' : ' DOWN')) : '');
+  $('clueText').textContent = solved ? 'Solved in ' + fmt(timer) : (e ? e.clue : '');
 }
 function onCell(r,c){
-  if(isBlock(r,c))return;
-  if(cur&&cur[0]===r&&cur[1]===c){dir=dir==='A'?'D':'A';if(!entryAt(r,c,dir))dir=dir==='A'?'D':'A'}
-  else{cur=[r,c];if(!entryAt(r,c,dir))dir=dir==='A'?'D':'A'}
-  haptic('selection');render();
+  if (isBlock(r,c) || state !== 'play') return;
+  if (cur && cur[0] === r && cur[1] === c){ dir = dir === 'A' ? 'D' : 'A'; if (!entryAt(r,c,dir)) dir = dir === 'A' ? 'D' : 'A'; }
+  else { cur = [r,c]; if (!entryAt(r,c,dir)) dir = dir === 'A' ? 'D' : 'A'; }
+  haptic('selection'); render();
 }
 function type(ch){
-  if(!cur||solved)return;
-  user[cur[0]][cur[1]]=ch;haptic('light');
-  var e=curEntry();if(e){var i=e.cells.findIndex(function(x){return x[0]===cur[0]&&x[1]===cur[1]});
+  if (!cur || solved || state !== 'play') return;
+  user[cur[0]][cur[1]] = ch; haptic('light');
+  var e = curEntry(); if (e){ var i = e.cells.findIndex(function(x){ return x[0] === cur[0] && x[1] === cur[1]; });
     // advance to next empty cell in entry, else next cell
-    var j=i+1;while(j<e.cells.length&&user[e.cells[j][0]][e.cells[j][1]])j++;
-    if(j>=e.cells.length)j=i+1;
-    if(j<e.cells.length)cur=e.cells[j];
+    var j = i + 1; while (j < e.cells.length && user[e.cells[j][0]][e.cells[j][1]]) j++;
+    if (j >= e.cells.length) j = i + 1;
+    if (j < e.cells.length) cur = e.cells[j];
   }
-  render();save();checkWin();
+  render(); save(); checkWin();
 }
 function backspace(){
-  if(!cur||solved)return;haptic('light');
-  if(user[cur[0]][cur[1]]){user[cur[0]][cur[1]]=''}
-  else{var e=curEntry();if(e){var i=e.cells.findIndex(function(x){return x[0]===cur[0]&&x[1]===cur[1]});if(i>0){cur=e.cells[i-1];user[cur[0]][cur[1]]=''}}}
-  render();save();
+  if (!cur || solved || state !== 'play') return; haptic('light');
+  if (user[cur[0]][cur[1]]){ user[cur[0]][cur[1]] = ''; }
+  else { var e = curEntry(); if (e){ var i = e.cells.findIndex(function(x){ return x[0] === cur[0] && x[1] === cur[1]; }); if (i > 0){ cur = e.cells[i-1]; user[cur[0]][cur[1]] = ''; } } }
+  render(); save();
 }
 function moveClue(delta){
-  var e=curEntry(),idx=e?entries.indexOf(e):-1;
-  var ni=((idx+delta)%entries.length+entries.length)%entries.length;
-  var ne=entries[ni];dir=ne.dir;cur=ne.cells[0];haptic('selection');render();
+  if (solved) return;
+  var e = curEntry(), idx = e ? entries.indexOf(e) : -1;
+  var ni = ((idx + delta) % entries.length + entries.length) % entries.length;
+  var ne = entries[ni]; dir = ne.dir; cur = ne.cells[0]; haptic('selection'); render();
 }
 
 function buildKeyboard(){
-  var rows=['QWERTYUIOP','ASDFGHJKL','ZXCVBNM'];var KB=$('kb');KB.innerHTML='';
+  var rows = ['QWERTYUIOP','ASDFGHJKL','ZXCVBNM']; var KB = $('kb'); KB.innerHTML = '';
   rows.forEach(function(row,ri){
-    var d=document.createElement('div');d.className='kbrow';
-    if(ri===2){var del=document.createElement('button');del.className='key wide';del.textContent='⌫';del.onclick=backspace;d.appendChild(del)}
-    row.split('').forEach(function(ch){var k=document.createElement('button');k.className='key';k.textContent=ch;k.onclick=function(){type(ch)};d.appendChild(k)});
-    if(ri===2){var clr=document.createElement('button');clr.className='key wide';clr.textContent='Clear';clr.onclick=clearPuzzle;d.appendChild(clr)}
+    var d = document.createElement('div'); d.className = 'kbrow';
+    if (ri === 2){ var del = document.createElement('button'); del.className = 'key wide'; del.innerHTML = '<svg><use href="#i-del"/></svg>'; del.setAttribute('aria-label','Delete'); del.onclick = backspace; d.appendChild(del); }
+    row.split('').forEach(function(ch){ var k = document.createElement('button'); k.className = 'key'; k.textContent = ch; k.onclick = function(){ type(ch); }; d.appendChild(k); });
+    if (ri === 2){ var clr = document.createElement('button'); clr.className = 'key wide'; clr.textContent = 'Clear'; clr.onclick = clearPuzzle; d.appendChild(clr); }
     KB.appendChild(d);
   });
 }
 
 function check(){
   haptic('warning');
-  var els=$('grid').querySelectorAll('.cell');var k=0;
-  for(var r=0;r<N;r++)for(var c=0;c<N;c++){var b=els[k++];if(isBlock(r,c))continue;
-    if(user[r][c]&&user[r][c]!==P.rows[r][c])b.classList.add('wrong');
+  var els = $('grid').querySelectorAll('.cell'); var k = 0;
+  for (var r = 0; r < N; r++) for (var c = 0; c < N; c++){ var b = els[k++]; if (isBlock(r,c)) continue;
+    if (user[r][c] && user[r][c] !== P.rows[r][c]) b.classList.add('wrong');
   }
-  setTimeout(function(){$('grid').querySelectorAll('.wrong').forEach(function(x){x.classList.remove('wrong')})},1200);
+  setTimeout(function(){ $('grid').querySelectorAll('.wrong').forEach(function(x){ x.classList.remove('wrong'); }); }, 1200);
 }
 function revealWord(){
-  var e=curEntry();if(!e)return;haptic('medium');
-  e.cells.forEach(function(x){user[x[0]][x[1]]=P.rows[x[0]][x[1]]});
-  render();save();checkWin();
+  var e = curEntry(); if (!e || solved) return; haptic('medium');
+  e.cells.forEach(function(x){ user[x[0]][x[1]] = P.rows[x[0]][x[1]]; });
+  render(); save(); checkWin();
 }
 function clearPuzzle(){
-  user=P.rows.map(function(row){return row.split('').map(function(ch){return ch==='#'?'#':''})});
-  solved=false;$('win').style.display='none';render();save();haptic('warning');
+  user = P.rows.map(function(row){ return row.split('').map(function(ch){ return ch === '#' ? '#' : ''; }); });
+  solved = false; cur = entries[0].cells[0]; dir = entries[0].dir; render(); save(); haptic('warning'); startTimer(); syncTools();
 }
 function checkWin(){
-  for(var r=0;r<N;r++)for(var c=0;c<N;c++){if(!isBlock(r,c)&&user[r][c]!==P.rows[r][c])return}
-  solved=true;$('win').style.display='block';stopTimer();haptic('success');save();
+  for (var r = 0; r < N; r++) for (var c = 0; c < N; c++){ if (!isBlock(r,c) && user[r][c] !== P.rows[r][c]) return; }
+  solved = true; stopTimer(); haptic('success'); save(); render(); syncTools();
+  setTimeout(function(){ if (solved && state === 'play') showSolved(); }, 500);
 }
+function syncTools(){ $('checkBtn').disabled = solved; $('revealBtn').disabled = solved; }
 
-function startTimer(){stopTimer();tInt=setInterval(function(){if(!solved){timer++;$('timer').textContent=fmt(timer);save()}},1000)}
-function stopTimer(){if(tInt){clearInterval(tInt);tInt=null}}
-function fmt(s){return Math.floor(s/60)+':'+(s%60<10?'0':'')+(s%60)}
+/* the clock only runs while you're actually solving */
+function startTimer(){ stopTimer(); if (state !== 'play' || solved || document.hidden) return; tInt = setInterval(function(){ if (!solved){ timer++; $('timer').textContent = fmt(timer); save(); } }, 1000); }
+function stopTimer(){ if (tInt){ clearInterval(tInt); tInt = null; } }
+function fmt(s){ return Math.floor(s / 60) + ':' + (s % 60 < 10 ? '0' : '') + (s % 60); }
 
-function loadPuzzle(i,fresh){
-  P=PUZZLES[i];$('pzName').textContent=P.name;build();
-  if(fresh){timer=0;solved=false}
-  // restore saved progress
-  if(window.myllmStorage){
-    myllmStorage.getItem('cw_'+P.id).then(function(v){
-      if(v&&!fresh)try{var s=JSON.parse(v);if(s.user)user=s.user;if(s.timer)timer=s.timer;if(s.solved)solved=s.solved}catch(e){}
-      cur=entries[0].cells[0];dir=entries[0].dir;
-      $('win').style.display=solved?'block':'none';$('timer').textContent=fmt(timer);
-      render();startTimer();
-    });
-  }else{cur=entries[0].cells[0];dir=entries[0].dir;render();startTimer()}
-  curPuz=i;saveCur();
-}
-var curPuz=0;
-function save(){if(window.myllmStorage&&P)myllmStorage.setItem('cw_'+P.id,JSON.stringify({user:user,timer:timer,solved:solved}))}
-function saveCur(){if(window.myllmStorage)myllmStorage.setItem('cw_last',String(curPuz))}
-
-$('checkBtn').onclick=check;
-$('revealBtn').onclick=revealWord;
-$('prevClue').onclick=function(){moveClue(-1)};
-$('nextClue').onclick=function(){moveClue(1)};
-$('puzBtn').onclick=function(){openPuz()};
-$('sheet').onclick=function(e){if(e.target===$('sheet'))$('sheet').classList.remove('show')};
-function openPuz(){
-  var L=$('pzList');L.innerHTML='';
-  PUZZLES.forEach(function(pz,i){
-    var d=document.createElement('div');d.className='pz';
-    d.innerHTML='<span>'+pz.name+'</span><span class="dn" id="dn'+i+'"></span>';
-    d.onclick=function(){$('sheet').classList.remove('show');stopTimer();loadPuzzle(i,false)};
-    L.appendChild(d);
-    if(window.myllmStorage)myllmStorage.getItem('cw_'+pz.id).then(function(v){try{if(v&&JSON.parse(v).solved){var e=$('dn'+i);if(e)e.textContent='Solved ✓'}}catch(e){}});
+var curPuz = 0;
+function loadPuzzle(i, then){
+  stopTimer();
+  P = PUZZLES[i]; syncLabel(); build(); timer = 0; solved = false;
+  curPuz = i; saveCur();
+  load('cw_' + P.id).then(function(v){
+    if (v) try { var s = JSON.parse(v); if (s.user) user = s.user; if (s.timer) timer = s.timer; if (s.solved) solved = s.solved; } catch(e){}
+    cur = entries[0].cells[0]; dir = entries[0].dir;
+    $('timer').textContent = fmt(timer); render(); syncTools();
+    if (then) then();
   });
-  $('sheet').classList.add('show');haptic('selection');
+}
+function save(){ if (P) keep('cw_' + P.id, JSON.stringify({user:user, timer:timer, solved:solved})); }
+function saveCur(){ keep('cw_last', String(curPuz)); }
+
+/* ---------- cards ---------- */
+function puzzleList(cb){
+  var out = [], left = PUZZLES.length;
+  PUZZLES.forEach(function(pz, i){
+    load('cw_' + pz.id).then(function(v){
+      var st = ''; try { var s = v && JSON.parse(v); if (s){ if (s.solved) st = 'done'; else if (s.user && s.user.some(function(row){ return row.some(function(ch){ return ch && ch !== '#'; }); })) st = 'going'; } } catch(e){}
+      out[i] = st; if (--left === 0) cb(out);
+    });
+  });
+}
+function listHTML(st){
+  return PUZZLES.map(function(pz, i){
+    var tag = st[i] === 'done' ? '<small><svg><use href="#i-check"/></svg> Solved</small>' : st[i] === 'going' ? '<small>In progress</small>' : '<small>New</small>';
+    return '<button class="pz glass' + (st[i] === 'done' ? ' done' : '') + (i === curPuz ? ' cur' : '') + '" data-i="' + i + '"><span>' + pz.name + '</span>' + tag + '</button>';
+  }).join('');
+}
+function wireList(){
+  Array.prototype.forEach.call(document.querySelectorAll('#sheet .pz'), function(b){
+    b.onclick = function(){ haptic('selection'); var i = +b.dataset.i; if (i === curPuz && P) enterPlay(); else loadPuzzle(i, enterPlay); };
+  });
+}
+function showHome(){
+  puzzleList(function(st){
+    showSheet('<h1>Crossword</h1><p>Four minis. Tap a square twice to switch across and down.</p>' + listHTML(st) +
+      '<button class="act pri" id="sA"><svg><use href="#i-play"/></svg>' + (st[curPuz] === 'going' ? 'Continue ' : 'Play ') + PUZZLES[curPuz].name + '</button>', {sA: function(){ haptic('medium'); enterPlay(); }});
+    wireList();
+  });
+}
+function showPicker(){
+  stopTimer();
+  puzzleList(function(st){
+    showSheet('<div class="kick">Puzzles</div>' + listHTML(st) +
+      '<button class="act pri" id="sA"><svg><use href="#i-play"/></svg>Back to ' + P.name + '</button><button class="act glass" id="sB">Leave</button>',
+      {sA: function(){ haptic('light'); hideSheet(); startTimer(); }, sB: goHome});
+    wireList();
+  });
+}
+function showSolved(){
+  var next = (curPuz + 1) % PUZZLES.length;
+  showSheet('<div class="kick">' + P.name + ' · Solved</div><div class="big">' + fmt(timer) + '<small>your time</small></div>' +
+    '<button class="act pri" id="sA"><svg><use href="#i-next"/></svg>' + PUZZLES[next].name + '</button><button class="act glass" id="sB">See the grid</button>',
+    {sA: function(){ haptic('medium'); loadPuzzle(next, enterPlay); }, sB: function(){ haptic('light'); hideSheet(); }});
 }
 
-buildKeyboard();
-if(window.myllmStorage){myllmStorage.getItem('cw_last').then(function(v){loadPuzzle(v?(+v||0):0,false)})}
-else loadPuzzle(0,false);
-</script>
-</body>
-</html>
+/* ---------- flow ---------- */
+function syncLabel(){ $('pzName').textContent = state === 'play' && P ? P.name : 'Crossword'; }
+function setState(s){
+  state = s; syncLabel(); $('stage').classList.toggle('home', s === 'home');
+  $('bMenu').classList.toggle('hide', s !== 'play'); $('timerPill').classList.toggle('hide', s !== 'play');
+  syncLook(); syncChrome();
+}
+function enterPlay(){ hideSheet(); setState('play'); render(); startTimer(); }
+function goHome(){ haptic('light'); stopTimer(); setState('home'); showHome(); }
+function onHide(){ stopTimer(); }
+document.addEventListener('visibilitychange', function(){ if (!document.hidden && state === 'play' && !el('sheet').classList.contains('on')) startTimer(); });
+
+$('checkBtn').onclick = check;
+$('revealBtn').onclick = revealWord;
+$('prevClue').onclick = function(){ moveClue(-1); };
+$('nextClue').onclick = function(){ moveClue(1); };
+$('bMenu').onclick = function(){ haptic('selection'); showPicker(); };
+document.addEventListener('keydown', function(e){
+  if (state !== 'play' || el('sheet').classList.contains('on')) return;
+  if (/^[a-z]$/i.test(e.key)){ type(e.key.toUpperCase()); e.preventDefault(); }
+  else if (e.key === 'Backspace'){ backspace(); e.preventDefault(); }
+});
+
+function fit(){
+  var w = $('wrap');
+  var b = Math.floor(Math.min(w.clientWidth, w.clientHeight, 520));
+  $('stage').style.setProperty('--b', Math.max(160, b) + 'px');
+}
+window.addEventListener('resize', fit);
+
+/* ---------- boot ---------- */
+buildKeyboard(); fit(); syncLook();
+load('cw_last').then(function(v){ var i = v ? (+v || 0) : 0; if (!PUZZLES[i]) i = 0; loadPuzzle(i, showHome); });
+</script></body></html>
