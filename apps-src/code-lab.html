@@ -28,6 +28,14 @@ button:active{transform:scale(.96)}
 .wrap{max-width:600px;margin:0 auto;
   padding:calc(14px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) calc(30px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left))}
 
+.head{display:flex;align-items:center;gap:12px;margin:2px 2px 14px}
+.tile{display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0;
+  background:linear-gradient(145deg,hsl(var(--h) 62% 50%),hsl(calc(var(--h) + 40) 58% 28%))}
+.head .tile{width:44px;height:44px;border-radius:13px;font-size:19px}
+.head .ht{flex:1;min-width:0}
+.head h1{font-size:22px;font-weight:800;letter-spacing:-.01em;margin:0}
+.head p{font-size:13px;color:var(--muted);margin:1px 0 0}
+
 /* The lesson you are on, and how far through you are. */
 .hero{position:relative;overflow:hidden;border-radius:20px;padding:16px 16px 14px;margin-bottom:14px;color:#fff;
   background:linear-gradient(145deg,hsl(var(--h) 62% 46%),hsl(calc(var(--h) + 40) 58% 24%));
@@ -109,12 +117,14 @@ h2.title{font-size:22px;font-weight:800;margin:2px 0 8px}
 }
 @media(min-width:700px) and (max-height:520px){
   .hero{padding:12px 16px}.hero h1{font-size:19px}.prog{margin-top:10px}
+  .head{margin-bottom:8px}.head p{display:none}.head .tile{width:34px;height:34px;border-radius:10px;font-size:15px}
   textarea,iframe{min-height:210px}
 }
 </style>
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-code" viewBox="0 0 24 24"><path d="M8.300 6.300a1.100 1.100 0 0 1 0 1.560L4.160 12l4.140 4.140a1.100 1.100 0 0 1-1.560 1.560l-4.920-4.920a1.100 1.100 0 0 1 0-1.560l4.920-4.920a1.100 1.100 0 0 1 1.560 0zm7.400 0a1.100 1.100 0 0 1 1.560 0l4.920 4.920a1.100 1.100 0 0 1 0 1.560l-4.920 4.920a1.100 1.100 0 0 1-1.560-1.560L19.840 12 15.700 7.860a1.100 1.100 0 0 1 0-1.560zm-1.400-3.200a1 1 0 0 1 .700 1.230l-4 15a1 1 0 0 1-1.930-.520l4-15a1 1 0 0 1 1.230-.700z"/></symbol>
   <symbol id="i-list" viewBox="0 0 24 24"><path d="M4.500 5a1.500 1.500 0 1 0 0 3 1.500 1.500 0 0 0 0-3zM9 5.500a1 1 0 0 0 0 2h11a1 1 0 0 0 0-2zm-4.500 5a1.500 1.500 0 1 0 0 3 1.500 1.500 0 0 0 0-3zM9 11a1 1 0 0 0 0 2h11a1 1 0 0 0 0-2zm-4.500 5a1.500 1.500 0 1 0 0 3 1.500 1.500 0 0 0 0-3zm4.500.5a1 1 0 0 0 0 2h11a1 1 0 0 0 0-2z"/></symbol>
   <symbol id="i-check" viewBox="0 0 24 24"><path d="M20.300 5.700a1.200 1.200 0 0 0-1.700 0L9.500 14.800l-4.100-4.100a1.200 1.200 0 0 0-1.700 1.700l5 5a1.200 1.200 0 0 0 1.700 0l9.900-10a1.200 1.200 0 0 0 0-1.700z"/></symbol>
   <symbol id="i-reset" viewBox="0 0 24 24"><path d="M12 5V2.600a.6.6 0 0 0-1-.450L7.200 5.550a.6.6 0 0 0 0 .9L11 9.850a.6.6 0 0 0 1-.450V7a5.500 5.500 0 1 1-5.500 5.500 1 1 0 0 0-2 0A7.500 7.500 0 1 0 12 5z"/></symbol>
@@ -126,6 +136,10 @@ h2.title{font-size:22px;font-weight:800;margin:2px 0 8px}
   <symbol id="i-flag" viewBox="0 0 24 24"><path d="M5 2.500a1 1 0 0 0-1 1v17a1 1 0 0 0 2 0V15h5.600l.6 1.500c.15.300.45.500.8.500H19a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1h-5.400L13 3.500a.9.9 0 0 0-.8-.5H6a1 1 0 0 0-1-.5z"/></symbol>
 </defs></svg>
 <div class="wrap">
+  <div class="head">
+    <div class="tile"><svg class="i"><use href="#i-code"/></svg></div>
+    <div class="ht"><h1>Code Lab</h1><p>Learn to code, live</p></div>
+  </div>
   <div class="hero">
     <div class="hero-row">
       <div class="hero-txt"><div class="lesson-no" id="hNo">Code Lab</div><h1 id="hTitle">Code Lab</h1></div>

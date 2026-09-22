@@ -29,12 +29,13 @@
   button{ font:inherit; color:inherit; border:none; background:none; }
   button:active{ transform:scale(.96); }
 
-  .head{ display:flex; align-items:center; gap:11px; margin:2px 2px 14px; }
+  .head{ display:flex; align-items:center; gap:12px; margin:2px 2px 14px; }
+  .head .ht{ flex:1; min-width:0; }
   .head h1{ font-size:22px; font-weight:800; letter-spacing:-.01em; }
+  .head p{ font-size:13px; color:var(--muted); margin-top:1px; }
   .tile{ display:flex; align-items:center; justify-content:center; color:#fff; flex-shrink:0;
     background:linear-gradient(145deg, hsl(var(--h) 62% 46%), hsl(var(--h2) 58% 24%)); }
-  .head .tile{ width:36px; height:36px; border-radius:11px; font-size:16px; }
-  .sub{ font-size:13px; color:var(--muted); margin:-8px 2px 14px; }
+  .head .tile{ width:44px; height:44px; border-radius:13px; font-size:19px; }
   h2{ font-size:12px; font-weight:800; letter-spacing:.07em; text-transform:uppercase; color:var(--muted); margin:20px 2px 9px;
     display:flex; align-items:center; justify-content:space-between; gap:10px; min-height:20px; }
   h2 button{ font-size:12.5px; font-weight:700; letter-spacing:0; text-transform:none; color:var(--acc); padding:6px 2px; margin:-6px 0; }
@@ -153,8 +154,10 @@ function hide(){depth=Math.max(0,depth-1);if(depth===0&&node)node.classList.remo
 window.myllmAsk=function(){show();var p;try{p=orig.apply(this,arguments);}catch(e){hide();throw e;}
 return Promise.resolve(p).then(function(r){hide();return r;},function(e){hide();throw e;});};})();
 </script>
-<div class="head"><div class="tile"><svg><use href="#i-list"/></svg></div><h1>Action Items</h1></div>
-<p class="sub">Paste meeting notes — your AI pulls out the actions, owners &amp; due dates.</p>
+<div class="head">
+  <div class="tile"><svg><use href="#i-list"/></svg></div>
+  <div class="ht"><h1>Action Items</h1><p>Paste meeting notes — your AI pulls out the actions, owners &amp; due dates.</p></div>
+</div>
 <div class="hero">
   <button class="hbtn" id="clearBtn"><svg><use href="#i-check"/></svg>Clear done</button>
   <div class="k">Open actions</div>

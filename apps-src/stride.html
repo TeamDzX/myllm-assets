@@ -40,8 +40,18 @@ header .sky{position:absolute;inset:0;background-size:cover;background-position:
 header .veil{position:absolute;inset:0;
   background:linear-gradient(180deg,transparent 0%,var(--bg) 96%)}
 header .inner{position:relative}
-h1{margin:0;font-size:1.5rem;font-weight:800;letter-spacing:-.02em}
-.date{margin:2px 0 0;color:var(--muted);font-size:.95rem;font-weight:600}
+.head{display:flex;align-items:center;gap:12px;margin:2px 2px 0}
+.head .tile{--h:18;display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0;
+  width:44px;height:44px;border-radius:13px;font-size:19px;
+  background:linear-gradient(145deg,hsl(var(--h) 62% 50%),hsl(calc(var(--h) + 40) 58% 28%))}
+.head .tile svg{width:1.25em;height:1.25em;fill:currentColor}
+.head .ht{flex:1;min-width:0}
+.head h1{margin:0;font-size:22px;font-weight:800;letter-spacing:-.01em}
+.head p{margin:1px 0 0;font-size:13px;color:var(--muted)}
+/* the greeting and the day being shown open the hero card */
+.greet{margin:0 0 12px;text-align:center}
+.greet b{display:block;font-size:1.02rem;font-weight:800}
+.greet span{display:block;font-size:.85rem;font-weight:650;opacity:.85;margin-top:1px}
 
 /* ---------- hero ring ---------- */
 .hero{--h:18;position:relative;overflow:hidden;color:#fff;border-radius:var(--radius);padding:22px 18px 20px;text-align:center;
@@ -158,8 +168,10 @@ svg.i{width:1.25em;height:1.25em;fill:currentColor;flex-shrink:0}
   <div class="sky" id="sky" aria-hidden="true"></div>
   <div class="veil" aria-hidden="true"></div>
   <div class="inner wrap">
-    <h1 id="greet">Stride</h1>
-    <p class="date" id="today-label">&nbsp;</p>
+    <div class="head">
+      <div class="tile"><svg><use href="#i-walk"/></svg></div>
+      <div class="ht"><h1>Stride</h1><p>Your steps, big and clear</p></div>
+    </div>
   </div>
 </header>
 
@@ -172,6 +184,7 @@ svg.i{width:1.25em;height:1.25em;fill:currentColor;flex-shrink:0}
   <div id="main" class="hide">
 
     <div class="hero">
+      <div class="greet"><b id="greet">&nbsp;</b><span id="today-label">&nbsp;</span></div>
       <div class="ringbox">
         <svg class="ring" viewBox="0 0 200 200" aria-hidden="true">
           <circle cx="100" cy="100" r="86" stroke="rgba(255,255,255,.22)" stroke-width="19"></circle>

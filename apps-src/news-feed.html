@@ -5,7 +5,7 @@
   Not for redistribution or republication. Terms: https://github.com/TeamDzX/myllm-assets/blob/main/LICENSE
 --><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>News</title>
-<style>:root{--build-id:"c14294ef8c";color-scheme:light dark;
+<style>:root{--h:4;--build-id:"c14294ef8c";color-scheme:light dark;
   --accent:var(--myllm-accent,#ff453a);
   --bg:var(--myllm-bg,#f2f2f7); --card:var(--myllm-surface,#fff);
   --fg:var(--myllm-text,#111); --dim:var(--myllm-muted,#6b6b70);
@@ -21,8 +21,8 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
 button{font:inherit;color:inherit}
 
 /* ---------- the list ---------- */
-.head{position:sticky;top:0;background:color-mix(in srgb,var(--bg) 92%,transparent);
-      backdrop-filter:saturate(180%) blur(12px);padding:calc(12px + env(safe-area-inset-top)) 16px 0;z-index:5}
+.stick{position:sticky;top:0;background:color-mix(in srgb,var(--bg) 92%,transparent);
+      backdrop-filter:saturate(180%) blur(12px);padding:8px 16px 0;z-index:5}
 .hrow{display:flex;align-items:center;gap:10px}
 h1{font-size:20px;margin:0 0 8px;flex:1}
 .icon{border:0;background:none;padding:6px;border-radius:9px;opacity:.75;font-size:17px;line-height:1;min-width:40px;min-height:40px;display:inline-flex;align-items:center;justify-content:center;color:inherit}
@@ -79,12 +79,27 @@ input{flex:1;padding:10px;border:1px solid var(--line);border-radius:9px;font-si
 .feedrow{display:flex;align-items:center;gap:8px;padding:9px 0;font-size:14px;border-top:1px solid var(--line)}
 .feedrow .u{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--dim)}
 .feedrow .x{color:var(--accent);font-size:16px;border:0;background:none}
-@media(min-width:768px){.wrap,.head{max-width:760px;margin-left:auto;margin-right:auto}}
+@media(min-width:768px){.wrap,.head,.stick{max-width:760px;margin-left:auto;margin-right:auto}}
+/* The header every gallery home screen shares: hue tile, name, one line, actions. */
+.head{display:flex;align-items:center;gap:12px;margin:2px 2px 14px}
+.head .tile{display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0;width:44px;height:44px;border-radius:13px;background:linear-gradient(145deg,hsl(var(--h) 62% 50%),hsl(calc(var(--h) + 40) 58% 28%))}
+.head .tile svg{width:24px;height:24px}
+.head .ht{flex:1;min-width:0}
+.head h1{font-size:22px;font-weight:800;letter-spacing:-.01em;line-height:1.2;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.head p{font-size:13px;color:var(--dim);margin:1px 0 0;line-height:1.35}
+.head .acts{display:flex;gap:8px;flex-shrink:0;align-items:center;padding:0}
+.head .acts>button{min-width:40px;height:40px;display:inline-flex;align-items:center;justify-content:center;gap:6px;flex:none}
+.head .acts svg{width:19px;height:19px}
+.head{margin:0 auto;padding:calc(14px + env(safe-area-inset-top)) 18px 2px}
+.head .acts .icon svg{fill:none}
 </style></head><body>
 
 <div class="head">
-  <div class="hrow"><h1>📰 News</h1>
-    <button class="icon" id="refresh" aria-label="Refresh"><svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.6-5.9"/><path d="M20 4v5h-5"/></svg></button></div>
+  <div class="tile"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M4 4.5A1.5 1.5 0 0 1 5.5 3h10A1.5 1.5 0 0 1 17 4.5V8h2.5A1.5 1.5 0 0 1 21 9.5V18a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3zM17 10v8a1 1 0 0 0 2 0v-8zM7 6.5a.75.75 0 0 0 0 1.5h7a.75.75 0 0 0 0-1.5zm0 4a.75.75 0 0 0-.75.75v3.5c0 .4.35.75.75.75h3.5c.4 0 .75-.35.75-.75v-3.5a.75.75 0 0 0-.75-.75zm6.25 0a.75.75 0 0 0 0 1.5H14a.75.75 0 0 0 0-1.5zm0 3.5a.75.75 0 0 0 0 1.5H14a.75.75 0 0 0 0-1.5zM7 17a.75.75 0 0 0 0 1.5h7a.75.75 0 0 0 0-1.5z"/></svg></div>
+  <div class="ht"><h1>News</h1><p>Headlines, and the whole story</p></div>
+  <div class="acts"><button class="icon" id="refresh" aria-label="Refresh"><svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.6-5.9"/><path d="M20 4v5h-5"/></svg></button></div>
+</div>
+<div class="stick">
   <div class="tabs" id="tabs"></div>
 </div>
 <div id="status"></div>

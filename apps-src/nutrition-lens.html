@@ -49,6 +49,14 @@ button{font-family:var(--font)}
 .hero h1{font-size:22px;font-weight:800;letter-spacing:-.02em;margin:0}
 .hero p{margin:3px 0 0;font-size:13px;opacity:.92;font-weight:500}
 
+.head{display:flex;align-items:center;gap:12px;margin:2px 2px 14px}
+.head .tile{display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0;
+  background:linear-gradient(145deg,hsl(var(--h) 62% 50%),hsl(calc(var(--h) + 40) 58% 28%));
+  width:44px;height:44px;border-radius:13px;font-size:19px}
+.head .ht{flex:1;min-width:0}
+.head h1{font-size:22px;font-weight:800;letter-spacing:-.01em;margin:0}
+.head p{font-size:13px;color:var(--muted);margin:1px 0 0}
+
 .surface{background:var(--surface);border:1px solid var(--border);border-radius:18px;
   padding:14px;margin-bottom:12px;box-shadow:var(--shadow)}
 .btn-primary{width:100%;min-height:52px;border:0;border-radius:14px;padding:14px;font-size:16px;font-weight:700;color:#fff;
@@ -197,9 +205,9 @@ button{font-family:var(--font)}
   <symbol id="i-warn" viewBox="0 0 24 24"><path d="M13.700 3.500a2 2 0 0 0-3.400 0L2.300 17a2 2 0 0 0 1.700 3h16a2 2 0 0 0 1.700-3zM12 8a1 1 0 0 1 1 1v4.500a1 1 0 0 1-2 0V9a1 1 0 0 1 1-1zm0 7.700a1.200 1.200 0 1 1 0 2.400 1.200 1.200 0 0 1 0-2.400z"/></symbol>
 </defs></svg>
 
-<div class="hero grad">
-  <div class="hero-badge"><svg class="i"><use href="#i-leaf"/></svg></div>
-  <div><h1>Nutrition Lens</h1><p>Photograph an ingredient, see what's in it.</p></div>
+<div class="head">
+  <div class="tile"><svg class="i"><use href="#i-leaf"/></svg></div>
+  <div class="ht"><h1>Nutrition Lens</h1><p>Photograph an ingredient, see what's in it.</p></div>
 </div>
 
 <div class="surface">

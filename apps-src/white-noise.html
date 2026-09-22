@@ -20,8 +20,11 @@
     padding:16px 16px calc(206px + env(safe-area-inset-bottom));
   }
   body.lock{ overflow:hidden; }
-  h1{ font-size:22px; font-weight:800; margin:4px 2px 4px; }
-  .sub{ font-size:13px; color:var(--mut); margin:0 2px 14px; line-height:1.4; }
+  .head{ display:flex; align-items:center; gap:12px; margin:2px 2px 14px; }
+  .head .tile{ width:44px; height:44px; border-radius:13px; font-size:19px; --th:245; }
+  .head .ht{ flex:1; min-width:0; }
+  h1{ font-size:22px; font-weight:800; letter-spacing:-.01em; }
+  .head p{ font-size:13px; color:var(--mut); margin-top:1px; line-height:1.35; }
   button{ font:inherit; color:inherit; }
   svg{ width:1.25em; height:1.25em; fill:currentColor; flex-shrink:0; }
 
@@ -33,10 +36,10 @@
   .sound{ background:var(--surface); border:1px solid var(--line); border-radius:18px; padding:11px 13px; margin-bottom:9px;
     transition:border-color .2s, box-shadow .2s; }
   .sound.on{ border-color:var(--accent); box-shadow:0 0 0 1px var(--accent), 0 6px 20px rgba(0,0,0,.07); }
-  .head{ display:flex; align-items:center; gap:12px; cursor:pointer; }
-  .head .tile{ width:42px; height:42px; border-radius:12px; font-size:18px; flex-shrink:0; }
-  .head .nm{ flex:1; min-width:0; font-size:15.5px; font-weight:700; }
-  .head .nm small{ display:block; font-size:12px; font-weight:400; color:var(--mut); margin-top:1px; }
+  .shead{ display:flex; align-items:center; gap:12px; cursor:pointer; }
+  .shead .tile{ width:42px; height:42px; border-radius:12px; font-size:18px; flex-shrink:0; }
+  .shead .nm{ flex:1; min-width:0; font-size:15.5px; font-weight:700; }
+  .shead .nm small{ display:block; font-size:12px; font-weight:400; color:var(--mut); margin-top:1px; }
   .dot{ width:24px; height:24px; border-radius:50%; border:2px solid var(--ring); flex:none; display:flex; align-items:center; justify-content:center; color:transparent; font-size:12px; }
   .sound.on .dot{ background:var(--accent); border-color:var(--accent); color:#fff; }
   .vol{ width:100%; margin-top:12px; accent-color:var(--accent); display:none; }
@@ -220,8 +223,10 @@
   </div>
 </div>
 
-<h1>White Noise</h1>
-<div class="sub">Tap sounds to mix your own — rain, fire, ocean and more. All made on-device, works offline.</div>
+<div class="head">
+  <div class="tile"><svg><use href="#i-vhi"/></svg></div>
+  <div class="ht"><h1>White Noise</h1><p>Tap sounds to mix your own — rain, fire, ocean and more</p></div>
+</div>
 <div id="list"></div>
 <div class="bar">
   <div class="barrow">
@@ -401,9 +406,9 @@ function render(){
   DEFS.forEach(function(s){
     var on=!!active[s.id];
     var d=document.createElement('div');d.className='sound'+(on?' on':'');
-    d.innerHTML='<div class="head"><div class="tile" style="--th:'+s.h+';--ts:'+s.s+'%">'+ico('s-'+s.id)+'</div><div class="nm">'+s.n+'<small>'+s.d+'</small></div><div class="dot">'+ico('i-check')+'</div></div>'+
+    d.innerHTML='<div class="shead"><div class="tile" style="--th:'+s.h+';--ts:'+s.s+'%">'+ico('s-'+s.id)+'</div><div class="nm">'+s.n+'<small>'+s.d+'</small></div><div class="dot">'+ico('i-check')+'</div></div>'+
       '<input class="vol" type="range" min="0" max="1" step="0.01" value="'+vol[s.id]+'" aria-label="'+s.n+' volume">';
-    d.querySelector('.head').onclick=function(){toggle(s.id)};
+    d.querySelector('.shead').onclick=function(){toggle(s.id)};
     var sl=d.querySelector('.vol');sl.oninput=function(){setVol(s.id,parseFloat(sl.value))};
     L.appendChild(d);
     var p=el('pad-'+s.id);if(p)p.classList.toggle('on',on);

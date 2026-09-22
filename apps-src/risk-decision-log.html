@@ -29,12 +29,13 @@
   button{ font:inherit; color:inherit; border:none; background:none; }
   button:active{ transform:scale(.96); }
 
-  .head{ display:flex; align-items:center; gap:11px; margin:2px 2px 14px; }
+  .head{ display:flex; align-items:center; gap:12px; margin:2px 2px 14px; }
+  .head .ht{ flex:1; min-width:0; }
   .head h1{ font-size:22px; font-weight:800; letter-spacing:-.01em; }
+  .head p{ font-size:13px; color:var(--muted); margin-top:1px; }
   .tile{ display:flex; align-items:center; justify-content:center; color:#fff; flex-shrink:0;
     background:linear-gradient(145deg, hsl(var(--h) 62% 46%), hsl(var(--h2) 58% 24%)); }
-  .head .tile{ width:36px; height:36px; border-radius:11px; font-size:16px; }
-  .sub{ font-size:13px; color:var(--muted); margin:-8px 2px 14px; }
+  .head .tile{ width:44px; height:44px; border-radius:13px; font-size:19px; }
   h2{ font-size:12px; font-weight:800; letter-spacing:.07em; text-transform:uppercase; color:var(--muted); margin:20px 2px 9px;
     display:flex; align-items:center; justify-content:space-between; gap:10px; min-height:20px; }
   h2 button{ font-size:12.5px; font-weight:700; letter-spacing:0; text-transform:none; color:var(--acc); padding:6px 2px; margin:-6px 0; }
@@ -143,7 +144,10 @@
   <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 2.8l7.5 2.7v6.3c0 4.6-3 8-7.5 9.4-4.5-1.4-7.5-4.8-7.5-9.4V5.5z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><path d="M8.7 12.2l2.4 2.4 4.3-4.6" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/></symbol>
   <symbol id="i-doc" viewBox="0 0 24 24"><path d="M7 3h7l5 5v11a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zM14 3v5h5M8.5 13h7M8.5 17h5" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></symbol>
 </defs></svg>
-<div class="head"><div class="tile"><svg><use href="#i-shield"/></svg></div><h1>Risk &amp; Decision Log</h1></div>
+<div class="head">
+  <div class="tile"><svg><use href="#i-shield"/></svg></div>
+  <div class="ht"><h1>Risk &amp; Decision Log</h1><p>The project paper-trail</p></div>
+</div>
 <div class="seg">
   <button class="on" id="tRisk">Risks</button>
   <button id="tDec">Decisions</button>

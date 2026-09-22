@@ -34,10 +34,12 @@
   .tile{ width:44px; height:44px; border-radius:13px; font-size:19px; display:flex; align-items:center; justify-content:center; color:#fff; flex-shrink:0;
     background:linear-gradient(145deg, hsl(var(--h) 62% 56%), hsl(calc(var(--h) + 40) 58% 30%)); }
   h1{ font-size:22px; font-weight:800; letter-spacing:-.01em; }
+  .head .ht{ flex:1; min-width:0; }
   .head p{ font-size:13px; color:var(--muted); margin-top:1px; }
   .count{ margin-left:auto; flex-shrink:0; font-size:11px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:var(--muted);
     border:1px solid var(--line); background:var(--surface); border-radius:99px; padding:6px 11px; font-variant-numeric:tabular-nums; visibility:hidden; }
   .count.on{ visibility:visible; }
+  @media (max-width:340px){ .count:not(.on){ display:none; } }   /* no room to hold its place on a small phone */
 
   /* The page: the whole screen is the note. */
   .page{ flex:1; min-height:0; display:flex; border-radius:18px; border:1px solid var(--line); background:var(--surface); overflow:hidden; transition:border-color .2s; }
@@ -78,7 +80,7 @@
 
 <div class="head">
   <div class="tile"><svg class="i"><use href="#i-bolt"/></svg></div>
-  <div><h1>Quick Capture</h1><p>Jot anything. Send it straight to your Shopping List.</p></div>
+  <div class="ht"><h1>Quick Capture</h1><p>Jot anything. Send it straight to your Shopping List.</p></div>
   <div class="count" id="count"></div>
 </div>
 

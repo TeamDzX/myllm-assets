@@ -27,7 +27,7 @@
   --ink:#191c28; --muted:#697083; --faint:#a2a8b8;
   --border:#e7e9f1;
   --acc:#635bff; --acc2:#22a7f0; --accSoft:rgba(99,91,255,.12);
-  --radius:16px; --radiusLg:22px;
+  --radius:16px; --radiusLg:22px; --h:238;
   --shadow:0 1px 2px rgba(20,20,50,.05),0 8px 22px -14px rgba(30,40,110,.28);
   --shadowLg:0 16px 44px -16px rgba(40,50,150,.5);
 }
@@ -47,15 +47,21 @@ body{font-family:var(--font);margin:0;padding:18px 16px calc(34px + env(safe-are
 body{padding-left:max(16px,env(safe-area-inset-left));padding-right:max(16px,env(safe-area-inset-right))}
 @media(min-width:768px){body{max-width:720px;margin:0 auto}}
 
-.hero{position:relative;overflow:hidden;border-radius:var(--radiusLg);padding:20px;margin-bottom:16px;
+/* header — the row every refreshed app opens with */
+.head{display:flex;align-items:center;gap:12px;margin:2px 2px 14px}
+.head .tile{width:44px;height:44px;border-radius:13px;font-size:19px;display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0;
+  background:linear-gradient(145deg,hsl(var(--h) 62% 50%),hsl(calc(var(--h) + 40) 58% 28%))}
+.head .tile svg{width:1.25em;height:1.25em;fill:currentColor}
+.head .ht{flex:1;min-width:0}
+.head h1{font-size:22px;font-weight:800;letter-spacing:-.01em;margin:0}
+.head p{font-size:13px;color:var(--muted);margin:1px 0 0}
+
+.hero{position:relative;overflow:hidden;border-radius:var(--radiusLg);padding:18px 20px;margin-bottom:16px;
   background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;box-shadow:var(--shadowLg);
   display:flex;align-items:center;gap:14px}
 .hero::after{content:"";position:absolute;right:-46px;top:-46px;width:170px;height:170px;border-radius:50%;
   background:radial-gradient(circle,rgba(255,255,255,.28),transparent 70%);pointer-events:none}
-.hero-badge{width:52px;height:52px;border-radius:16px;background:rgba(255,255,255,.22);
-  display:grid;place-items:center;font-size:28px;flex:0 0 auto}
-.hero h1{font-size:22px;font-weight:800;letter-spacing:-.02em;margin:0}
-.hero p{margin:3px 0 0;font-size:13px;opacity:.92;font-weight:500}
+.hero p{position:relative;margin:0;font-size:17px;line-height:1.35;font-weight:700;letter-spacing:-.01em}
 
 .surface{background:var(--surface);border:1px solid var(--border);border-radius:var(--radiusLg);
   padding:16px;box-shadow:var(--shadow);margin-bottom:16px}
@@ -309,9 +315,15 @@ body.fs-open{overflow:hidden}
 })();
 </script>
 
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-brain" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M10.5 2.5a8 8 0 0 0-7.9 9.1c.2 1.6.9 3 2 4.1v4.8A1.5 1.5 0 0 0 6.1 22H13a1.5 1.5 0 0 0 1.5-1.5v-1.8h2.4a2.4 2.4 0 0 0 2.4-2.4v-2.5l1.8-.6a.9.9 0 0 0 .5-1.3l-2.3-3.8A8 8 0 0 0 10.5 2.5zM10.2 6.4c1 0 1.9.5 2.3 1.3a2.4 2.4 0 0 1 1.9 3.9 2.3 2.3 0 0 1-2.1 3.2h-.9v1.5a.9.9 0 0 1-1.8 0v-1.5h-.9a2.5 2.5 0 0 1-2.3-3.4A2.6 2.6 0 0 1 7.8 8a2.6 2.6 0 0 1 2.4-1.6z"/></symbol>
+</defs></svg>
+<div class="head">
+  <div class="tile"><svg><use href="#i-brain"/></svg></div>
+  <div class="ht"><h1>Flashcard Forge</h1><p>Decks that write themselves</p></div>
+</div>
 <div class="hero">
-  <div class="hero-badge">🧠</div>
-  <div><h1>Flashcard Forge</h1><p>Turn any topic into a study deck in seconds.</p></div>
+  <p>Turn any topic into a study deck in seconds.</p>
 </div>
 
 <div class="surface">

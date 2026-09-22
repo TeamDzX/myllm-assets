@@ -28,10 +28,10 @@
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 svg.i{width:1.25em;height:1.25em;fill:currentColor;flex-shrink:0;display:block}
 body{margin:0;font-family:var(--font);background:var(--bg);color:var(--text);-webkit-text-size-adjust:100%}
-.head{position:sticky;top:0;z-index:10;background:var(--glassbg);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);padding:calc(10px + env(safe-area-inset-top)) env(safe-area-inset-right) 0 env(safe-area-inset-left);border-bottom:1px solid var(--border)}
+.topbar{position:sticky;top:0;z-index:10;background:var(--glassbg);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);padding:10px env(safe-area-inset-right) 0 env(safe-area-inset-left);border-bottom:1px solid var(--border)}
 .headrow{max-width:1080px;margin:0 auto}
 .headrow{display:flex;align-items:flex-start}
-#tabs{display:flex;gap:6px;overflow-x:auto;padding:0 16px 12px 4px;-webkit-overflow-scrolling:touch;scrollbar-width:none;flex:1;min-width:0}
+#tabs{display:flex;gap:6px;overflow-x:auto;padding:0 16px 12px 16px;-webkit-overflow-scrolling:touch;scrollbar-width:none;flex:1;min-width:0}
 #tabs::-webkit-scrollbar{display:none}
 #gear{flex:none;border:1px solid var(--border);background:var(--surface);color:var(--muted);border-radius:999px;width:40px;height:40px;font-size:15px;margin:-2px 6px 0 16px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0}
 #gear:active,.tab:active,.sh-x:active,#more:active,.prefs .chips button:active,.prefs .done:active{transform:scale(.96)}
@@ -110,6 +110,19 @@ a.cvg{display:flex;gap:11px;align-items:center;text-decoration:none;color:inheri
 @media(min-width:1000px){.wrap{max-width:1080px}.hero .body h2{font-size:26px}}
 #more[disabled]{opacity:.5}
 @media(prefers-reduced-motion:no-preference){a.card,a.hero{transition:transform .12s ease}a.card:active,a.hero:active{transform:scale(.985)}}
+/* The header every gallery home screen shares: hue tile, name, one line, actions. */
+.head{display:flex;align-items:center;gap:12px;margin:2px 2px 14px}
+.head .tile{display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0;width:44px;height:44px;border-radius:13px;background:linear-gradient(145deg,hsl(var(--h) 62% 50%),hsl(calc(var(--h) + 40) 58% 28%))}
+.head .tile svg{width:24px;height:24px}
+.head .ht{flex:1;min-width:0}
+.head h1{font-size:22px;font-weight:800;letter-spacing:-.01em;line-height:1.2;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.head p{font-size:13px;color:var(--muted);margin:1px 0 0;line-height:1.35}
+.head .acts{display:flex;gap:8px;flex-shrink:0;align-items:center;padding:0}
+.head .acts>button{min-width:40px;height:40px;display:inline-flex;align-items:center;justify-content:center;gap:6px;flex:none}
+.head .acts svg{width:19px;height:19px}
+.head{max-width:1080px;margin:0 auto;padding:calc(14px + env(safe-area-inset-top)) max(18px,env(safe-area-inset-right)) 4px max(18px,env(safe-area-inset-left))}
+.head .acts #gear{margin:0}
+.head .acts #gear svg{width:17px;height:17px}
 </style>
 </head>
 <body>
@@ -121,8 +134,12 @@ a.cvg{display:flex;gap:11px;align-items:center;text-decoration:none;color:inheri
 </defs></svg>
 
 <div class="head">
+  <div class="tile"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="currentColor"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="currentColor"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="currentColor"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="currentColor"/></svg></div>
+  <div class="ht"><h1>Headlines</h1><p>A visual news wall, by topic</p></div>
+  <div class="acts"><button id="gear" onclick="openPrefs()" aria-label="Feed settings"><svg class="i"><use href="#i-gear"/></svg></button></div>
+</div>
+<div class="topbar">
   <div class="headrow">
-    <button id="gear" onclick="openPrefs()" aria-label="Feed settings"><svg class="i"><use href="#i-gear"/></svg></button>
     <div id="tabs"></div>
   </div>
 </div>

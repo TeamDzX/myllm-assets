@@ -7,7 +7,7 @@
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Bin</title>
 <style>
-:root{--build-id:"61b52aa067";color-scheme:light dark;
+:root{--h:165;--build-id:"61b52aa067";color-scheme:light dark;
   --bg:var(--myllm-bg,#f2f2f7);--surface:var(--myllm-surface,#fff);--text:var(--myllm-text,#111);
   --muted:var(--myllm-muted,#6e6e73);--accent:var(--myllm-accent,#0a84ff);--border:var(--myllm-border,#e3e3e8);
   --radius:var(--myllm-radius,18px);--bad:#e5484d;--good:#2fb56a}
@@ -68,11 +68,24 @@ h1{font-size:24px;margin:0;letter-spacing:-.3px}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(20px);
   background:var(--text);color:var(--bg);padding:10px 16px;border-radius:14px;font-size:14px;font-weight:600;opacity:0;pointer-events:none;transition:.25s;z-index:10}
 .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+/* The header every gallery home screen shares: hue tile, name, one line, actions. */
+.head{display:flex;align-items:center;gap:12px;margin:2px 2px 14px}
+.head .tile{display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0;width:44px;height:44px;border-radius:13px;background:linear-gradient(145deg,hsl(var(--h) 62% 50%),hsl(calc(var(--h) + 40) 58% 28%))}
+.head .tile svg{width:24px;height:24px}
+.head .ht{flex:1;min-width:0}
+.head h1{font-size:22px;font-weight:800;letter-spacing:-.01em;line-height:1.2;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.head p{font-size:13px;color:var(--muted);margin:1px 0 0;line-height:1.35}
+.head .acts{display:flex;gap:8px;flex-shrink:0;align-items:center;padding:0}
+.head .acts>button{min-width:40px;height:40px;display:inline-flex;align-items:center;justify-content:center;gap:6px;flex:none}
+.head .acts svg{width:19px;height:19px}
+.head .acts>button[hidden]{display:none}
+.head .acts .btn{border-width:1px;border-style:solid;border-radius:12px;padding:0 13px;font-size:14px;font-weight:600}
 </style></head><body>
 
-<div class="top">
-  <div><h1>Bin</h1><div class="sub" id="sub">Things you deleted, until you empty it</div></div>
-  <button class="btn danger" id="emptyBtn" hidden>Empty Bin</button>
+<div class="head">
+  <div class="tile"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M9.2 3.2h5.6l.8 1.6H20a1 1 0 0 1 0 2h-1l-.9 12.3A2 2 0 0 1 16.1 21H7.9a2 2 0 0 1-2-1.9L5 6.8H4a1 1 0 0 1 0-2h4.4z"/></svg></div>
+  <div class="ht"><h1>Bin</h1><p id="sub">Things you deleted, until you empty it</p></div>
+  <div class="acts"><button class="btn danger" id="emptyBtn" hidden>Empty Bin</button></div>
 </div>
 
 <div class="seg"><button class="on" data-tab="deleted">Deleted</button><button data-tab="rewind">Rewind</button></div>

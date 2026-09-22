@@ -23,19 +23,14 @@
   }
   /* phone on its side: keep clear of the notch and the rounded corners */
   body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right)}
-  .hero{
-    height:104px; position:relative; display:flex; align-items:flex-end; padding:12px 16px;
-    background:linear-gradient(135deg,#3b1d5e 0%,#6d28d9 45%,#0ea5e9 100%);
-  }
-  .hero::after{
-    content:""; position:absolute; inset:0; opacity:.5;
-    background:
-      radial-gradient(circle at 18% 30%, rgba(255,255,255,.28) 0 14px, transparent 15px),
-      radial-gradient(circle at 74% 62%, rgba(255,255,255,.20) 0 22px, transparent 23px),
-      radial-gradient(circle at 46% 18%, rgba(255,255,255,.14) 0 9px, transparent 10px);
-  }
-  .hero h1{ position:relative; z-index:1; color:#fff; font-size:23px; font-weight:800; letter-spacing:-.3px; text-shadow:0 2px 10px rgba(0,0,0,.45); }
-  .hero p{ position:relative; z-index:1; color:rgba(255,255,255,.82); font-size:12.5px; margin-left:10px; padding-bottom:3px; }
+  :root{ --h:262; }
+  .head{ display:flex; align-items:center; gap:12px; margin:4px 2px 14px; }
+  .head .tile{ width:44px; height:44px; border-radius:13px; font-size:19px; display:flex; align-items:center; justify-content:center; color:#fff; flex-shrink:0;
+    background:linear-gradient(145deg, hsl(var(--h) 62% 50%), hsl(calc(var(--h) + 40) 58% 28%)); }
+  .head .tile svg{ width:1.25em; height:1.25em; fill:currentColor; }
+  .head .ht{ flex:1; min-width:0; }
+  .head h1{ font-size:22px; font-weight:800; letter-spacing:-.01em; }
+  .head p{ font-size:13px; color:var(--myllm-muted,#8a8a8e); margin-top:1px; }
   .wrap{ padding:12px 14px; }
 
   .tabs{ display:flex; background:var(--myllm-surface,#fff); border:1px solid var(--myllm-border,#e3e3e8); border-radius:13px; padding:3px; margin-bottom:12px; }
@@ -107,9 +102,11 @@
 </head>
 <body>
 
-<div class="hero"><h1>Channels</h1><p>your creators, no account</p></div>
-
 <div class="wrap">
+  <div class="head">
+    <div class="tile"><svg viewBox="0 0 24 24"><path d="M6.5 2.5h11a1 1 0 0 1 0 2h-11a1 1 0 0 1 0-2zM5 6h14a1 1 0 0 1 0 2H5a1 1 0 0 1 0-2zm-.5 3.5h15A2.5 2.5 0 0 1 22 12v7a2.5 2.5 0 0 1-2.5 2.5h-15A2.5 2.5 0 0 1 2 19v-7a2.5 2.5 0 0 1 2.5-2.5zm5.3 3.3v5.4a.6.6 0 0 0 .9.5l4.4-2.7a.6.6 0 0 0 0-1l-4.4-2.7a.6.6 0 0 0-.9.5z" fill-rule="evenodd"/></svg></div>
+    <div class="ht"><h1>Channels</h1><p>Your creators, no account</p></div>
+  </div>
   <div class="tabs">
     <button id="tabL" class="on" onclick="showTab('l')">Latest</button>
     <button id="tabC" onclick="showTab('c')">Channels</button>

@@ -7,7 +7,7 @@
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Speed Check</title>
 <style>
-:root{--build-id:"06afd97ecf";color-scheme:light dark;
+:root{--h:28;--build-id:"06afd97ecf";color-scheme:light dark;
   --bg:var(--myllm-bg,#f2f2f7);--surface:var(--myllm-surface,#fff);--text:var(--myllm-text,#111);
   --muted:var(--myllm-muted,#6e6e73);--accent:var(--myllm-accent,#0a84ff);--border:var(--myllm-border,#e3e3e8);
   --radius:var(--myllm-radius,18px);--down:#12a594;--up:#ff8a3d;--ping:#7c5cff;--good:#2fb56a;--warn:#e8a317;--bad:#e5484d}
@@ -70,11 +70,23 @@ h1{font-size:24px;margin:0;letter-spacing:-.3px}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(20px);
   background:var(--text);color:var(--bg);padding:10px 16px;border-radius:14px;font-size:14px;font-weight:600;opacity:0;pointer-events:none;transition:.25s;z-index:9}
 .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+/* The header every gallery home screen shares: hue tile, name, one line, actions. */
+.head{display:flex;align-items:center;gap:12px;margin:2px 2px 14px}
+.head .tile{display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0;width:44px;height:44px;border-radius:13px;background:linear-gradient(145deg,hsl(var(--h) 62% 50%),hsl(calc(var(--h) + 40) 58% 28%))}
+.head .tile svg{width:24px;height:24px}
+.head .ht{flex:1;min-width:0}
+.head h1{font-size:22px;font-weight:800;letter-spacing:-.01em;line-height:1.2;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.head p{font-size:13px;color:var(--muted);margin:1px 0 0;line-height:1.35}
+.head .acts{display:flex;gap:8px;flex-shrink:0;align-items:center;padding:0}
+.head .acts>button{min-width:40px;height:40px;display:inline-flex;align-items:center;justify-content:center;gap:6px;flex:none}
+.head .acts svg{width:19px;height:19px}
+.head .acts>button[hidden]{display:none}
 </style></head><body>
 
-<div class="top">
-  <div><h1>Speed Check</h1><div class="sub">Download, upload and ping for this connection</div></div>
-  <button class="iconbtn" id="shareBtn" hidden>Share</button>
+<div class="head">
+  <div class="tile"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.3 17.6a8.6 8.6 0 1 1 15.4 0" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M12 14.6l4.2-5.2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="12" cy="14.6" r="1.9" fill="currentColor"/></svg></div>
+  <div class="ht"><h1>Speed Check</h1><p>Download, upload and ping for this connection</p></div>
+  <div class="acts"><button class="iconbtn" id="shareBtn" hidden>Share</button></div>
 </div>
 
 <div class="card">
