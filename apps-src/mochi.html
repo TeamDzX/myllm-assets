@@ -16,7 +16,7 @@
     background:linear-gradient(180deg,#fdf6ec 0%,#f7ede0 100%);
     color:#4a4238;
     max-width:600px; margin:0 auto; min-height:100dvh;
-    padding:14px 14px calc(24px + env(safe-area-inset-bottom));
+    padding:calc(14px + env(safe-area-inset-top)) calc(14px + env(safe-area-inset-right)) calc(24px + env(safe-area-inset-bottom)) calc(14px + env(safe-area-inset-left));
     display:flex; flex-direction:column;
   }
   .top{ display:flex; align-items:baseline; justify-content:space-between; margin:2px 4px 6px; }
@@ -82,7 +82,7 @@
     flex:1; font-size:16px; padding:11px 13px; border-radius:14px;
     border:2px solid #eadfce; background:#fffdf8; color:#4a4238;
   }
-  .chatrow button{ border:none; border-radius:14px; width:46px; font-size:17px; background:#8fd3a8; color:#fff; }
+  .chatrow button{ border:none; border-radius:14px; width:48px; min-height:46px; font-size:17px; background:#8fd3a8; color:#fff; display:flex; align-items:center; justify-content:center; }
 
   /* walk mode */
   .walkview{ position:fixed; inset:0; background:linear-gradient(180deg,#fdf6ec 0%,#f3ecdd 100%); display:none; flex-direction:column; z-index:8; }
@@ -119,17 +119,17 @@
   .critter.front{ z-index:3; }
   @keyframes flutter{ from{ transform:translateY(0) rotate(-6deg); } to{ transform:translateY(-9px) rotate(6deg); } }
   @keyframes drift{ from{ transform:translateX(0); } to{ transform:translateX(125vw); } }
-  .walkhud{ display:flex; justify-content:space-between; align-items:center; padding:14px 16px calc(16px + env(safe-area-inset-bottom)); }
+  .walkhud{ display:flex; justify-content:space-between; align-items:center; padding:14px calc(16px + env(safe-area-inset-right)) calc(16px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left)); }
   .walkhud .steps{ font-size:13px; color:#a89a88; font-weight:700; }
   .walkhud button{ border:2px solid #eadfce; background:#fffdf8; color:#4a4238; border-radius:14px; padding:11px 18px; font-size:14px; font-weight:750; }
 
   /* wardrobe (dress-up) sheet */
   .wardrobe{ position:fixed; inset:0; background:rgba(74,66,56,.35); display:none; align-items:flex-end; justify-content:center; z-index:9; }
   .wardrobe.show{ display:flex; }
-  .wardcard{ background:#fffdf8; border-radius:22px 22px 0 0; padding:16px 16px calc(18px + env(safe-area-inset-bottom)); width:100%; max-width:600px; max-height:76dvh; overflow-y:auto; }
+  .wardcard{ background:#fffdf8; border-radius:22px 22px 0 0; padding:16px calc(16px + env(safe-area-inset-right)) calc(18px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left)); width:100%; max-width:600px; max-height:76dvh; overflow-y:auto; }
   .wardhead{ display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; }
   .wardhead h2{ font-size:18px; }
-  .wardhead button{ border:none; background:#8fd3a8; color:#fff; border-radius:12px; padding:8px 16px; font-size:14px; font-weight:750; }
+  .wardhead button{ border:none; background:#8fd3a8; color:#fff; border-radius:12px; padding:0 18px; min-height:40px; font-size:14px; font-weight:750; }
   .wardslot{ margin-top:12px; }
   .wardslot > small{ font-size:12px; font-weight:750; color:#a89a88; padding-left:2px; }
   .wardrow{ display:flex; gap:9px; overflow-x:auto; padding:8px 2px 4px; -webkit-overflow-scrolling:touch; }
@@ -149,10 +149,11 @@
   /* food picker (long-press Feed) */
   .foodmenu{ position:fixed; inset:0; background:rgba(74,66,56,.35); display:none; align-items:flex-end; justify-content:center; z-index:9; }
   .foodmenu.show{ display:flex; }
-  .foodcard{ background:#fffdf8; border-radius:22px 22px 0 0; padding:16px 16px calc(18px + env(safe-area-inset-bottom)); width:100%; max-width:600px; }
+  .foodcard{ background:#fffdf8; border-radius:22px 22px 0 0; padding:16px calc(16px + env(safe-area-inset-right)) calc(18px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left)); width:100%; max-width:600px; }
   .foodhead{ display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
   .foodhead h2{ font-size:18px; }
-  .foodhead button{ border:none; background:#f1e7d6; color:#8a7d6a; width:30px; height:30px; border-radius:50%; font-size:15px; }
+  .foodhead button{ border:none; background:#f1e7d6; color:#8a7d6a; width:40px; height:40px; border-radius:50%; font-size:15px; display:flex; align-items:center; justify-content:center; }
+  .foodhead button svg, .chatrow button svg{ width:1.2em; height:1.2em; fill:none; stroke:currentColor; stroke-width:2.6; stroke-linecap:round; stroke-linejoin:round; }
   .foodgrid{ display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
   .fooditem{ background:#fdf6ec; border:2px solid #eadfce; border-radius:16px; padding:12px 4px 10px; text-align:center; }
   .fooditem .fe{ display:block; font-size:30px; margin-bottom:3px; }
@@ -227,7 +228,7 @@
 
 <div class="chatrow" id="chatrow" style="display:none">
   <input id="say" type="text" autocomplete="off" placeholder="Say something…">
-  <button onclick="talk()">💬</button>
+  <button onclick="talk()" aria-label="Say it"><svg viewBox="0 0 24 24"><path d="M4 12l15-7-5 15-3-6z"/><path d="M11 14l8-9"/></svg></button>
 </div>
 
 <div class="namer" id="namer">
@@ -253,15 +254,25 @@
   <div class="foodcard">
     <div class="foodhead">
       <h2>Pick a snack 🍽️</h2>
-      <button onclick="closeFoodMenu()">✕</button>
+      <button onclick="closeFoodMenu()" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
     </div>
     <div class="foodgrid" id="foodgrid"></div>
   </div>
 </div>
 
 <script>
-var ASK = window.myllmAsk || null;
-var store = window.myllmStorage || {getItem:function(){return Promise.resolve(null)}, setItem:function(){return Promise.resolve()}};
+/* Bridges are looked up when used, never kept: MyLLM can add them after this
+   script has run. ASK and store stay usable as names everywhere below. */
+var storeFallback = {getItem:function(){return Promise.resolve(null)}, setItem:function(){return Promise.resolve()}};
+Object.defineProperty(window, "ASK", { configurable:true, get:function(){ return window.myllmAsk || null; } });
+Object.defineProperty(window, "store", { configurable:true, get:function(){ return window.myllmStorage || storeFallback; } });
+/* A walk is a full-screen moment: MyLLM's own bars step aside while Mochi is
+   outside, and come back when she heads home. Builds without the bridge keep
+   today's overlay under the title bar. */
+function syncChrome(){
+  if (!window.myllmImmersive) return;
+  try { myllmImmersive(walking, {keepAwake:false}).catch(function(){}); } catch(_){}
+}
 function haptic(k){ if(window.myllmHaptic){ try{ myllmHaptic(k||'light'); }catch(_){} } }
 function el(id){ return document.getElementById(id); }
 function esc(s){ return String(s==null?'':s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
@@ -729,6 +740,7 @@ function startWalk(){
   void track.offsetWidth;
   track.style.animation = "";
   el("walkview").classList.add("show");
+  syncChrome();
   startWalkAnim();
   el("walksteps").textContent = "";
   walkTimer = setInterval(walkTick, 5000);
@@ -834,11 +846,15 @@ function endWalk(tired){
   el("walkpet").style.backgroundImage = "";
   clearAccTransforms();
   el("walkview").classList.remove("show");
+  syncChrome();
   haptic("selection");
   render(); save();
   bubble(tired ? esc(S.name) + " got sleepy on the walk… 🥱" :
          "That was lovely! " + (findCount ? findCount + " treasures found." : "🌱"), 4600);
 }
+
+/* MyLLM puts its bars back when the app is left; ask again on return. */
+document.addEventListener("visibilitychange", function(){ if (!document.hidden && walking) syncChrome(); });
 
 /* ---------- ambient life: idle mutterings & dreams ---------- */
 var CHATTER = {

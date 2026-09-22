@@ -17,15 +17,34 @@ body{font-family:-apple-system,system-ui,sans-serif;background:var(--bg);color:v
   display:flex;flex-direction:column;height:100dvh;overflow:hidden;-webkit-tap-highlight-color:transparent;
   position:fixed;inset:0;width:100%}
 /* top bar */
-.top{display:flex;align-items:center;gap:10px;padding:calc(10px + env(safe-area-inset-top)) 16px 10px}
-.top .logo{font-weight:800;font-size:17px;letter-spacing:-.01em}
-.top .logo span{color:var(--ac)}
-.top .sp{flex:1}
+.top{display:flex;align-items:center;gap:12px;padding:calc(10px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) 10px calc(16px + env(safe-area-inset-left))}
+.head .tile{width:44px;height:44px;border-radius:13px;display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0;font-size:20px;
+  background:linear-gradient(145deg,#4f8df9,#7a52e0)}
+.head .ht{flex:1;min-width:0}
+.head h1{font-size:22px;font-weight:800;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.head h1 span{color:var(--ac)}
+.head p{font-size:13px;color:var(--mut);margin-top:1px;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.head .acts{display:flex;gap:8px;flex-shrink:0}
+svg.i{width:1.25em;height:1.25em;fill:currentColor;flex-shrink:0}
+#playBtn{display:flex;align-items:center;justify-content:center;gap:8px}
+/* the editor is height-bound: every pixel of header is canvas lost, so a phone on its side gets the compact row */
+@media (max-height:720px){ .head p{display:none} .head .tile{width:36px;height:36px;border-radius:11px;font-size:17px} .head h1{font-size:19px} }
+@media (max-height:520px){ .top{padding-top:calc(6px + env(safe-area-inset-top));padding-bottom:6px} .head .tile{width:30px;height:30px;border-radius:9px;font-size:15px} .head h1{font-size:17px} .top button{min-height:36px;padding-top:7px;padding-bottom:7px} }
+/* phone on its side: post on the left, the tool deck full height on the right —
+   stacked, the deck left the post about 25px of height */
+@media (max-height:520px) and (orientation:landscape){
+  body{display:grid;grid-template-columns:minmax(0,1fr) minmax(320px,46%);grid-template-rows:auto minmax(0,1fr)}
+  body>.top{grid-column:1;grid-row:1}
+  #stage{grid-column:1;grid-row:2}
+  .deck{grid-column:2;grid-row:1/span 2;display:flex;flex-direction:column;min-height:0;border-radius:0;border-top:0;border-left:1px solid var(--line);padding-right:env(safe-area-inset-right)}
+  .deck .panel{height:auto;flex:1;min-height:0}
+}
+@media (max-width:360px){ .head h1{font-size:19px} .top .acts button:not(.ghosttop){font-size:0;gap:0;padding:9px 11px;min-width:40px;justify-content:center} }
 .top button{border:0;border-radius:12px;background:var(--ac);color:#fff;font-weight:700;font-size:14px;
-  padding:9px 16px;display:flex;align-items:center;gap:7px}
+  padding:9px 16px;display:flex;align-items:center;gap:7px;min-height:40px}
 .top button svg{width:16px;height:16px}
 /* undo sits quiet next to Save — an icon-only ghost so it never competes with it */
-.top button.ghosttop{background:var(--card);color:var(--ink);padding:9px 11px}
+.top button.ghosttop{background:var(--card);color:var(--ink);padding:9px 11px;min-width:40px;justify-content:center}
 .top button.ghosttop:disabled{opacity:.32}
 /* preview */
 #stage{flex:1;display:flex;align-items:center;justify-content:center;min-height:0;padding:4px 14px 10px;position:relative;overflow:hidden}
@@ -168,14 +187,14 @@ input[type=range]{width:100%;accent-color:var(--ac)}
 @keyframes myllmAiSpin{to{transform:rotate(360deg)}}
 .myllm-ai-busy{position:fixed;left:50%;top:calc(14px + env(safe-area-inset-top));transform:translateX(-50%) translateY(-16px);z-index:99999;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;display:flex;align-items:center;gap:10px;background:rgba(28,28,30,.96);color:#fff;border-radius:999px;padding:10px 16px 10px 14px;box-shadow:0 6px 22px rgba(0,0,0,.4);font-family:-apple-system,system-ui,sans-serif;font-size:14px;font-weight:600;max-width:92%}
 .myllm-ai-busy.on{opacity:1;transform:translateX(-50%) translateY(0)}
-.myllm-ai-cog{font-size:18px;line-height:1;animation:myllmAiSpin 2.4s linear infinite;filter:drop-shadow(0 0 5px rgba(124,92,255,.85))}
+.myllm-ai-cog{width:16px;height:16px;border-radius:50%;border:2.4px solid #a78bfa;border-right-color:transparent;animation:myllmAiSpin .9s linear infinite;flex-shrink:0}
 .myllm-ai-busy small{font-weight:400;opacity:.6}
 </style>
 <script>
 (function(){if(window.__myllmAiWrap||typeof window.myllmAsk!=='function')return;window.__myllmAiWrap=true;
 var orig=window.myllmAsk,depth=0,node=null;
 function ensure(){if(node)return;node=document.createElement('div');node.className='myllm-ai-busy';
-node.innerHTML='<span class="myllm-ai-cog">⚙️</span><span>AI is working… <small>privately, on your device</small></span>';
+node.innerHTML='<span class="myllm-ai-cog"></span><span>AI is working… <small>privately, on your device</small></span>';
 (document.body||document.documentElement).appendChild(node);}
 function show(){ensure();depth++;node.classList.add('on');}
 function hide(){depth=Math.max(0,depth-1);if(depth===0&&node)node.classList.remove('on');}
@@ -183,11 +202,18 @@ window.myllmAsk=function(){show();var p;try{p=orig.apply(this,arguments);}catch(
 return Promise.resolve(p).then(function(r){hide();return r;},function(e){hide();throw e;});};})();
 </script>
 
-<div class="top">
-  <div class="logo">Social <span>Studio</span></div>
-  <div class="sp"></div>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-photo" viewBox="0 0 24 24"><rect x="3" y="5" width="15" height="12" rx="2.5" transform="rotate(-6 10.5 11)" fill="currentColor" opacity=".55"/><rect x="6" y="7.5" width="15" height="12" rx="2.5" fill="currentColor"/><path d="M8.5 17l3.3-3.6 2.4 2.4 1.8-1.8 2.5 3" fill="none" stroke="#fff" stroke-width="1.6" stroke-linejoin="round" opacity=".9"/><circle cx="16.8" cy="10.8" r="1.3" fill="#fff" opacity=".9"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5.5v13a1 1 0 0 0 1.52.85l10.4-6.5a1 1 0 0 0 0-1.7L9.52 4.65A1 1 0 0 0 8 5.5z" fill="currentColor"/></symbol>
+  <symbol id="i-stop" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2.6" fill="currentColor"/></symbol>
+</defs></svg>
+<div class="top head">
+  <div class="tile"><svg class="i"><use href="#i-photo"/></svg></div>
+  <div class="ht"><h1>Social <span>Studio</span></h1><p>AI-designed posts, ready to share</p></div>
+  <div class="acts">
   <button id="undoBtn" class="ghosttop" onclick="doUndo()" disabled title="Undo" aria-label="Undo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg></button>
-  <button onclick="doExport()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7.5 10.5L12 15l4.5-4.5"/><path d="M4 17v2.5A1.5 1.5 0 0 0 5.5 21h13a1.5 1.5 0 0 0 1.5-1.5V17"/></svg>Save</button>
+  <button onclick="doExport()" aria-label="Save"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7.5 10.5L12 15l4.5-4.5"/><path d="M4 17v2.5A1.5 1.5 0 0 0 5.5 21h13a1.5 1.5 0 0 0 1.5-1.5V17"/></svg>Save</button>
+  </div>
 </div>
 
 <div id="stage"><div id="feedTop"></div><canvas id="pv"></canvas><div id="safeOv"></div><div id="feedBot"></div><div id="stageHint"></div></div>
@@ -354,7 +380,7 @@ return Promise.resolve(p).then(function(r){hide();return r;},function(e){hide();
     <div class="lbl">Length — <span id="vidLen">6s</span></div>
     <input type="range" id="vsecs" min="3" max="15" value="6" oninput="setReelSecs(+this.value)">
     <div style="height:10px"></div>
-    <button class="btn ghost" id="playBtn" style="width:100%" onclick="toggleReel()">▶ Play preview</button>
+    <button class="btn ghost" id="playBtn" style="width:100%" onclick="toggleReel()"><svg class="i"><use href="#i-play"/></svg>Play preview</button>
     <div style="height:8px"></div>
     <button class="btn" id="vidBtn" style="width:100%" onclick="exportReel()">Save reel to Photos</button>
     <div id="vidProg" style="display:none;margin-top:12px">
@@ -400,10 +426,12 @@ return Promise.resolve(p).then(function(r){hide();return r;},function(e){hide();
 
 <script>
 "use strict";
-var store = window.myllmStorage || {
+/* looked up when used, never kept: MyLLM can add the bridge after this script has run */
+var STORE_OFF = {
   getItem:function(k){ try{return Promise.resolve(localStorage.getItem(k));}catch(e){return Promise.resolve(null);} },
   setItem:function(k,v){ try{localStorage.setItem(k,v);}catch(e){} return Promise.resolve(); }
 };
+Object.defineProperty(window, 'store', { configurable:true, get:function(){ return window.myllmStorage || STORE_OFF; } });
 function el(i){ return document.getElementById(i); }
 function haptic(k){ if(window.myllmHaptic) try{ myllmHaptic(k||'light'); }catch(e){} }
 
@@ -2190,7 +2218,7 @@ function updVideo(){
     ? 'Every reel exports at 1080 × 1920 — the right shape for Reels, Stories and TikTok.'
     : 'Reels and Stories are 9:16. This one exports at '+FORMATS[S.format].name+' instead.';
   el('vidFmtBtn').style.display=story?'none':'block';
-  el('playBtn').textContent=reelRAF?'■ Stop preview':'▶ Play preview';
+  el('playBtn').innerHTML=reelRAF?'<svg class="i"><use href="#i-stop"/></svg>Stop preview':'<svg class="i"><use href="#i-play"/></svg>Play preview';
   el('vidBtn').textContent=window.myllmVideo?'Save reel to Photos':'Save a still instead';
   el('vidHint').textContent=vidMsg||(window.myllmVideo
     ? 'Silent by design — add music in Instagram, TikTok or Reels. Rendering takes about '

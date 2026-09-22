@@ -4245,6 +4245,48 @@ body.hanyu-v3 #chatTab .chat-input-area{
   });
 })();
 </script>
+<style>
+/* MyLLMos: the "couldn't play" notice (design refresh, 2026-09-22). */
+.hy-snote{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom));transform:translateX(-50%);width:min(92%,480px);z-index:100000;
+  display:flex;gap:10px;align-items:flex-start;font:500 13.5px/1.45 -apple-system,system-ui,sans-serif;border-radius:14px;padding:11px 12px;
+  background:#fff;color:#111;border:1px solid rgba(255,159,10,.55);box-shadow:0 8px 24px rgba(0,0,0,.2)}
+@media(prefers-color-scheme:dark){.hy-snote{background:#1c1c1e;color:#f2f2f7}}
+.hy-snote svg{width:18px;height:18px;flex:0 0 auto;fill:#ff9f0a;margin-top:1px}
+.hy-snote[hidden]{display:none}
+</style>
+<script>
+/* === MyLLMos speech layer ===
+   Hanyu speaks from a dozen places, each already picking a Chinese voice from
+   its voice picker. On iPhone two things still made it fall silent: every site
+   calls speechSynthesis.cancel() right before speak(), which can swallow the
+   new line, and nothing says so when no voice plays. This wraps the synthesizer
+   once, so every site benefits without being touched:
+     - cancel() does nothing when nothing is speaking or queued;
+     - a speak() without a voice gets a Chinese one;
+     - if no speech starts within 2.5 s, a notice explains how to fix it.  */
+(function(){
+  var ss=window.speechSynthesis; if(!ss||!window.SpeechSynthesisUtterance) return;
+  var realCancel=ss.cancel.bind(ss), realSpeak=ss.speak.bind(ss), token=0, noteT=0, note=null;
+  function zh(){ try{ var v=ss.getVoices()||[]; return v.filter(function(x){return /^zh[-_]CN/i.test(x.lang)})[0]||v.filter(function(x){return /^zh/i.test(x.lang)})[0]||null; }catch(e){ return null; } }
+  function show(){
+    if(!note){ note=document.createElement('div'); note.className='hy-snote'; note.setAttribute('role','status');
+      note.innerHTML='<svg viewBox="0 0 24 24"><path d="M10.3 3.9a2 2 0 0 1 3.4 0l8 13.6a2 2 0 0 1-1.7 3H4a2 2 0 0 1-1.7-3zM12 9a1 1 0 0 0-1 1v4a1 1 0 0 0 2 0v-4a1 1 0 0 0-1-1zm0 7.2a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 0 0 0-2.4z"/></svg><span>Couldn’t play Chinese out loud. Check the volume, or add a Chinese voice in iPhone Settings → Accessibility → Spoken Content → Voices.</span>';
+      (document.body||document.documentElement).appendChild(note); }
+    note.hidden=false; clearTimeout(noteT); noteT=setTimeout(function(){ note.hidden=true; },8000);
+  }
+  ss.cancel=function(){ token++; if(ss.speaking||ss.pending) realCancel(); };
+  ss.speak=function(u){
+    var me=++token, started=false;
+    try{ if(u && !u.voice){ var v=zh(); if(v && /^zh/i.test(u.lang||'zh')) u.voice=v; } }catch(e){}
+    var os=u.onstart, oe=u.onerror;
+    u.onstart=function(ev){ started=true; if(note) note.hidden=true; if(os) return os.call(this,ev); };
+    u.onerror=function(ev){ var why=ev&&ev.error; if(me===token && !started && why!=='interrupted' && why!=='canceled') show(); if(oe) return oe.call(this,ev); };
+    try{ if(ss.paused) ss.resume(); realSpeak(u); }catch(e){ show(); return; }
+    setTimeout(function(){ if(me===token && !started && !ss.speaking) show(); },2500);
+  };
+  document.addEventListener('visibilitychange',function(){ if(document.hidden){ token++; try{ realCancel(); }catch(e){} } });
+})();
+</script>
 
     <!-- Top Header -->
     <header class="top-header">

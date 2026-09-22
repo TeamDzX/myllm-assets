@@ -10,17 +10,34 @@
 <title>Talk Tutor</title>
 <style>
   :root { color-scheme: light dark; }
+  /* Dark fallbacks for builds that do not supply the theme. :where() carries no
+     specificity, so MyLLM's own :root values always win where they exist. */
+  @media (prefers-color-scheme:dark){ :where(:root){ --myllm-bg:#000; --myllm-surface:#1c1c1e; --myllm-text:#f2f2f7; --myllm-muted:#98989f; --myllm-border:#2c2c2e; } }
   * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
   body{
     font-family:var(--myllm-font,-apple-system,system-ui,sans-serif);
     background:var(--myllm-bg,#f2f2f7);
     color:var(--myllm-text,#111);
     max-width:600px; margin:0 auto; min-height:100dvh;
-    padding:14px 14px calc(76px + env(safe-area-inset-bottom));
+    padding:calc(14px + env(safe-area-inset-top)) calc(14px + env(safe-area-inset-right)) calc(76px + env(safe-area-inset-bottom)) calc(14px + env(safe-area-inset-left));
   }
   h1{ font-size:21px; font-weight:800; margin:2px 2px 10px; display:flex; align-items:center; gap:8px; }
   h1 .flag{ font-size:24px; }
   h1 small{ font-size:12px; font-weight:650; color:var(--myllm-muted,#8a8a8e); margin-left:auto; }
+  .head{ display:flex; align-items:center; gap:12px; margin:2px 2px 14px; }
+  .head .tile{ width:44px; height:44px; border-radius:13px; font-size:19px; display:flex; align-items:center; justify-content:center; color:#fff; flex-shrink:0; }
+  .head .ht{ flex:1; min-width:0; }
+  .head h1{ font-size:22px; font-weight:800; letter-spacing:-.01em; margin:0; display:block; }
+  .head p{ font-size:13px; margin-top:1px; }
+  .head .acts{ display:flex; gap:8px; flex-shrink:0; align-items:center; }
+  svg.i{ width:1.25em; height:1.25em; fill:currentColor; flex-shrink:0; }
+  .head .tile{ background:linear-gradient(145deg, hsl(268 62% 58%), hsl(300 55% 34%)); }
+  .head p{ color:var(--myllm-muted,#8a8a8e); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .streak{ display:inline-flex; align-items:center; gap:4px; height:32px; padding:0 11px; border-radius:99px; background:rgba(255,159,10,.14); color:#e8860c; font-size:13.5px; font-weight:800; font-variant-numeric:tabular-nums; }
+  .streak svg.i{ width:15px; height:15px; }
+  .streak[hidden]{ display:none; }
+  .obtile{ width:64px; height:64px; border-radius:19px; display:flex; align-items:center; justify-content:center; color:#fff; font-size:28px;
+    background:linear-gradient(145deg, hsl(268 62% 58%), hsl(300 55% 34%)); box-shadow:0 10px 26px hsl(280 60% 40% / .3); }
   h2{ font-size:12px; font-weight:800; letter-spacing:.07em; text-transform:uppercase; color:var(--myllm-muted,#8a8a8e); margin:16px 2px 9px; }
 
   .card{ background:var(--myllm-surface,#fff); border:1px solid var(--myllm-border,#e3e3e8); border-radius:18px; padding:14px; margin-bottom:12px; }
@@ -34,9 +51,9 @@
     padding:6px 8px calc(6px + env(safe-area-inset-bottom)); z-index:8;
   }
   .tabs button{ flex:1; border:none; background:none; color:var(--myllm-muted,#8a8a8e); font-size:10.5px; font-weight:700; padding:5px 0; }
-  .tabs button .ti{ display:block; font-size:21px; margin-bottom:2px; filter:grayscale(1) opacity(.55); }
+  .tabs button .ti{ display:flex; justify-content:center; font-size:22px; margin-bottom:2px; }
+  .tabs button .ti svg.i{ width:23px; height:23px; }
   .tabs button.hot{ color:var(--myllm-accent,#0a84ff); }
-  .tabs button.hot .ti{ filter:none; }
   .tabs button b.badge{ position:absolute; margin-left:14px; margin-top:-4px; background:#ff453a; color:#fff; font-size:10px; border-radius:99px; padding:1px 5px; }
 
   /* Chips */
@@ -57,19 +74,22 @@
   .msg .fix{ font-size:12.5px; line-height:1.45; padding:6px 6px 0; color:#ff9f0a; display:none; }
   .msg.open .fix{ display:block; }
   .msg .row{ display:flex; align-items:center; gap:9px; }
-  .msg .spk{ border:none; background:none; font-size:17px; padding:4px; flex-shrink:0; }
+  .msg .spk, .spk{ border:none; background:none; color:var(--myllm-accent,#0a84ff); width:40px; height:40px; padding:0; flex-shrink:0; display:inline-flex; align-items:center; justify-content:center; font-size:19px; vertical-align:middle; }
   .typing{ color:var(--myllm-muted,#8a8a8e); font-size:13px; padding:2px 6px 10px; display:none; }
+  .typing svg.i{ width:14px; height:14px; vertical-align:-2px; margin-right:4px; }
 
   /* Composer */
   .composer{ display:flex; gap:8px; margin-top:4px; }
-  .composer input{ flex:1; font-size:16px; padding:11px 13px; border-radius:14px; border:1px solid var(--myllm-border,#e3e3e8); background:var(--myllm-surface,#fff); color:var(--myllm-text,#111); }
-  .composer button{ border:none; border-radius:14px; width:46px; font-size:18px; background:var(--myllm-accent,#0a84ff); color:#fff; flex-shrink:0; }
+  .composer input{ flex:1; min-width:0; font-size:16px; padding:11px 13px; border-radius:14px; border:1px solid var(--myllm-border,#e3e3e8); background:var(--myllm-surface,#fff); color:var(--myllm-text,#111); }
+  .composer button{ border:none; border-radius:14px; width:46px; font-size:18px; background:var(--myllm-accent,#0a84ff); color:#fff; flex-shrink:0; align-items:center; justify-content:center; }
+  .composer button:not([style*="none"]){ display:flex; }
   .composer button.alt{ background:var(--myllm-surface,#fff); color:var(--myllm-text,#111); border:1px solid var(--myllm-border,#e3e3e8); }
   .helprow{ display:flex; gap:7px; margin-top:8px; flex-wrap:wrap; }
   .helprow button{ border:1px dashed var(--myllm-border,#c9c9cf); background:none; color:var(--myllm-muted,#6a6a6e); border-radius:12px; padding:7px 11px; font-size:12.5px; text-align:left; }
 
   .tools{ display:flex; gap:7px; align-items:center; margin-bottom:9px; flex-wrap:wrap; }
-  .tools button{ border:1px solid var(--myllm-border,#e3e3e8); background:var(--myllm-surface,#fff); color:var(--myllm-text,#111); border-radius:99px; padding:5px 11px; font-size:12px; font-weight:650; }
+  .tools button{ border:1px solid var(--myllm-border,#e3e3e8); background:var(--myllm-surface,#fff); color:var(--myllm-text,#111); border-radius:99px; padding:5px 12px; font-size:12px; font-weight:650; min-height:38px; display:inline-flex; align-items:center; gap:6px; }
+  .tools button svg.i{ width:15px; height:15px; }
   .tools button.hot{ background:var(--myllm-accent,#0a84ff); border-color:var(--myllm-accent,#0a84ff); color:#fff; }
 
   /* Practice */
@@ -90,7 +110,7 @@
   .vrow{ display:flex; align-items:center; gap:11px; padding:9px 2px; border-bottom:1px solid var(--myllm-border,#e3e3e8); }
   .vrow:last-child{ border-bottom:none; }
   .vrow img{ width:40px; height:40px; border-radius:9px; object-fit:cover; background:var(--myllm-bg,#f2f2f7); flex-shrink:0; }
-  .vrow .noimg{ width:40px; height:40px; border-radius:9px; background:var(--myllm-bg,#f2f2f7); display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
+  .vrow .noimg{ width:40px; height:40px; border-radius:9px; background:var(--myllm-bg,#f2f2f7); color:var(--myllm-muted,#8a8a8e); display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
   .vrow .vi{ flex:1; min-width:0; }
   .vrow .w{ font-size:15px; font-weight:700; }
   .vrow .e{ font-size:12px; color:var(--myllm-muted,#8a8a8e); }
@@ -98,13 +118,13 @@
   .lvl.new{ background:rgba(10,132,255,.14); color:var(--myllm-accent,#0a84ff); }
   .lvl.learning{ background:rgba(255,159,10,.16); color:#ff9f0a; }
   .lvl.known{ background:rgba(48,209,88,.16); color:#30d158; }
-  .vrow .del{ border:none; background:none; color:var(--myllm-muted,#8a8a8e); font-size:15px; padding:6px; }
+  .vrow .del{ border:none; background:none; color:var(--myllm-muted,#8a8a8e); font-size:15px; padding:6px; min-width:40px; min-height:40px; }
   .packrow{ display:flex; align-items:center; gap:10px; padding:9px 2px; border-bottom:1px solid var(--myllm-border,#e3e3e8); }
   .packrow:last-child{ border-bottom:none; }
   .packrow .pi{ flex:1; }
   .packrow .t{ font-size:14.5px; font-weight:700; }
   .packrow .c{ font-size:12px; color:var(--myllm-muted,#8a8a8e); }
-  .packrow button{ border:1px solid var(--myllm-border,#e3e3e8); background:var(--myllm-bg,#f2f2f7); color:var(--myllm-text,#111); border-radius:10px; padding:8px 13px; font-size:13px; font-weight:650; }
+  .packrow button{ border:1px solid var(--myllm-border,#e3e3e8); background:var(--myllm-bg,#f2f2f7); color:var(--myllm-text,#111); border-radius:10px; padding:8px 13px; font-size:13px; font-weight:650; min-height:40px; }
   .packrow button.done{ color:#30d158; border-color:#30d158; background:none; }
   .search{ width:100%; font-size:15px; padding:10px 12px; border-radius:12px; border:1px solid var(--myllm-border,#e3e3e8); background:var(--myllm-surface,#fff); color:var(--myllm-text,#111); margin-bottom:10px; }
 
@@ -138,6 +158,7 @@
 
   .toast{ position:fixed; left:50%; bottom:calc(88px + env(safe-area-inset-bottom)); transform:translateX(-50%) translateY(20px); background:var(--myllm-text,#111); color:var(--myllm-bg,#fff); font-size:13.5px; font-weight:650; padding:11px 18px; border-radius:99px; transition:transform .25s, opacity .25s; z-index:22; white-space:nowrap; opacity:0; visibility:hidden; pointer-events:none; }
   .toast.show{ transform:translateX(-50%) translateY(0); opacity:1; visibility:visible; }
+  #obLevels{ flex-wrap:wrap; overflow:visible; }
 </style>
 <style>:root{--build-id:"c987d5381b";}</style>
 </head>
@@ -147,7 +168,7 @@
 <style>
 .myllm-ai-busy{position:fixed;top:calc(10px + env(safe-area-inset-top));left:50%;transform:translateX(-50%) translateY(-60px);display:flex;gap:8px;align-items:center;background:var(--myllm-surface,#fff);border:1px solid var(--myllm-border,#e3e3e8);border-radius:99px;padding:8px 15px;font-size:13px;font-weight:650;z-index:30;opacity:0;transition:all .25s;box-shadow:0 4px 18px rgba(0,0,0,.14)}
 .myllm-ai-busy.on{opacity:1;transform:translateX(-50%) translateY(0)}
-.myllm-ai-cog{font-size:18px;animation:myllmAiSpin 2.4s linear infinite;filter:drop-shadow(0 0 5px rgba(124,92,255,.85))}
+.myllm-ai-cog{width:16px;height:16px;border-radius:50%;border:2.4px solid #a78bfa;border-right-color:transparent;animation:myllmAiSpin .9s linear infinite;flex-shrink:0}
 .myllm-ai-busy small{font-weight:400;opacity:.6}
 @keyframes myllmAiSpin{to{transform:rotate(360deg)}}
 </style>
@@ -155,7 +176,7 @@
 (function(){if(window.__myllmAiWrap||typeof window.myllmAsk!=='function')return;window.__myllmAiWrap=true;
 var orig=window.myllmAsk,depth=0,node=null;
 function ensure(){if(node)return;node=document.createElement('div');node.className='myllm-ai-busy';
-node.innerHTML='<span class="myllm-ai-cog">⚙️</span><span>AI is thinking… <small>privately, on your device</small></span>';
+node.innerHTML='<span class="myllm-ai-cog"></span><span>AI is thinking… <small>privately, on your device</small></span>';
 (document.body||document.documentElement).appendChild(node);}
 function show(){ensure();depth++;node.classList.add('on');}
 function hide(){depth=Math.max(0,depth-1);if(depth===0&&node)node.classList.remove('on');}
@@ -163,9 +184,21 @@ window.myllmAsk=function(){show();var p;try{p=orig.apply(this,arguments);}catch(
 return Promise.resolve(p).then(function(r){hide();return r;},function(e){hide();throw e;});};})();
 </script>
 
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-bubbles" viewBox="0 0 24 24"><path d="M9.5 3C5.4 3 2 5.7 2 9.2c0 1.9 1 3.6 2.7 4.7L4 17l3.4-1.7c.7.2 1.4.2 2.1.2 4.1 0 7.5-2.7 7.5-6.2S13.6 3 9.5 3z" fill="currentColor"/><path d="M18.6 9.4c.1.4.1.8.1 1.2 0 4.2-3.9 7.5-8.7 7.7 1.2 1.6 3.4 2.7 5.9 2.7.6 0 1.2-.1 1.7-.2l2.9 1.4-.6-2.6c1.4-1 2.3-2.4 2.3-4 0-2.6-1.5-4.9-3.6-6.2z" fill="currentColor" opacity=".7"/></symbol>
+  <symbol id="i-send" viewBox="0 0 24 24"><path d="M3.4 11.2 19.6 4.1c.8-.3 1.6.5 1.3 1.3l-7.1 16.2c-.3.8-1.5.8-1.8-.1l-1.9-6.1a1 1 0 0 0-.6-.6l-6.1-1.9c-.9-.3-.9-1.5 0-1.7z" fill="currentColor"/></symbol>
+  <symbol id="i-speaker" viewBox="0 0 24 24"><path d="M11 4.6a.9.9 0 0 1 1.5.7v13.4a.9.9 0 0 1-1.5.7L6.6 15.6H4a1 1 0 0 1-1-1V9.4a1 1 0 0 1 1-1h2.6z" fill="currentColor"/><path d="M15.6 8.6a4.6 4.6 0 0 1 0 6.8M18.4 5.9a8.6 8.6 0 0 1 0 12.2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+  <symbol id="i-slow" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M3 16.5h11.5a5.5 5.5 0 0 0 0-11 5 5 0 0 0-5 5V13M14.5 16.5 17 20M6 16.5 4.5 20M18 9.5h3.2"/></g></symbol>
+  <symbol id="i-again" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12a7.5 7.5 0 1 0 2.2-5.3M4.5 4v4h4"/></g></symbol>
+  <symbol id="i-mic" viewBox="0 0 24 24"><rect x="8.5" y="3" width="7" height="12" rx="3.5" fill="currentColor"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+  <symbol id="i-pen" viewBox="0 0 24 24"><path d="M15.2 4.3a2.2 2.2 0 0 1 3.1 0l1.4 1.4a2.2 2.2 0 0 1 0 3.1L9.4 19.1 4 20l.9-5.4z" fill="currentColor"/></symbol>
+  <symbol id="i-cards" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="3.5" width="12" height="15.5" rx="2.4" transform="rotate(8 13 11)"/><rect x="4" y="5" width="12" height="15.5" rx="2.4"/></g></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H19a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H6.5a.5.5 0 0 0 0 1H19a1 1 0 0 1 0 2H6.5A2.5 2.5 0 0 1 4 18.5z" fill="currentColor"/></symbol>
+  <symbol id="i-flame" viewBox="0 0 24 24"><path d="M12.6 2.5c.3 3-1.4 4.6-2.9 6.2C8.3 10.1 7 11.6 7 14a5 5 0 0 0 10 0c0-2-1-3.5-2-4.6-.2 1.3-.9 2.2-1.8 2.6.6-2.9-.1-6.6-.6-9.5z" fill="currentColor"/></symbol>
+</defs></svg>
 <div class="ob" id="ob" style="display:none">
   <div class="inner">
-    <div style="font-size:44px">🗣️</div>
+    <div class="obtile"><svg class="i"><use href="#i-bubbles"/></svg></div>
     <h1>Talk Tutor</h1>
     <p class="sub">A patient conversation partner that lives on your phone. Speak, make mistakes, get gently corrected — nobody's listening but you.</p>
     <div id="obLangs"></div>
@@ -175,25 +208,29 @@ return Promise.resolve(p).then(function(r){hide();return r;},function(e){hide();
   </div>
 </div>
 
-<h1><span class="flag" id="hFlag">🗣️</span> Talk Tutor <small id="hStreak"></small></h1>
+<div class="head">
+  <div class="tile"><svg class="i"><use href="#i-bubbles"/></svg></div>
+  <div class="ht"><h1>Talk Tutor</h1><p><span id="hFlag"></span> <span id="hLang">Your private language partner</span></p></div>
+  <div class="acts"><span class="streak" id="hStreak" hidden></span></div>
+</div>
 
 <!-- TALK -->
 <div class="tab" id="tab-talk">
   <div class="chips" id="scenarios"></div>
   <div class="tools">
-    <button id="autoBtn" onclick="toggleAuto()">🔊 Auto-speak</button>
-    <button id="slowBtn" onclick="toggleSlow()">🐢 Slow</button>
-    <button onclick="newChat()">↺ New chat</button>
+    <button id="autoBtn" onclick="toggleAuto()"><svg class="i"><use href="#i-speaker"/></svg>Auto-speak</button>
+    <button id="slowBtn" onclick="toggleSlow()"><svg class="i"><use href="#i-slow"/></svg>Slow</button>
+    <button onclick="newChat()"><svg class="i"><use href="#i-again"/></svg>New chat</button>
   </div>
   <div id="chat"></div>
-  <div class="typing" id="typing">✍️ …</div>
+  <div class="typing" id="typing"><svg class="i"><use href="#i-pen"/></svg>…</div>
   <div id="aiGate" class="card" style="display:none">
     <p class="status">Conversations need the on-device AI.<br>Enable AI in MyLLM's Settings, then come back — your tutor is waiting.</p>
   </div>
   <div class="composer" id="composer">
-    <button class="alt" id="micBtn" onclick="dictate()" style="display:none">🎙️</button>
+    <button class="alt" id="micBtn" onclick="dictate()" style="display:none" aria-label="Speak"><svg class="i"><use href="#i-mic"/></svg></button>
     <input id="say" type="text" autocomplete="off" autocapitalize="sentences" placeholder="">
-    <button onclick="send()" id="sendBtn">➤</button>
+    <button onclick="send()" id="sendBtn" aria-label="Send"><svg class="i"><use href="#i-send"/></svg></button>
   </div>
   <div class="helprow" id="helps" style="display:none"></div>
   <p class="note" id="talkHint">Tap any tutor bubble for the English translation. Orange lines are gentle corrections of what you wrote.</p>
@@ -233,9 +270,14 @@ return Promise.resolve(p).then(function(r){hide();return r;},function(e){hide();
 <div class="toast" id="toast"></div>
 
 <script>
-var ASK = window.myllmAsk || null;
-var TRANSCRIBE = window.myllmTranscribe || null;
-var store = window.myllmStorage || {getItem:function(){return Promise.resolve(null)}, setItem:function(){return Promise.resolve()}};
+/* Bridges are looked up when used, never kept: MyLLM can add them after this script has run. */
+var STORE_OFF = {getItem:function(){return Promise.resolve(null)}, setItem:function(){return Promise.resolve()}};
+Object.defineProperty(window, 'ASK', {configurable:true, get:function(){ return window.myllmAsk || null; }});
+Object.defineProperty(window, 'TRANSCRIBE', {configurable:true, get:function(){ return window.myllmTranscribe || null; }});
+Object.defineProperty(window, 'store', {configurable:true, get:function(){ return window.myllmStorage || STORE_OFF; }});
+function icon(n){ return '<svg class="i"><use href="#i-' + n + '"/></svg>'; }
+function setStreak(n, always){ var e = el("hStreak"); var on = always || !!n; e.innerHTML = on ? icon('flame') + n : ''; e.hidden = !on; }
+function paintLang(k){ el("hFlag").textContent = LANGS[k].flag; el("hLang").textContent = LANGS[k].name + " · with " + LANGS[k].tutor; }
 function haptic(k){ if(window.myllmHaptic){ try{ myllmHaptic(k||'light'); }catch(_){} } }
 function el(id){ return document.getElementById(id); }
 function esc(s){ return String(s==null?'':s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
@@ -416,7 +458,7 @@ function tickActivity(){
     stats.streak = (stats.lastDay === y.toISOString().slice(0,10)) ? stats.streak + 1 : 1;
     stats.lastDay = t;
   }
-  el("hStreak").textContent = "🔥 " + stats.streak;
+  setStreak(stats.streak, true);
 }
 
 /* ---------- chat ---------- */
@@ -428,7 +470,7 @@ function renderMsg(m, idx){
   d.className = "msg " + (m.who === "t" ? "tutor" : "me");
   if (m.who === "t"){
     d.innerHTML = '<div class="row"><div class="bub">' + esc(m.txt) + '</div>' +
-      (CAN_SPEAK ? '<button class="spk" onclick="event.stopPropagation();speakIdx('+idx+')">🔊</button>' : '') + '</div>' +
+      (CAN_SPEAK ? '<button class="spk" onclick="event.stopPropagation();speakIdx('+idx+')" aria-label="Hear it">' + icon('speaker') + '</button>' : '') + '</div>' +
       (m.en ? '<div class="xtra">' + esc(m.en) + '</div>' : '');
     d.onclick = function(){ if (m.en) d.classList.toggle("open"); };
   } else {
@@ -591,7 +633,7 @@ function renderPractice(){
   area.innerHTML = '<div class="card pcard" id="pc">' + img +
     '<div class="front">' + esc(pCard.en) + '</div>' +
     '<div class="back">' + esc(pCard.w) +
-      (CAN_SPEAK ? ' <button class="spk" style="border:none;background:none;font-size:17px" onclick="speak(\'' + esc(pCard.w).replace(/'/g,"\\'") + '\')">🔊</button>' : '') + '</div>' +
+      (CAN_SPEAK ? ' <button class="spk" aria-label="Hear it" onclick="speak(\'' + esc(pCard.w).replace(/'/g,"\\'") + '\')">' + icon('speaker') + '</button>' : '') + '</div>' +
     '<div class="hintw" id="pEx"></div>' +
     '<button class="reveal" id="pReveal" onclick="flipCard()">Show answer</button>' +
     '<div class="grades" id="pGrades" style="display:none">' +
@@ -647,7 +689,7 @@ function renderWords(){
       var c = w[i], lv = wordLevel(c);
       var im = c.img != null ?
         '<img loading="lazy" src="' + IMG_BASE + c.img + '.jpg" onerror="this.style.visibility=\'hidden\'" alt="">' :
-        '<div class="noimg">💬</div>';
+        '<div class="noimg">' + icon('bubbles') + '</div>';
       h += '<div class="vrow">' + im +
         '<div class="vi"><div class="w">' + esc(c.w) + '</div><div class="e">' + esc(c.en) + '</div></div>' +
         '<span class="lvl ' + lv + '">' + lv + '</span>' +
@@ -693,10 +735,10 @@ function addPack(i){
 /* ---------- tabs & settings ---------- */
 
 var TABS = [
-  {id:"talk", icon:"💬", label:"Talk"},
-  {id:"practice", icon:"🃏", label:"Practice"},
-  {id:"words", icon:"📖", label:"Words"},
-  {id:"me", icon:"🔥", label:"Me"}
+  {id:"talk", icon:"bubbles", label:"Talk"},
+  {id:"practice", icon:"cards", label:"Practice"},
+  {id:"words", icon:"book", label:"Words"},
+  {id:"me", icon:"flame", label:"Me"}
 ];
 var tab = "talk";
 
@@ -704,7 +746,7 @@ function renderTabs(){
   var due = S ? dueCards().length : 0;
   el("tabs").innerHTML = TABS.map(function(t){
     return '<button ' + (t.id === tab ? 'class="hot"' : '') + ' onclick="go(\'' + t.id + '\')">' +
-      '<span class="ti">' + t.icon + '</span>' + t.label +
+      '<span class="ti">' + icon(t.icon) + '</span>' + t.label +
       (t.id === "practice" && due ? '<b class="badge">' + due + '</b>' : '') + '</button>';
   }).join("");
 }
@@ -752,7 +794,7 @@ function renderMe(){
 function setLang(k){
   if (k === S.lang){ return; }
   S.lang = k; haptic("selection");
-  el("hFlag").textContent = LANGS[k].flag;
+  paintLang(k);
   el("say").placeholder = "Write in " + LANGS[k].name + " or English…";
   store.getItem("tt_hist_" + k).then(function(v){
     hist = [];
@@ -791,10 +833,11 @@ function finishOb(){
 }
 
 function boot2(){
-  el("hFlag").textContent = LANGS[S.lang].flag;
+  paintLang(S.lang);
   el("say").placeholder = "Write in " + LANGS[S.lang].name + " or English…";
-  el("hStreak").textContent = stats.streak ? "🔥 " + stats.streak : "";
-  if (TRANSCRIBE) el("micBtn").style.display = "block";
+  setStreak(stats.streak, false);
+  if (TRANSCRIBE) el("micBtn").style.display = "flex";
+  else setTimeout(function(){ if (TRANSCRIBE) el("micBtn").style.display = "flex"; }, 1500);   /* a bridge added late */
   if (!ASK){ el("aiGate").style.display = "block"; el("talkHint").style.display = "none"; }
   renderScenarios(); renderTabs(); syncToggles();
   store.getItem("tt_hist_" + S.lang).then(function(v){

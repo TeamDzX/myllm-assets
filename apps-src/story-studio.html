@@ -9,81 +9,163 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Story Studio</title>
 <style>
-:root{--build-id:"1ee9b8844e";
-  color-scheme:light dark;
-  --bg:var(--myllm-bg,#f2f2f7);--surface:var(--myllm-surface,#fff);
-  --text:var(--myllm-text,#111);--muted:var(--myllm-muted,#6b6b72);
-  --accent:var(--myllm-accent,#0b5ed7);--border:var(--myllm-border,rgba(120,120,128,.25));
-  --radius:var(--myllm-radius,14px);--font:var(--myllm-font,-apple-system,system-ui,sans-serif);
-}
-@media(prefers-color-scheme:dark){:root{--bg:var(--myllm-bg,#000);--surface:var(--myllm-surface,#1c1c1e);--text:var(--myllm-text,#eee);--muted:var(--myllm-muted,#98989f)}}
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{height:100%}
-body{margin:0;font-family:var(--font);background:var(--bg);color:var(--text);display:flex;flex-direction:column}
-.head{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
-.head h1{margin:0;font-size:19px;font-weight:700;flex:1}
-.head button{border:0;background:none;color:var(--accent);font:inherit;font-weight:600;font-size:14px;cursor:pointer;padding:6px}
-#story{flex:1;width:100%;border:0;outline:0;resize:none;padding:18px 16px;font-family:Georgia,serif;font-size:17px;line-height:1.6;background:var(--bg);color:var(--text)}
-.start{padding:24px 16px;max-width:520px;margin:0 auto;width:100%}
-.start h2{font-size:18px;margin:0 0 4px}.start p{color:var(--muted);margin:0 0 16px;font-size:14px}
-.genres{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px}
-.gchip{border:1px solid var(--border);background:var(--surface);color:var(--muted);border-radius:999px;padding:7px 13px;font:inherit;font-size:13px;font-weight:600;cursor:pointer}
-.gchip.on{background:var(--accent);color:#fff;border-color:transparent}
-input[type=text]{width:100%;padding:13px;border:1px solid var(--border);border-radius:11px;font:inherit;font-size:16px;background:var(--surface);color:var(--text)}
-.bar{border-top:1px solid var(--border);background:var(--surface);padding:10px;display:flex;gap:8px;overflow-x:auto;scrollbar-width:none}.bar::-webkit-scrollbar{display:none}
-.bar button{flex:none;border:0;border-radius:10px;padding:11px 15px;font:inherit;font-weight:600;font-size:14px;cursor:pointer;background:var(--bg);border:1px solid var(--border);color:var(--text)}
-.bar button.primary{background:var(--accent);color:#fff;border-color:transparent}
-.bar button:disabled{opacity:.4}
-.foot{display:flex;justify-content:space-between;padding:6px 16px;font-size:12px;color:var(--muted)}
-#err{color:#e04848;font-size:13px;padding:0 16px 8px;display:none}
-.dots:after{content:'';animation:d 1.2s steps(4,end) infinite}
-@keyframes d{0%{content:''}25%{content:'.'}50%{content:'..'}75%{content:'...'}}
+:root{--build-id:"1ee9b8844e";color-scheme:light dark;
+  --bg:var(--myllm-bg,#f2f2f7); --surface:var(--myllm-surface,#fff); --ink:var(--myllm-text,#111);
+  --muted:var(--myllm-muted,#8a8a8e); --line:var(--myllm-border,#e3e3e8); --acc:var(--myllm-accent,#0a84ff);
+  --fill:rgba(120,120,128,.12); --h:244; }
+@media (prefers-color-scheme:dark){ :root{ --bg:var(--myllm-bg,#000); --surface:var(--myllm-surface,#1c1c1e);
+  --ink:var(--myllm-text,#f2f2f7); --muted:var(--myllm-muted,#8e8e93); --line:var(--myllm-border,#2c2c2e); --fill:rgba(120,120,128,.24); } }
+  *{ margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body{ height:100%; }
+  body{ font-family:var(--myllm-font,-apple-system,system-ui,sans-serif); background:var(--bg); color:var(--ink); font-size:15.5px;
+    display:flex; flex-direction:column; min-height:100dvh;
+    padding:calc(16px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) 0 calc(16px + env(safe-area-inset-left)); }
+  svg.i{ width:1.25em; height:1.25em; fill:currentColor; flex-shrink:0; }
+  button{ font:inherit; color:inherit; cursor:pointer; } button:active{ transform:scale(.96); }
+  [hidden]{ display:none !important; }
+
+  .head{ display:flex; align-items:center; gap:12px; margin:2px 2px 14px; width:100%; max-width:760px; align-self:center; flex-shrink:0; }
+  .tile{ display:flex; align-items:center; justify-content:center; color:#fff; flex-shrink:0;
+    background:linear-gradient(145deg, hsl(var(--h) 62% 50%), hsl(calc(var(--h) + 40) 58% 28%)); }
+  .head .tile{ width:44px; height:44px; border-radius:13px; font-size:19px; }
+  .head .ht{ flex:1; min-width:0; }
+  h1{ font-size:22px; font-weight:800; letter-spacing:-.01em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .head p{ font-size:13px; color:var(--muted); margin-top:1px; }
+  .head .acts{ display:flex; gap:8px; flex-shrink:0; }
+  .head .acts button{ min-width:40px; height:40px; border-radius:12px; border:1px solid var(--line); background:var(--surface);
+    display:flex; align-items:center; justify-content:center; gap:6px; padding:0 11px; font-size:14px; font-weight:700; }
+  .head .acts button.arm{ background:#ff453a; border-color:#ff453a; color:#fff; }
+  .head .acts button:disabled{ opacity:.4; }
+
+  /* start */
+  .start{ width:100%; max-width:560px; align-self:center; padding-bottom:calc(24px + env(safe-area-inset-bottom)); }
+  .card{ background:var(--surface); border:1px solid var(--line); border-radius:18px; padding:16px; }
+  .card h2{ font-size:18px; font-weight:800; letter-spacing:-.01em; }
+  .card .lead{ font-size:14px; color:var(--muted); line-height:1.45; margin:4px 0 14px; }
+  .lbl{ display:block; font-size:12px; font-weight:800; letter-spacing:.07em; text-transform:uppercase; color:var(--muted); margin:0 2px 8px; }
+  .chips{ display:flex; flex-wrap:wrap; gap:7px; margin-bottom:16px; }
+  .chip{ min-height:36px; border:1px solid var(--line); background:var(--bg); border-radius:99px; padding:0 14px; font-size:13.5px; font-weight:650; }
+  .chip.on{ background:hsl(var(--h) 60% 52%); border-color:transparent; color:#fff; }
+  input[type=text]{ width:100%; font:inherit; font-size:16px; padding:12px; border-radius:12px; border:1px solid var(--line); background:var(--bg); color:var(--ink); outline:none; }
+  input[type=text]:focus{ border-color:hsl(var(--h) 60% 55%); }
+  .go{ width:100%; min-height:50px; margin-top:14px; border:none; border-radius:14px; background:hsl(var(--h) 60% 52%); color:#fff; font-size:16px; font-weight:700;
+    display:flex; align-items:center; justify-content:center; gap:8px; }
+  .go:disabled{ opacity:.6; }
+  .spin{ width:16px; height:16px; border-radius:50%; border:2.4px solid currentColor; border-right-color:transparent; animation:spin .8s linear infinite; flex-shrink:0; }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+
+  .note{ display:flex; gap:10px; align-items:flex-start; font-size:13.5px; line-height:1.45; border-radius:14px; padding:11px 12px; margin-top:12px;
+    background:rgba(255,69,58,.1); }
+  .note svg{ color:#ff453a; margin-top:1px; }
+  .note .t{ flex:1; }
+  .note button{ flex-shrink:0; border:none; border-radius:10px; min-height:34px; padding:0 12px; background:var(--surface); font-size:13px; font-weight:700; }
+
+  /* editor */
+  .page{ flex:1; min-height:0; width:100%; max-width:760px; align-self:center; display:flex; flex-direction:column;
+    background:var(--surface); border:1px solid var(--line); border-radius:18px; overflow:hidden; }
+  #story{ flex:1; min-height:0; width:100%; max-width:68ch; align-self:center; border:0; outline:0; resize:none; padding:20px 18px;
+    font-family:Georgia,"Iowan Old Style","Times New Roman",serif; font-size:17px; line-height:1.6; background:transparent; color:var(--ink); }
+  #story::placeholder{ color:var(--muted); }
+  .foot{ display:flex; justify-content:space-between; align-items:center; gap:10px; padding:8px 16px; border-top:1px solid var(--line);
+    font-size:12.5px; color:var(--muted); font-variant-numeric:tabular-nums; min-height:36px; }
+  .foot .st{ display:flex; align-items:center; gap:7px; color:hsl(var(--h) 55% 50%); font-weight:650; }
+  @media (prefers-color-scheme:dark){ .foot .st{ color:hsl(var(--h) 80% 72%); } }
+  .foot .st .spin{ width:13px; height:13px; border-width:2px; }
+  .page .note{ margin:0 12px 10px; }
+
+  .bar{ width:100%; max-width:760px; align-self:center; display:flex; gap:8px; overflow-x:auto; scrollbar-width:none; flex-shrink:0;
+    padding:10px 0 calc(12px + env(safe-area-inset-bottom)); }
+  .bar::-webkit-scrollbar{ display:none; }
+  .bar button{ flex:none; min-height:44px; border-radius:99px; padding:0 15px; font-size:14px; font-weight:700;
+    background:var(--surface); border:1px solid var(--line); display:flex; align-items:center; gap:7px; }
+  .bar button svg{ color:hsl(var(--h) 60% 55%); }
+  .bar button.primary{ background:hsl(var(--h) 60% 52%); border-color:transparent; color:#fff; }
+  .bar button.primary svg{ color:#fff; }
+  .bar button:disabled{ opacity:.45; }
+
+  @media (max-height:520px){ .head{ margin-bottom:8px; } .head p{ display:none; } #story{ padding:14px 18px; } .bar{ padding-top:8px; } }
+  @media (max-width:360px){ .head .acts .lab{ display:none; } }
+  @media (prefers-reduced-motion:reduce){ .spin{ animation-duration:2.4s; } button:active{ transform:none; } }
 </style>
 </head>
 <body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H19a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H6.5a.5.5 0 0 0 0 1H19a1 1 0 0 1 0 2H6.5A2.5 2.5 0 0 1 4 18.5zM8 7a1 1 0 0 0 0 2h7a1 1 0 0 0 0-2z" fill="currentColor"/></symbol>
+  <symbol id="i-share" viewBox="0 0 24 24"><path d="M12 2.6a1 1 0 0 1 .7.3l3.6 3.6a1 1 0 1 1-1.4 1.4L13 6v8.5a1 1 0 0 1-2 0V6L9.1 7.9a1 1 0 1 1-1.4-1.4l3.6-3.6a1 1 0 0 1 .7-.3zM6 10.5a1 1 0 0 1 1 1V19c0 .3.2.5.5.5h9c.3 0 .5-.2.5-.5v-7.5a1 1 0 1 1 2 0V19a2.5 2.5 0 0 1-2.5 2.5h-9A2.5 2.5 0 0 1 5 19v-7.5a1 1 0 0 1 1-1z" fill="currentColor"/></symbol>
+  <symbol id="i-new" viewBox="0 0 24 24"><path d="M6.5 3h7.6L19 7.9V19a2 2 0 0 1-2 2H6.5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zm6.5 2v3.5a1 1 0 0 0 1 1h3.5zM11.8 11a1 1 0 0 0-1 1v1.8H9a1 1 0 0 0 0 2h1.8v1.8a1 1 0 0 0 2 0v-1.8h1.8a1 1 0 0 0 0-2h-1.8V12a1 1 0 0 0-1-1z" fill="currentColor"/></symbol>
+  <symbol id="i-spark" viewBox="0 0 24 24"><path d="M10 2.5l1.9 5.6 5.6 1.9-5.6 1.9L10 17.5l-1.9-5.6L2.5 10l5.6-1.9zM18.5 14l.95 2.55L22 17.5l-2.55.95L18.5 21l-.95-2.55L15 17.5l2.55-.95z" fill="currentColor"/></symbol>
+  <symbol id="i-next" viewBox="0 0 24 24"><path d="M4 12a1 1 0 0 1 1-1h11.6l-4.3-4.3a1 1 0 1 1 1.4-1.4l6 6a1 1 0 0 1 0 1.4l-6 6a1 1 0 1 1-1.4-1.4l4.3-4.3H5a1 1 0 0 1-1-1z" fill="currentColor"/></symbol>
+  <symbol id="i-twist" viewBox="0 0 24 24"><path d="M13.3 2.2a1 1 0 0 1 .6 1.1l-1 6.2h5.6a1 1 0 0 1 .8 1.6l-8.5 10.5a1 1 0 0 1-1.8-.8l1-6.3H4.5a1 1 0 0 1-.8-1.6L12.2 2.4a1 1 0 0 1 1.1-.2z" fill="currentColor"/></symbol>
+  <symbol id="i-person" viewBox="0 0 24 24"><path d="M10 3.5a4 4 0 1 1 0 8 4 4 0 0 1 0-8zM2.5 19.5c0-3.6 3.3-6 7.5-6 1.5 0 2.9.3 4 .9A5.5 5.5 0 0 0 13.3 21H3.3a.8.8 0 0 1-.8-.8zM18 14a1 1 0 0 1 1 1v1.5h1.5a1 1 0 0 1 0 2H19V20a1 1 0 0 1-2 0v-1.5h-1.5a1 1 0 0 1 0-2H17V15a1 1 0 0 1 1-1z" fill="currentColor"/></symbol>
+  <symbol id="i-scene" viewBox="0 0 24 24"><path d="M3 5.5A2.5 2.5 0 0 1 5.5 3h13A2.5 2.5 0 0 1 21 5.5v13a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 18.5zm2 9.9V18.5c0 .3.2.5.5.5h13c.3 0 .5-.2.5-.5v-2.7l-3.6-3.6a1 1 0 0 0-1.4 0L11 15.2l-1.8-1.8a1 1 0 0 0-1.4 0zM8.5 6.5a2 2 0 1 0 0 4 2 2 0 0 0 0-4z" fill="currentColor"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24"><path d="M12 5c5 0 8.6 4.2 9.8 6.4a1.2 1.2 0 0 1 0 1.2C20.6 14.8 17 19 12 19s-8.6-4.2-9.8-6.4a1.2 1.2 0 0 1 0-1.2C3.4 9.2 7 5 12 5zm0 3.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7z" fill="currentColor"/></symbol>
+  <symbol id="i-warn" viewBox="0 0 24 24"><path d="M10.3 3.9a2 2 0 0 1 3.4 0l8 13.6a2 2 0 0 1-1.7 3H4a2 2 0 0 1-1.7-3zM12 9a1 1 0 0 0-1 1v4a1 1 0 0 0 2 0v-4a1 1 0 0 0-1-1zm0 7.2a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 0 0 0-2.4z" fill="currentColor"/></symbol>
+</defs></svg>
+
 <div class="head">
-  <h1>✍️ Story Studio</h1>
-  <button id="shareBtn">Share</button>
-  <button id="newBtn">New</button>
+  <div class="tile"><svg class="i"><use href="#i-book"/></svg></div>
+  <div class="ht"><h1>Story Studio</h1><p>Write with your AI</p></div>
+  <div class="acts">
+    <button id="shareBtn" type="button" aria-label="Share"><svg class="i"><use href="#i-share"/></svg></button>
+    <button id="newBtn" type="button" aria-label="New story"><svg class="i"><use href="#i-new"/></svg><span class="lab">New</span></button>
+  </div>
 </div>
 
 <div class="start" id="startView">
-  <h2>Start a story</h2>
-  <p>Pick a vibe and give it a spark — your on-device AI writes the opening, then you steer.</p>
-  <div class="genres" id="genres"></div>
-  <input type="text" id="seed" placeholder="e.g. a lighthouse keeper finds a door in the sea">
-  <button class="gchip primary" id="startBtn" style="margin-top:14px;width:100%;padding:13px;font-size:15px;background:var(--accent);color:#fff;border:0">Begin ✨</button>
-  <div id="err"></div>
+  <div class="card">
+    <h2>Start a story</h2>
+    <p class="lead">Pick a vibe and give it a spark — your on-device AI writes the opening, then you steer.</p>
+    <span class="lbl">Vibe</span>
+    <div class="chips" id="genres"></div>
+    <span class="lbl">Spark</span>
+    <input type="text" id="seed" placeholder="e.g. a lighthouse keeper finds a door in the sea" autocomplete="off" enterkeyhint="go">
+    <button class="go" id="startBtn" type="button"></button>
+  </div>
 </div>
 
-<textarea id="story" placeholder="Your story will appear here…" style="display:none"></textarea>
-<div class="foot" id="foot" style="display:none"><span id="wc">0 words</span><span id="status"></span></div>
-<div class="bar" id="bar" style="display:none">
-  <button class="primary" data-a="continue">Continue</button>
-  <button data-a="twist">Plot twist</button>
-  <button data-a="character">New character</button>
-  <button data-a="scene">New scene</button>
-  <button data-a="describe">Describe</button>
+<div class="page" id="page" hidden>
+  <textarea id="story" placeholder="Your story will appear here…"></textarea>
+  <div class="foot"><span id="wc">0 words</span><span class="st" id="status"></span></div>
+</div>
+
+<div class="note" id="err" hidden style="width:100%;max-width:760px;align-self:center"><svg class="i"><use href="#i-warn"/></svg><span class="t" id="errText"></span><button type="button" id="errRetry" hidden>Try again</button></div>
+
+<div class="bar" id="bar" hidden>
+  <button class="primary" data-a="continue" type="button"><svg class="i"><use href="#i-next"/></svg>Continue</button>
+  <button data-a="twist" type="button"><svg class="i"><use href="#i-twist"/></svg>Plot twist</button>
+  <button data-a="character" type="button"><svg class="i"><use href="#i-person"/></svg>New character</button>
+  <button data-a="scene" type="button"><svg class="i"><use href="#i-scene"/></svg>New scene</button>
+  <button data-a="describe" type="button"><svg class="i"><use href="#i-eye"/></svg>Describe</button>
 </div>
 
 <script>
 var GENRES=["Any","Fantasy","Sci-fi","Mystery","Romance","Horror","Adventure","Fairy tale"];
-var genre="Any",busy=false,confirmNew=false;
+var genre="Any",busy=false,confirmNew=false,lastRun=null;
 var SYS="You are a talented fiction co-writer. Write immersive, vivid prose in the same tense, point of view, voice and style as the existing text. Continue seamlessly from where it leaves off. Output ONLY the new prose — no titles, no notes, no commentary, no surrounding quotation marks.";
 function haptic(k){if(window.myllmHaptic)try{myllmHaptic(k)}catch(e){}}
 function $(i){return document.getElementById(i)}
-function showErr(t){var e=$('err');e.style.display=t?'block':'none';e.textContent=t||''}
+function icon(n){return '<svg class="i"><use href="#i-'+n+'"/></svg>'}
+/* Errors show in both views now — before, the message lived inside the start
+   card and was invisible once the story was open. */
+function showErr(t,retry){
+  $('err').hidden=!t;$('errText').textContent=t||'';
+  $('errRetry').hidden=!(t&&retry);lastRun=retry||null;
+}
+$('errRetry').onclick=function(){var r=lastRun;showErr('');if(r)r()};
+function startBtn(on){
+  $('startBtn').innerHTML=on?'<i class="spin"></i><span>Writing the opening…</span>':icon('spark')+'<span>Begin</span>';
+}
 
 function buildGenres(){
   var g=$('genres');g.innerHTML='';
-  GENRES.forEach(function(x){var b=document.createElement('button');b.className='gchip'+(x===genre?' on':'');b.textContent=x;
+  GENRES.forEach(function(x){var b=document.createElement('button');b.type='button';b.className='chip'+(x===genre?' on':'');b.textContent=x;
     b.onclick=function(){genre=x;haptic('selection');buildGenres()};g.appendChild(b)});
 }
 function wc(){var t=$('story').value.trim();var n=t?t.split(/\s+/).length:0;$('wc').textContent=n+(n===1?' word':' words')}
 
 function showEditor(){
-  $('startView').style.display='none';
-  $('story').style.display='block';$('bar').style.display='flex';$('foot').style.display='flex';
+  $('startView').hidden=true;
+  $('page').hidden=false;$('bar').hidden=false;
   wc();
 }
 function ask(prompt){
@@ -92,19 +174,22 @@ function ask(prompt){
 }
 function setBusy(b,label){
   busy=b;
-  document.querySelectorAll('#bar button,#startBtn').forEach(function(e){e.disabled=b});
-  $('status').innerHTML=b?('<span class="dots">'+(label||'Writing')+'</span>'):'';
+  document.querySelectorAll('#bar button,#startBtn,#newBtn').forEach(function(e){e.disabled=b});
+  $('status').innerHTML=b?('<i class="spin"></i><span>'+(label||'Writing')+'…</span>'):'';
+  if($('startView').hidden===false)startBtn(b);
 }
 
-$('startBtn').onclick=function(){
+function begin(){
   if(busy)return;var spark=$('seed').value.trim();showErr('');
   var g=genre==='Any'?'':(' '+genre.toLowerCase());
   var p='Write the opening paragraph (4-6 sentences) of an engaging'+g+' story'+(spark?(' about: '+spark):'')+'. Make it vivid and end on a moment of momentum that invites continuation.';
   setBusy(true,'Writing the opening');
   ask(p).then(function(r){
     showEditor();$('story').value=(r||'').trim();wc();save();haptic('success');
-  }).catch(function(e){if(e)showErr('The AI didn’t respond. Try again.')}).then(function(){setBusy(false)});
-};
+  }).catch(function(e){if(e)showErr('The AI didn’t respond. Try again.',begin)}).then(function(){setBusy(false)});
+}
+$('startBtn').onclick=begin;
+$('seed').addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();begin()}});
 
 var PROMPTS={
   continue:"Continue the story with one short paragraph (3-5 sentences). Just write what happens next.",
@@ -113,40 +198,50 @@ var PROMPTS={
   scene:"Begin a new scene in a different time or place, picking up the thread — one short paragraph.",
   describe:"Add one short paragraph of rich, sensory description of the current setting or mood, without advancing the plot much."
 };
+function run(a){
+  if(busy)return;showErr('');
+  var story=$('story').value.trim();
+  var ctx=story.length>1800?story.slice(-1800):story;
+  var p='Here is the story so far:\n\n'+ctx+'\n\n'+PROMPTS[a];
+  setBusy(true,'Writing');haptic('light');
+  ask(p).then(function(r){
+    var add=(r||'').trim();if(!add)return;
+    var s=$('story');s.value=(s.value.replace(/\s+$/,''))+'\n\n'+add;wc();save();
+    s.scrollTop=s.scrollHeight;haptic('success');
+  }).catch(function(e){if(e)showErr('The AI didn’t respond. Try again.',function(){run(a)})}).then(function(){setBusy(false)});
+}
 document.querySelectorAll('#bar button').forEach(function(btn){
-  btn.onclick=function(){
-    if(busy)return;showErr('');
-    var a=btn.getAttribute('data-a');
-    var story=$('story').value.trim();
-    var ctx=story.length>1800?story.slice(-1800):story;
-    var p='Here is the story so far:\n\n'+ctx+'\n\n'+PROMPTS[a];
-    setBusy(true,'Writing');haptic('light');
-    ask(p).then(function(r){
-      var add=(r||'').trim();if(!add)return;
-      var s=$('story');s.value=(s.value.replace(/\s+$/,''))+'\n\n'+add;wc();save();
-      s.scrollTop=s.scrollHeight;haptic('success');
-    }).catch(function(e){if(e)showErr('The AI didn’t respond. Try again.')}).then(function(){setBusy(false)});
-  };
+  btn.onclick=function(){run(btn.getAttribute('data-a'))};
 });
 
 $('story').oninput=function(){wc();save()};
 $('shareBtn').onclick=function(){var t=$('story').value.trim();if(t&&window.myllmShare){haptic('light');myllmShare(t)}};
+function newLabel(arm){
+  var b=$('newBtn');b.classList.toggle('arm',arm);
+  b.innerHTML=icon('new')+'<span class="lab">'+(arm?'Clear?':'New')+'</span>';
+  b.setAttribute('aria-label',arm?'Tap again to clear':'New story');
+}
 $('newBtn').onclick=function(){
   if(busy)return;
-  if(!confirmNew){confirmNew=true;$('newBtn').textContent='Clear?';setTimeout(function(){confirmNew=false;$('newBtn').textContent='New'},2500);return}
-  confirmNew=false;$('newBtn').textContent='New';
-  $('story').value='';save();
-  $('startView').style.display='block';$('story').style.display='none';$('bar').style.display='none';$('foot').style.display='none';
-  $('seed').value='';haptic('warning');
+  if(!confirmNew){confirmNew=true;newLabel(true);setTimeout(function(){confirmNew=false;newLabel(false)},2500);return}
+  confirmNew=false;newLabel(false);
+  $('story').value='';save();showErr('');
+  $('startView').hidden=false;$('page').hidden=true;$('bar').hidden=true;
+  $('seed').value='';startBtn(false);haptic('warning');
 };
 
 function save(){if(window.myllmStorage)myllmStorage.setItem('story',$('story').value)}
-function load(){
-  buildGenres();
-  if(!window.myllmStorage)return;
+/* The storage bridge can arrive after this script runs: look again shortly. */
+var loaded=false;
+function tryLoad(){
+  if(loaded||!window.myllmStorage)return;loaded=true;
   myllmStorage.getItem('story').then(function(v){
-    if(v&&v.trim()){$('story').value=v;showEditor()}
+    if(v&&v.trim()&&!$('story').value.trim()){$('story').value=v;showEditor()}
   });
+}
+function load(){
+  buildGenres();startBtn(false);
+  tryLoad();setTimeout(tryLoad,600);setTimeout(tryLoad,2500);
 }
 load();
 </script>

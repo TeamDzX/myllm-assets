@@ -20,82 +20,114 @@ _CAT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "langpacks", "ca
 CATALOG = json.load(open(_CAT))
 CAT_BY_ID = {d["id"]: d for d in CATALOG}
 
-TEMPLATE = r"""<!doctype html><html lang="__CODE__"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+TEMPLATE = r"""<!doctype html><html lang="__CODE__"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>__TITLE__</title>
-<style>:root{color-scheme:light dark;--ac:__ACCENT__;--ac2:__ACCENT2__}
-*{box-sizing:border-box}
-body{font-family:-apple-system,system-ui,sans-serif;margin:0;padding:0 0 96px;background:#f2f2f7;color:#111;-webkit-tap-highlight-color:transparent}
-@media(prefers-color-scheme:dark){body{background:#000;color:#eee}.card,.deck,.chip,.panel,input,.vrow{background:#1c1c1e}.chip{border-color:#3a3a3c}input{color:#eee;border-color:#3a3a3c}.tabbar{background:rgba(20,20,22,.86)}.thumb{background:#2c2c2e}.body .w{color:#fff}.body .en{color:#c7c7cc}.body .tap{color:#8a8a8e}}
-header{padding:18px 18px 8px;display:flex;align-items:center;gap:12px}
-header .fl{width:44px;height:44px;border-radius:50%;object-fit:cover;flex:0 0 auto;box-shadow:0 2px 8px rgba(0,0,0,.18)}
-header h1{font-size:22px;margin:0}
-header .nv{font-size:13px;opacity:.6;margin:1px 0 0}
+<style>:root{color-scheme:light dark;--ac:__ACCENT__;--ac2:__ACCENT2__;
+  --bg:var(--myllm-bg,#f2f2f7);--surface:var(--myllm-surface,#fff);--ink:var(--myllm-text,#111);
+  --muted:var(--myllm-muted,#8a8a8e);--line:var(--myllm-border,#e3e3e8);--fill:rgba(120,120,128,.12);--bar:rgba(248,248,250,.86)}
+@media(prefers-color-scheme:dark){:root{--bg:var(--myllm-bg,#000);--surface:var(--myllm-surface,#1c1c1e);--ink:var(--myllm-text,#f2f2f7);
+  --muted:var(--myllm-muted,#8e8e93);--line:var(--myllm-border,#2c2c2e);--fill:rgba(120,120,128,.24);--bar:rgba(22,22,24,.86)}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:var(--myllm-font,-apple-system,system-ui,sans-serif);margin:0;background:var(--bg);color:var(--ink);
+  padding:env(safe-area-inset-top) env(safe-area-inset-right) calc(96px + env(safe-area-inset-bottom)) env(safe-area-inset-left)}
+button{font:inherit;color:inherit;cursor:pointer}
+svg.i{width:1.2em;height:1.2em;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;flex:0 0 auto}
+.head{display:flex;align-items:center;gap:12px;padding:16px 18px 8px;max-width:820px;margin:0 auto}
+.head .tile{width:44px;height:44px;border-radius:13px;object-fit:cover;flex:0 0 auto;box-shadow:0 2px 8px rgba(0,0,0,.18)}
+.head .ht{flex:1;min-width:0}
+.head h1{font-size:22px;font-weight:800;letter-spacing:-.01em;margin:0}
+.head p{font-size:13px;color:var(--muted);margin:1px 0 0}
 .wrap{padding:0 16px;max-width:820px;margin:0 auto}
-h2{font-size:14px;letter-spacing:.02em;text-transform:uppercase;opacity:.5;margin:20px 2px 8px}
-.chips{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 8px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+h2{font-size:12px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin:20px 2px 10px}
+.chips{display:flex;gap:7px;overflow-x:auto;padding:4px 2px 8px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
 .chips::-webkit-scrollbar{display:none}
-.chip{flex:0 0 auto;border:1px solid #e3e3e8;background:#fff;border-radius:999px;padding:9px 15px;font-size:14px;font-weight:600;white-space:nowrap;color:inherit}
+.chip{flex:0 0 auto;min-height:36px;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:99px;padding:0 14px;font-size:13.5px;font-weight:650;white-space:nowrap}
 .chip.on{background:var(--ac);color:#fff;border-color:transparent}
 /* flashcard */
-.card{background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 2px 14px rgba(0,0,0,.09);margin:4px 0}
-.card .img{width:100%;aspect-ratio:3/2;object-fit:cover;display:block;background:#e5e5ea}
+.card{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:20px;overflow:hidden;margin:4px 0;cursor:pointer}
+.card .img{width:100%;aspect-ratio:3/2;object-fit:cover;display:block;background:var(--fill)}
 .ph{width:100%;aspect-ratio:3/2;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--ac),var(--ac2))}
 .ph svg{width:56px;height:56px;opacity:.9}
 .body{padding:16px 18px;text-align:center;min-height:104px;display:flex;flex-direction:column;justify-content:center}
-.body .w{font-size:30px;font-weight:800;line-height:1.2;color:#000;letter-spacing:-.01em}
-.body .en{font-size:16px;font-weight:600;color:#3a3a3c;margin-top:5px}
-.body .tap{font-size:13px;color:#8a8a8e}
-.hidden{display:none}
-.nav{display:flex;align-items:center;justify-content:space-between;margin-top:12px}
-.nav button{border:0;background:#e5e5ea;color:inherit;border-radius:12px;padding:11px 20px;font-size:15px;font-weight:600}
-@media(prefers-color-scheme:dark){.nav button{background:#2c2c2e}}
-.nav .ct{font-size:14px;opacity:.6}
+.body .w{font-size:30px;font-weight:800;line-height:1.2;letter-spacing:-.01em}
+.body .en{font-size:16px;font-weight:600;color:var(--muted);margin-top:5px}
+.body .tap{font-size:13px;color:var(--muted)}
+.spkbtn{position:absolute;right:12px;bottom:12px;width:44px;height:44px;border:none;border-radius:12px;background:var(--fill);color:var(--ac);display:flex;align-items:center;justify-content:center;font-size:18px}
+.spkbtn.on{background:var(--ac);color:#fff}
+.hidden{display:none!important}
+.nav{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:12px}
+.nav button{min-height:44px;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:0 16px;font-size:15px;font-weight:650;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.nav button:active,.act:active,.chip:active{transform:scale(.97)}
+.nav .ct{font-size:13px;color:var(--muted);text-align:center;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .row{display:flex;gap:8px}
-.act{border:0;background:var(--ac);color:#fff;border-radius:12px;padding:0 16px;font-size:15px;font-weight:600}
-.act:disabled{opacity:.45}
-input{flex:1;min-width:0;padding:12px;border:1px solid #d1d1d6;border-radius:12px;font-size:16px;background:#fff}
-#status{font-size:13px;opacity:.65;min-height:18px;margin:8px 2px}
+.act{min-height:46px;border:0;background:var(--ac);color:#fff;border-radius:12px;padding:0 16px;font-size:15px;font-weight:700}
+.act:disabled{opacity:.5}
+input{flex:1;min-width:0;padding:12px;border:1px solid var(--line);border-radius:12px;font:inherit;font-size:16px;background:var(--surface);color:var(--ink);outline:none}
+input:focus{border-color:var(--ac)}
+#status{font-size:13px;color:var(--muted);min-height:18px;margin:8px 2px}
 /* vocab */
-.vrow{display:flex;align-items:center;gap:12px;background:#fff;border-radius:14px;padding:8px 12px;margin-bottom:8px}
-.thumb{width:52px;height:52px;border-radius:10px;object-fit:cover;flex:0 0 auto;background:#e5e5ea}
-.vrow .vw{font-size:16px;font-weight:600}
-.vrow .ve{font-size:13px;opacity:.6}
+.vrow{display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:8px 12px;margin-bottom:8px;cursor:pointer}
+.vrow>div{flex:1;min-width:0}
+.thumb{width:52px;height:52px;border-radius:10px;object-fit:cover;flex:0 0 auto;background:var(--fill)}
+.vrow .vw{font-size:16px;font-weight:650}
+.vrow .ve{font-size:13px;color:var(--muted)}
+.spk{flex:0 0 auto;color:var(--ac);opacity:.75;display:flex}
 /* AI panels */
-.panel{background:#fff;border-radius:14px;padding:14px 16px;margin-bottom:9px;box-shadow:0 1px 2px rgba(0,0,0,.06)}
-.panel .pt{font-size:17px;font-weight:600}
-.panel .pp{opacity:.6;font-style:italic;font-size:14px;margin-top:2px}
+.panel{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 44px 14px 16px;margin-bottom:9px;cursor:pointer}
+.panel.explain,.panel.basic{padding-right:16px;cursor:auto}
+.panel>.spk{position:absolute;right:14px;top:15px}
+.panel .pt{font-size:17px;font-weight:650}
+.panel .pp{color:var(--muted);font-style:italic;font-size:14px;margin-top:2px}
 .panel .pe{font-size:14px;margin-top:4px}
 .panel.explain{white-space:pre-wrap;line-height:1.6;font-size:15px}
 .section{display:none}.section.on{display:block}
-.tabbar{position:fixed;left:0;right:0;bottom:0;display:flex;background:rgba(248,248,250,.86);backdrop-filter:saturate(180%) blur(18px);-webkit-backdrop-filter:saturate(180%) blur(18px);border-top:1px solid rgba(0,0,0,.08);padding-bottom:env(safe-area-inset-bottom)}
-.tabbar button{flex:1;border:0;background:none;color:inherit;padding:9px 0 8px;font-size:11px;font-weight:600;opacity:.5;display:flex;flex-direction:column;align-items:center;gap:3px}
+.tabbar{position:fixed;left:0;right:0;bottom:0;display:flex;background:var(--bar);backdrop-filter:saturate(180%) blur(18px);-webkit-backdrop-filter:saturate(180%) blur(18px);border-top:1px solid var(--line);padding:0 env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+.tabbar button{flex:1;border:0;background:none;color:var(--muted);padding:9px 0 8px;font-size:11px;font-weight:650;display:flex;flex-direction:column;align-items:center;gap:3px;min-height:52px}
 .tabbar button .ti{height:22px;display:flex;align-items:center}
 .tabbar button .ti svg{width:22px;height:22px}
-.gr-ex{margin-top:6px;font-size:14px}
+.gr-ex{margin-top:8px;font-size:14px;cursor:pointer;display:flex;gap:6px;align-items:baseline}
 .gr-ex b{font-weight:650}
-.gr-ex span{opacity:.6}
-.tabbar button.on{opacity:1;color:var(--ac)}
+.gr-ex span{color:var(--muted)}
+.gr-ex .spk{align-self:center;font-size:12px}
+.tabbar button.on{color:var(--ac)}
+.snote{position:fixed;left:50%;bottom:calc(66px + env(safe-area-inset-bottom));transform:translateX(-50%);width:min(92%,480px);z-index:50;
+  display:flex;gap:10px;align-items:flex-start;font-size:13.5px;line-height:1.45;border-radius:14px;padding:11px 12px;background:var(--surface);border:1px solid rgba(255,159,10,.5);box-shadow:0 8px 24px rgba(0,0,0,.18)}
+.snote svg{color:#ff9f0a;fill:currentColor;stroke:none;margin-top:1px}
+.snote[hidden]{display:none}
+/* phone on its side: keep the photo, the word and the controls on one screen */
+@media(max-height:520px){.head{padding-top:10px;padding-bottom:4px}.head .tile{width:36px;height:36px;border-radius:11px}.head h1{font-size:19px}.head p{display:none}
+  #s-cards{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);grid-template-areas:'chips chips' 'card nav1' 'card nav2';column-gap:14px;align-items:start}
+  #deckChips{grid-area:chips}#fc{grid-area:card;display:flex}#fcImgWrap{flex:0 0 56%}#fc .img,#fc .ph{height:100%;aspect-ratio:auto;min-height:150px}
+  #fc .body{flex:1;min-height:0;padding:10px 12px}.body .w{font-size:24px}
+  #s-cards>.nav:nth-of-type(1){grid-area:nav1;margin-top:4px}#s-cards>.nav:nth-of-type(2){grid-area:nav2}}
+@media(prefers-reduced-motion:reduce){.nav button:active,.act:active,.chip:active{transform:none}}
 </style></head><body>
 <style>
 @keyframes myllmAiSpin{to{transform:rotate(360deg)}}
 .myllm-ai-busy{position:fixed;left:50%;bottom:calc(76px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(18px);z-index:99999;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;display:flex;align-items:center;gap:10px;background:rgba(28,28,30,.96);color:#fff;border-radius:999px;padding:10px 16px 10px 14px;box-shadow:0 6px 22px rgba(0,0,0,.4);font-family:-apple-system,system-ui,sans-serif;font-size:14px;font-weight:600;max-width:92%}
 .myllm-ai-busy.on{opacity:1;transform:translateX(-50%) translateY(0)}
-.myllm-ai-cog{font-size:18px;line-height:1;animation:myllmAiSpin 2.4s linear infinite;filter:drop-shadow(0 0 5px rgba(124,92,255,.85))}
+.myllm-ai-cog{width:16px;height:16px;border-radius:50%;border:2.4px solid #a78bfa;border-right-color:transparent;animation:myllmAiSpin .9s linear infinite;flex-shrink:0}
 .myllm-ai-busy small{font-weight:400;opacity:.6}
 </style>
 <script>
 (function(){if(window.__myllmAiWrap||typeof window.myllmAsk!=='function')return;window.__myllmAiWrap=true;
 var orig=window.myllmAsk,depth=0,node=null;
 function ensure(){if(node)return;node=document.createElement('div');node.className='myllm-ai-busy';
-node.innerHTML='<span class="myllm-ai-cog">⚙️</span><span>AI is thinking… <small>privately, on your device</small></span>';
+node.innerHTML='<span class="myllm-ai-cog"></span><span>AI is thinking… <small>privately, on your device</small></span>';
 (document.body||document.documentElement).appendChild(node);}
 function show(){ensure();depth++;node.classList.add('on');}
 function hide(){depth=Math.max(0,depth-1);if(depth===0&&node)node.classList.remove('on');}
 window.myllmAsk=function(){show();var p;try{p=orig.apply(this,arguments);}catch(e){hide();throw e;}
 return Promise.resolve(p).then(function(r){hide();return r;},function(e){hide();throw e;});};})();
 </script>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-spk" viewBox="0 0 24 24"><path d="M11 5.2 6.6 8.8H4v6.4h2.6L11 18.8z" fill="currentColor" stroke="none"/><path d="M15.4 9a4.3 4.3 0 0 1 0 6M18.2 6.3a8.2 8.2 0 0 1 0 11.4"/></symbol>
+  <symbol id="i-prev" viewBox="0 0 24 24"><path d="M14.5 6l-6 6 6 6"/></symbol>
+  <symbol id="i-next" viewBox="0 0 24 24"><path d="M9.5 6l6 6-6 6"/></symbol>
+  <symbol id="i-warn" viewBox="0 0 24 24"><path d="M10.3 3.9a2 2 0 0 1 3.4 0l8 13.6a2 2 0 0 1-1.7 3H4a2 2 0 0 1-1.7-3zM12 9a1 1 0 0 0-1 1v4a1 1 0 0 0 2 0v-4a1 1 0 0 0-1-1zm0 7.2a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 0 0 0-2.4z"/></symbol>
+</defs></svg>
 
-<header><img class="fl" src="__EMBLEM__" alt=""><div><h1>__TITLE__</h1><div class="nv">__SUBTITLE__</div></div></header>
+<div class="head"><img class="tile" src="__EMBLEM__" alt=""><div class="ht"><h1>__TITLE__</h1><p>__SUBTITLE__</p></div></div>
 
 <div class="wrap">
   <!-- FLASHCARDS -->
@@ -104,9 +136,10 @@ return Promise.resolve(p).then(function(r){hide();return r;},function(e){hide();
     <div class="card" id="fc" onclick="flip()">
       <div id="fcImgWrap"></div>
       <div class="body"><div class="w hidden" id="fcW"></div><div class="en hidden" id="fcE"></div><div class="tap" id="fcTap">tap to reveal</div></div>
+      <button class="spkbtn hidden" id="fcSpk" type="button" aria-label="Hear it" onclick="event.stopPropagation();sayCard()"><svg class="i"><use href="#i-spk"/></svg></button>
     </div>
-    <div class="nav"><button onclick="fcNav(-1)">‹ Prev</button><span class="ct" id="fcCt"></span><button onclick="fcNav(1)">Next ›</button></div>
-    <div class="nav" style="margin-top:8px"><button onclick="fcShuffle()" style="flex:1;display:flex;align-items:center;justify-content:center;gap:7px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:17px;height:17px"><path d="M3 7h3c5.5 0 6.5 10 12 10h3"/><path d="M3 17h3c2.2 0 3.6-1.6 4.8-3.5M21 7h-3c-2.2 0-3.6 1.6-4.8 3.5"/><path d="M18.5 4.5L21 7l-2.5 2.5M18.5 14.5L21 17l-2.5 2.5"/></svg>Shuffle deck</button></div>
+    <div class="nav"><button onclick="fcNav(-1)"><svg class="i"><use href="#i-prev"/></svg>Prev</button><span class="ct" id="fcCt"></span><button onclick="fcNav(1)">Next<svg class="i"><use href="#i-next"/></svg></button></div>
+    <div class="nav" style="margin-top:8px"><button onclick="fcShuffle()" style="flex:1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:17px;height:17px"><path d="M3 7h3c5.5 0 6.5 10 12 10h3"/><path d="M3 17h3c2.2 0 3.6-1.6 4.8-3.5M21 7h-3c-2.2 0-3.6 1.6-4.8 3.5"/><path d="M18.5 4.5L21 7l-2.5 2.5M18.5 14.5L21 17l-2.5 2.5"/></svg>Shuffle deck</button></div>
   </div>
 
   <!-- VOCABULARY -->
@@ -135,6 +168,8 @@ return Promise.resolve(p).then(function(r){hide();return r;},function(e){hide();
   </div>
 </div>
 
+<div class="snote" id="speakNote" hidden><svg class="i"><use href="#i-warn"/></svg><span id="speakNoteText"></span></div>
+
 <div class="tabbar" id="tabbar">
   <button class="on" data-s="cards" onclick="tab('cards')"><span class="ti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2.5" width="13.5" height="17.5" rx="2.5"/><path d="M3.5 6.5V19a2.5 2.5 0 0 0 2.5 2.5h9.5"/></svg></span>Flashcards</button>
   <button data-s="vocab" onclick="tab('vocab')"><span class="ti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15.5H6.5A2.5 2.5 0 0 0 4 21z"/><path d="M4 21a2.5 2.5 0 0 1 2.5-2.5H20"/></svg></span>Vocabulary</button>
@@ -151,9 +186,60 @@ var GRAMMAR_BASICS=__STARTERG_JSON__;
 var PH_ICON='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5"/><circle cx="9" cy="10" r="1.6"/><path d="M4.5 17l4.5-4.5 3 3 3.5-3.5 4 4"/></svg>';
 function phFallback(img){var d=document.createElement('div');d.className='ph';d.innerHTML=PH_ICON;img.parentNode.replaceChild(d,img);}
 function imgFallback(img){var j=img.getAttribute('data-jpg');if(j){img.removeAttribute('data-jpg');img.src=j;}else phFallback(img);}
-var store=window.myllmStorage||{getItem:function(){return Promise.resolve(null)},setItem:function(){return Promise.resolve()}};
+/* Bridges are looked up when used, never kept: MyLLM can add them after this
+   script has run. */
+var store={getItem:function(k){var s=window.myllmStorage;return s?s.getItem(k):Promise.resolve(null)},
+           setItem:function(k,v){var s=window.myllmStorage;return s?s.setItem(k,v):Promise.resolve()}};
 function el(i){return document.getElementById(i)}
-function haptic(k){if(window.myllmHaptic)myllmHaptic(k||'light')}
+function haptic(k){if(window.myllmHaptic)try{myllmHaptic(k||'light')}catch(e){}}
+function spkIcon(){return '<span class="spk"><svg class="i"><use href="#i-spk"/></svg></span>'}
+
+/* ---------- speech ----------
+   Android's MyLLM has a myllmSpeak bridge; iOS does not, so on iPhone the web
+   view's own speechSynthesis speaks. What makes it dependable there (learned on
+   device with Talk Tutor and Language Lab): pick a voice for the language
+   explicitly, only cancel when something is actually speaking, and say plainly
+   when no voice played instead of staying silent. */
+var TTS_LANG='__TTS__';
+function canSpeak(){return !!(window.speechSynthesis&&window.SpeechSynthesisUtterance)}
+var voiceCache={},speakToken=0,speakBtn=null,noteT=0;
+if(canSpeak())try{speechSynthesis.onvoiceschanged=function(){voiceCache={}}}catch(e){}
+function pickVoice(code){
+  if(voiceCache[code]!==undefined)return voiceCache[code];
+  var all=[];try{all=speechSynthesis.getVoices()||[]}catch(e){}
+  function norm(v){return String(v.lang||'').replace('_','-').toLowerCase()}
+  var want=code.toLowerCase(),base=want.slice(0,2);
+  var inLang=all.filter(function(v){return norm(v).slice(0,2)===base});
+  var better=function(list){return list.filter(function(v){return /enhanced|premium/i.test(v.name)})[0]||list[0]};
+  var exact=inLang.filter(function(v){return norm(v)===want});
+  voiceCache[code]=better(exact)||better(inLang)||null;
+  return voiceCache[code];
+}
+function markSpeaking(btn,on){
+  if(speakBtn&&speakBtn!==btn)speakBtn.classList.remove('on');
+  if(btn)btn.classList.toggle('on',on);
+  speakBtn=on?btn:null;
+}
+function noVoice(){
+  el('speakNoteText').textContent='Couldn’t play '+LANG+' out loud. Check the volume, or add a '+LANG+' voice in iPhone Settings → Accessibility → Spoken Content → Voices.';
+  el('speakNote').hidden=false;clearTimeout(noteT);noteT=setTimeout(function(){el('speakNote').hidden=true},8000);
+}
+function say(text,btn){
+  if(!text)return;
+  if(window.myllmSpeak){try{myllmSpeak(text,{lang:'__CODE__'});return}catch(e){}}
+  if(!canSpeak()){noVoice();return}
+  var ss=window.speechSynthesis,token=++speakToken,started=false;
+  var u=new SpeechSynthesisUtterance(text);u.lang=TTS_LANG;var v=pickVoice(TTS_LANG);if(v)u.voice=v;
+  u.rate=.9;u.volume=1;
+  u.onstart=function(){started=true;if(token===speakToken){markSpeaking(btn,true);el('speakNote').hidden=true}};
+  u.onend=function(){if(token===speakToken)markSpeaking(btn,false)};
+  u.onerror=function(e){if(token!==speakToken)return;markSpeaking(btn,false);var why=e&&e.error;if(!started&&why!=='interrupted'&&why!=='canceled')noVoice()};
+  function go(){try{if(ss.paused)ss.resume();ss.speak(u)}catch(e){noVoice()}}
+  try{if(ss.speaking||ss.pending){ss.cancel();setTimeout(go,80)}else go()}catch(e){noVoice();return}   /* first line stays inside the tap, which iOS requires */
+  setTimeout(function(){if(token===speakToken&&!started&&!ss.speaking){markSpeaking(btn,false);noVoice()}},2500);
+}
+function stopSpeaking(){speakToken++;markSpeaking(null,false);if(canSpeak())try{speechSynthesis.cancel()}catch(e){}}
+document.addEventListener('visibilitychange',function(){if(document.hidden)stopSpeaking()});
 
 /* ---------- tabs ---------- */
 function tab(s){
@@ -182,11 +268,12 @@ function renderCard(){
   iw.innerHTML='<img class="img" src="'+base+'.webp" alt="" data-jpg="'+base+'.jpg" onerror="imgFallback(this)">';
   el('fcW').textContent=c.w;el('fcE').textContent=c.en;
   el('fcW').classList.toggle('hidden',!showBack);el('fcE').classList.toggle('hidden',!showBack);
-  el('fcTap').classList.toggle('hidden',showBack);
+  el('fcTap').classList.toggle('hidden',showBack);el('fcSpk').classList.toggle('hidden',!showBack);
   el('fcCt').textContent=(cardIdx+1)+' / '+d.cards.length+'  ·  '+d.title;
 }
-function flip(){showBack=!showBack;renderCard();haptic('light');if(showBack&&window.myllmSpeak)try{myllmSpeak(DECKS[deckIdx].cards[order[cardIdx]].w,{lang:'__CODE__'})}catch(e){}}
-function fcNav(n){var len=DECKS[deckIdx].cards.length;cardIdx=(cardIdx+n+len)%len;showBack=false;renderCard();haptic('selection');}
+function sayCard(){say(DECKS[deckIdx].cards[order[cardIdx]].w,el('fcSpk'))}
+function flip(){showBack=!showBack;renderCard();haptic('light');if(showBack)sayCard();else stopSpeaking()}
+function fcNav(n){var len=DECKS[deckIdx].cards.length;cardIdx=(cardIdx+n+len)%len;showBack=false;stopSpeaking();renderCard();haptic('selection');}
 
 /* ---------- vocabulary ---------- */
 function renderVocab(){
@@ -199,8 +286,8 @@ function renderVocab(){
     matches.forEach(function(o){
       var r=document.createElement('div');r.className='vrow';
       r.innerHTML='<img class="thumb" loading="lazy" src="'+d.imgBase+o.i+'.jpg" alt="" onerror="this.style.visibility=\'hidden\'">'+
-        '<div><div class="vw">'+o.c.w+'</div><div class="ve">'+o.c.en+'</div></div>';
-      r.onclick=function(){haptic('light');if(window.myllmSpeak)try{myllmSpeak(o.c.w,{lang:'__CODE__'})}catch(e){}};
+        '<div><div class="vw">'+o.c.w+'</div><div class="ve">'+o.c.en+'</div></div>'+spkIcon();
+      r.onclick=function(){haptic('light');say(o.c.w)};
       L.appendChild(r);
     });
   });
@@ -210,29 +297,15 @@ function renderVocab(){
 /* ---------- phrases (AI) ---------- */
 var phrases=[];
 function needAI(setter){if(window.myllmAsk)return false;setter('This needs the latest MyLLM with “Allow apps to use the AI” enabled in Settings.');return true;}
-function genPhrases(){
-  var topic=el('ptopic').value.trim();if(!topic){el('pstatus').textContent='Enter a topic.';return}
-  if(needAI(function(t){el('pstatus').textContent=t})) return;
-  el('pgen').disabled=true;el('pstatus').textContent='Writing '+LANG+' phrases about “'+topic+'”…';
-  myllmAsk('Create 8 useful '+LANG+' phrases about: '+topic+', for an English-speaking beginner. Reply with ONLY a JSON array like [{"t":"phrase in '+LANG+'","p":"simple English pronunciation","n":"English meaning"}] and nothing else.')
-  .then(function(reply){
-    var s=reply.indexOf('['),e=reply.lastIndexOf(']');if(s<0||e<=s)throw new Error('no lesson came back');
-    var got=JSON.parse(reply.slice(s,e+1)).filter(function(x){return x&&x.t&&x.n});
-    if(!got.length)throw new Error('the lesson was empty');
-    phrases=got.concat(phrases);store.setItem('phrases',JSON.stringify(phrases.slice(0,80)));
-    el('ptopic').value='';el('pstatus').textContent='';renderPhrases();
-  }).catch(function(err){el('pstatus').textContent='Could not generate: '+err.message})
-  .then(function(){el('pgen').disabled=false});
-}
-function renderPhrases(){
+__PHRASES_JS__function renderPhrases(){
   var L=el('phraseList');L.innerHTML='';
   phrases.forEach(function(ph){
     var d=document.createElement('div');d.className='panel';
-    d.innerHTML='<div class="pt"></div><div class="pp"></div><div class="pe"></div>';
+    d.innerHTML='<div class="pt"></div><div class="pp"></div><div class="pe"></div>'+spkIcon();
     d.querySelector('.pt').textContent=ph.t;
     d.querySelector('.pp').textContent=ph.p?'['+ph.p+']':'';
     d.querySelector('.pe').textContent=ph.n;
-    d.onclick=function(){haptic('light');if(window.myllmSpeak)try{myllmSpeak(ph.t,{lang:'__CODE__'})}catch(e){}};
+    d.onclick=function(){haptic('light');say(ph.t)};
     L.appendChild(d);
   });
 }
@@ -243,11 +316,11 @@ function renderStarterPhrases(){
     var h=document.createElement('h2');h.textContent=sec.topic;L.appendChild(h);
     sec.items.forEach(function(ph){
       var d=document.createElement('div');d.className='panel';
-      d.innerHTML='<div class="pt"></div><div class="pp"></div><div class="pe"></div>';
+      d.innerHTML='<div class="pt"></div><div class="pp"></div><div class="pe"></div>'+spkIcon();
       d.querySelector('.pt').textContent=ph.t;
       d.querySelector('.pp').textContent=ph.p?'['+ph.p+']':'';
       d.querySelector('.pe').textContent=ph.n;
-      d.onclick=function(){haptic('light');if(window.myllmSpeak)try{myllmSpeak(ph.t,{lang:'__CODE__'})}catch(e){}};
+      d.onclick=function(){haptic('light');say(ph.t)};
       L.appendChild(d);
     });
   });
@@ -277,15 +350,15 @@ function renderGrammarBasics(){
   var L=el('grammarBasics');L.innerHTML='';
   var h=document.createElement('h2');h.textContent='The basics';L.appendChild(h);
   GRAMMAR_BASICS.forEach(function(g){
-    var d=document.createElement('div');d.className='panel';
+    var d=document.createElement('div');d.className='panel basic';
     var t=document.createElement('div');t.className='pt';t.textContent=g.title;d.appendChild(t);
     var r=document.createElement('div');r.className='pe';r.textContent=g.rule;d.appendChild(r);
     g.ex.forEach(function(pair){
       var x=document.createElement('div');x.className='gr-ex';
       var b=document.createElement('b');b.textContent=pair[0];
       var s=document.createElement('span');s.textContent='  —  '+pair[1];
-      x.appendChild(b);x.appendChild(s);
-      x.onclick=function(ev){ev.stopPropagation();haptic('light');if(window.myllmSpeak)try{myllmSpeak(pair[0],{lang:'__CODE__'})}catch(e){}};
+      x.appendChild(b);x.appendChild(s);x.insertAdjacentHTML('beforeend',spkIcon());
+      x.onclick=function(ev){ev.stopPropagation();haptic('light');say(pair[0])};
       d.appendChild(x);
     });
     L.appendChild(d);
@@ -299,6 +372,157 @@ el('gtopic').addEventListener('keydown',function(e){if(e.key==='Enter')genGramma
 store.getItem('phrases').then(function(v){if(v){try{phrases=JSON.parse(v)}catch(e){}renderPhrases();}});
 </script></body></html>
 """
+
+# Phrase generation. French, German and Spanish were each echo-proofed by hand
+# (2026-07-29 Apple Intelligence sweep: labelled lines, not JSON) with slightly
+# different wording, and those prompts are live — so each is kept verbatim here.
+# Any other language pack gets the original JSON-array version.
+DEFAULT_PHRASES_JS = r'''function genPhrases(){
+  var topic=el('ptopic').value.trim();if(!topic){el('pstatus').textContent='Enter a topic.';return}
+  if(needAI(function(t){el('pstatus').textContent=t})) return;
+  el('pgen').disabled=true;el('pstatus').textContent='Writing '+LANG+' phrases about “'+topic+'”…';
+  myllmAsk('Create 8 useful '+LANG+' phrases about: '+topic+', for an English-speaking beginner. Reply with ONLY a JSON array like [{"t":"phrase in '+LANG+'","p":"simple English pronunciation","n":"English meaning"}] and nothing else.')
+  .then(function(reply){
+    var s=reply.indexOf('['),e=reply.lastIndexOf(']');if(s<0||e<=s)throw new Error('no lesson came back');
+    var got=JSON.parse(reply.slice(s,e+1)).filter(function(x){return x&&x.t&&x.n});
+    if(!got.length)throw new Error('the lesson was empty');
+    phrases=got.concat(phrases);store.setItem('phrases',JSON.stringify(phrases.slice(0,80)));
+    el('ptopic').value='';el('pstatus').textContent='';renderPhrases();
+  }).catch(function(err){el('pstatus').textContent='Could not generate: '+err.message})
+  .then(function(){el('pgen').disabled=false});
+}
+'''
+PHRASES_JS = {
+    'fr': r'''/* Labelled lines, not JSON — small models (Apple Intelligence) echo JSON
+   templates back verbatim. Echoed instructions are rejected and retried. */
+var ECHO=new RegExp('the phrase in '+LANG+'|simple English pronunciation|the English meaning|repeat this line|labelled line','i');
+function parsePhrases(reply){
+  reply=String(reply||'');
+  var items=[],got=false;
+  reply.split(/\r?\n/).forEach(function(raw){
+    var ln=raw.replace(/\*\*/g,'').trim();
+    var m=ln.match(/^[-*#>\s]*(PHRASES?)\s*\d*\s*[::]\s*(.*)$/i);
+    if(!m)return;
+    got=true;
+    var parts=m[2].split('|').map(function(x){return x.trim()});
+    if(parts[0])items.push({t:parts[0],p:parts[1]||'',n:parts[2]||''});
+  });
+  if(!got){ // model answered in the old JSON-array shape — accept it
+    var s=reply.indexOf('['),e=reply.lastIndexOf(']');
+    if(s>=0&&e>s)try{
+      var j=JSON.parse(reply.slice(s,e+1));
+      if(Array.isArray(j))j.forEach(function(x){
+        if(x&&x.t)items.push({t:String(x.t),p:x.p?String(x.p):'',n:x.n?String(x.n):''});
+      });
+    }catch(e2){}
+  }
+  items=items.filter(function(x){return x.t&&x.n&&!ECHO.test(x.t)&&!ECHO.test(x.p)&&!ECHO.test(x.n)});
+  if(!items.length)throw new Error('no lesson came back');
+  return items;
+}
+function genPhrases(){
+  var topic=el('ptopic').value.trim();if(!topic){el('pstatus').textContent='Enter a topic.';return}
+  if(needAI(function(t){el('pstatus').textContent=t})) return;
+  el('pgen').disabled=true;el('pstatus').textContent='Writing '+LANG+' phrases about “'+topic+'”…';
+  var p='Create 8 useful '+LANG+' phrases about: '+topic+', for an English-speaking beginner. Reply with EXACTLY these labelled lines and nothing else:\n'+
+    'PHRASE: the phrase in '+LANG+' | simple English pronunciation | the English meaning — repeat this line for each of the 8 phrases';
+  myllmAsk(p).then(function(r){return parsePhrases(r||'')})
+  .catch(function(){return myllmAsk(p+'\nIMPORTANT: fill each labelled line with real content — never repeat the instruction text.')
+    .then(function(r){return parsePhrases(r||'')})})
+  .then(function(got){
+    phrases=got.concat(phrases);store.setItem('phrases',JSON.stringify(phrases.slice(0,80)));
+    el('ptopic').value='';el('pstatus').textContent='';renderPhrases();
+  }).catch(function(err){el('pstatus').textContent='Could not generate: '+err.message})
+  .then(function(){el('pgen').disabled=false});
+}
+''',
+    'de': r'''/* Labelled lines, not JSON — small models (Apple Intelligence) echo JSON
+   templates back verbatim. Echoed instructions are rejected and retried. */
+var PH_ECHO=new RegExp('the phrase in '+LANG+'|simple English pronunciation|the English meaning|repeat this line|labelled line','i');
+function parsePhrases(reply){
+  var out=[],got=false;
+  String(reply||'').split(/\r?\n/).forEach(function(raw){
+    var ln=raw.replace(/\*\*/g,'').trim();
+    var m=ln.match(/^[-*#>\s]*(PHRASES?)\s*\d*\s*[::]\s*(.*)$/i);
+    if(!m)return;
+    got=true;var v=m[2].trim();if(!v)return;
+    var parts=v.split('|').map(function(x){return x.trim()});
+    if(!parts[0])return;
+    out.push({t:parts[0],p:parts[1]||'',n:parts[2]||''});
+  });
+  if(!got){ // model answered in the old JSON shape — accept it
+    var s=String(reply||'').indexOf('['),e=String(reply||'').lastIndexOf(']');
+    if(s>=0&&e>s)try{
+      var j=JSON.parse(String(reply).slice(s,e+1));
+      if(Array.isArray(j))j.forEach(function(x){
+        if(x&&x.t)out.push({t:String(x.t),p:x.p?String(x.p):'',n:x.n?String(x.n):''});
+      });
+    }catch(e2){}
+  }
+  out=out.filter(function(x){return x.t&&x.n&&!PH_ECHO.test(x.t)&&!PH_ECHO.test(x.p)&&!PH_ECHO.test(x.n)});
+  if(!out.length)throw new Error('no lesson came back');
+  return out;
+}
+function genPhrases(){
+  var topic=el('ptopic').value.trim();if(!topic){el('pstatus').textContent='Enter a topic.';return}
+  if(needAI(function(t){el('pstatus').textContent=t})) return;
+  el('pgen').disabled=true;el('pstatus').textContent='Writing '+LANG+' phrases about “'+topic+'”…';
+  var p='Create 8 useful '+LANG+' phrases about: '+topic+', for an English-speaking beginner. Reply with EXACTLY these labelled lines and nothing else:\n'+
+    'PHRASE: the phrase in '+LANG+' | simple English pronunciation | the English meaning — repeat this line for each phrase';
+  myllmAsk(p).then(function(r){return parsePhrases(r||'')})
+  .catch(function(){return myllmAsk(p+'\nIMPORTANT: fill each labelled line with real content — never repeat the instruction text.')
+    .then(function(r){return parsePhrases(r||'')})})
+  .then(function(got){
+    phrases=got.concat(phrases);store.setItem('phrases',JSON.stringify(phrases.slice(0,80)));
+    el('ptopic').value='';el('pstatus').textContent='';renderPhrases();
+  }).catch(function(err){el('pstatus').textContent='Could not generate: '+err.message})
+  .then(function(){el('pgen').disabled=false});
+}
+''',
+    'es': r'''/* Labelled lines, not JSON — small models (Apple Intelligence) echo JSON
+   templates back verbatim. Echoed instructions are rejected and retried. */
+var ECHO=/the phrase in|simple English pronunciation|its English meaning|repeat this line|labelled line/i;
+function parsePhrases(reply){
+  var items=[],got=false;
+  String(reply||'').split(/\r?\n/).forEach(function(raw){
+    var ln=raw.replace(/\*\*/g,'').trim();
+    var m=ln.match(/^[-*#>\s]*(PHRASES?)\s*\d*\s*[::]\s*(.*)$/i);
+    if(!m)return;
+    got=true;
+    var parts=m[2].split('|').map(function(s){return s.trim()});
+    var it={t:parts[0]||'',p:parts[1]||'',n:parts[2]||''};
+    if(it.t&&it.n&&!ECHO.test(parts.join(' ')))items.push(it);
+  });
+  if(!got){ // model answered in the old JSON shape — accept it
+    var s=String(reply||'').indexOf('['),e=String(reply||'').lastIndexOf(']');
+    if(s>=0&&e>s)try{
+      items=JSON.parse(String(reply).slice(s,e+1)).filter(function(x){
+        return x&&x.t&&x.n&&!ECHO.test(String(x.t)+' '+String(x.p||'')+' '+String(x.n))});
+    }catch(e2){}
+  }
+  if(!items.length)throw new Error('the lesson was empty');
+  return items;
+}
+function genPhrases(){
+  var topic=el('ptopic').value.trim();if(!topic){el('pstatus').textContent='Enter a topic.';return}
+  if(needAI(function(t){el('pstatus').textContent=t})) return;
+  el('pgen').disabled=true;el('pstatus').textContent='Writing '+LANG+' phrases about “'+topic+'”…';
+  var p='Create 8 useful '+LANG+' phrases about: '+topic+', for an English-speaking beginner. Reply with EXACTLY these labelled lines and nothing else:\n'+
+    'PHRASE: the phrase in '+LANG+' | its simple English pronunciation | its English meaning — repeat this line for each of the 8 phrases';
+  myllmAsk(p).then(function(r){return parsePhrases(r||'')})
+  .catch(function(){return myllmAsk(p+'\nIMPORTANT: fill each labelled line with real content — never repeat the instruction text.')
+    .then(function(r){return parsePhrases(r||'')})})
+  .then(function(got){
+    phrases=got.concat(phrases);store.setItem('phrases',JSON.stringify(phrases.slice(0,80)));
+    el('ptopic').value='';el('pstatus').textContent='';renderPhrases();
+  }).catch(function(err){el('pstatus').textContent='Could not generate: '+err.message})
+  .then(function(){el('pgen').disabled=false});
+}
+''',
+}
+
+# BCP-47 voice per pack (the page's lang attribute stays the short code)
+TTS = {"fr": "fr-FR", "de": "de-DE", "es": "es-ES", "sk": "sk-SK"}
 
 # nice, common grammar points (kept language-neutral in wording so the AI adapts)
 GRAMMAR_PRESETS = ["Articles & gender","Present tense","Plurals","Adjective agreement",
@@ -337,12 +561,14 @@ def build(langfile):
             .replace("__NAME__", lp["name"])
             .replace("__NATIVE__", lp["native"])
             .replace("__EMBLEM__", emblem)
+            .replace("__TTS__", TTS.get(code, code))
             .replace("__ACCENT2__", lp.get("accent2", lp["accent"]))
             .replace("__ACCENT__", lp["accent"])
             .replace("__DECKS_JSON__", json.dumps(decks, ensure_ascii=False))
             .replace("__GRAMMAR_JSON__", json.dumps(grammar, ensure_ascii=False))
             .replace("__STARTERP_JSON__", json.dumps(lp["starterPhrases"], ensure_ascii=False))
-            .replace("__STARTERG_JSON__", json.dumps(lp["starterGrammar"], ensure_ascii=False)))
+            .replace("__STARTERG_JSON__", json.dumps(lp["starterGrammar"], ensure_ascii=False))
+            .replace("__PHRASES_JS__", PHRASES_JS.get(code, DEFAULT_PHRASES_JS)))
 
     open(os.path.join(HERE, "apps-src", slug + ".html"), "w").write(html)
     icon_symbol = lp.get("iconSymbol", "character.bubble.fill")

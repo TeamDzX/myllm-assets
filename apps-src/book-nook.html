@@ -9,143 +9,200 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Book Nook</title>
 <style>
-  :root { color-scheme: light dark; }
-  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-  body{
-    font-family:var(--myllm-font,-apple-system,system-ui,sans-serif);
-    background:var(--myllm-bg,#f2f2f7);
-    color:var(--myllm-text,#111);
-    max-width:640px; margin:0 auto; min-height:100dvh;
-    padding:14px 14px calc(30px + env(safe-area-inset-bottom));
-  }
-  h1{ font-size:22px; font-weight:800; margin:4px 2px 2px; }
-  .statline{ font-size:13px; color:var(--myllm-muted,#8a8a8e); margin:0 2px 12px; }
+:root{ color-scheme:light dark;
+  --bg:var(--myllm-bg,#f2f2f7); --surface:var(--myllm-surface,#fff); --ink:var(--myllm-text,#111);
+  --muted:var(--myllm-muted,#8a8a8e); --line:var(--myllm-border,#e3e3e8); --acc:var(--myllm-accent,#0a84ff);
+  --fill:rgba(120,120,128,.12); --h:24; --brand:hsl(var(--h) 46% 43%); }
+@media (prefers-color-scheme:dark){ :root{ --bg:var(--myllm-bg,#000); --surface:var(--myllm-surface,#1c1c1e);
+  --ink:var(--myllm-text,#f2f2f7); --muted:var(--myllm-muted,#8e8e93); --line:var(--myllm-border,#2c2c2e); --fill:rgba(120,120,128,.24);
+  --brand:hsl(var(--h) 55% 55%); } }
+  *{ margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body{ font-family:var(--myllm-font,-apple-system,system-ui,sans-serif); background:var(--bg); color:var(--ink); font-size:15.5px;
+    max-width:600px; margin:0 auto; min-height:100dvh;
+    padding:calc(16px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) calc(30px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left)); }
+  @media (min-width:768px){ body{ max-width:760px; } }
+  svg.i{ width:1.25em; height:1.25em; fill:currentColor; flex-shrink:0; }
+  button{ font:inherit; color:inherit; cursor:pointer; } button:active{ transform:scale(.96); }
+  [hidden]{ display:none !important; }
 
-  .tabs{ display:flex; background:var(--myllm-surface,#fff); border:1px solid var(--myllm-border,#e3e3e8); border-radius:13px; padding:3px; margin-bottom:12px; }
-  .tabs button{
-    flex:1; border:none; background:none; color:var(--myllm-muted,#8a8a8e);
-    border-radius:10px; padding:9px 4px; font-size:13.5px; font-weight:700;
-  }
-  .tabs button.on{ background:#a2653c; color:#fff; }
+  .head{ display:flex; align-items:center; gap:12px; margin:2px 2px 14px; }
+  .tile{ display:flex; align-items:center; justify-content:center; color:#fff; flex-shrink:0;
+    background:linear-gradient(145deg, hsl(var(--h) 62% 50%), hsl(calc(var(--h) + 40) 58% 28%)); }
+  .head .tile{ width:44px; height:44px; border-radius:13px; font-size:19px; }
+  .head .ht{ flex:1; min-width:0; }
+  h1{ font-size:22px; font-weight:800; letter-spacing:-.01em; }
+  .head p{ font-size:13px; color:var(--muted); margin-top:1px; }
+  h2{ font-size:12px; font-weight:800; letter-spacing:.07em; text-transform:uppercase; color:var(--muted); margin:20px 2px 10px; }
 
-  .card{
-    background:var(--myllm-surface,#fff); border:1px solid var(--myllm-border,#e3e3e8);
-    border-radius:16px; padding:13px 14px; margin-bottom:10px;
-  }
-  .row{ display:flex; gap:8px; }
-  input{
-    width:100%; font-size:15px; padding:11px 12px; border-radius:12px;
-    border:1px solid var(--myllm-border,#e3e3e8); background:var(--myllm-bg,#f2f2f7); color:var(--myllm-text,#111);
-  }
-  .go{
-    border:none; border-radius:12px; padding:0 16px; font-size:15px; font-weight:700;
-    background:#a2653c; color:#fff; flex:none;
-  }
-  .go:disabled{ opacity:.5; }
-  .hint{ font-size:12.5px; color:var(--myllm-muted,#8a8a8e); margin-top:8px; line-height:1.45; }
+  .hero{ border-radius:20px; padding:16px 18px; color:#fff; margin-bottom:12px; display:flex; align-items:center; gap:16px;
+    background:linear-gradient(145deg, hsl(var(--h) 55% 44%), hsl(calc(var(--h) + 30) 50% 22%)); box-shadow:0 10px 28px hsl(var(--h) 50% 25% / .25); }
+  .hero .n{ font-size:44px; font-weight:800; line-height:1; letter-spacing:-.03em; font-variant-numeric:tabular-nums; }
+  .hero .k{ font-size:11px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; opacity:.8; }
+  .hero .pills{ display:flex; flex-wrap:wrap; gap:6px; margin-top:7px; }
+  .hero .pill{ display:inline-flex; align-items:center; gap:5px; font-size:12.5px; font-weight:700; border-radius:99px; padding:4px 10px;
+    background:rgba(255,255,255,.18); border:1px solid rgba(255,255,255,.2); }
+  .hero .pill svg{ width:13px; height:13px; }
 
-  .result{ display:flex; gap:10px; align-items:center; padding:9px 0; border-bottom:1px solid var(--myllm-border,#e3e3e8); }
-  .result:last-child{ border-bottom:none; }
-  .result img, .book .cov{ width:44px; height:64px; object-fit:cover; border-radius:6px; background:#c9b8a4; flex-shrink:0; }
+  .seg{ display:flex; background:var(--fill); border-radius:13px; padding:3px; margin-bottom:12px; }
+  .seg button{ flex:1; min-height:38px; border:none; background:none; color:var(--muted); border-radius:10px; padding:0 4px; font-size:13.5px; font-weight:700; }
+  .seg button.on{ background:var(--surface); color:var(--ink); box-shadow:0 1px 3px rgba(0,0,0,.12); }
+  .seg button .c{ font-weight:600; opacity:.6; margin-left:3px; font-variant-numeric:tabular-nums; }
+
+  .card{ background:var(--surface); border:1px solid var(--line); border-radius:18px; padding:14px; margin-bottom:12px; }
+  .search{ display:flex; gap:8px; }
+  .field{ flex:1; min-width:0; display:flex; align-items:center; gap:8px; border:1px solid var(--line); background:var(--bg); border-radius:12px; padding:0 12px; }
+  .field svg{ color:var(--muted); }
+  .field input{ flex:1; min-width:0; border:0; background:none; outline:none; font:inherit; font-size:16px; padding:12px 0; color:var(--ink); }
+  .go{ flex:none; min-width:72px; min-height:46px; border:none; border-radius:12px; padding:0 16px; font-size:15px; font-weight:700; background:var(--brand); color:#fff;
+    display:flex; align-items:center; justify-content:center; gap:7px; }
+  .go:disabled{ opacity:.6; }
+  .hint{ font-size:12.5px; color:var(--muted); margin-top:9px; line-height:1.45; }
+  .hint:empty{ display:none; }
+  .spin{ width:16px; height:16px; border-radius:50%; border:2.4px solid currentColor; border-right-color:transparent; animation:spin .8s linear infinite; flex-shrink:0; }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+
+  .cov{ width:44px; height:64px; object-fit:cover; border-radius:7px; flex-shrink:0; display:flex; align-items:center; justify-content:center;
+    color:#fff; font-weight:800; font-size:15px; text-align:center; box-shadow:0 2px 6px rgba(0,0,0,.18); overflow:hidden;
+    background:linear-gradient(145deg, hsl(var(--ch,24) 45% 48%), hsl(calc(var(--ch,24) + 30) 45% 28%)); }
+  .cov.blank{ background:var(--fill); box-shadow:none; color:var(--muted); }
+  .result{ display:flex; gap:11px; align-items:center; padding:10px 0; border-bottom:1px solid var(--line); }
+  .result:first-child{ margin-top:12px; } .result:last-child{ border-bottom:none; padding-bottom:0; }
   .result .t{ flex:1; min-width:0; }
-  .result b{ display:block; font-size:14.5px; }
-  .result small{ color:var(--myllm-muted,#8a8a8e); font-size:12.5px; }
-  .result button{ border:none; border-radius:10px; padding:8px 12px; font-weight:700; font-size:12.5px; background:var(--myllm-bg,#f2f2f7); color:var(--myllm-text,#111); flex:none; }
+  .result b{ display:block; font-size:14.5px; line-height:1.3; }
+  .result small{ color:var(--muted); font-size:12.5px; }
+  .result .btns{ display:flex; gap:6px; flex:none; }
+  .result button{ min-height:36px; border:1px solid var(--line); border-radius:10px; padding:0 11px; font-weight:700; font-size:12.5px; background:var(--bg); }
+  .result button.pri{ background:var(--brand); border-color:transparent; color:#fff; }
 
-  .book{
-    display:flex; gap:12px;
-    background:var(--myllm-surface,#fff); border:1px solid var(--myllm-border,#e3e3e8);
-    border-radius:16px; padding:12px 13px; margin-bottom:9px; align-items:center;
-  }
-  .book .cov{ display:flex; align-items:center; justify-content:center; color:#fff; font-weight:800; font-size:15px; text-align:center; padding:2px; }
+  .shelf{ display:grid; gap:9px; }
+  @media (min-width:700px){ .shelf{ grid-template-columns:minmax(0,1fr) minmax(0,1fr); } }
+  .book{ display:flex; gap:12px; align-items:center; background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:12px; }
   .book .t{ flex:1; min-width:0; }
   .book b{ display:block; font-size:15px; line-height:1.3; }
-  .book small{ color:var(--myllm-muted,#8a8a8e); font-size:12.5px; display:block; margin-top:1px; }
-  .book .stars{ font-size:13px; margin-top:3px; letter-spacing:1px; }
-  .book .note{ font-size:12.5px; color:var(--myllm-muted,#8a8a8e); font-style:italic; margin-top:2px; }
+  .book small{ color:var(--muted); font-size:12.5px; display:block; margin-top:1px; }
+  .stars{ display:flex; gap:2px; margin-top:4px; color:#ff9f0a; }
+  .stars svg{ width:14px; height:14px; }
+  .stars .off{ color:var(--line); }
+  .book .note{ font-size:12.5px; color:var(--muted); font-style:italic; margin-top:3px; }
   .book .acts{ display:flex; flex-direction:column; gap:6px; flex:none; }
-  .book .acts button{
-    border:none; border-radius:9px; padding:7px 11px; font-size:12px; font-weight:700;
-    background:var(--myllm-bg,#f2f2f7); color:var(--myllm-text,#111);
-  }
-  .empty{ text-align:center; color:var(--myllm-muted,#8a8a8e); font-size:13.5px; padding:26px 14px; line-height:1.6; }
+  .book .acts button{ min-height:36px; border:1px solid var(--line); border-radius:10px; padding:0 11px; font-size:12.5px; font-weight:700; background:var(--bg);
+    display:flex; align-items:center; justify-content:center; gap:5px; }
+  .book .acts button.pri{ background:var(--brand); border-color:transparent; color:#fff; }
+  .book .acts button.x{ width:44px; height:44px; padding:0; border:none; background:none; color:var(--muted); font-size:14px; }
+
+  .empty{ text-align:center; padding:24px 18px 20px; }
+  .empty .tile{ width:48px; height:48px; border-radius:14px; font-size:21px; margin:0 auto 10px; opacity:.9; }
+  .empty p{ font-size:13.5px; color:var(--muted); line-height:1.5; max-width:290px; margin:0 auto; }
+
+  .recbtn{ width:100%; min-height:50px; border:1px solid hsl(var(--h) 50% 50% / .45); background:hsl(var(--h) 60% 50% / .12); color:var(--brand);
+    border-radius:14px; padding:0 14px; font-size:15px; font-weight:700; margin-bottom:10px; display:flex; align-items:center; justify-content:center; gap:8px; }
+  .recbtn:disabled{ opacity:.7; }
+  .rec{ padding:10px 0; border-bottom:1px solid var(--line); }
+  .rec:first-child{ padding-top:0; } .rec:last-child{ border-bottom:none; padding-bottom:0; }
+  .rec b{ font-size:14.5px; }
+  .rec .by{ color:var(--muted); font-size:12.5px; }
+  .rec small{ display:block; color:var(--muted); font-size:12.5px; line-height:1.45; margin-top:2px; }
+  .rec .add{ min-height:34px; border:1px solid var(--line); border-radius:10px; padding:0 11px; font-size:12.5px; font-weight:700; background:var(--bg); margin-top:7px;
+    display:inline-flex; align-items:center; gap:5px; }
+  .skel{ height:52px; border-radius:12px; background:var(--fill); margin-bottom:8px; animation:shimmer 1.4s ease-in-out infinite; }
+  .skel:last-child{ margin-bottom:0; }
+  @keyframes shimmer{ 50%{ opacity:.45; } }
+  .warn{ display:flex; gap:10px; align-items:flex-start; font-size:13.5px; line-height:1.45; }
+  .warn svg{ color:#ff9f0a; margin-top:1px; }
 
   /* finish sheet */
   .veil{ position:fixed; inset:0; background:rgba(0,0,0,.4); z-index:90; display:none; }
   .veil.on{ display:block; }
-  .sheet{
-    position:fixed; left:0; right:0; bottom:0; z-index:95;
-    background:var(--myllm-surface,#fff); border-radius:20px 20px 0 0;
-    padding:18px 18px calc(24px + env(safe-area-inset-bottom));
-    transform:translateY(105%); transition:transform .25s ease;
-    max-width:640px; margin:0 auto;
-  }
+  .sheet{ position:fixed; left:0; right:0; bottom:0; z-index:95; background:var(--surface); border-radius:22px 22px 0 0;
+    padding:10px calc(18px + env(safe-area-inset-right)) calc(24px + env(safe-area-inset-bottom)) calc(18px + env(safe-area-inset-left));
+    transform:translateY(105%); transition:transform .25s cubic-bezier(.2,.8,.2,1); max-width:640px; margin:0 auto; }
   .sheet.on{ transform:none; }
-  .sheet h3{ font-size:17px; font-weight:800; margin-bottom:4px; }
-  .sheet .bstars{ display:flex; gap:6px; justify-content:center; margin:14px 0; }
-  .sheet .bstars button{ border:none; background:none; font-size:34px; }
-  .sheet .done{ width:100%; border:none; border-radius:13px; padding:13px; font-size:15.5px; font-weight:750; background:#a2653c; color:#fff; margin-top:10px; }
+  .sheet .grab{ width:38px; height:5px; border-radius:99px; background:var(--line); margin:0 auto 14px; }
+  .sheet h3{ font-size:17px; font-weight:800; line-height:1.3; }
+  .sheet .bstars{ display:flex; gap:4px; justify-content:center; margin:14px 0; }
+  .sheet .bstars button{ width:48px; height:48px; border:none; background:none; color:var(--line); display:flex; align-items:center; justify-content:center; }
+  .sheet .bstars button.on{ color:#ff9f0a; }
+  .sheet .bstars svg{ width:34px; height:34px; }
+  .sheet input{ width:100%; font:inherit; font-size:16px; padding:12px; border-radius:12px; border:1px solid var(--line); background:var(--bg); color:var(--ink); outline:none; }
+  .sheet .done{ width:100%; min-height:50px; border:none; border-radius:14px; font-size:15.5px; font-weight:750; background:var(--brand); color:#fff; margin-top:12px; }
 
-  .recbtn{
-    width:100%; border:1px solid rgba(162,101,60,.45); background:rgba(162,101,60,.12);
-    color:#a2653c; border-radius:14px; padding:13px; font-size:15px; font-weight:700; margin-bottom:10px;
-  }
-  .rec{ padding:9px 0; border-bottom:1px solid var(--myllm-border,#e3e3e8); }
-  .rec:last-child{ border-bottom:none; }
-  .rec b{ font-size:14.5px; }
-  .rec small{ display:block; color:var(--myllm-muted,#8a8a8e); font-size:12.5px; line-height:1.45; margin-top:2px; }
-  .rec .add{ border:none; border-radius:9px; padding:6px 10px; font-size:12px; font-weight:700; background:var(--myllm-bg,#f2f2f7); color:var(--myllm-text,#111); margin-top:6px; }
+  @media (max-width:360px){ .result .btns{ flex-direction:column; } }
+  @media (prefers-reduced-motion:reduce){ .spin{ animation-duration:2.4s; } .skel{ animation:none; } .sheet{ transition:none; } button:active{ transform:none; } }
+
+  @keyframes myllmAiSpin{to{transform:rotate(360deg)}}
+  .myllm-ai-busy{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(18px);z-index:99999;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;display:flex;align-items:center;gap:10px;background:rgba(28,28,30,.96);color:#fff;border-radius:999px;padding:10px 16px 10px 14px;box-shadow:0 6px 22px rgba(0,0,0,.4);font-size:14px;font-weight:600;max-width:92%}
+  .myllm-ai-busy.on{opacity:1;transform:translateX(-50%) translateY(0)}
+  .myllm-ai-cog{width:16px;height:16px;border-radius:50%;border:2.4px solid #a78bfa;border-right-color:transparent;animation:myllmAiSpin .9s linear infinite;flex-shrink:0}
+  .myllm-ai-busy small{font-weight:400;opacity:.6}
 </style>
 <style>:root{--build-id:"3d02a4282c";}</style>
 </head>
 <body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-books" viewBox="0 0 24 24"><path d="M4 3.5h3a1 1 0 0 1 1 1v15a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-15a1 1 0 0 1 1-1zm6 0h3a1 1 0 0 1 1 1v15a1 1 0 0 1-1 1h-3a1 1 0 0 1-1-1v-15a1 1 0 0 1 1-1zm6.3 1.6l2.9-.8a1 1 0 0 1 1.2.7l3.8 14.1a1 1 0 0 1-.7 1.2l-2.9.8a1 1 0 0 1-1.2-.7L15.6 6.3a1 1 0 0 1 .7-1.2z" fill="currentColor"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><path d="M12 2.8l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 16.8l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z" fill="currentColor"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><path d="M10.5 3a7.5 7.5 0 0 1 5.9 12.1l4.3 4.3a1 1 0 0 1-1.4 1.4l-4.3-4.3A7.5 7.5 0 1 1 10.5 3zm0 2a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11z" fill="currentColor"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.6l4.6 4.6L19.2 7.4" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5.5v13a1 1 0 0 0 1.52.85l10.4-6.5a1 1 0 0 0 0-1.7L9.52 4.65A1 1 0 0 0 8 5.5z" fill="currentColor"/></symbol>
+  <symbol id="i-pause" viewBox="0 0 24 24"><rect x="6" y="5" width="4.2" height="14" rx="1.4" fill="currentColor"/><rect x="13.8" y="5" width="4.2" height="14" rx="1.4" fill="currentColor"/></symbol>
+  <symbol id="i-spark" viewBox="0 0 24 24"><path d="M10 2.5l1.9 5.6 5.6 1.9-5.6 1.9L10 17.5l-1.9-5.6L2.5 10l5.6-1.9zM18.5 14l.95 2.55L22 17.5l-2.55.95L18.5 21l-.95-2.55L15 17.5l2.55-.95z" fill="currentColor"/></symbol>
+  <symbol id="i-warn" viewBox="0 0 24 24"><path d="M10.3 3.9a2 2 0 0 1 3.4 0l8 13.6a2 2 0 0 1-1.7 3H4a2 2 0 0 1-1.7-3zM12 9a1 1 0 0 0-1 1v4a1 1 0 0 0 2 0v-4a1 1 0 0 0-1-1zm0 7.2a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 0 0 0-2.4z" fill="currentColor"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><path d="M12 2.5a9.5 9.5 0 1 1 0 19 9.5 9.5 0 0 1 0-19zm0 2a7.5 7.5 0 1 0 0 15 7.5 7.5 0 0 0 0-15zM12 7a1 1 0 0 1 1 1v3.6l2.4 1.4a1 1 0 1 1-1 1.7l-2.9-1.7A1 1 0 0 1 11 12V8a1 1 0 0 1 1-1z" fill="currentColor"/></symbol>
+</defs></svg>
 
-<h1>📚 Book Nook</h1>
-<p class="statline" id="stats"></p>
+<div class="head">
+  <div class="tile"><svg class="i"><use href="#i-books"/></svg></div>
+  <div class="ht"><h1>Book Nook</h1><p>Your reading life, on one shelf</p></div>
+</div>
 
-<div class="tabs">
-  <button id="tabR" class="on" onclick="showTab('reading')">Reading</button>
-  <button id="tabW" onclick="showTab('want')">Want to read</button>
-  <button id="tabF" onclick="showTab('finished')">Finished</button>
+<div class="hero">
+  <div class="n" id="hFin">0</div>
+  <div style="min-width:0">
+    <div class="k" id="hLbl">Finished this year</div>
+    <div class="pills"><span class="pill" id="hAvg" hidden></span><span class="pill" id="hWait"></span></div>
+  </div>
+</div>
+<p id="stats" hidden></p>
+
+<div class="seg" role="tablist">
+  <button id="tabR" class="on" type="button" onclick="showTab('reading')">Reading<span class="c" id="cR"></span></button>
+  <button id="tabW" type="button" onclick="showTab('want')">Want to read<span class="c" id="cW"></span></button>
+  <button id="tabF" type="button" onclick="showTab('finished')">Finished<span class="c" id="cF"></span></button>
 </div>
 
 <div class="card" id="addcard">
-  <div class="row">
-    <input id="addq" placeholder="Add a book — title or author…" onkeydown="if(event.key==='Enter')searchBooks()">
-    <button class="go" id="addgo" onclick="searchBooks()">Find</button>
+  <div class="search">
+    <label class="field"><svg class="i"><use href="#i-search"/></svg><input id="addq" placeholder="Add a book — title or author…" autocomplete="off" enterkeyhint="search" onkeydown="if(event.key==='Enter')searchBooks()"></label>
+    <button class="go" id="addgo" type="button" onclick="searchBooks()">Find</button>
   </div>
   <div id="results"></div>
   <p class="hint" id="addhint"></p>
 </div>
 
 <div id="recwrap" style="display:none">
-  <button class="recbtn" onclick="recommend()">✨ What should I read next?</button>
+  <button class="recbtn" id="recbtn" type="button" onclick="recommend()"></button>
   <div class="card" id="reccard" style="display:none"><div id="recs"></div></div>
 </div>
 
 <div id="shelf"></div>
 
 <div class="veil" id="veil" onclick="closeSheet()"></div>
-<div class="sheet" id="sheet">
+<div class="sheet" id="sheet" role="dialog" aria-modal="true">
+  <div class="grab"></div>
   <h3 id="fintitle">Finished!</h3>
   <div class="bstars" id="bstars"></div>
   <input id="finnote" placeholder="One line to remember it by (optional)">
-  <button class="done" onclick="confirmFinish()">Add to Finished</button>
+  <button class="done" type="button" onclick="confirmFinish()">Add to Finished</button>
 </div>
 
 <!-- AI thinking pill (house convention) -->
-<style>
-@keyframes myllmAiSpin{to{transform:rotate(360deg)}}
-.myllm-ai-busy{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(18px);z-index:99999;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;display:flex;align-items:center;gap:10px;background:rgba(28,28,30,.96);color:#fff;border-radius:999px;padding:10px 16px 10px 14px;box-shadow:0 6px 22px rgba(0,0,0,.4);font-size:14px;font-weight:600;max-width:92%}
-.myllm-ai-busy.on{opacity:1;transform:translateX(-50%) translateY(0)}
-.myllm-ai-cog{font-size:18px;animation:myllmAiSpin 2.4s linear infinite;filter:drop-shadow(0 0 5px rgba(124,92,255,.85))}
-.myllm-ai-busy small{font-weight:400;opacity:.6}
-</style>
 <script>
 (function(){if(window.__myllmAiWrap||typeof window.myllmAsk!=='function')return;window.__myllmAiWrap=true;
 var orig=window.myllmAsk,depth=0,node=null;
 function ensure(){if(node)return;node=document.createElement('div');node.className='myllm-ai-busy';
-node.innerHTML='<span class="myllm-ai-cog">⚙️</span><span>AI is thinking… <small>privately, on your device</small></span>';
+node.innerHTML='<span class="myllm-ai-cog"></span><span>AI is thinking… <small>privately, on your device</small></span>';
 (document.body||document.documentElement).appendChild(node);}
 function show(){ensure();depth++;node.classList.add('on');}
 function hide(){depth=Math.max(0,depth-1);if(depth===0&&node)node.classList.remove('on');}
@@ -154,18 +211,26 @@ return Promise.resolve(p).then(function(r){hide();return r;},function(e){hide();
 </script>
 
 <script>
-var store = window.myllmStorage || {getItem:function(){return Promise.resolve(null)}, setItem:function(){return Promise.resolve()}};
+/* Bridges are looked up when used, never kept: MyLLM can add them after this
+   script has run. */
+var store = {
+  getItem:function(k){ return window.myllmStorage ? window.myllmStorage.getItem(k) : Promise.resolve(null); },
+  setItem:function(k,v){ return window.myllmStorage ? window.myllmStorage.setItem(k,v) : Promise.resolve(); }
+};
 function haptic(k){ if(window.myllmHaptic){ try{ myllmHaptic(k||'light'); }catch(_){} } }
-var NET = window.myllmFetch || null;
-var ASK = window.myllmAsk || null;
+function NET(){ return window.myllmFetch ? window.myllmFetch.apply(window, arguments) : Promise.reject(new Error("no bridge")); }
+function hasNet(){ return !!window.myllmFetch; }
+function ASK(){ return window.myllmAsk.apply(window, arguments); }
+function hasAsk(){ return typeof window.myllmAsk === "function"; }
 function el(id){ return document.getElementById(id); }
 function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+function icon(n){ return '<svg class="i"><use href="#i-' + n + '"/></svg>'; }
 
 /* book = {id, title, author, cover(url|null), shelf, rating, note, finishedAt} */
 var books = [];
 var tab = "reading";
-var finishing = null, finRating = 0;
-var SPINE_COLORS = ["#a2653c","#5b7d5a","#4a6d8c","#8c5a74","#7a6a4f","#586b78"];
+var finishing = null, finRating = 0, recBusy = false;
+var SPINE_HUES = [24, 110, 208, 326, 40, 200];
 
 function uid(){ return "b" + Date.now().toString(36) + Math.floor(Math.random()*1e5).toString(36); }
 function save(){ store.setItem("books", JSON.stringify(books)); }
@@ -173,13 +238,21 @@ function save(){ store.setItem("books", JSON.stringify(books)); }
 function initials(t){
   return t.split(/\s+/).slice(0,2).map(function(w){ return (w[0]||"").toUpperCase(); }).join("");
 }
-function coverHTML(b){
-  if (b.cover) return '<img class="cov" src="' + esc(b.cover) + '" alt="" loading="lazy" onerror="this.outerHTML=\'<div class=&quot;cov&quot; style=&quot;background:' + spine(b) + '&quot;>' + esc(initials(b.title)) + '</div>\'">';
-  return '<div class="cov" style="background:' + spine(b) + '">' + esc(initials(b.title)) + '</div>';
+function spineHue(t){
+  var h = 0; for (var i = 0; i < t.length; i++) h = (h * 31 + t.charCodeAt(i)) >>> 0;
+  return SPINE_HUES[h % SPINE_HUES.length];
 }
-function spine(b){
-  var h = 0; for (var i = 0; i < b.title.length; i++) h = (h * 31 + b.title.charCodeAt(i)) >>> 0;
-  return SPINE_COLORS[h % SPINE_COLORS.length];
+function tileHTML(title){ return '<div class="cov" style="--ch:' + spineHue(title) + '">' + esc(initials(title)) + '</div>'; }
+/* A cover that fails to load becomes its hue tile. Guarded: the row may have
+   been re-rendered (and the image detached) before the error fires. */
+function coverFail(img){
+  var p = img.parentNode; if (!p) return;
+  var d = document.createElement("div"); d.className = "cov"; d.style.setProperty("--ch", img.getAttribute("data-h"));
+  d.textContent = img.getAttribute("data-i") || ""; p.replaceChild(d, img);
+}
+function coverHTML(b){
+  if (b.cover) return '<img class="cov" src="' + esc(b.cover) + '" alt="" loading="lazy" data-h="' + spineHue(b.title) + '" data-i="' + esc(initials(b.title)) + '" onerror="coverFail(this)">';
+  return tileHTML(b.title);
 }
 
 function showTab(t){
@@ -198,49 +271,59 @@ function renderStats(){
   var finYr = fin.filter(function(b){ return b.finishedAt && new Date(b.finishedAt).getFullYear() === yr; });
   var rated = fin.filter(function(b){ return b.rating; });
   var avg = rated.length ? (rated.reduce(function(a,b){ return a + b.rating; }, 0) / rated.length).toFixed(1) : null;
+  var waiting = books.filter(function(b){ return b.shelf === "want"; }).length;
   el("stats").textContent = finYr.length + " finished in " + yr +
     (avg ? " · " + avg + "★ average" : "") +
-    " · " + books.filter(function(b){ return b.shelf === "want"; }).length + " waiting";
+    " · " + waiting + " waiting";
+  el("hFin").textContent = finYr.length;
+  el("hLbl").textContent = "Finished in " + yr;
+  el("hAvg").hidden = !avg;
+  if (avg) el("hAvg").innerHTML = icon("star") + avg + " average";
+  el("hWait").innerHTML = icon("clock") + waiting + " waiting";
+  el("cR").textContent = books.filter(function(b){ return b.shelf === "reading"; }).length || "";
+  el("cW").textContent = waiting || "";
+  el("cF").textContent = fin.length || "";
 }
 
 /* ---------- add via Open Library (manual fallback built in) ---------- */
+function findBtn(busy){ el("addgo").disabled = busy; el("addgo").innerHTML = busy ? '<i class="spin"></i>' : "Find"; }
 function searchBooks(){
   var q = el("addq").value.trim();
   if (!q) return;
   haptic("light");
-  if (!NET){ offerManual(q, "No internet access for apps — add it by hand:"); return; }
-  el("addgo").disabled = true;
-  el("addhint").textContent = "Searching…";
+  if (!hasNet()){ offerManual(q, "No internet access for apps — add it by hand:"); return; }
+  findBtn(true);
+  el("addhint").textContent = "Searching Open Library…";
   el("results").innerHTML = "";
   NET("https://openlibrary.org/search.json?limit=5&fields=title,author_name,cover_i&q=" + encodeURIComponent(q))
   .then(function(r){
     var j = JSON.parse(r.body);
-    el("addgo").disabled = false;
+    findBtn(false);
     el("addhint").textContent = "";
     if (!j.docs || !j.docs.length){ offerManual(q, "Nothing found — add it by hand:"); return; }
     window.__found = j.docs.slice(0,5);
     el("results").innerHTML = window.__found.map(function(d, i){
       var cov = d.cover_i ? "https://covers.openlibrary.org/b/id/" + d.cover_i + "-M.jpg" : "";
       return '<div class="result">' +
-        (cov ? '<img src="' + cov + '" alt="" loading="lazy">' : '<div class="cov" style="background:#c9b8a4"></div>') +
+        (cov ? '<img class="cov" src="' + cov + '" alt="" loading="lazy" data-h="' + spineHue(d.title) + '" data-i="' + esc(initials(d.title)) + '" onerror="coverFail(this)">' : tileHTML(d.title)) +
         '<div class="t"><b>' + esc(d.title) + '</b><small>' + esc((d.author_name || []).slice(0,2).join(", ")) + '</small></div>' +
-        '<button onclick="addFound(' + i + ',\'want\')">Want</button>' +
-        '<button onclick="addFound(' + i + ',\'reading\')">Reading</button>' +
+        '<div class="btns"><button type="button" onclick="addFound(' + i + ',\'want\')">Want</button>' +
+        '<button type="button" class="pri" onclick="addFound(' + i + ',\'reading\')">Reading</button></div>' +
       '</div>';
     }).join("");
   })
   .catch(function(){
-    el("addgo").disabled = false;
+    findBtn(false);
     offerManual(q, "Search didn't work — add it by hand:");
   });
 }
 function offerManual(q, msg){
   el("addhint").textContent = "";
   window.__manual = q;
-  el("results").innerHTML = '<div class="result"><div class="cov" style="background:#c9b8a4"></div>' +
+  el("results").innerHTML = '<div class="result"><div class="cov blank">' + icon("books") + '</div>' +
     '<div class="t"><b>' + esc(q) + '</b><small>' + esc(msg) + '</small></div>' +
-    '<button onclick="addManual(\'want\')">Want</button>' +
-    '<button onclick="addManual(\'reading\')">Reading</button></div>';
+    '<div class="btns"><button type="button" onclick="addManual(\'want\')">Want</button>' +
+    '<button type="button" class="pri" onclick="addManual(\'reading\')">Reading</button></div></div>';
 }
 function addFound(i, shelf){
   var d = window.__found[i];
@@ -260,32 +343,38 @@ function addBook(meta, shelf){
 }
 
 /* ---------- shelf ---------- */
+function starsHTML(n){
+  var s = ""; for (var i = 1; i <= 5; i++) s += '<svg class="' + (i <= n ? "" : "off") + '"><use href="#i-star"/></svg>';
+  return '<div class="stars" aria-label="' + n + ' of 5 stars">' + s + '</div>';
+}
+function recLabel(){ el("recbtn").disabled = recBusy; el("recbtn").innerHTML = recBusy ? '<i class="spin"></i>Finding your next read…' : icon("spark") + "What should I read next?"; }
 function render(){
   renderStats();
   el("recwrap").style.display =
-    (ASK && books.filter(function(b){ return b.shelf === "finished" && b.rating >= 4; }).length >= 2) ? "block" : "none";
+    (hasAsk() && books.filter(function(b){ return b.shelf === "finished" && b.rating >= 4; }).length >= 2) ? "block" : "none";
+  recLabel();
   var rows = books.filter(function(b){ return b.shelf === tab; });
   if (!rows.length){
     var msg = tab === "reading" ? "Nothing on the go. Find a book above — or move one over from Want to read."
             : tab === "want" ? "Your someday-pile is empty. Lucky you — go browsing."
             : "Nothing finished yet. The first one's the sweetest.";
-    el("shelf").innerHTML = '<p class="empty">' + msg + '</p>';
+    el("shelf").innerHTML = '<div class="card empty"><div class="tile">' + icon("books") + '</div><p>' + msg + '</p></div>';
     return;
   }
-  el("shelf").innerHTML = rows.map(function(b){
+  el("shelf").innerHTML = '<div class="shelf">' + rows.map(function(b){
     var acts = "";
-    if (tab === "reading") acts = '<button onclick="openFinish(\'' + b.id + '\')">Finished ✓</button>' +
-                                  '<button onclick="moveBook(\'' + b.id + '\',\'want\')">Pause</button>';
-    else if (tab === "want") acts = '<button onclick="moveBook(\'' + b.id + '\',\'reading\')">Start</button>' +
-                                    '<button onclick="removeBook(\'' + b.id + '\')">✕</button>';
-    else acts = '<button onclick="removeBook(\'' + b.id + '\')">✕</button>';
+    if (tab === "reading") acts = '<button type="button" class="pri" onclick="openFinish(\'' + b.id + '\')">' + icon("check") + 'Finished</button>' +
+                                  '<button type="button" onclick="moveBook(\'' + b.id + '\',\'want\')">' + icon("pause") + 'Pause</button>';
+    else if (tab === "want") acts = '<button type="button" class="pri" onclick="moveBook(\'' + b.id + '\',\'reading\')">' + icon("play") + 'Start</button>' +
+                                    '<button type="button" class="x" aria-label="Remove" onclick="removeBook(\'' + b.id + '\')">' + icon("x") + '</button>';
+    else acts = '<button type="button" class="x" aria-label="Remove" onclick="removeBook(\'' + b.id + '\')">' + icon("x") + '</button>';
     return '<div class="book">' + coverHTML(b) +
       '<div class="t"><b>' + esc(b.title) + '</b>' +
       (b.author ? '<small>' + esc(b.author) + '</small>' : '') +
-      (b.rating ? '<div class="stars">' + "★".repeat(b.rating) + "☆".repeat(5 - b.rating) + '</div>' : '') +
+      (b.rating ? starsHTML(b.rating) : '') +
       (b.note ? '<div class="note">“' + esc(b.note) + '”</div>' : '') +
       '</div><div class="acts">' + acts + '</div></div>';
-  }).join("");
+  }).join("") + '</div>';
 }
 function moveBook(id, shelf){
   var b = books.filter(function(x){ return x.id === id; })[0];
@@ -309,7 +398,7 @@ function openFinish(id){
 }
 function renderStars(){
   el("bstars").innerHTML = [1,2,3,4,5].map(function(n){
-    return '<button onclick="setStar(' + n + ')">' + (n <= finRating ? "★" : "☆") + '</button>';
+    return '<button type="button" class="' + (n <= finRating ? "on" : "") + '" aria-label="' + n + ' star' + (n > 1 ? "s" : "") + '" onclick="setStar(' + n + ')">' + icon("star") + '</button>';
   }).join("");
 }
 function setStar(n){ finRating = n; haptic("selection"); renderStars(); }
@@ -358,7 +447,7 @@ function parseRecs(reply){
   return recs;
 }
 function recommend(){
-  if (!ASK) return;
+  if (!hasAsk() || recBusy) return;
   haptic("light");
   var loved = books.filter(function(b){ return b.shelf === "finished" && b.rating >= 4; })
                    .slice(0, 8)
@@ -368,6 +457,9 @@ function recommend(){
       ".\nSuggest 4 books I haven't mentioned that I'd probably love next. Reply with EXACTLY these labelled lines and nothing else:\n" +
       "BOOK: the book title | the author's name | one short sentence on why I'd love it — repeat this line for each of the 4 suggestions";
   var sys = {system:"You are a well-read, honest book recommender."};
+  recBusy = true; recLabel();
+  el("reccard").style.display = "block";
+  el("recs").innerHTML = '<div class="skel"></div><div class="skel"></div><div class="skel"></div>';
   ASK(p, sys)
   .then(function(r){ return parseRecs(r); })
   .catch(function(){
@@ -380,16 +472,17 @@ function recommend(){
     window.__recs = recs;
     el("reccard").style.display = "block";
     el("recs").innerHTML = recs.map(function(x, i){
-      return '<div class="rec"><b>' + esc(x.title) + '</b>' + (x.author ? ' <small style="display:inline">— ' + esc(x.author) + '</small>' : '') +
+      return '<div class="rec"><b>' + esc(x.title) + '</b>' + (x.author ? ' <span class="by">— ' + esc(x.author) + '</span>' : '') +
         '<small>' + esc(x.why || "") + '</small>' +
-        '<button class="add" onclick="addRec(' + i + ')">+ Want to read</button></div>';
+        '<button type="button" class="add" onclick="addRec(' + i + ')">' + icon("plus") + 'Want to read</button></div>';
     }).join("");
     haptic("success");
   })
   .catch(function(){
     el("reccard").style.display = "block";
-    el("recs").innerHTML = '<div class="rec"><small>The recommendations didn\'t come through cleanly — tap the button to try again.</small></div>';
-  });
+    el("recs").innerHTML = '<div class="warn">' + icon("warn") + '<span>The recommendations didn\'t come through cleanly — tap the button to try again.</span></div>';
+  })
+  .then(function(){ recBusy = false; recLabel(); });
 }
 function addRec(i){
   var x = window.__recs[i];
@@ -397,9 +490,10 @@ function addRec(i){
 }
 
 /* ---------- boot ---------- */
+recLabel();
 store.getItem("books").then(function(v){
   if (v){ try{ books = JSON.parse(v) || []; }catch(e){} }
-  if (!NET) el("addhint").textContent = "No internet access for apps — you can still add books by hand (type the title, then Find).";
+  if (!hasNet()) el("addhint").textContent = "No internet access for apps — you can still add books by hand (type the title, then Find).";
   render();
 });
 </script>

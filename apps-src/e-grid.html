@@ -32,16 +32,24 @@ body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font);
   display:flex;flex-direction:column;height:100dvh;overflow:hidden}
 
 /* ---------- chrome ---------- */
-#bar{flex:0 0 auto;padding:max(10px,env(safe-area-inset-top)) 16px 10px;
-  display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);
+#bar{flex:0 0 auto;padding:max(14px,calc(10px + env(safe-area-inset-top))) max(16px,env(safe-area-inset-right)) 10px max(16px,env(safe-area-inset-left));
+  display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border);
   background:var(--surface)}
-#bar h1{margin:0;font-size:1.22rem;font-weight:800;letter-spacing:-.03em;flex:1}
+#bar .tile{width:44px;height:44px;min-height:44px;max-height:44px;align-self:center;border-radius:13px;flex:0 0 44px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;color:#fff;
+  background:linear-gradient(145deg,hsl(4 72% 50%),hsl(44 70% 30%))}
+#bar .tile svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#bar .ht{flex:1;min-width:0}
+#bar p{margin:1px 0 0;font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#bar.inseries .tile,#bar.inseries p{display:none}
+#bar h1{margin:0;font-size:22px;font-weight:800;letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#bar.inseries h1{font-size:1.22rem}
 #bar h1 em{font-style:normal;color:var(--accent)}
-.iconbtn{border:0;background:var(--sunk);color:var(--text);width:34px;height:34px;
+.iconbtn{border:0;background:var(--sunk);color:var(--text);width:40px;height:40px;
   border-radius:50%;font-size:1rem;display:grid;place-items:center;cursor:pointer}
 .iconbtn:active{opacity:.55}
 .iconbtn.spin{animation:spin 1s linear infinite}
-#back{font-size:1.5rem;line-height:0;padding-bottom:3px}
+#back{padding:0}
+.iconbtn svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
 #back[hidden]{display:none}
 @keyframes spin{to{transform:rotate(360deg)}}
 
@@ -50,11 +58,12 @@ body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font);
 .wrap{max-width:760px;margin:0 auto}
 
 #tabs{flex:0 0 auto;display:flex;border-top:1px solid var(--border);
-  background:var(--surface);padding-bottom:env(safe-area-inset-bottom)}
+  background:var(--surface);padding:0 env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
 #tabs button{flex:1;border:0;background:none;color:var(--muted);cursor:pointer;
   padding:8px 2px 7px;font-family:inherit;font-size:.66rem;font-weight:700;
   letter-spacing:.02em;display:flex;flex-direction:column;align-items:center;gap:2px}
-#tabs button span{font-size:1.22rem;line-height:1.05}
+#tabs button span{height:24px;display:flex;align-items:center}
+#tabs button span svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 #tabs button[aria-selected=true]{color:var(--accent)}
 
 /* ---------- notices ---------- */
@@ -204,23 +213,24 @@ a{color:var(--accent)}
 <body>
 
 <div id="bar">
-  <button class="iconbtn" id="back" data-act="back" aria-label="Back" hidden>‹</button>
-  <h1>E<em>-</em>Grid</h1>
-  <button class="iconbtn" id="refresh" data-act="refresh" aria-label="Refresh">⟳</button>
+  <button class="iconbtn" id="back" data-act="back" aria-label="Back" hidden><svg viewBox="0 0 24 24"><path d="M14.5 6l-6 6 6 6"/></svg></button>
+  <div class="tile" id="bartile"><svg viewBox="0 0 24 24"><path d="M5 21V3.5M5 4h13.5l-2.6 4 2.6 4H5"/><path d="M8 4v8M11 4v8M14 4v8" stroke-width="1.4"/></svg></div>
+  <div class="ht"><h1>E<em>-</em>Grid</h1><p id="barsub">Every race, one app</p></div>
+  <button class="iconbtn" id="refresh" data-act="refresh" aria-label="Refresh"><svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.6-5.9"/><path d="M20 4v5h-5"/></svg></button>
 </div>
 
 <main id="view"><div class="wrap"><div class="empty">Loading…</div></div></main>
 
 <nav id="tabs">
-  <button data-act="tab" data-tab="home" aria-selected="true"><span>🏁</span>Home</button>
-  <button data-act="tab" data-tab="series" aria-selected="false"><span>🏎️</span>Series</button>
-  <button data-act="tab" data-tab="tracks" aria-selected="false"><span>🛣️</span>Tracks</button>
-  <button data-act="tab" data-tab="news" aria-selected="false"><span>📰</span>News</button>
+  <button data-act="tab" data-tab="home" aria-selected="true"><span><svg viewBox="0 0 24 24"><path d="M4 10.5L12 4l8 6.5V19a1 1 0 0 1-1 1h-4.5v-6h-5v6H5a1 1 0 0 1-1-1z"/></svg></span>Home</button>
+  <button data-act="tab" data-tab="series" aria-selected="false"><span><svg viewBox="0 0 24 24"><path d="M3.5 15.5l1.6-4.3A2.5 2.5 0 0 1 7.4 9.6h8.2a2.5 2.5 0 0 1 2.3 1.6l1.6 4.3"/><rect x="2.5" y="15" width="19" height="3.5" rx="1.5"/><circle cx="7" cy="18.5" r="1.8"/><circle cx="17" cy="18.5" r="1.8"/><path d="M10 9.6l1-3h2l1 3"/></svg></span>Series</button>
+  <button data-act="tab" data-tab="tracks" aria-selected="false"><span><svg viewBox="0 0 24 24"><path d="M6.5 20.5c-2.2 0-3.5-1.5-3.5-3.3 0-1.4.9-2.4 2.3-3.1L13 10c1.4-.7 1.9-2 1.4-3.1-.5-1.2 0-2.4 1.4-2.9 2.3-.8 4.9.9 5 3.3.2 3.3-2.1 5-4.5 6.2l-3.8 1.9c-1.2.6-1.2 2.1 0 2.6l1.5.7v2.8z"/></svg></span>Tracks</button>
+  <button data-act="tab" data-tab="news" aria-selected="false"><span><svg viewBox="0 0 24 24"><path d="M4.5 5.5h12v13a1.5 1.5 0 0 0 1.5 1.5H6A1.5 1.5 0 0 1 4.5 18.5z"/><path d="M16.5 9h3v9.5a1.5 1.5 0 0 1-3 0M7.5 9h6M7.5 12.5h6M7.5 16h4"/></svg></span>News</button>
 </nav>
 
 <div id="sheet" aria-hidden="true">
   <div class="head">
-    <button class="iconbtn" data-act="close" aria-label="Close">✕</button>
+    <button class="iconbtn" data-act="close" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
     <h2 id="sheettitle"></h2>
   </div>
   <div id="sheetbody"></div>
@@ -863,7 +873,7 @@ function tileHTML(c){
     '<img src="' + esc(heroFor(c.id)) + '" alt="" loading="lazy" decoding="async"' +
     FALLBACK_IMG + '>' +
     '<div class="veil"></div><div class="bar" style="background:' + accent(c) + '"></div>' +
-    (isFollowed(c.id) ? '<div class="star">★</div>' : '') +
+    (isFollowed(c.id) ? '<div class="star">★\uFE0E</div>' : '') +
     '<div class="body"><div class="nm">' + esc(c.name) + '</div>' +
     '<div class="nx">' + esc(n ? fmtDate(n.start, false) + ' · ' + n.name : (c.tagline || '')) +
     '</div></div></button>';
@@ -902,7 +912,7 @@ function viewChannel(){
     '<div class="sub">' + esc(c.tagline || '') + '</div></div></div>' +
     '<button class="btn" data-act="follow" data-ch="' + esc(c.id) + '" style="margin-bottom:14px' +
     (isFollowed(c.id) ? '' : ';background:' + accent(c) + ';color:#fff') + '">' +
-    (isFollowed(c.id) ? '★ Following' : '☆ Follow this series') + '</button>' +
+    (isFollowed(c.id) ? '★\uFE0E Following' : '☆\uFE0E Follow this series') + '</button>' +
     '<div class="segs">';
   segs.forEach(function(s){
     h += '<button class="seg" data-act="seg" data-seg="' + s + '" aria-selected="' +
@@ -1306,6 +1316,7 @@ function render(){
   var inChannel = !!(S.channel && S.tab === 'series');
   var c = inChannel ? channel(S.channel) : null;
   document.querySelector('#bar h1').innerHTML = c ? esc(c.name) : 'E<em>-</em>Grid';
+  document.getElementById('bar').classList.toggle('inseries', !!c);
   document.getElementById('back').hidden = !inChannel;
   tick();
 }

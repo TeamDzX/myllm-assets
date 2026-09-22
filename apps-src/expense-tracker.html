@@ -6,8 +6,8 @@
 --><html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Credit Card Tracker</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Expense Tracker</title>
     <meta name="theme-color" content="#ffffff">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -994,6 +994,49 @@
 @media (min-width: 768px){
   body{ max-width: 640px !important; margin-left:auto !important; margin-right:auto !important; }
 }
+/* MyLLMos design refresh: the gallery's shared header, theme tokens with dark
+   fallbacks, safe areas on the sides, and 40px header buttons. */
+:root{--build-id:"8547801937"; --primary:var(--myllm-accent,#007AFF); color-scheme:light dark; --h:152; }
+@media (prefers-color-scheme:dark){ :root{
+  --white:#1c1c1e; --card-bg:#1c1c1e; --body-bg:#000; --border:#2c2c2e;
+  --gray-50:#1f1f22; --gray-100:#2c2c2e; --gray-200:#3a3a3c; --gray-300:#48484a;
+  --gray-400:#8e8e93; --gray-500:#98989f; --gray-600:#aeaeb2; --gray-700:#c7c7cc; --gray-800:#e5e5ea; --gray-900:#f2f2f7; } }
+body{ font-family:var(--myllm-font,-apple-system,BlinkMacSystemFont,sans-serif) !important; }
+.app{ padding-left:env(safe-area-inset-left); padding-right:env(safe-area-inset-right); }
+.header{ background:var(--body-bg) !important; border-bottom:0 !important; padding:calc(14px + var(--safe-area-top)) 16px 6px !important; }
+.header-title{ gap:12px !important; min-width:0; }
+.header-icon{ width:44px !important; height:44px !important; border-radius:13px !important; font-size:19px; flex-shrink:0;
+  background:linear-gradient(145deg,hsl(var(--h) 62% 44%),hsl(calc(var(--h) + 40) 58% 26%)) !important; }
+.header h1{ font-size:22px !important; font-weight:800 !important; letter-spacing:-.01em; line-height:1.15; }
+.header .sub{ font-size:13px; color:var(--gray-500); margin-top:1px; }
+.header-btn{ width:40px !important; height:40px !important; border-radius:12px !important; border:1px solid var(--border) !important;
+  background:var(--card-bg) !important; color:var(--gray-700) !important; }
+/* Icons: the source used Font Awesome from a CDN, which the self-contained
+   build had to drop — so every icon rendered blank. Each fa-* class the app
+   uses is drawn here as an inline SVG mask, coloured by currentColor. */
+[class^="fa-"],[class*=" fa-"]{display:inline-block;width:1em;height:1em;vertical-align:-.125em;flex:0 0 auto;
+  background:currentColor;-webkit-mask:var(--fa) center/contain no-repeat;mask:var(--fa) center/contain no-repeat}
+.fa-credit-card{--fa:url("data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2024%2024%22%20fill=%22none%22%20stroke=%22%23000%22%20stroke-width=%222.1%22%20stroke-linecap=%22round%22%20stroke-linejoin=%22round%22%3E%3Crect%20x=%222.5%22%20y=%225%22%20width=%2219%22%20height=%2214%22%20rx=%222.5%22/%3E%3Cpath%20d=%22M2.5%2010h19M6.5%2015h4%22/%3E%3C/svg%3E")}
+.fa-arrows-rotate{--fa:url("data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2024%2024%22%20fill=%22none%22%20stroke=%22%23000%22%20stroke-width=%222.1%22%20stroke-linecap=%22round%22%20stroke-linejoin=%22round%22%3E%3Cpath%20d=%22M20%2011a8%208%200%200%200-14.3-4.9L4%208M4%204v4h4M4%2013a8%208%200%200%200%2014.3%204.9L20%2016M20%2020v-4h-4%22/%3E%3C/svg%3E")}
+.fa-gear{--fa:url("data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2024%2024%22%20fill=%22none%22%20stroke=%22%23000%22%20stroke-width=%222.1%22%20stroke-linecap=%22round%22%20stroke-linejoin=%22round%22%3E%3Ccircle%20cx=%2212%22%20cy=%2212%22%20r=%223.2%22/%3E%3Cpath%20d=%22M12%202.8v2.4M12%2018.8v2.4M4.2%207.5l2.1%201.2M17.7%2015.3l2.1%201.2M4.2%2016.5l2.1-1.2M17.7%208.7l2.1-1.2%22/%3E%3Ccircle%20cx=%2212%22%20cy=%2212%22%20r=%226.6%22/%3E%3C/svg%3E")}
+.fa-plus{--fa:url("data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2024%2024%22%20fill=%22none%22%20stroke=%22%23000%22%20stroke-width=%222.1%22%20stroke-linecap=%22round%22%20stroke-linejoin=%22round%22%3E%3Cpath%20d=%22M12%205v14M5%2012h14%22/%3E%3C/svg%3E")}
+.fa-sterling-sign{--fa:url("data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2024%2024%22%20fill=%22none%22%20stroke=%22%23000%22%20stroke-width=%222.1%22%20stroke-linecap=%22round%22%20stroke-linejoin=%22round%22%3E%3Cpath%20d=%22M16.5%206.5A4%204%200%200%200%209%208.2V18M6%2013h7M6%2018h11%22/%3E%3C/svg%3E")}
+.fa-pencil{--fa:url("data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2024%2024%22%20fill=%22none%22%20stroke=%22%23000%22%20stroke-width=%222.1%22%20stroke-linecap=%22round%22%20stroke-linejoin=%22round%22%3E%3Cpath%20d=%22M4%2020l1-4.5L15.8%204.7a2%202%200%200%201%202.8%200l.7.7a2%202%200%200%201%200%202.8L8.5%2019z%22/%3E%3C/svg%3E")}
+.fa-clock-rotate-left{--fa:url("data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2024%2024%22%20fill=%22none%22%20stroke=%22%23000%22%20stroke-width=%222.1%22%20stroke-linecap=%22round%22%20stroke-linejoin=%22round%22%3E%3Cpath%20d=%22M3.5%2012a8.5%208.5%200%201%200%202.5-6L3.5%208.5M3.5%204v4.5H8M12%207.5V12l3%202%22/%3E%3C/svg%3E")}
+.fa-folder{--fa:url("data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2024%2024%22%20fill=%22none%22%20stroke=%22%23000%22%20stroke-width=%222.1%22%20stroke-linecap=%22round%22%20stroke-linejoin=%22round%22%3E%3Cpath%20d=%22M3%207.5A2.5%202.5%200%200%201%205.5%205h4l2%202.5h7A2.5%202.5%200%200%201%2021%2010v7.5a2.5%202.5%200%200%201-2.5%202.5h-13A2.5%202.5%200%200%201%203%2017.5z%22/%3E%3C/svg%3E")}
+.fa-user{--fa:url("data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2024%2024%22%20fill=%22none%22%20stroke=%22%23000%22%20stroke-width=%222.1%22%20stroke-linecap=%22round%22%20stroke-linejoin=%22round%22%3E%3Ccircle%20cx=%2212%22%20cy=%228%22%20r=%224%22/%3E%3Cpath%20d=%22M4.5%2020.5c.8-3.8%203.9-5.8%207.5-5.8s6.7%202%207.5%205.8%22/%3E%3C/svg%3E")}
+.fa-chart-column{--fa:url("data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2024%2024%22%20fill=%22none%22%20stroke=%22%23000%22%20stroke-width=%222.1%22%20stroke-linecap=%22round%22%20stroke-linejoin=%22round%22%3E%3Cpath%20d=%22M4%2020h16M7%2016.5v-5M12%2016.5V7M17%2016.5v-8%22/%3E%3C/svg%3E")}
+.fa-google{--fa:url("data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2024%2024%22%20fill=%22%23000%22%3E%3Cpath%20d=%22M20.5%2012.2c0-.6-.1-1.2-.2-1.7H12v3.3h4.8a4.1%204.1%200%200%201-1.8%202.7v2.2h2.9c1.7-1.6%202.6-3.9%202.6-6.5z%22/%3E%3Cpath%20d=%22M12%2021c2.4%200%204.5-.8%205.9-2.2L15%2016.5a5.4%205.4%200%200%201-8.1-2.8H4v2.3A9%209%200%200%200%2012%2021zM6.9%2013.7a5.4%205.4%200%200%201%200-3.4V8H4a9%209%200%200%200%200%208.1zM12%206.6c1.3%200%202.5.5%203.4%201.3l2.6-2.6A9%209%200%200%200%204%208l2.9%202.3A5.4%205.4%200%200%201%2012%206.6z%22/%3E%3C/svg%3E")}
+.fa-trash{--fa:url("data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2024%2024%22%20fill=%22none%22%20stroke=%22%23000%22%20stroke-width=%222.1%22%20stroke-linecap=%22round%22%20stroke-linejoin=%22round%22%3E%3Cpath%20d=%22M4.5%207h15M9.5%207V4.5h5V7M6.5%207l1%2013h9l1-13%22/%3E%3C/svg%3E")}
+.fa-trash-can{--fa:url("data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2024%2024%22%20fill=%22none%22%20stroke=%22%23000%22%20stroke-width=%222.1%22%20stroke-linecap=%22round%22%20stroke-linejoin=%22round%22%3E%3Cpath%20d=%22M4.5%207h15M9.5%207V4.5h5V7M6.5%207l1%2013h9l1-13M10%2011v5M14%2011v5%22/%3E%3C/svg%3E")}
+.fa-repeat{--fa:url("data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2024%2024%22%20fill=%22none%22%20stroke=%22%23000%22%20stroke-width=%222.1%22%20stroke-linecap=%22round%22%20stroke-linejoin=%22round%22%3E%3Cpath%20d=%22M17%203.5L20.5%207%2017%2010.5M3.5%2011V9.5A2.5%202.5%200%200%201%206%207h14.5M7%2020.5L3.5%2017%207%2013.5M20.5%2013v1.5A2.5%202.5%200%200%201%2018%2017H3.5%22/%3E%3C/svg%3E")}
+.fa-check{--fa:url("data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2024%2024%22%20fill=%22none%22%20stroke=%22%23000%22%20stroke-width=%222.1%22%20stroke-linecap=%22round%22%20stroke-linejoin=%22round%22%3E%3Cpath%20d=%22M5%2012.6l4.6%204.6L19.2%207.4%22/%3E%3C/svg%3E")}
+.fa-xmark{--fa:url("data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2024%2024%22%20fill=%22none%22%20stroke=%22%23000%22%20stroke-width=%222.1%22%20stroke-linecap=%22round%22%20stroke-linejoin=%22round%22%3E%3Cpath%20d=%22M6%206l12%2012M18%206L6%2018%22/%3E%3C/svg%3E")}
+.fa-circle-info{--fa:url("data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2024%2024%22%20fill=%22none%22%20stroke=%22%23000%22%20stroke-width=%222.1%22%20stroke-linecap=%22round%22%20stroke-linejoin=%22round%22%3E%3Ccircle%20cx=%2212%22%20cy=%2212%22%20r=%229%22/%3E%3Cpath%20d=%22M12%2011v5.5M12%207.6v.2%22/%3E%3C/svg%3E")}
+.fa-arrow-up-right-from-square{--fa:url("data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2024%2024%22%20fill=%22none%22%20stroke=%22%23000%22%20stroke-width=%222.1%22%20stroke-linecap=%22round%22%20stroke-linejoin=%22round%22%3E%3Cpath%20d=%22M13.5%204.5h6v6M19.5%204.5L11%2013M17%2014v4.5a1.5%201.5%200%200%201-1.5%201.5h-10A1.5%201.5%200%200%201%204%2018.5v-10A1.5%201.5%200%200%201%205.5%207H10%22/%3E%3C/svg%3E")}
+.fa-rotate-left{--fa:url("data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2024%2024%22%20fill=%22none%22%20stroke=%22%23000%22%20stroke-width=%222.1%22%20stroke-linecap=%22round%22%20stroke-linejoin=%22round%22%3E%3Cpath%20d=%22M4%2012a8%208%200%201%200%202.4-5.7L4%208.5M4%204v4.5h4.5%22/%3E%3C/svg%3E")}
+.fa-ban{--fa:url("data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2024%2024%22%20fill=%22none%22%20stroke=%22%23000%22%20stroke-width=%222.1%22%20stroke-linecap=%22round%22%20stroke-linejoin=%22round%22%3E%3Ccircle%20cx=%2212%22%20cy=%2212%22%20r=%228.5%22/%3E%3Cpath%20d=%22M6%206l12%2012%22/%3E%3C/svg%3E")}
+@media (max-width:360px){ .header h1{ font-size:18px !important; white-space:nowrap; } .header .sub{ display:none; } .header-actions{ gap:6px !important; } }
 #webAppUrlInput{ width:100%; box-sizing:border-box; font:inherit; font-size:14px; padding:10px 12px;
   border:2px solid var(--border,#e5e7eb); border-radius:8px; }
 #appsScript{ white-space:pre-wrap; font-family:ui-monospace,Menlo,monospace; font-size:11px;
@@ -1001,7 +1044,6 @@
 </style>
 <meta name="myllm:intents" content="add-expense">
 <script type="application/myllm-actions">[{"name": "add-expense", "description": "Add an expense to the shared household expense tracker", "parameters": {"amount": "the amount as a number, e.g. 12.50", "description": "what it was for, e.g. lunch", "category": "optional category name"}}]</script>
-<style>:root{--build-id:"8547801937";}</style>
 </head>
 <body>
 <script>
@@ -1103,7 +1145,7 @@
                     <div class="header-icon">
                         <i class="fa-solid fa-credit-card"></i>
                     </div>
-                    <h1>Credit Card Tracker</h1>
+                    <div><h1>Expense Tracker</h1><div class="sub">Shared household spending, synced</div></div>
                 </div>
                 <div class="header-actions">
                     <button class="header-btn" id="refreshBtn" title="Refresh">
