@@ -71,6 +71,13 @@
   .preveal{ max-height:0; overflow:hidden; opacity:0; transition:max-height .3s ease, opacity .25s ease, margin .3s; padding-left:37px; }
   .pcard.open .preveal{ max-height:260px; opacity:1; margin-top:8px; }
   .ppron{ font-size:14px; font-style:italic; color:var(--muted); }
+  .ptext{ flex:1; min-width:0; }
+  .ppy{ font-size:15px; font-weight:550; color:hsl(var(--h) 70% 36%); margin-top:2px; letter-spacing:.01em; overflow-wrap:anywhere; }
+  @media (prefers-color-scheme:dark){ .ppy{ color:hsl(var(--h) 80% 70%); } }
+  .pyfix{ display:flex; align-items:center; gap:10px; border-radius:14px; padding:10px 12px; margin:0 0 12px; background:var(--fill); font-size:13.5px; line-height:1.4; }
+  .pyfix span{ flex:1; }
+  .pyfix button{ flex-shrink:0; min-height:36px; border:none; border-radius:10px; padding:0 12px; background:var(--acc); color:#fff; font-size:13.5px; font-weight:700; display:flex; align-items:center; gap:6px; }
+  .pyfix button:disabled{ opacity:.6; }
   .pmean{ font-size:15px; margin-top:3px; line-height:1.5; }
   .hint{ font-size:12px; color:var(--muted); text-align:center; margin:4px 0 12px; }
   .notice{ display:flex; gap:10px; align-items:flex-start; font-size:13.5px; line-height:1.45; border-radius:14px; padding:11px 12px; margin:0 0 12px;
@@ -169,6 +176,7 @@ return Promise.resolve(p).then(function(r){hide();return r;},function(e){hide();
     <div style="min-width:0"><div class="k" id="lessonSub"></div><b id="lessonTitle"></b></div>
   </div>
   <div class="notice" id="voiceNote" hidden><svg class="i"><use href="#i-warn"/></svg><span id="voiceNoteText"></span></div>
+  <div class="pyfix" id="pyFix" hidden><span>This lesson spells sounds out in English letters.</span><button type="button" id="pyBtn">Add Pinyin</button></div>
   <div id="phrases"></div>
   <div class="hint" id="tapHint">Tap a card to reveal the meaning</div>
   <div class="card">
@@ -291,7 +299,7 @@ function needAI(){
 
 /* Labelled lines, not JSON — small models (Apple Intelligence) echo JSON
    templates back verbatim. Echoed instructions are rejected and retried. */
-var ECHO=/the phrase in\b|english pronunciation|english meaning|repeat this line|labelled line/i;
+var ECHO=/the phrase in\b|english pronunciation|english meaning|repeat this line|labelled line|pinyin with tone marks|jyutping with tone numbers|simplified chinese characters/i;
 function parseLesson(reply){
   reply=String(reply||'');
   var phrases=[],got=false;
@@ -317,6 +325,42 @@ function parseLesson(reply){
   if(phrases.length<2)throw new Error('the model did not return a lesson');
   return phrases;
 }
+/* Chinese is learned with Hanyu Pinyin, not English sound-alike spellings
+   (Cantonese with Jyutping). Everything else keeps the simple English
+   pronunciation. */
+function romFor(lang){
+  var k=langKey(lang);
+  if(k==='cantonese')return 'jyutping';
+  if(k==='mandarin'||k==='chinese')return 'pinyin';
+  return '';
+}
+/* Models sometimes write "ni3 hao3"; learners read "nǐ hǎo". Rule: a or e
+   takes the mark; in "ou" the o does; otherwise the last vowel. ü may arrive
+   as v or u:. Tone 5 / 0 is neutral (no mark). */
+var TONES={a:'āáǎàa',e:'ēéěèe',i:'īíǐìi',o:'ōóǒòo',u:'ūúǔùu','ü':'ǖǘǚǜü'};
+function toneMarks(py){
+  return String(py||'').replace(/([a-zü:v]+)([0-5])/gi,function(all,syl,t){
+    t=+t;syl=syl.replace(/u:|v/gi,function(m){return m[0]===m[0].toUpperCase()&&m!=='v'?'Ü':'ü'});
+    if(!t||t===5)return syl;
+    var low=syl.toLowerCase(),at=-1;
+    if(low.indexOf('a')>=0)at=low.indexOf('a');
+    else if(low.indexOf('e')>=0)at=low.indexOf('e');
+    else if(low.indexOf('ou')>=0)at=low.indexOf('o');
+    else for(var i=low.length-1;i>=0;i--)if(TONES[low[i]]){at=i;break}
+    if(at<0)return syl;
+    var ch=low[at],mark=TONES[ch].charAt(t-1);
+    if(syl[at]!==ch)mark=mark.toUpperCase();
+    return syl.slice(0,at)+mark+syl.slice(at+1);
+  });
+}
+function lessonPrompt(lang,topic){
+  var rom=romFor(lang),line;
+  if(rom==='pinyin')line='PHRASE: the phrase in Simplified Chinese characters | its Hanyu Pinyin with tone marks | its English meaning';
+  else if(rom==='jyutping')line='PHRASE: the phrase in Traditional Chinese characters | its Jyutping with tone numbers | its English meaning';
+  else line='PHRASE: the phrase in '+lang+' | its simple English pronunciation | its English meaning';
+  return 'Create 8 useful '+lang+' phrases about: '+topic+', for an English-speaking beginner. Reply with EXACTLY these labelled lines and nothing else:\n'+
+    line+' — repeat this line for each of the 8 phrases';
+}
 function gen(){
   var lang=el('lang').value.trim(),topic=el('topic').value.trim();
   if(!lang||!topic){setStatus('Enter a language and a topic.',true);return}
@@ -324,13 +368,14 @@ function gen(){
   stopSpeaking();
   genBtn(true,'Writing your '+lang+' lesson…');setStatus('');
   el('skeleton').hidden=false;el('lessonView').hidden=true;el('empty').hidden=true;
-  var p='Create 8 useful '+lang+' phrases about: '+topic+', for an English-speaking beginner. Reply with EXACTLY these labelled lines and nothing else:\n'+
-    'PHRASE: the phrase in '+lang+' | its simple English pronunciation | its English meaning — repeat this line for each of the 8 phrases';
+  var p=lessonPrompt(lang,topic),rom=romFor(lang);
   myllmAsk(p).then(function(r){return parseLesson(r)})
   .catch(function(){return myllmAsk(p+'\nIMPORTANT: fill each labelled line with real content — never repeat the instruction text.')
     .then(function(r){return parseLesson(r)})})
   .then(function(phrases){
-    lessons.unshift({lang:lang,topic:topic,phrases:phrases});save();
+    var les={lang:lang,topic:topic,phrases:phrases};
+    if(rom){les.rom=rom;if(rom==='pinyin')phrases.forEach(function(ph){ph.p=toneMarks(ph.p)})}
+    lessons.unshift(les);save();
     el('topic').value='';setStatus('');cur=-1;openLesson(0);renderLessons();haptic('success');
   }).catch(function(err){
     setStatus('Could not generate: '+err.message,true);
@@ -348,14 +393,21 @@ function openLesson(i){
   el('lessonTitle').textContent=les.topic;
   el('lessonSub').textContent=les.lang+' · '+les.phrases.length+' phrases';
   el('voiceNote').hidden=true;
+  var want=romFor(les.lang);
+  el('pyFix').hidden=!(want&&les.rom!==want);
+  if(want==='jyutping'){el('pyBtn').textContent='Add Jyutping'}else{el('pyBtn').textContent='Add Pinyin'}
+  el('pyBtn').disabled=false;
   var L=el('phrases');L.innerHTML='';
   var talk=canSpeak();
   les.phrases.forEach(function(ph,idx){
     var d=document.createElement('div');d.className='pcard';d.style.setProperty('--d',(Math.min(idx,12)*40)+'ms');
     var top=document.createElement('div');top.className='ptop';
     var num=document.createElement('span');num.className='pnum';num.textContent=idx+1;
-    var p=document.createElement('div');p.className='pphrase';p.textContent=ph.t;
-    top.appendChild(num);top.appendChild(p);
+    var tx=document.createElement('div');tx.className='ptext';
+    var p=document.createElement('div');p.className='pphrase';p.textContent=ph.t;tx.appendChild(p);
+    var rom=les.rom&&ph.p;
+    if(rom){var py=document.createElement('div');py.className='ppy';py.textContent=ph.p;py.lang='zh-Latn';tx.appendChild(py)}
+    top.appendChild(num);top.appendChild(tx);
     if(talk){
       var sp=document.createElement('button');sp.className='speak';sp.type='button';sp.innerHTML=icon('speaker');sp.setAttribute('aria-label','Hear it');
       sp.onclick=function(ev){ev.stopPropagation();speak(ph.t,les.lang,sp)};
@@ -363,7 +415,7 @@ function openLesson(i){
     }
     var chev=document.createElement('span');chev.className='chev';chev.innerHTML=icon('chev');top.appendChild(chev);
     var rev=document.createElement('div');rev.className='preveal';
-    rev.innerHTML=(ph.p?'<div class="ppron">['+esc(ph.p)+']</div>':'')+'<div class="pmean">'+esc(ph.n)+'</div>';
+    rev.innerHTML=(ph.p&&!rom?'<div class="ppron">['+esc(ph.p)+']</div>':'')+'<div class="pmean">'+esc(ph.n)+'</div>';
     d.appendChild(top);d.appendChild(rev);
     d.onclick=function(){d.classList.toggle('open');haptic('light')};
     L.appendChild(d);
@@ -372,6 +424,34 @@ function openLesson(i){
   el('feedback').hidden=true;el('feedback').innerHTML='';el('attempt').value='';
   updateViews();
 }
+
+/* Lessons saved before Pinyin: ask the model for just the romanisation of
+   each phrase, numbered so the answers line up, and keep the rest. */
+function addRomanisation(){
+  var les=lessons[cur];if(!les)return;
+  var rom=romFor(les.lang);if(!rom)return;
+  if(needAI())return;
+  var btn=el('pyBtn'),label=rom==='pinyin'?'Pinyin':'Jyutping';
+  btn.disabled=true;btn.innerHTML='<i class="spin"></i>Adding…';
+  var ask='Write the '+(rom==='pinyin'?'Hanyu Pinyin with tone marks':'Jyutping with tone numbers')+' for each Chinese phrase below. Reply with EXACTLY one line per phrase in the form "N: romanisation" and nothing else.\n'+
+    les.phrases.map(function(ph,i){return (i+1)+': '+ph.t}).join('\n');
+  myllmAsk(ask).then(function(reply){
+    var got={},n=0;
+    String(reply||'').split(/\r?\n/).forEach(function(ln){
+      var m=ln.replace(/\*\*/g,'').match(/^\s*(\d+)\s*[.:)：]\s*(.+)$/);
+      if(!m)return;var v=m[2].trim().replace(/^\[|\]$/g,'');
+      if(!v||/[㐀-鿿]/.test(v)||ECHO.test(v))return;      /* characters back = not a romanisation */
+      got[+m[1]-1]=rom==='pinyin'?toneMarks(v):v;
+    });
+    les.phrases.forEach(function(ph,i){if(got[i]){ph.p=got[i];n++}});
+    if(n<Math.ceil(les.phrases.length/2))throw new Error('the model did not return '+label);
+    les.rom=rom;save();openLesson(cur);haptic('success');
+  }).catch(function(err){
+    btn.disabled=false;btn.textContent='Add '+label;
+    setStatus('Could not add '+label+': '+err.message,true);
+  });
+}
+el('pyBtn').onclick=addRomanisation;
 
 function coach(){
   var lang=el('lang').value.trim(),attempt=el('attempt').value.trim();
