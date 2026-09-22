@@ -3,141 +3,301 @@
   Weather — MyLLMos™ App Gallery · © 2026 Opticell Ltd
   Source-available: read it, remix it, run your version inside MyLLM™.
   Not for redistribution or republication. Terms: https://github.com/TeamDzX/myllm-assets/blob/main/LICENSE
---><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<style>:root{--build-id:"73349fd0a0";color-scheme:light dark;--accent:#0a84ff}
-*{box-sizing:border-box}
-body{font-family:-apple-system,system-ui,sans-serif;margin:0;padding:18px;background:#f2f2f7;color:#111}
-@media(prefers-color-scheme:dark){body{background:#000;color:#eee}input,.cur,.day,.tip{background:#1c1c1e;color:#eee;border-color:#3a3a3c}.unit{background:#1c1c1e}}
-h1{font-size:22px;margin:0 0 4px}
-.sub{font-size:13px;opacity:.6;margin-bottom:14px}
-.row{display:flex;gap:8px;margin-bottom:10px}
-input{flex:1;min-width:0;padding:11px;border:1px solid #d1d1d6;border-radius:10px;font-size:16px;background:#fff;color:#111}
-button.go{border:0;background:var(--accent);color:#fff;border-radius:10px;padding:0 16px;font-size:15px;font-weight:600}
-.unit{display:inline-flex;background:#e5e5ea;border-radius:9px;overflow:hidden;margin-bottom:12px}
-.unit button{border:0;background:transparent;color:inherit;padding:7px 14px;font-size:14px;font-weight:600}
-.unit button.on{background:var(--accent);color:#fff}
-#status{font-size:13px;opacity:.7;min-height:16px;margin:6px 0}
-.cur{background:#fff;border-radius:18px;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,.1);display:none;text-align:center}
-.cur .loc{font-size:15px;opacity:.7}
-.cur .big{font-size:58px;line-height:1.05;font-weight:300;margin:2px 0}
-.cur .ico{font-size:46px}
-.cur .desc{font-size:16px;font-weight:600}
-.cur .extra{font-size:13px;opacity:.65;margin-top:8px}
-.days{display:flex;gap:8px;overflow-x:auto;margin-top:12px;display:none}
-.day{flex:1;min-width:62px;background:#fff;border-radius:13px;padding:11px 6px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.08)}
-.day .d{font-size:12px;opacity:.65}.day .e{font-size:24px;margin:4px 0}.day .hi{font-weight:700;font-size:14px}.day .lo{font-size:13px;opacity:.55}
-.tip{background:#eef;border-radius:13px;padding:13px 15px;margin-top:12px;font-size:14px;line-height:1.5;display:none}
-button.wear{margin-top:12px;border:0;background:#e8eefc;color:var(--accent);border-radius:11px;padding:11px 16px;font-size:14px;font-weight:600;display:none}
-@media(prefers-color-scheme:dark){.unit{background:#1c1c1e}.tip{background:#15152a}button.wear{background:#15223a}}
+--><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Weather</title>
+<style>:root{--build-id:"73349fd0a0";color-scheme:light dark;
+  --bg:var(--myllm-bg,#f2f2f7); --surface:var(--myllm-surface,#fff); --ink:var(--myllm-text,#111);
+  --muted:var(--myllm-muted,#8a8a8e); --line:var(--myllm-border,#e3e3e8); --acc:var(--myllm-accent,#0a84ff);
+  --fill:rgba(120,120,128,.12); --h:205; }
+@media (prefers-color-scheme:dark){ :root{ --bg:var(--myllm-bg,#000); --surface:var(--myllm-surface,#1c1c1e);
+  --ink:var(--myllm-text,#f2f2f7); --muted:var(--myllm-muted,#8e8e93); --line:var(--myllm-border,#2c2c2e); --fill:rgba(120,120,128,.24); } }
+  @property --wh{ syntax:'<number>'; inherits:true; initial-value:205; }
+  *{ margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body{ font-family:var(--myllm-font,-apple-system,system-ui,sans-serif); background:var(--bg); color:var(--ink);
+    max-width:600px; margin:0 auto; min-height:100dvh; font-size:15.5px; line-height:1.4;
+    padding:calc(16px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) calc(30px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left)); }
+  @media (min-width:768px){ body{ max-width:760px; } }
+  svg.i{ width:1.25em; height:1.25em; fill:currentColor; flex-shrink:0; }
+  button{ font:inherit; color:inherit; cursor:pointer; } button:active{ transform:scale(.96); }
+  [hidden]{ display:none !important; }
+
+  .head{ display:flex; align-items:center; gap:12px; margin:2px 2px 14px; }
+  .tile{ display:flex; align-items:center; justify-content:center; color:#fff; flex-shrink:0;
+    background:linear-gradient(145deg, hsl(var(--h) 62% 50%), hsl(calc(var(--h) + 40) 58% 28%)); }
+  .head .tile{ width:44px; height:44px; border-radius:13px; font-size:19px; }
+  .head .ht{ flex:1; min-width:0; }
+  h1{ font-size:22px; font-weight:800; letter-spacing:-.01em; }
+  .head p{ font-size:13px; color:var(--muted); margin-top:1px; }
+  .head .acts{ display:flex; gap:8px; flex-shrink:0; }
+  .seg{ display:flex; background:var(--fill); border-radius:12px; padding:3px; }
+  .seg button{ min-width:42px; height:34px; border:0; background:none; border-radius:9px; font-size:14px; font-weight:750; color:var(--muted); }
+  .seg button.on{ background:var(--surface); color:var(--ink); box-shadow:0 1px 3px rgba(0,0,0,.14); }
+
+  .card{ background:var(--surface); border:1px solid var(--line); border-radius:18px; padding:14px; margin-bottom:12px; }
+  .search{ display:flex; gap:8px; }
+  .field{ flex:1; min-width:0; display:flex; align-items:center; gap:8px; border:1px solid var(--line); background:var(--bg); border-radius:12px; padding:0 12px; }
+  .field svg{ color:var(--muted); }
+  .field input{ flex:1; min-width:0; border:0; background:none; outline:none; font:inherit; font-size:16px; padding:12px 0; color:var(--ink); }
+  .field:focus-within{ border-color:var(--acc); }
+  .go{ flex-shrink:0; min-height:46px; border:0; border-radius:12px; padding:0 16px; background:var(--acc); color:#fff; font-size:15px; font-weight:700; display:flex; align-items:center; gap:7px; }
+  .go:disabled{ opacity:.55; }
+  .spin{ width:16px; height:16px; border-radius:50%; border:2.4px solid currentColor; border-right-color:transparent; animation:spin .8s linear infinite; flex-shrink:0; }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+
+  /* the hero takes the weather's colour: cold blue, mild teal, warm amber, hot red; night and storms darker */
+  .hero{ --wh:205; transition:--wh 1s ease; border-radius:22px; padding:16px 18px 14px; color:#fff; margin-bottom:12px; overflow:hidden;
+    background:linear-gradient(160deg, hsl(var(--wh) 66% 50%), hsl(calc(var(--wh) + 28) 60% 28%)); box-shadow:0 12px 30px hsl(var(--wh) 60% 30% / .28); }
+  .hero.night{ background:linear-gradient(160deg, hsl(var(--wh) 42% 32%), hsl(calc(var(--wh) + 20) 45% 13%)); }
+  .hero .loc{ display:flex; align-items:center; gap:6px; font-size:13px; font-weight:700; letter-spacing:.02em; opacity:.88; }
+  .hero .loc span{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .hero .now{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:4px; }
+  .hero .big{ font-size:68px; font-weight:250; line-height:1; letter-spacing:-.04em; font-variant-numeric:tabular-nums; }
+  .hero .big small{ font-size:26px; font-weight:400; letter-spacing:0; vertical-align:top; margin-left:2px; opacity:.85; }
+  .hero .wx{ width:74px; height:74px; fill:#fff; flex-shrink:0; filter:drop-shadow(0 4px 12px rgba(0,0,0,.18)); }
+  .hero .desc{ font-size:18px; font-weight:700; margin-top:2px; }
+  .hero .extra{ display:flex; gap:16px; margin-top:6px; font-size:13.5px; opacity:.9; font-variant-numeric:tabular-nums; }
+  .hero .extra span{ display:inline-flex; align-items:center; gap:5px; }
+  .hours{ display:flex; gap:6px; overflow-x:auto; scrollbar-width:none; margin:14px -18px -2px; padding:0 18px 2px; }
+  .hours::-webkit-scrollbar{ display:none; }
+  .hr{ flex:0 0 auto; width:54px; border-radius:14px; padding:8px 0; text-align:center; background:rgba(255,255,255,.14); border:1px solid rgba(255,255,255,.14); }
+  .hr.cur{ background:rgba(255,255,255,.28); }
+  .hr b{ display:block; font-size:11.5px; font-weight:700; opacity:.85; }
+  .hr svg{ width:24px; height:24px; fill:#fff; margin:5px 0 3px; }
+  .hr span{ display:block; font-size:14.5px; font-weight:750; font-variant-numeric:tabular-nums; }
+
+  h2{ font-size:12px; font-weight:800; letter-spacing:.07em; text-transform:uppercase; color:var(--muted); margin:18px 2px 10px; }
+  .days{ padding:4px 14px; }
+  .day{ display:grid; grid-template-columns:56px 30px 38px 1fr 38px; align-items:center; gap:8px; padding:10px 0; border-bottom:1px solid var(--line); font-variant-numeric:tabular-nums; }
+  .day:last-child{ border-bottom:none; }
+  .day .d{ font-size:15px; font-weight:650; }
+  .day svg{ width:24px; height:24px; color:hsl(var(--h) 70% 50%); }
+  .day .lo{ font-size:15px; color:var(--muted); text-align:right; }
+  .day .hi{ font-size:15px; font-weight:750; }
+  .bar{ position:relative; height:6px; border-radius:99px; background:var(--fill); }
+  .bar i{ position:absolute; top:0; bottom:0; border-radius:99px; background:linear-gradient(90deg, #5ac8fa, #34c759 45%, #ffcc00 70%, #ff9500); }
+
+  .wear{ width:100%; min-height:48px; border:0; border-radius:14px; background:var(--fill); color:var(--acc); font-size:15px; font-weight:700; display:flex; align-items:center; justify-content:center; gap:8px; margin-top:12px; }
+  .wear:disabled{ opacity:.6; }
+  .tip{ display:flex; gap:12px; align-items:flex-start; margin-top:10px; }
+  .tip .tile{ width:36px; height:36px; border-radius:10px; font-size:15px; }
+  .tip p{ font-size:15px; line-height:1.5; }
+  .tip small{ display:block; font-size:12.5px; color:var(--muted); margin-top:3px; }
+
+  .notice{ display:flex; gap:12px; align-items:flex-start; background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:14px; margin:0 0 12px; }
+  .notice .tile{ width:36px; height:36px; border-radius:10px; font-size:15px; }
+  .notice.err .tile{ background:linear-gradient(145deg,#ff6b5f,#c0392b); }
+  .notice.off .tile{ background:linear-gradient(145deg,#8e8e93,#48484a); }
+  .notice b{ display:block; font-size:15px; font-weight:750; }
+  .notice p{ font-size:13.5px; color:var(--muted); margin-top:2px; line-height:1.45; }
+  .notice button{ margin-top:10px; min-height:36px; padding:0 14px; border-radius:10px; border:0; background:var(--acc); color:#fff; font-weight:700; font-size:13.5px; display:inline-flex; align-items:center; gap:6px; }
+  .status{ display:flex; align-items:center; justify-content:center; gap:8px; font-size:13.5px; color:var(--muted); margin:-2px 0 12px; min-height:18px; }
+  .sk{ height:240px; border-radius:22px; background:var(--fill); margin-bottom:12px; animation:pulse 1.3s ease-in-out infinite; }
+  @keyframes pulse{ 50%{ opacity:.5; } }
+
+  @media (max-height:520px) and (min-width:600px){ .hero .big{ font-size:56px; } .hero .wx{ width:60px; height:60px; } }
+  @media (max-width:350px){ .hero .big{ font-size:56px; } .go span{ display:none; } }
+  @media (prefers-reduced-motion:reduce){ .hero{ transition:none; } .sk{ animation:none; } .spin{ animation-duration:2.4s; } button:active{ transform:none; } }
+  @keyframes myllmAiSpin{to{transform:rotate(360deg)}}
+  .myllm-ai-busy{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(18px);z-index:99999;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;display:flex;align-items:center;gap:10px;background:rgba(28,28,30,.96);color:#fff;border-radius:999px;padding:10px 16px 10px 14px;box-shadow:0 6px 22px rgba(0,0,0,.4);font-size:14px;font-weight:600;max-width:92%}
+  .myllm-ai-busy.on{opacity:1;transform:translateX(-50%) translateY(0)}
+  .myllm-ai-cog{width:16px;height:16px;border-radius:50%;border:2.4px solid #a78bfa;border-right-color:transparent;animation:myllmAiSpin .9s linear infinite;flex-shrink:0}
+  .myllm-ai-busy small{font-weight:400;opacity:.6}
 </style></head><body>
-<style>
-@keyframes myllmAiSpin{to{transform:rotate(360deg)}}
-.myllm-ai-busy{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(18px);z-index:99999;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;display:flex;align-items:center;gap:10px;background:rgba(28,28,30,.96);color:#fff;border-radius:999px;padding:10px 16px 10px 14px;box-shadow:0 6px 22px rgba(0,0,0,.4);font-family:-apple-system,system-ui,sans-serif;font-size:14px;font-weight:600;max-width:92%}
-.myllm-ai-busy.on{opacity:1;transform:translateX(-50%) translateY(0)}
-.myllm-ai-cog{font-size:18px;line-height:1;animation:myllmAiSpin 2.4s linear infinite;filter:drop-shadow(0 0 5px rgba(124,92,255,.85))}
-.myllm-ai-busy small{font-weight:400;opacity:.6}
-@media(min-width:768px){body{max-width:760px;margin-left:auto;margin-right:auto}}
-</style>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="w-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.6"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></symbol>
+  <symbol id="w-moon" viewBox="0 0 24 24"><path d="M20.5 14.6A8.6 8.6 0 0 1 9.4 3.5a.6.6 0 0 0-.8-.7A9.6 9.6 0 1 0 21.2 15.4a.6.6 0 0 0-.7-.8z"/></symbol>
+  <symbol id="w-suncloud" viewBox="0 0 24 24"><circle cx="8.3" cy="8.3" r="3.3"/><path d="M8.3 2.4v1.3M2.4 8.3h1.3M4.2 4.2l.9.9M12.4 4.2l-.9.9M4.2 12.4l.9-.9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/><path d="M9.3 20.8a4 4 0 0 1-.5-8 5.4 5.4 0 0 1 10.3 1.3 3.4 3.4 0 0 1-.3 6.7z"/></symbol>
+  <symbol id="w-mooncloud" viewBox="0 0 24 24"><path d="M12 9.2a5 5 0 0 1-6.3-6.3.4.4 0 0 0-.5-.5 5.8 5.8 0 1 0 7.3 7.3.4.4 0 0 0-.5-.5z"/><path d="M9.3 20.8a4 4 0 0 1-.5-8 5.4 5.4 0 0 1 10.3 1.3 3.4 3.4 0 0 1-.3 6.7z"/></symbol>
+  <symbol id="w-cloud" viewBox="0 0 24 24"><path d="M7 19a4.5 4.5 0 0 1-.6-9 6 6 0 0 1 11.5 1.5A3.8 3.8 0 0 1 17.5 19z"/></symbol>
+  <symbol id="w-fog" viewBox="0 0 24 24"><path d="M7 11.5a4 4 0 0 1-.4-7.9 5.3 5.3 0 0 1 10.2 1.3A3.3 3.3 0 0 1 16.5 11.5z"/><path d="M4 15h16M5.5 19h13" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" fill="none"/></symbol>
+  <symbol id="w-drizzle" viewBox="0 0 24 24"><path d="M7 14.5a4.2 4.2 0 0 1-.5-8.4 5.6 5.6 0 0 1 10.8 1.4A3.5 3.5 0 0 1 17 14.5z"/><path d="M8.5 17.6v1.2M12.5 17.6v1.2M16.5 17.6v1.2" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></symbol>
+  <symbol id="w-rain" viewBox="0 0 24 24"><path d="M7 14.5a4.2 4.2 0 0 1-.5-8.4 5.6 5.6 0 0 1 10.8 1.4A3.5 3.5 0 0 1 17 14.5z"/><path d="M9 17l-1.1 3.2M13 17l-1.1 3.2M17 17l-1.1 3.2" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></symbol>
+  <symbol id="w-snow" viewBox="0 0 24 24"><path d="M7 14.5a4.2 4.2 0 0 1-.5-8.4 5.6 5.6 0 0 1 10.8 1.4A3.5 3.5 0 0 1 17 14.5z"/><circle cx="8.3" cy="18.3" r="1.25"/><circle cx="12.3" cy="20" r="1.25"/><circle cx="16.3" cy="18.3" r="1.25"/></symbol>
+  <symbol id="w-storm" viewBox="0 0 24 24"><path d="M7 14a4.2 4.2 0 0 1-.5-8.4 5.6 5.6 0 0 1 10.8 1.4A3.5 3.5 0 0 1 17 14z"/><path d="M12.8 14.6l-3.2 4.6h2.6l-1 3.3 3.9-5h-2.6l1.4-2.9z"/></symbol>
+  <symbol id="w-temp" viewBox="0 0 24 24"><path d="M12 2.5a3 3 0 0 1 3 3v8.1a5 5 0 1 1-6 0V5.5a3 3 0 0 1 3-3zm0 2a1 1 0 0 0-1 1v9.2l-.4.3a3 3 0 1 0 2.8 0l-.4-.3V5.5a1 1 0 0 0-1-1z"/></symbol>
+  <symbol id="i-drop" viewBox="0 0 24 24"><path d="M12 3c-.3 0-.5.1-.7.3C9 6 5.5 10.4 5.5 14a6.5 6.5 0 0 0 13 0c0-3.6-3.5-8-5.8-10.7A1 1 0 0 0 12 3z"/></symbol>
+  <symbol id="i-wind" viewBox="0 0 24 24"><path d="M3 9h11a2.5 2.5 0 1 0-2.5-2.5M3 13h15a2.5 2.5 0 1 1-2.5 2.5M3 17h8" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></symbol>
+  <symbol id="i-shirt" viewBox="0 0 24 24"><path d="M8.5 3.5L4 5.5 2.5 10l3.3 1.3.9-1.4V20a1 1 0 0 0 1 1h8.6a1 1 0 0 0 1-1V9.9l.9 1.4 3.3-1.3L20 5.5l-4.5-2a3.6 3.6 0 0 1-7 0z"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><path d="M10.5 3a7.5 7.5 0 0 1 6 12l4.3 4.3a1 1 0 0 1-1.4 1.4L15 16.5A7.5 7.5 0 1 1 10.5 3zm0 2a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11z"/></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 2.5a7 7 0 0 1 7 7c0 5-5.6 10.6-6.3 11.3a1 1 0 0 1-1.4 0C10.6 20.1 5 14.5 5 9.5a7 7 0 0 1 7-7zm0 4.3a2.7 2.7 0 1 0 0 5.4 2.7 2.7 0 0 0 0-5.4z"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.6-5.9M20 4v5h-5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-off" viewBox="0 0 24 24"><path d="M3.3 3.3a1 1 0 0 1 1.4 0l16 16a1 1 0 0 1-1.4 1.4l-3.5-3.5a2 2 0 1 1-2.5-2.5L10.8 12a5 5 0 0 0-3.4 1.6 1 1 0 0 1-1.5-1.3 7 7 0 0 1 3.1-2L7 8.4a10 10 0 0 0-3.2 2.2 1 1 0 0 1-1.4-1.4A12 12 0 0 1 5.6 7L3.3 4.7a1 1 0 0 1 0-1.4zM12 6c3.5 0 6.8 1.4 9.2 3.8a1 1 0 0 1-1.4 1.4A11 11 0 0 0 12 8h-.6L9.6 6.2C10.4 6.1 11.2 6 12 6z"/></symbol>
+  <symbol id="i-warn" viewBox="0 0 24 24"><path d="M10.3 3.9a2 2 0 0 1 3.4 0l8 13.6a2 2 0 0 1-1.7 3H4a2 2 0 0 1-1.7-3zM12 9a1 1 0 0 0-1 1v4a1 1 0 0 0 2 0v-4a1 1 0 0 0-1-1zm0 7.2a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 0 0 0-2.4z"/></symbol>
+</defs></svg>
 <script>
-(function(){
-  if(window.__myllmAiWrap||typeof window.myllmAsk!=='function')return;
-  window.__myllmAiWrap=true;
-  var orig=window.myllmAsk,depth=0,node=null;
-  function ensure(){if(node)return;node=document.createElement('div');node.className='myllm-ai-busy';
-    node.innerHTML='<span class="myllm-ai-cog">\u2699\uFE0F</span><span>AI is thinking\u2026 <small>privately, on your device</small></span>';
-    (document.body||document.documentElement).appendChild(node);}
-  function show(){ensure();depth++;node.classList.add('on');}
-  function hide(){depth=Math.max(0,depth-1);if(depth===0&&node)node.classList.remove('on');}
-  window.myllmAsk=function(){show();var p;try{p=orig.apply(this,arguments);}catch(e){hide();throw e;}
-    return Promise.resolve(p).then(function(r){hide();return r;},function(e){hide();throw e;});};
-})();
+(function(){if(window.__myllmAiWrap||typeof window.myllmAsk!=='function')return;window.__myllmAiWrap=true;
+var orig=window.myllmAsk,depth=0,node=null;
+function ensure(){if(node)return;node=document.createElement('div');node.className='myllm-ai-busy';
+node.innerHTML='<span class="myllm-ai-cog"></span><span>AI is thinking… <small>privately, on your device</small></span>';
+(document.body||document.documentElement).appendChild(node);}
+function show(){ensure();depth++;node.classList.add('on');}
+function hide(){depth=Math.max(0,depth-1);if(depth===0&&node)node.classList.remove('on');}
+window.myllmAsk=function(){show();var p;try{p=orig.apply(this,arguments);}catch(e){hide();throw e;}
+return Promise.resolve(p).then(function(r){hide();return r;},function(e){hide();throw e;});};})();
 </script>
 
-<h1>⛅ Weather</h1>
-<div class="sub">Live forecast for anywhere. No account, no tracking.</div>
-<div class="row"><input id="city" placeholder="City (e.g. London, Tokyo)" enterkeyhint="search"><button class="go" onclick="search()">Get weather</button></div>
-<div class="unit"><button id="uC" class="on" onclick="setUnit('c')">°C</button><button id="uF" onclick="setUnit('f')">°F</button></div>
-<div id="status"></div>
-<div class="cur" id="cur"></div>
-<div class="days" id="days"></div>
-<button class="wear" id="wearBtn" onclick="wear()">👕 What should I wear?</button>
-<div class="tip" id="tip"></div>
+<div class="head">
+  <div class="tile"><svg class="i"><use href="#w-suncloud"/></svg></div>
+  <div class="ht"><h1>Weather</h1><p>Live forecast for anywhere — no account, no tracking</p></div>
+  <div class="acts"><div class="seg" role="group" aria-label="Units"><button id="uC" class="on" type="button">°C</button><button id="uF" type="button">°F</button></div></div>
+</div>
+
+<div class="card">
+  <div class="search">
+    <label class="field"><svg class="i"><use href="#i-search"/></svg><input id="city" placeholder="City (e.g. London, Tokyo)" enterkeyhint="search" autocomplete="off" aria-label="City"></label>
+    <button class="go" id="goBtn" type="button"><svg class="i"><use href="#i-search"/></svg><span>Search</span></button>
+  </div>
+</div>
+<div class="status" id="status"></div>
+<div id="notice"></div>
+<div class="notice" id="empty" hidden><div class="tile"><svg class="i"><use href="#i-pin"/></svg></div><div><b>Where are you looking?</b><p>Search for a city to see its weather now, the next 24 hours and the days ahead.</p></div></div>
+<div class="sk" id="sk" hidden></div>
+
+<div class="hero" id="cur" hidden></div>
+<div id="dayWrap" hidden><h2>Next few days</h2><div class="card days" id="days"></div></div>
+<div id="wearWrap" hidden>
+  <button class="wear" id="wearBtn" type="button"><svg class="i"><use href="#i-shirt"/></svg><span>What should I wear?</span></button>
+  <div class="card tip" id="tip" hidden><div class="tile"><svg class="i"><use href="#i-shirt"/></svg></div><div><p id="tipText"></p></div></div>
+</div>
+
 <script>
-var store=window.myllmStorage||{getItem:function(){return Promise.resolve(null)},setItem:function(){return Promise.resolve()}};
 var unit='c',place=null,last=null;
 function el(i){return document.getElementById(i)}
-function setStatus(t){el('status').textContent=t||''}
+/* Bridges are looked up when used, never kept: MyLLM can add them after this
+   script has run. */
+function store(){return window.myllmStorage||{getItem:function(){return Promise.resolve(null)},setItem:function(){return Promise.resolve()}}}
+function net(){return window.myllmFetch||null}
+function haptic(k){if(window.myllmHaptic)try{myllmHaptic(k)}catch(e){}}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function icon(n){return '<svg class="i"><use href="#'+n+'"/></svg>'}
+function setStatus(t,busy){el('status').innerHTML=t?(busy?'<i class="spin"></i>':'')+'<span>'+esc(t)+'</span>':''}
+function notice(kind,title,text,retry){
+  var N=el('notice');
+  if(!kind){N.innerHTML='';return}
+  N.innerHTML='<div class="notice '+kind+'"><div class="tile">'+icon(kind==='off'?'i-off':'i-warn')+'</div><div><b>'+esc(title)+'</b><p>'+esc(text)+'</p>'+
+    (retry?'<button type="button">'+icon('i-refresh')+'Try again</button>':'')+'</div></div>';
+  if(retry)N.querySelector('button').onclick=retry;
+}
 function uTemp(){return unit==='f'?'fahrenheit':'celsius'}
 function uWind(){return unit==='f'?'mph':'kmh'}
 function deg(){return unit==='f'?'°F':'°C'}
 function wspd(){return unit==='f'?'mph':'km/h'}
 
-var WMO={0:['☀️','Clear sky'],1:['🌤️','Mainly clear'],2:['⛅','Partly cloudy'],3:['☁️','Overcast'],
-45:['🌫️','Fog'],48:['🌫️','Rime fog'],51:['🌦️','Light drizzle'],53:['🌦️','Drizzle'],55:['🌦️','Heavy drizzle'],
-56:['🌧️','Freezing drizzle'],57:['🌧️','Freezing drizzle'],61:['🌧️','Light rain'],63:['🌧️','Rain'],65:['🌧️','Heavy rain'],
-66:['🌧️','Freezing rain'],67:['🌧️','Freezing rain'],71:['🌨️','Light snow'],73:['🌨️','Snow'],75:['🌨️','Heavy snow'],
-77:['🌨️','Snow grains'],80:['🌦️','Light showers'],81:['🌦️','Showers'],82:['⛈️','Violent showers'],
-85:['🌨️','Snow showers'],86:['🌨️','Snow showers'],95:['⛈️','Thunderstorm'],96:['⛈️','Thunderstorm + hail'],99:['⛈️','Thunderstorm + hail']};
-function wmo(c,day){var w=WMO[c]||['🌡️','—'];var e=w[0];if(c<=1&&day===0)e='🌙';return{e:e,t:w[1]}}
+var WMO={0:['sun','Clear sky'],1:['suncloud','Mainly clear'],2:['suncloud','Partly cloudy'],3:['cloud','Overcast'],
+45:['fog','Fog'],48:['fog','Rime fog'],51:['drizzle','Light drizzle'],53:['drizzle','Drizzle'],55:['drizzle','Heavy drizzle'],
+56:['drizzle','Freezing drizzle'],57:['drizzle','Freezing drizzle'],61:['rain','Light rain'],63:['rain','Rain'],65:['rain','Heavy rain'],
+66:['rain','Freezing rain'],67:['rain','Freezing rain'],71:['snow','Light snow'],73:['snow','Snow'],75:['snow','Heavy snow'],
+77:['snow','Snow grains'],80:['rain','Light showers'],81:['rain','Showers'],82:['storm','Violent showers'],
+85:['snow','Snow showers'],86:['snow','Snow showers'],95:['storm','Thunderstorm'],96:['storm','Thunderstorm + hail'],99:['storm','Thunderstorm + hail']};
+function wmo(c,day){var w=WMO[c]||['temp','—'];var g=w[0];if(day===0){if(g==='sun')g='moon';else if(g==='suncloud')g=c<=1?'moon':'mooncloud'}return{g:'w-'+g,t:w[1],kind:w[0]}}
+function wx(g,cls){return '<svg class="'+(cls||'i')+'"><use href="#'+g+'"/></svg>'}
 function dayName(iso){var d=new Date(iso+'T00:00');return d.toLocaleDateString(undefined,{weekday:'short'})}
+
+/* Hue from how warm it feels (in °C whatever the display unit), nudged by the sky.
+   Two families, never the green in between: cool blues up to 19°, warm ambers
+   from 20°. The hue animates, so crossing over is a fade, not a jump. */
+var HUES=[[-10,228],[0,215],[10,202],[19,188],[19.5,52],[25,36],[32,14],[38,4]];
+function hueFor(temp,kind,isDay){
+  var t=unit==='f'?(temp-32)*5/9:temp,h=HUES[0][1];
+  for(var i=0;i<HUES.length;i++){if(t<=HUES[i][0]){if(i===0)h=HUES[0][1];else{var a=HUES[i-1],b=HUES[i],k=(t-a[0])/(b[0]-a[0]);h=a[1]+(b[1]-a[1])*k}break}h=HUES[i][1]}
+  if(kind==='rain'||kind==='drizzle')h=h*0.4+208*0.6;
+  if(kind==='storm')h=262;if(kind==='snow')h=200;if(kind==='fog'||kind==='cloud')h=h*0.5+210*0.5;
+  if(!isDay)h=h*0.3+235*0.7;
+  return Math.round(h);
+}
 
 function search(){
   var q=el('city').value.trim();if(!q)return;
-  if(!window.myllmFetch){setStatus('This app needs network access — update MyLLM and enable app network access in Settings.');return}
-  setStatus('Finding “'+q+'”…');
-  myllmFetch('https://geocoding-api.open-meteo.com/v1/search?count=1&language=en&name='+encodeURIComponent(q))
+  if(!net()){notice('off','Network access is off','Weather needs “Allow apps to use the internet” in MyLLM’s Settings.',search);return}
+  notice(null);el('city').blur();
+  el('goBtn').disabled=true;setStatus('Finding “'+q+'”…',true);
+  net()('https://geocoding-api.open-meteo.com/v1/search?count=1&language=en&name='+encodeURIComponent(q))
   .then(function(r){
     if(!r||!r.ok)throw new Error('lookup failed');
     var g=JSON.parse(r.body);
     if(!g.results||!g.results.length)throw new Error('couldn’t find that place');
     var p=g.results[0];place={lat:p.latitude,lon:p.longitude,name:p.name,region:p.admin1||'',country:p.country||''};
-    store.setItem('place',JSON.stringify(place));load();
-  }).catch(function(e){setStatus('Could not search: '+e.message)});
+    store().setItem('place',JSON.stringify(place));haptic('light');load();
+  }).catch(function(e){setStatus('');notice('err','Could not search',e.message,search)})
+  .then(function(){el('goBtn').disabled=false});
 }
 function load(){
-  if(!place)return;setStatus('Loading forecast…');
+  if(!place)return;
+  if(!net()){notice('off','Network access is off','Weather needs “Allow apps to use the internet” in MyLLM’s Settings.',load);return}
+  notice(null);el('empty').hidden=true;
+  if(!last)el('sk').hidden=false;
+  setStatus('Loading forecast…',true);
   var u='https://api.open-meteo.com/v1/forecast?latitude='+place.lat+'&longitude='+place.lon+
     '&current=temperature_2m,weather_code,wind_speed_10m,relative_humidity_2m,is_day'+
+    '&hourly=temperature_2m,weather_code,is_day'+
     '&daily=weather_code,temperature_2m_max,temperature_2m_min&forecast_days=5&timezone=auto'+
     '&temperature_unit='+uTemp()+'&wind_speed_unit='+uWind();
-  myllmFetch(u).then(function(r){
+  net()(u).then(function(r){
     if(!r||!r.ok)throw new Error('forecast failed');
     last=JSON.parse(r.body);render();setStatus('');
-  }).catch(function(e){setStatus('Could not load forecast: '+e.message)});
+  }).catch(function(e){setStatus('');notice('err','Could not load the forecast',e.message,load)})
+  .then(function(){el('sk').hidden=true});
+}
+function hoursHtml(){
+  var H=last.hourly;if(!H||!H.time||!H.time.length)return '';
+  var nowKey=String(last.current.time||'').slice(0,13),start=0;
+  for(var i=0;i<H.time.length;i++){if(H.time[i].slice(0,13)>=nowKey){start=i;break}}
+  var out='';
+  for(var j=start;j<Math.min(start+24,H.time.length);j++){
+    var w=wmo(H.weather_code[j],H.is_day?H.is_day[j]:1);
+    var label=j===start?'Now':H.time[j].slice(11,13);
+    out+='<div class="hr'+(j===start?' cur':'')+'"><b>'+label+'</b>'+wx(w.g,'')+'<span>'+Math.round(H.temperature_2m[j])+'°</span></div>';
+  }
+  return '<div class="hours">'+out+'</div>';
 }
 function render(){
   if(!last)return;var c=last.current,w=wmo(c.weather_code,c.is_day);
   var loc=place.name+(place.region&&place.region!==place.name?', '+place.region:'')+(place.country?', '+place.country:'');
-  el('cur').style.display='block';
-  el('cur').innerHTML='<div class="loc">'+loc+'</div><div class="ico">'+w.e+'</div>'+
-    '<div class="big">'+Math.round(c.temperature_2m)+deg()+'</div>'+
-    '<div class="desc">'+w.t+'</div>'+
-    '<div class="extra">💧 '+c.relative_humidity_2m+'%  ·  💨 '+Math.round(c.wind_speed_10m)+' '+wspd()+'</div>';
-  var D=el('days');D.style.display='flex';D.innerHTML='';
+  var hero=el('cur');hero.hidden=false;
+  hero.classList.toggle('night',c.is_day===0);
+  hero.style.setProperty('--wh',hueFor(c.temperature_2m,w.kind,c.is_day!==0));
+  hero.innerHTML='<div class="loc">'+icon('i-pin')+'<span>'+esc(loc)+'</span></div>'+
+    '<div class="now"><div class="big">'+Math.round(c.temperature_2m)+'<small>'+deg()+'</small></div>'+wx(w.g,'wx')+'</div>'+
+    '<div class="desc">'+esc(w.t)+'</div>'+
+    '<div class="extra"><span>'+icon('i-drop')+c.relative_humidity_2m+'%</span><span>'+icon('i-wind')+Math.round(c.wind_speed_10m)+' '+wspd()+'</span></div>'+
+    hoursHtml();
+  var D=el('days');D.innerHTML='';
+  var lo=Math.min.apply(null,last.daily.temperature_2m_min),hi=Math.max.apply(null,last.daily.temperature_2m_max),span=Math.max(1,hi-lo);
   for(var i=0;i<last.daily.time.length;i++){
-    var dw=wmo(last.daily.weather_code[i],1);
-    var div=document.createElement('div');div.className='day';
-    div.innerHTML='<div class="d">'+(i===0?'Today':dayName(last.daily.time[i]))+'</div>'+
-      '<div class="e">'+dw.e+'</div>'+
-      '<div class="hi">'+Math.round(last.daily.temperature_2m_max[i])+'°</div>'+
-      '<div class="lo">'+Math.round(last.daily.temperature_2m_min[i])+'°</div>';
-    D.appendChild(div);
+    var dw=wmo(last.daily.weather_code[i],1),mn=last.daily.temperature_2m_min[i],mx=last.daily.temperature_2m_max[i];
+    var row=document.createElement('div');row.className='day';
+    row.innerHTML='<div class="d">'+(i===0?'Today':esc(dayName(last.daily.time[i])))+'</div>'+wx(dw.g,'i')+
+      '<div class="lo">'+Math.round(mn)+'°</div>'+
+      '<div class="bar"><i style="left:'+((mn-lo)/span*100).toFixed(1)+'%;width:'+Math.max(6,(mx-mn)/span*100).toFixed(1)+'%"></i></div>'+
+      '<div class="hi">'+Math.round(mx)+'°</div>';
+    row.setAttribute('aria-label',(i===0?'Today':dayName(last.daily.time[i]))+': '+dw.t+', '+Math.round(mn)+' to '+Math.round(mx)+' degrees');
+    D.appendChild(row);
   }
-  el('tip').style.display='none';
-  el('wearBtn').style.display=window.myllmAsk?'inline-block':'none';
+  el('dayWrap').hidden=false;
+  el('tip').hidden=true;
+  el('wearWrap').hidden=!window.myllmAsk;
 }
-function setUnit(u){if(unit===u)return;unit=u;el('uC').classList.toggle('on',u==='c');el('uF').classList.toggle('on',u==='f');store.setItem('unit',u);if(place)load()}
+function setUnit(u){
+  if(unit===u)return;unit=u;syncUnit();haptic('selection');
+  store().setItem('unit',u);if(place)load();
+}
+function syncUnit(){el('uC').classList.toggle('on',unit==='c');el('uF').classList.toggle('on',unit==='f')}
 function wear(){
   if(!last||!window.myllmAsk)return;var c=last.current,w=wmo(c.weather_code,c.is_day);
-  el('wearBtn').disabled=true;setStatus('Thinking…');
+  var b=el('wearBtn');b.disabled=true;b.innerHTML='<i class="spin"></i><span>Thinking…</span>';
   myllmAsk('Weather right now: '+Math.round(c.temperature_2m)+deg()+', '+w.t+', wind '+Math.round(c.wind_speed_10m)+' '+wspd()+', humidity '+c.relative_humidity_2m+'%. In ONE friendly sentence, say what to wear and whether to take an umbrella.')
-  .then(function(reply){var t=el('tip');t.textContent='👕 '+reply.trim();t.style.display='block';setStatus('')})
-  .catch(function(e){setStatus('')}).then(function(){el('wearBtn').disabled=false});
+  .then(function(reply){el('tipText').textContent=String(reply).trim();el('tip').hidden=false;haptic('success')})
+  .catch(function(){el('tipText').textContent='Couldn’t get a suggestion just now — try again in a moment.';el('tip').hidden=false})
+  .then(function(){b.disabled=false;b.innerHTML=icon('i-shirt')+'<span>What should I wear?</span>'});
 }
+el('uC').onclick=function(){setUnit('c')};
+el('uF').onclick=function(){setUnit('f')};
+el('goBtn').onclick=search;
+el('wearBtn').onclick=wear;
 el('city').addEventListener('keydown',function(e){if(e.key==='Enter')search()});
-Promise.all([store.getItem('place'),store.getItem('unit')]).then(function(r){
-  if(r[1])unit=r[1];el('uC').classList.toggle('on',unit==='c');el('uF').classList.toggle('on',unit==='f');
-  if(r[0]){try{place=JSON.parse(r[0]);el('city').value=place.name;load()}catch(e){}}
-  if(!window.myllmFetch)setStatus('Heads-up: this app needs app network access (Settings).');
+Promise.all([store().getItem('place'),store().getItem('unit')]).then(function(r){
+  if(r[1]==='c'||r[1]==='f')unit=r[1];syncUnit();
+  if(r[0]){try{place=JSON.parse(r[0]);el('city').value=place.name;load()}catch(e){place=null}}
+  if(!place){el('empty').hidden=false;if(!net())notice('off','Network access is off','Weather needs “Allow apps to use the internet” in MyLLM’s Settings.',null)}
 });
 </script></body></html>

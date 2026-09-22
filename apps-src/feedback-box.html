@@ -9,97 +9,124 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Feedback &amp; Ideas</title>
 <style>
-  :root { color-scheme: light dark; }
+  :root{ color-scheme:light dark;
+    --bg:var(--myllm-bg,#f2f2f7); --surface:var(--myllm-surface,#fff); --ink:var(--myllm-text,#111);
+    --muted:var(--myllm-muted,#8a8a8e); --line:var(--myllm-border,#e3e3e8); --acc:var(--myllm-accent,#0a84ff);
+    --fill:rgba(120,120,128,.12); --h:40; }
+  @media (prefers-color-scheme:dark){ :root{ --bg:var(--myllm-bg,#000); --surface:var(--myllm-surface,#1c1c1e);
+    --ink:var(--myllm-text,#f2f2f7); --muted:var(--myllm-muted,#8e8e93); --line:var(--myllm-border,#2c2c2e); --fill:rgba(120,120,128,.24); } }
   * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-  body{
-    font-family:var(--myllm-font,-apple-system,system-ui,sans-serif);
-    background:var(--myllm-bg,#f2f2f7);
-    color:var(--myllm-text,#111);
-    max-width:640px; margin:0 auto; min-height:100dvh;
-    padding:16px 16px calc(30px + env(safe-area-inset-bottom));
-  }
-  h1{ font-size:22px; font-weight:800; margin:6px 2px 4px; }
-  p.sub{ font-size:13.5px; color:var(--myllm-muted,#8a8a8e); margin:0 2px 14px; line-height:1.5; }
-  .card{
-    background:var(--myllm-surface,#fff); border:1px solid var(--myllm-border,#e3e3e8);
-    border-radius:16px; padding:14px; margin-bottom:12px;
-  }
-  label{ display:block; font-size:11.5px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; color:var(--myllm-muted,#8a8a8e); margin:12px 0 6px; }
+  body{ font-family:var(--myllm-font,-apple-system,system-ui,sans-serif); background:var(--bg); color:var(--ink);
+    max-width:640px; margin:0 auto; min-height:100dvh; font-size:15.5px; line-height:1.4;
+    padding:calc(16px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) calc(30px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left)); }
+  @media (min-width:768px){ body{ max-width:760px; } }
+  svg.i{ width:1.25em; height:1.25em; fill:currentColor; flex-shrink:0; }
+  button{ font:inherit; color:inherit; cursor:pointer; } button:active{ transform:scale(.97); }
+
+  .head{ display:flex; align-items:center; gap:12px; margin:2px 2px 12px; }
+  .tile{ display:flex; align-items:center; justify-content:center; color:#fff; flex-shrink:0;
+    background:linear-gradient(145deg, hsl(var(--h) 90% 50%), hsl(calc(var(--h) - 22) 80% 40%)); }
+  .head .tile{ width:44px; height:44px; border-radius:13px; font-size:19px; }
+  .head .ht{ flex:1; min-width:0; }
+  h1{ font-size:22px; font-weight:800; letter-spacing:-.01em; }
+  .head p{ font-size:13px; color:var(--muted); margin-top:1px; }
+  p.sub{ font-size:14px; color:var(--muted); margin:0 2px 14px; line-height:1.5; }
+
+  .card{ background:var(--surface); border:1px solid var(--line); border-radius:18px; padding:14px; margin-bottom:12px; }
+  label{ display:flex; align-items:baseline; gap:8px; font-size:12px; font-weight:800; letter-spacing:.07em; text-transform:uppercase; color:var(--muted); margin:16px 2px 7px; }
   label:first-child{ margin-top:0; }
-  input, textarea{
-    width:100%; font-size:15px; padding:11px 12px; border-radius:12px;
-    border:1px solid var(--myllm-border,#e3e3e8); background:var(--myllm-bg,#f2f2f7); color:var(--myllm-text,#111);
-    font-family:inherit;
-  }
+  input, textarea{ width:100%; font:inherit; font-size:16px; padding:12px; border-radius:12px;
+    border:1px solid var(--line); background:var(--bg); color:var(--ink); outline:none; }
+  input:focus, textarea:focus{ border-color:var(--acc); }
   textarea{ min-height:120px; resize:vertical; line-height:1.45; }
-  .kinds{ display:flex; flex-wrap:wrap; gap:8px; }
-  .kind{
-    flex:1 1 calc(50% - 4px); border:1px solid var(--myllm-border,#e3e3e8); background:var(--myllm-bg,#f2f2f7);
-    color:var(--myllm-text,#111); border-radius:12px; padding:11px 8px; font-size:14px; font-weight:650;
-    font-family:inherit; display:flex; align-items:center; justify-content:center; gap:6px;
-  }
-  .kind[aria-pressed="true"]{ background:var(--myllm-accent,#0a84ff); color:#fff; border-color:transparent; }
-  .go{
-    width:100%; border:none; border-radius:13px; padding:14px; margin-top:12px;
-    font-size:15.5px; font-weight:750; background:var(--myllm-accent,#0a84ff); color:#fff; font-family:inherit;
-  }
-  .go.ghost{ background:var(--myllm-bg,#f2f2f7); color:var(--myllm-text,#111); border:1px solid var(--myllm-border,#e3e3e8); }
+  .kinds{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .kind{ min-height:52px; border:1px solid var(--line); background:var(--bg); border-radius:14px; padding:8px 10px; font-size:14px; font-weight:650;
+    display:flex; align-items:center; gap:9px; text-align:left; line-height:1.25; }
+  .kind .ki{ width:30px; height:30px; border-radius:9px; display:flex; align-items:center; justify-content:center; color:#fff; flex-shrink:0; font-size:15px; }
+  .kind[aria-pressed="true"]{ background:var(--acc); color:#fff; border-color:transparent; }
+  .kind[aria-pressed="true"] .ki{ background:rgba(255,255,255,.22) !important; }
+  .go{ width:100%; min-height:50px; border:none; border-radius:14px; margin-top:14px; font-size:16px; font-weight:700;
+    background:var(--acc); color:#fff; display:flex; align-items:center; justify-content:center; gap:8px; }
+  .go.ghost{ background:var(--bg); color:var(--ink); border:1px solid var(--line); margin-top:10px; }
   .go[disabled]{ opacity:.45; }
-  .note{ font-size:12.5px; color:var(--myllm-muted,#8a8a8e); line-height:1.5; margin-top:10px; }
-  .note b{ color:var(--myllm-text,#111); font-weight:700; }
-  .msg{ font-size:13.5px; margin-top:10px; line-height:1.5; min-height:19px; }
+  .note{ font-size:12.5px; color:var(--muted); line-height:1.55; margin-top:12px; }
+  .note b{ color:var(--ink); font-weight:700; }
+  .msg{ display:flex; align-items:flex-start; gap:7px; font-size:13.5px; margin-top:10px; line-height:1.45; }
+  .msg:empty{ display:none; }
+  .msg svg{ width:16px; height:16px; margin-top:1px; }
   .msg.warn{ color:#d1342f; }
   .msg.ok{ color:#1a8a3f; }
+  @media (prefers-color-scheme:dark){ .msg.warn{ color:#ff6b62; } .msg.ok{ color:#34c759; } }
   #out{ display:none; }
-  #pkg{ min-height:150px; font-family:ui-monospace,Menlo,monospace; font-size:11.5px; }
-  .privacy{ border-left:3px solid var(--myllm-accent,#0a84ff); padding-left:10px; }
-  .count{ float:right; font-size:11px; color:var(--myllm-muted,#8a8a8e); text-transform:none; letter-spacing:0; font-weight:600; }
+  #pkg{ min-height:150px; font-family:ui-monospace,Menlo,monospace; font-size:13px; }
+  .privacy{ display:flex; gap:12px; align-items:flex-start; }
+  .privacy .tile{ width:36px; height:36px; border-radius:10px; font-size:16px; background:linear-gradient(145deg,#34c759,#1f8a45); }
+  .privacy .note{ margin-top:0; }
+  .count{ margin-left:auto; font-size:11px; color:var(--muted); text-transform:none; letter-spacing:0; font-weight:600; font-variant-numeric:tabular-nums; }
+  @media (prefers-reduced-motion:reduce){ button:active{ transform:none; } }
 </style>
 <style>:root{--build-id:"db136e85f3";}</style>
 </head>
 <body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-bulb" viewBox="0 0 24 24"><path d="M12 2.5a7 7 0 0 1 4.2 12.6c-.7.5-1.2 1.3-1.2 2.1v.3a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1v-.3c0-.8-.5-1.6-1.2-2.1A7 7 0 0 1 12 2.5zM9.5 20h5a1 1 0 0 1 0 2h-5a1 1 0 0 1 0-2z" fill="currentColor"/></symbol>
+  <symbol id="i-bug" viewBox="0 0 24 24"><path d="M9 3.3a1 1 0 0 1 1.3.5l.5 1.1a5 5 0 0 1 2.4 0l.5-1.1a1 1 0 1 1 1.8.8l-.5 1.1A5 5 0 0 1 17 8h1.5a1 1 0 0 1 0 2H17v2h2.5a1 1 0 0 1 0 2H17v.5c0 .5-.1 1-.2 1.5h1.7a1 1 0 0 1 0 2h-2.7A5 5 0 0 1 12 20a5 5 0 0 1-3.8-2H5.5a1 1 0 0 1 0-2h1.7A6 6 0 0 1 7 14.5V14H4.5a1 1 0 0 1 0-2H7v-2H5.5a1 1 0 0 1 0-2H7a5 5 0 0 1 2-2.3l-.5-1.1A1 1 0 0 1 9 3.3zM11 10v7.9a1 1 0 0 0 2 0V10a1 1 0 0 0-2 0z" fill="currentColor"/></symbol>
+  <symbol id="i-box" viewBox="0 0 24 24"><path d="M11.5 2.2a1 1 0 0 1 1 0l8 4.4a1 1 0 0 1 .5.9v9a1 1 0 0 1-.5.9l-8 4.4a1 1 0 0 1-1 0l-8-4.4a1 1 0 0 1-.5-.9v-9a1 1 0 0 1 .5-.9zM5 9.2v7.7l6 3.3v-7.7zm14 0l-6 3.3v7.7l6-3.3zM12 4.2L6.1 7.5 12 10.8l5.9-3.3z" fill="currentColor"/></symbol>
+  <symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 20.5l-1.3-1.2C5.9 15 3 12.3 3 8.9 3 6.2 5.1 4 7.8 4c1.6 0 3.1.8 4.2 2 1.1-1.2 2.6-2 4.2-2C18.9 4 21 6.2 21 8.9c0 3.4-2.9 6.1-7.7 10.4z" fill="currentColor"/></symbol>
+  <symbol id="i-send" viewBox="0 0 24 24"><path d="M21.4 2.6a1 1 0 0 1 .2 1.1l-7.2 17a1 1 0 0 1-1.9-.1l-1.9-7.2-7.2-1.9a1 1 0 0 1-.1-1.9l17-7.2a1 1 0 0 1 1.1.2zM12.6 12.8l1.1 4.2 4.4-10.4z" fill="currentColor"/></symbol>
+  <symbol id="i-doc" viewBox="0 0 24 24"><path d="M6.5 2.5h7.1c.7 0 1.3.3 1.8.7l4.4 4.4c.5.5.7 1.1.7 1.8v10.1a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4.5 19.5v-14A3 3 0 0 1 6.5 2.5zM8 12a1 1 0 0 0 0 2h8a1 1 0 0 0 0-2zm0 4a1 1 0 0 0 0 2h5a1 1 0 0 0 0-2z" fill="currentColor"/></symbol>
+  <symbol id="i-ext" viewBox="0 0 24 24"><path d="M14 3h6a1 1 0 0 1 1 1v6a1 1 0 0 1-2 0V6.4l-7.3 7.3a1 1 0 0 1-1.4-1.4L17.6 5H14a1 1 0 0 1 0-2zM6.5 6H10a1 1 0 0 1 0 2H6.5a.5.5 0 0 0-.5.5v11c0 .3.2.5.5.5h11c.3 0 .5-.2.5-.5V14a1 1 0 0 1 2 0v3.5A2.5 2.5 0 0 1 17.5 20h-11A2.5 2.5 0 0 1 4 17.5v-9A2.5 2.5 0 0 1 6.5 6z" fill="currentColor"/></symbol>
+  <symbol id="i-again" viewBox="0 0 24 24"><path d="M12 5V2.6a.6.6 0 0 0-1-.45L7.2 5.55a.6.6 0 0 0 0 .9L11 9.85a.6.6 0 0 0 1-.45V7a5.5 5.5 0 1 1-5.5 5.5 1 1 0 0 0-2 0A7.5 7.5 0 1 0 12 5z" fill="currentColor"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><path d="M12 2.5a4.5 4.5 0 0 1 4.5 4.5v2h.5A2.5 2.5 0 0 1 19.5 11.5v7A2.5 2.5 0 0 1 17 21H7a2.5 2.5 0 0 1-2.5-2.5v-7A2.5 2.5 0 0 1 7 9h.5V7A4.5 4.5 0 0 1 12 2.5zm0 2A2.5 2.5 0 0 0 9.5 7v2h5V7A2.5 2.5 0 0 0 12 4.5z" fill="currentColor"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.6l4.6 4.6L19.2 7.4" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-warn" viewBox="0 0 24 24"><path d="M10.3 3.9a2 2 0 0 1 3.4 0l8 13.6a2 2 0 0 1-1.7 3H4a2 2 0 0 1-1.7-3zM12 9a1 1 0 0 0-1 1v4a1 1 0 0 0 2 0v-4a1 1 0 0 0-1-1zm0 7.2a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 0 0 0-2.4z" fill="currentColor"/></symbol>
+</defs></svg>
 
-<h1>💡 Feedback &amp; Ideas</h1>
+<div class="head">
+  <div class="tile"><svg class="i"><use href="#i-bulb"/></svg></div>
+  <div class="ht"><h1>Feedback &amp; Ideas</h1><p>Tell us what to build next</p></div>
+</div>
 <p class="sub">Tell us what to build next, what's broken, or what you love. Write it here and send it whichever way suits you — nothing is uploaded on its own.</p>
 
 <div class="card">
   <label>What is this?</label>
   <div class="kinds">
-    <button class="kind" id="k-idea"  aria-pressed="true"  onclick="setKind('idea')">💡 Idea</button>
-    <button class="kind" id="k-bug"   aria-pressed="false" onclick="setKind('bug')">🐞 Something's broken</button>
-    <button class="kind" id="k-app"   aria-pressed="false" onclick="setKind('app')">📦 App request</button>
-    <button class="kind" id="k-love"  aria-pressed="false" onclick="setKind('love')">💚 Something I like</button>
+    <button class="kind" id="k-idea"  aria-pressed="true"  onclick="setKind('idea')"><span class="ki" style="background:#e6a100"><svg class="i"><use href="#i-bulb"/></svg></span>Idea</button>
+    <button class="kind" id="k-bug"   aria-pressed="false" onclick="setKind('bug')"><span class="ki" style="background:#e5342f"><svg class="i"><use href="#i-bug"/></svg></span>Something's broken</button>
+    <button class="kind" id="k-app"   aria-pressed="false" onclick="setKind('app')"><span class="ki" style="background:#6e5ce6"><svg class="i"><use href="#i-box"/></svg></span>App request</button>
+    <button class="kind" id="k-love"  aria-pressed="false" onclick="setKind('love')"><span class="ki" style="background:#1f9d55"><svg class="i"><use href="#i-heart"/></svg></span>Something I like</button>
   </div>
 
-  <label>Which app or part of MyLLM? <span class="count">optional</span></label>
+  <label for="area">Which app or part of MyLLM? <span class="count">optional</span></label>
   <input id="area" placeholder="e.g. Chess, the springboard, voice mode" oninput="draft()">
 
-  <label id="bodyLabel">Your idea <span class="count" id="len">0</span></label>
+  <label id="bodyLabel" for="body">Your idea <span class="count" id="len">0</span></label>
   <textarea id="body" placeholder="The more specific, the more useful." oninput="draft()"></textarea>
 
   <div id="bugWrap" style="display:none">
-    <label>What did you expect to happen instead?</label>
+    <label for="expected">What did you expect to happen instead?</label>
     <textarea id="expected" style="min-height:70px" placeholder="Optional, but it helps a lot." oninput="draft()"></textarea>
   </div>
 
-  <label>How should we reply? <span class="count">optional</span></label>
+  <label for="contact">How should we reply? <span class="count">optional</span></label>
   <input id="contact" placeholder="Email or handle — leave blank to stay anonymous" oninput="draft()">
 
-  <button class="go" onclick="build()">Prepare my feedback</button>
+  <button class="go" onclick="build()"><svg class="i"><use href="#i-doc"/></svg><span>Prepare my feedback</span></button>
   <div class="msg" id="msg"></div>
 </div>
 
 <div class="card" id="out">
   <label>Ready to send</label>
   <textarea id="pkg" readonly onclick="this.select()"></textarea>
-  <button class="go" id="shareBtn" onclick="share()">Send it (email, Messages…)</button>
-  <button class="go ghost" onclick="openIssue()">Post it on GitHub instead</button>
-  <button class="go ghost" onclick="reset()">Clear and start again</button>
+  <button class="go" id="shareBtn" onclick="share()"><svg class="i"><use href="#i-send"/></svg><span>Send it (email, Messages…)</span></button>
+  <button class="go ghost" onclick="openIssue()"><svg class="i"><use href="#i-ext"/></svg><span>Post it on GitHub instead</span></button>
+  <button class="go ghost" onclick="reset()"><svg class="i"><use href="#i-again"/></svg><span>Clear and start again</span></button>
   <p class="note">Send to <b>MyLLM@opticell-limited.com</b>, or open an issue at <b>github.com/TeamDzX/myllm-assets</b>. Every message is read by a human — you may not get a reply to each one, but it all feeds the roadmap.</p>
 </div>
 
 <div class="card privacy">
-  <p class="note" style="margin-top:0"><b>Nothing leaves your phone by itself.</b> This app has no internet access at all — it only builds the text above. It travels only when you tap send, and only to where you choose. Your draft is saved on-device so you don't lose it.</p>
+  <div class="tile"><svg class="i"><use href="#i-lock"/></svg></div>
+  <p class="note"><b>Nothing leaves your phone by itself.</b> This app has no internet access at all — it only builds the text above. It travels only when you tap send, and only to where you choose. Your draft is saved on-device so you don't lose it.</p>
 </div>
 
 <script>
@@ -119,7 +146,13 @@ var KEY = "feedbackDraft";
 
 function el(id){ return document.getElementById(id); }
 function haptic(k){ if(window.myllmHaptic){ try{ myllmHaptic(k||'light'); }catch(_){} } }
-function say(text, cls){ var m = el("msg"); m.textContent = text || ""; m.className = "msg" + (cls ? " " + cls : ""); }
+function say(text, cls){
+  var m = el("msg"); m.className = "msg" + (cls ? " " + cls : "");
+  m.innerHTML = "";
+  if (!text) return;
+  if (cls) m.innerHTML = '<svg><use href="#i-' + (cls === "warn" ? "warn" : "check") + '"/></svg>';
+  var s = document.createElement("span"); s.textContent = text; m.appendChild(s);
+}
 
 function setKind(k){
   kind = k;
@@ -186,7 +219,7 @@ function build(){
   lines.push("Reply to: " + (el("contact").value.trim() || "(no reply needed)"));
   el("pkg").value = lines.join("\n");
   el("out").style.display = "block";
-  el("shareBtn").style.display = window.myllmShare ? "block" : "none";
+  el("shareBtn").style.display = window.myllmShare ? "flex" : "none";
   say("Ready — now choose how to send it.", "ok");
   haptic("success");
   el("out").scrollIntoView({ behavior:"smooth", block:"nearest" });

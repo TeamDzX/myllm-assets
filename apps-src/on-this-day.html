@@ -3,67 +3,151 @@
   On This Day — MyLLMos™ App Gallery · © 2026 Opticell Ltd
   Source-available: read it, remix it, run your version inside MyLLM™.
   Not for redistribution or republication. Terms: https://github.com/TeamDzX/myllm-assets/blob/main/LICENSE
---><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<style>:root{--build-id:"cf0902a5f1";color-scheme:light dark;--accent:#5e5ce6}
-*{box-sizing:border-box}
-body{font-family:-apple-system,system-ui,sans-serif;margin:0;padding:0;background:#f2f2f7;color:#111}
-@media(prefers-color-scheme:dark){body{background:#000;color:#eee}.head{background:rgba(20,20,22,.92)}.item{background:#1c1c1e}.tab{color:#888}}
-.head{position:sticky;top:0;background:rgba(242,242,247,.92);backdrop-filter:saturate(180%) blur(12px);padding:14px 16px 0;z-index:5}
-h1{font-size:20px;margin:0}
-.date{font-size:13px;opacity:.6;margin:2px 0 8px}
-.tabs{display:flex;gap:4px;overflow-x:auto;padding-bottom:10px}
-.tab{flex:none;padding:7px 14px;border-radius:18px;background:none;color:#777;font-size:14px;font-weight:600;border:0;white-space:nowrap}
-.tab.on{background:var(--accent);color:#fff}
-.wrap{padding:6px 16px 24px}
-.item{background:#fff;border-radius:13px;padding:12px 14px;margin-bottom:9px;box-shadow:0 1px 3px rgba(0,0,0,.07);display:flex;gap:12px}
-.year{font-size:15px;font-weight:800;color:var(--accent);min-width:46px}
-.txt{flex:1;min-width:0;font-size:14.5px;line-height:1.45}
-.txt a{color:inherit;text-decoration:none}
-.thumb{width:52px;height:52px;border-radius:8px;object-fit:cover;flex:none}
-#status{padding:16px;text-align:center;font-size:14px;opacity:.7}
-@media(min-width:768px){body{max-width:760px;margin-left:auto;margin-right:auto}}
+--><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>On This Day</title>
+<style>:root{--build-id:"cf0902a5f1";color-scheme:light dark;
+  --bg:var(--myllm-bg,#f2f2f7); --surface:var(--myllm-surface,#fff); --ink:var(--myllm-text,#111);
+  --muted:var(--myllm-muted,#8a8a8e); --line:var(--myllm-border,#e3e3e8); --acc:var(--myllm-accent,#0a84ff);
+  --fill:rgba(120,120,128,.12); --h:245; }
+@media (prefers-color-scheme:dark){ :root{ --bg:var(--myllm-bg,#000); --surface:var(--myllm-surface,#1c1c1e);
+  --ink:var(--myllm-text,#f2f2f7); --muted:var(--myllm-muted,#8e8e93); --line:var(--myllm-border,#2c2c2e); --fill:rgba(120,120,128,.24); } }
+  *{ margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body{ font-family:var(--myllm-font,-apple-system,system-ui,sans-serif); background:var(--bg); color:var(--ink);
+    max-width:600px; margin:0 auto; min-height:100dvh; font-size:15.5px; line-height:1.4;
+    padding:calc(16px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) calc(30px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left)); }
+  @media (min-width:768px){ body{ max-width:760px; } }
+  svg.i{ width:1.25em; height:1.25em; fill:currentColor; flex-shrink:0; }
+  button{ font:inherit; color:inherit; cursor:pointer; } button:active{ transform:scale(.96); }
+  [hidden]{ display:none !important; }
+
+  .head{ display:flex; align-items:center; gap:12px; margin:2px 2px 6px; }
+  .tile{ display:flex; align-items:center; justify-content:center; color:#fff; flex-shrink:0;
+    background:linear-gradient(145deg, hsl(var(--h) 62% 50%), hsl(calc(var(--h) + 40) 58% 28%)); }
+  .head .tile{ width:44px; height:44px; border-radius:13px; font-size:19px; }
+  .head .ht{ flex:1; min-width:0; }
+  h1{ font-size:22px; font-weight:800; letter-spacing:-.01em; }
+  .head p{ font-size:13px; color:var(--muted); margin-top:1px; }
+  .head .acts{ display:flex; gap:8px; flex-shrink:0; }
+  .ib{ width:40px; height:40px; border-radius:12px; border:1px solid var(--line); background:var(--surface); display:flex; align-items:center; justify-content:center; font-size:17px; }
+  .ib.busy svg{ animation:spin .8s linear infinite; }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+
+  .stick{ position:sticky; top:0; z-index:5; margin:0 calc(-16px - env(safe-area-inset-right)) 4px calc(-16px - env(safe-area-inset-left));
+    padding:8px calc(16px + env(safe-area-inset-right)) 10px calc(16px + env(safe-area-inset-left));
+    background:color-mix(in srgb, var(--bg) 90%, transparent); -webkit-backdrop-filter:saturate(180%) blur(12px); backdrop-filter:saturate(180%) blur(12px); }
+  .chips{ display:flex; gap:7px; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none; }
+  .chips::-webkit-scrollbar{ display:none; }
+  .chip{ flex:0 0 auto; min-height:36px; border:1px solid var(--line); background:var(--surface); border-radius:99px; padding:0 15px; font-size:14px; font-weight:650; white-space:nowrap; display:inline-flex; align-items:center; gap:6px; }
+  .chip small{ font-size:12px; font-weight:700; opacity:.6; font-variant-numeric:tabular-nums; }
+  .chip.hot{ background:var(--acc); border-color:var(--acc); color:#fff; }
+  .chip.hot small{ opacity:.85; }
+
+  .item{ display:flex; gap:12px; align-items:flex-start; background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:12px 14px; margin-bottom:8px; }
+  .year{ flex-shrink:0; min-width:48px; font-size:16px; font-weight:800; letter-spacing:-.01em; font-variant-numeric:tabular-nums; color:hsl(var(--h) 70% 55%); padding-top:1px; }
+  .year svg.i{ width:1.1em; height:1.1em; margin-top:2px; }
+  .txt{ flex:1; min-width:0; font-size:15px; line-height:1.45; overflow-wrap:anywhere; }
+  .txt a{ color:inherit; text-decoration:none; }
+  .thumb{ width:56px; height:56px; border-radius:12px; object-fit:cover; flex:none; background:var(--fill); }
+
+  .sk{ display:flex; gap:12px; background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:14px; margin-bottom:8px; }
+  .sk b{ width:44px; height:14px; border-radius:7px; background:var(--fill); flex-shrink:0; animation:pulse 1.3s ease-in-out infinite; }
+  .sk div{ flex:1; }
+  .sk i{ display:block; height:12px; border-radius:6px; background:var(--fill); margin-bottom:9px; animation:pulse 1.3s ease-in-out infinite; }
+  .sk i:last-child{ width:60%; margin-bottom:0; }
+  @keyframes pulse{ 50%{ opacity:.45; } }
+
+  .notice{ display:flex; gap:12px; align-items:flex-start; background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:14px; margin:4px 0 12px; }
+  .notice .tile{ width:36px; height:36px; border-radius:10px; font-size:15px; }
+  .notice.err .tile{ background:linear-gradient(145deg,#ff6b5f,#c0392b); }
+  .notice.off .tile{ background:linear-gradient(145deg,#8e8e93,#48484a); }
+  .notice b{ display:block; font-size:15px; font-weight:750; }
+  .notice p{ font-size:13.5px; color:var(--muted); margin-top:2px; line-height:1.45; }
+  .notice button{ margin-top:10px; min-height:36px; padding:0 14px; border-radius:10px; border:0; background:var(--acc); color:#fff; font-weight:700; font-size:13.5px; display:inline-flex; align-items:center; gap:6px; }
+
+  @media (prefers-reduced-motion:reduce){ .sk i, .sk b, .ib.busy svg{ animation:none; } button:active{ transform:none; } }
 </style></head><body>
-<div class="head"><h1>📜 On This Day</h1><div class="date" id="date"></div><div class="tabs" id="tabs"></div></div>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-cal" viewBox="0 0 24 24"><path d="M7 2.8a1 1 0 0 1 1 1V5h8V3.8a1 1 0 0 1 2 0V5h.5A2.5 2.5 0 0 1 21 7.5v11a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 18.5v-11A2.5 2.5 0 0 1 5.5 5H6V3.8a1 1 0 0 1 1-1zM5 10.2v8.3c0 .3.2.5.5.5h13c.3 0 .5-.2.5-.5v-8.3z"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.6-5.9M20 4v5h-5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-flag" viewBox="0 0 24 24"><path d="M5 3a1 1 0 0 1 1 1v.5c1.6-.9 3.4-.9 5.3-.1 1.9.8 3.6.8 5.3-.1A1 1 0 0 1 18 5.2v8.4a1 1 0 0 1-.5.9c-2.1 1.2-4.3 1.3-6.6.3-1.6-.7-3.2-.6-4.9.4V21a1 1 0 1 1-2 0V4a1 1 0 0 1 1-1z"/></symbol>
+  <symbol id="i-off" viewBox="0 0 24 24"><path d="M3.3 3.3a1 1 0 0 1 1.4 0l16 16a1 1 0 0 1-1.4 1.4l-3.5-3.5a2 2 0 1 1-2.5-2.5L10.8 12a5 5 0 0 0-3.4 1.6 1 1 0 0 1-1.5-1.3 7 7 0 0 1 3.1-2L7 8.4a10 10 0 0 0-3.2 2.2 1 1 0 0 1-1.4-1.4A12 12 0 0 1 5.6 7L3.3 4.7a1 1 0 0 1 0-1.4zM12 6c3.5 0 6.8 1.4 9.2 3.8a1 1 0 0 1-1.4 1.4A11 11 0 0 0 12 8h-.6L9.6 6.2C10.4 6.1 11.2 6 12 6z"/></symbol>
+  <symbol id="i-warn" viewBox="0 0 24 24"><path d="M10.3 3.9a2 2 0 0 1 3.4 0l8 13.6a2 2 0 0 1-1.7 3H4a2 2 0 0 1-1.7-3zM12 9a1 1 0 0 0-1 1v4a1 1 0 0 0 2 0v-4a1 1 0 0 0-1-1zm0 7.2a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 0 0 0-2.4z"/></symbol>
+</defs></svg>
+
+<div class="head">
+  <div class="tile"><svg class="i"><use href="#i-cal"/></svg></div>
+  <div class="ht"><h1>On This Day</h1><p id="date"></p></div>
+  <div class="acts"><button class="ib" id="refresh" type="button" aria-label="Refresh"><svg class="i"><use href="#i-refresh"/></svg></button></div>
+</div>
+<div class="stick"><div class="chips" id="tabs"></div></div>
 <div id="status"></div>
-<div class="wrap" id="wrap"></div>
+<div id="wrap"></div>
+
 <script>
 var TABS=[['Events','events'],['Births','births'],['Deaths','deaths'],['Holidays','holidays']];
-var active=0,data=null;
+var active=0,data=null,loading=false;
 function el(i){return document.getElementById(i)}
-function setStatus(t){var s=el('status');s.style.display=t?'block':'none';s.textContent=t||''}
+function icon(n){return '<svg class="i"><use href="#i-'+n+'"/></svg>'}
+/* Looked up when used, never kept: MyLLM can add bridges after this script runs. */
+function net(){return window.myllmFetch||null}
+function haptic(k){if(window.myllmHaptic)try{myllmHaptic(k)}catch(e){}}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 var now=new Date();
 var MM=String(now.getMonth()+1).padStart(2,'0'),DD=String(now.getDate()).padStart(2,'0');
-el('date').textContent=now.toLocaleDateString(undefined,{month:'long',day:'numeric'});
+var DAYNAME=now.toLocaleDateString(undefined,{month:'long',day:'numeric'});
+el('date').textContent='History for '+DAYNAME;
 
-function renderTabs(){var T=el('tabs');T.innerHTML='';TABS.forEach(function(t,i){var b=document.createElement('button');b.className='tab'+(i===active?' on':'');b.textContent=t[0];b.onclick=function(){active=i;render()};T.appendChild(b)})}
+function notice(kind,title,text,retry){
+  var S=el('status');
+  S.innerHTML='<div class="notice '+kind+'"><div class="tile">'+icon(kind==='off'?'off':'warn')+'</div><div><b>'+esc(title)+'</b><p>'+esc(text)+'</p>'+
+    (retry?'<button type="button">'+icon('refresh')+'Try again</button>':'')+'</div></div>';
+  if(retry)S.querySelector('button').onclick=retry;
+}
+function skeleton(){var h='';for(var i=0;i<6;i++)h+='<div class="sk"><b></b><div><i></i><i></i></div></div>';el('wrap').innerHTML=h}
+
+function renderTabs(){
+  var T=el('tabs');T.innerHTML='';
+  TABS.forEach(function(t,i){
+    var b=document.createElement('button');b.type='button';b.className='chip'+(i===active?' hot':'');
+    var n=data&&data[t[1]]?data[t[1]].length:null;
+    b.innerHTML=esc(t[0])+(n!=null?'<small>'+n+'</small>':'');
+    b.onclick=function(){if(active===i)return;active=i;haptic('selection');render();window.scrollTo({top:0})};
+    T.appendChild(b);
+  });
+}
 
 function loadAll(){
-  if(!window.myllmFetch){setStatus('This app needs network access — enable it in Settings.');return}
-  setStatus('Looking up '+el('date').textContent+'…');
-  myllmFetch('https://api.wikimedia.org/feed/v1/wikipedia/en/onthisday/all/'+MM+'/'+DD,
+  el('status').innerHTML='';
+  if(!net()){el('wrap').innerHTML='';notice('off','Network access is off','On This Day needs “Allow apps to use the internet” in MyLLM’s Settings.',loadAll);return}
+  skeleton();loading=true;el('refresh').classList.add('busy');
+  net()('https://api.wikimedia.org/feed/v1/wikipedia/en/onthisday/all/'+MM+'/'+DD,
     {headers:{'Api-User-Agent':'MyLLMos/1.0 (https://opticell-limited.com/myllm)'}})
   .then(function(r){
     if(!r||!r.ok)throw new Error('HTTP '+((r&&r.status)||'?'));
-    data=JSON.parse(r.body);setStatus('');render();
-  }).catch(function(e){setStatus('Couldn’t load history: '+e.message)});
+    data=JSON.parse(r.body);render();
+  }).catch(function(e){el('wrap').innerHTML='';notice('err','Couldn’t load history',e.message,loadAll)})
+  .then(function(){loading=false;el('refresh').classList.remove('busy')});
 }
 
 function render(){
   renderTabs();var W=el('wrap');W.innerHTML='';if(!data)return;
+  el('status').innerHTML='';
   var list=(data[TABS[active][1]]||[]).slice();
   list.sort(function(a,b){return (b.year||0)-(a.year||0)});
-  if(!list.length){W.innerHTML='<div style="opacity:.5;text-align:center;padding:30px">Nothing listed for today.</div>';return}
+  if(!list.length){notice('err','Nothing listed for today','Try another tab.',null);return}
   list.forEach(function(ev){
     var page=ev.pages&&ev.pages[0];
     var url=page&&page.content_urls&&page.content_urls.desktop&&page.content_urls.desktop.page;
     var thumb=page&&page.thumbnail&&page.thumbnail.source;
     var c=document.createElement('div');c.className='item';
-    var inner='<div class="year">'+(ev.year?ev.year:'•')+'</div><div class="txt">'+
-      (url?'<a href="'+url+'" target="_top" rel="noopener">'+esc(ev.text)+'</a>':esc(ev.text))+'</div>';
-    if(thumb)inner+='<img class="thumb" src="'+esc(thumb)+'" alt="" loading="lazy" onerror="this.remove()">';
-    c.innerHTML=inner;W.appendChild(c);
+    var inner='<div class="year">'+(ev.year?ev.year:icon('flag'))+'</div><div class="txt">'+
+      (url?'<a href="'+esc(url)+'" target="_top" rel="noopener">'+esc(ev.text)+'</a>':esc(ev.text))+'</div>';
+    if(thumb)inner+='<img class="thumb" src="'+esc(thumb)+'" alt="" loading="lazy">';
+    c.innerHTML=inner;
+    var im=c.querySelector('img');if(im)im.onerror=function(){if(im.parentNode)im.parentNode.removeChild(im)};
+    W.appendChild(c);
   });
 }
-function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+el('refresh').onclick=function(){if(loading)return;haptic('light');loadAll()};
 renderTabs();loadAll();
 </script></body></html>

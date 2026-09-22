@@ -3,56 +3,133 @@
   QR Generator — MyLLMos™ App Gallery · © 2026 Opticell Ltd
   Source-available: read it, remix it, run your version inside MyLLM™.
   Not for redistribution or republication. Terms: https://github.com/TeamDzX/myllm-assets/blob/main/LICENSE
---><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<style>:root{--build-id:"d41709542b";color-scheme:light dark;--accent:#0a84ff}
-*{box-sizing:border-box}
-body{font-family:-apple-system,system-ui,sans-serif;margin:0;padding:18px 16px;background:#f2f2f7;color:#111}
-@media(prefers-color-scheme:dark){body{background:#000;color:#eee}textarea,select,.qrwrap{background:#1c1c1e;color:#eee;border-color:#3a3a3c}}
-h1{font-size:22px;margin:0 0 4px}
-.sub{font-size:13px;opacity:.6;margin-bottom:14px}
-textarea{width:100%;height:84px;padding:12px;border:1px solid #d1d1d6;border-radius:11px;font-size:15px;background:#fff;color:#111;resize:vertical;-webkit-user-select:text;user-select:text}
-.opts{display:flex;gap:8px;margin:10px 0}
-.opts label{flex:1;font-size:12px;opacity:.6}
-select{width:100%;padding:9px;border:1px solid #d1d1d6;border-radius:9px;font-size:15px;background:#fff;color:#111;margin-top:3px}
-button.go{width:100%;border:0;background:var(--accent);color:#fff;border-radius:11px;padding:13px;font-size:15px;font-weight:600}
-button:disabled{opacity:.5}
-#status{font-size:13px;opacity:.75;min-height:18px;text-align:center;margin:12px 0}
-.qrwrap{background:#fff;border-radius:18px;padding:18px;margin-top:8px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,.1);display:none}
-.qrwrap img{width:100%;max-width:300px;image-rendering:pixelated;border-radius:8px}
-.acts{display:flex;gap:8px;margin-top:14px}
-.acts button{flex:1;border:0;border-radius:10px;padding:11px;font-size:14px;font-weight:600;background:#e8eefc;color:var(--accent)}
-@media(prefers-color-scheme:dark){.acts button{background:#15223a}}
-@media(min-width:768px){body{max-width:760px;margin-left:auto;margin-right:auto}}
+--><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>QR Generator</title>
+<style>:root{--build-id:"d41709542b";color-scheme:light dark;
+  --bg:var(--myllm-bg,#f2f2f7); --surface:var(--myllm-surface,#fff); --ink:var(--myllm-text,#111);
+  --muted:var(--myllm-muted,#8a8a8e); --line:var(--myllm-border,#e3e3e8); --acc:var(--myllm-accent,#0a84ff);
+  --fill:rgba(120,120,128,.12); --h:215; }
+@media (prefers-color-scheme:dark){ :root{ --bg:var(--myllm-bg,#000); --surface:var(--myllm-surface,#1c1c1e);
+  --ink:var(--myllm-text,#f2f2f7); --muted:var(--myllm-muted,#8e8e93); --line:var(--myllm-border,#2c2c2e); --fill:rgba(120,120,128,.24); } }
+  *{ margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body{ font-family:var(--myllm-font,-apple-system,system-ui,sans-serif); background:var(--bg); color:var(--ink);
+    max-width:600px; margin:0 auto; min-height:100dvh; font-size:15.5px; line-height:1.4;
+    padding:calc(16px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) calc(30px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left)); }
+  @media (min-width:768px){ body{ max-width:760px; } }
+  svg.i{ width:1.25em; height:1.25em; fill:currentColor; flex-shrink:0; }
+  button{ font:inherit; color:inherit; cursor:pointer; } button:active{ transform:scale(.96); }
+
+  .head{ display:flex; align-items:center; gap:12px; margin:2px 2px 14px; }
+  .tile{ display:flex; align-items:center; justify-content:center; color:#fff; flex-shrink:0;
+    background:linear-gradient(145deg, hsl(var(--h) 62% 50%), hsl(calc(var(--h) + 40) 58% 28%)); }
+  .head .tile{ width:44px; height:44px; border-radius:13px; font-size:19px; }
+  .head .ht{ flex:1; min-width:0; }
+  h1{ font-size:22px; font-weight:800; letter-spacing:-.01em; }
+  .head p{ font-size:13px; color:var(--muted); margin-top:1px; }
+
+  .card{ background:var(--surface); border:1px solid var(--line); border-radius:18px; padding:14px; margin-bottom:12px; }
+  label{ display:block; font-size:12px; font-weight:800; letter-spacing:.07em; text-transform:uppercase; color:var(--muted); margin:14px 2px 7px; }
+  label:first-child{ margin-top:0; }
+  textarea{ display:block; width:100%; height:90px; padding:12px; border:1px solid var(--line); border-radius:12px; font:inherit; font-size:16px;
+    background:var(--bg); color:var(--ink); resize:vertical; outline:none; -webkit-user-select:text; user-select:text; }
+  textarea:focus{ border-color:var(--acc); }
+  .opts{ display:grid; grid-template-columns:1fr 1fr; gap:10px; align-items:end; }
+  select{ width:100%; min-height:44px; border:1px solid var(--line); border-radius:12px; padding:0 10px; background:var(--bg); color:var(--ink); font:inherit; font-size:16px; }
+  .go{ width:100%; min-height:50px; margin-top:16px; border:none; border-radius:14px; background:var(--acc); color:#fff; font-size:16px; font-weight:700;
+    display:flex; align-items:center; justify-content:center; gap:8px; }
+  .go:disabled{ opacity:.6; }
+  .spin{ width:16px; height:16px; border-radius:50%; border:2.4px solid currentColor; border-right-color:transparent; animation:spin .8s linear infinite; flex-shrink:0; }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+  #status{ font-size:13.5px; color:var(--muted); line-height:1.45; text-align:center; margin:10px 4px 0; }
+  #status:empty{ display:none; }
+  #status.err{ color:#e5342f; } #status.ok{ color:#1f9d55; }
+
+  /* The QR sits on white in every theme: a code on a dark card doesn't scan. */
+  .hero{ border-radius:22px; padding:16px; margin-bottom:12px; color:#fff;
+    background:linear-gradient(145deg, hsl(var(--h) 62% 46%), hsl(calc(var(--h) + 40) 58% 24%)); box-shadow:0 10px 28px hsl(var(--h) 60% 30% / .25); }
+  .qrbox{ background:#fff; border-radius:16px; padding:14px; display:flex; justify-content:center; }
+  .qrbox img{ width:100%; max-width:300px; aspect-ratio:1; image-rendering:pixelated; display:block; }
+  .cap{ font-size:12.5px; opacity:.85; margin:10px 2px 0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .acts{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:12px; }
+  .acts button{ min-height:48px; border-radius:13px; border:1px solid rgba(255,255,255,.22); background:rgba(255,255,255,.16); color:#fff;
+    font-size:13.5px; font-weight:700; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; padding:6px 4px;
+    -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px); }
+  .acts button svg{ width:19px; height:19px; }
+  @media (max-width:360px){ .acts button{ font-size:12px; } }
+
+  /* Show-to-scan stage: the code huge on white, screen kept awake. */
+  .stage{ position:fixed; inset:0; z-index:50; background:#fff; color:#111; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:18px;
+    padding:calc(20px + env(safe-area-inset-top)) calc(20px + env(safe-area-inset-right)) calc(24px + env(safe-area-inset-bottom)) calc(20px + env(safe-area-inset-left)); }
+  .stage img{ width:min(88vw, 72vh, 560px); aspect-ratio:1; image-rendering:pixelated; display:block; }
+  .stage .st{ font-size:14px; color:#555; max-width:min(88vw,560px); text-align:center; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .stage .done{ min-height:54px; min-width:200px; border:none; border-radius:99px; background:#111; color:#fff; font-size:17px; font-weight:750;
+    display:flex; align-items:center; justify-content:center; gap:8px; padding:0 28px; }
+  @media (max-height:520px){
+    .stage{ flex-direction:row; gap:28px; }
+    .stage img{ width:min(78vh, 60vw); }
+    .stage .side{ display:flex; flex-direction:column; align-items:center; gap:16px; max-width:40vw; }
+  }
+  @media (min-height:521px){ .stage .side{ display:contents; } }
+  [hidden]{ display:none !important; }
+  @media (prefers-reduced-motion:reduce){ .spin{ animation-duration:2.4s; } button:active{ transform:none; } }
 </style></head><body>
-<h1>🔳 QR Generator</h1>
-<div class="sub">Turn any text or link into a scannable QR code — then save it to Photos.</div>
-<textarea id="text" placeholder="Text, URL, Wi-Fi, contact… anything" enterkeyhint="go" autocapitalize="off">https://www.opticell-limited.com/myllm</textarea>
-<div class="opts">
-  <label>Size<select id="size"><option value="240">Small</option><option value="360" selected>Medium</option><option value="600">Large</option></select></label>
-  <label>Error correction<select id="ecc"><option value="L">Low</option><option value="M" selected>Medium</option><option value="Q">Quartile</option><option value="H">High</option></select></label>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-qr" viewBox="0 0 24 24"><path d="M3 3h8v8H3zm2 2v4h4V5zm8-2h8v8h-8zm2 2v4h4V5zM3 13h8v8H3zm2 2v4h4v-4zm1-9h2v2H6zm10 0h2v2h-2zM6 16h2v2H6zm7-3h2v2h-2zm2 2h2v2h-2zm-2 2h2v4h-2zm4-4h4v2h-2v2h-2zm2 4h2v4h-4v-2h2zm-4 2h2v2h-2z" fill="currentColor"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24"><path d="M12 3.5a1 1 0 0 1 1 1v9.1l3.3-3.3a1 1 0 1 1 1.4 1.4l-5 5a1 1 0 0 1-1.4 0l-5-5a1 1 0 1 1 1.4-1.4l3.3 3.3V4.5a1 1 0 0 1 1-1zM4.5 19a1 1 0 0 1 1-1h13a1 1 0 0 1 0 2h-13a1 1 0 0 1-1-1z" fill="currentColor"/></symbol>
+  <symbol id="i-share" viewBox="0 0 24 24"><path d="M12 2.6a1 1 0 0 1 .7.3l3.5 3.5a1 1 0 1 1-1.4 1.4L13 6v8.5a1 1 0 0 1-2 0V6L9.2 7.8a1 1 0 0 1-1.4-1.4l3.5-3.5a1 1 0 0 1 .7-.3zM6.5 10h1a1 1 0 0 1 0 2h-1a.5.5 0 0 0-.5.5v7c0 .3.2.5.5.5h11c.3 0 .5-.2.5-.5v-7a.5.5 0 0 0-.5-.5h-1a1 1 0 0 1 0-2h1a2.5 2.5 0 0 1 2.5 2.5v7a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 19.5v-7A2.5 2.5 0 0 1 6.5 10z" fill="currentColor"/></symbol>
+  <symbol id="i-expand" viewBox="0 0 24 24"><path d="M4 9V5a1 1 0 0 1 1-1h4M15 4h4a1 1 0 0 1 1 1v4M20 15v4a1 1 0 0 1-1 1h-4M9 20H5a1 1 0 0 1-1-1v-4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.6l4.6 4.6L19.2 7.4" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+</defs></svg>
+
+<div class="head">
+  <div class="tile"><svg class="i"><use href="#i-qr"/></svg></div>
+  <div class="ht"><h1>QR Generator</h1><p>Turn any text or link into a scannable QR code</p></div>
 </div>
-<button class="go" id="go" onclick="generate()">Generate QR</button>
-<div id="status"></div>
-<div class="qrwrap" id="qrwrap">
-  <img id="qr" alt="QR code">
+
+<div class="card">
+  <label for="text">Text or link</label>
+  <textarea id="text" placeholder="Text, URL, Wi-Fi, contact… anything" enterkeyhint="go" autocapitalize="off">https://www.opticell-limited.com/myllm</textarea>
+  <div class="opts">
+    <div><label for="size">Size</label><select id="size"><option value="240">Small</option><option value="360" selected>Medium</option><option value="600">Large</option></select></div>
+    <div><label for="ecc">Error correction</label><select id="ecc"><option value="L">Low</option><option value="M" selected>Medium</option><option value="Q">Quartile</option><option value="H">High</option></select></div>
+  </div>
+  <button class="go" id="go" type="button" onclick="generate()"></button>
+  <div id="status"></div>
+</div>
+
+<div class="hero" id="qrwrap" hidden>
+  <div class="qrbox"><img id="qr" alt="QR code"></div>
+  <div class="cap" id="cap"></div>
   <div class="acts">
-    <button onclick="saveImg()">⬇︎ Save to Photos</button>
-    <button onclick="shareText()">↗︎ Share text</button>
+    <button type="button" onclick="showStage()"><svg><use href="#i-expand"/></svg>Full screen</button>
+    <button type="button" onclick="saveImg()"><svg><use href="#i-down"/></svg>Save</button>
+    <button type="button" onclick="shareText()"><svg><use href="#i-share"/></svg>Share text</button>
+  </div>
+</div>
+
+<div class="stage" id="stage" hidden>
+  <img id="bigqr" alt="QR code">
+  <div class="side">
+    <div class="st" id="stageText"></div>
+    <button class="done" type="button" onclick="hideStage()"><svg class="i"><use href="#i-check"/></svg>Done</button>
   </div>
 </div>
 <script>
-var store=window.myllmStorage||{getItem:function(){return Promise.resolve(null)},setItem:function(){return Promise.resolve()}};
-var dataUrl=null;
+/* Bridges are looked up when used, never kept: MyLLM can add them after this
+   script has run. */
+function store(){return window.myllmStorage||{getItem:function(){return Promise.resolve(null)},setItem:function(){return Promise.resolve()}}}
+var dataUrl=null,stageOn=false;
 function el(i){return document.getElementById(i)}
-function setStatus(t){el('status').textContent=t||''}
+function setStatus(t,cls){var s=el('status');s.textContent=t||'';s.className=cls||''}
+function goBtn(busy){var b=el('go');b.disabled=!!busy;b.innerHTML=busy?'<i class="spin"></i><span>Generating…</span>':'<svg class="i"><use href="#i-qr"/></svg><span>Generate QR</span>'}
 
 function generate(){
   var text=el('text').value.trim();
-  if(!text){setStatus('Enter some text or a link first.');return}
-  if(!window.myllmFetch){setStatus('QR codes are generated over the network — turn on app network access in Settings → MyLLMos Apps.');return}
-  store.setItem('last',text);
+  if(!text){setStatus('Enter some text or a link first.','err');return}
+  if(!window.myllmFetch){setStatus('QR codes are generated over the network — turn on app network access in Settings → MyLLMos Apps.','err');return}
+  store().setItem('last',text);
   var size=el('size').value,ecc=el('ecc').value;
-  el('go').disabled=true;setStatus('Generating…');el('qrwrap').style.display='none';
+  goBtn(true);setStatus('');el('qrwrap').hidden=true;
   var url='https://api.qrserver.com/v1/create-qr-code/?size='+size+'x'+size+'&ecc='+ecc+'&margin=8&data='+encodeURIComponent(text);
   myllmFetch(url,{headers:{Accept:'image/png'}})
   .then(function(r){
@@ -60,20 +137,37 @@ function generate(){
     var b64=r.bodyBase64||'';
     if(!b64)throw new Error('no image came back');
     dataUrl='data:image/png;base64,'+b64;
-    el('qr').src=dataUrl;el('qrwrap').style.display='block';setStatus('');
+    el('qr').src=dataUrl;el('cap').textContent=text;el('qrwrap').hidden=false;setStatus('');
     if(window.myllmHaptic)myllmHaptic('success');
-  }).catch(function(err){setStatus('Couldn’t generate: '+err.message)})
-  .then(function(){el('go').disabled=false});
+  }).catch(function(err){setStatus('Couldn’t generate: '+err.message,'err')})
+  .then(function(){goBtn(false)});
 }
 function saveImg(){
   if(!dataUrl)return;
-  if(!window.myllmSaveImage){setStatus('Saving to Photos needs the latest MyLLM.');return}
-  Promise.resolve(myllmSaveImage(dataUrl)).then(function(){setStatus('✓ Saved to Photos')})
-  .catch(function(e){setStatus('Couldn’t save: '+(e&&e.message||e))});
+  if(!window.myllmSaveImage){setStatus('Saving to Photos needs the latest MyLLM.','err');return}
+  Promise.resolve(myllmSaveImage(dataUrl)).then(function(){setStatus('Saved to Photos','ok')})
+  .catch(function(e){setStatus('Couldn’t save: '+(e&&e.message||e),'err')});
 }
 function shareText(){var t=el('text').value.trim();if(t&&window.myllmShare)myllmShare(t)}
 
+/* Full screen for someone else to scan: MyLLM's bars hidden and the screen
+   kept awake while it's up (myllmImmersive), released the moment it closes. */
+function syncChrome(){
+  if(!window.myllmImmersive)return;
+  try{myllmImmersive(stageOn,{keepAwake:stageOn}).catch(function(){})}catch(_){}
+}
+function showStage(){
+  if(!dataUrl)return;
+  el('bigqr').src=dataUrl;el('stageText').textContent=el('text').value.trim();
+  stageOn=true;el('stage').hidden=false;syncChrome();
+  if(window.myllmHaptic)myllmHaptic('light');
+}
+function hideStage(){stageOn=false;el('stage').hidden=true;syncChrome()}
+document.addEventListener('visibilitychange',function(){if(!document.hidden&&stageOn)syncChrome()});   /* MyLLM puts its bars back when the app is left */
+document.addEventListener('keydown',function(e){if(e.key==='Escape'&&stageOn)hideStage()});
+
 el('text').addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();generate()}});
-store.getItem('last').then(function(v){if(v)el('text').value=v});
-if(!window.myllmFetch)setStatus('Heads-up: this app needs app network access (Settings → MyLLMos Apps).');
+goBtn(false);
+store().getItem('last').then(function(v){if(v)el('text').value=v});
+setTimeout(function(){if(!window.myllmFetch&&!el('status').textContent)setStatus('Heads-up: this app needs app network access (Settings → MyLLMos Apps).')},700);
 </script></body></html>

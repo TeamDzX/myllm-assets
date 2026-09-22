@@ -9,77 +9,105 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Submit Your App</title>
 <style>
-  :root { color-scheme: light dark; }
+  :root{ color-scheme:light dark;
+    --bg:var(--myllm-bg,#f2f2f7); --surface:var(--myllm-surface,#fff); --ink:var(--myllm-text,#111);
+    --muted:var(--myllm-muted,#8a8a8e); --line:var(--myllm-border,#e3e3e8); --acc:var(--myllm-accent,#0a84ff);
+    --fill:rgba(120,120,128,.12); --h:222; }
+  @media (prefers-color-scheme:dark){ :root{ --bg:var(--myllm-bg,#000); --surface:var(--myllm-surface,#1c1c1e);
+    --ink:var(--myllm-text,#f2f2f7); --muted:var(--myllm-muted,#8e8e93); --line:var(--myllm-border,#2c2c2e); --fill:rgba(120,120,128,.24); } }
   * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-  body{
-    font-family:var(--myllm-font,-apple-system,system-ui,sans-serif);
-    background:var(--myllm-bg,#f2f2f7);
-    color:var(--myllm-text,#111);
-    max-width:640px; margin:0 auto; min-height:100dvh;
-    padding:16px 16px calc(30px + env(safe-area-inset-bottom));
-  }
-  h1{ font-size:22px; font-weight:800; margin:6px 2px 4px; }
-  p.sub{ font-size:13.5px; color:var(--myllm-muted,#8a8a8e); margin:0 2px 14px; line-height:1.5; }
-  .card{
-    background:var(--myllm-surface,#fff); border:1px solid var(--myllm-border,#e3e3e8);
-    border-radius:16px; padding:14px; margin-bottom:12px;
-  }
-  label{ display:block; font-size:11.5px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; color:var(--myllm-muted,#8a8a8e); margin:12px 0 6px; }
+  body{ font-family:var(--myllm-font,-apple-system,system-ui,sans-serif); background:var(--bg); color:var(--ink);
+    max-width:640px; margin:0 auto; min-height:100dvh; font-size:15.5px; line-height:1.4;
+    padding:calc(16px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) calc(30px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left)); }
+  @media (min-width:768px){ body{ max-width:760px; } }
+  svg.i{ width:1.25em; height:1.25em; fill:currentColor; flex-shrink:0; }
+  button{ font:inherit; color:inherit; cursor:pointer; } button:active{ transform:scale(.97); }
+
+  .head{ display:flex; align-items:center; gap:12px; margin:2px 2px 12px; }
+  .tile{ display:flex; align-items:center; justify-content:center; color:#fff; flex-shrink:0;
+    background:linear-gradient(145deg, hsl(var(--h) 62% 50%), hsl(calc(var(--h) + 40) 58% 28%)); }
+  .head .tile{ width:44px; height:44px; border-radius:13px; font-size:19px; }
+  .head .ht{ flex:1; min-width:0; }
+  h1{ font-size:22px; font-weight:800; letter-spacing:-.01em; }
+  .head p{ font-size:13px; color:var(--muted); margin-top:1px; }
+  p.sub{ font-size:14px; color:var(--muted); margin:0 2px 14px; line-height:1.5; }
+
+  .card{ background:var(--surface); border:1px solid var(--line); border-radius:18px; padding:14px; margin-bottom:12px; }
+  label{ display:block; font-size:12px; font-weight:800; letter-spacing:.07em; text-transform:uppercase; color:var(--muted); margin:14px 2px 7px; }
   label:first-child{ margin-top:0; }
-  input, textarea{
-    width:100%; font-size:15px; padding:11px 12px; border-radius:12px;
-    border:1px solid var(--myllm-border,#e3e3e8); background:var(--myllm-bg,#f2f2f7); color:var(--myllm-text,#111);
-    font-family:inherit;
-  }
-  textarea#code{ min-height:150px; font-family:ui-monospace,Menlo,monospace; font-size:12px; resize:vertical; }
-  .go{
-    width:100%; border:none; border-radius:13px; padding:14px; margin-top:12px;
-    font-size:15.5px; font-weight:750; background:var(--myllm-accent,#0a84ff); color:#fff;
-  }
-  .go.ghost{ background:var(--myllm-bg,#f2f2f7); color:var(--myllm-text,#111); border:1px solid var(--myllm-border,#e3e3e8); }
-  .check{ display:flex; gap:10px; padding:8px 0; border-bottom:1px solid var(--myllm-border,#e3e3e8); font-size:14px; align-items:flex-start; }
-  .check:last-child{ border-bottom:none; }
-  .check .ic{ flex-shrink:0; font-size:15px; }
-  .check small{ display:block; color:var(--myllm-muted,#8a8a8e); font-size:12px; margin-top:2px; line-height:1.4; }
-  .steps{ font-size:14px; line-height:1.6; }
-  .steps b{ font-weight:750; }
-  .note{ font-size:12.5px; color:var(--myllm-muted,#8a8a8e); line-height:1.5; margin-top:10px; }
-  .note a{ color:var(--myllm-accent,#0a84ff); }
+  input, textarea{ width:100%; font:inherit; font-size:16px; padding:12px; border-radius:12px;
+    border:1px solid var(--line); background:var(--bg); color:var(--ink); outline:none; }
+  input:focus, textarea:focus{ border-color:var(--acc); }
+  textarea#code{ min-height:150px; font-family:ui-monospace,Menlo,monospace; font-size:16px; line-height:1.4; resize:vertical; }
+  .go{ width:100%; min-height:50px; border:none; border-radius:14px; margin-top:14px; font-size:16px; font-weight:700;
+    background:var(--acc); color:#fff; display:flex; align-items:center; justify-content:center; gap:8px; }
+  .go.ghost{ background:var(--bg); color:var(--ink); border:1px solid var(--line); margin-top:10px; }
+
+  .how{ display:flex; gap:12px; align-items:flex-start; }
+  .how .tile{ width:36px; height:36px; border-radius:10px; font-size:16px; }
+  .how b{ display:block; font-size:15px; font-weight:750; margin-bottom:3px; }
+  .how span{ font-size:14px; line-height:1.55; color:var(--ink); }
+  .how span em{ font-style:normal; font-weight:700; }
+
+  #checks:not(:empty){ margin-top:12px; }
+  .check{ display:flex; gap:10px; padding:9px 0; border-bottom:1px solid var(--line); font-size:14.5px; font-weight:600; align-items:flex-start; }
+  .check:first-child{ padding-top:0; } .check:last-child{ border-bottom:none; padding-bottom:0; }
+  .check .ic{ flex-shrink:0; width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#fff; margin-top:-1px; }
+  .check .ic svg{ width:13px; height:13px; }
+  .check .ic.ok{ background:#1f9d55; } .check .ic.bad{ background:#e5342f; } .check .ic.info{ background:var(--muted); }
+  .check small{ display:block; color:var(--muted); font-size:12.5px; font-weight:500; margin-top:2px; line-height:1.4; overflow-wrap:anywhere; }
+  .note{ font-size:12.5px; color:var(--muted); line-height:1.55; margin-top:12px; }
+  .note b{ color:var(--ink); }
   #out{ display:none; }
-  #pkg{ min-height:110px; font-family:ui-monospace,Menlo,monospace; font-size:11px; }
+  #pkg{ min-height:110px; font-family:ui-monospace,Menlo,monospace; font-size:13px; }
+  @media (prefers-reduced-motion:reduce){ button:active{ transform:none; } }
 </style>
 <style>:root{--build-id:"c24a549174";}</style>
 </head>
 <body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-plane" viewBox="0 0 24 24"><path d="M21.4 2.6a1 1 0 0 1 .2 1.1l-7.2 17a1 1 0 0 1-1.9-.1l-1.9-7.2-7.2-1.9a1 1 0 0 1-.1-1.9l17-7.2a1 1 0 0 1 1.1.2zM12.6 12.8l1.1 4.2 4.4-10.4z" fill="currentColor"/></symbol>
+  <symbol id="i-code" viewBox="0 0 24 24"><path d="M8.7 6.3a1 1 0 0 1 0 1.4L4.4 12l4.3 4.3a1 1 0 1 1-1.4 1.4l-5-5a1 1 0 0 1 0-1.4l5-5a1 1 0 0 1 1.4 0zm6.6 0a1 1 0 0 1 1.4 0l5 5a1 1 0 0 1 0 1.4l-5 5a1 1 0 1 1-1.4-1.4l4.3-4.3-4.3-4.3a1 1 0 0 1 0-1.4z" fill="currentColor"/></symbol>
+  <symbol id="i-box" viewBox="0 0 24 24"><path d="M11.5 2.2a1 1 0 0 1 1 0l8 4.4a1 1 0 0 1 .5.9v9a1 1 0 0 1-.5.9l-8 4.4a1 1 0 0 1-1 0l-8-4.4a1 1 0 0 1-.5-.9v-9a1 1 0 0 1 .5-.9zM5 9.2v7.7l6 3.3v-7.7zm14 0l-6 3.3v7.7l6-3.3zM12 4.2L6.1 7.5 12 10.8l5.9-3.3z" fill="currentColor"/></symbol>
+  <symbol id="i-share" viewBox="0 0 24 24"><path d="M12 2.6a1 1 0 0 1 .7.3l3.5 3.5a1 1 0 1 1-1.4 1.4L13 6v8.5a1 1 0 0 1-2 0V6L9.2 7.8a1 1 0 0 1-1.4-1.4l3.5-3.5a1 1 0 0 1 .7-.3zM6.5 10h1a1 1 0 0 1 0 2h-1a.5.5 0 0 0-.5.5v7c0 .3.2.5.5.5h11c.3 0 .5-.2.5-.5v-7a.5.5 0 0 0-.5-.5h-1a1 1 0 0 1 0-2h1a2.5 2.5 0 0 1 2.5 2.5v7a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 19.5v-7A2.5 2.5 0 0 1 6.5 10z" fill="currentColor"/></symbol>
+  <symbol id="i-ext" viewBox="0 0 24 24"><path d="M14 3h6a1 1 0 0 1 1 1v6a1 1 0 0 1-2 0V6.4l-7.3 7.3a1 1 0 0 1-1.4-1.4L17.6 5H14a1 1 0 0 1 0-2zM6.5 6H10a1 1 0 0 1 0 2H6.5a.5.5 0 0 0-.5.5v11c0 .3.2.5.5.5h11c.3 0 .5-.2.5-.5V14a1 1 0 0 1 2 0v3.5A2.5 2.5 0 0 1 17.5 20h-11A2.5 2.5 0 0 1 4 17.5v-9A2.5 2.5 0 0 1 6.5 6z" fill="currentColor"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.6l4.6 4.6L19.2 7.4" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24"><path d="M12 10.2a1.4 1.4 0 0 1 1.4 1.4v6a1.4 1.4 0 0 1-2.8 0v-6a1.4 1.4 0 0 1 1.4-1.4zm0-5.2a1.7 1.7 0 1 1 0 3.4 1.7 1.7 0 0 1 0-3.4z" fill="currentColor"/></symbol>
+</defs></svg>
 
-<h1>🚀 Submit Your App</h1>
+<div class="head">
+  <div class="tile"><svg class="i"><use href="#i-plane"/></svg></div>
+  <div class="ht"><h1>Submit Your App</h1><p>Put your creation in this gallery</p></div>
+</div>
 <p class="sub">Built something good in MyLLM? Put it in this gallery, on iOS and Android, credited to you. This wizard checks the house rules and packages your submission — a human reviews every app before it goes live.</p>
 
-<div class="card steps">
-  <b>How to get your app's code:</b> springboard → long-press your app → <b>View Code</b> → select all → copy. Then paste it below.
+<div class="card how">
+  <div class="tile"><svg class="i"><use href="#i-code"/></svg></div>
+  <div><b>How to get your app's code:</b><span>springboard → long-press your app → <em>View Code</em> → select all → copy. Then paste it below.</span></div>
 </div>
 
 <div class="card">
-  <label>Your app's code</label>
-  <textarea id="code" placeholder="<!doctype html>…" oninput="onCode()"></textarea>
+  <label for="code">Your app's code</label>
+  <textarea id="code" placeholder="<!doctype html>…" oninput="onCode()" autocapitalize="off" autocorrect="off" spellcheck="false"></textarea>
   <div id="checks"></div>
 </div>
 
 <div class="card">
-  <label>App name</label>
+  <label for="name">App name</label>
   <input id="name" placeholder="My Brilliant App">
-  <label>One-line pitch</label>
+  <label for="pitch">One-line pitch</label>
   <input id="pitch" placeholder="What does it do, in a sentence?">
-  <label>Credit you as</label>
+  <label for="author">Credit you as</label>
   <input id="author" placeholder="Your name or handle">
-  <button class="go" onclick="buildPackage()">Package my submission</button>
+  <button class="go" onclick="buildPackage()"><svg class="i"><use href="#i-box"/></svg><span>Package my submission</span></button>
 </div>
 
 <div class="card" id="out">
   <label>Your submission package</label>
   <textarea id="pkg" readonly onclick="this.select()"></textarea>
-  <button class="go" id="shareBtn" onclick="sharePkg()">Share it (email, AirDrop…)</button>
-  <button class="go ghost" onclick="openIssue()">Open the GitHub submission form</button>
+  <button class="go" id="shareBtn" onclick="sharePkg()"><svg class="i"><use href="#i-share"/></svg><span>Share it (email, AirDrop…)</span></button>
+  <button class="go ghost" onclick="openIssue()"><svg class="i"><use href="#i-ext"/></svg><span>Open the GitHub submission form</span></button>
   <p class="note">Send the package to <b>MyLLM@opticell-limited.com</b> or paste it into a GitHub issue at <b>github.com/TeamDzX/myllm-assets</b>. You'll hear back on the issue or by reply — most reviews take a few days. Submissions are covered by the <b>Gallery Terms</b> (github.com/TeamDzX/myllm-assets → GALLERY-TERMS.md) — in short: the code is yours to publish, you keep ownership, and you licence us to host and distribute it.</p>
 </div>
 
@@ -125,8 +153,9 @@ function onCode(){
   if (!code.trim()){ el("checks").innerHTML = ""; return; }
   lastChecks = runChecks(code);
   el("checks").innerHTML = lastChecks.map(function(c){
-    var ic = c.info ? "ℹ️" : (c.ok ? "✅" : "❌");
-    return '<div class="check"><span class="ic">' + ic + '</span><div>' + esc(c.t) +
+    var kind = c.info ? "info" : (c.ok ? "ok" : "bad");
+    var ic = '<span class="ic ' + kind + '"><svg><use href="#i-' + (c.info ? "info" : (c.ok ? "check" : "x")) + '"/></svg></span>';
+    return '<div class="check">' + ic + '<div>' + esc(c.t) +
       (c.s ? '<small>' + esc(c.s) + '</small>' : '') + '</div></div>';
   }).join("");
   /* try to prefill the name from <title> */
@@ -165,7 +194,7 @@ function buildPackage(){
   if (failed.length){
     el("pkg").value = "NOTE: " + failed.length + " check(s) failing — fix them first or explain in your submission why they should pass.\n\n" + el("pkg").value;
   }
-  el("shareBtn").style.display = window.myllmShare ? "block" : "none";
+  el("shareBtn").style.display = window.myllmShare ? "flex" : "none";
 }
 function sharePkg(){
   if (window.myllmShare){ try{ myllmShare({text:el("pkg").value}); }catch(_){} }

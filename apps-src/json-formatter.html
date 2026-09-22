@@ -3,52 +3,123 @@
   JSON Formatter — MyLLMos™ App Gallery · © 2026 Opticell Ltd
   Source-available: read it, remix it, run your version inside MyLLM™.
   Not for redistribution or republication. Terms: https://github.com/TeamDzX/myllm-assets/blob/main/LICENSE
---><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<style>:root{--build-id:"7aef683605";color-scheme:light dark;--accent:#30b56a;--key:#0a84ff;--str:#c93b6b;--num:#9a6f00;--bool:#7b3ff2;--nul:#8a8a8e}
-@media(prefers-color-scheme:dark){:root{--key:#5ac8fa;--str:#ff7ab2;--num:#ffd479;--bool:#bf9cff;--nul:#8a8a8e}}
-*{box-sizing:border-box}
-body{font-family:-apple-system,system-ui,sans-serif;margin:0;padding:16px;background:#f2f2f7;color:#111}
-@media(prefers-color-scheme:dark){body{background:#000;color:#eee}textarea,pre,.bar{background:#1c1c1e;color:#eee;border-color:#3a3a3c}}
-h1{font-size:21px;margin:0 0 4px}
-.sub{font-size:13px;opacity:.6;margin-bottom:12px}
-textarea{width:100%;height:150px;padding:12px;border:1px solid #d1d1d6;border-radius:11px;font:13px ui-monospace,Menlo,monospace;background:#fff;color:#111;resize:vertical;-webkit-user-select:text;user-select:text}
-.bar{display:flex;gap:7px;flex-wrap:wrap;margin:10px 0}
-.bar button{border:0;background:var(--accent);color:#fff;border-radius:9px;padding:9px 13px;font-size:14px;font-weight:600}
-.bar button.sec{background:#e5e5ea;color:#333}
-@media(prefers-color-scheme:dark){.bar button.sec{background:#2c2c2e;color:#eee}}
-.bar .indent{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:13px;opacity:.7}
-.bar select{border:1px solid #d1d1d6;border-radius:8px;padding:5px 8px;background:#fff;color:#111;font-size:13px}
-@media(prefers-color-scheme:dark){.bar select{background:#1c1c1e;color:#eee;border-color:#3a3a3c}}
-#msg{font-size:13px;min-height:18px;margin-bottom:8px;font-weight:600}
-#msg.ok{color:var(--accent)}#msg.err{color:#ff453a}
-pre{margin:0;padding:14px;border:1px solid #d1d1d6;border-radius:11px;background:#fff;font:13px ui-monospace,Menlo,monospace;line-height:1.5;overflow:auto;white-space:pre;-webkit-user-select:text;user-select:text;min-height:60px}
-.key{color:var(--key)}.str{color:var(--str)}.num{color:var(--num)}.bool{color:var(--bool)}.nul{color:var(--nul)}
-@media(min-width:768px){body{max-width:760px;margin-left:auto;margin-right:auto}}
+--><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>JSON Formatter</title>
+<style>:root{--build-id:"7aef683605";color-scheme:light dark;
+  --bg:var(--myllm-bg,#f2f2f7); --surface:var(--myllm-surface,#fff); --ink:var(--myllm-text,#111);
+  --muted:var(--myllm-muted,#8a8a8e); --line:var(--myllm-border,#e3e3e8); --acc:var(--myllm-accent,#0a84ff);
+  --fill:rgba(120,120,128,.12); --h:145;
+  --key:#0a6fd6; --str:#c93b6b; --num:#9a6f00; --bool:#7b3ff2; --nul:#8a8a8e; --ok:#1f9d55; --bad:#e5342f; }
+@media (prefers-color-scheme:dark){ :root{ --bg:var(--myllm-bg,#000); --surface:var(--myllm-surface,#1c1c1e);
+  --ink:var(--myllm-text,#f2f2f7); --muted:var(--myllm-muted,#8e8e93); --line:var(--myllm-border,#2c2c2e); --fill:rgba(120,120,128,.24);
+  --key:#5ac8fa; --str:#ff7ab2; --num:#ffd479; --bool:#bf9cff; --nul:#8e8e93; --ok:#34c759; --bad:#ff5a52; } }
+  *{ margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body{ font-family:var(--myllm-font,-apple-system,system-ui,sans-serif); background:var(--bg); color:var(--ink);
+    max-width:600px; margin:0 auto; min-height:100dvh; font-size:15.5px; line-height:1.4;
+    padding:calc(16px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) calc(30px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left)); }
+  svg.i{ width:1.25em; height:1.25em; fill:currentColor; flex-shrink:0; }
+  button{ font:inherit; color:inherit; cursor:pointer; } button:active{ transform:scale(.96); }
+
+  .head{ display:flex; align-items:center; gap:12px; margin:2px 2px 14px; }
+  .tile{ display:flex; align-items:center; justify-content:center; color:#fff; flex-shrink:0;
+    background:linear-gradient(145deg, hsl(var(--h) 62% 44%), hsl(calc(var(--h) + 40) 58% 26%)); }
+  .head .tile{ width:44px; height:44px; border-radius:13px; font-size:19px; }
+  .head .ht{ flex:1; min-width:0; }
+  h1{ font-size:22px; font-weight:800; letter-spacing:-.01em; }
+  .head p{ font-size:13px; color:var(--muted); margin-top:1px; }
+
+  .card{ background:var(--surface); border:1px solid var(--line); border-radius:18px; padding:14px; margin-bottom:12px; min-width:0; }
+  .lbl{ display:flex; align-items:center; gap:8px; font-size:12px; font-weight:800; letter-spacing:.07em; text-transform:uppercase; color:var(--muted); margin:0 2px 8px; min-height:26px; }
+  .lbl .sp{ flex:1; }
+  textarea{ display:block; width:100%; height:170px; padding:12px; border:1px solid var(--line); border-radius:12px;
+    font:16px/1.45 ui-monospace,Menlo,monospace; background:var(--bg); color:var(--ink); resize:vertical; outline:none;
+    -webkit-user-select:text; user-select:text; }
+  textarea:focus{ border-color:var(--acc); }
+  .bar{ display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; align-items:center; }
+  .btn{ min-height:44px; border:1px solid var(--line); background:var(--bg); border-radius:12px; padding:0 13px; font-size:14.5px; font-weight:700;
+    display:inline-flex; align-items:center; justify-content:center; gap:6px; }
+  .btn.pri{ background:var(--acc); border-color:var(--acc); color:#fff; }
+  .indent{ margin-left:auto; display:flex; align-items:center; gap:8px; font-size:13px; font-weight:650; color:var(--muted); }
+  select{ min-height:40px; border:1px solid var(--line); border-radius:10px; padding:0 10px; background:var(--bg); color:var(--ink); font:inherit; font-size:15px; }
+
+  .badge{ display:inline-flex; align-items:center; gap:5px; border-radius:99px; padding:3px 9px 3px 7px; font-size:11.5px; font-weight:800; letter-spacing:.04em; text-transform:uppercase; }
+  .badge svg{ width:13px; height:13px; }
+  .badge.ok{ background:color-mix(in srgb, var(--ok) 16%, transparent); color:var(--ok); }
+  .badge.err{ background:color-mix(in srgb, var(--bad) 16%, transparent); color:var(--bad); }
+  .meta{ font-size:12px; font-weight:600; letter-spacing:0; text-transform:none; color:var(--muted); font-variant-numeric:tabular-nums; }
+  #msg{ font-size:13.5px; line-height:1.45; min-height:0; margin:0 2px 8px; }
+  #msg:empty{ display:none; }
+  #msg.err{ color:var(--bad); } #msg.ok{ color:var(--ok); }
+  pre{ margin:0; padding:13px; border:1px solid var(--line); border-radius:12px; background:var(--bg); font:14px/1.5 ui-monospace,Menlo,monospace;
+    overflow:auto; white-space:pre; -webkit-user-select:text; user-select:text; min-height:120px; max-height:60vh; }
+  pre:empty::before{ content:"Beautified JSON appears here."; color:var(--muted); font-family:var(--myllm-font,-apple-system,system-ui,sans-serif); font-size:14px; }
+  .key{color:var(--key)}.str{color:var(--str)}.num{color:var(--num)}.bool{color:var(--bool)}.nul{color:var(--nul)}
+
+  @media (min-width:700px){
+    body{ max-width:1080px; }
+    .grid{ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:12px; align-items:start; }
+    textarea{ height:calc(60vh + 26px); }
+  }
+  @media (max-width:360px){ .indent span{ display:none; } }
+  @media (prefers-reduced-motion:reduce){ button:active{ transform:none; } }
 </style></head><body>
-<h1>🧩 JSON Formatter</h1>
-<div class="sub">Beautify, minify and validate JSON — fully offline, nothing leaves your device.</div>
-<textarea id="in" placeholder='Paste JSON here, e.g. {"hello":"world","items":[1,2,3]}' autocapitalize="off" autocorrect="off" spellcheck="false"></textarea>
-<div class="bar">
-  <button onclick="format()">Beautify</button>
-  <button class="sec" onclick="minify()">Minify</button>
-  <button class="sec" onclick="copyOut()">Copy</button>
-  <button class="sec" onclick="clearAll()">Clear</button>
-  <span class="indent">Indent
-    <select id="indent"><option value="2">2</option><option value="4">4</option><option value="\t">Tab</option></select>
-  </span>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-braces" viewBox="0 0 24 24"><path d="M8.5 3.5a1 1 0 0 1 0 2c-.8 0-1.3.5-1.3 1.4v2.4c0 1.2-.5 2.1-1.3 2.7.8.6 1.3 1.5 1.3 2.7v2.4c0 .9.5 1.4 1.3 1.4a1 1 0 0 1 0 2c-2 0-3.3-1.3-3.3-3.4v-2.4c0-.9-.5-1.4-1.4-1.4a1 1 0 0 1 0-2c.9 0 1.4-.5 1.4-1.4V6.9c0-2.1 1.3-3.4 3.3-3.4zm7 0c2 0 3.3 1.3 3.3 3.4v2.4c0 .9.5 1.4 1.4 1.4a1 1 0 0 1 0 2c-.9 0-1.4.5-1.4 1.4v2.4c0 2.1-1.3 3.4-3.3 3.4a1 1 0 0 1 0-2c.8 0 1.3-.5 1.3-1.4v-2.4c0-1.2.5-2.1 1.3-2.7-.8-.6-1.3-1.5-1.3-2.7V6.9c0-.9-.5-1.4-1.3-1.4a1 1 0 0 1 0-2z" fill="currentColor"/></symbol>
+  <symbol id="i-spark" viewBox="0 0 24 24"><path d="M10 2.5l1.9 5.6 5.6 1.9-5.6 1.9L10 17.5l-1.9-5.6L2.5 10l5.6-1.9zM18.5 14l.95 2.55L22 17.5l-2.55.95L18.5 21l-.95-2.55L15 17.5l2.55-.95z" fill="currentColor"/></symbol>
+  <symbol id="i-min" viewBox="0 0 24 24"><path d="M4 12h16M8 7.5L4 12l4 4.5M16 7.5l4 4.5-4 4.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24"><path d="M9 3h9.5A2.5 2.5 0 0 1 21 5.5V15a2.5 2.5 0 0 1-2.5 2.5H17v1A2.5 2.5 0 0 1 14.5 21h-9A2.5 2.5 0 0 1 3 18.5v-9A2.5 2.5 0 0 1 5.5 7h1V5.5A2.5 2.5 0 0 1 9 3zm0 2a.5.5 0 0 0-.5.5V15c0 .3.2.5.5.5h9.5c.3 0 .5-.2.5-.5V5.5a.5.5 0 0 0-.5-.5zM6.5 9h-1a.5.5 0 0 0-.5.5v9c0 .3.2.5.5.5h9c.3 0 .5-.2.5-.5v-1H9a2.5 2.5 0 0 1-2.5-2.5z" fill="currentColor"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.6l4.6 4.6L19.2 7.4" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-bad" viewBox="0 0 24 24"><path d="M12 2.5a9.5 9.5 0 1 1 0 19 9.5 9.5 0 0 1 0-19zm0 5a1.2 1.2 0 0 0-1.2 1.2v4.2a1.2 1.2 0 0 0 2.4 0V8.7A1.2 1.2 0 0 0 12 7.5zm0 8.3a1.35 1.35 0 1 0 0 2.7 1.35 1.35 0 0 0 0-2.7z" fill="currentColor"/></symbol>
+</defs></svg>
+
+<div class="head">
+  <div class="tile"><svg class="i"><use href="#i-braces"/></svg></div>
+  <div class="ht"><h1>JSON Formatter</h1><p>Beautify, minify and validate JSON — fully offline, nothing leaves your device.</p></div>
 </div>
-<div id="msg"></div>
-<pre id="out"></pre>
+
+<div class="grid">
+  <div class="card">
+    <div class="lbl">Input</div>
+    <textarea id="in" placeholder='Paste JSON here, e.g. {"hello":"world","items":[1,2,3]}' autocapitalize="off" autocorrect="off" spellcheck="false"></textarea>
+    <div class="bar">
+      <button class="btn pri" type="button" onclick="format()"><svg class="i"><use href="#i-spark"/></svg>Beautify</button>
+      <button class="btn" type="button" onclick="minify()"><svg class="i"><use href="#i-min"/></svg>Minify</button>
+      <button class="btn" type="button" onclick="clearAll()" aria-label="Clear"><svg class="i"><use href="#i-x"/></svg>Clear</button>
+      <label class="indent"><span>Indent</span>
+        <select id="indent"><option value="2">2</option><option value="4">4</option><option value="\t">Tab</option></select>
+      </label>
+    </div>
+  </div>
+  <div class="card">
+    <div class="lbl">Output <span id="state"></span><span class="sp"></span>
+      <button class="btn" type="button" onclick="copyOut()" style="min-height:36px;padding:0 11px;font-size:13.5px;letter-spacing:0;text-transform:none;color:var(--ink)"><svg class="i"><use href="#i-copy"/></svg>Copy</button>
+    </div>
+    <div id="msg"></div>
+    <pre id="out"></pre>
+  </div>
+</div>
 <script>
-var store=window.myllmStorage||{getItem:function(){return Promise.resolve(null)},setItem:function(){return Promise.resolve()}};
+/* The bridge is looked up when used, never kept: MyLLM can add it after this
+   script has run. */
+function store(){return window.myllmStorage||{getItem:function(){return Promise.resolve(null)},setItem:function(){return Promise.resolve()}}}
 var lastOut='';
 function el(i){return document.getElementById(i)}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
 function msg(t,cls){var m=el('msg');m.textContent=t||'';m.className=cls||''}
+/* valid / invalid badge in the output header, with the size line beside it */
+function state(kind,meta){
+  var s=el('state');
+  if(!kind){s.innerHTML='';return}
+  s.innerHTML=kind==='ok'
+    ?'<span class="badge ok"><svg><use href="#i-check"/></svg>Valid</span>'+(meta?' <span class="meta">'+esc(meta)+'</span>':'')
+    :'<span class="badge err"><svg><use href="#i-bad"/></svg>Invalid</span>';
+}
 
 function parseInput(){
   var raw=el('in').value;
-  store.setItem('json',raw);
-  if(!raw.trim()){msg('');el('out').innerHTML='';lastOut='';return null}
+  store().setItem('json',raw);
+  if(!raw.trim()){msg('');state('');el('out').innerHTML='';lastOut='';return null}
   try{return {ok:true,val:JSON.parse(raw)}}
   catch(e){return {ok:false,err:e,raw:raw}}
 }
@@ -56,15 +127,16 @@ function showError(r){
   el('out').innerHTML='';lastOut='';
   var m=String(r.err.message||r.err);
   var pos=m.match(/position\s+(\d+)/);
+  state('err');
   if(pos){var i=+pos[1],before=r.raw.slice(0,i),line=before.split('\n').length,col=i-before.lastIndexOf('\n');
-    msg('✗ Invalid JSON — line '+line+', column '+col+': '+m,'err');}
-  else msg('✗ Invalid JSON — '+m,'err');
+    msg('Line '+line+', column '+col+': '+m,'err');}
+  else msg(m,'err');
   if(window.myllmHaptic)myllmHaptic('error');
 }
 function render(text){
   lastOut=text;el('out').innerHTML=highlight(text);
   var bytes=new Blob([text]).size;
-  msg('✓ Valid JSON · '+text.split('\n').length+' lines · '+bytes+' bytes','ok');
+  msg('');state('ok',text.split('\n').length+' lines · '+bytes+' bytes');
   if(window.myllmHaptic)myllmHaptic('light');
 }
 function format(){
@@ -72,13 +144,13 @@ function format(){
   var ind=el('indent').value;render(JSON.stringify(r.val,null,ind==='\\t'?'\t':parseInt(ind,10)));
 }
 function minify(){var r=parseInput();if(!r)return;if(!r.ok)return showError(r);render(JSON.stringify(r.val))}
-function clearAll(){el('in').value='';store.setItem('json','');msg('');el('out').innerHTML='';lastOut=''}
+function clearAll(){el('in').value='';store().setItem('json','');msg('');state('');el('out').innerHTML='';lastOut=''}
 function copyOut(){
   if(!lastOut){msg('Nothing to copy yet — Beautify or Minify first.','');return}
-  var done=function(){msg('✓ Copied to clipboard','ok')};
+  var done=function(){msg('Copied to clipboard','ok')};
   if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(lastOut).then(done,function(){fallbackCopy()});
   else fallbackCopy();
-  function fallbackCopy(){if(window.myllmShare){myllmShare(lastOut);msg('✓ Opened share sheet','ok')}else msg('Copy unavailable on this version.','')}
+  function fallbackCopy(){if(window.myllmShare){myllmShare(lastOut);msg('Opened the share sheet','ok')}else msg('Copy unavailable on this version.','')}
 }
 function highlight(json){
   json=json.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
@@ -91,6 +163,6 @@ function highlight(json){
   });
 }
 el('in').addEventListener('input',function(){if(el('in').value.trim()&&JSONtest())format()});
-function JSONtest(){try{JSON.parse(el('in').value);return true}catch(e){msg('');el('out').innerHTML='';return false}}
-store.getItem('json').then(function(v){if(v){el('in').value=v;if(v.trim())format()}});
+function JSONtest(){try{JSON.parse(el('in').value);return true}catch(e){msg('');state('');el('out').innerHTML='';return false}}
+store().getItem('json').then(function(v){if(v){el('in').value=v;if(v.trim())format()}});
 </script></body></html>

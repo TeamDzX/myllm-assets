@@ -3,132 +3,254 @@
   Plant Care — MyLLMos™ App Gallery · © 2026 Opticell Ltd
   Source-available: read it, remix it, run your version inside MyLLM™.
   Not for redistribution or republication. Terms: https://github.com/TeamDzX/myllm-assets/blob/main/LICENSE
---><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<style>:root{--build-id:"63cbf7bf54";color-scheme:light dark;--accent:#30d158}
-*{box-sizing:border-box}
-body{font-family:-apple-system,system-ui,sans-serif;margin:0;padding:18px;background:#f2f2f7;color:#111}
-@media(prefers-color-scheme:dark){body{background:#000;color:#eee}.item,input{background:#1c1c1e;color:#eee;border-color:#3a3a3c}.tips{background:#0e0e10}}
-h1{font-size:22px;margin:0 0 4px}
-.sub{font-size:13px;opacity:.6;margin-bottom:14px}
-input{padding:11px;border:1px solid #d1d1d6;border-radius:10px;font-size:15px;background:#fff;font-family:inherit}
-.row{display:flex;gap:8px;margin-bottom:8px}
-#name{flex:1;min-width:0}#days{width:108px;flex:none}
-button{border:0;background:var(--accent);color:#fff;border-radius:10px;padding:11px 16px;font-size:15px;font-weight:600}
-button:disabled{opacity:.5}
-.add{width:100%}
-.item{background:#fff;border-radius:13px;padding:12px 14px;margin-bottom:9px;box-shadow:0 1px 3px rgba(0,0,0,.08);border-left:4px solid var(--accent)}
-.item.thirsty{border-left-color:#ff9f0a}.item.dry{border-left-color:#ff453a}
-.top{display:flex;align-items:flex-start;gap:10px}
-.leaf{font-size:26px;flex:none;line-height:1}
-.body{flex:1;min-width:0}
-.name{font-size:16px;font-weight:600}
-.meta{font-size:12px;opacity:.65;margin-top:2px}
-.meta .due.soon{color:#ff9f0a;font-weight:600}.meta .due.late{color:#ff453a;font-weight:600}
-.btns{display:flex;gap:8px;margin-top:9px}
-.btns .water{flex:1;background:#e8f7ee;color:#1a8a44;padding:9px;border-radius:9px;font-size:14px}
-.btns .tip{flex:none;background:#eef;color:#5e5ce6;padding:9px 12px;border-radius:9px;font-size:14px}
-@media(prefers-color-scheme:dark){.btns .water{background:#13351f;color:#5fd98a}.btns .tip{background:#15152a;color:#9a98ff}}
-.del{background:none;color:#ff453a;font-size:18px;padding:0 2px;flex:none}
-.tips{background:#f2f2f7;border-radius:9px;padding:9px 11px;margin-top:9px;font-size:13.5px;line-height:1.5;white-space:pre-wrap}
-#status{font-size:13px;opacity:.7;min-height:16px;margin:4px 0}
-.empty{text-align:center;opacity:.5;font-size:14px;padding:34px 0}
-@media(min-width:768px){body{max-width:760px;margin-left:auto;margin-right:auto}}
+--><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Plant Care</title>
+<style>:root{--build-id:"63cbf7bf54";color-scheme:light dark;
+  --bg:var(--myllm-bg,#f2f2f7); --surface:var(--myllm-surface,#fff); --ink:var(--myllm-text,#111);
+  --muted:var(--myllm-muted,#8a8a8e); --line:var(--myllm-border,#e3e3e8); --acc:var(--myllm-accent,#0a84ff);
+  --fill:rgba(120,120,128,.12); --h:140; }
+@media (prefers-color-scheme:dark){ :root{ --bg:var(--myllm-bg,#000); --surface:var(--myllm-surface,#1c1c1e);
+  --ink:var(--myllm-text,#f2f2f7); --muted:var(--myllm-muted,#8e8e93); --line:var(--myllm-border,#2c2c2e); --fill:rgba(120,120,128,.24); } }
+  *{ margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body{ font-family:var(--myllm-font,-apple-system,system-ui,sans-serif); background:var(--bg); color:var(--ink);
+    max-width:600px; margin:0 auto; min-height:100dvh; font-size:15.5px; line-height:1.4;
+    padding:calc(16px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) calc(30px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left)); }
+  @media (min-width:768px){ body{ max-width:760px; } }
+  svg.i{ width:1.25em; height:1.25em; fill:currentColor; flex-shrink:0; }
+  button{ font:inherit; color:inherit; cursor:pointer; } button:active{ transform:scale(.96); }
+
+  .head{ display:flex; align-items:center; gap:12px; margin:2px 2px 14px; }
+  .tile{ display:flex; align-items:center; justify-content:center; color:#fff; flex-shrink:0;
+    background:linear-gradient(145deg, hsl(var(--h) 55% 44%), hsl(calc(var(--h) + 30) 55% 28%)); }
+  .head .tile{ width:44px; height:44px; border-radius:13px; font-size:19px; }
+  .head .ht{ flex:1; min-width:0; }
+  h1{ font-size:22px; font-weight:800; letter-spacing:-.01em; }
+  .head p{ font-size:13px; color:var(--muted); margin-top:1px; }
+  h2{ font-size:12px; font-weight:800; letter-spacing:.07em; text-transform:uppercase; color:var(--muted); margin:20px 2px 10px; }
+
+  .hero{ border-radius:20px; padding:16px 18px; color:#fff; margin-bottom:12px; display:flex; align-items:center; gap:16px;
+    background:linear-gradient(145deg, hsl(var(--h) 55% 40%), hsl(calc(var(--h) + 30) 55% 22%)); box-shadow:0 10px 28px hsl(var(--h) 60% 22% / .25); }
+  .hero.due{ background:linear-gradient(145deg, hsl(32 90% 50%), hsl(12 75% 38%)); box-shadow:0 10px 28px hsl(20 80% 30% / .25); }
+  .hero .n{ font-size:44px; font-weight:800; line-height:1; letter-spacing:-.03em; font-variant-numeric:tabular-nums; }
+  .hero .k{ font-size:11px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; opacity:.8; }
+  .hero b{ display:block; font-size:16px; font-weight:750; margin-top:2px; overflow-wrap:anywhere; }
+  .hero span{ display:block; font-size:12.5px; line-height:1.4; opacity:.85; margin-top:2px; }
+
+  .card{ background:var(--surface); border:1px solid var(--line); border-radius:18px; padding:14px; margin-bottom:12px; }
+  label{ display:block; font-size:12px; font-weight:800; letter-spacing:.07em; text-transform:uppercase; color:var(--muted); margin:14px 2px 7px; }
+  label:first-child{ margin-top:0; }
+  input{ width:100%; font:inherit; font-size:16px; padding:12px; border-radius:12px; border:1px solid var(--line); background:var(--bg); color:var(--ink); outline:none; }
+  input:focus{ border-color:var(--acc); }
+  .step{ display:flex; align-items:center; gap:6px; border:1px solid var(--line); background:var(--bg); border-radius:12px; padding:4px; }
+  .step button{ width:40px; height:40px; border:none; border-radius:9px; background:var(--fill); color:hsl(var(--h) 55% 34%); font-size:17px; display:flex; align-items:center; justify-content:center; }
+  @media (prefers-color-scheme:dark){ .step button{ color:hsl(var(--h) 55% 62%); } }
+  .step button:disabled{ opacity:.4; }
+  .step input{ border:none; background:none; text-align:center; font-weight:700; padding:8px 0; flex:1; min-width:0; font-variant-numeric:tabular-nums; }
+  .step input::-webkit-inner-spin-button, .step input::-webkit-outer-spin-button{ -webkit-appearance:none; margin:0; }
+  .step small{ font-size:13px; color:var(--muted); padding-right:8px; white-space:nowrap; }
+  .go{ width:100%; min-height:50px; margin-top:14px; border:none; border-radius:14px; background:var(--acc); color:#fff; font-size:16px; font-weight:700;
+    display:flex; align-items:center; justify-content:center; gap:8px; }
+  .status{ font-size:13px; color:var(--muted); min-height:18px; margin:2px 2px 0; }
+  .status.err{ color:#ff453a; }
+
+  .list{ display:grid; gap:10px; }
+  @media (min-width:700px){ .list{ grid-template-columns:minmax(0,1fr) minmax(0,1fr); } }
+  .item{ background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:12px 12px 12px 14px; }
+  .item.thirsty{ border-color:hsl(34 90% 55% / .7); } .item.dry{ border-color:hsl(4 85% 58% / .75); }
+  .top{ display:flex; align-items:center; gap:11px; }
+  .drop{ width:40px; height:40px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0;
+    background:hsl(var(--h) 55% 45% / .14); color:hsl(var(--h) 55% 36%); }
+  @media (prefers-color-scheme:dark){ .drop{ color:hsl(var(--h) 55% 62%); } }
+  .item.thirsty .drop{ background:hsl(34 90% 55% / .16); color:hsl(30 90% 42%); }
+  .item.dry .drop{ background:hsl(4 85% 58% / .16); color:hsl(4 80% 50%); }
+  .body{ flex:1; min-width:0; }
+  .name{ font-size:16px; font-weight:650; overflow-wrap:anywhere; }
+  .meta{ font-size:12.5px; color:var(--muted); margin-top:2px; }
+  .meta .due{ font-weight:700; } .meta .due.soon{ color:hsl(30 90% 44%); } .meta .due.late{ color:#ff453a; }
+  .del{ width:44px; height:44px; margin-right:-8px; border:none; background:none; color:var(--muted); font-size:14px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .btns{ display:flex; gap:8px; margin-top:10px; }
+  .btns button{ min-height:42px; border:none; border-radius:11px; font-size:14.5px; font-weight:700; display:flex; align-items:center; justify-content:center; gap:7px; }
+  .btns .water{ flex:1; background:hsl(var(--h) 55% 45% / .15); color:hsl(var(--h) 60% 28%); }
+  @media (prefers-color-scheme:dark){ .btns .water{ color:hsl(var(--h) 55% 64%); } }
+  .btns .tip{ flex:0 0 auto; padding:0 14px; background:var(--fill); }
+  .btns .tip:disabled{ opacity:.6; }
+  .tips{ background:var(--fill); border-radius:11px; padding:10px 12px; margin-top:10px; font-size:14px; line-height:1.55; white-space:pre-wrap; }
+  .spin{ width:15px; height:15px; border-radius:50%; border:2.2px solid currentColor; border-right-color:transparent; animation:spin .8s linear infinite; flex-shrink:0; }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+
+  .empty{ text-align:center; padding:26px 20px 14px; }
+  .empty .tile{ width:48px; height:48px; border-radius:14px; font-size:21px; margin:0 auto 10px; opacity:.9; }
+  .empty b{ display:block; font-size:16px; font-weight:750; }
+  .empty p{ font-size:13.5px; color:var(--muted); line-height:1.5; max-width:280px; margin:5px auto 0; }
+  [hidden]{ display:none !important; }
+  @media (prefers-reduced-motion:reduce){ .spin{ animation-duration:2.4s; } button:active{ transform:none; } }
+
+  @keyframes myllmAiSpin{to{transform:rotate(360deg)}}
+  .myllm-ai-busy{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(18px);z-index:99999;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;display:flex;align-items:center;gap:10px;background:rgba(28,28,30,.96);color:#fff;border-radius:999px;padding:10px 16px 10px 14px;box-shadow:0 6px 22px rgba(0,0,0,.4);font-size:14px;font-weight:600;max-width:92%}
+  .myllm-ai-busy.on{opacity:1;transform:translateX(-50%) translateY(0)}
+  .myllm-ai-cog{width:16px;height:16px;border-radius:50%;border:2.4px solid #a78bfa;border-right-color:transparent;animation:myllmAiSpin .9s linear infinite;flex-shrink:0}
+  .myllm-ai-busy small{font-weight:400;opacity:.6}
 </style></head><body>
-<style>
-@keyframes myllmAiSpin{to{transform:rotate(360deg)}}
-.myllm-ai-busy{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(18px);z-index:99999;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;display:flex;align-items:center;gap:10px;background:rgba(28,28,30,.96);color:#fff;border-radius:999px;padding:10px 16px 10px 14px;box-shadow:0 6px 22px rgba(0,0,0,.4);font-family:-apple-system,system-ui,sans-serif;font-size:14px;font-weight:600;max-width:92%}
-.myllm-ai-busy.on{opacity:1;transform:translateX(-50%) translateY(0)}
-.myllm-ai-cog{font-size:18px;line-height:1;animation:myllmAiSpin 2.4s linear infinite;filter:drop-shadow(0 0 5px rgba(124,92,255,.85))}
-.myllm-ai-busy small{font-weight:400;opacity:.6}
-</style>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-leaf" viewBox="0 0 24 24"><path d="M20.5 3.5c-8.6-.4-15 3.3-15.7 10.3-.2 1.8.3 3.4 1.2 4.6L4.3 20a1 1 0 1 0 1.4 1.4l1.6-1.6c1.2.9 2.8 1.4 4.6 1.2 7-.7 10.7-7.1 10.3-15.7a1.9 1.9 0 0 0-1.7-1.8zM8.7 17.1l6.2-6.2a1 1 0 0 0-1.4-1.4l-6.2 6.2c-.2-.5-.3-1.2-.2-1.9.5-5 4.9-8 11.4-8.2-.2 6.5-3.2 10.9-8.2 11.4-.7.1-1.2 0-1.6-.1z" fill="currentColor"/></symbol>
+  <symbol id="i-drop" viewBox="0 0 24 24"><path d="M12 2.6c.3 0 .6.1.8.4 1.6 2 6.7 8.5 6.7 12.3a7.5 7.5 0 0 1-15 0c0-3.8 5.1-10.3 6.7-12.3.2-.3.5-.4.8-.4z" fill="currentColor"/></symbol>
+  <symbol id="i-drop-o" viewBox="0 0 24 24"><path d="M12 3.6c1.9 2.4 6.5 8.4 6.5 11.7a6.5 6.5 0 0 1-13 0c0-3.3 4.6-9.3 6.5-11.7z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+  <symbol id="i-spark" viewBox="0 0 24 24"><path d="M10 2.5l1.9 5.6 5.6 1.9-5.6 1.9L10 17.5l-1.9-5.6L2.5 10l5.6-1.9zM18.5 14l.95 2.55L22 17.5l-2.55.95L18.5 21l-.95-2.55L15 17.5l2.55-.95z" fill="currentColor"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></symbol>
+  <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></symbol>
+</defs></svg>
 <script>
-(function(){
-  if(window.__myllmAiWrap||typeof window.myllmAsk!=='function')return;
-  window.__myllmAiWrap=true;
-  var orig=window.myllmAsk,depth=0,node=null;
-  function ensure(){if(node)return;node=document.createElement('div');node.className='myllm-ai-busy';
-    node.innerHTML='<span class="myllm-ai-cog">\u2699\uFE0F</span><span>AI is thinking\u2026 <small>privately, on your device</small></span>';
-    (document.body||document.documentElement).appendChild(node);}
-  function show(){ensure();depth++;node.classList.add('on');}
-  function hide(){depth=Math.max(0,depth-1);if(depth===0&&node)node.classList.remove('on');}
-  window.myllmAsk=function(){show();var p;try{p=orig.apply(this,arguments);}catch(e){hide();throw e;}
-    return Promise.resolve(p).then(function(r){hide();return r;},function(e){hide();throw e;});};
-})();
+(function(){if(window.__myllmAiWrap||typeof window.myllmAsk!=='function')return;window.__myllmAiWrap=true;
+var orig=window.myllmAsk,depth=0,node=null;
+function ensure(){if(node)return;node=document.createElement('div');node.className='myllm-ai-busy';
+node.innerHTML='<span class="myllm-ai-cog"></span><span>AI is thinking… <small>privately, on your device</small></span>';
+(document.body||document.documentElement).appendChild(node);}
+function show(){ensure();depth++;node.classList.add('on');}
+function hide(){depth=Math.max(0,depth-1);if(depth===0&&node)node.classList.remove('on');}
+window.myllmAsk=function(){show();var p;try{p=orig.apply(this,arguments);}catch(e){hide();throw e;}
+return Promise.resolve(p).then(function(r){hide();return r;},function(e){hide();throw e;});};})();
 </script>
 
-<h1>🪴 Plant Care</h1>
-<div class="sub">Never forget to water again — track each plant and when it's next due.</div>
-<div class="row"><input id="name" placeholder="Plant (e.g. Monstera, tomatoes)"><input id="days" type="number" inputmode="numeric" min="1" value="7" aria-label="days between watering"></div>
-<button class="add" onclick="add()">Add plant</button>
-<div id="status"></div>
-<div id="list"></div>
+<div class="head">
+  <div class="tile"><svg class="i"><use href="#i-leaf"/></svg></div>
+  <div class="ht"><h1>Plant Care</h1><p>Never forget to water again — track each plant and when it's next due.</p></div>
+</div>
+
+<div class="hero" id="hero" hidden>
+  <div class="n" id="hN">0</div>
+  <div style="min-width:0"><div class="k" id="hK">Due today</div><b id="hB"></b><span id="hS"></span></div>
+</div>
+
+<div class="card">
+  <label for="name">Plant</label>
+  <input id="name" placeholder="Plant (e.g. Monstera, tomatoes)" autocomplete="off" enterkeyhint="done">
+  <label for="days">Water every</label>
+  <div class="step">
+    <button type="button" id="dMinus" aria-label="Fewer days"><svg class="i"><use href="#i-minus"/></svg></button>
+    <input id="days" type="number" inputmode="numeric" min="1" value="7" aria-label="days between watering">
+    <small id="dUnit">days</small>
+    <button type="button" id="dPlus" aria-label="More days"><svg class="i"><use href="#i-plus"/></svg></button>
+  </div>
+  <button class="go" id="addBtn" type="button"><svg class="i"><use href="#i-plus"/></svg>Add plant</button>
+</div>
+<div id="status" class="status"></div>
+
+<h2 id="listHead" hidden>Your plants</h2>
+<div id="list" class="list"></div>
+
 <script>
-var store=window.myllmStorage||{getItem:function(){return Promise.resolve(null)},setItem:function(){return Promise.resolve()}};
-var plants=[];
 function el(i){return document.getElementById(i)}
-function save(){store.setItem('plants',JSON.stringify(plants))}
-function setStatus(t){el('status').textContent=t||''}
+/* Bridges are looked up when used, never kept: MyLLM can add them after this
+   script has run. */
+function store(){return window.myllmStorage||{getItem:function(){return Promise.resolve(null)},setItem:function(){return Promise.resolve()}}}
+function haptic(k){if(window.myllmHaptic)try{myllmHaptic(k)}catch(e){}}
+function icon(n){return '<svg class="i"><use href="#i-'+n+'"/></svg>'}
+var plants=[],busy={};
+function save(){store().setItem('plants',JSON.stringify(plants))}
+function setStatus(t,err){var s=el('status');s.textContent=t||'';s.classList.toggle('err',!!err)}
 function uid(){return 'p'+plants.reduce(function(m,p){return Math.max(m,+String(p.id).slice(1)||0)},0)+1}
 var DAY=86400000;
 
 function add(){
-  var name=el('name').value.trim();if(!name)return;
+  var name=el('name').value.trim();if(!name){el('name').focus();return}
   var days=Math.max(1,parseInt(el('days').value,10)||7);
   plants.push({id:uid(),name:name,interval:days,last:Date.now(),tips:null});
-  el('name').value='';el('days').value='7';
-  save();render();if(window.myllmHaptic)myllmHaptic('light');
+  el('name').value='';el('days').value='7';syncDays();
+  save();render();haptic('light');
 }
-function water(id){var p=byId(id);p.last=Date.now();save();render();if(window.myllmHaptic)myllmHaptic('success')}
+function water(id){var p=byId(id);p.last=Date.now();save();render();haptic('success')}
 function del(id){plants=plants.filter(function(p){return p.id!==id});save();render()}
 function byId(id){return plants.filter(function(p){return p.id===id})[0]}
 
 function dueInfo(p){
   var next=p.last+p.interval*DAY;
   var days=Math.ceil((next-Date.now())/DAY);
-  if(days<0)return{txt:'Overdue by '+(-days)+'d',cls:'late',state:'dry'};
-  if(days===0)return{txt:'Water today',cls:'late',state:'thirsty'};
-  if(days===1)return{txt:'Water tomorrow',cls:'soon',state:'thirsty'};
-  return{txt:'Water in '+days+' days',cls:'',state:''};
+  if(days<0)return{txt:'Overdue by '+(-days)+'d',cls:'late',state:'dry',days:days};
+  if(days===0)return{txt:'Water today',cls:'late',state:'thirsty',days:days};
+  if(days===1)return{txt:'Water tomorrow',cls:'soon',state:'thirsty',days:days};
+  return{txt:'Water in '+days+' days',cls:'',state:'',days:days};
 }
 
 function tips(id){
   var p=byId(id);
-  if(!window.myllmAsk){setStatus('Care tips need AI — enable “Allow apps to use the AI” in Settings.');return}
-  setStatus('Getting care tips for '+p.name+'…');
+  if(!window.myllmAsk){setStatus('Care tips need AI — enable “Allow apps to use the AI” in Settings.',true);return}
+  setStatus('');busy[id]=true;render();
   myllmAsk('Give 3 short, practical care tips for growing "'+p.name+'" (watering, light, and one extra). Reply as exactly 3 lines starting with "• " and nothing else.')
   .then(function(reply){
-    p.tips=reply.trim();save();render();setStatus('');
-  }).catch(function(err){setStatus('Could not get tips: '+err.message)});
+    p.tips=String(reply).trim();save();
+  }).catch(function(err){setStatus('Could not get tips: '+err.message,true)})
+  .then(function(){delete busy[id];render()});
+}
+
+function hero(){
+  var h=el('hero');
+  if(!plants.length){h.hidden=true;return}
+  var info=plants.map(function(p){return{p:p,d:dueInfo(p)}}).sort(function(a,b){return a.d.days-b.d.days});
+  var due=info.filter(function(x){return x.d.days<=0});
+  h.hidden=false;
+  if(due.length){
+    h.classList.add('due');
+    el('hN').textContent=due.length;
+    el('hK').textContent=due.length===1?'Needs water today':'Need water today';
+    el('hB').textContent=due.map(function(x){return x.p.name}).slice(0,3).join(', ')+(due.length>3?' and '+(due.length-3)+' more':'');
+    var late=due.filter(function(x){return x.d.days<0}).length;
+    el('hS').textContent=late?(late+' overdue'):'All on time so far';
+  }else{
+    h.classList.remove('due');
+    el('hN').textContent='0';
+    el('hK').textContent='Due today';
+    el('hB').textContent='Next: '+info[0].p.name;
+    el('hS').textContent=info[0].d.txt;
+  }
 }
 
 function render(){
+  hero();
   var L=el('list');L.innerHTML='';
-  if(!plants.length){L.innerHTML='<div class="empty">No plants yet — add your first above. 🌱</div>';return}
+  el('listHead').hidden=!plants.length;
+  if(!plants.length){
+    L.innerHTML='<div class="card empty"><div class="tile">'+icon('leaf')+'</div><b>No plants yet</b><p>Add your first above and it will tell you when it next needs water.</p></div>';
+    return;
+  }
   plants.slice().sort(function(a,b){return(a.last+a.interval*DAY)-(b.last+b.interval*DAY)}).forEach(function(p){
     var di=dueInfo(p);
     var card=document.createElement('div');card.className='item'+(di.state?' '+di.state:'');
     var top=document.createElement('div');top.className='top';
-    var leaf=document.createElement('div');leaf.className='leaf';leaf.textContent='🪴';
+    var dr=document.createElement('div');dr.className='drop';dr.innerHTML=icon(di.state?'drop-o':'drop');
     var body=document.createElement('div');body.className='body';
     var nm=document.createElement('div');nm.className='name';nm.textContent=p.name;body.appendChild(nm);
     var meta=document.createElement('div');meta.className='meta';
-    meta.innerHTML='💧 every '+p.interval+' day'+(p.interval===1?'':'s')+' · <span class="due '+di.cls+'">'+di.txt+'</span>';
+    meta.innerHTML='Every '+p.interval+' day'+(p.interval===1?'':'s')+' · <span class="due '+di.cls+'">'+di.txt+'</span>';
     body.appendChild(meta);
+    var x=document.createElement('button');x.className='del';x.type='button';x.innerHTML=icon('x');x.setAttribute('aria-label','Remove '+p.name);x.onclick=function(){del(p.id)};
+    top.appendChild(dr);top.appendChild(body);top.appendChild(x);
+    card.appendChild(top);
     var btns=document.createElement('div');btns.className='btns';
-    var w=document.createElement('button');w.className='water';w.textContent='💧 Watered';w.onclick=function(){water(p.id)};
-    var t=document.createElement('button');t.className='tip';t.textContent=p.tips?'🌱 Tips':'🌱 Care tips';t.onclick=function(){tips(p.id)};
-    btns.appendChild(w);btns.appendChild(t);body.appendChild(btns);
-    if(p.tips){var tp=document.createElement('div');tp.className='tips';tp.textContent=p.tips;body.appendChild(tp)}
-    var x=document.createElement('button');x.className='del';x.textContent='✕';x.onclick=function(){del(p.id)};
-    top.appendChild(leaf);top.appendChild(body);top.appendChild(x);
-    card.appendChild(top);L.appendChild(card);
+    var w=document.createElement('button');w.className='water';w.type='button';w.innerHTML=icon('drop')+'Watered';w.onclick=function(){water(p.id)};
+    var t=document.createElement('button');t.className='tip';t.type='button';
+    if(busy[p.id]){t.disabled=true;t.innerHTML='<i class="spin"></i>Tips…'}
+    else t.innerHTML=icon('spark')+(p.tips?'Tips':'Care tips');
+    t.onclick=function(){tips(p.id)};
+    btns.appendChild(w);btns.appendChild(t);card.appendChild(btns);
+    if(p.tips){var tp=document.createElement('div');tp.className='tips';tp.textContent=p.tips;card.appendChild(tp)}
+    L.appendChild(card);
   });
 }
 
+function syncDays(){
+  var d=Math.max(1,parseInt(el('days').value,10)||1);
+  el('dMinus').disabled=d<=1;el('dUnit').textContent=d===1?'day':'days';
+}
+el('dMinus').onclick=function(){var d=Math.max(1,(parseInt(el('days').value,10)||7)-1);el('days').value=d;syncDays();haptic('selection')};
+el('dPlus').onclick=function(){var d=Math.min(365,(parseInt(el('days').value,10)||7)+1);el('days').value=d;syncDays();haptic('selection')};
+el('days').addEventListener('input',syncDays);
+el('addBtn').onclick=add;
 el('name').addEventListener('keydown',function(e){if(e.key==='Enter')add()});
 el('days').addEventListener('keydown',function(e){if(e.key==='Enter')add()});
-store.getItem('plants').then(function(v){
-  if(v)try{plants=JSON.parse(v)}catch(e){}
+syncDays();
+store().getItem('plants').then(function(v){
+  if(v)try{plants=JSON.parse(v)||[]}catch(e){}
   render();
 });
 </script></body></html>

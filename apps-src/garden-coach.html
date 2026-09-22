@@ -3,84 +3,144 @@
   Garden Coach — MyLLMos™ App Gallery · © 2026 Opticell Ltd
   Source-available: read it, remix it, run your version inside MyLLM™.
   Not for redistribution or republication. Terms: https://github.com/TeamDzX/myllm-assets/blob/main/LICENSE
---><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<style>:root{--build-id:"ff0ade068b";color-scheme:light dark;--accent:#34c759}
-*{box-sizing:border-box}
-body{font-family:-apple-system,system-ui,sans-serif;margin:0;padding:18px;background:#f2f2f7;color:#111}
-@media(prefers-color-scheme:dark){body{background:#000;color:#eee}input,.answer{background:#1c1c1e;color:#eee;border-color:#3a3a3c}.chip{background:#1c1c1e;color:#eee}}
-h1{font-size:22px;margin:0 0 4px}
-.sub{font-size:13px;opacity:.6;margin-bottom:14px}
-input{width:100%;padding:11px;border:1px solid #d1d1d6;border-radius:10px;font-size:15px;background:#fff;font-family:inherit;margin-bottom:8px}
-.chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
-.chip{border:0;background:#e8f7ee;color:#1a8a44;border-radius:18px;padding:9px 13px;font-size:14px;font-weight:600}
-@media(prefers-color-scheme:dark){.chip{background:#13351f;color:#5fd98a}}
-.ask{display:flex;gap:8px}
-.ask input{flex:1;margin-bottom:0}
-.ask button{border:0;background:var(--accent);color:#fff;border-radius:10px;padding:0 16px;font-size:15px;font-weight:600}
-button:disabled{opacity:.5}
-#status{font-size:13px;opacity:.7;min-height:16px;margin:10px 0}
-.answer{background:#fff;border-radius:13px;padding:14px 16px;margin-top:6px;font-size:15px;line-height:1.55;white-space:pre-wrap;box-shadow:0 1px 3px rgba(0,0,0,.08);display:none}
-.answer .q{font-weight:700;color:var(--accent);margin-bottom:6px}
-.season{font-size:12px;opacity:.55;margin-bottom:12px}
+--><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Garden Coach</title>
+<style>:root{--build-id:"ff0ade068b";color-scheme:light dark;
+  --bg:var(--myllm-bg,#f2f2f7); --surface:var(--myllm-surface,#fff); --ink:var(--myllm-text,#111);
+  --muted:var(--myllm-muted,#8a8a8e); --line:var(--myllm-border,#e3e3e8); --acc:var(--myllm-accent,#0a84ff);
+  --fill:rgba(120,120,128,.12); --h:158; }
+@media (prefers-color-scheme:dark){ :root{ --bg:var(--myllm-bg,#000); --surface:var(--myllm-surface,#1c1c1e);
+  --ink:var(--myllm-text,#f2f2f7); --muted:var(--myllm-muted,#8e8e93); --line:var(--myllm-border,#2c2c2e); --fill:rgba(120,120,128,.24); } }
+  *{ margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body{ font-family:var(--myllm-font,-apple-system,system-ui,sans-serif); background:var(--bg); color:var(--ink);
+    max-width:600px; margin:0 auto; min-height:100dvh; font-size:15.5px; line-height:1.4;
+    padding:calc(16px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) calc(30px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left)); }
+  @media (min-width:768px){ body{ max-width:760px; } }
+  svg.i{ width:1.25em; height:1.25em; fill:currentColor; flex-shrink:0; }
+  button{ font:inherit; color:inherit; cursor:pointer; } button:active{ transform:scale(.96); }
+
+  .head{ display:flex; align-items:center; gap:12px; margin:2px 2px 14px; }
+  .tile{ display:flex; align-items:center; justify-content:center; color:#fff; flex-shrink:0;
+    background:linear-gradient(145deg, hsl(var(--h) 55% 42%), hsl(calc(var(--h) - 25) 55% 26%)); }
+  .head .tile{ width:44px; height:44px; border-radius:13px; font-size:19px; }
+  .head .ht{ flex:1; min-width:0; }
+  h1{ font-size:22px; font-weight:800; letter-spacing:-.01em; }
+  .head p{ font-size:13px; color:var(--muted); margin-top:1px; }
+
+  .season{ display:inline-flex; align-items:center; gap:7px; font-size:12.5px; font-weight:700; color:hsl(var(--h) 55% 30%);
+    background:hsl(var(--h) 55% 45% / .14); border-radius:99px; padding:6px 12px; margin:0 2px 12px; }
+  @media (prefers-color-scheme:dark){ .season{ color:hsl(var(--h) 55% 64%); } }
+
+  .card{ background:var(--surface); border:1px solid var(--line); border-radius:18px; padding:14px; margin-bottom:12px; }
+  label{ display:block; font-size:12px; font-weight:800; letter-spacing:.07em; text-transform:uppercase; color:var(--muted); margin:14px 2px 7px; }
+  label:first-child{ margin-top:0; }
+  input{ width:100%; font:inherit; font-size:16px; padding:12px; border-radius:12px; border:1px solid var(--line); background:var(--bg); color:var(--ink); outline:none; }
+  input:focus{ border-color:var(--acc); }
+  .chips{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  @media (min-width:560px){ .chips{ grid-template-columns:repeat(4,1fr); } }
+  .chip{ min-height:48px; border:1px solid var(--line); background:var(--bg); border-radius:14px; padding:8px 12px; font-size:14px; font-weight:650;
+    display:flex; align-items:center; gap:8px; text-align:left; line-height:1.25; }
+  .chip .e{ font-size:18px; flex-shrink:0; }
+  .chip:disabled{ opacity:.5; }
+  .ask{ display:flex; gap:8px; }
+  .ask input{ flex:1; min-width:0; }
+  .ask button{ flex-shrink:0; min-width:64px; border:none; border-radius:12px; background:var(--acc); color:#fff; font-size:15.5px; font-weight:700; padding:0 16px;
+    display:flex; align-items:center; justify-content:center; gap:6px; }
+  .ask button:disabled{ opacity:.55; }
+  .status{ font-size:13px; color:var(--muted); min-height:18px; margin:4px 2px 0; }
+  .status.err{ color:#ff453a; }
+
+  .answer .top{ display:flex; align-items:center; gap:11px; margin-bottom:10px; }
+  .answer .top .tile{ width:36px; height:36px; border-radius:10px; font-size:15px; }
+  .answer .top b{ font-size:16px; font-weight:750; line-height:1.3; overflow-wrap:anywhere; }
+  .answer .body{ font-size:15.5px; line-height:1.6; white-space:pre-wrap; overflow-wrap:anywhere; }
+  .spin{ width:16px; height:16px; border-radius:50%; border:2.4px solid currentColor; border-right-color:transparent; animation:spin .8s linear infinite; flex-shrink:0; }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+  .skel{ height:14px; border-radius:7px; background:var(--fill); margin-top:10px; animation:shimmer 1.4s ease-in-out infinite; }
+  .skel.w8{ width:80%; } .skel.w6{ width:60%; } .skel.w9{ width:92%; }
+  @keyframes shimmer{ 50%{ opacity:.45; } }
+  [hidden]{ display:none !important; }
+  @media (prefers-reduced-motion:reduce){ .spin{ animation-duration:2.4s; } .skel{ animation:none; } button:active{ transform:none; } }
+
+  @keyframes myllmAiSpin{to{transform:rotate(360deg)}}
+  .myllm-ai-busy{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(18px);z-index:99999;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;display:flex;align-items:center;gap:10px;background:rgba(28,28,30,.96);color:#fff;border-radius:999px;padding:10px 16px 10px 14px;box-shadow:0 6px 22px rgba(0,0,0,.4);font-size:14px;font-weight:600;max-width:92%}
+  .myllm-ai-busy.on{opacity:1;transform:translateX(-50%) translateY(0)}
+  .myllm-ai-cog{width:16px;height:16px;border-radius:50%;border:2.4px solid #a78bfa;border-right-color:transparent;animation:myllmAiSpin .9s linear infinite;flex-shrink:0}
+  .myllm-ai-busy small{font-weight:400;opacity:.6}
 </style></head><body>
-<style>
-@keyframes myllmAiSpin{to{transform:rotate(360deg)}}
-.myllm-ai-busy{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(18px);z-index:99999;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;display:flex;align-items:center;gap:10px;background:rgba(28,28,30,.96);color:#fff;border-radius:999px;padding:10px 16px 10px 14px;box-shadow:0 6px 22px rgba(0,0,0,.4);font-family:-apple-system,system-ui,sans-serif;font-size:14px;font-weight:600;max-width:92%}
-.myllm-ai-busy.on{opacity:1;transform:translateX(-50%) translateY(0)}
-.myllm-ai-cog{font-size:18px;line-height:1;animation:myllmAiSpin 2.4s linear infinite;filter:drop-shadow(0 0 5px rgba(124,92,255,.85))}
-.myllm-ai-busy small{font-weight:400;opacity:.6}
-@media(min-width:768px){body{max-width:760px;margin-left:auto;margin-right:auto}}
-</style>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-flower" viewBox="0 0 24 24"><path d="M12 2.5a3.5 3.5 0 0 1 3.4 4.4 3.5 3.5 0 0 1 2.7 6.1A3.5 3.5 0 0 1 12 15.9 3.5 3.5 0 0 1 5.9 13a3.5 3.5 0 0 1 2.7-6.1A3.5 3.5 0 0 1 12 2.5zm0 5.8a1.7 1.7 0 1 0 0 3.4 1.7 1.7 0 0 0 0-3.4zM11 16.8h2V21a1 1 0 0 1-2 0z" fill="currentColor"/></symbol>
+  <symbol id="i-cal" viewBox="0 0 24 24"><path d="M7 2.8a1 1 0 0 1 1 1V5h8V3.8a1 1 0 0 1 2 0V5h.5A2.5 2.5 0 0 1 21 7.5v11a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 18.5v-11A2.5 2.5 0 0 1 5.5 5H6V3.8a1 1 0 0 1 1-1zM5 10.2v8.3c0 .3.2.5.5.5h13c.3 0 .5-.2.5-.5v-8.3z" fill="currentColor"/></symbol>
+  <symbol id="i-send" viewBox="0 0 24 24"><path d="M3.4 11.1L19.6 4a.9.9 0 0 1 1.2 1.2L13.9 21.4a.9.9 0 0 1-1.7-.1L10.5 14l-7.2-1.6a.9.9 0 0 1-.1-1.7z" fill="currentColor"/></symbol>
+</defs></svg>
 <script>
-(function(){
-  if(window.__myllmAiWrap||typeof window.myllmAsk!=='function')return;
-  window.__myllmAiWrap=true;
-  var orig=window.myllmAsk,depth=0,node=null;
-  function ensure(){if(node)return;node=document.createElement('div');node.className='myllm-ai-busy';
-    node.innerHTML='<span class="myllm-ai-cog">\u2699\uFE0F</span><span>AI is thinking\u2026 <small>privately, on your device</small></span>';
-    (document.body||document.documentElement).appendChild(node);}
-  function show(){ensure();depth++;node.classList.add('on');}
-  function hide(){depth=Math.max(0,depth-1);if(depth===0&&node)node.classList.remove('on');}
-  window.myllmAsk=function(){show();var p;try{p=orig.apply(this,arguments);}catch(e){hide();throw e;}
-    return Promise.resolve(p).then(function(r){hide();return r;},function(e){hide();throw e;});};
-})();
+(function(){if(window.__myllmAiWrap||typeof window.myllmAsk!=='function')return;window.__myllmAiWrap=true;
+var orig=window.myllmAsk,depth=0,node=null;
+function ensure(){if(node)return;node=document.createElement('div');node.className='myllm-ai-busy';
+node.innerHTML='<span class="myllm-ai-cog"></span><span>AI is thinking… <small>privately, on your device</small></span>';
+(document.body||document.documentElement).appendChild(node);}
+function show(){ensure();depth++;node.classList.add('on');}
+function hide(){depth=Math.max(0,depth-1);if(depth===0&&node)node.classList.remove('on');}
+window.myllmAsk=function(){show();var p;try{p=orig.apply(this,arguments);}catch(e){hide();throw e;}
+return Promise.resolve(p).then(function(r){hide();return r;},function(e){hide();throw e;});};})();
 </script>
 
-<h1>🌱 Garden Coach</h1>
-<div class="sub">Your AI gardening helper — what to plant right now, and answers to anything.</div>
-<div class="season" id="season"></div>
-<input id="region" placeholder="Your area / climate (optional, e.g. UK, mild)">
-<div class="chips">
-  <button class="chip" onclick="quick('vegetables to sow or plant now')">🥕 Veg to sow now</button>
-  <button class="chip" onclick="quick('flowers to plant now')">🌸 Flowers</button>
-  <button class="chip" onclick="quick('herbs to grow now')">🌿 Herbs</button>
-  <button class="chip" onclick="quick('key gardening jobs to do this month')">🧤 Jobs this month</button>
+<div class="head">
+  <div class="tile"><svg class="i"><use href="#i-flower"/></svg></div>
+  <div class="ht"><h1>Garden Coach</h1><p>Your AI gardening helper — what to plant right now, and answers to anything.</p></div>
 </div>
-<div class="ask"><input id="q" placeholder="Ask the coach anything…" enterkeyhint="send"><button id="askBtn" onclick="ask()">Ask</button></div>
-<div id="status"></div>
-<div class="answer" id="answer"></div>
+<div class="season"><svg class="i"><use href="#i-cal"/></svg><span id="season"></span></div>
+
+<div class="card">
+  <label for="region">Your area</label>
+  <input id="region" placeholder="Your area / climate (optional, e.g. UK, mild)" autocomplete="off">
+  <label>Right now</label>
+  <div class="chips">
+    <button class="chip" type="button" data-q="vegetables to sow or plant now"><span class="e">🥕</span>Veg to sow now</button>
+    <button class="chip" type="button" data-q="flowers to plant now"><span class="e">🌸</span>Flowers</button>
+    <button class="chip" type="button" data-q="herbs to grow now"><span class="e">🌿</span>Herbs</button>
+    <button class="chip" type="button" data-q="key gardening jobs to do this month"><span class="e">🧤</span>Jobs this month</button>
+  </div>
+  <label for="q">Ask anything</label>
+  <div class="ask"><input id="q" placeholder="Ask the coach anything…" enterkeyhint="send" autocomplete="off"><button id="askBtn" type="button" aria-label="Ask"><svg class="i"><use href="#i-send"/></svg></button></div>
+</div>
+<div id="status" class="status"></div>
+<div class="card answer" id="answer" hidden></div>
+
 <script>
-var store=window.myllmStorage||{getItem:function(){return Promise.resolve(null)},setItem:function(){return Promise.resolve()}};
-var month=new Date().toLocaleDateString(undefined,{month:'long'});
 function el(i){return document.getElementById(i)}
-function setStatus(t){el('status').textContent=t||''}
-el('season').textContent='🗓️ Tips tuned for '+month;
+/* Bridges are looked up when used, never kept: MyLLM can add them after this
+   script has run. */
+function store(){return window.myllmStorage||{getItem:function(){return Promise.resolve(null)},setItem:function(){return Promise.resolve()}}}
+function haptic(k){if(window.myllmHaptic)try{myllmHaptic(k)}catch(e){}}
+var month=new Date().toLocaleDateString(undefined,{month:'long'});
+function setStatus(t,err){var s=el('status');s.textContent=t||'';s.classList.toggle('err',!!err)}
+el('season').textContent='Tips tuned for '+month;
 
 function regionClause(){var r=el('region').value.trim();return r?(' I garden in: '+r+'.'):''}
-function busy(b){el('askBtn').disabled=b;var c=document.querySelectorAll('.chip');for(var i=0;i<c.length;i++)c[i].disabled=b}
+function busy(b){
+  el('askBtn').disabled=b;el('askBtn').innerHTML=b?'<i class="spin"></i>':'<svg class="i"><use href="#i-send"/></svg>';
+  var c=document.querySelectorAll('.chip');for(var i=0;i<c.length;i++)c[i].disabled=b;
+}
+function answerCard(heading){
+  var a=el('answer');a.hidden=false;
+  a.innerHTML='<div class="top"><div class="tile"><svg class="i"><use href="#i-flower"/></svg></div><b></b></div>';
+  a.querySelector('b').textContent=heading;return a;
+}
 
 function run(prompt,heading){
-  if(!window.myllmAsk){setStatus('This app needs AI — update MyLLM and enable “Allow apps to use the AI” in Settings.');return}
-  busy(true);setStatus('Asking the garden coach…');
-  store.setItem('region',el('region').value.trim());
+  if(!window.myllmAsk){setStatus('This app needs AI — update MyLLM and enable “Allow apps to use the AI” in Settings.',true);return}
+  busy(true);setStatus('');
+  var a=answerCard(heading);
+  a.insertAdjacentHTML('beforeend','<div class="skel w9"></div><div class="skel w8"></div><div class="skel w6"></div><div class="skel w8"></div>');
+  store().setItem('region',el('region').value.trim());
   myllmAsk(prompt,{system:'You are a friendly, practical gardening expert. Be concise and specific. Prefer short bulleted lists. Assume a home gardener.'})
   .then(function(reply){
-    var a=el('answer');a.style.display='block';
-    a.innerHTML='<div class="q"></div>';a.querySelector('.q').textContent=heading;
-    a.appendChild(document.createTextNode(reply.trim()));
-    setStatus('');if(window.myllmHaptic)myllmHaptic('success');
+    var a=answerCard(heading);
+    var b=document.createElement('div');b.className='body';b.textContent=String(reply).trim();a.appendChild(b);
+    haptic('success');
     a.scrollIntoView({behavior:'smooth',block:'nearest'});
-  }).catch(function(err){setStatus('Coach unavailable: '+err.message)})
+  }).catch(function(err){el('answer').hidden=true;setStatus('Coach unavailable: '+err.message,true)})
   .then(function(){busy(false)});
 }
 function quick(what){
@@ -93,7 +153,9 @@ function ask(){
   el('q').value='';
 }
 
+[].forEach.call(document.querySelectorAll('.chip'),function(c){c.onclick=function(){quick(c.getAttribute('data-q'))}});
+el('askBtn').onclick=ask;
 el('q').addEventListener('keydown',function(e){if(e.key==='Enter')ask()});
-store.getItem('region').then(function(v){if(v)el('region').value=v});
+store().getItem('region').then(function(v){if(v)el('region').value=v});
 if(!window.myllmAsk)setStatus('Heads-up: this app needs the latest MyLLM with apps-AI enabled.');
 </script></body></html>

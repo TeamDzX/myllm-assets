@@ -3,44 +3,85 @@
   Feelings Check-In — MyLLMos™ App Gallery · © 2026 Opticell Ltd
   Source-available: read it, remix it, run your version inside MyLLM™.
   Not for redistribution or republication. Terms: https://github.com/TeamDzX/myllm-assets/blob/main/LICENSE
---><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<style>:root{--build-id:"719a6558f9";color-scheme:light dark;--bg:#f2f2f7;--fg:#111;--card:#fff}
-@media(prefers-color-scheme:dark){:root{--bg:#000;--fg:#eee;--card:#1c1c1e}}
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
-html,body{margin:0;min-height:100%}
-body{font-family:-apple-system,system-ui,sans-serif;background:var(--bg);color:var(--fg);margin:0 auto;max-width:560px;padding:calc(16px + env(safe-area-inset-top)) 16px calc(20px + env(safe-area-inset-bottom))}
-h1{font-size:21px;margin:0 0 2px;font-weight:700}
-.sub{font-size:13px;opacity:.6;margin-bottom:14px}
-.zones{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.zone{border-radius:18px;padding:18px 12px;color:#fff;text-align:center;border:0;box-shadow:0 3px 8px rgba(0,0,0,.12)}
-.zone:active{transform:scale(.97)}
-.zone .em{font-size:44px}
-.zone .nm{font-size:16px;font-weight:700;margin-top:4px}
-.zone .ds{font-size:11px;opacity:.9;margin-top:1px}
-.panel{display:none;margin-top:16px;background:var(--card);border-radius:18px;padding:18px;box-shadow:0 2px 8px rgba(0,0,0,.1)}
-.panel.show{display:block}
-.panel h2{margin:0 0 2px;font-size:20px}
-.panel .msg{font-size:14px;opacity:.75;margin-bottom:12px}
-.tool{display:flex;align-items:center;gap:12px;padding:12px;border-radius:14px;background:var(--bg);margin-bottom:8px;font-size:16px;font-weight:600}
-.tool .em{font-size:26px}
-.pbtns{display:flex;gap:10px;margin-top:12px}
-.pbtns button{flex:1;border:0;border-radius:14px;padding:13px;font-size:15px;font-weight:700}
-.logbtn{background:#4a7bf0;color:#fff}.closebtn{background:rgba(127,127,127,.18);color:var(--fg)}
-.hist{margin-top:22px}
-.hist h3{font-size:13px;opacity:.55;text-transform:uppercase;letter-spacing:.5px;margin:0 0 8px}
-.hrow{display:flex;align-items:center;gap:10px;font-size:14px;padding:7px 0;border-top:1px solid rgba(127,127,127,.14)}
-.hrow .em{font-size:20px}.hrow .t{margin-left:auto;opacity:.5;font-size:12px}
-.clear{border:0;background:none;color:#f0584f;font-size:12px;font-weight:600;margin-top:6px}
-@media(min-width:768px){body{max-width:720px}}
+--><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Feelings Check-In</title>
+<style>:root{--build-id:"719a6558f9";color-scheme:light dark;
+  --bg:var(--myllm-bg,#f2f2f7); --surface:var(--myllm-surface,#fff); --ink:var(--myllm-text,#111);
+  --muted:var(--myllm-muted,#8a8a8e); --line:var(--myllm-border,#e3e3e8); --acc:var(--myllm-accent,#0a84ff);
+  --fill:rgba(120,120,128,.12); --h:285; }
+@media (prefers-color-scheme:dark){ :root{ --bg:var(--myllm-bg,#000); --surface:var(--myllm-surface,#1c1c1e);
+  --ink:var(--myllm-text,#f2f2f7); --muted:var(--myllm-muted,#8e8e93); --line:var(--myllm-border,#2c2c2e); --fill:rgba(120,120,128,.24); } }
+  *{ margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; -webkit-user-select:none; user-select:none; }
+  body{ font-family:var(--myllm-font,-apple-system,system-ui,sans-serif); background:var(--bg); color:var(--ink);
+    max-width:600px; margin:0 auto; min-height:100dvh; font-size:15.5px; line-height:1.4;
+    padding:calc(16px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) calc(30px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left)); }
+  @media (min-width:768px){ body{ max-width:720px; } }
+  svg.i{ width:1.25em; height:1.25em; fill:currentColor; flex-shrink:0; }
+  button{ font:inherit; color:inherit; cursor:pointer; } button:active{ transform:scale(.97); }
+
+  .head{ display:flex; align-items:center; gap:12px; margin:2px 2px 14px; }
+  .tile{ display:flex; align-items:center; justify-content:center; color:#fff; flex-shrink:0;
+    background:linear-gradient(145deg, hsl(var(--h) 45% 52%), hsl(calc(var(--h) + 30) 45% 34%)); }
+  .head .tile{ width:44px; height:44px; border-radius:13px; font-size:19px; }
+  .head .ht{ flex:1; min-width:0; }
+  h1{ font-size:22px; font-weight:800; letter-spacing:-.01em; }
+  .head p{ font-size:13px; color:var(--muted); margin-top:1px; }
+  .q{ font-size:20px; font-weight:800; letter-spacing:-.01em; margin:4px 2px 12px; }
+  h3{ font-size:12px; font-weight:800; letter-spacing:.07em; text-transform:uppercase; color:var(--muted); margin:22px 2px 10px; }
+
+  /* Four calm colour tiles; the faces are content. */
+  .zones{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  @media (min-width:700px){ .zones{ grid-template-columns:repeat(4,1fr); } }
+  .zone{ min-height:140px; border-radius:22px; padding:16px 12px; color:#fff; text-align:center; border:3px solid transparent;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; box-shadow:0 6px 16px rgba(0,0,0,.12); }
+  .zone.on{ border-color:var(--ink); }
+  .zone .em{ font-size:48px; line-height:1.1; }
+  .zone .nm{ font-size:18px; font-weight:800; margin-top:4px; }
+  .zone .ds{ font-size:12.5px; opacity:.92; }
+
+  .panel{ margin-top:14px; background:var(--surface); border:1px solid var(--line); border-radius:20px; padding:16px; border-top-width:8px; }
+  .panel h2{ display:flex; align-items:center; gap:10px; font-size:21px; font-weight:800; }
+  .panel h2 .em{ font-size:30px; }
+  .panel .msg{ font-size:15.5px; color:var(--muted); line-height:1.5; margin:6px 0 12px; }
+  .tool{ display:flex; align-items:center; gap:14px; min-height:60px; padding:10px 14px; border-radius:16px; background:var(--fill); margin-bottom:8px; font-size:17px; font-weight:650; line-height:1.3; }
+  .tool .em{ font-size:28px; flex-shrink:0; }
+  .pbtns{ display:flex; gap:10px; margin-top:12px; }
+  .pbtns button{ flex:1; min-height:56px; border:none; border-radius:16px; font-size:16px; font-weight:750; display:flex; align-items:center; justify-content:center; gap:8px; }
+  .logbtn{ color:#fff; }
+  .closebtn{ background:var(--fill); }
+
+  .card{ background:var(--surface); border:1px solid var(--line); border-radius:18px; padding:4px 14px; }
+  .hrow{ display:flex; align-items:center; gap:12px; font-size:16px; font-weight:600; min-height:56px; border-bottom:1px solid var(--line); }
+  .hrow:last-child{ border-bottom:none; }
+  .hrow .dot{ width:12px; height:12px; border-radius:50%; flex-shrink:0; }
+  .hrow .em{ font-size:24px; }
+  .hrow .t{ margin-left:auto; color:var(--muted); font-size:13.5px; font-weight:500; font-variant-numeric:tabular-nums; }
+  .clear{ display:flex; align-items:center; gap:6px; min-height:44px; border:none; background:none; color:#e5484d; font-size:14px; font-weight:700; margin:6px 2px 0; }
+  [hidden]{ display:none !important; }
+  @media (prefers-reduced-motion:reduce){ button:active{ transform:none; } }
 </style></head><body>
-<h1>💗 How Are You Feeling?</h1>
-<div class="sub">Tap the colour that matches how you feel right now.</div>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 20.3l-1.3-1.2C5.8 14.7 3 12.1 3 8.9A4.8 4.8 0 0 1 7.9 4c1.6 0 3.1.7 4.1 1.9A5.5 5.5 0 0 1 16.1 4 4.8 4.8 0 0 1 21 8.9c0 3.2-2.8 5.8-7.7 10.2z" fill="currentColor"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.6l4.6 4.6L19.2 7.4" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></symbol>
+</defs></svg>
+
+<div class="head">
+  <div class="tile"><svg class="i"><use href="#i-heart"/></svg></div>
+  <div class="ht"><h1>Feelings Check-In</h1><p>Tap the colour that matches how you feel right now.</p></div>
+</div>
+<div class="q">How Are You Feeling?</div>
 <div class="zones" id="zones"></div>
-<div class="panel" id="panel"></div>
-<div class="hist" id="hist"></div>
+<div class="panel" id="panel" hidden></div>
+<div id="hist"></div>
+
 <script>
-var store=window.myllmStorage||{getItem:function(){return Promise.resolve(null)},setItem:function(){return Promise.resolve()}};
+function el(i){return document.getElementById(i)}
+/* Bridges are looked up when used, never kept: MyLLM can add them after this
+   script has run. */
+function store(){return window.myllmStorage||{getItem:function(){return Promise.resolve(null)},setItem:function(){return Promise.resolve()}}}
 function haptic(s){if(window.myllmHaptic)try{myllmHaptic(s)}catch(e){}}
+function icon(n){return '<svg class="i"><use href="#i-'+n+'"/></svg>'}
 var ZONES=[
  {id:'blue',c:'#4a7bf0',em:'😢',nm:'Blue',ds:'sad · tired · poorly',
   msg:"It's okay to feel low. These can help you feel a bit better.",
@@ -48,43 +89,47 @@ var ZONES=[
  {id:'green',c:'#34a853',em:'😊',nm:'Green',ds:'happy · calm · ready',
   msg:"You're in a great place to learn and play. Keep it up!",
   tools:[['🎯','Carry on with what you’re doing'],['🤝','Help a friend or say hello'],['🌟','Notice one good thing right now']]},
- {id:'yellow',c:'#f4b400',em:'😟',nm:'Yellow',ds:'worried · wiggly · silly',
+ {id:'yellow',c:'#e0a400',em:'😟',nm:'Yellow',ds:'worried · wiggly · silly',
   msg:"Feeling a bit wobbly is normal. Let's get steady again.",
   tools:[['🌬️','Breathe in for 4, out for 4'],['🔢','Slowly count to ten'],['✋','Squeeze and let go your hands'],['⏸️','Ask for a short break']]},
- {id:'red',c:'#ea4335',em:'😠',nm:'Red',ds:'angry · upset · too much',
+ {id:'red',c:'#e04a3c',em:'😠',nm:'Red',ds:'angry · upset · too much',
   msg:"Big feelings are okay. You are safe. Let's calm your body.",
   tools:[['🛑','Stop and stand still'],['🌬️','Take long, slow breaths'],['🧱','Push your hands on a wall'],['🧑','Find a grown-up you trust']]}
 ];
-var hist=[];
-function el(i){return document.getElementById(i)}
+var COL={}; ZONES.forEach(function(z){COL[z.id]=z.c});
+var hist=[],openId=null;
+function save(){store().setItem('fc_hist',JSON.stringify(hist))}
 function renderZones(){
   var Z=el('zones');Z.innerHTML='';
   ZONES.forEach(function(z){
-    var b=document.createElement('button');b.className='zone';b.style.background=z.c;
+    var b=document.createElement('button');b.type='button';b.className='zone'+(openId===z.id?' on':'');
+    b.style.background='linear-gradient(160deg,'+z.c+','+z.c+'dd)';
     b.innerHTML='<div class="em">'+z.em+'</div><div class="nm">'+z.nm+'</div><div class="ds">'+z.ds+'</div>';
     b.onclick=function(){openZone(z)};
     Z.appendChild(b);
   });
 }
+function closePanel(){el('panel').hidden=true;openId=null;renderZones()}
 function openZone(z){
-  haptic('selection');
+  haptic('selection');openId=z.id;renderZones();
   // pick up to 3 tools, rotating so it feels fresh
   var t=z.tools.slice();for(var i=t.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var x=t[i];t[i]=t[j];t[j]=x}
   t=t.slice(0,3);
-  var P=el('panel');P.className='panel show';P.style.borderTop='6px solid '+z.c;
-  P.innerHTML='<h2>'+z.em+' '+z.nm+'</h2><div class="msg">'+z.msg+'</div>'+
-    t.map(function(x){return '<div class="tool"><span class="em">'+x[0]+'</span>'+x[1]+'</div>'}).join('')+
-    '<div class="pbtns"><button class="logbtn" id="logb">Save how I feel</button><button class="closebtn" id="closeb">Close</button></div>';
+  var P=el('panel');P.hidden=false;P.style.borderTopColor=z.c;
+  P.innerHTML='<h2><span class="em">'+z.em+'</span>'+z.nm+'</h2><div class="msg">'+z.msg+'</div>'+
+    t.map(function(x){return '<div class="tool"><span class="em">'+x[0]+'</span><span>'+x[1]+'</span></div>'}).join('')+
+    '<div class="pbtns"><button class="logbtn" id="logb" type="button">'+icon('check')+'Save how I feel</button><button class="closebtn" id="closeb" type="button">Close</button></div>';
+  el('logb').style.background=z.c;
   el('logb').onclick=function(){logFeeling(z)};
-  el('closeb').onclick=function(){P.className='panel'};
+  el('closeb').onclick=closePanel;
   P.scrollIntoView({behavior:'smooth',block:'nearest'});
 }
 function logFeeling(z){
   hist.unshift({z:z.id,em:z.em,nm:z.nm,t:Date.now()});
   hist=hist.slice(0,30);
-  store.setItem('fc_hist',JSON.stringify(hist));
+  save();
   haptic('success');
-  el('panel').className='panel';
+  closePanel();
   renderHist();
 }
 function fmtTime(ts){var d=new Date(ts);var h=d.getHours(),m=d.getMinutes();var ap=h<12?'am':'pm';h=h%12||12;return h+':'+(m<10?'0':'')+m+ap}
@@ -93,11 +138,11 @@ function renderHist(){
   var H=el('hist');
   var today=hist.filter(function(r){return sameDay(r.t,Date.now())});
   if(!today.length){H.innerHTML='';return}
-  H.innerHTML='<h3>Today’s check-ins</h3>'+today.map(function(r){
-    return '<div class="hrow"><span class="em">'+r.em+'</span>'+r.nm+'<span class="t">'+fmtTime(r.t)+'</span></div>';
-  }).join('')+'<button class="clear" id="clr">Clear today</button>';
-  el('clr').onclick=function(){hist=hist.filter(function(r){return !sameDay(r.t,Date.now())});store.setItem('fc_hist',JSON.stringify(hist));renderHist()};
+  H.innerHTML='<h3>Today’s check-ins</h3><div class="card">'+today.map(function(r){
+    return '<div class="hrow"><span class="dot" style="background:'+(COL[r.z]||'#999')+'"></span><span class="em">'+r.em+'</span>'+r.nm+'<span class="t">'+fmtTime(r.t)+'</span></div>';
+  }).join('')+'</div><button class="clear" id="clr" type="button">'+icon('x')+'Clear today</button>';
+  el('clr').onclick=function(){hist=hist.filter(function(r){return !sameDay(r.t,Date.now())});save();renderHist()};
 }
 renderZones();
-store.getItem('fc_hist').then(function(v){if(v){try{hist=JSON.parse(v)||[]}catch(e){}}renderHist()});
+store().getItem('fc_hist').then(function(v){if(v){try{hist=JSON.parse(v)||[]}catch(e){}}renderHist()});
 </script></body></html>
