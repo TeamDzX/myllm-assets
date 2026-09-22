@@ -43,6 +43,8 @@
 body{font-family:var(--font);margin:0;padding:18px 16px calc(34px + env(safe-area-inset-bottom));
   background:linear-gradient(180deg,var(--page1),var(--page2));background-attachment:fixed;
   min-height:100dvh;color:var(--ink);line-height:1.4}
+/* phone on its side: keep clear of the notch and the rounded corners */
+body{padding-left:max(16px,env(safe-area-inset-left));padding-right:max(16px,env(safe-area-inset-right))}
 @media(min-width:768px){body{max-width:720px;margin:0 auto}}
 
 .hero{position:relative;overflow:hidden;border-radius:var(--radiusLg);padding:20px;margin-bottom:16px;
@@ -448,7 +450,8 @@ body.fs-open{overflow:hidden}
 
 <script>
 "use strict";
-var store=window.myllmStorage||{getItem:function(){return Promise.resolve(null)},setItem:function(){return Promise.resolve()}};
+/* Looked up on each use, never kept: MyLLM can add its bridges after this script has run. */
+var store={getItem:function(k){var s=window.myllmStorage;return s?s.getItem(k):Promise.resolve(null)},setItem:function(k,v){var s=window.myllmStorage;return s?s.setItem(k,v):Promise.resolve()}};
 var decks=[],cur=-1,idx=0,showA=false;
 /* How many cards to ask for. Small on-device models get less reliable the more
    you ask for in one go, so the parser takes whatever actually comes back and

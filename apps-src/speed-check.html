@@ -11,10 +11,13 @@
   --bg:var(--myllm-bg,#f2f2f7);--surface:var(--myllm-surface,#fff);--text:var(--myllm-text,#111);
   --muted:var(--myllm-muted,#6e6e73);--accent:var(--myllm-accent,#0a84ff);--border:var(--myllm-border,#e3e3e8);
   --radius:var(--myllm-radius,18px);--down:#12a594;--up:#ff8a3d;--ping:#7c5cff;--good:#2fb56a;--warn:#e8a317;--bad:#e5484d}
+@media(prefers-color-scheme:dark){:root{--bg:var(--myllm-bg,#000);--surface:var(--myllm-surface,#1c1c1e);--text:var(--myllm-text,#f2f2f7);--muted:var(--myllm-muted,#98989f);--border:var(--myllm-border,#2c2c2e)}}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0}
 body{font-family:var(--myllm-font,-apple-system,system-ui,sans-serif);background:var(--bg);color:var(--text);
   padding:18px 16px calc(28px + env(safe-area-inset-bottom));max-width:820px;margin:0 auto;-webkit-font-smoothing:antialiased}
+/* phone on its side: keep clear of the notch and the rounded corners */
+body{padding-left:max(16px,env(safe-area-inset-left));padding-right:max(16px,env(safe-area-inset-right))}
 h1{font-size:24px;margin:0;letter-spacing:-.3px}
 .sub{font-size:13px;color:var(--muted);margin:3px 0 14px}
 .top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
@@ -127,7 +130,8 @@ h1{font-size:24px;margin:0;letter-spacing:-.3px}
 'use strict';
 var $=function(id){return document.getElementById(id);};
 function haptic(k){try{if(window.myllmHaptic)window.myllmHaptic(k||'light');}catch(e){}}
-var store=window.myllmStorage||{getItem:function(){return Promise.resolve(null);},setItem:function(){return Promise.resolve();}};
+/* Looked up on each use, never kept: MyLLM can add its bridges after this script has run. */
+var store={getItem:function(k){var s=window.myllmStorage;return s?s.getItem(k):Promise.resolve(null);},setItem:function(k,v){var s=window.myllmStorage;return s?s.setItem(k,v):Promise.resolve();}};
 var hasFetch=typeof window.myllmFetch==='function';
 var HOST='https://speed.cloudflare.com';
 var KEY='speedcheck.v1';

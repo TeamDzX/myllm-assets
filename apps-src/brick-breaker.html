@@ -3,97 +3,327 @@
   Brick Breaker — MyLLMos™ App Gallery · © 2026 Opticell Ltd
   Source-available: read it, remix it, run your version inside MyLLM™.
   Not for redistribution or republication. Terms: https://github.com/TeamDzX/myllm-assets/blob/main/LICENSE
---><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+--><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Brick Breaker</title>
 <style>:root{--build-id:"164946bd97";color-scheme:light dark}
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
-html,body{margin:0;height:100%}
-body{font-family:-apple-system,system-ui,sans-serif;background:#0e0e16;color:#eee;display:flex;flex-direction:column;align-items:center;padding:10px;touch-action:none;overflow:hidden}
-.hud{display:flex;justify-content:space-between;width:100%;max-width:420px;font-size:14px;font-weight:600;padding:4px 6px;font-variant-numeric:tabular-nums}
-.hud .s{color:#ffd60a}.hud .h{opacity:.6}
-canvas{border-radius:14px;background:#15151f;box-shadow:0 6px 24px rgba(0,0,0,.5);touch-action:none}
-.tip{font-size:12px;opacity:.5;margin-top:8px;height:14px}
+  @property --h{ syntax:'<number>'; inherits:true; initial-value:258; }
+  *{ margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body{ height:100%; }
+  body{ font-family:var(--myllm-font,-apple-system,system-ui,sans-serif); background:#0b0b10; color:#fff; overflow:hidden;
+    touch-action:none; overscroll-behavior:none; -webkit-user-select:none; user-select:none; }
+  button{ font:inherit; color:inherit; }
+
+  /* The stage: a hue-tinted backdrop in two layers, dark and light, so the
+     change between them can fade. */
+  .stage{ position:fixed; inset:0; --h:258; transition:--h 1.4s ease; color:#fff; }
+  .bg{ position:absolute; inset:0; transition:opacity .6s ease; }
+  .bg.d{ background:radial-gradient(120% 90% at 20% 10%, hsl(var(--h) 70% 34%), transparent 60%),
+      radial-gradient(120% 90% at 85% 95%, hsl(calc(var(--h) + 60) 65% 26%), transparent 62%), #0b0b10; }
+  .bg.l{ opacity:0; background:radial-gradient(120% 90% at 20% 0%, hsl(var(--h) 80% 84%), transparent 60%),
+      radial-gradient(120% 90% at 85% 100%, hsl(calc(var(--h) + 60) 78% 86%), transparent 62%), #f4f4f8; }
+  .lite{ color:#15151a; } .lite .bg.l{ opacity:1; } .lite .bg.d{ opacity:0; }
+
+  .col{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center;
+    padding:calc(12px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) calc(14px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left)); }
+  .top{ width:100%; max-width:560px; height:44px; display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
+  .lbl{ font-size:11px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; opacity:.62; white-space:nowrap; }
+  .glass{ border:1px solid rgba(255,255,255,.16); background:rgba(255,255,255,.12); color:inherit;
+    -webkit-backdrop-filter:blur(18px); backdrop-filter:blur(18px); }
+  .lite .glass{ border-color:rgba(0,0,0,.09); background:rgba(255,255,255,.62); }
+  svg{ width:1.25em; height:1.25em; fill:currentColor; flex-shrink:0; }
+  .rnd{ width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:15px; flex-shrink:0; }
+  .pill{ min-width:44px; height:44px; border-radius:99px; padding:0 16px; display:flex; align-items:center; justify-content:center; gap:6px;
+    font-size:19px; font-weight:800; font-variant-numeric:tabular-nums; flex-shrink:0; }
+  .pill small{ font-size:10px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; opacity:.6; }
+  .pill.bump{ animation:bump .28s ease; }
+  @keyframes bump{ 40%{ transform:scale(1.18); } }
+  .top .hide{ visibility:hidden; }
+
+  .wrap{ flex:1; width:100%; min-height:0; position:relative; display:flex; align-items:center; justify-content:center; margin:10px 0 34px; }
+  .foot{ position:absolute; left:0; right:0; top:calc(50% + var(--bh,320px) / 2 + 12px); text-align:center; font-size:12px; font-weight:600;
+    letter-spacing:.02em; opacity:.55; font-variant-numeric:tabular-nums; white-space:nowrap; }
+
+  /* One glass card over the board: title, paused, finished. */
+  .sheet{ position:absolute; left:50%; top:50%; width:max(232px, min(300px, calc(var(--b,320px) - 44px))); transform:translate(-50%,-50%) scale(.96);
+    opacity:0; pointer-events:none; border-radius:26px; padding:22px 20px 18px; text-align:center; box-shadow:0 24px 60px rgba(0,0,0,.35); z-index:5;
+    transition:opacity .28s ease, transform .28s cubic-bezier(.2,.8,.2,1); }
+  .sheet.on{ opacity:1; transform:translate(-50%,-50%); pointer-events:auto; }
+  /* whatever sits under an open card steps back, so the card reads */
+  .under{ transition:opacity .3s, filter .3s; } .veil .under{ opacity:.28; filter:blur(2px); }
+  .lite .sheet{ box-shadow:0 22px 50px rgba(20,20,40,.18); }
+  .sheet h1{ font-size:30px; font-weight:800; letter-spacing:-.02em; }
+  .sheet p{ font-size:13.5px; line-height:1.4; opacity:.72; margin-top:6px; }
+  .kick{ font-size:11px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; opacity:.62; }
+  .big{ font-size:64px; font-weight:800; line-height:1.05; letter-spacing:-.03em; font-variant-numeric:tabular-nums; margin-top:4px; }
+  .big small{ display:block; font-size:12px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; opacity:.6; margin-top:2px; }
+  .best{ display:inline-block; margin-top:10px; font-size:11.5px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; opacity:.7; }
+  .best.new{ opacity:1; color:#0b0b10; background:#ffd60a; border-radius:99px; padding:5px 11px; }
+  .sheet .act{ width:100%; height:50px; border-radius:99px; margin-top:10px; font-size:16px; font-weight:750;
+    display:flex; align-items:center; justify-content:center; gap:8px; }
+  .sheet .act:first-of-type{ margin-top:18px; }
+  .sheet .act:active, .rnd:active{ transform:scale(.96); }
+  .pri{ border:none; background:#fff; color:#0b0b10; box-shadow:0 10px 30px rgba(0,0,0,.3); }
+  .lite .pri{ background:#15151a; color:#fff; box-shadow:0 10px 26px rgba(20,20,40,.22); }
+
+  @media (max-height:430px){
+    .sheet{ padding:14px 18px 14px; } .sheet h1{ font-size:24px; } .big{ font-size:42px; }
+    .sheet .act{ height:44px; margin-top:8px; } .sheet .act:first-of-type{ margin-top:12px; } .sheet p{ display:none; }
+    .wrap{ margin:6px 0 26px; }
+  }
+  @media (prefers-reduced-motion:reduce){ .pill.bump{ animation:none; } .stage{ transition:none; } }
+
+  canvas{ display:block; position:relative; z-index:1; border-radius:22px; background:rgba(10,10,16,.42); border:1px solid rgba(255,255,255,.12);
+    box-shadow:0 24px 60px rgba(0,0,0,.45); touch-action:none; transition:background .6s, box-shadow .6s; flex-shrink:0; }
+  .lite canvas{ background:rgba(255,255,255,.6); border-color:rgba(0,0,0,.06); box-shadow:0 22px 50px rgba(20,20,40,.16); }
+  canvas.shake{ animation:shake .4s ease; }
+  @keyframes shake{ 20%{ transform:translate(-7px,2px); } 40%{ transform:translate(6px,-2px); } 60%{ transform:translate(-4px,1px); } 80%{ transform:translate(2px,0); } }
+  .mid{ display:flex; flex-direction:column; align-items:center; gap:5px; }
+  .lives{ display:flex; gap:4px; font-size:11px; height:14px; color:#ff5d73; }
+  .lives svg.off{ opacity:.22; color:inherit; filter:grayscale(1); }
+  .lives.hide{ visibility:hidden; }
+  @media (prefers-reduced-motion:reduce){ canvas.shake{ animation:none; } }
 </style></head><body>
-<div class="hud"><span>❤️ <span id="lives">3</span></span><span class="s">⭐ <span id="score">0</span></span><span class="h">Best <span id="best">0</span></span></div>
-<canvas id="cv"></canvas>
-<div class="tip" id="tip">Drag to move · tap to launch</div>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5.5v13a1 1 0 0 0 1.52.85l10.4-6.5a1 1 0 0 0 0-1.7L9.52 4.65A1 1 0 0 0 8 5.5z"/></symbol>
+  <symbol id="i-pause" viewBox="0 0 24 24"><rect x="6" y="5" width="4.2" height="14" rx="1.4"/><rect x="13.8" y="5" width="4.2" height="14" rx="1.4"/></symbol>
+  <symbol id="i-again" viewBox="0 0 24 24"><path d="M12 5V2.6a.6.6 0 0 0-1-.45L7.2 5.55a.6.6 0 0 0 0 .9L11 9.85a.6.6 0 0 0 1-.45V7a5.5 5.5 0 1 1-5.5 5.5 1 1 0 0 0-2 0A7.5 7.5 0 1 0 12 5z"/></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24"><path d="M6.4 5a1 1 0 0 0-1.4 1.4L10.6 12 5 17.6A1 1 0 0 0 6.4 19l5.6-5.6 5.6 5.6a1 1 0 0 0 1.4-1.4L13.4 12 19 6.4A1 1 0 0 0 17.6 5L12 10.6z"/></symbol>
+  <symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 21.2l-1.3-1.2C5.4 15.2 2.5 12.5 2.5 9.1 2.5 6.4 4.6 4.3 7.3 4.3c1.8 0 3.6.9 4.7 2.4 1.1-1.5 2.9-2.4 4.7-2.4 2.7 0 4.8 2.1 4.8 4.8 0 3.4-2.9 6.1-8.2 10.9z"/></symbol>
+</defs></svg>
+<div class="stage" id="stage">
+  <div class="bg d"></div><div class="bg l"></div>
+  <div class="col">
+    <div class="top">
+      <button class="glass rnd hide" id="bPause" aria-label="Pause"><svg><use href="#i-pause"/></svg></button>
+      <div class="mid"><div class="lbl">Brick Breaker</div><div class="lives hide" id="lives" aria-label="Lives"></div></div>
+      <div class="glass pill hide" id="pill" aria-label="Score">0</div>
+    </div>
+    <div class="wrap" id="wrap">
+      <canvas class="under" id="cv" width="320" height="480"></canvas>
+      <div class="sheet glass" id="sheet"></div>
+      <div class="foot" id="foot"></div>
+    </div>
+  </div>
+</div>
 <script>
-var store=window.myllmStorage||{getItem:function(){return Promise.resolve(null)},setItem:function(){return Promise.resolve()}};
-var cv=document.getElementById('cv'),ctx=cv.getContext('2d'),DPR=Math.min(window.devicePixelRatio||1,3);
-var W=Math.min(window.innerWidth-20,420),H=Math.min(window.innerHeight-90,Math.round(W*1.5));
-cv.style.width=W+'px';cv.style.height=H+'px';cv.width=W*DPR;cv.height=H*DPR;ctx.scale(DPR,DPR);
-function el(i){return document.getElementById(i)}
-var COLORS=['#ff453a','#ff9f0a','#ffd60a','#30d158','#0a84ff','#bf5af2'];
-var paddle,ball,bricks,score=0,lives=3,level=1,best=0,state='start',launched=false;
-var COLS=7,ROWS=5,GAP=6,TOP=54;
+function el(i){ return document.getElementById(i); }
+/* Bridges are looked up when used, never kept: MyLLM can add them after this
+   script has run. */
+function haptic(s){ if (window.myllmHaptic) try { myllmHaptic(s); } catch(_){} }
+function load(k){ var s = window.myllmStorage; return s ? s.getItem(k).catch(function(){ return null; }) : Promise.resolve(null); }
+function keep(k, v){ var s = window.myllmStorage; if (s) try { s.setItem(k, v).catch(function(){}); } catch(_){} }
+var calm = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/* ---------- look ---------- */
+function isLight(){ return !(window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches); }
+/* A game in progress takes the whole display and goes dark. Where MyLLM can't
+   hide its own title bar, a dark stage under a white bar looks cut in half —
+   so in light mode, without myllmImmersive, the stage stays light. */
+function syncLook(){
+  el("stage").classList.toggle("lite", isLight() && !(state !== "home" && window.myllmImmersive));
+  if (typeof onLook === "function") onLook();
+}
+function syncChrome(){
+  if (!window.myllmImmersive) return;
+  try { myllmImmersive(state !== "home", {keepAwake:false}).catch(function(){}); } catch(_){}
+}
+function setHue(h){ el("stage").style.setProperty("--h", String(h)); }
+function showSheet(html, acts){
+  var s = el("sheet"); s.innerHTML = html;
+  Object.keys(acts).forEach(function(id){ var b = el(id); if (b) b.onclick = acts[id]; });
+  s.classList.add("on"); el("stage").classList.add("veil");
+}
+function hideSheet(){ el("sheet").classList.remove("on"); el("stage").classList.remove("veil"); }
+function bump(id){ var p = el(id); p.classList.remove("bump"); void p.offsetWidth; p.classList.add("bump"); }
+document.addEventListener("visibilitychange", function(){
+  if (document.hidden){ if (typeof onHide === "function") onHide(); return; }
+  if (state !== "home") syncChrome();          /* MyLLM puts its bars back when the app is left */
+});
+if (window.matchMedia){
+  var mq = matchMedia("(prefers-color-scheme: dark)");
+  if (mq.addEventListener) mq.addEventListener("change", syncLook); else if (mq.addListener) mq.addListener(syncLook);
+}
+
+var state = "home";                 /* home · play · over */
+var paused = false;
+var cv = el("cv"), ctx = cv.getContext("2d"), DPR = 1, SC = 1;
+/* The playfield is a fixed logical size, exactly what the app has always used
+   on a phone held upright; only the drawing is scaled to the screen, so the
+   ball, the paddle and the pace are the same on every display. */
+var W = Math.min(Math.min(window.innerWidth, window.innerHeight) - 20, 420), H = Math.round(W * 1.5);
+var paddle, ball, bricks, score = 0, lives = 3, level = 1, best = 0, best0 = 0, newBest = false, launched = false;
+var COLS = 7, ROWS = 5, GAP = 6, TOP = 54, trail = [];
+var STEP = 1000 / 60, acc = 0, lastT = 0;      /* the game was tuned per frame at 60 Hz: keep that pace on faster screens */
 
 function reset(full){
-  if(full){score=0;lives=3;level=1}
-  var bw=(W-GAP*(COLS+1))/COLS,bh=20;
-  bricks=[];
-  for(var r=0;r<ROWS;r++)for(var c=0;c<COLS;c++)bricks.push({x:GAP+c*(bw+GAP),y:TOP+r*(bh+GAP),w:bw,h:bh,c:COLORS[r%COLORS.length],alive:true});
-  paddle={w:Math.max(64,W*0.22),h:12,x:W/2};
-  var spd=2.6+level*0.35;
-  ball={x:W/2,y:H-60,r:7,vx:0,vy:0,spd:spd};
-  launched=false;
+  if (full){ score = 0; lives = 3; level = 1; }
+  var bw = (W - GAP * (COLS + 1)) / COLS, bh = 20;
+  bricks = [];
+  for (var r = 0; r < ROWS; r++) for (var c = 0; c < COLS; c++) bricks.push({x:GAP + c * (bw + GAP), y:TOP + r * (bh + GAP), w:bw, h:bh, r:r, alive:true});
+  paddle = {w:Math.max(64, W * 0.22), h:12, x:W / 2};
+  var spd = 2.6 + level * 0.35;
+  ball = {x:W / 2, y:H - 60, r:7, vx:0, vy:0, spd:spd};
+  launched = false; trail = [];
 }
-function launch(){if(!launched){var a=(-Math.PI/2)+(Math.random()*0.5-0.25);ball.vx=Math.cos(a)*ball.spd;ball.vy=Math.sin(a)*ball.spd;launched=true}}
-
+function launch(){
+  if (launched) return;
+  var a = (-Math.PI / 2) + (Math.random() * 0.5 - 0.25);
+  ball.vx = Math.cos(a) * ball.spd; ball.vy = Math.sin(a) * ball.spd; launched = true; tip();
+}
 function step(){
-  if(state!=='play')return;
-  if(!launched){ball.x=paddle.x;ball.y=H-60}
-  else{
-    ball.x+=ball.vx;ball.y+=ball.vy;
-    if(ball.x<ball.r){ball.x=ball.r;ball.vx*=-1}
-    if(ball.x>W-ball.r){ball.x=W-ball.r;ball.vx*=-1}
-    if(ball.y<ball.r){ball.y=ball.r;ball.vy*=-1}
-    // paddle
-    var py=H-28;
-    if(ball.vy>0&&ball.y+ball.r>=py&&ball.y+ball.r<=py+paddle.h+8&&Math.abs(ball.x-paddle.x)<paddle.w/2+ball.r){
-      var hit=(ball.x-paddle.x)/(paddle.w/2);var ang=-Math.PI/2+hit*1.0;
-      ball.vx=Math.cos(ang)*ball.spd;ball.vy=Math.sin(ang)*ball.spd;ball.y=py-ball.r;
-      if(window.myllmHaptic)myllmHaptic('light');
-    }
-    // bricks
-    for(var i=0;i<bricks.length;i++){var b=bricks[i];if(!b.alive)continue;
-      if(ball.x+ball.r>b.x&&ball.x-ball.r<b.x+b.w&&ball.y+ball.r>b.y&&ball.y-ball.r<b.y+b.h){
-        b.alive=false;score+=10*level;el('score').textContent=score;
-        var ox=Math.min(ball.x-b.x,b.x+b.w-ball.x),oy=Math.min(ball.y-b.y,b.y+b.h-ball.y);
-        if(ox<oy)ball.vx*=-1;else ball.vy*=-1;
-        if(window.myllmHaptic)myllmHaptic('selection');
-        break;
-      }
-    }
-    if(!bricks.some(function(b){return b.alive})){level++;reset(false);el('tip').textContent='Level '+level+'! Tap to launch'}
-    if(ball.y-ball.r>H){lives--;el('lives').textContent=lives;launched=false;ball.x=paddle.x;ball.y=H-60;
-      if(window.myllmHaptic)myllmHaptic('error');
-      if(lives<=0)gameOver();}
+  if (!launched){ ball.x = paddle.x; ball.y = H - 60; return; }
+  ball.x += ball.vx; ball.y += ball.vy;
+  if (ball.x < ball.r){ ball.x = ball.r; ball.vx *= -1; }
+  if (ball.x > W - ball.r){ ball.x = W - ball.r; ball.vx *= -1; }
+  if (ball.y < ball.r){ ball.y = ball.r; ball.vy *= -1; }
+  var py = H - 28;
+  if (ball.vy > 0 && ball.y + ball.r >= py && ball.y + ball.r <= py + paddle.h + 8 && Math.abs(ball.x - paddle.x) < paddle.w / 2 + ball.r){
+    var hit = (ball.x - paddle.x) / (paddle.w / 2), ang = -Math.PI / 2 + hit * 1.0;
+    ball.vx = Math.cos(ang) * ball.spd; ball.vy = Math.sin(ang) * ball.spd; ball.y = py - ball.r;
+    haptic("light");
   }
-  draw();requestAnimationFrame(step);
-}
-function draw(){
-  ctx.clearRect(0,0,W,H);
-  bricks.forEach(function(b){if(!b.alive)return;ctx.fillStyle=b.c;roundRect(b.x,b.y,b.w,b.h,5);ctx.fill()});
-  ctx.fillStyle='#e8e8ef';roundRect(paddle.x-paddle.w/2,H-28,paddle.w,paddle.h,6);ctx.fill();
-  ctx.beginPath();ctx.fillStyle='#fff';ctx.arc(ball.x,ball.y,ball.r,0,Math.PI*2);ctx.fill();
-  if(state==='start'||state==='over'){
-    ctx.fillStyle='rgba(10,10,18,.72)';ctx.fillRect(0,0,W,H);
-    ctx.fillStyle='#fff';ctx.textAlign='center';
-    ctx.font='700 26px -apple-system,system-ui';ctx.fillText(state==='over'?'Game Over':'Brick Breaker',W/2,H/2-18);
-    ctx.font='15px -apple-system,system-ui';ctx.fillStyle='#bbb';
-    ctx.fillText(state==='over'?('Score '+score+(score>=best?'  ·  New best!':'')):'Tap to play',W/2,H/2+14);
-    if(state==='over')ctx.fillText('Tap to play again',W/2,H/2+40);
+  for (var i = 0; i < bricks.length; i++){
+    var b = bricks[i]; if (!b.alive) continue;
+    if (ball.x + ball.r > b.x && ball.x - ball.r < b.x + b.w && ball.y + ball.r > b.y && ball.y - ball.r < b.y + b.h){
+      b.alive = false; b.t0 = performance.now(); score += 10 * level; el("pill").textContent = score; bump("pill");
+      var ox = Math.min(ball.x - b.x, b.x + b.w - ball.x), oy = Math.min(ball.y - b.y, b.y + b.h - ball.y);
+      if (ox < oy) ball.vx *= -1; else ball.vy *= -1;
+      haptic("selection");
+      break;
+    }
+  }
+  if (!bricks.some(function(b){ return b.alive; })){ level++; reset(false); setHue(258 + (level - 1) * 24); tip("Level " + level + " — tap to launch"); }
+  if (ball.y - ball.r > H){
+    lives--; hearts(); launched = false; ball.x = paddle.x; ball.y = H - 60; trail = [];
+    haptic("error");
+    if (!calm){ cv.classList.remove("shake"); void cv.offsetWidth; cv.classList.add("shake"); }
+    if (lives <= 0) gameOver(); else tip();
   }
 }
-function roundRect(x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath()}
-function gameOver(){state='over';if(score>best){best=score;store.setItem('bbBest',String(best));el('best').textContent=best}draw();el('tip').textContent='Tap to play again'}
-function startGame(){reset(true);el('score').textContent=0;el('lives').textContent=3;state='play';el('tip').textContent='Drag to move · tap to launch';requestAnimationFrame(step)}
+function gameOver(){
+  state = "over";
+  if (score > best){ best = score; keep("bbBest", String(best)); }
+  newBest = score > best0 && score > 0;
+  hud();
+  setTimeout(function(){ if (state === "over") card("over"); }, 650);
+}
 
-function px(e){var t=e.touches?e.touches[0]:e,rect=cv.getBoundingClientRect();return t.clientX-rect.left}
-function onMove(e){if(state!=='play')return;var x=px(e);paddle.x=Math.max(paddle.w/2,Math.min(W-paddle.w/2,x));e.preventDefault()}
-function onTap(e){if(state==='play'){launch()}else{startGame()}e.preventDefault()}
-cv.addEventListener('touchstart',onTap,{passive:false});cv.addEventListener('touchmove',onMove,{passive:false});
-cv.addEventListener('mousedown',onTap);cv.addEventListener('mousemove',function(e){if(e.buttons)onMove(e)});
+/* ---------- drawing ---------- */
+function rr(x, y, w, h, r){ ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
+function draw(now){
+  var L = el("stage").classList.contains("lite"), base = 258 + (level - 1) * 24;
+  ctx.setTransform(DPR * SC, 0, 0, DPR * SC, 0, 0);
+  ctx.clearRect(0, 0, W, H);
+  bricks.forEach(function(b){
+    var hue = base + b.r * 22;
+    if (!b.alive){                                   /* a broken brick fades and lifts away */
+      var k = b.t0 ? (now - b.t0) / 260 : 1; if (k >= 1 || calm) return;
+      ctx.globalAlpha = 1 - k; ctx.fillStyle = "hsl(" + hue + " 90% 78%)"; rr(b.x - 3 * k, b.y - 5 * k, b.w + 6 * k, b.h, 6); ctx.fill(); ctx.globalAlpha = 1; return;
+    }
+    var g = ctx.createLinearGradient(0, b.y, 0, b.y + b.h);
+    g.addColorStop(0, "hsl(" + hue + " 85% " + (L ? 64 : 70) + "%)"); g.addColorStop(1, "hsl(" + (hue + 14) + " 80% " + (L ? 50 : 54) + "%)");
+    ctx.fillStyle = g; rr(b.x, b.y, b.w, b.h, 6); ctx.fill();
+    ctx.fillStyle = "rgba(255,255,255,.3)"; rr(b.x + 3, b.y + 2, b.w - 6, 2.5, 1.2); ctx.fill();
+  });
+  var ink = L ? "#15151a" : "#fff";
+  ctx.save(); ctx.shadowColor = L ? "rgba(20,20,40,.25)" : "hsla(" + base + ",90%,70%,.7)"; ctx.shadowBlur = 14;
+  ctx.fillStyle = ink; rr(paddle.x - paddle.w / 2, H - 28, paddle.w, paddle.h, 6); ctx.fill(); ctx.restore();
+  for (var i = 0; i < trail.length; i++){
+    ctx.globalAlpha = (i + 1) / trail.length * .22; ctx.fillStyle = L ? "hsl(" + base + " 80% 45%)" : "hsl(" + base + " 95% 80%)";
+    ctx.beginPath(); ctx.arc(trail[i].x, trail[i].y, ball.r * (.5 + .5 * (i + 1) / trail.length), 0, 7); ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+  ctx.save(); ctx.shadowColor = L ? "rgba(20,20,40,.3)" : "hsla(" + base + ",95%,75%,.9)"; ctx.shadowBlur = 16;
+  ctx.fillStyle = ink; ctx.beginPath(); ctx.arc(ball.x, ball.y, ball.r, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+}
+function frame(now){
+  requestAnimationFrame(frame);
+  var dt = Math.min(100, now - (lastT || now)); lastT = now;
+  if (state === "play" && !paused){
+    acc += dt;
+    while (acc >= STEP && state === "play"){
+      acc -= STEP; step();
+      if (launched && !calm){ trail.push({x:ball.x, y:ball.y}); if (trail.length > 7) trail.shift(); }
+    }
+  } else acc = 0;
+  draw(now);
+}
+function fit(){
+  var w = el("wrap");
+  SC = Math.max(.4, Math.min(w.clientWidth / W, w.clientHeight / H, 1.7));
+  DPR = Math.min(window.devicePixelRatio || 1, 3);
+  var cw = Math.floor(W * SC), ch = Math.floor(H * SC);
+  SC = cw / W;
+  cv.style.width = cw + "px"; cv.style.height = ch + "px"; cv.width = Math.round(cw * DPR); cv.height = Math.round(ch * DPR);
+  var st = el("stage").style; st.setProperty("--b", cw + "px"); st.setProperty("--bh", ch + "px");
+}
 
-reset(true);
-store.getItem('bbBest').then(function(v){best=+v||0;el('best').textContent=best;draw()});
+/* ---------- the glass card + HUD ---------- */
+function bestLine(){
+  if (newBest) return '<div class="best new">New best</div>';
+  return best ? '<div class="best">Best ' + best + '</div>' : "";
+}
+function card(kind){
+  var h;
+  if (kind === "home") h = '<h1>Brick Breaker</h1><p>Drag anywhere to move the paddle, tap to launch. Three lives — every level is faster.</p>' + bestLine() +
+    '<button class="act pri" id="sB"><svg><use href="#i-play"/></svg>Play</button>';
+  else if (kind === "pause") h = '<div class="kick">Paused · level ' + level + '</div><div class="big">' + score + '</div>' +
+    '<button class="act pri" id="sA"><svg><use href="#i-play"/></svg>Resume</button><button class="act glass" id="sC">End game</button>';
+  else h = '<div class="kick">Game over · level ' + level + '</div><div class="big">' + score + '</div>' + bestLine() +
+    '<button class="act pri" id="sB"><svg><use href="#i-again"/></svg>Play again</button><button class="act glass" id="sC">Done</button>';
+  showSheet(h, {sA:resume, sB:begin, sC:goHome});
+}
+function hearts(){
+  var h = ""; for (var i = 0; i < 3; i++) h += '<svg' + (i < lives ? "" : ' class="off"') + '><use href="#i-heart"/></svg>';
+  el("lives").innerHTML = h;
+}
+function tip(t){
+  el("foot").textContent = state === "home" ? "" : (t || (launched ? "Level " + level + (best ? " · best " + best : "") : "Drag to move · tap to launch"));
+}
+function hud(){
+  var playing = state !== "home";
+  el("bPause").classList.toggle("hide", state !== "play" || paused);
+  el("pill").classList.toggle("hide", !playing || paused);
+  el("lives").classList.toggle("hide", !playing);
+  el("pill").textContent = score; hearts(); tip();
+}
+function begin(){
+  haptic("medium");
+  reset(true); best0 = best; newBest = false; paused = false; state = "play"; setHue(258);
+  hideSheet(); hud(); syncLook(); syncChrome();
+}
+function pause(){ if (state !== "play" || paused) return; paused = true; card("pause"); hud(); }
+function resume(){ if (!paused) return; haptic("light"); paused = false; hideSheet(); hud(); syncChrome(); }
+function goHome(){
+  haptic("light");
+  state = "home"; paused = false; newBest = false; level = 1; reset(true); setHue(258);
+  card("home"); hud(); syncLook(); syncChrome();
+}
+function onHide(){ pause(); }
+
+/* ---------- input: the whole screen is the paddle's rail ---------- */
+function toField(e){ var r = cv.getBoundingClientRect(); return (e.clientX - r.left) / SC; }
+document.addEventListener("pointerdown", function(e){
+  if (e.target.closest && e.target.closest("button")) return;
+  if (state === "play" && !paused) launch();
+});
+document.addEventListener("pointermove", function(e){
+  if (state !== "play" || paused) return;
+  if (e.pointerType === "mouse" && !e.buttons) return;
+  paddle.x = Math.max(paddle.w / 2, Math.min(W - paddle.w / 2, toField(e)));
+});
+document.addEventListener("keydown", function(e){
+  if (e.key === " " || e.key === "Escape" || e.key === "p"){ if (paused) resume(); else pause(); e.preventDefault(); }
+  else if (e.key === "Enter" && state !== "play") begin();
+  else if (e.key === "ArrowUp" && state === "play" && !paused) launch();
+  else if ((e.key === "ArrowLeft" || e.key === "ArrowRight") && state === "play" && !paused)
+    paddle.x = Math.max(paddle.w / 2, Math.min(W - paddle.w / 2, paddle.x + (e.key === "ArrowLeft" ? -26 : 26)));
+});
+el("bPause").onclick = function(){ haptic("light"); pause(); };
+window.addEventListener("resize", fit);
+
+/* ---------- boot ---------- */
+reset(true); fit(); syncLook(); card("home"); hud();
+requestAnimationFrame(frame);
+load("bbBest").then(function(v){ best = +v || 0; if (state === "home") card("home"); hud(); });
 </script></body></html>

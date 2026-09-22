@@ -3,163 +3,385 @@
   Sudoku — MyLLMos™ App Gallery · © 2026 Opticell Ltd
   Source-available: read it, remix it, run your version inside MyLLM™.
   Not for redistribution or republication. Terms: https://github.com/TeamDzX/myllm-assets/blob/main/LICENSE
---><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<style>:root{--build-id:"1c23822e4f";color-scheme:light dark;--accent:#0a84ff;--grid:#c7c7cc;--cell:#fff;--fixed:#111;--user:#0a84ff}
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
-@media(prefers-color-scheme:dark){:root{--grid:#48484a;--cell:#1c1c1e;--fixed:#eee}}
-html,body{margin:0;height:100%}
-body{font-family:-apple-system,system-ui,sans-serif;background:#f2f2f7;color:#111;display:flex;flex-direction:column;align-items:center;padding:14px 12px;gap:12px}
-@media(prefers-color-scheme:dark){body{background:#000;color:#eee}.pad button,.diff button{background:#1c1c1e;color:#eee}}
-.bar{display:flex;align-items:center;gap:10px;width:100%;max-width:440px;justify-content:space-between}
-.diff{display:flex;gap:5px}
-.diff button{border:0;background:#e5e5ea;color:#333;border-radius:8px;padding:7px 11px;font-size:13px;font-weight:600}
-.diff button.on{background:var(--accent);color:#fff}
-#info{font-size:13px;opacity:.7;font-variant-numeric:tabular-nums}
-.board{width:min(94vw,440px);aspect-ratio:1;display:grid;grid-template-columns:repeat(9,1fr);background:var(--grid);gap:1px;border:2.5px solid var(--grid);border-radius:6px;overflow:hidden}
-.c{background:var(--cell);display:flex;align-items:center;justify-content:center;font-size:min(6.4vw,30px);font-weight:500;color:var(--user);position:relative}
-.c.fixed{color:var(--fixed);font-weight:600}
-.c.sel{background:#cfe6ff}.c.peer{background:#eaf3ff}.c.same{background:#bcd9f7}.c.bad{color:#ff453a!important;background:#ffddd9}
-@media(prefers-color-scheme:dark){.c.sel{background:#0a3a66}.c.peer{background:#16263a}.c.same{background:#0e4f86}.c.bad{background:#5c1a16}}
-.c:nth-child(3n){border-right:2px solid var(--grid)}.c:nth-child(9n){border-right:0}
-.brow3{box-shadow:0 2px 0 var(--grid)}
-.notes{position:absolute;inset:1px;display:grid;grid-template-columns:repeat(3,1fr);font-size:min(2.4vw,11px);color:#888;font-weight:600}
-.notes span{display:flex;align-items:center;justify-content:center}
-.pad{display:grid;grid-template-columns:repeat(9,1fr);gap:5px;width:min(94vw,440px)}
-.pad button{border:0;background:#fff;color:var(--accent);border-radius:9px;padding:12px 0;font-size:20px;font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.08)}
-.pad button .n{font-size:9px;display:block;opacity:.5;font-weight:600}
-.tools{display:flex;gap:8px;width:min(94vw,440px)}
-.tools button{flex:1;border:0;background:#e5e5ea;color:#333;border-radius:10px;padding:11px;font-size:14px;font-weight:600}
-.tools button.on{background:var(--accent);color:#fff}
-@media(prefers-color-scheme:dark){.tools button{background:#1c1c1e;color:#eee}}
-#msg{font-size:15px;font-weight:600;min-height:20px;text-align:center}
-.win{color:#30d158}
-@media(min-width:768px){.bar{max-width:520px}.board,.pad,.tools{width:min(94vw,520px)}.c{font-size:min(6.4vw,36px)}.notes{font-size:min(2.4vw,13px)}}
-</style></head><body>
-<div class="bar">
-  <div class="diff" id="diff"></div>
-  <div id="info"></div>
-</div>
-<div class="board" id="board"></div>
-<div id="msg"></div>
-<div class="tools">
-  <button id="notesBtn" onclick="toggleNotes()">✏️ Notes</button>
-  <button onclick="erase()">⌫ Erase</button>
-  <button onclick="hint()">💡 Hint</button>
-</div>
-<div class="pad" id="pad"></div>
-<script>
-var store=window.myllmStorage||{getItem:function(){return Promise.resolve(null)},setItem:function(){return Promise.resolve()}};
-var DIFFS=[["Easy",42],["Medium",34],["Hard",28],["Expert",24]];
-var puzzle=[],solution=[],given=[],notes=[],sel=-1,notesMode=false,diff=1,mistakes=0,startT=0,timer=null,won=false;
-function el(i){return document.getElementById(i)}
+--><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Sudoku</title>
+<style>:root{--build-id:"1c23822e4f";color-scheme:light dark}
+  @property --h{ syntax:'<number>'; inherits:true; initial-value:215; }
+  *{ margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body{ height:100%; }
+  body{ font-family:var(--myllm-font,-apple-system,system-ui,sans-serif); background:#0b0b10; color:#fff; overflow:hidden;
+    touch-action:none; overscroll-behavior:none; -webkit-user-select:none; user-select:none; }
+  button{ font:inherit; color:inherit; }
 
-// ---- generator ----
-function emptyGrid(){return Array(81).fill(0)}
-function rc(i){return[Math.floor(i/9),i%9]}
-function ok(g,i,v){var r=Math.floor(i/9),c=i%9,br=r-r%3,bc=c-c%3;
-  for(var k=0;k<9;k++){if(g[r*9+k]===v||g[k*9+c]===v)return false}
-  for(var a=0;a<3;a++)for(var b=0;b<3;b++)if(g[(br+a)*9+(bc+b)]===v)return false;
-  return true}
-function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t}return a}
-function fill(g){
-  var i=g.indexOf(0);if(i<0)return true;
-  var nums=shuffle([1,2,3,4,5,6,7,8,9]);
-  for(var k=0;k<9;k++){if(ok(g,i,nums[k])){g[i]=nums[k];if(fill(g))return true;g[i]=0}}
-  return false}
-function countSolutions(g,cap){
-  var i=g.indexOf(0);if(i<0)return 1;
-  var n=0;
-  for(var v=1;v<=9;v++){if(ok(g,i,v)){g[i]=v;n+=countSolutions(g,cap);if(n>=cap){g[i]=0;return n}g[i]=0}}
-  return n}
-function generate(clues){
-  var g=emptyGrid();fill(g);solution=g.slice();
-  var idx=shuffle(Array.from({length:81},function(_,i){return i}));
-  var p=g.slice(),removed=0,target=81-clues;
-  for(var k=0;k<idx.length&&removed<target;k++){
-    var i=idx[k],bak=p[i];if(bak===0)continue;
-    p[i]=0;var t=p.slice();
-    if(countSolutions(t,2)!==1){p[i]=bak}else{removed++}
+  /* The stage: a hue-tinted backdrop in two layers, dark and light, so the
+     change between them can fade. */
+  .stage{ position:fixed; inset:0; --h:215; transition:--h 1.4s ease; color:#fff; }
+  .bg{ position:absolute; inset:0; transition:opacity .6s ease; }
+  .bg.d{ background:radial-gradient(120% 90% at 20% 10%, hsl(var(--h) 70% 34%), transparent 60%),
+      radial-gradient(120% 90% at 85% 95%, hsl(calc(var(--h) + 60) 65% 26%), transparent 62%), #0b0b10; }
+  .bg.l{ opacity:0; background:radial-gradient(120% 90% at 20% 0%, hsl(var(--h) 80% 84%), transparent 60%),
+      radial-gradient(120% 90% at 85% 100%, hsl(calc(var(--h) + 60) 78% 86%), transparent 62%), #f4f4f8; }
+  .lite{ color:#15151a; } .lite .bg.l{ opacity:1; } .lite .bg.d{ opacity:0; }
+
+  .col{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center;
+    padding:calc(12px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) calc(14px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left)); }
+  .top{ width:100%; max-width:560px; height:44px; display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
+  .lbl{ font-size:11px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; opacity:.62; white-space:nowrap; }
+  .glass{ border:1px solid rgba(255,255,255,.16); background:rgba(255,255,255,.12); color:inherit;
+    -webkit-backdrop-filter:blur(18px); backdrop-filter:blur(18px); }
+  .lite .glass{ border-color:rgba(0,0,0,.09); background:rgba(255,255,255,.62); }
+  svg{ width:1.25em; height:1.25em; fill:currentColor; flex-shrink:0; }
+  .rnd{ width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:15px; flex-shrink:0; }
+  .pill{ min-width:44px; height:44px; border-radius:99px; padding:0 16px; display:flex; align-items:center; justify-content:center; gap:6px;
+    font-size:19px; font-weight:800; font-variant-numeric:tabular-nums; flex-shrink:0; }
+  .pill small{ font-size:10px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; opacity:.6; }
+  .pill.bump{ animation:bump .28s ease; }
+  @keyframes bump{ 40%{ transform:scale(1.18); } }
+  .top .hide{ visibility:hidden; }
+
+  .wrap{ flex:1; width:100%; min-height:0; position:relative; display:flex; align-items:center; justify-content:center; margin:10px 0 34px; }
+  .foot{ position:absolute; left:0; right:0; top:calc(50% + var(--bh,320px) / 2 + 12px); text-align:center; font-size:12px; font-weight:600;
+    letter-spacing:.02em; opacity:.55; font-variant-numeric:tabular-nums; white-space:nowrap; }
+
+  /* One glass card over the board: title, paused, finished. */
+  .sheet{ position:absolute; left:50%; top:50%; width:max(232px, min(300px, calc(var(--b,320px) - 44px))); transform:translate(-50%,-50%) scale(.96);
+    opacity:0; pointer-events:none; border-radius:26px; padding:22px 20px 18px; text-align:center; box-shadow:0 24px 60px rgba(0,0,0,.35); z-index:5;
+    transition:opacity .28s ease, transform .28s cubic-bezier(.2,.8,.2,1); }
+  .sheet.on{ opacity:1; transform:translate(-50%,-50%); pointer-events:auto; }
+  /* whatever sits under an open card steps back, so the card reads */
+  .under{ transition:opacity .3s, filter .3s; } .veil .under{ opacity:.28; filter:blur(2px); }
+  .lite .sheet{ box-shadow:0 22px 50px rgba(20,20,40,.18); }
+  .sheet h1{ font-size:30px; font-weight:800; letter-spacing:-.02em; }
+  .sheet p{ font-size:13.5px; line-height:1.4; opacity:.72; margin-top:6px; }
+  .kick{ font-size:11px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; opacity:.62; }
+  .big{ font-size:64px; font-weight:800; line-height:1.05; letter-spacing:-.03em; font-variant-numeric:tabular-nums; margin-top:4px; }
+  .big small{ display:block; font-size:12px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; opacity:.6; margin-top:2px; }
+  .best{ display:inline-block; margin-top:10px; font-size:11.5px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; opacity:.7; }
+  .best.new{ opacity:1; color:#0b0b10; background:#ffd60a; border-radius:99px; padding:5px 11px; }
+  .sheet .act{ width:100%; height:50px; border-radius:99px; margin-top:10px; font-size:16px; font-weight:750;
+    display:flex; align-items:center; justify-content:center; gap:8px; }
+  .sheet .act:first-of-type{ margin-top:18px; }
+  .sheet .act:active, .rnd:active{ transform:scale(.96); }
+  .pri{ border:none; background:#fff; color:#0b0b10; box-shadow:0 10px 30px rgba(0,0,0,.3); }
+  .lite .pri{ background:#15151a; color:#fff; box-shadow:0 10px 26px rgba(20,20,40,.22); }
+
+  @media (max-height:430px){
+    .sheet{ padding:14px 18px 14px; } .sheet h1{ font-size:24px; } .big{ font-size:42px; }
+    .sheet .act{ height:44px; margin-top:8px; } .sheet .act:first-of-type{ margin-top:12px; } .sheet p{ display:none; }
+    .wrap{ margin:6px 0 26px; }
   }
-  puzzle=p.slice();given=p.map(function(v){return v!==0});
-  notes=Array.from({length:81},function(){return[]});
-  mistakes=0;won=false;startT=Date.now();
+  @media (prefers-reduced-motion:reduce){ .pill.bump{ animation:none; } .stage{ transition:none; } }
+
+  .stage{ --cell:rgba(255,255,255,.045); --ln:rgba(255,255,255,.13); --ln2:rgba(255,255,255,.42); --fixed:#fff; --user:hsl(var(--h) 95% 76%);
+    --sel:hsl(var(--h) 85% 52% / .7); --peer:rgba(255,255,255,.085); --same:hsl(var(--h) 85% 58% / .3); --badbg:rgba(255,69,58,.3); --bad:#ff7a70; --note:rgba(255,255,255,.55); }
+  .stage.lite{ --cell:rgba(255,255,255,.72); --ln:rgba(20,20,40,.13); --ln2:rgba(20,20,40,.5); --fixed:#15151a; --user:hsl(var(--h) 85% 42%);
+    --sel:hsl(var(--h) 90% 60% / .42); --peer:hsl(var(--h) 60% 50% / .09); --same:hsl(var(--h) 90% 55% / .24); --badbg:rgba(255,69,58,.18); --bad:#d92d20; --note:rgba(20,20,40,.5); }
+
+  /* Portrait: board, then tools, then a two-row pad. On its side: board left, keys right. */
+  .play{ position:relative; z-index:1; display:flex; flex-direction:column; align-items:center; gap:10px; }
+  .board{ width:var(--b,320px); height:var(--b,320px); display:grid; grid-template-columns:repeat(9,1fr); grid-template-rows:repeat(9,1fr); flex-shrink:0;
+    border-radius:16px; overflow:hidden; border:1.5px solid var(--ln2); box-shadow:0 24px 60px rgba(0,0,0,.4);
+    -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px); }
+  .lite .board{ box-shadow:0 22px 50px rgba(20,20,40,.14); }
+  .c{ background:var(--cell); display:flex; align-items:center; justify-content:center; font-size:calc(var(--b,320px) * .062); font-weight:500; color:var(--user);
+    position:relative; border-right:1px solid var(--ln); border-bottom:1px solid var(--ln); font-variant-numeric:tabular-nums; }
+  .c.fixed{ color:var(--fixed); font-weight:700; }
+  .c:nth-child(3n){ border-right:1.5px solid var(--ln2); } .c:nth-child(9n){ border-right:0; }
+  .c.brow3{ border-bottom:1.5px solid var(--ln2); } .c:nth-child(n+73){ border-bottom:0; }
+  .c.peer{ background:var(--peer); } .c.same{ background:var(--same); } .c.sel{ background:var(--sel); color:#fff; box-shadow:inset 0 0 0 2px #fff; } .lite .c.sel{ color:#15151a; box-shadow:inset 0 0 0 2px #15151a; }
+  .c.bad{ color:var(--bad)!important; background:var(--badbg); }
+  .notes{ position:absolute; inset:1px; display:grid; grid-template-columns:repeat(3,1fr); font-size:calc(var(--b,320px) * .024); color:var(--note); font-weight:700; }
+  .notes span{ display:flex; align-items:center; justify-content:center; }
+
+  .keys{ width:var(--b,320px); display:flex; flex-direction:column; gap:8px; flex-shrink:0; }
+  .tools{ display:flex; gap:8px; }
+  .tools button{ flex:1; height:42px; border-radius:99px; font-size:13.5px; font-weight:700; display:flex; align-items:center; justify-content:center; gap:6px; }
+  .tools button.on{ background:#fff; border-color:#fff; color:#0b0b10; } .lite .tools button.on{ background:#15151a; border-color:#15151a; color:#fff; }
+  .pad{ display:grid; grid-template-columns:repeat(5,1fr); gap:8px; }
+  .pad button{ height:var(--k,54px); border-radius:16px; font-size:23px; font-weight:650; display:flex; flex-direction:column; align-items:center; justify-content:center; line-height:1.05;
+    font-variant-numeric:tabular-nums; }
+  .pad button .n{ font-size:9.5px; font-weight:800; opacity:.55; min-height:11px; }
+  .pad button.spent{ opacity:.32; }
+  .pad button:active, .tools button:active{ transform:scale(.95); }
+  .pad .er{ font-size:19px; }
+  .dim .play{ pointer-events:none; }
+
+  .chips{ display:flex; justify-content:center; gap:6px; margin-top:14px; flex-wrap:wrap; }
+  .chips button{ height:34px; border-radius:99px; padding:0 12px; font-size:12.5px; font-weight:700; }
+  .chips button.hot{ background:#fff; border-color:#fff; color:#0b0b10; } .lite .chips button.hot{ background:#15151a; border-color:#15151a; color:#fff; }
+  .sheet{ width:max(248px, min(320px, calc(var(--b,320px) - 24px))); }
+
+  @media (max-height:520px){
+    .play{ flex-direction:row; gap:18px; } .keys{ width:min(250px,30vw); height:var(--b,300px); }
+    .pad{ grid-template-columns:repeat(3,1fr); flex:1; grid-auto-rows:1fr; } .pad button{ height:auto; font-size:20px; } .pad .er{ grid-column:span 3; flex-direction:row; gap:6px; font-size:14px; }
+    .tools button{ height:38px; }
+  }
+</style></head><body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5.5v13a1 1 0 0 0 1.52.85l10.4-6.5a1 1 0 0 0 0-1.7L9.52 4.65A1 1 0 0 0 8 5.5z"/></symbol>
+  <symbol id="i-pause" viewBox="0 0 24 24"><rect x="6" y="5" width="4.2" height="14" rx="1.4"/><rect x="13.8" y="5" width="4.2" height="14" rx="1.4"/></symbol>
+  <symbol id="i-again" viewBox="0 0 24 24"><path d="M12 5V2.6a.6.6 0 0 0-1-.45L7.2 5.55a.6.6 0 0 0 0 .9L11 9.85a.6.6 0 0 0 1-.45V7a5.5 5.5 0 1 1-5.5 5.5 1 1 0 0 0-2 0A7.5 7.5 0 1 0 12 5z"/></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24"><path d="M6.4 5a1 1 0 0 0-1.4 1.4L10.6 12 5 17.6A1 1 0 0 0 6.4 19l5.6-5.6 5.6 5.6a1 1 0 0 0 1.4-1.4L13.4 12 19 6.4A1 1 0 0 0 17.6 5L12 10.6z"/></symbol>
+  <symbol id="i-pencil" viewBox="0 0 24 24"><path d="M16.9 3.6a2 2 0 0 1 2.8 0l.7.7a2 2 0 0 1 0 2.8L9.2 18.3a1 1 0 0 1-.45.26l-4.1 1.1a.8.8 0 0 1-.98-.98l1.1-4.1a1 1 0 0 1 .26-.45zm-1.4 3.5L6.6 16l-.5 1.9 1.9-.5 8.9-8.9z"/></symbol>
+  <symbol id="i-bulb" viewBox="0 0 24 24"><path d="M12 2.5a6.8 6.8 0 0 0-4.1 12.2c.5.4.8.9.8 1.5v.3a1 1 0 0 0 1 1h4.6a1 1 0 0 0 1-1v-.3c0-.6.3-1.1.8-1.5A6.8 6.8 0 0 0 12 2.5zm0 2a4.8 4.8 0 0 1 2.9 8.6c-.8.6-1.3 1.4-1.5 2.4h-2.8c-.2-1-.7-1.8-1.5-2.4A4.8 4.8 0 0 1 12 4.5zM9.8 19a.9.9 0 0 0 0 1.8h4.4a.9.9 0 0 0 0-1.8z"/></symbol>
+  <symbol id="i-erase" viewBox="0 0 24 24"><path d="M9.2 5a2 2 0 0 0-1.5.7l-4.6 5.4a1.4 1.4 0 0 0 0 1.8l4.6 5.4a2 2 0 0 0 1.5.7H19a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2zm0 2H19v10H9.2L5 12zm2.5 2.1a.9.9 0 0 0-.64 1.54L12.43 12l-1.37 1.36a.9.9 0 1 0 1.28 1.28l1.36-1.37 1.36 1.37a.9.9 0 1 0 1.28-1.28L14.97 12l1.37-1.36a.9.9 0 1 0-1.28-1.28L13.7 10.73l-1.36-1.37a.9.9 0 0 0-.64-.26z"/></symbol>
+</defs></svg>
+<div class="stage" id="stage">
+  <div class="bg d"></div><div class="bg l"></div>
+  <div class="col">
+    <div class="top">
+      <button class="glass rnd hide" id="bHome" aria-label="Close"><svg><use href="#i-close"/></svg></button>
+      <div class="lbl" id="lbl">Sudoku</div>
+      <div class="glass pill hide" id="pill" aria-label="Time" style="font-size:16px">00:00</div>
+    </div>
+    <div class="wrap" id="wrap">
+      <div class="play under" id="play">
+        <div class="board" id="board"></div>
+        <div class="keys">
+          <div class="tools">
+            <button class="glass" id="notesBtn"><svg><use href="#i-pencil"/></svg>Notes</button>
+            <button class="glass" id="hintBtn"><svg><use href="#i-bulb"/></svg>Hint</button>
+          </div>
+          <div class="pad" id="pad"></div>
+        </div>
+      </div>
+      <div class="sheet glass" id="sheet"></div>
+    </div>
+  </div>
+</div>
+<script>
+function el(i){ return document.getElementById(i); }
+/* Bridges are looked up when used, never kept: MyLLM can add them after this
+   script has run. */
+function haptic(s){ if (window.myllmHaptic) try { myllmHaptic(s); } catch(_){} }
+function load(k){ var s = window.myllmStorage; return s ? s.getItem(k).catch(function(){ return null; }) : Promise.resolve(null); }
+function keep(k, v){ var s = window.myllmStorage; if (s) try { s.setItem(k, v).catch(function(){}); } catch(_){} }
+var calm = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/* ---------- look ---------- */
+function isLight(){ return !(window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches); }
+/* A game in progress takes the whole display and goes dark. Where MyLLM can't
+   hide its own title bar, a dark stage under a white bar looks cut in half —
+   so in light mode, without myllmImmersive, the stage stays light. */
+function syncLook(){
+  el("stage").classList.toggle("lite", isLight() && !(state !== "home" && window.myllmImmersive));
+  if (typeof onLook === "function") onLook();
+}
+function syncChrome(){
+  if (!window.myllmImmersive) return;
+  try { myllmImmersive(state !== "home", {keepAwake:false}).catch(function(){}); } catch(_){}
+}
+function setHue(h){ el("stage").style.setProperty("--h", String(h)); }
+function showSheet(html, acts){
+  var s = el("sheet"); s.innerHTML = html;
+  Object.keys(acts).forEach(function(id){ var b = el(id); if (b) b.onclick = acts[id]; });
+  s.classList.add("on"); el("stage").classList.add("veil");
+}
+function hideSheet(){ el("sheet").classList.remove("on"); el("stage").classList.remove("veil"); }
+function bump(id){ var p = el(id); p.classList.remove("bump"); void p.offsetWidth; p.classList.add("bump"); }
+document.addEventListener("visibilitychange", function(){
+  if (document.hidden){ if (typeof onHide === "function") onHide(); return; }
+  if (state !== "home") syncChrome();          /* MyLLM puts its bars back when the app is left */
+});
+if (window.matchMedia){
+  var mq = matchMedia("(prefers-color-scheme: dark)");
+  if (mq.addEventListener) mq.addEventListener("change", syncLook); else if (mq.addListener) mq.addListener(syncLook);
+}
+
+var state = "home";                 /* home · play · done */
+var DIFFS = [["Easy",42],["Medium",34],["Hard",28],["Expert",24]];
+var puzzle = [], solution = [], given = [], notes = [], sel = -1, notesMode = false, diff = 1, pick = 1, mistakes = 0, startT = 0, timer = null, won = false, has = false;
+
+// ---- generator (unchanged) ----
+function emptyGrid(){ return Array(81).fill(0); }
+function ok(g, i, v){
+  var r = Math.floor(i / 9), c = i % 9, br = r - r % 3, bc = c - c % 3;
+  for (var k = 0; k < 9; k++){ if (g[r * 9 + k] === v || g[k * 9 + c] === v) return false; }
+  for (var a = 0; a < 3; a++) for (var b = 0; b < 3; b++) if (g[(br + a) * 9 + (bc + b)] === v) return false;
+  return true;
+}
+function shuffle(a){ for (var i = a.length - 1; i > 0; i--){ var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+function fill(g){
+  var i = g.indexOf(0); if (i < 0) return true;
+  var nums = shuffle([1,2,3,4,5,6,7,8,9]);
+  for (var k = 0; k < 9; k++){ if (ok(g, i, nums[k])){ g[i] = nums[k]; if (fill(g)) return true; g[i] = 0; } }
+  return false;
+}
+function countSolutions(g, cap){
+  var i = g.indexOf(0); if (i < 0) return 1;
+  var n = 0;
+  for (var v = 1; v <= 9; v++){ if (ok(g, i, v)){ g[i] = v; n += countSolutions(g, cap); if (n >= cap){ g[i] = 0; return n; } g[i] = 0; } }
+  return n;
+}
+function generate(clues){
+  var g = emptyGrid(); fill(g); solution = g.slice();
+  var idx = shuffle(Array.from({length:81}, function(_, i){ return i; }));
+  var p = g.slice(), removed = 0, target = 81 - clues;
+  for (var k = 0; k < idx.length && removed < target; k++){
+    var i = idx[k], bak = p[i]; if (bak === 0) continue;
+    p[i] = 0; var t = p.slice();
+    if (countSolutions(t, 2) !== 1){ p[i] = bak; } else { removed++; }
+  }
+  puzzle = p.slice(); given = p.map(function(v){ return v !== 0; });
+  notes = Array.from({length:81}, function(){ return []; });
+  mistakes = 0; won = false; startT = Date.now();
 }
 
 // ---- rendering ----
 function render(){
-  var B=el('board');if(!B.children.length){for(var i=0;i<81;i++){var d=document.createElement('div');d.className='c';d.dataset.i=i;d.onclick=(function(i){return function(){select(i)}})(i);B.appendChild(d)}}
-  for(var i=0;i<81;i++){
-    var c=B.children[i],v=puzzle[i];c.className='c'+(given[i]?' fixed':'');
-    var r=Math.floor(i/9);if(r===2||r===5)c.classList.add('brow3');
-    if(v){c.textContent=v}
-    else if(notes[i].length){c.innerHTML='<div class="notes">'+[1,2,3,4,5,6,7,8,9].map(function(n){return'<span>'+(notes[i].indexOf(n)>=0?n:'')+'</span>'}).join('')+'</div>'}
-    else c.textContent='';
+  var B = el("board");
+  if (!B.children.length){ for (var i = 0; i < 81; i++){ var d = document.createElement("div"); d.className = "c"; d.onclick = (function(i){ return function(){ select(i); }; })(i); B.appendChild(d); } }
+  for (var i = 0; i < 81; i++){
+    var c = B.children[i], v = puzzle[i]; c.className = "c" + (given[i] ? " fixed" : "");
+    var r = Math.floor(i / 9); if (r === 2 || r === 5) c.classList.add("brow3");
+    if (v){ c.textContent = v; }
+    else if (notes[i] && notes[i].length){ c.innerHTML = '<div class="notes">' + [1,2,3,4,5,6,7,8,9].map(function(n){ return "<span>" + (notes[i].indexOf(n) >= 0 ? n : "") + "</span>"; }).join("") + "</div>"; }
+    else c.textContent = "";
   }
-  paint();renderInfo();renderPad();
+  paint(); renderInfo(); updatePad();
 }
 function paint(){
-  var B=el('board');var sv=sel>=0?puzzle[sel]:0;
-  for(var i=0;i<81;i++){var c=B.children[i];c.classList.remove('sel','peer','same','bad')}
-  if(sel<0)return;
-  var sr=Math.floor(sel/9),sc=sel%9;
-  for(var i=0;i<81;i++){
-    var c=B.children[i],r=Math.floor(i/9),cc=i%9;
-    if(i===sel){c.classList.add('sel');continue}
-    if(r===sr||cc===sc||(Math.floor(r/3)===Math.floor(sr/3)&&Math.floor(cc/3)===Math.floor(sc/3)))c.classList.add('peer');
-    if(sv&&puzzle[i]===sv)c.classList.add('same');
+  var B = el("board"), sv = sel >= 0 ? puzzle[sel] : 0;
+  for (var i = 0; i < 81; i++){ B.children[i].classList.remove("sel", "peer", "same", "bad"); }
+  if (sel >= 0){
+    var sr = Math.floor(sel / 9), sc = sel % 9;
+    for (var i = 0; i < 81; i++){
+      var c = B.children[i], r = Math.floor(i / 9), cc = i % 9;
+      if (i === sel){ c.classList.add("sel"); continue; }
+      if (r === sr || cc === sc || (Math.floor(r / 3) === Math.floor(sr / 3) && Math.floor(cc / 3) === Math.floor(sc / 3))) c.classList.add("peer");
+      if (sv && puzzle[i] === sv) c.classList.add("same");
+    }
   }
-  // mark conflicts
-  for(var i=0;i<81;i++){var v=puzzle[i];if(!v||given[i])continue;var t=puzzle.slice();t[i]=0;if(!ok(t,i,v))B.children[i].classList.add('bad')}
+  if (sel < 0) return;                       // conflicts are marked once a cell is chosen, as before
+  for (var i = 0; i < 81; i++){ var v = puzzle[i]; if (!v || given[i]) continue; var t = puzzle.slice(); t[i] = 0; if (!ok(t, i, v)) B.children[i].classList.add("bad"); }
 }
+function stamp(){ var s = Math.floor((Date.now() - startT) / 1000); return String(Math.floor(s / 60)).padStart(2, "0") + ":" + String(s % 60).padStart(2, "0"); }
 function renderInfo(){
-  var s=Math.floor((Date.now()-startT)/1000);
-  el('info').textContent=(mistakes?('✕'+mistakes+'  '):'')+String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');
+  el("pill").textContent = stamp();
+  el("lbl").textContent = state === "home" ? "Sudoku" : DIFFS[diff][0] + (mistakes ? " · " + mistakes + (mistakes === 1 ? " mistake" : " mistakes") : "");
 }
-function renderPad(){
-  var P=el('pad');if(P.children.length)return;
-  for(var n=1;n<=9;n++){var b=document.createElement('button');b.dataset.n=n;b.onclick=(function(n){return function(){place(n)}})(n);P.appendChild(b)}
-  updatePad();
+function buildPad(){
+  var P = el("pad");
+  for (var n = 1; n <= 9; n++){ var b = document.createElement("button"); b.className = "glass"; b.onclick = (function(n){ return function(){ place(n); }; })(n); P.appendChild(b); }
+  var e = document.createElement("button"); e.className = "glass er"; e.setAttribute("aria-label", "Erase");
+  e.innerHTML = '<svg><use href="#i-erase"/></svg><span class="n">Erase</span>'; e.onclick = erase; P.appendChild(e);
 }
 function updatePad(){
-  var counts={};for(var i=0;i<81;i++)if(puzzle[i])counts[puzzle[i]]=(counts[puzzle[i]]||0)+1;
-  var P=el('pad');for(var n=1;n<=9;n++){var left=9-(counts[n]||0);P.children[n-1].innerHTML=n+'<span class="n">'+(left>0?left:'')+'</span>';P.children[n-1].style.opacity=left>0?1:.35}
+  var counts = {}; for (var i = 0; i < 81; i++) if (puzzle[i]) counts[puzzle[i]] = (counts[puzzle[i]] || 0) + 1;
+  var P = el("pad");
+  for (var n = 1; n <= 9; n++){ var left = 9 - (counts[n] || 0); P.children[n - 1].innerHTML = n + '<span class="n">' + (left > 0 ? left + " left" : "") + "</span>"; P.children[n - 1].classList.toggle("spent", left <= 0); }
 }
-function renderDiff(){var D=el('diff');D.innerHTML='';DIFFS.forEach(function(d,i){var b=document.createElement('button');b.textContent=d[0];if(i===diff)b.className='on';b.onclick=function(){diff=i;newGame()};D.appendChild(b)})}
 
-// ---- interaction ----
-function select(i){sel=i;paint();if(window.myllmHaptic)myllmHaptic('selection')}
+// ---- interaction (unchanged) ----
+function select(i){ if (state !== "play") return; sel = i; paint(); haptic("selection"); }
 function place(n){
-  if(sel<0||given[sel]||won)return;
-  if(notesMode){var a=notes[sel],k=a.indexOf(n);if(k>=0)a.splice(k,1);else a.push(n);puzzle[sel]=0}
-  else{
-    if(puzzle[sel]===n){puzzle[sel]=0}
-    else{puzzle[sel]=n;notes[sel]=[];if(solution[sel]!==n){mistakes++;if(window.myllmHaptic)myllmHaptic('error')}else if(window.myllmHaptic)myllmHaptic('light')}
+  if (sel < 0 || given[sel] || won) return;
+  if (notesMode){ var a = notes[sel], k = a.indexOf(n); if (k >= 0) a.splice(k, 1); else a.push(n); puzzle[sel] = 0; }
+  else {
+    if (puzzle[sel] === n){ puzzle[sel] = 0; }
+    else { puzzle[sel] = n; notes[sel] = []; if (solution[sel] !== n){ mistakes++; haptic("error"); } else haptic("light"); }
   }
-  save();render();checkWin();
+  save(); render(); checkWin();
 }
-function erase(){if(sel<0||given[sel]||won)return;puzzle[sel]=0;notes[sel]=[];save();render()}
-function toggleNotes(){notesMode=!notesMode;el('notesBtn').classList.toggle('on',notesMode);if(window.myllmHaptic)myllmHaptic('selection')}
+function erase(){ if (sel < 0 || given[sel] || won) return; puzzle[sel] = 0; notes[sel] = []; save(); render(); }
+function toggleNotes(){ notesMode = !notesMode; el("notesBtn").classList.toggle("on", notesMode); haptic("selection"); }
 function hint(){
-  if(won)return;var blanks=[];for(var i=0;i<81;i++)if(!puzzle[i])blanks.push(i);
-  if(!blanks.length)return;var i=sel>=0&&!puzzle[sel]?sel:blanks[Math.floor(Math.random()*blanks.length)];
-  puzzle[i]=solution[i];given[i]=true;notes[i]=[];save();render();checkWin();if(window.myllmHaptic)myllmHaptic('success');
+  if (won) return; var blanks = []; for (var i = 0; i < 81; i++) if (!puzzle[i]) blanks.push(i);
+  if (!blanks.length) return; var i = sel >= 0 && !puzzle[sel] ? sel : blanks[Math.floor(Math.random() * blanks.length)];
+  puzzle[i] = solution[i]; given[i] = true; notes[i] = []; save(); render(); checkWin(); haptic("success");
 }
 function checkWin(){
-  for(var i=0;i<81;i++)if(puzzle[i]!==solution[i])return;
-  won=true;if(timer){clearInterval(timer);timer=null}
-  el('msg').innerHTML='<span class="win">🎉 Solved!'+(mistakes?'':' Flawless!')+'</span>';
-  if(window.myllmHaptic)myllmHaptic('success');save();
+  for (var i = 0; i < 81; i++) if (puzzle[i] !== solution[i]) return;
+  won = true; if (timer){ clearInterval(timer); timer = null; }
+  var took = stamp();
+  haptic("success"); save();
+  state = "done"; sel = -1; paint(); hud();
+  setTimeout(function(){ if (state === "done") card("done", took); }, 500);
+}
+function save(){ keep("game", JSON.stringify({puzzle:puzzle, solution:solution, given:given, notes:notes, diff:diff, mistakes:mistakes, startT:startT, won:won})); }
+function tick(){ if (timer) clearInterval(timer); timer = setInterval(function(){ if (!won && state === "play") renderInfo(); }, 1000); }
+
+/* ---------- the glass card ---------- */
+function card(kind, took){
+  var h;
+  if (kind === "home"){
+    var cont = has && !won;
+    h = '<h1>Sudoku</h1>' + (cont ? '<p>' + DIFFS[diff][0] + ' in progress · ' + stamp() + (mistakes ? ' · ' + mistakes + (mistakes === 1 ? ' mistake' : ' mistakes') : '') + '</p>'
+        : '<p>' + (has ? 'Last puzzle solved. ' : '') + 'Every board is made fresh, with one solution.</p>') +
+      (cont ? '<button class="act pri" id="sA"><svg><use href="#i-play"/></svg>Continue</button>' : '') +
+      '<div class="chips" id="chips"></div>' +
+      '<button class="act ' + (cont ? 'glass' : 'pri') + '" id="sB" style="margin-top:12px">' + (cont ? '' : '<svg><use href="#i-play"/></svg>') + 'New puzzle</button>';
+  } else if (kind === "busy") h = '<div class="kick">' + DIFFS[diff][0] + '</div><p style="font-size:16px;margin:10px 0 6px">Making a puzzle…</p>';
+  else h = '<div class="kick">' + DIFFS[diff][0] + ' · solved</div><div class="big">' + took + '</div><div class="best' + (mistakes ? '' : ' new') + '">' +
+      (mistakes ? mistakes + (mistakes === 1 ? ' mistake' : ' mistakes') : 'Flawless') + '</div>' +
+      '<button class="act pri" id="sB"><svg><use href="#i-again"/></svg>New puzzle</button><button class="act glass" id="sC">Done</button>';
+  showSheet(h, {sA:resume, sB:newGame, sC:goHome});
+  var C = el("chips");
+  if (C) DIFFS.forEach(function(d, i){
+    var b = document.createElement("button"); b.className = "glass" + (i === pick ? " hot" : ""); b.textContent = d[0];
+    b.onclick = function(){ pick = i; haptic("selection"); card("home"); }; C.appendChild(b);
+  });
+}
+function hud(){
+  el("bHome").classList.toggle("hide", state === "home");
+  el("pill").classList.toggle("hide", state === "home");
+  el("stage").classList.toggle("dim", state !== "play");
+  renderInfo();
 }
 function newGame(){
-  el('msg').textContent='Generating…';
-  setTimeout(function(){generate(DIFFS[diff][1]);sel=-1;el('msg').textContent='';renderDiff();render();updatePad();save();
-    if(timer)clearInterval(timer);timer=setInterval(function(){if(!won)renderInfo()},1000);},20);
+  haptic("medium");
+  diff = pick; state = "play"; card("busy"); hud(); syncLook(); syncChrome();
+  setTimeout(function(){                       /* let the card paint: Expert boards take a moment */
+    generate(DIFFS[diff][1]); has = true; sel = -1; notesMode = false; el("notesBtn").classList.remove("on");
+    render(); save(); tick(); hideSheet(); hud(); fit();
+  }, 30);
 }
-function save(){store.setItem('game',JSON.stringify({puzzle:puzzle,solution:solution,given:given,notes:notes,diff:diff,mistakes:mistakes,startT:startT,won:won}))}
+function resume(){ haptic("light"); state = "play"; tick(); hideSheet(); hud(); syncLook(); syncChrome(); fit(); }
+function goHome(){
+  haptic("light");
+  state = "home"; sel = -1; if (has) paint(); pick = diff;
+  card("home"); hud(); syncLook(); syncChrome();
+}
 
-renderDiff();renderPad();
-store.getItem('game').then(function(v){
-  if(v){try{var g=JSON.parse(v);if(g.solution&&g.solution.length===81){puzzle=g.puzzle;solution=g.solution;given=g.given;notes=g.notes||Array.from({length:81},function(){return[]});diff=g.diff||1;mistakes=g.mistakes||0;startT=g.startT||Date.now();won=g.won||false;renderDiff();render();updatePad();if(won)el('msg').innerHTML='<span class="win">🎉 Solved!</span>';if(!timer)timer=setInterval(function(){if(!won)renderInfo()},1000);return}}catch(e){}}
-  newGame();
+function fit(){
+  var w = el("wrap"), st = el("stage").style, wide = window.innerHeight <= 520, B, k;
+  if (wide){ B = Math.min(w.clientHeight, w.clientWidth - Math.min(250, window.innerWidth * .3) - 18, 560); k = 48; }
+  else {
+    var room = w.clientHeight - (42 + 2 * 44 + 30);              /* tools + two key rows + gaps */
+    B = Math.min(w.clientWidth, room, 560);
+    k = Math.max(44, Math.min(68, (w.clientHeight - B - 42 - 30) / 2));
+  }
+  st.setProperty("--b", Math.max(200, Math.floor(B)) + "px"); st.setProperty("--k", Math.floor(k) + "px");
+}
+el("bHome").onclick = goHome;
+el("notesBtn").onclick = toggleNotes;
+el("hintBtn").onclick = hint;
+document.addEventListener("keydown", function(e){
+  if (state !== "play") return;
+  if (e.key >= "1" && e.key <= "9") place(+e.key);
+  else if (e.key === "Backspace" || e.key === "Delete" || e.key === "0") erase();
+  else if (e.key === "n") toggleNotes();
+  else if (e.key === "Escape") goHome();
+  else if (sel >= 0 && e.key.indexOf("Arrow") === 0){
+    var r = Math.floor(sel / 9), c = sel % 9;
+    if (e.key === "ArrowUp") r = (r + 8) % 9; else if (e.key === "ArrowDown") r = (r + 1) % 9; else if (e.key === "ArrowLeft") c = (c + 8) % 9; else c = (c + 1) % 9;
+    select(r * 9 + c); e.preventDefault();
+  }
+});
+window.addEventListener("resize", fit);
+
+/* ---------- boot ---------- */
+puzzle = emptyGrid(); given = puzzle.map(function(){ return false; }); notes = Array.from({length:81}, function(){ return []; }); solution = emptyGrid();
+buildPad(); fit(); render(); syncLook(); card("home"); hud();
+load("game").then(function(v){
+  if (!v) return;
+  try {
+    var g = JSON.parse(v);
+    if (g.solution && g.solution.length === 81){
+      puzzle = g.puzzle; solution = g.solution; given = g.given; notes = g.notes || Array.from({length:81}, function(){ return []; });
+      diff = typeof g.diff === "number" && DIFFS[g.diff] ? g.diff : 1; pick = diff;   /* was `g.diff || 1`, which reopened an Easy game as Medium */ mistakes = g.mistakes || 0; startT = g.startT || Date.now(); won = g.won || false; has = true;
+      render(); if (state === "home") card("home"); hud();
+    }
+  } catch(e){}
 });
 </script></body></html>

@@ -9,63 +9,83 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <title>Quick Capture</title>
 <style>
-  :root{--build-id:"b8f0555128";
-    --bg: var(--myllm-bg, #f6f7f9);
-    --surface: var(--myllm-surface, #ffffff);
-    --text: var(--myllm-text, #11131a);
-    --muted: var(--myllm-muted, #6b7280);
-    --accent: var(--myllm-accent, #4f7cff);
-    --border: var(--myllm-border, rgba(0,0,0,.10));
-    --radius: var(--myllm-radius, 14px);
+  :root{--build-id:"b8f0555128"; color-scheme:light dark;
+    --bg:var(--myllm-bg,#f2f2f7); --surface:var(--myllm-surface,#fff); --ink:var(--myllm-text,#111);
+    --muted:var(--myllm-muted,#8a8a8e); --line:var(--myllm-border,#e3e3e8); --acc:var(--myllm-accent,#0a84ff);
+    --h:275;
   }
   @media (prefers-color-scheme: dark){
-    :root{ --bg: var(--myllm-bg,#0e0f13); --surface: var(--myllm-surface,#1a1c22); --text: var(--myllm-text,#f3f4f7); --muted: var(--myllm-muted,#a4abba); --border: var(--myllm-border,rgba(255,255,255,.14)); }
+    :root{ --bg:var(--myllm-bg,#000); --surface:var(--myllm-surface,#1c1c1e); --ink:var(--myllm-text,#f2f2f7);
+      --muted:var(--myllm-muted,#8e8e93); --line:var(--myllm-border,#2c2c2e); }
   }
-  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-  html,body{ margin:0; height:100%; }
+  *{ margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body{ height:100%; }
   body{
-    background:var(--bg); color:var(--text);
-    font-family:var(--myllm-font, -apple-system,system-ui,'Segoe UI',Roboto,sans-serif);
-    display:flex; flex-direction:column; padding:max(16px,env(safe-area-inset-top)) 16px 16px;
+    background:var(--bg); color:var(--ink);
+    font-family:var(--myllm-font,-apple-system,system-ui,sans-serif);
+    display:flex; flex-direction:column; max-width:600px; margin:0 auto; height:100dvh;
+    padding:calc(16px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) calc(16px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left));
     user-select:none; -webkit-user-select:none;
   }
-  h1{ font-size:24px; margin:0 0 2px; }
-  .sub{ color:var(--muted); font-size:13px; margin-bottom:14px; }
+  svg.i{ width:1.25em; height:1.25em; fill:currentColor; flex-shrink:0; }
+  button{ font:inherit; color:inherit; cursor:pointer; } button:active{ transform:scale(.96); }
+
+  .head{ display:flex; align-items:center; gap:12px; margin:2px 2px 14px; flex-shrink:0; }
+  .tile{ width:44px; height:44px; border-radius:13px; font-size:19px; display:flex; align-items:center; justify-content:center; color:#fff; flex-shrink:0;
+    background:linear-gradient(145deg, hsl(var(--h) 62% 56%), hsl(calc(var(--h) + 40) 58% 30%)); }
+  h1{ font-size:22px; font-weight:800; letter-spacing:-.01em; }
+  .head p{ font-size:13px; color:var(--muted); margin-top:1px; }
+  .count{ margin-left:auto; flex-shrink:0; font-size:11px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:var(--muted);
+    border:1px solid var(--line); background:var(--surface); border-radius:99px; padding:6px 11px; font-variant-numeric:tabular-nums; visibility:hidden; }
+  .count.on{ visibility:visible; }
+
+  /* The page: the whole screen is the note. */
+  .page{ flex:1; min-height:0; display:flex; border-radius:18px; border:1px solid var(--line); background:var(--surface); overflow:hidden; transition:border-color .2s; }
+  .page:focus-within{ border-color:var(--acc); }
   textarea{
-    flex:1; width:100%; font:inherit; font-size:17px; line-height:1.5; color:var(--text);
-    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
-    padding:14px; outline:none; resize:none; user-select:text; -webkit-user-select:text;
+    flex:1; width:100%; font:inherit; font-size:17px; line-height:1.55; color:var(--ink);
+    background:transparent; border:none; padding:16px; outline:none; resize:none; user-select:text; -webkit-user-select:text;
   }
-  textarea:focus{ border-color:var(--accent); }
-  .row{ display:flex; gap:10px; margin-top:12px; }
-  button{ font:inherit; cursor:pointer; border:0; border-radius:var(--radius); padding:14px 16px; font-weight:700; font-size:16px; }
-  .primary{ flex:1; background:var(--accent); color:#fff; }
-  .ghost{ background:transparent; color:var(--accent); box-shadow:inset 0 0 0 1.5px var(--border); }
+  textarea::placeholder{ color:var(--muted); opacity:.8; }
+  .row{ display:flex; gap:10px; margin-top:12px; flex-shrink:0; }
+  .row button{ min-height:52px; border-radius:14px; padding:0 18px; font-weight:700; font-size:16px; display:flex; align-items:center; justify-content:center; gap:8px; }
+  .primary{ flex:1; border:none; background:var(--acc); color:#fff; }
+  .ghost{ border:1px solid var(--line); background:var(--surface); }
   .toast{
-    position:fixed; left:50%; bottom:22px; transform:translateX(-50%) translateY(20px);
-    background:var(--text); color:var(--bg); padding:10px 16px; border-radius:999px; font-size:14px;
-    opacity:0; transition:opacity .2s, transform .2s; pointer-events:none; max-width:84%; text-align:center;
+    position:fixed; left:50%; bottom:calc(88px + env(safe-area-inset-bottom)); transform:translateX(-50%) translateY(20px);
+    background:var(--ink); color:var(--bg); padding:10px 16px; border-radius:999px; font-size:14px; font-weight:600;
+    opacity:0; transition:opacity .2s, transform .2s cubic-bezier(.2,.8,.2,1); pointer-events:none; max-width:84%; text-align:center;
+    box-shadow:0 8px 24px rgba(0,0,0,.25);
   }
   .toast.show{ opacity:1; transform:translateX(-50%); }
 
   /* iPad / large screens: a centred, comfortable column (the textarea grows to
      fill the height) rather than an over-wide stretch. */
   @media (min-width: 768px){
-    body{ max-width: 760px; margin-inline: auto; padding-left:24px; padding-right:24px; }
-    h1{ font-size:30px; }
+    body{ max-width:760px; padding-left:24px; padding-right:24px; }
     textarea{ font-size:19px; }
-    button{ font-size:18px; }
   }
+  /* Phone on its side: the note keeps the room, the header gives way. */
+  @media (max-height: 520px){ .head{ margin-bottom:8px; } .head p{ display:none; } .tile{ width:34px; height:34px; border-radius:10px; font-size:15px; } .row{ margin-top:8px; } .row button{ min-height:44px; } }
+  @media (prefers-reduced-motion:reduce){ button:active{ transform:none; } .toast{ transition:opacity .2s; } }
 </style>
 </head>
 <body>
-<h1>⚡ Quick Capture</h1>
-<div class="sub">Jot anything. Send a line straight to your Shopping List.</div>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-bolt" viewBox="0 0 24 24"><path d="M13.2 2.3 5 13.2a.7.7 0 0 0 .56 1.12H11l-1.1 7.1a.5.5 0 0 0 .9.38L19 10.9a.7.7 0 0 0-.56-1.12H13l1.1-7.1a.5.5 0 0 0-.9-.38z"/></symbol>
+  <symbol id="i-send" viewBox="0 0 24 24"><path d="M21.4 2.6a1 1 0 0 0-1.05-.23L2.65 9.2a1 1 0 0 0-.06 1.84l6.9 3.47 3.47 6.9a1 1 0 0 0 1.84-.06l6.83-17.7a1 1 0 0 0-.23-1.05zM17.9 6.1l-4.1 10.6-2.1-4.2a1 1 0 0 0-.45-.45L7.3 9.95z"/></symbol>
+</defs></svg>
 
-<textarea id="note" placeholder="milk&#10;eggs&#10;coffee&#10;&#10;Type items (one per line), then send to your list…"></textarea>
+<div class="head">
+  <div class="tile"><svg class="i"><use href="#i-bolt"/></svg></div>
+  <div><h1>Quick Capture</h1><p>Jot anything. Send it straight to your Shopping List.</p></div>
+  <div class="count" id="count"></div>
+</div>
+
+<div class="page"><textarea id="note" placeholder="milk&#10;eggs&#10;coffee&#10;&#10;Type items (one per line), then send to your list…"></textarea></div>
 
 <div class="row">
-  <button class="primary" id="send" type="button">Send to Shopping List</button>
+  <button class="primary" id="send" type="button"><svg class="i"><use href="#i-send"/></svg>Send to Shopping List</button>
   <button class="ghost" id="clear" type="button">Clear</button>
 </div>
 
@@ -79,10 +99,17 @@
     clearTimeout(t._t); t._t = setTimeout(function(){ t.classList.remove('show'); }, 2200);
   }
   function haptic(s){ try{ if(window.myllmHaptic) myllmHaptic(s); }catch(e){} }
+  function count(){
+    var n = document.getElementById('note').value.split(/\r?\n/).filter(function(l){ return l.trim(); }).length;
+    var c = document.getElementById('count');
+    c.textContent = n + (n === 1 ? ' line' : ' lines'); c.classList.toggle('on', n > 0);
+  }
+  document.getElementById('note').addEventListener('input', count);
 
   document.getElementById('clear').addEventListener('click', function(){
     document.getElementById('note').value = '';
     document.getElementById('note').focus();
+    count();
   });
 
   // #1 intent bus — hand the text off to whichever app handles "add-item"
@@ -101,6 +128,7 @@
       toast(e && e.message ? e.message : 'No app can receive that yet — install Shopping List.');
     }
   });
+  count();
 })();
 </script>
 </body>

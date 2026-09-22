@@ -15,6 +15,9 @@
 *{box-sizing:border-box}
 body{font-family:var(--myllm-font,-apple-system,system-ui,sans-serif);margin:0;background:var(--bg);color:var(--fg);
      -webkit-text-size-adjust:100%}
+/* phone on its side: keep clear of the notch and the rounded corners */
+body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right)}
+#reader{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right)}
 button{font:inherit;color:inherit}
 
 /* ---------- the list ---------- */
@@ -22,7 +25,8 @@ button{font:inherit;color:inherit}
       backdrop-filter:saturate(180%) blur(12px);padding:calc(12px + env(safe-area-inset-top)) 16px 0;z-index:5}
 .hrow{display:flex;align-items:center;gap:10px}
 h1{font-size:20px;margin:0 0 8px;flex:1}
-.icon{border:0;background:none;padding:6px;border-radius:9px;opacity:.75;font-size:17px;line-height:1}
+.icon{border:0;background:none;padding:6px;border-radius:9px;opacity:.75;font-size:17px;line-height:1;min-width:40px;min-height:40px;display:inline-flex;align-items:center;justify-content:center;color:inherit}
+.icon svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .tabs{display:flex;gap:4px;overflow-x:auto;padding:0 16px 10px;margin:0 -16px}
 .tab{flex:none;padding:7px 14px;border-radius:18px;background:none;color:var(--dim);font-size:14px;font-weight:600;border:0;white-space:nowrap}
 .tab.on{background:var(--accent);color:#fff}
@@ -80,7 +84,7 @@ input{flex:1;padding:10px;border:1px solid var(--line);border-radius:9px;font-si
 
 <div class="head">
   <div class="hrow"><h1>📰 News</h1>
-    <button class="icon" id="refresh" aria-label="Refresh">↻</button></div>
+    <button class="icon" id="refresh" aria-label="Refresh"><svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.6-5.9"/><path d="M20 4v5h-5"/></svg></button></div>
   <div class="tabs" id="tabs"></div>
 </div>
 <div id="status"></div>
@@ -92,7 +96,7 @@ input{flex:1;padding:10px;border:1px solid var(--line);border-radius:9px;font-si
     <span class="site" id="rsite"></span>
     <button class="icon" id="smaller" aria-label="Smaller text">A−</button>
     <button class="icon" id="bigger" aria-label="Larger text">A+</button>
-    <button class="icon" id="share" aria-label="Share">↗</button>
+    <button class="icon" id="share" aria-label="Share"><svg viewBox="0 0 24 24"><path d="M12 3v12"/><path d="M8 7l4-4 4 4"/><path d="M7 11H6a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-8a1 1 0 0 0-1-1h-1"/></svg></button>
   </div>
   <div class="art" id="art"></div>
 </div>
@@ -115,7 +119,8 @@ var TOPICS=[
   {name:"Science",url:"https://feeds.bbci.co.uk/news/science_and_environment/rss.xml"},
   {name:"Sport",url:"https://feeds.bbci.co.uk/sport/rss.xml"}
 ];
-var store=window.myllmStorage||{getItem:function(){return Promise.resolve(null)},setItem:function(){return Promise.resolve()}};
+/* Looked up on each use, never kept: MyLLM can add its bridges after this script has run. */
+var store={getItem:function(k){var s=window.myllmStorage;return s?s.getItem(k):Promise.resolve(null)},setItem:function(k,v){var s=window.myllmStorage;return s?s.setItem(k,v):Promise.resolve()}};
 var custom=[],active=0,feedCache={},artCache={},readSize=17;
 var CACHE_MS=5*60*1000;
 
@@ -373,7 +378,7 @@ function figure(src,cap){
 function note(text){var d=document.createElement('div');d.className='note';d.textContent=text;return d}
 function openLink(item){
   var a=document.createElement('a');a.className='open';a.href=item.link;a.target='_top';a.rel='noopener';
-  a.textContent='Open the original ↗';
+  a.textContent='Open the original ↗\uFE0E';
   return a;
 }
 

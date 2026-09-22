@@ -9,93 +9,133 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Packing Planner</title>
 <style>
-  :root { color-scheme: light dark; }
+  :root{ color-scheme:light dark;
+    --bg:var(--myllm-bg,#f2f2f7); --surface:var(--myllm-surface,#fff); --ink:var(--myllm-text,#111);
+    --muted:var(--myllm-muted,#8a8a8e); --line:var(--myllm-border,#e3e3e8); --acc:var(--myllm-accent,#0a84ff);
+    --h:30; }
+  @media (prefers-color-scheme:dark){ :root{ --bg:var(--myllm-bg,#000); --surface:var(--myllm-surface,#1c1c1e);
+    --ink:var(--myllm-text,#f2f2f7); --muted:var(--myllm-muted,#8e8e93); --line:var(--myllm-border,#2c2c2e); } }
   * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
   body{
     font-family:var(--myllm-font,-apple-system,system-ui,sans-serif);
-    background:var(--myllm-bg,#f2f2f7);
-    color:var(--myllm-text,#111);
-    max-width:820px; margin:0 auto;
-    padding:16px 16px calc(40px + env(safe-area-inset-bottom));
+    background:var(--bg); color:var(--ink); font-size:15.5px;
+    max-width:600px; margin:0 auto; min-height:100dvh;
+    padding:calc(16px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) calc(40px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left));
   }
-  h1{ font-size:22px; font-weight:800; letter-spacing:-0.02em; margin:6px 2px 14px; }
+  svg.i{ width:1.25em; height:1.25em; fill:currentColor; flex-shrink:0; }
+  button{ font:inherit; color:inherit; } button:active{ transform:scale(.96); }
+  .head{ display:flex; align-items:center; gap:12px; margin:2px 2px 14px; }
+  .tile{ width:44px; height:44px; border-radius:13px; font-size:19px; display:flex; align-items:center; justify-content:center; color:#fff; flex-shrink:0;
+    background:linear-gradient(145deg, hsl(var(--h) 80% 54%), hsl(calc(var(--h) - 22) 72% 36%)); }
+  h1{ font-size:22px; font-weight:800; letter-spacing:-.01em; }
+  .head p{ font-size:13px; color:var(--muted); margin-top:1px; }
   .card{
-    background:var(--myllm-surface,#fff); border:1px solid var(--myllm-border,#e3e3e8);
-    border-radius:16px; padding:14px; margin-bottom:12px;
+    background:var(--surface); border:1px solid var(--line);
+    border-radius:18px; padding:14px; margin-bottom:12px;
   }
-  label{ display:block; font-size:11.5px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; color:var(--myllm-muted,#8a8a8e); margin:10px 0 5px; }
+  label{ display:block; font-size:12px; font-weight:800; letter-spacing:.07em; text-transform:uppercase; color:var(--muted); margin:14px 2px 7px; }
   label:first-child{ margin-top:0; }
   input, select{
-    width:100%; font-size:16px; padding:11px 12px; border-radius:12px;
-    border:1px solid var(--myllm-border,#e3e3e8); background:var(--myllm-bg,#f2f2f7); color:var(--myllm-text,#111);
+    width:100%; min-height:46px; font:inherit; font-size:16px; padding:11px 12px; border-radius:12px;
+    border:1px solid var(--line); background:var(--bg); color:var(--ink); outline:none;
   }
-  .row2{ display:flex; gap:10px; }
-  .row2 > div{ flex:1; }
+  input:focus{ border-color:var(--acc); }
+  input[type=date]{ -webkit-appearance:none; appearance:none; }
+  .row2{ display:flex; gap:10px; margin-top:14px; }
+  .row2 > div{ flex:1; min-width:0; }
   .chips{ display:flex; flex-wrap:wrap; gap:7px; }
   .chip{
-    border:1px solid var(--myllm-border,#e3e3e8); background:var(--myllm-bg,#f2f2f7); color:var(--myllm-text,#111);
-    border-radius:99px; padding:8px 14px; font-size:14px; font-weight:600;
+    min-height:38px; border:1px solid var(--line); background:var(--bg);
+    border-radius:99px; padding:0 14px; font-size:14px; font-weight:650;
   }
-  .chip.on{ background:var(--myllm-accent,#0a84ff); border-color:var(--myllm-accent,#0a84ff); color:#fff; }
+  .chip.on{ background:var(--acc); border-color:var(--acc); color:#fff; }
   .go{
-    width:100%; margin-top:14px; border:none; border-radius:14px; padding:15px; font-size:16.5px; font-weight:750;
-    background:var(--myllm-accent,#0a84ff); color:#fff;
+    width:100%; min-height:52px; margin-top:16px; border:none; border-radius:14px; font-size:16.5px; font-weight:750;
+    background:var(--acc); color:#fff;
   }
   .go:disabled{ opacity:.55; }
-  .note{ font-size:13px; color:var(--myllm-muted,#8a8a8e); line-height:1.45; margin-top:8px; }
+  .note{ font-size:13px; color:var(--muted); line-height:1.45; margin-top:8px; }
+  .note:empty{ display:none; }
+
+  /* trip hero: where you're going and how packed you are */
+  .hero{ border-radius:20px; padding:16px 18px; color:#fff; margin-bottom:12px;
+    background:linear-gradient(145deg, hsl(var(--h) 78% 50%), hsl(calc(var(--h) - 22) 72% 32%)); box-shadow:0 10px 28px hsl(var(--h) 70% 34% / .25); }
+  .hero .kick{ font-size:11px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; opacity:.78; }
+  .phead{ display:flex; justify-content:space-between; align-items:flex-end; gap:12px; margin-top:4px; }
+  .phead b{ font-size:24px; font-weight:800; line-height:1.15; letter-spacing:-.02em; min-width:0; overflow-wrap:anywhere; }
+  .phead span{ font-size:13px; font-weight:700; opacity:.9; white-space:nowrap; font-variant-numeric:tabular-nums; padding-bottom:3px; }
+  .prog{ height:8px; border-radius:99px; background:rgba(255,255,255,.22); overflow:hidden; margin:12px 0 2px; }
+  .prog div{ height:100%; border-radius:99px; background:#fff; transition:width .25s cubic-bezier(.2,.8,.2,1); }
+  .prog.full div{ background:#b9ffcf; }
 
   /* weather strip */
-  .wx{ display:flex; gap:6px; overflow-x:auto; padding-bottom:4px; scrollbar-width:none; }
+  .wx{ display:flex; gap:6px; overflow-x:auto; padding-bottom:4px; scrollbar-width:none; margin:0 -14px; padding-left:14px; padding-right:14px; }
   .wx::-webkit-scrollbar{ display:none; }
   .day{
-    min-width:64px; text-align:center; background:var(--myllm-bg,#f2f2f7);
+    min-width:64px; text-align:center; background:var(--bg);
     border-radius:12px; padding:8px 4px;
   }
-  .day small{ display:block; font-size:10.5px; font-weight:700; color:var(--myllm-muted,#8a8a8e); }
+  .day small{ display:block; font-size:10.5px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); }
   .day .i{ font-size:20px; line-height:1.5; }
-  .day b{ font-size:12px; font-weight:700; }
-  .day i{ font-style:normal; font-size:11px; color:var(--myllm-muted,#8a8a8e); }
-  .wxhead{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px; }
+  .day b{ font-size:12.5px; font-weight:700; font-variant-numeric:tabular-nums; }
+  .day i{ font-style:normal; font-size:11px; color:var(--muted); font-variant-numeric:tabular-nums; }
+  .wxhead{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:10px; gap:10px; }
   .wxhead b{ font-size:15px; font-weight:750; }
-  .wxhead span{ font-size:12px; color:var(--myllm-muted,#8a8a8e); }
+  .wxhead span{ font-size:12px; color:var(--muted); }
 
   /* checklist */
-  .prog{ height:8px; border-radius:99px; background:var(--myllm-bg,#f2f2f7); overflow:hidden; margin:8px 0 2px; }
-  .prog div{ height:100%; border-radius:99px; background:#30d158; transition:width .25s; }
-  .phead{ display:flex; justify-content:space-between; align-items:baseline; }
-  .phead b{ font-size:15px; font-weight:750; }
-  .phead span{ font-size:12.5px; color:var(--myllm-muted,#8a8a8e); }
-  .grp{ margin-top:12px; }
-  .grp > b{ display:block; font-size:13px; font-weight:800; letter-spacing:.02em; margin-bottom:6px; }
+  .grp{ margin-top:16px; break-inside:avoid; }
+  .grp:first-child{ margin-top:0; }
+  .grp > b{ display:block; font-size:12px; font-weight:800; letter-spacing:.07em; text-transform:uppercase; color:var(--muted); margin:0 2px 4px; }
   .it{
-    display:flex; align-items:center; gap:11px; padding:9px 2px;
-    border-bottom:1px solid var(--myllm-border,#e3e3e8); font-size:15.5px;
+    display:flex; align-items:center; gap:11px; min-height:46px; padding:6px 2px;
+    border-bottom:1px solid var(--line); font-size:15.5px; line-height:1.3;
   }
   .it:last-child{ border-bottom:none; }
+  .it > span{ flex:1; min-width:0; overflow-wrap:anywhere; }
   .it .box{
     width:24px; height:24px; border-radius:8px; border:2px solid var(--myllm-border,#c9c9cf);
-    display:flex; align-items:center; justify-content:center; color:#fff; font-size:14px; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center; color:#fff; font-size:12px; flex-shrink:0; transition:background .15s, border-color .15s;
   }
+  .it .box svg{ opacity:0; }
   .it.on .box{ background:#30d158; border-color:#30d158; }
-  .it.on span{ text-decoration:line-through; color:var(--myllm-muted,#8a8a8e); }
-  .it .rm{ margin-left:auto; border:none; background:none; color:var(--myllm-muted,#8a8a8e); font-size:15px; padding:4px 6px; }
-  .addrow{ display:flex; gap:8px; margin-top:12px; }
-  .addrow input{ flex:1; }
+  .it.on .box svg{ opacity:1; }
+  .it.on > span{ text-decoration:line-through; color:var(--muted); }
+  .it .rm{ width:44px; height:44px; margin:-4px -10px -4px 0; border:none; background:none; color:var(--muted); font-size:13px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .addrow{ display:flex; gap:8px; margin-top:14px; }
+  .addrow input{ flex:1; min-width:0; }
   .addrow button{
-    border:none; border-radius:12px; padding:0 16px; font-size:15px; font-weight:700;
-    background:var(--myllm-accent,#0a84ff); color:#fff;
+    border:none; border-radius:12px; padding:0 18px; font-size:15px; font-weight:700;
+    background:var(--acc); color:#fff;
   }
-  .toolrow{ display:flex; gap:8px; margin-top:14px; }
+  .toolrow{ display:flex; gap:8px; margin-top:10px; }
   .toolrow button{
-    flex:1; border:1px solid var(--myllm-border,#e3e3e8); border-radius:12px; padding:11px;
-    font-size:14px; font-weight:650; background:var(--myllm-bg,#f2f2f7); color:var(--myllm-text,#111);
+    flex:1; min-width:0; min-height:44px; border:1px solid var(--line); border-radius:12px; padding:0 6px;
+    font-size:13.5px; font-weight:650; background:var(--bg);
+    display:flex; align-items:center; justify-content:center; gap:6px; white-space:nowrap;
   }
+  @media (max-width:350px){ .toolrow button svg{ display:none; } }
+  @media (min-width:768px){ body{ max-width:820px; } #groups{ columns:2; column-gap:28px; } .grp:first-child{ margin-top:0; } }
+  @media (prefers-reduced-motion:reduce){ button:active{ transform:none; } .prog div{ transition:none; } }
 </style>
 <style>:root{--build-id:"04941c4462";}</style>
 </head>
 <body>
 
-<h1>🧳 Packing Planner</h1>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-case" viewBox="0 0 24 24"><path d="M9 3a2 2 0 0 0-2 2v2H5a3 3 0 0 0-3 3v8a3 3 0 0 0 3 3h14a3 3 0 0 0 3-3v-8a3 3 0 0 0-3-3h-2V5a2 2 0 0 0-2-2zm0 2h6v2H9z"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M9.6 18.4a1.5 1.5 0 0 1-1.08-.46l-4.6-4.7a1.5 1.5 0 1 1 2.16-2.1l3.5 3.6 8.32-8.7a1.5 1.5 0 0 1 2.16 2.08l-9.38 9.8a1.5 1.5 0 0 1-1.08.48z"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6.4 5a1 1 0 0 0-1.4 1.4L10.6 12 5 17.6A1 1 0 0 0 6.4 19l5.6-5.6 5.6 5.6a1 1 0 0 0 1.4-1.4L13.4 12 19 6.4A1 1 0 0 0 17.6 5L12 10.6z"/></symbol>
+  <symbol id="i-share" viewBox="0 0 24 24"><path d="M12 2.6a1 1 0 0 0-.7.3L7.8 6.4a1 1 0 0 0 1.4 1.4L11 6v8.5a1 1 0 0 0 2 0V6l1.8 1.8a1 1 0 0 0 1.4-1.4l-3.5-3.5a1 1 0 0 0-.7-.3zM6 10a3 3 0 0 0-3 3v5a3 3 0 0 0 3 3h12a3 3 0 0 0 3-3v-5a3 3 0 0 0-3-3h-1a1 1 0 0 0 0 2h1a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-5a1 1 0 0 1 1-1h1a1 1 0 0 0 0-2z"/></symbol>
+  <symbol id="i-again" viewBox="0 0 24 24"><path d="M12 5V2.6a.6.6 0 0 0-1-.45L7.2 5.55a.6.6 0 0 0 0 .9L11 9.85a.6.6 0 0 0 1-.45V7a5.5 5.5 0 1 1-5.5 5.5 1 1 0 0 0-2 0A7.5 7.5 0 1 0 12 5z"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 4a1 1 0 0 0-1 1v6H5a1 1 0 0 0 0 2h6v6a1 1 0 0 0 2 0v-6h6a1 1 0 0 0 0-2h-6V5a1 1 0 0 0-1-1z"/></symbol>
+</defs></svg>
+
+<div class="head">
+  <div class="tile"><svg class="i"><use href="#i-case"/></svg></div>
+  <div><h1>Packing Planner</h1><p>Never forget the charger</p></div>
+</div>
+
 
 <div class="card" id="form">
   <label>Where to?</label>
@@ -110,23 +150,27 @@
   <p class="note" id="formNote"></p>
 </div>
 
+<div class="hero" id="hero" style="display:none">
+  <div class="kick" id="herokick"></div>
+  <div class="phead"><b id="listtitle">Your list</b><span id="listcount"></span></div>
+  <div class="prog" id="prog"><div id="progfill" style="width:0%"></div></div>
+</div>
+
 <div class="card" id="wxcard" style="display:none">
   <div class="wxhead"><b id="wxplace"></b><span id="wxsum"></span></div>
   <div class="wx" id="wxdays"></div>
 </div>
 
 <div class="card" id="listcard" style="display:none">
-  <div class="phead"><b id="listtitle">Your list</b><span id="listcount"></span></div>
-  <div class="prog"><div id="progfill" style="width:0%"></div></div>
   <div id="groups"></div>
   <div class="addrow">
-    <input id="newitem" placeholder="Add your own item…" onkeydown="if(event.key==='Enter')addItem()">
+    <input id="newitem" placeholder="Add your own item…" enterkeyhint="done" onkeydown="if(event.key==='Enter')addItem()">
     <button onclick="addItem()">Add</button>
   </div>
   <div class="toolrow">
-    <button onclick="shareList()">Share</button>
-    <button onclick="untickAll()">Untick all</button>
-    <button onclick="newTrip()">New trip</button>
+    <button onclick="shareList()"><svg class="i"><use href="#i-share"/></svg>Share</button>
+    <button onclick="untickAll()"><svg class="i"><use href="#i-again"/></svg>Untick all</button>
+    <button onclick="newTrip()"><svg class="i"><use href="#i-plus"/></svg>New trip</button>
   </div>
 </div>
 
@@ -139,7 +183,7 @@
 .myllm-ai-busy small{font-weight:400;opacity:.6}
 </style>
 <script>
-(function(){if(window.__myllmAiWrap||typeof window.myllmAsk!=='function')return;window.__myllmAiWrap=true;
+function myllmAiWrap(){if(window.__myllmAiWrap||typeof window.myllmAsk!=='function')return;window.__myllmAiWrap=true;
 var orig=window.myllmAsk,depth=0,node=null;
 function ensure(){if(node)return;node=document.createElement('div');node.className='myllm-ai-busy';
 node.innerHTML='<span class="myllm-ai-cog">⚙️</span><span>AI is thinking… <small>privately, on your device</small></span>';
@@ -147,14 +191,20 @@ node.innerHTML='<span class="myllm-ai-cog">⚙️</span><span>AI is thinking… 
 function show(){ensure();depth++;node.classList.add('on');}
 function hide(){depth=Math.max(0,depth-1);if(depth===0&&node)node.classList.remove('on');}
 window.myllmAsk=function(){show();var p;try{p=orig.apply(this,arguments);}catch(e){hide();throw e;}
-return Promise.resolve(p).then(function(r){hide();return r;},function(e){hide();throw e;});};})();
+return Promise.resolve(p).then(function(r){hide();return r;},function(e){hide();throw e;});};}
+myllmAiWrap();
 </script>
 
 <script>
-var store = window.myllmStorage || {getItem:function(){return Promise.resolve(null)}, setItem:function(){return Promise.resolve()}};
+/* Bridges are looked up when used, never kept: MyLLM can add them after this
+   script has run. */
+var store = {
+  getItem:function(k){ var s = window.myllmStorage; return s ? s.getItem(k).catch(function(){ return null; }) : Promise.resolve(null); },
+  setItem:function(k, v){ var s = window.myllmStorage; if (s) try { s.setItem(k, v).catch(function(){}); } catch(_){} }
+};
 function haptic(k){ if(window.myllmHaptic){ try{ myllmHaptic(k||'light'); }catch(_){} } }
-var NET = window.myllmFetch || null;
-var ASK = window.myllmAsk || null;
+function NET(u, o){ return window.myllmFetch(u, o); }
+function ASK(p, o){ myllmAiWrap(); return window.myllmAsk(p, o); }
 
 var TYPES = [
   {id:"city",     name:"🏙️ City break"},
@@ -245,7 +295,7 @@ function plan(){
   if (!(nights > 0)) nights = 3;
   haptic("light");
   el("goBtn").disabled = true;
-  el("formNote").textContent = NET ? "Checking the forecast…" : "";
+  el("formNote").textContent = window.myllmFetch ? "Checking the forecast…" : "";
 
   lookupWeather(dest, start, nights).then(function(res){
     trip = {
@@ -256,12 +306,13 @@ function plan(){
     el("goBtn").disabled = false;
     el("formNote").textContent = res.msg || "";
     haptic("success");
+    try{ el("hero").scrollIntoView({behavior:"smooth", block:"start"}); }catch(_){}   /* the list lands below the form: bring it into view */
     smartExtras();
   });
 }
 
 function lookupWeather(dest, start, nights){
-  if (!NET) return Promise.resolve({days:null, msg:"Weather needs network access — list built from trip type."});
+  if (!window.myllmFetch) return Promise.resolve({days:null, msg:"Weather needs network access — list built from trip type."});
   var lead = Math.round((new Date(start + "T12:00:00") - new Date()) / 86400000);
   if (lead > 14) return Promise.resolve({days:null, msg:"Too far ahead for a forecast — I'll add weather items when it's closer."});
   var gurl = "https://geocoding-api.open-meteo.com/v1/search?count=1&name=" + encodeURIComponent(dest);
@@ -318,7 +369,7 @@ function parseExtras(reply){
   return items;
 }
 function smartExtras(){
-  if (!ASK || !trip) return;
+  if (!window.myllmAsk || !trip) return;
   var wxs = trip.wx ? (" Forecast: " + Math.round(Math.min.apply(null, trip.wx.map(function(d){return d.tmin;}))) + "–" +
     Math.round(Math.max.apply(null, trip.wx.map(function(d){return d.tmax;}))) + "°C, max rain chance " +
     Math.round(Math.max.apply(null, trip.wx.map(function(d){return d.rain;}))) + "%.") : "";
@@ -348,6 +399,7 @@ function render(){
   if (!trip){
     el("wxcard").style.display = "none";
     el("listcard").style.display = "none";
+    el("hero").style.display = "none";
     return;
   }
   el("dest").value = trip.dest;
@@ -368,16 +420,20 @@ function render(){
   } else el("wxcard").style.display = "none";
 
   el("listcard").style.display = "block";
+  el("hero").style.display = "block";
+  var ty = TYPES.filter(function(t){ return t.id === trip.type; })[0];
+  el("herokick").textContent = trip.nights + (trip.nights === 1 ? " night" : " nights") + (ty ? " · " + ty.name.replace(/^\S+\s/, "") : "");
   el("listtitle").textContent = "Packing for " + trip.place;
   var total = 0, done = 0;
   trip.groups.forEach(function(g){ g.items.forEach(function(it){ total++; if (it.on) done++; }); });
   el("listcount").textContent = done + " / " + total + " packed";
   el("progfill").style.width = (total ? Math.round(done / total * 100) : 0) + "%";
+  el("prog").classList.toggle("full", total > 0 && done === total);
   el("groups").innerHTML = trip.groups.map(function(g, gi){
     return '<div class="grp"><b>' + esc(g.name) + '</b>' + g.items.map(function(it, ii){
       return '<div class="it' + (it.on ? ' on' : '') + '" onclick="toggle(' + gi + ',' + ii + ')">' +
-        '<div class="box">' + (it.on ? '✓' : '') + '</div><span>' + esc(it.t) + '</span>' +
-        '<button class="rm" onclick="event.stopPropagation();removeItem(' + gi + ',' + ii + ')" aria-label="Remove">✕</button></div>';
+        '<div class="box"><svg class="i"><use href="#i-check"/></svg></div><span>' + esc(it.t) + '</span>' +
+        '<button class="rm" onclick="event.stopPropagation();removeItem(' + gi + ',' + ii + ')" aria-label="Remove"><svg class="i"><use href="#i-x"/></svg></button></div>';
     }).join("") + '</div>';
   }).join("");
 }

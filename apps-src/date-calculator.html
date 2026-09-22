@@ -11,64 +11,106 @@
 <style>
 :root{--build-id:"cbff539a7d";
   color-scheme:light dark;
-  --bg:var(--myllm-bg,#f2f2f7);--surface:var(--myllm-surface,#fff);
-  --text:var(--myllm-text,#111);--muted:var(--myllm-muted,#6b6b72);
-  --accent:var(--myllm-accent,#0b5ed7);--border:var(--myllm-border,rgba(120,120,128,.25));
-  --radius:var(--myllm-radius,14px);--font:var(--myllm-font,-apple-system,system-ui,sans-serif);
+  --bg:var(--myllm-bg,#f2f2f7); --surface:var(--myllm-surface,#fff); --ink:var(--myllm-text,#111);
+  --muted:var(--myllm-muted,#8a8a8e); --line:var(--myllm-border,#e3e3e8); --acc:var(--myllm-accent,#0a84ff);
+  --h:28;
 }
-@media(prefers-color-scheme:dark){:root{--bg:var(--myllm-bg,#000);--surface:var(--myllm-surface,#1c1c1e);--text:var(--myllm-text,#eee);--muted:var(--myllm-muted,#98989f)}}
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-body{margin:0;font-family:var(--font);background:var(--bg);color:var(--text)}
-.wrap{max-width:560px;margin:0 auto;padding:16px}
-.seg{display:flex;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:3px;margin-bottom:18px}
-.seg button{flex:1;border:0;background:none;color:var(--muted);font:inherit;font-weight:600;font-size:14px;padding:10px;border-radius:9px;cursor:pointer}
-.seg button.on{background:var(--accent);color:#fff}
-label{display:block;font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;margin:0 0 6px}
-.field{margin-bottom:16px}
-input[type=date]{width:100%;padding:12px;border:1px solid var(--border);border-radius:11px;font:inherit;font-size:16px;background:var(--surface);color:var(--text)}
-.opseg{display:flex;gap:8px;margin-bottom:16px}
-.opseg button{flex:1;border:1px solid var(--border);background:var(--surface);color:var(--text);border-radius:11px;padding:12px;font:inherit;font-weight:700;font-size:16px;cursor:pointer}
-.opseg button.on{background:var(--accent);color:#fff;border-color:transparent}
-.amts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px}
-.amt label{margin-bottom:4px}
-.amt input{width:100%;padding:11px;border:1px solid var(--border);border-radius:10px;font:inherit;font-size:17px;background:var(--surface);color:var(--text);text-align:center}
-.today{background:none;border:0;color:var(--accent);font:inherit;font-weight:600;font-size:13px;cursor:pointer;padding:2px 0}
-.result{background:var(--accent);color:#fff;border-radius:var(--radius);padding:18px;text-align:center;margin-top:4px}
-.result .big{font-size:26px;font-weight:700;line-height:1.2}
-.result .sub{font-size:14px;opacity:.9;margin-top:6px}
-.result.alt{background:var(--surface);color:var(--text);border:1px solid var(--border)}
-.result.alt .big{color:var(--accent)}
+@media(prefers-color-scheme:dark){:root{--bg:var(--myllm-bg,#000);--surface:var(--myllm-surface,#1c1c1e);--ink:var(--myllm-text,#f2f2f7);--muted:var(--myllm-muted,#8e8e93);--line:var(--myllm-border,#2c2c2e)}}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:var(--myllm-font,-apple-system,system-ui,sans-serif);background:var(--bg);color:var(--ink);font-size:15.5px;
+  max-width:600px;margin:0 auto;min-height:100dvh;
+  padding:calc(16px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) calc(30px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left))}
+svg.i{width:1.25em;height:1.25em;fill:currentColor;flex-shrink:0}
+button{font:inherit;color:inherit;cursor:pointer} button:active{transform:scale(.96)}
+
+.head{display:flex;align-items:center;gap:12px;margin:2px 2px 14px}
+.tile{width:44px;height:44px;border-radius:13px;font-size:19px;display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0;
+  background:linear-gradient(145deg,hsl(var(--h) 80% 54%),hsl(calc(var(--h) - 22) 72% 36%))}
+h1{font-size:22px;font-weight:800;letter-spacing:-.01em}
+.head p{font-size:13px;color:var(--muted);margin-top:1px}
+
+.seg{display:flex;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:3px;margin-bottom:12px}
+.seg button{flex:1;border:0;background:none;color:var(--muted);font-weight:700;font-size:14px;min-height:40px;border-radius:11px}
+.seg button.on{background:var(--acc);color:#fff}
+
+/* The answer leads: it sits above the inputs so the keyboard never hides it. */
+.result{border-radius:20px;padding:18px;color:#fff;text-align:center;margin-bottom:12px;min-height:132px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:linear-gradient(145deg,hsl(var(--h) 78% 50%),hsl(calc(var(--h) - 22) 72% 32%));box-shadow:0 10px 28px hsl(var(--h) 70% 34% / .25)}
+.result .kick{font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;opacity:.75;min-height:14px}
+.result .big{font-size:29px;font-weight:800;line-height:1.15;letter-spacing:-.02em;font-variant-numeric:tabular-nums;margin-top:5px;overflow-wrap:anywhere}
+.result .sub{font-size:14px;font-weight:600;opacity:.85;margin-top:6px;font-variant-numeric:tabular-nums}
+.result .sub:empty{display:none}
+.result .pill{display:inline-block;margin-top:11px;font-size:12.5px;font-weight:650;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.16);border-radius:99px;padding:6px 13px;font-variant-numeric:tabular-nums}
+.result .pill:empty{display:none}
+.result .pill b{font-weight:800}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:14px;margin-bottom:12px}
+label{display:block;font-size:12px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin:0 2px 7px}
+.lrow{display:flex;align-items:center;justify-content:space-between}
+.field+.field,.field+.opseg{margin-top:14px}
+input[type=date]{width:100%;min-height:46px;padding:11px 12px;border:1px solid var(--line);border-radius:12px;font:inherit;font-size:16px;background:var(--bg);color:var(--ink);-webkit-appearance:none;appearance:none}
+.today{border:1px solid var(--line);background:var(--bg);color:var(--acc);font-weight:700;font-size:12px;border-radius:99px;padding:5px 11px;margin:-3px 0 6px}
+.opseg{display:flex;gap:8px;margin-bottom:14px}
+.opseg button{flex:1;border:1px solid var(--line);background:var(--bg);border-radius:12px;min-height:46px;font-weight:700;font-size:15.5px;display:flex;align-items:center;justify-content:center;gap:7px}
+.opseg button.on{background:var(--acc);color:#fff;border-color:var(--acc)}
+.amts{display:grid;grid-template-columns:1fr 1fr;gap:12px 10px}
+.step{display:flex;align-items:stretch;border:1px solid var(--line);border-radius:12px;background:var(--bg);overflow:hidden}
+.step button{width:40px;min-height:46px;border:0;background:none;color:var(--acc);font-size:15px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.step input{flex:1;min-width:0;width:100%;border:0;background:none;color:var(--ink);font:inherit;font-size:17px;font-weight:700;text-align:center;font-variant-numeric:tabular-nums;outline:none;-moz-appearance:textfield;appearance:textfield}
+.step input::-webkit-outer-spin-button,.step input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
 .rowdates{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.hint{color:var(--muted);font-size:12px;line-height:1.5;margin-top:16px}
+.rowdates .field+.field{margin-top:0}
+.hint{color:var(--muted);font-size:12.5px;line-height:1.5;padding:4px 6px 0}
+
+@media(max-width:350px){.rowdates{grid-template-columns:1fr}.rowdates .field+.field{margin-top:14px}.result .big{font-size:25px}}
+@media(min-width:768px){body{max-width:760px}.amts{grid-template-columns:repeat(4,1fr)}}
+@media(max-height:520px) and (min-width:600px){ /* phone on its side: answer left, inputs right */
+  .split{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:12px;align-items:start}
+  .split .result{position:sticky;top:12px;margin-bottom:0}
+  body{max-width:none}
+}
+@media(prefers-reduced-motion:reduce){button:active{transform:none}}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <div class="seg"><button id="tabAdd" class="on">Add / Subtract</button><button id="tabDiff">Difference</button></div>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-cal" viewBox="0 0 24 24"><path d="M7 2a1 1 0 0 0-1 1v1H5a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3h14a3 3 0 0 0 3-3V7a3 3 0 0 0-3-3h-1V3a1 1 0 0 0-2 0v1H8V3a1 1 0 0 0-1-1zM4 10h16v9a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 4a1 1 0 0 0-1 1v6H5a1 1 0 0 0 0 2h6v6a1 1 0 0 0 2 0v-6h6a1 1 0 0 0 0-2h-6V5a1 1 0 0 0-1-1z"/></symbol>
+  <symbol id="i-minus" viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="2" rx="1"/></symbol>
+</defs></svg>
 
-  <div id="addView">
-    <div class="field"><label>Start date</label><input type="date" id="start"><button class="today" data-for="start">Today</button></div>
-    <div class="opseg"><button id="opAdd" class="on">＋ Add</button><button id="opSub">－ Subtract</button></div>
-    <div class="amts">
-      <div class="amt"><label>Years</label><input type="number" id="y" inputmode="numeric" min="0" value="0"></div>
-      <div class="amt"><label>Months</label><input type="number" id="mo" inputmode="numeric" min="0" value="0"></div>
-      <div class="amt"><label>Weeks</label><input type="number" id="w" inputmode="numeric" min="0" value="0"></div>
-      <div class="amt"><label>Days</label><input type="number" id="da" inputmode="numeric" min="0" value="0"></div>
-    </div>
-    <div class="result" id="addResult"><div class="big">—</div><div class="sub"></div></div>
-  </div>
-
-  <div id="diffView" style="display:none">
-    <div class="rowdates">
-      <div class="field"><label>From</label><input type="date" id="from"><button class="today" data-for="from">Today</button></div>
-      <div class="field"><label>To</label><input type="date" id="to"><button class="today" data-for="to">Today</button></div>
-    </div>
-    <div class="result alt" id="diffResult"><div class="big">—</div><div class="sub"></div></div>
-    <div class="result alt" id="diffTotals" style="margin-top:10px;padding:13px"><div class="sub" style="opacity:1"></div></div>
-  </div>
-
-  <p class="hint">Months and years are calendar-aware: adding a month lands on the same day next month (clamped to the last day for short months). Difference shows the gap in calendar years, months and days.</p>
+<div class="head">
+  <div class="tile"><svg class="i"><use href="#i-cal"/></svg></div>
+  <div><h1>Date Calculator</h1><p>Add, subtract &amp; compare dates</p></div>
 </div>
+
+<div class="seg"><button id="tabAdd" class="on">Add / Subtract</button><button id="tabDiff">Difference</button></div>
+
+<div id="addView" class="split">
+  <div class="result" id="addResult"><div class="kick"></div><div class="big">—</div><div class="sub"></div></div>
+  <div class="card">
+    <div class="field"><div class="lrow"><label for="start">Start date</label><button class="today" data-for="start">Today</button></div><input type="date" id="start"></div>
+    <div class="opseg"><button id="opAdd" class="on"><svg class="i"><use href="#i-plus"/></svg>Add</button><button id="opSub"><svg class="i"><use href="#i-minus"/></svg>Subtract</button></div>
+    <div class="amts">
+      <div class="amt"><label for="y">Years</label><div class="step"><button data-step="-1" data-for="y" aria-label="Fewer years"><svg class="i"><use href="#i-minus"/></svg></button><input type="number" id="y" inputmode="numeric" min="0" value="0"><button data-step="1" data-for="y" aria-label="More years"><svg class="i"><use href="#i-plus"/></svg></button></div></div>
+      <div class="amt"><label for="mo">Months</label><div class="step"><button data-step="-1" data-for="mo" aria-label="Fewer months"><svg class="i"><use href="#i-minus"/></svg></button><input type="number" id="mo" inputmode="numeric" min="0" value="0"><button data-step="1" data-for="mo" aria-label="More months"><svg class="i"><use href="#i-plus"/></svg></button></div></div>
+      <div class="amt"><label for="w">Weeks</label><div class="step"><button data-step="-1" data-for="w" aria-label="Fewer weeks"><svg class="i"><use href="#i-minus"/></svg></button><input type="number" id="w" inputmode="numeric" min="0" value="0"><button data-step="1" data-for="w" aria-label="More weeks"><svg class="i"><use href="#i-plus"/></svg></button></div></div>
+      <div class="amt"><label for="da">Days</label><div class="step"><button data-step="-1" data-for="da" aria-label="Fewer days"><svg class="i"><use href="#i-minus"/></svg></button><input type="number" id="da" inputmode="numeric" min="0" value="0"><button data-step="1" data-for="da" aria-label="More days"><svg class="i"><use href="#i-plus"/></svg></button></div></div>
+    </div>
+  </div>
+</div>
+
+<div id="diffView" class="split" style="display:none">
+  <div class="result" id="diffResult"><div class="kick">Between</div><div class="big">—</div><div class="sub"></div><div class="pill" id="diffTotals"></div></div>
+  <div class="card">
+    <div class="rowdates">
+      <div class="field"><div class="lrow"><label for="from">From</label><button class="today" data-for="from">Today</button></div><input type="date" id="from"></div>
+      <div class="field"><div class="lrow"><label for="to">To</label><button class="today" data-for="to">Today</button></div><input type="date" id="to"></div>
+    </div>
+  </div>
+</div>
+
+<p class="hint">Months and years are calendar-aware: adding a month lands on the same day next month (clamped to the last day for short months). Difference shows the gap in calendar years, months and days.</p>
 
 <script>
 var op=1; // +1 add, -1 subtract
@@ -77,11 +119,13 @@ function haptic(k){if(window.myllmHaptic)try{myllmHaptic(k)}catch(e){}}
 function todayStr(){var d=new Date();return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())}
 function pad(n){return (n<10?'0':'')+n}
 function parse(v){if(!v)return null;var p=v.split('-');return new Date(+p[0],+p[1]-1,+p[2],12,0,0)}
-function fmt(d){return new Intl.DateTimeFormat([],{weekday:'long',day:'numeric',month:'long',year:'numeric'}).format(d)}
+function fmtDay(d){return new Intl.DateTimeFormat([],{weekday:'long'}).format(d)}
+function fmtDate(d){return new Intl.DateTimeFormat([],{day:'numeric',month:'long',year:'numeric'}).format(d)}
 function num(id){var n=parseInt($(id).value);return isNaN(n)||n<0?0:n}
+function show(R,kick,big,sub){R.querySelector('.kick').textContent=kick;R.querySelector('.big').textContent=big;R.querySelector('.sub').textContent=sub}
 
 function calcAdd(){
-  var s=parse($('start').value);if(!s){$('addResult').querySelector('.big').textContent='Pick a start date';$('addResult').querySelector('.sub').textContent='';return}
+  var s=parse($('start').value);if(!s){show($('addResult'),'','Pick a start date','');return}
   var y=num('y'),mo=num('mo'),w=num('w'),da=num('da');
   var Y=s.getFullYear()+op*y, M=s.getMonth()+op*mo;
   var d=new Date(Y,M,1,12);
@@ -89,32 +133,30 @@ function calcAdd(){
   d.setDate(Math.min(s.getDate(),last));
   d.setDate(d.getDate()+op*(w*7+da));
   var totalDays=Math.round((d-s)/86400000);
-  $('addResult').querySelector('.big').textContent=fmt(d);
-  var rel=totalDays===0?'same day':(Math.abs(totalDays)+' day'+(Math.abs(totalDays)===1?'':'s')+(totalDays>0?' later':' earlier'));
-  $('addResult').querySelector('.sub').textContent=rel;
+  var rel=totalDays===0?'same day':(Math.abs(totalDays).toLocaleString()+' day'+(Math.abs(totalDays)===1?'':'s')+(totalDays>0?' later':' earlier'));
+  show($('addResult'),fmtDay(d),fmtDate(d),rel);
 }
 
 function calcDiff(){
   var a=parse($('from').value),b=parse($('to').value);
   var R=$('diffResult'),T=$('diffTotals');
-  if(!a||!b){R.querySelector('.big').textContent='Pick both dates';R.querySelector('.sub').textContent='';T.querySelector('.sub').textContent='';return}
+  if(!a||!b){show(R,'Between','Pick both dates','');T.textContent='';return}
   var sign=a<=b?1:-1, A=sign>0?a:b, B=sign>0?b:a;
   var y=B.getFullYear()-A.getFullYear(), m=B.getMonth()-A.getMonth(), d=B.getDate()-A.getDate();
   if(d<0){m--;d+=new Date(B.getFullYear(),B.getMonth(),0).getDate()}
   if(m<0){y--;m+=12}
   var parts=[];if(y)parts.push(y+' year'+(y===1?'':'s'));if(m)parts.push(m+' month'+(m===1?'':'s'));if(d)parts.push(d+' day'+(d===1?'':'s'));
   var total=Math.round((B-A)/86400000);
-  R.querySelector('.big').textContent= total===0?'Same day':parts.join(', ');
-  R.querySelector('.sub').textContent= total===0?'':(sign<0?'(From is after To)':'');
+  show(R,'Between', total===0?'Same day':parts.join(', '), total===0?'':(sign<0?'(From is after To)':''));
   var wk=Math.floor(total/7),rem=total%7;
-  T.querySelector('.sub').innerHTML='<b style="color:var(--accent)">'+total.toLocaleString()+'</b> total days &nbsp;·&nbsp; '+wk+' week'+(wk===1?'':'s')+(rem?(' '+rem+'d'):'');
+  T.innerHTML='<b>'+total.toLocaleString()+'</b> total days &nbsp;·&nbsp; '+wk.toLocaleString()+' week'+(wk===1?'':'s')+(rem?(' '+rem+'d'):'');
 }
 
 $('tabAdd').onclick=function(){sw(true)};
 $('tabDiff').onclick=function(){sw(false)};
 function sw(add){
   $('tabAdd').classList.toggle('on',add);$('tabDiff').classList.toggle('on',!add);
-  $('addView').style.display=add?'block':'none';$('diffView').style.display=add?'none':'block';haptic('selection');
+  $('addView').style.display=add?'':'none';$('diffView').style.display=add?'none':'';haptic('selection');
 }
 $('opAdd').onclick=function(){op=1;$('opAdd').classList.add('on');$('opSub').classList.remove('on');calcAdd();haptic('selection')};
 $('opSub').onclick=function(){op=-1;$('opSub').classList.add('on');$('opAdd').classList.remove('on');calcAdd();haptic('selection')};
@@ -122,6 +164,9 @@ $('opSub').onclick=function(){op=-1;$('opSub').classList.add('on');$('opAdd').cl
 ['start','y','mo','w','da'].forEach(function(id){$(id).addEventListener('input',calcAdd)});
 ['from','to'].forEach(function(id){$(id).addEventListener('input',calcDiff)});
 Array.prototype.forEach.call(document.querySelectorAll('.today'),function(b){b.onclick=function(){$(b.getAttribute('data-for')).value=todayStr();haptic('selection');calcAdd();calcDiff()}});
+// Steppers: the same numbers, without raising the keyboard.
+Array.prototype.forEach.call(document.querySelectorAll('.step button'),function(b){b.onclick=function(){
+  var id=b.getAttribute('data-for');$(id).value=Math.max(0,num(id)+(+b.getAttribute('data-step')));haptic('selection');calcAdd()}});
 
 // init
 $('start').value=todayStr();$('from').value=todayStr();$('to').value=todayStr();

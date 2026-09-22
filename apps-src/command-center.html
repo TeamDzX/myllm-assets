@@ -8,15 +8,21 @@
 <title>Command Center</title>
 <style>
   :root{--build-id:"761922ee1c"; color-scheme:light dark; }
+  /* Dark fallbacks for builds that do not supply the theme. :where() carries no
+     specificity, so MyLLM's own :root values always win where they exist. */
+  @media (prefers-color-scheme:dark){ :where(:root){ --myllm-bg:#000; --myllm-surface:#1c1c1e; --myllm-text:#f2f2f7; --myllm-muted:#98989f; --myllm-border:#2c2c2e; } }
   *{ margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
   body{ font-family:var(--myllm-font,-apple-system,system-ui,sans-serif);
     background:var(--myllm-bg,#f2f2f7); color:var(--myllm-text,#111);
     max-width:680px; margin:0 auto; min-height:100dvh;
     padding:12px 12px calc(20px + env(safe-area-inset-bottom)); }
+/* phone on its side: keep clear of the notch and the rounded corners */
+body{padding-left:max(12px,env(safe-area-inset-left));padding-right:max(12px,env(safe-area-inset-right))}
   .top{ display:flex; align-items:center; gap:10px; margin:2px 2px 12px; }
   .top h1{ font-size:20px; font-weight:800; flex:1; display:flex; align-items:center; gap:8px; }
   .ib{ border:0; background:var(--myllm-surface,#fff); color:var(--myllm-text,#111);
     width:38px; height:38px; border-radius:12px; font-size:17px; display:flex; align-items:center; justify-content:center; }
+  .ib svg{ width:19px; height:19px; fill:none; stroke:currentColor; stroke-width:1.9; stroke-linecap:round; stroke-linejoin:round; }
   .ib:active{ transform:scale(.94); }
 
   .summary{ display:flex; gap:8px; margin-bottom:12px; }
@@ -42,7 +48,7 @@
   .metric b{ font-weight:750; } .metric .k{ color:var(--myllm-muted,#8a8a8e); }
   .errs{ margin-top:8px; }
   .errs div{ font-size:12px; color:#ff3b30; padding:2px 0 2px 16px; position:relative; }
-  .errs div::before{ content:"⚠"; position:absolute; left:0; }
+  .errs div::before{ content:"⚠\FE0E"; position:absolute; left:0; }
 
   .empty{ text-align:center; color:var(--myllm-muted,#8a8a8e); padding:40px 16px; }
   .empty .big{ font-size:40px; margin-bottom:10px; }
@@ -89,11 +95,11 @@
 
 <div class="top">
   <h1>🛰️ Command Center</h1>
-  <button class="ib" onclick="openMonitors()" aria-label="Monitors">🌐</button>
-  <button class="ib" onclick="openHistory()" aria-label="History">🕘</button>
+  <button class="ib" onclick="openMonitors()" aria-label="Monitors"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="3.8" ry="9"/><path d="M3 12h18"/></svg></button>
+  <button class="ib" onclick="openHistory()" aria-label="History"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.2 2"/></svg></button>
   <button class="ib" onclick="openHelp()" aria-label="How to report">?</button>
-  <button class="ib" onclick="syncNow(true)" aria-label="Sync">⟳</button>
-  <button class="ib" onclick="openSettings()" aria-label="Settings">⚙</button>
+  <button class="ib" onclick="syncNow(true)" aria-label="Sync"><svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.6-5.9"/><path d="M20 4v5h-5"/></svg></button>
+  <button class="ib" onclick="openSettings()" aria-label="Settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="6.6"/><circle cx="12" cy="12" r="9" stroke-width="3" stroke-dasharray="3.2 3.87"/></svg></button>
 </div>
 
 <div class="summary" id="summary" style="display:none">
@@ -248,8 +254,9 @@
 
 <script>
 /* ---------- bridges (feature-detected, degrade gracefully) ---------- */
-var files = window.myllmFiles || null;
-var store = window.myllmStorage || {getItem:function(){return Promise.resolve(null)},setItem:function(){return Promise.resolve()}};
+/* Looked up on each use, never kept: MyLLM can add its bridges after this script has run. */
+Object.defineProperty(window, "files", { configurable:true, get:function(){ return window.myllmFiles || null; } });
+var store = {getItem:function(k){var s=window.myllmStorage;return s?s.getItem(k):Promise.resolve(null)},setItem:function(k,v){var s=window.myllmStorage;return s?s.setItem(k,v):Promise.resolve()}};
 var haptic = function(k){ if(window.myllmHaptic) try{ myllmHaptic(k||'light'); }catch(e){} };
 function el(id){ return document.getElementById(id); }
 function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }

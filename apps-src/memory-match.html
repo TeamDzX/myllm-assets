@@ -3,40 +3,254 @@
   Memory Match — MyLLMos™ App Gallery · © 2026 Opticell Ltd
   Source-available: read it, remix it, run your version inside MyLLM™.
   Not for redistribution or republication. Terms: https://github.com/TeamDzX/myllm-assets/blob/main/LICENSE
---><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+--><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Memory Match</title>
 <style>:root{--build-id:"d93fa440ac";color-scheme:light dark}
-body{font-family:-apple-system,system-ui,sans-serif;margin:0;padding:18px;background:#f2f2f7;color:#111;text-align:center}
-@media(prefers-color-scheme:dark){body{background:#000;color:#eee}.tile{background:#1c1c1e}}
-h1{font-size:22px;margin:4px 0 2px}
-#stats{font-size:14px;opacity:.65;margin-bottom:14px;min-height:18px}
-#grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;max-width:340px;margin:0 auto}
-.tile{aspect-ratio:1;border-radius:12px;background:#fff;border:0;font-size:30px;box-shadow:0 1px 3px rgba(0,0,0,.12)}
-.tile span{opacity:0}
-.tile.up span,.tile.got span{opacity:1}
-.tile.got{background:#bf5af2;box-shadow:none}
-button.new{margin-top:16px;border:0;border-radius:10px;padding:11px 26px;font-size:15px;font-weight:600;background:#bf5af2;color:#fff}
-@media(min-width:768px){#grid{max-width:480px;gap:12px}.tile{font-size:42px}h1{font-size:28px}}
+  @property --h{ syntax:'<number>'; inherits:true; initial-value:286; }
+  *{ margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body{ height:100%; }
+  body{ font-family:var(--myllm-font,-apple-system,system-ui,sans-serif); background:#0b0b10; color:#fff; overflow:hidden;
+    touch-action:none; overscroll-behavior:none; -webkit-user-select:none; user-select:none; }
+  button{ font:inherit; color:inherit; }
+
+  /* The stage: a hue-tinted backdrop in two layers, dark and light, so the
+     change between them can fade. */
+  .stage{ position:fixed; inset:0; --h:286; transition:--h 1.4s ease; color:#fff; }
+  .bg{ position:absolute; inset:0; transition:opacity .6s ease; }
+  .bg.d{ background:radial-gradient(120% 90% at 20% 10%, hsl(var(--h) 70% 34%), transparent 60%),
+      radial-gradient(120% 90% at 85% 95%, hsl(calc(var(--h) + 60) 65% 26%), transparent 62%), #0b0b10; }
+  .bg.l{ opacity:0; background:radial-gradient(120% 90% at 20% 0%, hsl(var(--h) 80% 84%), transparent 60%),
+      radial-gradient(120% 90% at 85% 100%, hsl(calc(var(--h) + 60) 78% 86%), transparent 62%), #f4f4f8; }
+  .lite{ color:#15151a; } .lite .bg.l{ opacity:1; } .lite .bg.d{ opacity:0; }
+
+  .col{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center;
+    padding:calc(12px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) calc(14px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left)); }
+  .top{ width:100%; max-width:560px; height:44px; display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
+  .lbl{ font-size:11px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; opacity:.62; white-space:nowrap; }
+  .glass{ border:1px solid rgba(255,255,255,.16); background:rgba(255,255,255,.12); color:inherit;
+    -webkit-backdrop-filter:blur(18px); backdrop-filter:blur(18px); }
+  .lite .glass{ border-color:rgba(0,0,0,.09); background:rgba(255,255,255,.62); }
+  svg{ width:1.25em; height:1.25em; fill:currentColor; flex-shrink:0; }
+  .rnd{ width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:15px; flex-shrink:0; }
+  .pill{ min-width:44px; height:44px; border-radius:99px; padding:0 16px; display:flex; align-items:center; justify-content:center; gap:6px;
+    font-size:19px; font-weight:800; font-variant-numeric:tabular-nums; flex-shrink:0; }
+  .pill small{ font-size:10px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; opacity:.6; }
+  .pill.bump{ animation:bump .28s ease; }
+  @keyframes bump{ 40%{ transform:scale(1.18); } }
+  .top .hide{ visibility:hidden; }
+
+  .wrap{ flex:1; width:100%; min-height:0; position:relative; display:flex; align-items:center; justify-content:center; margin:10px 0 34px; }
+  .foot{ position:absolute; left:0; right:0; top:calc(50% + var(--bh,320px) / 2 + 12px); text-align:center; font-size:12px; font-weight:600;
+    letter-spacing:.02em; opacity:.55; font-variant-numeric:tabular-nums; white-space:nowrap; }
+
+  /* One glass card over the board: title, paused, finished. */
+  .sheet{ position:absolute; left:50%; top:50%; width:max(232px, min(300px, calc(var(--b,320px) - 44px))); transform:translate(-50%,-50%) scale(.96);
+    opacity:0; pointer-events:none; border-radius:26px; padding:22px 20px 18px; text-align:center; box-shadow:0 24px 60px rgba(0,0,0,.35); z-index:5;
+    transition:opacity .28s ease, transform .28s cubic-bezier(.2,.8,.2,1); }
+  .sheet.on{ opacity:1; transform:translate(-50%,-50%); pointer-events:auto; }
+  /* whatever sits under an open card steps back, so the card reads */
+  .under{ transition:opacity .3s, filter .3s; } .veil .under{ opacity:.28; filter:blur(2px); }
+  .lite .sheet{ box-shadow:0 22px 50px rgba(20,20,40,.18); }
+  .sheet h1{ font-size:30px; font-weight:800; letter-spacing:-.02em; }
+  .sheet p{ font-size:13.5px; line-height:1.4; opacity:.72; margin-top:6px; }
+  .kick{ font-size:11px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; opacity:.62; }
+  .big{ font-size:64px; font-weight:800; line-height:1.05; letter-spacing:-.03em; font-variant-numeric:tabular-nums; margin-top:4px; }
+  .big small{ display:block; font-size:12px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; opacity:.6; margin-top:2px; }
+  .best{ display:inline-block; margin-top:10px; font-size:11.5px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; opacity:.7; }
+  .best.new{ opacity:1; color:#0b0b10; background:#ffd60a; border-radius:99px; padding:5px 11px; }
+  .sheet .act{ width:100%; height:50px; border-radius:99px; margin-top:10px; font-size:16px; font-weight:750;
+    display:flex; align-items:center; justify-content:center; gap:8px; }
+  .sheet .act:first-of-type{ margin-top:18px; }
+  .sheet .act:active, .rnd:active{ transform:scale(.96); }
+  .pri{ border:none; background:#fff; color:#0b0b10; box-shadow:0 10px 30px rgba(0,0,0,.3); }
+  .lite .pri{ background:#15151a; color:#fff; box-shadow:0 10px 26px rgba(20,20,40,.22); }
+
+  @media (max-height:430px){
+    .sheet{ padding:14px 18px 14px; } .sheet h1{ font-size:24px; } .big{ font-size:42px; }
+    .sheet .act{ height:44px; margin-top:8px; } .sheet .act:first-of-type{ margin-top:12px; } .sheet p{ display:none; }
+    .wrap{ margin:6px 0 26px; }
+  }
+  @media (prefers-reduced-motion:reduce){ .pill.bump{ animation:none; } .stage{ transition:none; } }
+
+  .grid{ position:relative; z-index:1; width:var(--b,320px); height:var(--b,320px); display:grid; grid-template-columns:repeat(4,1fr); gap:calc(var(--b,320px) * .03); flex-shrink:0; perspective:900px; }
+  /* A <button> can't hold a 3D scene in WebKit, so the flip lives on an inner div. */
+  .card{ position:relative; border:none; background:none; border-radius:18%; cursor:pointer; padding:0; }
+  .card .in{ position:absolute; inset:0; border-radius:inherit; transform-style:preserve-3d; -webkit-transform-style:preserve-3d;
+    transition:transform .42s cubic-bezier(.2,.8,.2,1); }
+  .card.up .in, .card.got .in{ transform:rotateY(180deg); }
+  .card i{ position:absolute; inset:0; border-radius:inherit; display:flex; align-items:center; justify-content:center; font-style:normal;
+    backface-visibility:hidden; -webkit-backface-visibility:hidden; }
+  /* back: glass with a small hue lozenge */
+  .card .bk{ border:1px solid rgba(255,255,255,.16); background:rgba(255,255,255,.1); box-shadow:0 8px 22px rgba(0,0,0,.28); }
+  .card .bk::after{ content:""; width:26%; height:26%; border-radius:30%; transform:rotate(45deg);
+    background:linear-gradient(145deg, hsl(var(--h) 85% 72%), hsl(calc(var(--h) + 40) 80% 52%)); opacity:.85; }
+  .lite .card .bk{ border-color:rgba(0,0,0,.07); background:rgba(255,255,255,.66); box-shadow:0 8px 20px rgba(20,20,40,.12); }
+  .card .ft{ transform:rotateY(180deg); background:#fff; font-size:calc(var(--b,320px) * .115); box-shadow:0 8px 22px rgba(0,0,0,.3); }
+  .lite .card .ft{ box-shadow:0 8px 20px rgba(20,20,40,.14), 0 0 0 1px rgba(0,0,0,.05); }
+  .card.got .ft{ background:linear-gradient(145deg, hsl(var(--h) 90% 88%), hsl(calc(var(--h) + 40) 85% 78%));
+    box-shadow:0 0 0 2px hsl(var(--h) 85% 70%), 0 0 26px hsl(var(--h) 90% 62% / .55); }
+  .card.cheer .in{ animation:cheer .5s ease; }
+  @keyframes cheer{ 0%,100%{ transform:rotateY(180deg) scale(1); } 45%{ transform:rotateY(180deg) scale(1.1); } }
+  .card:active{ filter:brightness(1.12); }
+  @media (prefers-reduced-motion:reduce){ .card .in{ transition:none; } .card.cheer .in{ animation:none; } }
 </style></head><body>
-<h1>🃏 Memory Match</h1>
-<div id="stats"></div>
-<div id="grid"></div>
-<button class="new" onclick="deal()">New game</button>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5.5v13a1 1 0 0 0 1.52.85l10.4-6.5a1 1 0 0 0 0-1.7L9.52 4.65A1 1 0 0 0 8 5.5z"/></symbol>
+  <symbol id="i-pause" viewBox="0 0 24 24"><rect x="6" y="5" width="4.2" height="14" rx="1.4"/><rect x="13.8" y="5" width="4.2" height="14" rx="1.4"/></symbol>
+  <symbol id="i-again" viewBox="0 0 24 24"><path d="M12 5V2.6a.6.6 0 0 0-1-.45L7.2 5.55a.6.6 0 0 0 0 .9L11 9.85a.6.6 0 0 0 1-.45V7a5.5 5.5 0 1 1-5.5 5.5 1 1 0 0 0-2 0A7.5 7.5 0 1 0 12 5z"/></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24"><path d="M6.4 5a1 1 0 0 0-1.4 1.4L10.6 12 5 17.6A1 1 0 0 0 6.4 19l5.6-5.6 5.6 5.6a1 1 0 0 0 1.4-1.4L13.4 12 19 6.4A1 1 0 0 0 17.6 5L12 10.6z"/></symbol>
+</defs></svg>
+<div class="stage" id="stage">
+  <div class="bg d"></div><div class="bg l"></div>
+  <div class="col">
+    <div class="top">
+      <button class="glass rnd hide" id="bHome" aria-label="Close"><svg><use href="#i-close"/></svg></button>
+      <div class="lbl">Memory Match</div>
+      <div class="glass pill hide" id="pill" aria-label="Moves"><span id="mv">0</span><small>moves</small></div>
+    </div>
+    <div class="wrap" id="wrap">
+      <div class="grid under" id="grid"></div>
+      <div class="sheet glass" id="sheet"></div>
+      <div class="foot" id="foot"></div>
+    </div>
+  </div>
+</div>
 <script>
-var store=window.myllmStorage||{getItem:function(){return Promise.resolve(null)},setItem:function(){return Promise.resolve()}};
-var EMOJI=['🍎','🚀','🐙','🌵','🎲','🔑','🐝','🌙'];
-var deck=[],up=[],moves=0,found=0,best=null,lock=false;
-function deal(){deck=EMOJI.concat(EMOJI).sort(function(){return Math.random()-.5});
-up=[];moves=0;found=0;lock=false;var g=document.getElementById('grid');g.innerHTML='';
-deck.forEach(function(e,i){var b=document.createElement('button');b.className='tile';
-b.innerHTML='<span>'+e+'</span>';b.onclick=function(){flip(i,b)};g.appendChild(b)});stats()}
-function stats(){document.getElementById('stats').textContent='Moves: '+moves+(best?' · Best: '+best:'')}
-function flip(i,b){if(lock||b.classList.contains('up')||b.classList.contains('got'))return;
-b.classList.add('up');up.push({i:i,b:b});
-if(up.length===2){moves++;stats();lock=true;
-setTimeout(function(){var a=up[0],c=up[1];
-if(deck[a.i]===deck[c.i]){a.b.classList.add('got');c.b.classList.add('got');found++;
-if(found===8){if(!best||moves<best){best=moves;store.setItem('best',String(best))}
-document.getElementById('stats').textContent='🎉 Solved in '+moves+' moves'+(best===moves?' — new best!':' · Best: '+best)}}
-a.b.classList.remove('up');c.b.classList.remove('up');up=[];lock=false},650)}}
-store.getItem('best').then(function(v){if(v)best=parseInt(v,10)||null;deal()});
+function el(i){ return document.getElementById(i); }
+/* Bridges are looked up when used, never kept: MyLLM can add them after this
+   script has run. */
+function haptic(s){ if (window.myllmHaptic) try { myllmHaptic(s); } catch(_){} }
+function load(k){ var s = window.myllmStorage; return s ? s.getItem(k).catch(function(){ return null; }) : Promise.resolve(null); }
+function keep(k, v){ var s = window.myllmStorage; if (s) try { s.setItem(k, v).catch(function(){}); } catch(_){} }
+var calm = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/* ---------- look ---------- */
+function isLight(){ return !(window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches); }
+/* A game in progress takes the whole display and goes dark. Where MyLLM can't
+   hide its own title bar, a dark stage under a white bar looks cut in half —
+   so in light mode, without myllmImmersive, the stage stays light. */
+function syncLook(){
+  el("stage").classList.toggle("lite", isLight() && !(state !== "home" && window.myllmImmersive));
+  if (typeof onLook === "function") onLook();
+}
+function syncChrome(){
+  if (!window.myllmImmersive) return;
+  try { myllmImmersive(state !== "home", {keepAwake:false}).catch(function(){}); } catch(_){}
+}
+function setHue(h){ el("stage").style.setProperty("--h", String(h)); }
+function showSheet(html, acts){
+  var s = el("sheet"); s.innerHTML = html;
+  Object.keys(acts).forEach(function(id){ var b = el(id); if (b) b.onclick = acts[id]; });
+  s.classList.add("on"); el("stage").classList.add("veil");
+}
+function hideSheet(){ el("sheet").classList.remove("on"); el("stage").classList.remove("veil"); }
+function bump(id){ var p = el(id); p.classList.remove("bump"); void p.offsetWidth; p.classList.add("bump"); }
+document.addEventListener("visibilitychange", function(){
+  if (document.hidden){ if (typeof onHide === "function") onHide(); return; }
+  if (state !== "home") syncChrome();          /* MyLLM puts its bars back when the app is left */
+});
+if (window.matchMedia){
+  var mq = matchMedia("(prefers-color-scheme: dark)");
+  if (mq.addEventListener) mq.addEventListener("change", syncLook); else if (mq.addListener) mq.addListener(syncLook);
+}
+
+var state = "home";                 /* home · play · done */
+var EMOJI = ['🍎','🚀','🐙','🌵','🎲','🔑','🐝','🌙'];
+var deck = [], up = [], moves = 0, found = 0, best = null, newBest = false, lock = false, live = false;
+var t0 = 0, held = 0, ticker = 0;   /* the clock is for show: the record is still fewest moves */
+
+function clock(ms){ var s = Math.floor(ms / 1000), m = Math.floor(s / 60); s %= 60; return m + ":" + (s < 10 ? "0" : "") + s; }
+function elapsed(){ return held + (state === "play" ? performance.now() - t0 : 0); }
+
+/* ---------- the glass card ---------- */
+function bestLine(){
+  if (newBest) return '<div class="best new">New best</div>';
+  return best ? '<div class="best">Best ' + best + ' moves</div>' : "";
+}
+function card(kind){
+  var h;
+  if (kind === "home") h = '<h1>Memory Match</h1><p>Flip two tiles at a time and find all eight pairs in as few moves as you can.</p>' + bestLine() +
+    (live ? '<button class="act pri" id="sA"><svg><use href="#i-play"/></svg>Resume</button><button class="act glass" id="sB">New game</button>'
+          : '<button class="act pri" id="sB"><svg><use href="#i-play"/></svg>Play</button>');
+  else h = '<div class="kick">Solved in ' + clock(held) + '</div><div class="big">' + moves + '<small>moves</small></div>' + bestLine() +
+    '<button class="act pri" id="sB"><svg><use href="#i-again"/></svg>Play again</button><button class="act glass" id="sC">Done</button>';
+  showSheet(h, {sA:resume, sB:begin, sC:goHome});
+}
+function hud(){
+  el("bHome").classList.toggle("hide", state !== "play");
+  el("pill").classList.toggle("hide", state === "home");
+  el("mv").textContent = moves;
+  el("foot").textContent = state === "home" ? "" : clock(elapsed()) + " · " + found + " of 8 pairs" + (best ? " · best " + best : "");
+}
+
+/* ---------- game (rules unchanged) ---------- */
+function deal(){
+  deck = EMOJI.concat(EMOJI).sort(function(){ return Math.random() - .5; });
+  up = []; moves = 0; found = 0; lock = false;
+  var g = el("grid"); g.innerHTML = "";
+  deck.forEach(function(e, i){
+    var b = document.createElement("button"); b.className = "card"; b.setAttribute("aria-label", "Tile " + (i + 1));
+    b.innerHTML = '<span class="in"><i class="bk"></i><i class="ft">' + e + '</i></span>';
+    b.onclick = function(){ flip(i, b); }; g.appendChild(b);
+  });
+}
+function flip(i, b){
+  if (state !== "play" || lock || b.classList.contains("up") || b.classList.contains("got")) return;
+  b.classList.add("up"); up.push({i:i, b:b}); haptic("selection");
+  if (up.length === 2){
+    moves++; hud(); bump("pill"); lock = true;
+    setTimeout(function(){
+      var a = up[0], c = up[1];
+      if (deck[a.i] === deck[c.i]){
+        a.b.classList.add("got"); c.b.classList.add("got"); found++; haptic("light");
+        if (!calm){ a.b.classList.add("cheer"); c.b.classList.add("cheer"); }
+        setHue(286 + found * 9);
+        if (found === 8) solved();
+      }
+      a.b.classList.remove("up"); c.b.classList.remove("up"); up = []; lock = false; hud();
+    }, 650);
+  }
+}
+function solved(){
+  held = elapsed(); state = "done"; live = false; clearInterval(ticker);
+  if (!best || moves < best){ best = moves; newBest = true; keep("best", String(best)); }
+  haptic("success");
+  setTimeout(function(){ if (state === "done"){ card("done"); hud(); } }, 700);
+}
+function begin(){
+  haptic("medium");
+  deal(); newBest = false; live = true; state = "play"; held = 0; t0 = performance.now(); setHue(286);
+  clearInterval(ticker); ticker = setInterval(hud, 1000);
+  hideSheet(); hud(); syncLook(); syncChrome();
+}
+function resume(){
+  haptic("light"); state = "play"; t0 = performance.now();
+  clearInterval(ticker); ticker = setInterval(hud, 1000);
+  hideSheet(); hud(); syncLook(); syncChrome();
+}
+function goHome(){
+  haptic("light");
+  if (state === "play") held = elapsed();
+  clearInterval(ticker); state = "home";
+  if (!live){ newBest = false; deal(); setHue(286); }
+  card("home"); hud(); syncLook(); syncChrome();
+}
+function onHide(){ if (state === "play") goHome(); }     /* the clock doesn't run while you're away */
+
+function fit(){
+  var w = el("wrap"), B = Math.max(180, Math.floor(Math.min(w.clientWidth, w.clientHeight, 520)));
+  var st = el("stage").style; st.setProperty("--b", B + "px"); st.setProperty("--bh", B + "px");
+}
+el("bHome").onclick = goHome;
+document.addEventListener("keydown", function(e){
+  if (e.key === "Escape" && state === "play") goHome();
+  else if (e.key === "Enter" && state !== "play") (live ? resume : begin)();
+});
+window.addEventListener("resize", fit);
+
+/* ---------- boot ---------- */
+fit(); deal(); syncLook(); card("home"); hud();
+load("best").then(function(v){
+  if (v){ best = parseInt(v, 10) || null; if (state === "home") card("home"); hud(); }
+});
 </script></body></html>

@@ -10,6 +10,9 @@
 <title>Channels</title>
 <style>
   :root { color-scheme: light dark; }
+  /* Dark fallbacks for builds that do not supply the theme. :where() carries no
+     specificity, so MyLLM's own :root values always win where they exist. */
+  @media (prefers-color-scheme:dark){ :where(:root){ --myllm-bg:#000; --myllm-surface:#1c1c1e; --myllm-text:#f2f2f7; --myllm-muted:#98989f; --myllm-border:#2c2c2e; } }
   * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
   body{
     font-family:var(--myllm-font,-apple-system,system-ui,sans-serif);
@@ -18,6 +21,8 @@
     max-width:640px; margin:0 auto; min-height:100dvh;
     padding-bottom:calc(30px + env(safe-area-inset-bottom));
   }
+  /* phone on its side: keep clear of the notch and the rounded corners */
+  body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right)}
   .hero{
     height:104px; position:relative; display:flex; align-items:flex-end; padding:12px 16px;
     background:linear-gradient(135deg,#3b1d5e 0%,#6d28d9 45%,#0ea5e9 100%);
@@ -48,9 +53,10 @@
   .vid .thumbwrap{ position:relative; border-radius:14px; overflow:hidden; background:#d9d9de; aspect-ratio:16/9; }
   .vid img{ width:100%; height:100%; object-fit:cover; display:block; }
   .vid .play{
-    position:absolute; right:9px; bottom:9px; background:rgba(0,0,0,.62); color:#fff;
+    position:absolute; right:9px; bottom:9px; background:rgba(0,0,0,.62); color:#fff; display:inline-flex; align-items:center; gap:4px;
     font-size:11.5px; font-weight:700; padding:3px 8px; border-radius:999px; backdrop-filter:blur(6px);
   }
+  .vid .play svg{ width:11px; height:11px; fill:currentColor; }
   .vid h3{ font-size:15px; font-weight:700; line-height:1.32; margin:8px 2px 2px; }
   .vid .by{ font-size:12.5px; color:var(--myllm-muted,#8a8a8e); margin:0 2px; display:flex; align-items:center; gap:6px; }
   .dot{ width:7px; height:7px; border-radius:50%; background:var(--myllm-accent,#0a84ff); flex-shrink:0; }
@@ -140,8 +146,9 @@
 </div>
 
 <script>
-var store = window.myllmStorage || {getItem:function(){return Promise.resolve(null)}, setItem:function(){return Promise.resolve()}};
-var NET = window.myllmFetch || null;
+/* Looked up on each use, never kept: MyLLM can add its bridges after this script has run. */
+var store={getItem:function(k){var s=window.myllmStorage;return s?s.getItem(k):Promise.resolve(null)},setItem:function(k,v){var s=window.myllmStorage;return s?s.setItem(k,v):Promise.resolve()}};
+function NET(u, o){ return window.myllmFetch(u, o); }     /* looked up on each call, never kept */
 function haptic(k){ if(window.myllmHaptic){ try{ myllmHaptic(k||'light'); }catch(_){} } }
 function el(id){ return document.getElementById(id); }
 function esc(s){ return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
@@ -203,7 +210,7 @@ function videoId(link){
 }
 
 function netGuard(target){
-  if (!NET){
+  if (!window.myllmFetch){
     el(target).innerHTML = '<p class="status">This app needs internet access for apps — turn it on in MyLLMos settings, then reopen.</p>';
     return false;
   }
@@ -347,7 +354,7 @@ function followSuggested(i){
   var s = SUGGESTED[i];
   if (!s) return;
   el("addmsg").innerHTML = "";
-  if (!NET){ el("addmsg").innerHTML = '<div class="errline">Needs internet access for apps (MyLLMos settings).</div>'; return; }
+  if (!window.myllmFetch){ el("addmsg").innerHTML = '<div class="errline">Needs internet access for apps (MyLLMos settings).</div>'; return; }
   haptic("light");
   var btn = el("sug" + i);
   if (btn){ btn.disabled = true; btn.textContent = "Adding…"; }
@@ -360,7 +367,7 @@ function followSuggested(i){
 function addChannel(){
   var raw = el("url").value;
   el("addmsg").innerHTML = "";
-  if (!NET){ el("addmsg").innerHTML = '<div class="errline">Needs internet access for apps (MyLLMos settings).</div>'; return; }
+  if (!window.myllmFetch){ el("addmsg").innerHTML = '<div class="errline">Needs internet access for apps (MyLLMos settings).</div>'; return; }
   haptic("light");
   el("addBtn").disabled = true;
   el("addBtn").textContent = "Looking…";
@@ -445,7 +452,7 @@ function renderFeed(){
       return '<a class="vid" href="' + esc(v.link) + '" target="_blank" rel="noopener">' +
         '<div class="thumbwrap">' +
           (v.thumb ? '<img src="' + esc(v.thumb) + '" alt="" loading="lazy">' : '') +
-          '<span class="play">Watch ↗</span>' +
+          '<span class="play">Watch ↗\uFE0E</span>' +
         '</div>' +
         '<h3>' + esc(v.title) + '</h3>' +
         '<div class="by">' + meta + '</div>' +
@@ -455,11 +462,11 @@ function renderFeed(){
     return '<div class="vid">' +
       '<div class="thumbwrap" id="tw' + i + '" onclick="play(' + i + ',\'' + esc(vid) + '\')">' +
         (v.thumb ? '<img src="' + esc(v.thumb) + '" alt="" loading="lazy">' : '') +
-        '<span class="play">▶ Play</span>' +
+        '<span class="play"><svg viewBox="0 0 24 24"><path d="M8 5.5v13a1 1 0 0 0 1.52.85l10.4-6.5a1 1 0 0 0 0-1.7L9.52 4.65A1 1 0 0 0 8 5.5z"/></svg>Play</span>' +
       '</div>' +
       '<h3>' + esc(v.title) + '</h3>' +
       '<div class="by">' + meta +
-        '<a class="out" href="' + esc(v.link) + '" target="_blank" rel="noopener">open ↗</a>' +
+        '<a class="out" href="' + esc(v.link) + '" target="_blank" rel="noopener">open ↗\uFE0E</a>' +
       '</div>' +
     '</div>';
   }).join("");
@@ -500,8 +507,10 @@ function refresh(manual){
     all.sort(function(a, b){ return b.at - a.at; });
     var fresh = all.slice(0, 60);
 
-    if (!fresh.length && !items.length){
-      el("feed").innerHTML = '<p class="status">Couldn\'t reach those channels just now — tap Refresh to try again.</p>';
+    if (!fresh.length){
+      /* Every feed failed. Keep the cached list on screen (and in the cache)
+         rather than replacing it with nothing. */
+      if (!items.length) el("feed").innerHTML = '<p class="status">Couldn\'t reach those channels just now — tap Refresh to try again.</p>';
       return;
     }
     items = fresh;
