@@ -3,72 +3,194 @@
   Pop-It — MyLLMos™ App Gallery · © 2026 Opticell Ltd
   Source-available: read it, remix it, run your version inside MyLLM™.
   Not for redistribution or republication. Terms: https://github.com/TeamDzX/myllm-assets/blob/main/LICENSE
---><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<style>:root{--build-id:"de23f27ef9";color-scheme:light dark;--bg:#f2f2f7;--fg:#111}
-@media(prefers-color-scheme:dark){:root{--bg:#000;--fg:#eee}}
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
-html,body{margin:0;height:100%;overflow:hidden}
-body{font-family:-apple-system,system-ui,sans-serif;background:var(--bg);color:var(--fg);display:flex;flex-direction:column;align-items:center;padding:calc(12px + env(safe-area-inset-top)) 12px calc(12px + env(safe-area-inset-bottom));touch-action:manipulation}
-h1{font-size:19px;margin:0 0 2px;font-weight:700}
-.sub{font-size:12px;opacity:.55;margin-bottom:8px}
-.grid{flex:1;display:grid;gap:9px;width:100%;max-width:460px;align-content:center}
-.b{aspect-ratio:1;border-radius:50%;border:none;position:relative;transition:transform .07s,box-shadow .07s,filter .07s;
-  box-shadow:inset 0 -6px 10px rgba(0,0,0,.28),inset 0 4px 8px rgba(255,255,255,.55),0 2px 4px rgba(0,0,0,.15)}
-.b.popped{transform:scale(.9);filter:brightness(.82);
-  box-shadow:inset 0 6px 12px rgba(0,0,0,.45),inset 0 -3px 6px rgba(255,255,255,.18)}
-.bar{display:flex;gap:10px;margin-top:10px}
-.bar button{border:0;background:rgba(127,127,127,.16);color:var(--fg);border-radius:15px;padding:11px 20px;font-size:15px;font-weight:600}
-.bar button:active{background:rgba(127,127,127,.32)}
-.count{font-size:12px;opacity:.5;margin-top:6px;min-height:14px}
+--><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Pop-It</title>
+<style>:root{--build-id:"de23f27ef9";color-scheme:light dark}
+  *{ margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; -webkit-user-select:none; user-select:none; }
+  html,body{ height:100%; overflow:hidden; }
+  body{ font-family:var(--myllm-font,-apple-system,system-ui,sans-serif); background:#0b0b10; color:#fff; touch-action:manipulation; overscroll-behavior:none; }
+
+  /* The stage: a soft pink backdrop, kept quiet so the rainbow board is the
+     only bright thing on screen. Two layers, dark and light, cross-faded slowly. */
+  .stage{ position:fixed; inset:0; --h:330; color:#fff; }
+  .bg{ position:absolute; inset:0; transition:opacity 1.4s ease; }
+  .bg.d{ background:radial-gradient(120% 90% at 20% 10%, hsl(var(--h) 46% 26%), transparent 60%),
+      radial-gradient(120% 90% at 85% 95%, hsl(calc(var(--h) - 60) 42% 22%), transparent 62%), #0b0b10; }
+  .bg.l{ opacity:0; background:radial-gradient(120% 90% at 20% 0%, hsl(var(--h) 78% 90%), transparent 60%),
+      radial-gradient(120% 90% at 85% 100%, hsl(calc(var(--h) - 60) 70% 91%), transparent 62%), #f6f4f8; }
+  .lite{ color:#15151a; } .lite .bg.l{ opacity:1; } .lite .bg.d{ opacity:0; }
+
+  .col{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center;
+    padding:calc(12px + env(safe-area-inset-top)) calc(14px + env(safe-area-inset-right)) calc(16px + env(safe-area-inset-bottom)) calc(14px + env(safe-area-inset-left)); }
+  .top{ width:100%; max-width:560px; height:58px; display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
+  .top .side{ width:112px; display:flex; }
+  .lbl{ font-size:11px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; opacity:.62; }
+  .glass{ border:1px solid rgba(255,255,255,.16); background:rgba(255,255,255,.12); color:inherit;
+    -webkit-backdrop-filter:blur(18px); backdrop-filter:blur(18px); }
+  .lite .glass{ border-color:rgba(0,0,0,.09); background:rgba(255,255,255,.66); }
+  svg{ width:1.25em; height:1.25em; fill:currentColor; flex-shrink:0; }
+  button{ font:inherit; }
+  .big{ height:58px; min-width:58px; border-radius:99px; padding:0 24px; font-size:16.5px; font-weight:750;
+    display:inline-flex; align-items:center; justify-content:center; gap:9px; }
+  .big:active{ transform:scale(.96); }
+  #bDone{ opacity:0; pointer-events:none; transition:opacity .8s ease; }
+  .open #bDone{ opacity:1; pointer-events:auto; }
+
+  /* The board sits in a glass tray, like the real toy. */
+  .mid{ flex:1; min-height:0; width:100%; display:flex; align-items:center; justify-content:center; margin:6px 0; }
+  .tray{ border-radius:calc(var(--cell,48px) * .62); padding:var(--pad,14px); box-shadow:0 24px 60px rgba(0,0,0,.35); transition:box-shadow 1.4s ease; }
+  .lite .tray{ box-shadow:0 22px 50px rgba(20,20,40,.14); }
+  .grid{ display:grid; gap:var(--gap,9px); grid-template-columns:repeat(6, var(--cell,48px)); grid-auto-rows:var(--cell,48px); }
+  .wide .grid{ grid-auto-flow:column; grid-template-columns:none; grid-template-rows:repeat(6, var(--cell,48px)); grid-auto-columns:var(--cell,48px); }  /* the same board on its side: nothing is lost on rotation */
+  .b{ border-radius:50%; border:none; position:relative; transition:transform .07s, box-shadow .07s, filter .07s;
+    box-shadow:inset 0 -6px 10px rgba(0,0,0,.28), inset 0 4px 8px rgba(255,255,255,.55), 0 2px 4px rgba(0,0,0,.15); }
+  .b.popped{ transform:scale(.9); filter:brightness(.82);
+    box-shadow:inset 0 6px 12px rgba(0,0,0,.45), inset 0 -3px 6px rgba(255,255,255,.18); }
+  .b.squish{ animation:squish .2s ease; }
+  @keyframes squish{ 0%{ transform:scale(1); } 45%{ transform:scale(.8); } 100%{ transform:scale(.9); } }
+  .b.spring{ animation:spring .24s ease; }
+  @keyframes spring{ 0%{ transform:scale(.9); } 55%{ transform:scale(1.05); } 100%{ transform:scale(1); } }
+
+  .foot{ width:100%; max-width:560px; flex-shrink:0; display:flex; flex-direction:column; align-items:center; gap:10px; }
+  .count{ font-size:14px; font-weight:650; opacity:.66; min-height:20px; text-align:center; font-variant-numeric:tabular-nums; }
+
+  @media (max-height:520px){                       /* phone on its side: Done left, board middle, Flip right */
+    .col{ flex-direction:row; align-items:stretch; padding-top:calc(10px + env(safe-area-inset-top)); padding-bottom:calc(10px + env(safe-area-inset-bottom)); }
+    .top{ width:118px; height:auto; flex-direction:column; align-items:flex-start; justify-content:flex-start; gap:12px; }
+    .top .side:last-child{ display:none; } .top .side{ order:2; } .lbl{ order:1; margin-top:6px; }
+    .mid{ margin:0 8px; } .foot{ width:140px; justify-content:center; } .big{ padding:0 18px; font-size:15.5px; }
+  }
+  @media (prefers-reduced-motion:reduce){ .b.squish, .b.spring{ animation:none; } }
+  @media (max-width:340px){ .top .side{ width:60px; } #bDone{ padding:0; width:56px; } #bDone span{ display:none; } }
 </style></head><body>
-<h1>🟣 Pop-It</h1>
-<div class="sub">Tap the bubbles to pop them — pop, pop, pop!</div>
-<div class="grid" id="grid"></div>
-<div class="count" id="count"></div>
-<div class="bar"><button onclick="flip()">Flip / Reset</button></div>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-close" viewBox="0 0 24 24"><path d="M6.4 5a1 1 0 0 0-1.4 1.4L10.6 12 5 17.6A1 1 0 0 0 6.4 19l5.6-5.6 5.6 5.6a1 1 0 0 0 1.4-1.4L13.4 12 19 6.4A1 1 0 0 0 17.6 5L12 10.6z"/></symbol>
+  <symbol id="i-flip" viewBox="0 0 24 24"><path d="M12 5V2.6a.6.6 0 0 0-1-.45L7.2 5.55a.6.6 0 0 0 0 .9L11 9.85a.6.6 0 0 0 1-.45V7a5.5 5.5 0 1 1-5.5 5.5 1 1 0 0 0-2 0A7.5 7.5 0 1 0 12 5z"/></symbol>
+</defs></svg>
+
+<div class="stage" id="stage">
+  <div class="bg d"></div><div class="bg l"></div>
+  <div class="col">
+    <div class="top">
+      <div class="side"><button class="glass big" id="bDone" aria-label="Close full screen"><svg><use href="#i-close"/></svg><span>Done</span></button></div>
+      <div class="lbl">Pop-It</div>
+      <div class="side"></div>
+    </div>
+    <div class="mid" id="mid"><div class="tray glass"><div class="grid" id="grid"></div></div></div>
+    <div class="foot">
+      <div class="count" id="count">Tap the bubbles to pop them — pop, pop, pop!</div>
+      <button class="glass big" id="bFlip"><svg><use href="#i-flip"/></svg>Flip / Reset</button>
+    </div>
+  </div>
+</div>
+
 <script>
-function haptic(s){if(window.myllmHaptic)try{myllmHaptic(s)}catch(e){}}
-var COLS=6,ROWS=8,N=COLS*ROWS,state=new Array(N).fill(false);
-var HUES=[0,30,55,120,200,260,300];
-var grid=document.getElementById('grid'),countEl=document.getElementById('count');
-grid.style.gridTemplateColumns='repeat('+COLS+',1fr)';
-var actx=null;
-function pop(rising){
-  try{
-    if(!actx){var AC=window.AudioContext||window.webkitAudioContext;actx=new AC()}
-    if(actx.state==='suspended')actx.resume();
-    var o=actx.createOscillator(),g=actx.createGain(),t=actx.currentTime;
-    o.type='triangle';
-    var f=rising?420:260;o.frequency.setValueAtTime(f,t);o.frequency.exponentialRampToValueAtTime(f*(rising?2.4:0.6),t+0.07);
-    g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(0.28,t+0.005);g.gain.exponentialRampToValueAtTime(0.0001,t+0.13);
-    o.connect(g);g.connect(actx.destination);o.start(t);o.stop(t+0.15);
-  }catch(e){}
+function el(i){ return document.getElementById(i); }
+/* Bridges are looked up when used, never kept: MyLLM can add them after this
+   script has run. */
+function haptic(s){ if (window.myllmHaptic) try { myllmHaptic(s); } catch(e){} }
+
+var COLS = 6, ROWS = 8, N = COLS * ROWS, state = new Array(N).fill(false);
+var HUES = [0,30,55,120,200,260,300];
+var INTRO = "Tap the bubbles to pop them — pop, pop, pop!";
+var grid = el("grid"), countEl = el("count"), cells = [], boardOpen = false;
+
+/* ---------- look ---------- */
+function isLight(){ return !(window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches); }
+/* Once you start popping, the board takes the whole display. Where MyLLM can't
+   hide its own title bar, a dark stage under a white bar looks cut in half —
+   so in light mode, without myllmImmersive, the stage stays light. */
+function syncLook(){
+  var s = el("stage");
+  s.classList.toggle("lite", isLight() && !(boardOpen && window.myllmImmersive));
+  s.classList.toggle("open", boardOpen);
 }
+function syncChrome(){
+  if (!window.myllmImmersive) return;
+  try { myllmImmersive(boardOpen, {keepAwake:false}).catch(function(){}); } catch(_){}   /* busy hands keep the screen awake by themselves */
+}
+function openBoard(){ if (boardOpen) return; boardOpen = true; syncLook(); syncChrome(); }
+function closeBoard(){ if (!boardOpen) return; haptic("light"); boardOpen = false; syncLook(); syncChrome(); }
+
+/* The bubbles are sized from the room there is: six across and eight down on
+   a phone held upright, the same board turned on its side when it's wider. */
+function fit(){
+  var m = el("mid"), w = m.clientWidth, h = m.clientHeight, wide = w > h * 1.1;
+  var cols = wide ? ROWS : COLS, rows = wide ? COLS : ROWS;
+  var cell = Math.min(w / (cols + (cols - 1) * .19 + .6), h / (rows + (rows - 1) * .19 + .6), 92);
+  cell = Math.max(28, Math.floor(cell));
+  var s = el("stage").style;
+  s.setProperty("--cell", cell + "px"); s.setProperty("--gap", Math.round(cell * .19) + "px"); s.setProperty("--pad", Math.round(cell * .3) + "px");
+  el("stage").classList.toggle("wide", wide);
+}
+
+/* ---------- sound ---------- */
+var actx = null;
+function pop(rising){
+  try {
+    if (!actx){ var AC = window.AudioContext || window.webkitAudioContext; actx = new AC(); }
+    if (actx.state === "suspended") actx.resume();
+    var o = actx.createOscillator(), g = actx.createGain(), t = actx.currentTime;
+    o.type = "triangle";
+    var f = rising ? 420 : 260; o.frequency.setValueAtTime(f, t); o.frequency.exponentialRampToValueAtTime(f * (rising ? 2.4 : 0.6), t + 0.07);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.28, t + 0.005); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.13);
+    o.connect(g); g.connect(actx.destination); o.start(t); o.stop(t + 0.15);
+  } catch(e){}
+}
+
+/* ---------- board ---------- */
 function build(){
-  grid.innerHTML='';
-  for(var i=0;i<N;i++){
+  grid.innerHTML = ""; cells = [];
+  for (var i = 0; i < N; i++){
     (function(i){
-      var b=document.createElement('button');b.className='b'+(state[i]?' popped':'');
-      var hue=HUES[Math.floor(i/COLS)%HUES.length];
-      b.style.background='radial-gradient(circle at 38% 32%,hsl('+hue+',90%,72%),hsl('+hue+',75%,52%))';
-      b.addEventListener('touchstart',function(e){e.preventDefault();tap(i,b)},{passive:false});
-      b.addEventListener('mousedown',function(e){e.preventDefault();tap(i,b)});
-      grid.appendChild(b);
+      var b = document.createElement("button"); b.className = "b" + (state[i] ? " popped" : "");
+      b.setAttribute("aria-label", "Bubble"); b.setAttribute("aria-pressed", state[i]);
+      var hue = HUES[Math.floor(i / COLS) % HUES.length];
+      b.style.background = "radial-gradient(circle at 38% 32%,hsl(" + hue + ",90%,72%),hsl(" + hue + ",75%,52%))";
+      b.addEventListener("touchstart", function(e){ e.preventDefault(); tap(i, b); }, {passive:false});
+      b.addEventListener("mousedown", function(e){ e.preventDefault(); tap(i, b); });
+      grid.appendChild(b); cells.push(b);
     })(i);
   }
 }
-function tap(i,b){
-  state[i]=!state[i];
-  b.classList.toggle('popped',state[i]);
+function tap(i, b){
+  openBoard();
+  state[i] = !state[i];
+  b.classList.remove("squish", "spring"); void b.offsetWidth;
+  b.classList.toggle("popped", state[i]); b.classList.add(state[i] ? "squish" : "spring");
+  b.setAttribute("aria-pressed", state[i]);
   pop(!state[i]);
-  haptic(state[i]?'medium':'light');
-  var done=state.filter(Boolean).length;
-  countEl.textContent=done+' / '+N+' popped';
-  if(done===N){haptic('success');countEl.textContent='All popped! 🎉  Tap Flip to play again';}
+  haptic(state[i] ? "medium" : "light");
+  var done = state.filter(Boolean).length;
+  countEl.textContent = done + " / " + N + " popped";
+  if (done === N){ haptic("success"); countEl.textContent = "All popped! Tap Flip to play again"; }
 }
 function flip(){
-  for(var i=0;i<N;i++)state[i]=false;
-  build();countEl.textContent='';haptic('selection');
+  haptic("selection");
+  for (var i = 0; i < N; i++){
+    if (!state[i]) continue;
+    state[i] = false;
+    (function(i){                                  /* the bubbles come back row by row, not all at once */
+      setTimeout(function(){
+        if (state[i]) return;                      /* popped again in the meantime */
+        cells[i].classList.remove("popped", "squish", "spring"); cells[i].setAttribute("aria-pressed", false);
+      }, Math.floor(i / COLS) * 40);
+    })(i);
+  }
+  countEl.textContent = "";
 }
-build();
+el("bFlip").onclick = flip;
+el("bDone").onclick = closeBoard;
+
+window.addEventListener("resize", fit);
+document.addEventListener("visibilitychange", function(){
+  if (!document.hidden && boardOpen) syncChrome();     /* MyLLM puts its bars back when the app is left */
+});
+if (window.matchMedia){
+  var mq = matchMedia("(prefers-color-scheme: dark)");
+  if (mq.addEventListener) mq.addEventListener("change", syncLook); else if (mq.addListener) mq.addListener(syncLook);
+}
+
+/* ---------- boot ---------- */
+syncLook(); fit(); build();
 </script></body></html>

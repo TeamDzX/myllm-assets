@@ -3,71 +3,147 @@
   Block Drop — MyLLMos™ App Gallery · © 2026 Opticell Ltd
   Source-available: read it, remix it, run your version inside MyLLM™.
   Not for redistribution or republication. Terms: https://github.com/TeamDzX/myllm-assets/blob/main/LICENSE
---><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<style>:root{--build-id:"be1c2d013d";color-scheme:light dark;--accent:#5e5ce6;--bg:#f2f2f7;--fg:#111;--cell:#d8d8df;--grid:rgba(0,0,0,.06);--btn:#fff;--btnfg:#111}
-@media(prefers-color-scheme:dark){:root{--bg:#000;--fg:#eee;--cell:#1c1c1e;--grid:rgba(255,255,255,.05);--btn:#1c1c1e;--btnfg:#eee}}
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
-html,body{margin:0;height:100%}
-body{font-family:-apple-system,system-ui,sans-serif;background:var(--bg);color:var(--fg);display:flex;flex-direction:column;align-items:center;padding:8px 10px calc(8px + env(safe-area-inset-bottom));touch-action:none;overflow:hidden}
-.top{width:100%;max-width:520px;display:flex;align-items:flex-end;justify-content:space-between;gap:10px;margin-bottom:6px}
-.title{font-size:18px;font-weight:700}
-.stats{display:flex;gap:14px;font-size:12px}
-.stats b{display:block;font-size:16px;font-weight:700}
-.stats span{opacity:.55}
-.stage{position:relative;display:flex;gap:10px;align-items:flex-start}
-canvas{background:var(--cell);border-radius:10px;box-shadow:0 1px 4px rgba(0,0,0,.12);display:block}
-.side{display:flex;flex-direction:column;gap:8px}
-.side .lbl{font-size:10px;opacity:.5;text-transform:uppercase;letter-spacing:.5px;text-align:center}
-#next{background:var(--cell);border-radius:8px}
-.pad{width:100%;max-width:520px;margin-top:10px;display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-.pad button{border:0;background:var(--btn);color:var(--btnfg);border-radius:14px;height:54px;font-size:22px;font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.1);touch-action:none}
-.pad button:active{background:var(--accent);color:#fff}
-.pad .wide{grid-column:span 1}
-.row2{width:100%;max-width:520px;margin-top:8px;display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.row2 button{border:0;background:var(--btn);color:var(--btnfg);border-radius:14px;height:48px;font-size:15px;font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.1)}
-.row2 button:active{background:var(--accent);color:#fff}
-.overlay{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:rgba(0,0,0,.55);border-radius:10px;color:#fff;text-align:center;padding:18px}
-.overlay.show{display:flex}
-.overlay h2{margin:0;font-size:22px}
-.overlay p{margin:0;font-size:14px;opacity:.85}
-.overlay button{border:0;background:var(--accent);color:#fff;border-radius:14px;padding:12px 26px;font-size:16px;font-weight:700}
+--><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Block Drop</title>
+<style>:root{--build-id:"be1c2d013d";color-scheme:light dark}
+  *{ margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; -webkit-user-select:none; user-select:none; }
+  html,body{ height:100%; }
+  body{ font-family:var(--myllm-font,-apple-system,system-ui,sans-serif); background:#0b0b10; color:#fff; overflow:hidden;
+    touch-action:none; overscroll-behavior:none; }
+
+  /* The stage: a hue-tinted backdrop in two layers, dark and light, so the
+     change between them can fade. */
+  .stage{ position:fixed; inset:0; --h:190; color:#fff; }
+  .bg{ position:absolute; inset:0; transition:opacity .6s ease; }
+  .bg.d{ background:radial-gradient(120% 90% at 20% 10%, hsl(var(--h) 72% 30%), transparent 60%),
+      radial-gradient(120% 90% at 85% 95%, hsl(calc(var(--h) + 60) 62% 28%), transparent 62%), #0b0b10; }
+  .bg.l{ opacity:0; background:radial-gradient(120% 90% at 20% 0%, hsl(var(--h) 80% 84%), transparent 60%),
+      radial-gradient(120% 90% at 85% 100%, hsl(calc(var(--h) + 60) 78% 87%), transparent 62%), #f4f4f8; }
+  .lite{ color:#15151a; } .lite .bg.l{ opacity:1; } .lite .bg.d{ opacity:0; }
+
+  .col{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center;
+    padding:calc(10px + env(safe-area-inset-top)) calc(14px + env(safe-area-inset-right)) calc(12px + env(safe-area-inset-bottom)) calc(14px + env(safe-area-inset-left)); }
+  .top{ width:100%; max-width:560px; height:44px; display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
+  .lbl{ font-size:11px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; opacity:.62; }
+  .glass{ border:1px solid rgba(255,255,255,.16); background:rgba(255,255,255,.12); color:inherit;
+    -webkit-backdrop-filter:blur(18px); backdrop-filter:blur(18px); }
+  .lite .glass{ border-color:rgba(0,0,0,.09); background:rgba(255,255,255,.62); }
+  svg{ width:1.25em; height:1.25em; fill:currentColor; flex-shrink:0; }
+  button{ font:inherit; }
+  .rnd{ width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:15px; }
+  .pill{ min-width:44px; height:44px; border-radius:99px; padding:0 16px; display:flex; align-items:center; justify-content:center;
+    font-size:19px; font-weight:800; font-variant-numeric:tabular-nums; }
+  .top .hide{ visibility:hidden; }
+
+  /* Board in the middle; move with the left thumb, turn and drop with the right. */
+  .mid{ flex:1; min-height:0; width:100%; max-width:560px; margin-top:8px; display:grid; gap:12px;
+    grid-template-columns:1fr 1fr; grid-template-rows:minmax(0,1fr) auto; grid-template-areas:"field field" "ctlL ctlR"; }
+  .field{ grid-area:field; min-height:0; min-width:0; position:relative; display:flex; align-items:center; justify-content:center; gap:10px; overflow:hidden; }
+  .field > canvas, .field > .side{ transition:filter .3s, opacity .3s; }
+  .veil .field > canvas, .veil .field > .side{ filter:blur(9px) saturate(.7); opacity:.55; pointer-events:none; }   /* a paused board can't be studied */
+  canvas#board{ display:block; border-radius:14px; background:rgba(10,10,16,.42); border:1px solid rgba(255,255,255,.12);
+    box-shadow:0 18px 44px rgba(0,0,0,.4); touch-action:none; transition:background .6s; }
+  .lite canvas#board{ background:rgba(255,255,255,.6); border-color:rgba(0,0,0,.06); box-shadow:0 18px 40px rgba(20,20,40,.14); }
+  .side{ width:76px; flex-shrink:0; align-self:stretch; display:flex; flex-direction:column; gap:8px; justify-content:center; }
+  .stat{ border-radius:14px; padding:8px 4px; text-align:center; }
+  .stat span{ display:block; font-size:9.5px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; opacity:.6; }
+  .stat b{ display:block; font-size:17px; font-weight:800; font-variant-numeric:tabular-nums; margin-top:2px; }
+  .stat canvas{ display:block; width:56px; height:56px; margin:4px auto 0; }
+
+  .ctl{ display:grid; gap:8px; transition:opacity .3s; }
+  .ctlL{ grid-area:ctlL; grid-template-columns:1fr 1fr; } .ctlR{ grid-area:ctlR; grid-template-columns:1fr; }
+  .ctl button{ height:58px; border-radius:18px; font-size:22px; font-weight:700; display:flex; align-items:center; justify-content:center; gap:7px; touch-action:none; }
+  .ctl button.low{ height:50px; font-size:14px; } .ctl button.low svg{ font-size:17px; }
+  .ctlL .low{ grid-column:span 2; }
+  .ctl button:active{ background:#fff; color:#0b0b10; border-color:#fff; }
+  .lite .ctl button:active{ background:#15151a; color:#fff; border-color:#15151a; }
+  .idle .ctl{ opacity:.4; }
+
+  /* One glass card over the board: title, paused, game over. */
+  .sheet{ position:absolute; left:50%; top:50%; z-index:5; width:min(300px, calc(100% - 12px)); transform:translate(-50%,-50%) scale(.96); opacity:0; pointer-events:none;
+    border-radius:26px; padding:22px 20px 18px; text-align:center; box-shadow:0 24px 60px rgba(0,0,0,.35);
+    transition:opacity .28s ease, transform .28s cubic-bezier(.2,.8,.2,1); }
+  .sheet.on{ opacity:1; transform:translate(-50%,-50%); pointer-events:auto; }
+  .lite .sheet{ box-shadow:0 22px 50px rgba(20,20,40,.18); }
+  .sheet h1{ font-size:30px; font-weight:800; letter-spacing:-.02em; }
+  .sheet p{ font-size:13.5px; line-height:1.4; opacity:.72; margin-top:6px; }
+  .kick{ font-size:11px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; opacity:.62; }
+  .big{ font-size:56px; font-weight:800; line-height:1.05; letter-spacing:-.03em; font-variant-numeric:tabular-nums; margin-top:4px; }
+  .best{ display:inline-block; margin-top:10px; font-size:11.5px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; opacity:.7; }
+  .best.new{ opacity:1; color:#0b0b10; background:#ffd60a; border-radius:99px; padding:5px 11px; }
+  .sheet button{ width:100%; height:50px; border-radius:99px; margin-top:10px; font-size:16px; font-weight:750;
+    display:flex; align-items:center; justify-content:center; gap:8px; }
+  .sheet button:first-of-type{ margin-top:18px; }
+  .sheet button:active, .rnd:active{ transform:scale(.96); }
+  .pri{ border:none; background:#fff; color:#0b0b10; box-shadow:0 10px 30px rgba(0,0,0,.3); }
+  .lite .pri{ background:#15151a; color:#fff; box-shadow:0 10px 26px rgba(20,20,40,.22); }
+
+  @media (max-height:520px){                       /* phone on its side: a thumb cluster either side of the board */
+    .mid{ max-width:none; grid-template-columns:minmax(120px,170px) minmax(0,1fr) minmax(120px,170px); grid-template-rows:minmax(0,1fr);
+      grid-template-areas:"ctlL field ctlR"; align-items:center; }
+    .field{ align-self:stretch; } .ctl button{ height:62px; } .ctl button.low{ height:52px; }
+    .side{ width:70px; gap:5px; } .stat{ padding:5px 3px; border-radius:12px; } .stat b{ font-size:15px; } .stat canvas{ width:44px; height:44px; }
+    .sheet{ padding:14px 18px; } .sheet h1{ font-size:24px; } .big{ font-size:38px; } .sheet p{ display:none; }
+    .sheet button{ height:44px; margin-top:8px; } .sheet button:first-of-type{ margin-top:12px; }
+  }
+  @media (max-height:600px) and (min-height:521px){ .ctl button{ height:50px; } .ctl button.low{ height:44px; } }
 </style></head><body>
-<div class="top">
-  <div class="title">🧩 Block Drop</div>
-  <div class="stats">
-    <div><span>Score</span><b id="score">0</b></div>
-    <div><span>Lines</span><b id="lines">0</b></div>
-    <div><span>Level</span><b id="level">1</b></div>
-    <div><span>Best</span><b id="best">0</b></div>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5.5v13a1 1 0 0 0 1.52.85l10.4-6.5a1 1 0 0 0 0-1.7L9.52 4.65A1 1 0 0 0 8 5.5z"/></symbol>
+  <symbol id="i-pause" viewBox="0 0 24 24"><rect x="6" y="5" width="4.2" height="14" rx="1.4"/><rect x="13.8" y="5" width="4.2" height="14" rx="1.4"/></symbol>
+  <symbol id="i-again" viewBox="0 0 24 24"><path d="M12 5V2.6a.6.6 0 0 0-1-.45L7.2 5.55a.6.6 0 0 0 0 .9L11 9.85a.6.6 0 0 0 1-.45V7a5.5 5.5 0 1 1-5.5 5.5 1 1 0 0 0-2 0A7.5 7.5 0 1 0 12 5z"/></symbol>
+  <symbol id="i-left" viewBox="0 0 24 24"><path d="M16 5.5v13a1 1 0 0 1-1.52.85l-10.4-6.5a1 1 0 0 1 0-1.7l10.4-6.5A1 1 0 0 1 16 5.5z"/></symbol>
+  <symbol id="i-right" viewBox="0 0 24 24"><path d="M8 5.5v13a1 1 0 0 0 1.52.85l10.4-6.5a1 1 0 0 0 0-1.7L9.52 4.65A1 1 0 0 0 8 5.5z"/></symbol>
+  <symbol id="i-turn" viewBox="0 0 24 24"><path d="M12 5V2.6a.6.6 0 0 1 1-.45l3.8 3.4a.6.6 0 0 1 0 .9L13 9.85a.6.6 0 0 1-1-.45V7a5.5 5.5 0 1 0 5.5 5.5 1 1 0 0 1 2 0A7.5 7.5 0 1 1 12 5z"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24"><path d="M12 3a1.2 1.2 0 0 0-1.2 1.2v12.2l-4-4a1.2 1.2 0 0 0-1.7 1.7l6 6a1.2 1.2 0 0 0 1.7 0l6-6a1.2 1.2 0 0 0-1.7-1.7l-3.9 4V4.2A1.2 1.2 0 0 0 12 3z"/></symbol>
+  <symbol id="i-drop" viewBox="0 0 24 24"><path d="M12 2a1.2 1.2 0 0 0-1.2 1.2v9.2l-3-3a1.2 1.2 0 0 0-1.7 1.7l5 5a1.2 1.2 0 0 0 1.7 0l5-5a1.2 1.2 0 0 0-1.7-1.7l-2.9 3V3.2A1.2 1.2 0 0 0 12 2zM5.2 19.2a1.2 1.2 0 0 0 0 2.4h13.6a1.2 1.2 0 0 0 0-2.4z"/></symbol>
+</defs></svg>
+
+<div class="stage idle" id="stage">
+  <div class="bg d"></div><div class="bg l"></div>
+  <div class="col">
+    <div class="top">
+      <button class="glass rnd hide" id="bPause" aria-label="Pause"><svg><use href="#i-pause"/></svg></button>
+      <div class="lbl">Block Drop</div>
+      <div class="glass pill hide" id="score" aria-label="Score">0</div>
+    </div>
+    <div class="mid">
+      <div class="ctl ctlL">
+        <button class="glass" id="bL" aria-label="Left"><svg><use href="#i-left"/></svg></button>
+        <button class="glass" id="bR" aria-label="Right"><svg><use href="#i-right"/></svg></button>
+        <button class="glass low" id="bDown"><svg><use href="#i-down"/></svg>Soft drop</button>
+      </div>
+      <div class="field" id="field">
+        <canvas id="board"></canvas>
+        <div class="side">
+          <div class="glass stat"><span>Next</span><canvas id="next" width="64" height="64"></canvas></div>
+          <div class="glass stat"><span>Level</span><b id="level">1</b></div>
+          <div class="glass stat"><span>Lines</span><b id="lines">0</b></div>
+          <div class="glass stat"><span>Best</span><b id="best">0</b></div>
+        </div>
+        <div class="sheet glass" id="sheet"></div>
+      </div>
+      <div class="ctl ctlR">
+        <button class="glass" id="bRot" aria-label="Rotate"><svg><use href="#i-turn"/></svg></button>
+        <button class="glass low" id="bDrop"><svg><use href="#i-drop"/></svg>Hard drop</button>
+      </div>
+    </div>
   </div>
 </div>
-<div class="stage">
-  <canvas id="board"></canvas>
-  <div class="side">
-    <div class="lbl">Next</div>
-    <canvas id="next" width="64" height="64"></canvas>
-  </div>
-  <div class="overlay" id="overlay">
-    <h2 id="otitle">Block Drop</h2>
-    <p id="omsg">Stack the falling blocks, clear full rows.</p>
-    <button id="obtn" onclick="startGame()">Play</button>
-  </div>
-</div>
-<div class="pad">
-  <button id="bL" aria-label="Left">◀</button>
-  <button id="bRot" aria-label="Rotate">⟳</button>
-  <button id="bR" aria-label="Right">▶</button>
-</div>
-<div class="row2">
-  <button id="bDown">▼ Soft drop</button>
-  <button id="bDrop">⤓ Hard drop</button>
-</div>
+
 <script>
-var store=window.myllmStorage||{getItem:function(){return Promise.resolve(null)},setItem:function(){return Promise.resolve()}};
-function haptic(s){if(window.myllmHaptic)try{myllmHaptic(s)}catch(e){}}
+function el(i){ return document.getElementById(i); }
+/* Bridges are looked up when used, never kept: MyLLM can add them after this
+   script has run. */
+function haptic(s){ if (window.myllmHaptic) try { myllmHaptic(s); } catch(e){} }
+function load(k){ var s = window.myllmStorage; return s ? s.getItem(k).catch(function(){ return null; }) : Promise.resolve(null); }
+function keep(k, v){ var s = window.myllmStorage; if (s) try { s.setItem(k, v).catch(function(){}); } catch(e){} }
+
 var COLS=10,ROWS=20;
-var COLORS=[null,'#39c5e8','#f5d33b','#b66be8','#5ad15a','#f0584f','#4a7bf0','#f0942f'];
-// Tetromino matrices, indexed 1..7 = I,O,T,S,Z,J,L
+/* One cool family around the stage's hue, spread in lightness as well as hue
+   so the seven pieces stay easy to tell apart. */
+var COLORS=[null,'hsl(190,85%,58%)','hsl(165,70%,50%)','hsl(262,78%,70%)','hsl(140,60%,52%)','hsl(222,88%,66%)','hsl(205,82%,46%)','hsl(288,62%,62%)'];
+// Piece matrices, indexed 1..7
 var SHAPES={
  1:[[0,0,0,0],[1,1,1,1],[0,0,0,0],[0,0,0,0]],
  2:[[2,2],[2,2]],
@@ -76,12 +152,17 @@ var SHAPES={
  5:[[5,5,0],[0,5,5],[0,0,0]],
  6:[[6,0,0],[6,6,6],[0,0,0]],
  7:[[0,0,7],[7,7,7],[0,0,0]]};
-var board,cur,curX,curY,nextId,bag=[],score,lines,level,best=0,playing=false,over=false,dropTimer=null,cell=24;
-var bc=document.getElementById('board'),ctx=bc.getContext('2d');
-var nc=document.getElementById('next'),nctx=nc.getContext('2d');
+/* What sits behind the title card: a few settled rows, for show only. */
+var DEMO=["0000003000","6000033300","6660220557","1111220577"];
+var board,cur,curX,curY,nextId,bag=[],score=0,lines=0,level=1,best=0,bestAtStart=0,playing=false,paused=false,over=false,dropTimer=null,cell=24;
+var state="home", flash=[], flashing=false;
+var calm=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;
+var bc=el('board'),ctx=bc.getContext('2d');
+var nc=el('next'),nctx=nc.getContext('2d');
 var dpr=Math.max(1,Math.min(3,window.devicePixelRatio||1));
 
 function emptyBoard(){var b=[];for(var r=0;r<ROWS;r++){b.push(new Array(COLS).fill(0))}return b}
+function demoBoard(){var b=emptyBoard();DEMO.forEach(function(row,i){var y=ROWS-DEMO.length+i;for(var x=0;x<COLS;x++)b[y][x]=+row.charAt(x)});return b}
 function clone(m){return m.map(function(row){return row.slice()})}
 function rotateCW(m){var n=m.length,out=[];for(var x=0;x<n;x++){out.push(new Array(n).fill(0));for(var y=0;y<n;y++){out[x][n-1-y]=m[y][x]}}return out}
 
@@ -109,7 +190,8 @@ function merge(){
   }
 }
 function clearLines(){
-  var cleared=0;
+  var cleared=0,rows=[];
+  for(var f=0;f<ROWS;f++){if(board[f].every(function(v){return v}))rows.push(f)}
   for(var y=ROWS-1;y>=0;y--){
     if(board[y].every(function(v){return v})){
       board.splice(y,1);board.unshift(new Array(COLS).fill(0));cleared++;y++;
@@ -122,8 +204,10 @@ function clearLines(){
     if(nl!==level){level=nl;restartTimer()}
     haptic(cleared>=4?'success':'medium');
     updateStats();
+    if(!calm){flash.push({rows:rows,t0:performance.now()});if(!flashing){flashing=true;requestAnimationFrame(flashLoop)}}
   }
 }
+function flashLoop(){draw();if(flash.length)requestAnimationFrame(flashLoop);else flashing=false}
 function lock(){
   merge();clearLines();
   if(!over){spawn();}
@@ -162,37 +246,52 @@ function restartTimer(){
   dropTimer=setInterval(tick,ms);
 }
 
-// ---- drawing ----
-function fit(){
-  var topH=document.querySelector('.top').offsetHeight;
-  var padH=document.querySelector('.pad').offsetHeight+document.querySelector('.row2').offsetHeight;
-  var availW=Math.min(window.innerWidth,520)-20- (74); // minus side column
-  var availH=window.innerHeight-topH-padH-60;
-  cell=Math.max(12,Math.floor(Math.min(availW/COLS,availH/ROWS)));
-  bc.width=COLS*cell*dpr;bc.height=ROWS*cell*dpr;
-  bc.style.width=(COLS*cell)+'px';bc.style.height=(ROWS*cell)+'px';
-  ctx.setTransform(dpr,0,0,dpr,0,0);
+// ---- look ----
+function isLight(){return !(window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches)}
+/* A game in progress takes the whole display and goes dark. Where MyLLM can't
+   hide its own title bar, a dark stage under a white bar looks cut in half —
+   so in light mode, without myllmImmersive, the stage stays light. */
+function lite(){return isLight()&&!(state!=="home"&&window.myllmImmersive)}
+function syncLook(){
+  var s=el("stage");s.classList.toggle("lite",lite());s.classList.toggle("idle",!playing);s.classList.toggle("veil",state!=="play"||paused);
   draw();drawNext();
 }
+function syncChrome(){
+  if(!window.myllmImmersive)return;
+  try{myllmImmersive(state!=="home",{keepAwake:false}).catch(function(){})}catch(e){}
+}
+
+// ---- drawing ----
+function fit(){
+  var f=el('field'),side=document.querySelector('.side').offsetWidth+10;
+  cell=Math.max(10,Math.floor(Math.min((f.clientWidth-side)/COLS,f.clientHeight/ROWS)));
+  dpr=Math.max(1,Math.min(3,window.devicePixelRatio||1));
+  bc.width=COLS*cell*dpr;bc.height=ROWS*cell*dpr;
+  bc.style.width=(COLS*cell)+'px';bc.style.height=(ROWS*cell)+'px';
+  nc.width=nc.height=64*dpr;
+  draw();drawNext();
+}
+function rr(c,x,y,w,h,r){c.beginPath();if(c.roundRect)c.roundRect(x,y,w,h,r);else c.rect(x,y,w,h);c.fill()}
 function cellRect(cx,cy,c,a){
+  var px=cx*cell,py=cy*cell,r=Math.max(2,cell*.2);
   ctx.globalAlpha=a==null?1:a;
-  ctx.fillStyle=c;
-  var px=cx*cell,py=cy*cell;
-  ctx.fillRect(px+1,py+1,cell-2,cell-2);
+  ctx.fillStyle=c;rr(ctx,px+1,py+1,cell-2,cell-2,r);
+  if(a==null){ctx.fillStyle='rgba(255,255,255,.22)';rr(ctx,px+2.5,py+2.5,cell-5,Math.max(2,cell*0.2),r*.6);}
   ctx.globalAlpha=1;
-  ctx.fillStyle='rgba(255,255,255,.18)';
-  ctx.fillRect(px+1,py+1,cell-2,Math.max(2,cell*0.22));
 }
 function draw(){
-  ctx.clearRect(0,0,bc.width,bc.height);
+  if(!board)return;
+  var L=el("stage").classList.contains("lite");
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,COLS*cell,ROWS*cell);
   // grid
-  ctx.strokeStyle=getComputedStyle(document.body).getPropertyValue('--grid')||'rgba(0,0,0,.06)';
+  ctx.strokeStyle=L?'rgba(20,20,40,.07)':'rgba(255,255,255,.06)';
   ctx.lineWidth=1;
   for(var x=1;x<COLS;x++){ctx.beginPath();ctx.moveTo(x*cell,0);ctx.lineTo(x*cell,ROWS*cell);ctx.stroke();}
   for(var y=1;y<ROWS;y++){ctx.beginPath();ctx.moveTo(0,y*cell);ctx.lineTo(COLS*cell,y*cell);ctx.stroke();}
   // settled
   for(var r=0;r<ROWS;r++)for(var c=0;c<COLS;c++){if(board[r][c])cellRect(c,r,COLORS[board[r][c]]);}
-  if(playing&&cur){
+  if((playing||paused)&&cur){
     // ghost
     var gy=curY;while(!collide(cur,curX,gy+1))gy++;
     for(var y2=0;y2<cur.length;y2++)for(var x2=0;x2<cur[y2].length;x2++){
@@ -203,38 +302,93 @@ function draw(){
       if(cur[y3][x3]&&curY+y3>=0)cellRect(curX+x3,curY+y3,COLORS[cur[y3][x3]]);
     }
   }
+  // a cleared row leaves a brief band of light
+  var now=performance.now();
+  for(var i=flash.length-1;i>=0;i--){
+    var k=(now-flash[i].t0)/260;
+    if(k>=1){flash.splice(i,1);continue}
+    ctx.fillStyle='rgba(255,255,255,'+((1-k)*(L?.75:.5)).toFixed(3)+')';
+    flash[i].rows.forEach(function(ry){ctx.fillRect(0,ry*cell,COLS*cell,cell)});
+  }
 }
 function drawNext(){
-  nctx.clearRect(0,0,nc.width,nc.height);
-  if(!nextId)return;
+  nctx.setTransform(dpr,0,0,dpr,0,0);
+  nctx.clearRect(0,0,64,64);
+  if(!nextId||state==="home")return;
   var m=SHAPES[nextId],n=m.length,cs=Math.floor(56/n),off=(64-cs*n)/2;
+  var rows=m.filter(function(row){return row.some(function(v){return v})}).length,first=0;
+  while(first<n&&!m[first].some(function(v){return v}))first++;
+  var oy=(64-rows*cs)/2-first*cs;                 /* centre the piece itself, not its empty rows */
   for(var y=0;y<n;y++)for(var x=0;x<n;x++){
-    if(m[y][x]){nctx.fillStyle=COLORS[m[y][x]];nctx.fillRect(off+x*cs+1,off+y*cs+1,cs-2,cs-2);}
+    if(m[y][x]){nctx.fillStyle=COLORS[m[y][x]];rr(nctx,off+x*cs+1,oy+y*cs+1,cs-2,cs-2,Math.max(2,cs*.2));}
   }
 }
 function updateStats(){
-  document.getElementById('score').textContent=score;
-  document.getElementById('lines').textContent=lines;
-  document.getElementById('level').textContent=level;
-  if(score>best){best=score;document.getElementById('best').textContent=best;store.setItem('bd_best',String(best));}
+  el('score').textContent=score;
+  el('lines').textContent=lines;
+  el('level').textContent=level;
+  if(score>best){best=score;el('best').textContent=best;keep('bd_best',String(best));}
+}
+
+// ---- the glass card ----
+function bestLine(){
+  if(state==="over"&&score>0&&score>bestAtStart)return '<div class="best new">New best</div>';
+  return best?'<div class="best">Best '+best+'</div>':'';
+}
+function showSheet(kind){
+  var s=el("sheet"),h;
+  if(kind==="home")h='<h1>Block Drop</h1><p>Stack the falling blocks, clear full rows.</p>'+bestLine()+
+    '<button class="pri" id="sA"><svg><use href="#i-play"/></svg>Play</button>';
+  else if(kind==="pause")h='<div class="kick">Paused</div><div class="big">'+score+'</div>'+
+    '<button class="pri" id="sA"><svg><use href="#i-play"/></svg>Resume</button><button class="glass" id="sB">End game</button>';
+  else h='<div class="kick">Game over</div><div class="big">'+score+'</div><p>'+lines+(lines===1?' line':' lines')+' · level '+level+'</p>'+bestLine()+
+    '<button class="pri" id="sA"><svg><use href="#i-again"/></svg>Play again</button><button class="glass" id="sB">Done</button>';
+  s.innerHTML=h;
+  el("sA").onclick=kind==="pause"?resume:startGame;
+  if(el("sB"))el("sB").onclick=home;
+  s.classList.add("on");
+}
+function hideSheet(){el("sheet").classList.remove("on")}
+function hud(){
+  el("bPause").classList.toggle("hide",!playing);
+  el("score").classList.toggle("hide",state==="home"||paused);
 }
 
 // ---- game flow ----
 function startGame(){
-  board=emptyBoard();score=0;lines=0;level=1;over=false;bag=[];
+  board=emptyBoard();score=0;lines=0;level=1;over=false;paused=false;bag=[];flash=[];bestAtStart=best;
+  state="play";
   nextId=nextFromBag();spawn();
   playing=true;updateStats();
-  document.getElementById('overlay').classList.remove('show');
+  hideSheet();hud();syncLook();syncChrome();
   restartTimer();draw();
 }
 function gameOver(){
-  playing=false;over=true;
+  playing=false;over=true;state="over";
   if(dropTimer)clearInterval(dropTimer);
   haptic('error');
-  document.getElementById('otitle').textContent='Game Over';
-  document.getElementById('omsg').textContent='Score '+score+' · '+lines+' lines · level '+level;
-  document.getElementById('obtn').textContent='Play again';
-  document.getElementById('overlay').classList.add('show');
+  showSheet("over");hud();syncLook();
+}
+function pause(){
+  if(!playing)return;
+  playing=false;paused=true;
+  if(dropTimer){clearInterval(dropTimer);dropTimer=null}
+  showSheet("pause");hud();syncLook();
+}
+function resume(){
+  if(!paused)return;
+  haptic('light');
+  paused=false;playing=true;
+  hideSheet();hud();syncLook();syncChrome();
+  restartTimer();
+}
+function home(){
+  haptic('light');
+  if(dropTimer){clearInterval(dropTimer);dropTimer=null}
+  playing=false;paused=false;over=false;cur=null;state="home";flash=[];
+  board=demoBoard();
+  el('score').textContent=0;el('lines').textContent=0;el('level').textContent=1;
+  showSheet("home");hud();syncLook();syncChrome();
 }
 
 // ---- controls ----
@@ -246,12 +400,13 @@ function hold(btn,fn,rate){
   btn.addEventListener('touchend',stop);btn.addEventListener('touchcancel',stop);
   btn.addEventListener('mousedown',start);btn.addEventListener('mouseup',stop);btn.addEventListener('mouseleave',stop);
 }
-hold(document.getElementById('bL'),function(){move(-1)});
-hold(document.getElementById('bR'),function(){move(1)});
-hold(document.getElementById('bDown'),function(){softDrop()},60);
+hold(el('bL'),function(){move(-1)});
+hold(el('bR'),function(){move(1)});
+hold(el('bDown'),function(){softDrop()},60);
 function tap(btn,fn){btn.addEventListener('touchstart',function(e){e.preventDefault();fn()},{passive:false});btn.addEventListener('click',function(e){e.preventDefault();fn()});}
-tap(document.getElementById('bRot'),rotate);
-tap(document.getElementById('bDrop'),hardDrop);
+tap(el('bRot'),rotate);
+tap(el('bDrop'),hardDrop);
+el('bPause').onclick=function(){haptic('light');pause()};
 
 // swipe + tap-to-rotate on the board
 (function(){
@@ -271,8 +426,10 @@ tap(document.getElementById('bDrop'),hardDrop);
   });
 })();
 
-// keyboard (nice on desktop preview)
+// keyboard (nice on an iPad keyboard or the desktop preview)
 window.addEventListener('keydown',function(e){
+  if(e.key==='p'||e.key==='P'||e.key==='Escape'){if(paused)resume();else pause();return}
+  if(e.key==='Enter'&&(state==="home"||state==="over")){startGame();return}
   if(!playing)return;
   if(e.key==='ArrowLeft')move(-1);
   else if(e.key==='ArrowRight')move(1);
@@ -281,10 +438,17 @@ window.addEventListener('keydown',function(e){
   else if(e.key===' '){e.preventDefault();hardDrop();}
 });
 
+document.addEventListener("visibilitychange",function(){
+  if(document.hidden){pause();return}
+  if(state!=="home")syncChrome();               /* MyLLM puts its bars back when the app is left */
+});
+if(window.matchMedia){
+  var mq=matchMedia("(prefers-color-scheme: dark)");
+  if(mq.addEventListener)mq.addEventListener("change",syncLook);else if(mq.addListener)mq.addListener(syncLook);
+}
 window.addEventListener('resize',fit);
-store.getItem('bd_best').then(function(v){if(v){best=parseInt(v,10)||0;document.getElementById('best').textContent=best;}});
-board=emptyBoard();fit();
-// Show the start screen so the player can tap Play (controls stay inert until
-// the game is running).
-document.getElementById('overlay').classList.add('show');
+
+// ---- boot ----
+board=demoBoard();fit();syncLook();showSheet("home");hud();
+load('bd_best').then(function(v){if(v){best=parseInt(v,10)||0;el('best').textContent=best;if(state==="home")showSheet("home")}});
 </script></body></html>

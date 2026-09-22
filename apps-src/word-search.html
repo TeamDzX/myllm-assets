@@ -3,36 +3,111 @@
   Word Search — MyLLMos™ App Gallery · © 2026 Opticell Ltd
   Source-available: read it, remix it, run your version inside MyLLM™.
   Not for redistribution or republication. Terms: https://github.com/TeamDzX/myllm-assets/blob/main/LICENSE
---><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<style>:root{--build-id:"93d38c6cd9";color-scheme:light dark;--accent:#bf5af2}
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
-html,body{margin:0}
-body{font-family:-apple-system,system-ui,sans-serif;background:#f2f2f7;color:#111;display:flex;flex-direction:column;align-items:center;padding:12px;gap:10px;touch-action:none}
-@media(prefers-color-scheme:dark){body{background:#000;color:#eee}.grid{background:#1c1c1e}.chip{background:#1c1c1e}select{background:#1c1c1e;color:#eee}}
-.bar{display:flex;gap:10px;align-items:center;width:min(96vw,460px);justify-content:space-between}
-select{border:0;background:#e5e5ea;color:#111;border-radius:9px;padding:9px 12px;font-size:15px;font-weight:600}
-button.new{border:0;background:var(--accent);color:#fff;border-radius:9px;padding:9px 14px;font-size:14px;font-weight:600}
-.grid{width:min(96vw,460px);aspect-ratio:1;display:grid;background:#fff;border-radius:12px;padding:5px;box-shadow:0 1px 3px rgba(0,0,0,.1);position:relative}
-.cell{display:flex;align-items:center;justify-content:center;font-size:min(4.6vw,22px);font-weight:600;border-radius:50%;text-transform:uppercase}
-.cell.hl{background:var(--accent);color:#fff}
-.cell.found{background:rgba(191,90,242,.22);color:var(--accent)}
-.words{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;width:min(96vw,460px)}
-.chip{background:#fff;border-radius:14px;padding:6px 11px;font-size:13px;font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.08)}
-.chip.done{text-decoration:line-through;opacity:.4}
-#msg{font-size:15px;font-weight:600;min-height:20px}
-.win{color:#30d158}
-h1{font-size:18px;margin:0}
-@media(min-width:768px){.bar,.grid,.words{width:min(90vw,560px)}.cell{font-size:min(4.6vw,26px)}}
+--><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Word Search</title>
+<style>:root{--build-id:"93d38c6cd9";color-scheme:light dark}
+  *{ margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; -webkit-user-select:none; user-select:none; }
+  html,body{ height:100%; }
+  body{ font-family:var(--myllm-font,-apple-system,system-ui,sans-serif); background:#0b0b10; color:#fff; overflow:hidden; touch-action:none; overscroll-behavior:none; }
+
+  /* The stage: a hue-tinted backdrop in two layers, dark and light, so the
+     change between them can fade. */
+  .stage{ position:fixed; inset:0; --h:282; color:#fff; }
+  .bg{ position:absolute; inset:0; transition:opacity .6s ease; }
+  .bg.d{ background:radial-gradient(120% 90% at 20% 10%, hsl(var(--h) 62% 34%), transparent 60%),
+      radial-gradient(120% 90% at 85% 95%, hsl(calc(var(--h) - 60) 62% 28%), transparent 62%), #0b0b10; }
+  .bg.l{ opacity:0; background:radial-gradient(120% 90% at 20% 0%, hsl(var(--h) 85% 88%), transparent 60%),
+      radial-gradient(120% 90% at 85% 100%, hsl(calc(var(--h) - 60) 80% 88%), transparent 62%), #f4f4f8; }
+  .lite{ color:#15151a; } .lite .bg.l{ opacity:1; } .lite .bg.d{ opacity:0; }
+
+  .col{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center;
+    padding:calc(10px + env(safe-area-inset-top)) calc(14px + env(safe-area-inset-right)) calc(14px + env(safe-area-inset-bottom)) calc(14px + env(safe-area-inset-left)); }
+  .top{ width:100%; max-width:560px; height:44px; display:flex; align-items:center; justify-content:space-between; gap:8px; flex-shrink:0; }
+  .lbl{ font-size:11px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; opacity:.62; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .glass{ border:1px solid rgba(255,255,255,.16); background:rgba(255,255,255,.12); color:inherit;
+    -webkit-backdrop-filter:blur(18px); backdrop-filter:blur(18px); }
+  .lite .glass{ border-color:rgba(0,0,0,.09); background:rgba(255,255,255,.62); }
+  svg.i{ width:1.25em; height:1.25em; fill:currentColor; flex-shrink:0; }
+  button{ font:inherit; } button:active{ transform:scale(.96); }
+  .rnd{ width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:15px; flex-shrink:0; }
+  .pillbtn{ height:44px; border-radius:99px; padding:0 14px; display:flex; align-items:center; gap:6px; font-size:13.5px; font-weight:750; flex-shrink:0; }
+  .top .hide{ visibility:hidden; }
+
+  .mid{ position:relative; flex:1; min-height:0; width:100%; max-width:560px; display:flex; flex-direction:column; align-items:center; gap:12px; margin-top:8px; }
+  .boardwrap{ flex:1; min-height:0; width:100%; display:flex; align-items:center; justify-content:center; }
+  .grid{ position:relative; width:var(--b,320px); height:var(--b,320px); display:grid; border-radius:22px; padding:6px; flex-shrink:0;
+    background:rgba(10,10,16,.42); border:1px solid rgba(255,255,255,.12); box-shadow:0 18px 44px rgba(0,0,0,.4); touch-action:none; transition:background .6s, filter .3s; }
+  .lite .grid{ background:rgba(255,255,255,.6); border-color:rgba(0,0,0,.06); box-shadow:0 18px 40px rgba(20,20,40,.14); }
+  .idle .grid, .veil .grid{ filter:blur(7px) saturate(.8); opacity:.35; transition:opacity .3s, filter .3s; } .veil .grid{ pointer-events:none; }
+  .cell{ position:relative; z-index:1; display:flex; align-items:center; justify-content:center; font-size:calc(var(--b,320px) / 19); font-weight:700; text-transform:uppercase; }
+  .cell.found{ color:hsl(var(--h) 100% 88%); } .lite .cell.found{ color:hsl(var(--h) 70% 36%); }
+  .cell.hl{ color:#fff; } .lite .cell.hl{ color:#15151a; }
+  /* Selections are drawn as capsules under the letters: the live one solid, found ones soft. */
+  .grid svg.marks{ position:absolute; inset:0; width:100%; height:100%; z-index:0; pointer-events:none; overflow:visible; }
+  .marks line{ stroke-linecap:round; }
+  .marks .was{ stroke:hsl(var(--h) 85% 66% / .30); } .lite .marks .was{ stroke:hsl(var(--h) 80% 56% / .24); }
+  .marks .now{ stroke:hsl(var(--h) 90% 66% / .62); } .lite .marks .now{ stroke:hsl(var(--h) 85% 60% / .45); }
+  .marks .pop{ animation:pop .45s ease; }
+  @keyframes pop{ 0%{ stroke:hsl(var(--h) 95% 78% / .85); } }
+
+  .words{ width:100%; flex-shrink:0; border-radius:20px; padding:10px 12px; display:flex; flex-wrap:wrap; gap:4px 12px; justify-content:center; transition:opacity .3s; }
+  .idle .words{ opacity:0; }
+  .words span{ font-size:13px; font-weight:750; letter-spacing:.04em; padding:3px 0; }
+  .words span.done{ text-decoration:line-through; opacity:.38; }
+
+  /* One glass card over the grid: title and puzzle complete. */
+  .sheet{ position:absolute; left:50%; top:50%; width:min(320px, calc(100% - 12px)); transform:translate(-50%,-50%) scale(.96); opacity:0; pointer-events:none; z-index:5;
+    border-radius:26px; padding:22px 18px 18px; text-align:center; box-shadow:0 24px 60px rgba(0,0,0,.35);
+    transition:opacity .28s ease, transform .28s cubic-bezier(.2,.8,.2,1); }
+  .sheet.on{ opacity:1; transform:translate(-50%,-50%); pointer-events:auto; }
+  .lite .sheet{ box-shadow:0 22px 50px rgba(20,20,40,.18); }
+  .sheet h1{ font-size:29px; font-weight:800; letter-spacing:-.02em; }
+  .sheet p{ font-size:13.5px; line-height:1.4; opacity:.72; margin-top:6px; }
+  .kick{ font-size:11px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; opacity:.62; margin-bottom:4px; }
+  .themes{ display:flex; flex-wrap:wrap; gap:6px; justify-content:center; margin-top:14px; }
+  .themes button{ height:36px; border-radius:99px; padding:0 13px; font-size:13px; font-weight:700; }
+  .themes button.hot{ background:#fff; border-color:#fff; color:#0b0b10; } .lite .themes button.hot{ background:#15151a; border-color:#15151a; color:#fff; }
+  .sheet .act{ width:100%; height:50px; border-radius:99px; margin-top:10px; font-size:16px; font-weight:750; display:flex; align-items:center; justify-content:center; gap:8px; }
+  .sheet .act.first{ margin-top:16px; }
+  .pri{ border:none; background:#fff; color:#0b0b10; box-shadow:0 10px 30px rgba(0,0,0,.3); }
+  .lite .pri{ background:#15151a; color:#fff; box-shadow:0 10px 26px rgba(20,20,40,.22); }
+
+  @media (max-height:520px){                       /* phone on its side: grid left, words right */
+    .mid{ flex-direction:row; max-width:none; align-items:stretch; }
+    .boardwrap{ flex:1; } .words{ width:min(250px,32vw); align-self:center; justify-content:flex-start; gap:2px 12px; }
+    .words span{ width:calc(50% - 6px); }
+    .sheet{ padding:14px 16px; width:min(420px, calc(100% - 12px)); } .sheet h1{ font-size:22px; } .sheet p{ display:none; }
+    .themes{ margin-top:8px; } .themes button{ height:32px; } .sheet .act{ height:42px; margin-top:8px; } .sheet .act.first{ margin-top:10px; }
+  }
+  @media (prefers-reduced-motion:reduce){ .marks .pop{ animation:none; } }
 </style></head><body>
-<div class="bar">
-  <select id="theme" onchange="newPuzzle()"></select>
-  <button class="new" onclick="newPuzzle()">New</button>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5.5v13a1 1 0 0 0 1.52.85l10.4-6.5a1 1 0 0 0 0-1.7L9.52 4.65A1 1 0 0 0 8 5.5z"/></symbol>
+  <symbol id="i-again" viewBox="0 0 24 24"><path d="M12 5V2.6a.6.6 0 0 0-1-.45L7.2 5.55a.6.6 0 0 0 0 .9L11 9.85a.6.6 0 0 0 1-.45V7a5.5 5.5 0 1 1-5.5 5.5 1 1 0 0 0-2 0A7.5 7.5 0 1 0 12 5z"/></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24"><path d="M6.4 5a1 1 0 0 0-1.4 1.4L10.6 12 5 17.6A1 1 0 0 0 6.4 19l5.6-5.6 5.6 5.6a1 1 0 0 0 1.4-1.4L13.4 12 19 6.4A1 1 0 0 0 17.6 5L12 10.6z"/></symbol>
+</defs></svg>
+
+<div class="stage idle" id="stage">
+  <div class="bg d"></div><div class="bg l"></div>
+  <div class="col">
+    <div class="top">
+      <button class="glass rnd hide" id="bClose" aria-label="Close"><svg class="i"><use href="#i-close"/></svg></button>
+      <div class="lbl" id="lbl">Word Search</div>
+      <button class="glass pillbtn hide" id="bNew" aria-label="New puzzle"><svg class="i"><use href="#i-again"/></svg><span id="count">0/0</span></button>
+    </div>
+    <div class="mid">
+      <div class="boardwrap" id="wrap"><div class="grid" id="grid"></div></div>
+      <div class="glass words" id="words"></div>
+      <div class="sheet glass" id="sheet"></div>
+    </div>
+  </div>
 </div>
-<div class="grid" id="grid"></div>
-<div id="msg"></div>
-<div class="words" id="words"></div>
 <script>
-var store=window.myllmStorage||{getItem:function(){return Promise.resolve(null)},setItem:function(){return Promise.resolve()}};
+/* Bridges are looked up when used, never kept: MyLLM can add them after this
+   script has run. */
+function haptic(s){ if (window.myllmHaptic) try { myllmHaptic(s); } catch(e){} }
+function load(k){ var s = window.myllmStorage; return s ? s.getItem(k).catch(function(){ return null; }) : Promise.resolve(null); }
+function keep(k, v){ var s = window.myllmStorage; if (s) try { s.setItem(k, v).catch(function(){}); } catch(e){} }
 var THEMES={
  "Animals":["TIGER","PANDA","OTTER","ZEBRA","KOALA","HORSE","EAGLE","SHARK","MOOSE","CAMEL","LLAMA","RHINO"],
  "Fruit":["APPLE","MANGO","LEMON","GRAPE","PEACH","BERRY","MELON","PLUM","KIWI","PEAR","CHERRY","ORANGE"],
@@ -44,8 +119,9 @@ var THEMES={
 };
 var DIRS=[[0,1],[1,0],[1,1],[1,-1],[0,-1],[-1,0],[-1,-1],[-1,1]];
 var N=11,grid=[],placed=[],found=[],foundCells={},theme="Animals",dragging=false,path=[];
+var state="home",pick="Animals",hasSave=false,fresh=null;
+var SVGNS="http://www.w3.org/2000/svg";
 function el(i){return document.getElementById(i)}
-function key(r,c){return r+'_'+c}
 
 function place(words){
   grid=Array.from({length:N},function(){return Array(N).fill('')});
@@ -67,8 +143,35 @@ function place(words){
   for(var r=0;r<N;r++)for(var c=0;c<N;c++)if(!grid[r][c])grid[r][c]=A[Math.floor(Math.random()*26)];
 }
 
+/* ---------- look ---------- */
+function isLight(){return !(window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches)}
+/* A puzzle takes the whole display and goes dark. Where MyLLM can't hide its
+   own title bar, a dark stage under a white bar looks cut in half — so in
+   light mode, without myllmImmersive, the stage stays light. */
+function syncLook(){
+  var s=el("stage");
+  s.classList.toggle("lite",isLight()&&!(state!=="home"&&window.myllmImmersive));
+  s.classList.toggle("idle",state==="home");
+  el("bClose").classList.toggle("hide",state==="home");
+  el("bNew").classList.toggle("hide",state==="home");
+  el("lbl").textContent=state==="home"?"Word Search":theme;
+}
+function syncChrome(){
+  if(!window.myllmImmersive)return;
+  try{myllmImmersive(state!=="home",{keepAwake:false}).catch(function(){})}catch(e){}
+}
+function fit(){
+  var w=el("wrap"),b=Math.max(200,Math.floor(Math.min(w.clientWidth,w.clientHeight,560)));
+  el("stage").style.setProperty("--b",b+"px");
+}
+
+/* ---------- render ---------- */
+function cellEl(r,c){return el('grid').querySelector('.cell[data-r="'+r+'"][data-c="'+c+'"]')}
 function render(){
-  var G=el('grid');G.style.gridTemplateColumns='repeat('+N+',1fr)';G.innerHTML='';
+  var G=el('grid');G.style.gridTemplateColumns='repeat('+N+',1fr)';G.style.gridTemplateRows='repeat('+N+',1fr)';G.innerHTML='';
+  var m=document.createElementNS(SVGNS,'svg');m.setAttribute('class','marks');m.setAttribute('viewBox','0 0 '+N+' '+N);m.id='marks';
+  m.setAttribute('preserveAspectRatio','none');G.appendChild(m);
+  m.style.inset='6px';m.style.width='calc(100% - 12px)';m.style.height='calc(100% - 12px)';
   for(var r=0;r<N;r++)for(var c=0;c<N;c++){
     var d=document.createElement('div');d.className='cell';d.textContent=grid[r][c];d.dataset.r=r;d.dataset.c=c;
     G.appendChild(d);
@@ -77,11 +180,33 @@ function render(){
 }
 function renderWords(){
   var W=el('words');W.innerHTML='';
-  placed.forEach(function(w){var s=document.createElement('span');s.className='chip'+(found.indexOf(w)>=0?' done':'');s.textContent=w;W.appendChild(s)});
+  placed.forEach(function(w){var s=document.createElement('span');s.className=found.indexOf(w)>=0?'done':'';s.textContent=w;W.appendChild(s)});
+  el('count').textContent=found.length+'/'+placed.length;
 }
-function cellAt(x,y){var e=document.elementFromPoint(x,y);if(e&&e.classList.contains('cell'))return e;return null}
+function capsule(cells,cls){
+  var a=cells[0],b=cells[cells.length-1],l=document.createElementNS(SVGNS,'line');
+  l.setAttribute('x1',a[1]+.5);l.setAttribute('y1',a[0]+.5);l.setAttribute('x2',b[1]+.5);l.setAttribute('y2',b[0]+.5);
+  l.setAttribute('stroke-width',.78);l.setAttribute('class',cls);
+  el('marks').appendChild(l);return l;
+}
+var live=null;
+function clearHl(){
+  el('grid').querySelectorAll('.cell.hl').forEach(function(c){c.classList.remove('hl')});
+  if(live&&live.parentNode)live.parentNode.removeChild(live);live=null;
+}
+function showHl(cells){
+  clearHl();
+  cells.forEach(function(p){var c=cellEl(p[0],p[1]);if(c)c.classList.add('hl')});
+  live=capsule(cells,'now');
+}
+function cellAt(x,y){
+  var G=el('grid'),b=G.getBoundingClientRect(),pad=6,s=(b.width-pad*2)/N;
+  var c=Math.floor((x-b.left-pad)/s),r=Math.floor((y-b.top-pad)/s);
+  if(r<0||c<0||r>=N||c>=N)return null;
+  return [r,c];
+}
 function lineCells(a,b){
-  var r1=+a.dataset.r,c1=+a.dataset.c,r2=+b.dataset.r,c2=+b.dataset.c;
+  var r1=a[0],c1=a[1],r2=b[0],c2=b[1];
   var dr=r2-r1,dc=c2-c1;
   var adr=Math.abs(dr),adc=Math.abs(dc);
   if(!(dr===0||dc===0||adr===adc))return null;
@@ -89,13 +214,20 @@ function lineCells(a,b){
   for(var k=0;k<=len;k++)out.push([r1+sr*k,c1+sc*k]);
   return out;
 }
-function clearHl(){document.querySelectorAll('.cell.hl').forEach(function(c){c.classList.remove('hl')})}
 var startCell=null;
-function down(e){var t=e.touches?e.touches[0]:e;var c=cellAt(t.clientX,t.clientY);if(!c)return;dragging=true;startCell=c;path=[c];c.classList.add('hl');e.preventDefault()}
-function move(e){if(!dragging)return;var t=e.touches?e.touches[0]:e;var c=cellAt(t.clientX,t.clientY);if(!c)return;
-  var cells=lineCells(startCell,c);if(!cells)return;clearHl();
-  cells.forEach(function(p){var sel=document.querySelector('.cell[data-r="'+p[0]+'"][data-c="'+p[1]+'"]');if(sel)sel.classList.add('hl')});
-  path=cells;e.preventDefault()}
+function down(e){
+  if(state!=="play")return;
+  var c=cellAt(e.clientX,e.clientY);if(!c)return;
+  dragging=true;startCell=c;path=[c];showHl(path);
+  try{el('grid').setPointerCapture(e.pointerId)}catch(err){}
+  e.preventDefault();
+}
+function move(e){
+  if(!dragging)return;
+  var c=cellAt(e.clientX,e.clientY);if(!c)return;
+  var cells=lineCells(startCell,c);if(!cells)return;
+  path=cells;showHl(path);e.preventDefault();
+}
 function up(){
   if(!dragging)return;dragging=false;
   var letters=path.map(function(p){return grid[p[0]][p[1]]}).join('');
@@ -103,33 +235,80 @@ function up(){
   var hit=placed.filter(function(w){return(w===letters||w===rev)&&found.indexOf(w)<0})[0];
   clearHl();
   if(hit){found.push(hit);foundCells[hit]=path.slice();
-    path.forEach(function(p){var c=document.querySelector('.cell[data-r="'+p[0]+'"][data-c="'+p[1]+'"]');c.classList.add('found')});
-    if(window.myllmHaptic)myllmHaptic('success');save();renderWords();
-    if(found.length===placed.length){el('msg').innerHTML='<span class="win">🎉 All found!</span>'}
+    path.forEach(function(p){var c=cellEl(p[0],p[1]);if(c)c.classList.add('found')});
+    capsule(path,'was pop');
+    haptic('success');save();renderWords();
+    if(found.length===placed.length)setTimeout(function(){if(state==="play"&&found.length===placed.length){el("stage").classList.add("veil");showSheet("done")}},500);
   }
   path=[];
 }
 function markFound(){
-  found.forEach(function(w){(foundCells[w]||[]).forEach(function(p){
-    var c=document.querySelector('.cell[data-r="'+p[0]+'"][data-c="'+p[1]+'"]');if(c)c.classList.add('found');
-  })});
+  found.forEach(function(w){var cells=foundCells[w]||[];
+    cells.forEach(function(p){var c=cellEl(p[0],p[1]);if(c)c.classList.add('found')});
+    if(cells.length)capsule(cells,'was');
+  });
 }
 
 function newPuzzle(){
-  theme=el('theme').value;found=[];foundCells={};el('msg').textContent='';
-  place(THEMES[theme]);render();save();
+  found=[];foundCells={};
+  place(THEMES[theme]);render();save();hasSave=true;
 }
-function save(){store.setItem('ws',JSON.stringify({theme:theme,grid:grid,placed:placed,found:found,foundCells:foundCells}))}
+function save(){keep('ws',JSON.stringify({theme:theme,grid:grid,placed:placed,found:found,foundCells:foundCells}))}
+
+/* ---------- the glass card ---------- */
+function unfinished(){return hasSave&&found.length<placed.length}
+function showSheet(kind){
+  var s=el("sheet"),h;
+  if(kind==="home"){
+    var go=pick===theme&&unfinished();
+    h='<h1>Word Search</h1><p>Drag across the letters in any direction to grab a word.</p><div class="themes">'+
+      Object.keys(THEMES).map(function(k){return '<button class="glass'+(k===pick?' hot':'')+'" data-t="'+k+'">'+k+'</button>'}).join('')+'</div>'+
+      '<button class="act first pri" id="sA"><svg class="i"><use href="#i-play"/></svg>'+(go?'Continue · '+found.length+'/'+placed.length:'New puzzle')+'</button>';
+  }else{
+    h='<div class="kick">Puzzle complete</div><h1>All found!</h1><p>'+placed.length+' words in '+theme+'.</p>'+
+      '<button class="act first pri" id="sA"><svg class="i"><use href="#i-again"/></svg>New puzzle</button><button class="act glass" id="sB">Done</button>';
+  }
+  s.innerHTML=h;s.classList.add("on");
+  s.querySelectorAll('[data-t]').forEach(function(b){b.onclick=function(){pick=b.dataset.t;haptic('selection');showSheet("home")}});
+  el("sA").onclick=kind==="home"?play:function(){haptic('medium');el("sheet").classList.remove("on");el("stage").classList.remove("veil");newPuzzle()};
+  if(el("sB"))el("sB").onclick=home;
+}
+function play(){
+  haptic('medium');
+  var go=pick===theme&&unfinished();
+  state="play";theme=pick;
+  el("sheet").classList.remove("on");
+  if(!go)newPuzzle();
+  syncLook();syncChrome();
+}
+function home(){
+  haptic('light');
+  state="home";pick=theme;clearHl();dragging=false;el("stage").classList.remove("veil");
+  showSheet("home");syncLook();syncChrome();
+}
+el("bClose").onclick=home;
+el("bNew").onclick=function(){haptic('medium');el("sheet").classList.remove("on");el("stage").classList.remove("veil");newPuzzle()};
 
 (function init(){
-  var T=el('theme');Object.keys(THEMES).forEach(function(k){var o=document.createElement('option');o.value=k;o.textContent=k;T.appendChild(o)});
   var G=el('grid');
-  G.addEventListener('touchstart',down,{passive:false});G.addEventListener('touchmove',move,{passive:false});G.addEventListener('touchend',up);
-  G.addEventListener('mousedown',down);G.addEventListener('mousemove',move);window.addEventListener('mouseup',up);
-  store.getItem('ws').then(function(v){
-    if(v){try{var s=JSON.parse(v);if(s.grid&&s.placed){theme=s.theme;T.value=theme;grid=s.grid;placed=s.placed;found=s.found||[];foundCells=s.foundCells||{};N=grid.length;render();
-      if(found.length&&found.length===placed.length)el('msg').innerHTML='<span class="win">🎉 All found!</span>';return}}catch(e){}}
-    newPuzzle();
+  G.addEventListener('pointerdown',down);G.addEventListener('pointermove',move);
+  G.addEventListener('pointerup',up);G.addEventListener('pointercancel',up);
+  document.addEventListener("visibilitychange",function(){
+    if(document.hidden){if(dragging){dragging=false;clearHl();path=[]}return}
+    if(state!=="home")syncChrome();             /* MyLLM puts its bars back when the app is left */
+  });
+  if(window.matchMedia){
+    var mq=matchMedia("(prefers-color-scheme: dark)");
+    if(mq.addEventListener)mq.addEventListener("change",syncLook);else if(mq.addListener)mq.addListener(syncLook);
+  }
+  window.addEventListener('resize',fit);
+  fit();syncLook();
+  load('ws').then(function(v){
+    if(v){try{var s=JSON.parse(v);if(s.grid&&s.placed){theme=s.theme;pick=theme;grid=s.grid;placed=s.placed;found=s.found||[];foundCells=s.foundCells||{};N=grid.length;hasSave=true;render();
+      showSheet("home");return}}catch(e){}}
+    /* nothing saved yet: a grid to sit behind the title card; the first puzzle is made on Play */
+    place(THEMES[theme]);render();placed=[];el('words').innerHTML='';
+    showSheet("home");
   });
 })();
 </script></body></html>

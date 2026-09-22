@@ -3,75 +3,195 @@
   Calm Jar — MyLLMos™ App Gallery · © 2026 Opticell Ltd
   Source-available: read it, remix it, run your version inside MyLLM™.
   Not for redistribution or republication. Terms: https://github.com/TeamDzX/myllm-assets/blob/main/LICENSE
---><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+--><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Calm Jar</title>
 <style>:root{--build-id:"c26e5ba24b";color-scheme:light dark}
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
-html,body{margin:0;height:100%;overflow:hidden;font-family:-apple-system,system-ui,sans-serif}
-body{background:#0b1020;color:#fff;display:flex;flex-direction:column;touch-action:none}
-canvas{flex:1;display:block;width:100%}
-.hint{position:fixed;left:0;right:0;top:calc(14px + env(safe-area-inset-top));text-align:center;font-size:15px;opacity:.85;pointer-events:none;transition:opacity .6s}
-.bar{position:fixed;left:0;right:0;bottom:0;display:flex;gap:10px;justify-content:center;padding:12px 14px calc(12px + env(safe-area-inset-bottom))}
-.bar button{border:0;background:rgba(255,255,255,.14);color:#fff;border-radius:16px;padding:11px 18px;font-size:15px;font-weight:600;backdrop-filter:blur(6px)}
-.bar button:active{background:rgba(255,255,255,.28)}
+  @property --h{ syntax:'<number>'; inherits:true; initial-value:230; }
+  *{ margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; -webkit-user-select:none; user-select:none; }
+  html,body{ height:100%; overflow:hidden; }
+  body{ font-family:var(--myllm-font,-apple-system,system-ui,sans-serif); background:#0b0b10; color:#fff; touch-action:none; overscroll-behavior:none; }
+
+  /* The stage: a quiet, hue-tinted backdrop behind the jar. Two layers, dark
+     and light, cross-faded slowly — nothing here should ever change suddenly. */
+  .stage{ position:fixed; inset:0; --h:230; transition:--h 4s ease-in-out; color:#fff; }
+  .bg{ position:absolute; inset:0; transition:opacity 1.4s ease; }
+  .bg.d{ background:radial-gradient(120% 90% at 20% 10%, hsl(var(--h) 52% 26%), transparent 60%),
+      radial-gradient(120% 90% at 85% 95%, hsl(calc(var(--h) + 50) 46% 20%), transparent 62%), #0b0b10; }
+  .bg.l{ opacity:0; background:radial-gradient(120% 90% at 20% 0%, hsl(var(--h) 70% 88%), transparent 60%),
+      radial-gradient(120% 90% at 85% 100%, hsl(calc(var(--h) + 50) 66% 90%), transparent 62%), #f4f4f8; }
+  .lite{ color:#15151a; } .lite .bg.l{ opacity:1; } .lite .bg.d{ opacity:0; }
+
+  /* The jar fills the display: a rounded glass vessel, inset from the edges
+     and the safe areas, with the glitter canvas inside it. */
+  .jar{ position:absolute; border-radius:36px; overflow:hidden;
+    top:calc(10px + env(safe-area-inset-top)); right:calc(10px + env(safe-area-inset-right));
+    bottom:calc(10px + env(safe-area-inset-bottom)); left:calc(10px + env(safe-area-inset-left));
+    background:rgba(8,8,16,.34); border:1px solid rgba(255,255,255,.13);
+    box-shadow:inset 0 0 70px rgba(255,255,255,.05), 0 24px 60px rgba(0,0,0,.4); transition:background 1.4s ease, box-shadow 1.4s ease; }
+  .lite .jar{ background:rgba(255,255,255,.5); border-color:rgba(0,0,0,.07); box-shadow:inset 0 0 70px rgba(255,255,255,.6), 0 22px 50px rgba(20,20,40,.14); }
+  .jar::after{ content:""; position:absolute; inset:0; pointer-events:none; border-radius:inherit;      /* the sheen on the glass */
+    background:linear-gradient(115deg, rgba(255,255,255,.10) 0%, rgba(255,255,255,0) 22%, rgba(255,255,255,0) 78%, rgba(255,255,255,.05) 100%); }
+  canvas{ position:absolute; inset:0; width:100%; height:100%; display:block; touch-action:none; }
+
+  .glass{ border:1px solid rgba(255,255,255,.16); background:rgba(255,255,255,.12); color:inherit;
+    -webkit-backdrop-filter:blur(18px); backdrop-filter:blur(18px); }
+  .lite .glass{ border-color:rgba(0,0,0,.09); background:rgba(255,255,255,.66); }
+  svg{ width:1.25em; height:1.25em; fill:currentColor; flex-shrink:0; }
+  button{ font:inherit; } button:active{ transform:scale(.96); }
+  .big{ height:58px; min-width:58px; border-radius:99px; padding:0 24px; font-size:16.5px; font-weight:750;
+    display:inline-flex; align-items:center; justify-content:center; gap:9px; }
+
+  .top{ position:absolute; left:22px; right:22px; top:20px; display:flex; align-items:center; justify-content:space-between; pointer-events:none; }
+  .top > *{ pointer-events:auto; }
+  .lbl{ font-size:11px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; opacity:.6; pointer-events:none; }
+  .top .side{ width:112px; display:flex; } .top .side.r{ justify-content:flex-end; }
+  #bDone{ opacity:0; pointer-events:none; transition:opacity .8s ease; }
+  .open #bDone{ opacity:1; pointer-events:auto; }
+
+  .hint{ position:absolute; left:28px; right:28px; top:50%; transform:translateY(-50%); text-align:center; font-size:19px; font-weight:750;
+    line-height:1.3; pointer-events:none; transition:opacity 1.2s ease; }
+  .hint small{ display:block; font-size:14px; font-weight:500; opacity:.7; margin-top:6px; }
+  .hint.gone{ opacity:0; }
+
+  .bar{ position:absolute; left:0; right:0; bottom:22px; display:flex; gap:12px; justify-content:center; pointer-events:none; }
+  .bar button{ pointer-events:auto; }
+  .sw{ width:20px; height:20px; border-radius:50%; flex-shrink:0; border:1.5px solid rgba(255,255,255,.7);
+    background:conic-gradient(from 200deg, hsl(var(--h) 85% 68%), hsl(calc(var(--h) + 50) 85% 66%), hsl(var(--h) 85% 68%)); transition:--h 4s ease-in-out; }
+  .lite .sw{ border-color:rgba(0,0,0,.18); }
+
+  @media (max-height:520px){ .top{ top:14px; } .bar{ bottom:14px; } .big{ height:56px; } }
+  @media (prefers-reduced-motion:reduce){ .stage, .sw{ transition:none; } }
+  @media (max-width:340px){ .top .side{ width:60px; } #bDone{ padding:0; width:56px; } #bDone span{ display:none; } }
 </style></head><body>
-<canvas id="c"></canvas>
-<div class="hint" id="hint">Tap anywhere to shake the jar 🌟<br><span style="font-size:13px;opacity:.7">then watch the glitter settle and breathe slowly</span></div>
-<div class="bar">
-  <button onclick="shake()">Shake</button>
-  <button onclick="nextTheme()">Colours</button>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-close" viewBox="0 0 24 24"><path d="M6.4 5a1 1 0 0 0-1.4 1.4L10.6 12 5 17.6A1 1 0 0 0 6.4 19l5.6-5.6 5.6 5.6a1 1 0 0 0 1.4-1.4L13.4 12 19 6.4A1 1 0 0 0 17.6 5L12 10.6z"/></symbol>
+  <symbol id="i-spark" viewBox="0 0 24 24"><path d="M10 2.5l1.9 5.6 5.6 1.9-5.6 1.9-1.9 5.6-1.9-5.6L2.5 10l5.6-1.9zM18.5 14l1 2.9 2.9 1-2.9 1-1 2.9-1-2.9-2.9-1 2.9-1z"/></symbol>
+</defs></svg>
+
+<div class="stage" id="stage">
+  <div class="bg d"></div><div class="bg l"></div>
+  <div class="jar" id="jar">
+    <canvas id="c"></canvas>
+    <div class="hint" id="hint">Tap anywhere to shake the jar<small>then watch the glitter settle and breathe slowly</small></div>
+    <div class="top">
+      <div class="side"><button class="glass big" id="bDone" aria-label="Close the jar"><svg><use href="#i-close"/></svg><span>Done</span></button></div>
+      <div class="lbl">Calm Jar</div>
+      <div class="side r"></div>
+    </div>
+    <div class="bar">
+      <button class="glass big" id="bShake"><svg><use href="#i-spark"/></svg>Shake</button>
+      <button class="glass big" id="bTheme"><span class="sw"></span>Colours</button>
+    </div>
+  </div>
 </div>
+
 <script>
-function haptic(s){if(window.myllmHaptic)try{myllmHaptic(s)}catch(e){}}
-var c=document.getElementById('c'),ctx=c.getContext('2d');
-var dpr=Math.max(1,Math.min(3,window.devicePixelRatio||1)),W=0,H=0;
-var THEMES=[[200,260],[280,330],[150,200],[20,60],[330,30]]; // hue ranges
-var theme=0,parts=[];
-function resize(){W=c.clientWidth;H=c.clientHeight;c.width=W*dpr;c.height=H*dpr;ctx.setTransform(dpr,0,0,dpr,0,0)}
-function rnd(a,b){return a+Math.random()*(b-a)}
+function el(i){ return document.getElementById(i); }
+/* Bridges are looked up when used, never kept: MyLLM can add them after this
+   script has run. */
+function haptic(s){ if (window.myllmHaptic) try { myllmHaptic(s); } catch(e){} }
+
+var c = el("c"), ctx = c.getContext("2d");
+var dpr = Math.max(1, Math.min(3, window.devicePixelRatio || 1)), W = 0, H = 0;
+var THEMES = [[200,260],[280,330],[150,200],[20,60],[330,30]];   /* hue ranges */
+var STAGE_H = [230, 305, 175, 40, 262];                          /* the backdrop that goes with each */
+var theme = 0, parts = [], jarOpen = false, hintGone = false;
+var calm = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/* ---------- look ---------- */
+function isLight(){ return !(window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches); }
+/* An jarOpen jar takes the whole display and dims the room. Where MyLLM can't
+   hide its own title bar, a dark stage under a white bar looks cut in half —
+   so in light mode, without myllmImmersive, the jar stays light. */
+function lite(){ return isLight() && !(jarOpen && window.myllmImmersive); }
+function syncLook(){
+  var s = el("stage");
+  s.classList.toggle("lite", lite());
+  s.classList.toggle("open", jarOpen);
+}
+function syncChrome(){
+  if (!window.myllmImmersive) return;
+  /* someone watching glitter settle isn't touching the screen: keep it awake */
+  try { myllmImmersive(jarOpen, {keepAwake:jarOpen}).catch(function(){}); } catch(_){}
+}
+function openJar(){ if (jarOpen) return; jarOpen = true; syncLook(); syncChrome(); }
+function closeJar(){ if (!jarOpen) return; haptic("light"); jarOpen = false; syncLook(); syncChrome(); }
+
+/* ---------- glitter ---------- */
+function rnd(a, b){ return a + Math.random() * (b - a); }
+function resize(){
+  var w = c.clientWidth, h = c.clientHeight;
+  if (!w || !h) return;
+  /* the jar changes size when MyLLM's bars come and go: carry the glitter
+     across in proportion rather than starting it again */
+  if (W && H && parts.length) parts.forEach(function(p){ p.x *= w / W; p.y *= h / H; });
+  W = w; H = h; c.width = Math.round(W * dpr); c.height = Math.round(H * dpr); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  if (!parts.length) makeParts();
+}
 function makeParts(){
-  parts=[];var n=Math.min(170,Math.floor(W*H/4200));
-  for(var i=0;i<n;i++){
-    parts.push({x:rnd(20,W-20),y:rnd(20,H-20),vx:0,vy:0,r:rnd(2.2,5.2),hue:0,a:rnd(.6,1),tw:rnd(0,6.28)});
-  }
+  parts = []; var n = Math.min(170, Math.floor(W * H / 4200));
+  for (var i = 0; i < n; i++)
+    parts.push({x:rnd(20, W - 20), y:rnd(20, H - 20), vx:0, vy:0, r:rnd(2.2, 5.2), hue:0, a:rnd(.6, 1), tw:rnd(0, 6.28)});
   recolor();
 }
-function recolor(){var t=THEMES[theme];parts.forEach(function(p){p.hue=rnd(t[0],t[1])})}
-function nextTheme(){theme=(theme+1)%THEMES.length;recolor();haptic('selection')}
-function shake(x,y){
-  haptic('medium');
+function recolor(){ var t = THEMES[theme]; parts.forEach(function(p){ p.hue = rnd(t[0], t[1]); }); }
+function nextTheme(){
+  theme = (theme + 1) % THEMES.length; recolor(); haptic("selection");
+  el("stage").style.setProperty("--h", String(STAGE_H[theme]));
+}
+function shake(x, y){
+  haptic("medium");
   hideHint();
   parts.forEach(function(p){
-    var ang=rnd(0,6.28),sp=rnd(2,7);
-    p.vx+=Math.cos(ang)*sp+(x!=null?(p.x-x)*0.01:0);
-    p.vy+=Math.sin(ang)*sp-rnd(1,4);
+    var ang = rnd(0, 6.28), sp = rnd(2, 7);
+    p.vx += Math.cos(ang) * sp + (x != null ? (p.x - x) * 0.01 : 0);
+    p.vy += Math.sin(ang) * sp - rnd(1, 4);
   });
 }
-var hintGone=false;
-function hideHint(){if(!hintGone){hintGone=true;document.getElementById('hint').style.opacity='0'}}
+function hideHint(){ if (!hintGone){ hintGone = true; el("hint").classList.add("gone"); } }
 function step(){
-  ctx.fillStyle='rgba(11,16,32,0.30)';ctx.fillRect(0,0,W,H); // motion trails
-  for(var i=0;i<parts.length;i++){
-    var p=parts[i];
-    p.vy+=0.045;            // gentle gravity
-    p.vx*=0.975;p.vy*=0.975; // fluid drag → slow, dreamy settle
-    p.x+=p.vx;p.y+=p.vy;
-    if(p.x<p.r){p.x=p.r;p.vx*=-0.45}
-    if(p.x>W-p.r){p.x=W-p.r;p.vx*=-0.45}
-    if(p.y>H-p.r){p.y=H-p.r;p.vy*=-0.35;p.vx*=0.9}
-    if(p.y<p.r){p.y=p.r;p.vy*=-0.4}
-    p.tw+=0.05;
-    var tw=0.65+0.35*Math.sin(p.tw);
-    ctx.globalAlpha=p.a*tw;
-    ctx.fillStyle='hsl('+p.hue+',85%,'+(62+10*Math.sin(p.tw))+'%)';
-    ctx.shadowBlur=8;ctx.shadowColor='hsl('+p.hue+',90%,70%)';
-    ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,6.2832);ctx.fill();
+  var L = el("stage").classList.contains("lite");
+  /* motion trails: fade what's there toward clear, so the backdrop shows through the jar */
+  ctx.globalCompositeOperation = "destination-out";
+  ctx.fillStyle = "rgba(0,0,0,0.30)"; ctx.fillRect(0, 0, W, H);
+  ctx.globalCompositeOperation = "source-over";
+  for (var i = 0; i < parts.length; i++){
+    var p = parts[i];
+    p.vy += 0.045;                 /* gentle gravity */
+    p.vx *= 0.975; p.vy *= 0.975;  /* fluid drag → slow, dreamy settle */
+    p.x += p.vx; p.y += p.vy;
+    if (p.x < p.r){ p.x = p.r; p.vx *= -0.45; }
+    if (p.x > W - p.r){ p.x = W - p.r; p.vx *= -0.45; }
+    if (p.y > H - p.r){ p.y = H - p.r; p.vy *= -0.35; p.vx *= 0.9; }
+    if (p.y < p.r){ p.y = p.r; p.vy *= -0.4; }
+    if (!calm) p.tw += 0.05;       /* the twinkle is decoration; the falling is the point */
+    var tw = calm ? 0.85 : 0.65 + 0.35 * Math.sin(p.tw), wob = calm ? 0 : 10 * Math.sin(p.tw);
+    ctx.globalAlpha = p.a * tw;
+    ctx.fillStyle = "hsl(" + p.hue + "," + (L ? 78 : 85) + "%," + ((L ? 50 : 62) + wob * (L ? .6 : 1)) + "%)";
+    ctx.shadowBlur = L ? 3 : 8; ctx.shadowColor = "hsl(" + p.hue + ",90%," + (L ? 55 : 70) + "%)";
+    ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, 6.2832); ctx.fill();
   }
-  ctx.globalAlpha=1;ctx.shadowBlur=0;
+  ctx.globalAlpha = 1; ctx.shadowBlur = 0;
   requestAnimationFrame(step);
 }
-function pt(e){var t=e.touches?e.touches[0]:e,r=c.getBoundingClientRect();return{x:t.clientX-r.left,y:t.clientY-r.top}}
-c.addEventListener('touchstart',function(e){var q=pt(e);shake(q.x,q.y);e.preventDefault()},{passive:false});
-c.addEventListener('mousedown',function(e){var q=pt(e);shake(q.x,q.y)});
-window.addEventListener('resize',function(){resize();makeParts()});
-resize();makeParts();shake();step();
+
+/* ---------- input ---------- */
+function pt(e){ var t = e.touches ? e.touches[0] : e, r = c.getBoundingClientRect(); return {x:t.clientX - r.left, y:t.clientY - r.top}; }
+c.addEventListener("touchstart", function(e){ var q = pt(e); openJar(); shake(q.x, q.y); e.preventDefault(); }, {passive:false});
+c.addEventListener("mousedown", function(e){ var q = pt(e); openJar(); shake(q.x, q.y); });
+el("bShake").onclick = function(){ openJar(); shake(); };
+el("bTheme").onclick = nextTheme;
+el("bDone").onclick = closeJar;
+
+window.addEventListener("resize", resize);
+document.addEventListener("visibilitychange", function(){
+  if (!document.hidden && jarOpen) syncChrome();      /* MyLLM puts its bars back when the app is left */
+});
+if (window.matchMedia){
+  var mq = matchMedia("(prefers-color-scheme: dark)");
+  if (mq.addEventListener) mq.addEventListener("change", syncLook); else if (mq.addListener) mq.addListener(syncLook);
+}
+
+/* ---------- boot ---------- */
+syncLook(); resize(); shake(); hintGone = false; el("hint").classList.remove("gone"); step();
 </script></body></html>

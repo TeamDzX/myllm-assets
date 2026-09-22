@@ -3,97 +3,239 @@
   Visual Timer — MyLLMos™ App Gallery · © 2026 Opticell Ltd
   Source-available: read it, remix it, run your version inside MyLLM™.
   Not for redistribution or republication. Terms: https://github.com/TeamDzX/myllm-assets/blob/main/LICENSE
---><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<style>:root{--build-id:"166c8542e4";color-scheme:light dark;--bg:#f2f2f7;--fg:#111;--card:#fff}
-@media(prefers-color-scheme:dark){:root{--bg:#000;--fg:#eee;--card:#1c1c1e}}
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
-html,body{margin:0;height:100%;overflow:hidden}
-body{font-family:-apple-system,system-ui,sans-serif;background:var(--bg);color:var(--fg);display:flex;flex-direction:column;align-items:center;padding:calc(16px + env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom));touch-action:manipulation}
-h1{font-size:20px;margin:0 0 10px;font-weight:700}
-.presets{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:10px}
-.presets button{border:0;background:rgba(127,127,127,.16);color:var(--fg);border-radius:14px;padding:9px 14px;font-size:14px;font-weight:600}
-.presets button.on{background:var(--accent,#f0584f);color:#fff}
-.stage{flex:1;display:flex;align-items:center;justify-content:center;width:100%}
-canvas{max-width:100%;max-height:100%}
-.digits{font-size:34px;font-weight:800;font-variant-numeric:tabular-nums;margin-top:4px;min-height:42px}
-.bar{display:flex;gap:10px;margin-top:8px}
-.bar button{border:0;border-radius:16px;padding:13px 30px;font-size:16px;font-weight:700}
-#go{background:#f0584f;color:#fff}
-.sec{background:rgba(127,127,127,.16);color:var(--fg)}
-.opts{display:flex;gap:14px;margin-top:10px;font-size:13px;opacity:.7}
-.opts label{display:flex;align-items:center;gap:5px}
+--><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Visual Timer</title>
+<style>:root{--build-id:"166c8542e4";color-scheme:light dark}
+  *{ margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; -webkit-user-select:none; user-select:none; }
+  html,body{ height:100%; overflow:hidden; }
+  body{ font-family:var(--myllm-font,-apple-system,system-ui,sans-serif); background:#0b0b10; color:#fff; touch-action:manipulation; }
+
+  /* The stage: a warm, muted backdrop — the disc is the only strong colour on
+     screen, and the backdrop never changes as time runs down. Two layers, dark
+     and light, cross-faded slowly. */
+  .stage{ position:fixed; inset:0; --h:6; color:#fff; }
+  .bg{ position:absolute; inset:0; transition:opacity 1.4s ease; }
+  .bg.d{ background:radial-gradient(120% 90% at 20% 10%, hsl(var(--h) 42% 24%), transparent 60%),
+      radial-gradient(120% 90% at 85% 95%, hsl(calc(var(--h) + 32) 40% 20%), transparent 62%), #0b0b10; }
+  .bg.l{ opacity:0; background:radial-gradient(120% 90% at 20% 0%, hsl(var(--h) 80% 91%), transparent 60%),
+      radial-gradient(120% 90% at 85% 100%, hsl(calc(var(--h) + 32) 78% 91%), transparent 62%), #f7f5f4; }
+  .lite{ color:#15151a; } .lite .bg.l{ opacity:1; } .lite .bg.d{ opacity:0; }
+
+  .col{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; text-align:center;
+    padding:calc(12px + env(safe-area-inset-top)) calc(18px + env(safe-area-inset-right)) calc(18px + env(safe-area-inset-bottom)) calc(18px + env(safe-area-inset-left)); }
+  .top{ width:100%; max-width:520px; height:58px; display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
+  .top .side{ width:112px; display:flex; }
+  .lbl{ font-size:11px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; opacity:.62; }
+  .glass{ border:1px solid rgba(255,255,255,.16); background:rgba(255,255,255,.12); color:inherit;
+    -webkit-backdrop-filter:blur(18px); backdrop-filter:blur(18px); }
+  .lite .glass{ border-color:rgba(0,0,0,.09); background:rgba(255,255,255,.66); }
+  svg{ width:1.25em; height:1.25em; fill:currentColor; flex-shrink:0; }
+  button{ font:inherit; } button:active{ transform:scale(.96); }
+  .big{ height:58px; min-width:58px; border-radius:99px; padding:0 22px; font-size:16.5px; font-weight:750;
+    display:inline-flex; align-items:center; justify-content:center; gap:9px; }
+  #bDone{ opacity:0; pointer-events:none; transition:opacity .8s ease; }
+  .staged #bDone{ opacity:1; pointer-events:auto; }
+
+  .mid{ flex:1; min-height:0; width:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+  canvas{ display:block; flex-shrink:0; border-radius:50%; box-shadow:0 24px 60px rgba(0,0,0,.35); transition:box-shadow 1.4s ease; }
+  .lite canvas{ box-shadow:0 22px 50px rgba(20,20,40,.14); }
+  .digits{ font-size:46px; font-weight:800; letter-spacing:-.02em; font-variant-numeric:tabular-nums; margin-top:16px; min-height:56px; line-height:56px; flex-shrink:0; }
+  .digits.off{ visibility:hidden; }
+  .note{ font-size:14px; font-weight:650; opacity:.66; min-height:20px; flex-shrink:0; }
+
+  .ctl{ width:100%; max-width:420px; flex-shrink:0; }
+  .presets{ display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-bottom:14px; }
+  .presets button{ height:48px; min-width:56px; border-radius:99px; padding:0 14px; font-size:15px; font-weight:750; font-variant-numeric:tabular-nums; }
+  .presets button.on{ background:var(--accent,#f0584f); border-color:var(--accent,#f0584f); color:#fff; }
+  .staged .presets{ display:none; }
+  .bar{ display:flex; gap:10px; }
+  .bar .big{ flex:1; }
+  #go{ flex:1.6; border:none; background:#fff; color:#0b0b10; box-shadow:0 10px 30px rgba(0,0,0,.3); font-size:18px; height:60px; }
+  .lite #go{ background:#15151a; color:#fff; box-shadow:0 10px 26px rgba(20,20,40,.22); }
+  .bar .big{ height:60px; }
+  #bNum{ flex:0 0 60px; padding:0; }
+  #bNum[aria-pressed="false"]{ opacity:.55; }
+
+  @media (max-width:340px){ .digits{ font-size:38px; margin-top:8px; } .big{ padding:0 14px; font-size:15.5px; } .presets button{ height:44px; min-width:50px; padding:0 10px; } }
+  @media (max-height:520px){                       /* phone on its side: disc left, time beside it, buttons right */
+    .mid{ flex-direction:row; justify-content:center; gap:24px; padding:0 calc(min(300px,38vw) + 22px) 0 2vw; }
+    .digits{ margin-top:0; } .words{ text-align:left; min-width:130px; }
+    .ctl{ position:absolute; right:calc(18px + env(safe-area-inset-right)); top:50%; transform:translateY(-50%); width:min(300px,38vw); }
+    .presets{ margin-bottom:10px; gap:6px; } .presets button{ height:44px; min-width:48px; padding:0 10px; font-size:14px; }
+    .bar .big, #go{ height:56px; padding:0 12px; font-size:16px; } #bNum{ flex-basis:56px; }
+  }
+  @media (max-width:340px){ .top .side{ width:60px; } #bDone{ padding:0; width:56px; } #bDone span{ display:none; } }
 </style></head><body>
-<h1>⏳ Visual Timer</h1>
-<div class="presets" id="presets"></div>
-<div class="stage"><canvas id="c" width="280" height="280"></canvas></div>
-<div class="digits" id="digits"></div>
-<div class="bar">
-  <button id="go" onclick="toggle()">Start</button>
-  <button class="sec" onclick="reset()">Reset</button>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5.5v13a1 1 0 0 0 1.52.85l10.4-6.5a1 1 0 0 0 0-1.7L9.52 4.65A1 1 0 0 0 8 5.5z"/></symbol>
+  <symbol id="i-pause" viewBox="0 0 24 24"><rect x="6" y="5" width="4.2" height="14" rx="1.4"/><rect x="13.8" y="5" width="4.2" height="14" rx="1.4"/></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24"><path d="M6.4 5a1 1 0 0 0-1.4 1.4L10.6 12 5 17.6A1 1 0 0 0 6.4 19l5.6-5.6 5.6 5.6a1 1 0 0 0 1.4-1.4L13.4 12 19 6.4A1 1 0 0 0 17.6 5L12 10.6z"/></symbol>
+  <symbol id="i-reset" viewBox="0 0 24 24"><path d="M12 5V2.6a.6.6 0 0 0-1-.45L7.2 5.55a.6.6 0 0 0 0 .9L11 9.85a.6.6 0 0 0 1-.45V7a5.5 5.5 0 1 1-5.5 5.5 1 1 0 0 0-2 0A7.5 7.5 0 1 0 12 5z"/></symbol>
+  <symbol id="i-num" viewBox="0 0 24 24"><path d="M12 5C6.8 5 3.2 9 2.2 11.3a1.8 1.8 0 0 0 0 1.4C3.2 15 6.8 19 12 19s8.8-4 9.8-6.3a1.8 1.8 0 0 0 0-1.4C20.8 9 17.2 5 12 5zm0 11a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm0-2.2a1.8 1.8 0 1 0 0-3.6 1.8 1.8 0 0 0 0 3.6z"/></symbol>
+</defs></svg>
+
+<div class="stage" id="stage">
+  <div class="bg d"></div><div class="bg l"></div>
+  <div class="col">
+    <div class="top">
+      <div class="side"><button class="glass big" id="bDone" aria-label="Leave full screen"><svg><use href="#i-close"/></svg><span>Done</span></button></div>
+      <div class="lbl">Visual Timer</div>
+      <div class="side"></div>
+    </div>
+    <div class="mid" id="mid">
+      <canvas id="c" width="280" height="280"></canvas>
+      <div class="words">
+        <div class="digits" id="digits"></div>
+        <div class="note" id="note"></div>
+      </div>
+    </div>
+    <div class="ctl">
+      <div class="presets" id="presets"></div>
+      <div class="bar">
+        <button class="big" id="go"><svg><use href="#i-play"/></svg><span>Start</span></button>
+        <button class="glass big" id="bReset"><svg><use href="#i-reset"/></svg>Reset</button>
+        <button class="glass big" id="bNum" aria-pressed="true" aria-label="Show numbers"><svg><use href="#i-num"/></svg></button>
+      </div>
+    </div>
+  </div>
 </div>
-<div class="opts">
-  <label><input type="checkbox" id="showNum" checked onchange="draw()"> Show numbers</label>
-</div>
+
 <script>
-function haptic(s){if(window.myllmHaptic)try{myllmHaptic(s)}catch(e){}}
-var PRESETS=[1,2,3,5,10,15,20],COLOR='#f0584f';
-var total=5*60,remaining=5*60,running=false,endAt=0,loop=null;
-var c=document.getElementById('c'),ctx=c.getContext('2d'),dpr=Math.max(1,Math.min(3,window.devicePixelRatio||1));
-function sizeCanvas(){var s=Math.min(window.innerWidth-32,window.innerHeight-340,320);s=Math.max(180,s);c.style.width=s+'px';c.style.height=s+'px';c.width=s*dpr;c.height=s*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);C=s}
-var C=280;
-function renderPresets(){var P=document.getElementById('presets');P.innerHTML='';PRESETS.forEach(function(m){var b=document.createElement('button');b.textContent=m+'m';if(total===m*60)b.className='on';b.onclick=function(){if(running)return;total=remaining=m*60;renderPresets();draw();document.getElementById('digits').textContent=fmt(remaining)};P.appendChild(b)})}
-function fmt(s){s=Math.max(0,Math.ceil(s));var m=Math.floor(s/60),ss=s%60;return m+':'+(ss<10?'0':'')+ss}
-function draw(){
-  var cx=C/2,cy=C/2,r=C/2-8;
-  ctx.clearRect(0,0,C,C);
-  // track
-  ctx.beginPath();ctx.arc(cx,cy,r,0,6.2832);ctx.fillStyle='rgba(127,127,127,.14)';ctx.fill();
-  // remaining wedge (depletes clockwise from top)
-  var frac=total>0?remaining/total:0;
-  if(frac>0){
-    ctx.beginPath();ctx.moveTo(cx,cy);
-    ctx.arc(cx,cy,r,-Math.PI/2,-Math.PI/2+frac*6.2832,false);
-    ctx.closePath();ctx.fillStyle=COLOR;ctx.fill();
-  }
-  // rim
-  ctx.beginPath();ctx.arc(cx,cy,r,0,6.2832);ctx.lineWidth=4;ctx.strokeStyle='rgba(127,127,127,.35)';ctx.stroke();
-  if(document.getElementById('showNum').checked){
-    ctx.fillStyle=getComputedStyle(document.body).color;
-    ctx.font='800 '+Math.round(C*0.16)+'px -apple-system,system-ui';
-    ctx.textAlign='center';ctx.textBaseline='middle';
-    ctx.fillText(fmt(remaining),cx,cy);
-  }
+function el(i){ return document.getElementById(i); }
+/* Bridges are looked up when used, never kept: MyLLM can add them after this
+   script has run. */
+function haptic(s){ if (window.myllmHaptic) try { myllmHaptic(s); } catch(e){} }
+
+var PRESETS = [1,2,3,5,10,15,20], COLOR = "#f0584f";
+var total = 5 * 60, remaining = 5 * 60, running = false, endAt = 0, loop = null;
+var staged = false, finished = false, showNum = true;
+var c = el("c"), ctx = c.getContext("2d"), dpr = Math.max(1, Math.min(3, window.devicePixelRatio || 1)), C = 280;
+
+/* ---------- look ---------- */
+function isLight(){ return !(window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches); }
+/* A running timer takes the whole display. Where MyLLM can't hide its own
+   title bar, a dark stage under a white bar looks cut in half — so in light
+   mode, without myllmImmersive, the stage stays light. */
+function syncLook(){
+  var s = el("stage");
+  s.classList.toggle("lite", isLight() && !(staged && window.myllmImmersive));
+  s.classList.toggle("staged", staged);
 }
+function syncChrome(){
+  if (!window.myllmImmersive) return;
+  /* a timer nobody is touching must not be lost to auto-lock; once it's paused or done, the screen may sleep */
+  try { myllmImmersive(staged, {keepAwake:staged && running}).catch(function(){}); } catch(_){}
+}
+function sync(){
+  el("go").innerHTML = running ? '<svg><use href="#i-pause"/></svg><span>Pause</span>' : '<svg><use href="#i-play"/></svg><span>Start</span>';
+  el("digits").textContent = fmt(remaining);
+  el("digits").classList.toggle("off", !showNum);
+  el("note").textContent = finished ? "All done" : "";
+  el("bNum").setAttribute("aria-pressed", showNum);
+  syncLook(); sizeCanvas(); draw();
+}
+
+function sizeCanvas(){
+  var m = el("mid"), wide = window.innerHeight <= 520;
+  var s = wide ? Math.min(m.clientHeight - 6, m.clientWidth * .5, 340) : Math.min(m.clientWidth - 12, m.clientHeight - 96, 440);
+  s = Math.max(150, Math.floor(s));
+  if (s === C && c.width === Math.round(s * dpr)) return;
+  C = s; c.style.width = c.style.height = s + "px"; c.width = c.height = Math.round(s * dpr); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+function renderPresets(){
+  var P = el("presets"); P.innerHTML = "";
+  PRESETS.forEach(function(m){
+    var b = document.createElement("button"); b.textContent = m + "m"; b.className = "glass" + (total === m * 60 ? " on" : "");
+    b.onclick = function(){ if (running) return; total = remaining = m * 60; finished = false; haptic("selection"); renderPresets(); sync(); };
+    P.appendChild(b);
+  });
+}
+function fmt(s){ s = Math.max(0, Math.ceil(s)); var m = Math.floor(s / 60), ss = s % 60; return m + ":" + (ss < 10 ? "0" : "") + ss; }
+function draw(){
+  var L = el("stage").classList.contains("lite"), cx = C / 2, cy = C / 2, r = C / 2 - 6;
+  ctx.clearRect(0, 0, C, C);
+  /* track */
+  ctx.beginPath(); ctx.arc(cx, cy, r + 6, 0, 6.2832); ctx.fillStyle = L ? "rgba(255,255,255,.7)" : "rgba(255,255,255,.08)"; ctx.fill();
+  ctx.beginPath(); ctx.arc(cx, cy, r, 0, 6.2832); ctx.fillStyle = L ? "rgba(20,20,40,.06)" : "rgba(0,0,0,.28)"; ctx.fill();
+  /* remaining wedge (depletes clockwise from top) */
+  var frac = total > 0 ? remaining / total : 0;
+  if (frac > 0){
+    var g = ctx.createRadialGradient(cx - r * .3, cy - r * .35, r * .1, cx, cy, r);
+    g.addColorStop(0, "#ff7d72"); g.addColorStop(1, COLOR);
+    ctx.beginPath(); ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, r, -Math.PI / 2, -Math.PI / 2 + Math.min(frac, .99999) * 6.2832, false);
+    ctx.closePath(); ctx.fillStyle = g; ctx.fill();
+  }
+  /* rim + hub */
+  ctx.beginPath(); ctx.arc(cx, cy, r, 0, 6.2832); ctx.lineWidth = 2; ctx.strokeStyle = L ? "rgba(20,20,40,.12)" : "rgba(255,255,255,.16)"; ctx.stroke();
+  ctx.beginPath(); ctx.arc(cx, cy, Math.max(5, C * .028), 0, 6.2832); ctx.fillStyle = L ? "#fff" : "rgba(255,255,255,.9)"; ctx.fill();
+}
+
+/* ---------- timer ---------- */
 function tick(){
-  remaining=(endAt-Date.now())/1000;
-  if(remaining<=0){remaining=0;finish()}
-  document.getElementById('digits').textContent=fmt(remaining);
+  remaining = (endAt - Date.now()) / 1000;          /* always from the clock, so time spent away still counts */
+  if (remaining <= 0){ remaining = 0; finish(); return; }
+  el("digits").textContent = fmt(remaining);
   draw();
 }
 function toggle(){
-  if(total<=0)return;
-  if(running){running=false;remaining=(endAt-Date.now())/1000;document.getElementById('go').textContent='Start';if(loop)clearInterval(loop);}
-  else{if(remaining<=0)remaining=total;running=true;endAt=Date.now()+remaining*1000;document.getElementById('go').textContent='Pause';haptic('light');loop=setInterval(tick,100);tick();}
+  if (total <= 0) return;
+  if (running){ running = false; remaining = (endAt - Date.now()) / 1000; if (loop) clearInterval(loop); }
+  else {
+    if (remaining <= 0) remaining = total;
+    running = true; finished = false; staged = true; endAt = Date.now() + remaining * 1000;
+    haptic("light"); primeAudio(); loop = setInterval(tick, 100);
+  }
+  sync(); syncChrome();
+  if (running) tick();
 }
-function reset(){running=false;if(loop)clearInterval(loop);remaining=total;document.getElementById('go').textContent='Start';document.getElementById('digits').textContent=fmt(remaining);draw();}
+function reset(){
+  running = false; finished = false; staged = false; if (loop) clearInterval(loop);
+  remaining = total; sync(); syncChrome();
+}
 function finish(){
-  running=false;if(loop)clearInterval(loop);
-  document.getElementById('go').textContent='Start';
-  haptic('success');chime();
+  running = false; finished = true; if (loop) clearInterval(loop);
+  sync(); syncChrome();
+  haptic("success"); chime();
 }
-var actx=null;
+function leave(){ haptic("light"); staged = false; sync(); syncChrome(); }     /* the timer carries on; only the full screen ends */
+
+var actx = null;
+/* made on the Start tap, so the chime is allowed to sound when the time is up */
+function primeAudio(){
+  try {
+    if (!actx){ var AC = window.AudioContext || window.webkitAudioContext; actx = new AC(); }
+    if (actx.state === "suspended") actx.resume();
+  } catch(e){}
+}
 function chime(){
-  try{
-    if(!actx){var AC=window.AudioContext||window.webkitAudioContext;actx=new AC()}
-    if(actx.state==='suspended')actx.resume();
-    [523.25,659.25,783.99].forEach(function(f,i){
-      var o=actx.createOscillator(),g=actx.createGain(),t=actx.currentTime+i*0.18;
-      o.type='sine';o.frequency.value=f;
-      g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(0.3,t+0.03);g.gain.exponentialRampToValueAtTime(0.0001,t+0.6);
-      o.connect(g);g.connect(actx.destination);o.start(t);o.stop(t+0.65);
+  try {
+    primeAudio();
+    [523.25, 659.25, 783.99].forEach(function(f, i){
+      var o = actx.createOscillator(), g = actx.createGain(), t = actx.currentTime + i * 0.18;
+      o.type = "sine"; o.frequency.value = f;
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.3, t + 0.03); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.6);
+      o.connect(g); g.connect(actx.destination); o.start(t); o.stop(t + 0.65);
     });
-  }catch(e){}
+  } catch(e){}
 }
-window.addEventListener('resize',function(){sizeCanvas();draw()});
-sizeCanvas();renderPresets();document.getElementById('digits').textContent=fmt(remaining);draw();
+
+el("go").onclick = toggle;
+el("bReset").onclick = reset;
+el("bDone").onclick = leave;
+el("bNum").onclick = function(){ showNum = !showNum; haptic("selection"); sync(); };
+
+window.addEventListener("resize", function(){ sizeCanvas(); draw(); });
+document.addEventListener("visibilitychange", function(){
+  if (document.hidden) return;
+  if (running) tick();                               /* if it ran out while away: finished, and one chime */
+  if (staged) syncChrome();                          /* MyLLM puts its bars back when the app is left */
+});
+if (window.matchMedia){
+  var mq = matchMedia("(prefers-color-scheme: dark)");
+  if (mq.addEventListener) mq.addEventListener("change", function(){ syncLook(); draw(); }); else if (mq.addListener) mq.addListener(function(){ syncLook(); draw(); });
+}
+
+/* ---------- boot ---------- */
+renderPresets(); sync();
 </script></body></html>

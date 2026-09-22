@@ -3,69 +3,220 @@
   Bubble Breathing — MyLLMos™ App Gallery · © 2026 Opticell Ltd
   Source-available: read it, remix it, run your version inside MyLLM™.
   Not for redistribution or republication. Terms: https://github.com/TeamDzX/myllm-assets/blob/main/LICENSE
---><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<style>:root{--build-id:"f946701289";color-scheme:light dark;--bg:#eef4ff;--fg:#1b2440}
-@media(prefers-color-scheme:dark){:root{--bg:#0a0f1f;--fg:#eaf0ff}}
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
-html,body{margin:0;height:100%;overflow:hidden}
-body{font-family:-apple-system,system-ui,sans-serif;background:var(--bg);color:var(--fg);display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:calc(18px + env(safe-area-inset-top)) 16px calc(20px + env(safe-area-inset-bottom));touch-action:manipulation}
-h1{font-size:20px;margin:0;font-weight:700}
-.sub{font-size:13px;opacity:.6;margin-top:2px}
-.stage{flex:1;display:flex;align-items:center;justify-content:center;width:100%;position:relative}
-.bubble{width:62vw;max-width:300px;aspect-ratio:1;border-radius:50%;display:flex;align-items:center;justify-content:center;
-  background:radial-gradient(circle at 35% 30%,#7ad0ff,#4a7bf0 70%);box-shadow:0 12px 40px rgba(74,123,240,.45);transition:none}
-.bubble .face{font-size:54px}
-.word{position:absolute;bottom:-6px;font-size:22px;font-weight:700;opacity:.9}
-.count{font-size:13px;opacity:.55;margin-top:6px}
-.modes{display:flex;gap:8px;margin-bottom:12px}
-.modes button{border:0;background:rgba(127,127,127,.16);color:var(--fg);border-radius:14px;padding:8px 14px;font-size:13px;font-weight:600}
-.modes button.on{background:#4a7bf0;color:#fff}
-.go{border:0;background:#4a7bf0;color:#fff;border-radius:18px;padding:15px 44px;font-size:18px;font-weight:700;box-shadow:0 6px 18px rgba(74,123,240,.4)}
-.go:active{transform:scale(.97)}
-</style></head><body>
-<div style="text-align:center"><h1>🫧 Bubble Breathing</h1><div class="sub">Grow big as you breathe in, shrink as you breathe out</div></div>
-<div class="stage">
-  <div class="bubble" id="bubble"><span class="face" id="face">😌</span></div>
-  <div class="word" id="word"></div>
-</div>
-<div style="text-align:center;width:100%">
-  <div class="modes" id="modes"></div>
-  <button class="go" id="go" onclick="toggle()">Start</button>
-  <div class="count" id="count"></div>
-</div>
-<script>
-function haptic(s){if(window.myllmHaptic)try{myllmHaptic(s)}catch(e){}}
-// [inhale, hold-in, exhale, hold-out] seconds
-var MODES=[['Calm',[4,1,4,1],'😌'],['Relax',[4,2,6,1],'😊'],['Sleepy',[4,7,8,0],'😴']];
-var mode=0,running=false,t0=0,raf=null,breaths=0,lastPhase=-1;
-var bubble=document.getElementById('bubble'),face=document.getElementById('face'),word=document.getElementById('word'),countEl=document.getElementById('count');
-function renderModes(){var M=document.getElementById('modes');M.innerHTML='';MODES.forEach(function(m,i){var b=document.createElement('button');b.textContent=m[0];if(i===mode)b.className='on';b.onclick=function(){if(running)return;mode=i;renderModes()};M.appendChild(b)})}
-function cycleLen(){var p=MODES[mode][1];return p[0]+p[1]+p[2]+p[3]}
-function ease(x){return 0.5-0.5*Math.cos(Math.PI*x)} // smooth in/out
-function frame(now){
-  if(!running)return;
-  var p=MODES[mode][1],L=cycleLen();
-  var el=((now-t0)/1000)%L, phase, frac, scale, txt;
-  if(el<p[0]){phase=0;frac=el/p[0];scale=0.55+0.45*ease(frac);txt='Breathe in…'}
-  else if(el<p[0]+p[1]){phase=1;scale=1;txt='Hold'}
-  else if(el<p[0]+p[1]+p[2]){phase=2;frac=(el-p[0]-p[1])/p[2];scale=1-0.45*ease(frac);txt='Breathe out…'}
-  else{phase=3;scale=0.55;txt='Hold'}
-  if(p[1]===0&&phase===1)phase=2;
-  bubble.style.transform='scale('+scale+')';
-  word.textContent=txt;
-  if(phase!==lastPhase){
-    lastPhase=phase;haptic(phase===0?'medium':phase===2?'soft':'selection');
-    if(phase===0){breaths++;countEl.textContent=breaths+' breath'+(breaths===1?'':'s')}
-    face.textContent=phase===0?'🙂':phase===2?'😮':MODES[mode][2];
+--><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Bubble Breathing</title>
+<style>:root{--build-id:"f946701289";color-scheme:light dark}
+  @property --h{ syntax:'<number>'; inherits:true; initial-value:212; }
+  *{ margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; -webkit-user-select:none; user-select:none; }
+  html,body{ height:100%; overflow:hidden; }
+  body{ font-family:var(--myllm-font,-apple-system,system-ui,sans-serif); background:#0b0b10; color:#fff; touch-action:manipulation; }
+
+  /* The stage: a quiet blue backdrop that drifts a little cooler on the
+     out-breath. Two layers, dark and light, cross-faded slowly. */
+  .stage{ position:fixed; inset:0; --h:212; transition:--h 3.6s ease-in-out; color:#fff; overflow:hidden; }
+  .bg{ position:absolute; inset:0; transition:opacity 1.4s ease; }
+  .bg.d{ background:radial-gradient(120% 90% at 20% 10%, hsl(var(--h) 58% 28%), transparent 60%),
+      radial-gradient(120% 90% at 85% 95%, hsl(calc(var(--h) + 40) 50% 22%), transparent 62%), #0b0b10; }
+  .bg.l{ opacity:0; background:radial-gradient(120% 90% at 20% 0%, hsl(var(--h) 80% 87%), transparent 60%),
+      radial-gradient(120% 90% at 85% 100%, hsl(calc(var(--h) + 40) 72% 89%), transparent 62%), #f4f6fb; }
+  .lite{ color:#15151a; } .lite .bg.l{ opacity:1; } .lite .bg.d{ opacity:0; }
+
+  /* A few small bubbles rising, slowly, far apart. Decoration only. */
+  .rise{ position:absolute; inset:0; pointer-events:none; opacity:0; transition:opacity 2s ease; }
+  .run .rise{ opacity:1; }
+  .rise i{ position:absolute; bottom:-60px; border-radius:50%; border:1.5px solid rgba(255,255,255,.3); background:none; animation:rise linear infinite; }
+  .lite .rise i{ border-color:hsl(var(--h) 60% 55% / .4); }
+  @keyframes rise{ from{ transform:translate(0,0); } 50%{ transform:translate(14px,-60vh); } to{ transform:translate(-6px,-125vh); } }
+
+  .col{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; text-align:center;
+    padding:calc(12px + env(safe-area-inset-top)) calc(20px + env(safe-area-inset-right)) calc(20px + env(safe-area-inset-bottom)) calc(20px + env(safe-area-inset-left)); }
+  .top{ width:100%; max-width:520px; height:58px; display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
+  .top .side{ width:112px; display:flex; }
+  .lbl{ font-size:11px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; opacity:.62; }
+  .glass{ border:1px solid rgba(255,255,255,.16); background:rgba(255,255,255,.12); color:inherit;
+    -webkit-backdrop-filter:blur(18px); backdrop-filter:blur(18px); }
+  .lite .glass{ border-color:rgba(0,0,0,.09); background:rgba(255,255,255,.66); }
+  svg.i{ width:1.25em; height:1.25em; fill:currentColor; flex-shrink:0; }
+  button{ font:inherit; } button:active{ transform:scale(.96); }
+  .big{ height:58px; min-width:58px; border-radius:99px; padding:0 22px; font-size:16.5px; font-weight:750;
+    display:inline-flex; align-items:center; justify-content:center; gap:9px; }
+  #bDone{ opacity:0; pointer-events:none; transition:opacity .8s ease; }
+  .run #bDone{ opacity:1; pointer-events:auto; }
+
+  .mid{ flex:1; min-height:0; width:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+  .well{ position:relative; width:var(--s,260px); height:var(--s,260px); flex-shrink:0; display:flex; align-items:center; justify-content:center; }
+  .well::before{ content:""; position:absolute; inset:0; border-radius:50%; border:1.5px dashed currentColor; opacity:.14; }   /* how big the bubble gets */
+  .bubble{ width:100%; height:100%; border-radius:50%; display:flex; align-items:center; justify-content:center; transform:scale(.7); will-change:transform;
+    background:radial-gradient(circle at 34% 28%, hsl(var(--h) 100% 90%), hsl(var(--h) 85% 66%) 42%, hsl(calc(var(--h) + 18) 72% 50%) 100%);
+    box-shadow:0 0 80px hsl(var(--h) 90% 60% / .38), inset 0 0 0 1.5px rgba(255,255,255,.35), inset -14px -18px 40px hsl(calc(var(--h) + 26) 70% 34% / .35); }
+  .lite .bubble{ box-shadow:0 22px 56px hsl(var(--h) 70% 42% / .28), inset 0 0 0 1.5px rgba(255,255,255,.6), inset -14px -18px 40px hsl(calc(var(--h) + 26) 70% 40% / .22); }
+  .bubble::before{ content:""; position:absolute; left:20%; top:14%; width:26%; height:16%; border-radius:50%; background:rgba(255,255,255,.55); filter:blur(5px); transform:rotate(-28deg); }
+  .face{ font-size:calc(var(--s,260px) * .24); line-height:1; position:relative; }
+
+  .word{ font-size:28px; font-weight:800; letter-spacing:-.01em; margin-top:26px; min-height:36px; flex-shrink:0; }
+  .word.swap{ animation:swap .6s ease both; }
+  @keyframes swap{ from{ opacity:0; transform:translateY(8px); } to{ opacity:1; transform:none; } }
+  .meta{ font-size:14px; opacity:.62; margin-top:6px; min-height:20px; max-width:300px; line-height:1.35; flex-shrink:0; font-variant-numeric:tabular-nums; }
+
+  .ctl{ width:100%; max-width:380px; flex-shrink:0; }
+  .chips{ display:flex; justify-content:center; gap:8px; margin-bottom:14px; }
+  .chips button{ height:56px; flex:1; max-width:120px; border-radius:20px; font-size:15px; font-weight:750; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px; }
+  .chips button small{ font-size:11px; font-weight:600; opacity:.6; font-variant-numeric:tabular-nums; }
+  .chips button.hot{ background:#fff; border-color:#fff; color:#0b0b10; }
+  .lite .chips button.hot{ background:#15151a; border-color:#15151a; color:#fff; }
+  .run .chips{ visibility:hidden; }          /* keeps its room, so the bubble doesn't jump on Start */
+  .go{ width:100%; height:60px; border-radius:99px; border:none; font-size:18px; font-weight:750; background:#fff; color:#0b0b10;
+    box-shadow:0 10px 30px rgba(0,0,0,.3); display:flex; align-items:center; justify-content:center; gap:9px; }
+  .lite .go{ background:#15151a; color:#fff; box-shadow:0 10px 26px rgba(20,20,40,.22); }
+  .run .go{ background:rgba(255,255,255,.12); color:inherit; border:1px solid rgba(255,255,255,.16); box-shadow:none;
+    -webkit-backdrop-filter:blur(18px); backdrop-filter:blur(18px); }
+  .lite.run .go{ background:rgba(255,255,255,.66); border-color:rgba(0,0,0,.09); color:#15151a; }
+
+  @media (max-width:340px){ .word{ font-size:24px; margin-top:18px; } .chips button{ font-size:14px; } }
+  @media (max-height:520px){                       /* phone on its side: bubble left, words and buttons right */
+    .mid{ flex-direction:row; justify-content:center; gap:26px; padding:0 calc(min(280px,36vw) + 22px) 0 2vw; }
+    .word{ margin-top:0; font-size:24px; } .words{ text-align:left; min-width:150px; } .meta{ max-width:200px; }
+    .ctl{ position:absolute; right:calc(20px + env(safe-area-inset-right)); top:50%; transform:translateY(-50%); width:min(280px,36vw); }
+    .chips{ margin-bottom:12px; } .go{ height:56px; font-size:16.5px; }
   }
-  raf=requestAnimationFrame(frame);
+  @media (prefers-reduced-motion:reduce){ .word.swap{ animation:none; } .stage{ transition:none; } .rise{ display:none; } }
+  @media (max-width:340px){ .top .side{ width:60px; } #bDone{ padding:0; width:56px; } #bDone span{ display:none; } }
+</style></head><body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5.5v13a1 1 0 0 0 1.52.85l10.4-6.5a1 1 0 0 0 0-1.7L9.52 4.65A1 1 0 0 0 8 5.5z"/></symbol>
+  <symbol id="i-stop" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2.6"/></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24"><path d="M6.4 5a1 1 0 0 0-1.4 1.4L10.6 12 5 17.6A1 1 0 0 0 6.4 19l5.6-5.6 5.6 5.6a1 1 0 0 0 1.4-1.4L13.4 12 19 6.4A1 1 0 0 0 17.6 5L12 10.6z"/></symbol>
+</defs></svg>
+
+<div class="stage" id="stage">
+  <div class="bg d"></div><div class="bg l"></div>
+  <div class="rise" aria-hidden="true">
+    <i style="left:12%;width:22px;height:22px;animation-duration:26s;animation-delay:-4s"></i>
+    <i style="left:34%;width:12px;height:12px;animation-duration:34s;animation-delay:-19s"></i>
+    <i style="left:58%;width:30px;height:30px;animation-duration:30s;animation-delay:-11s"></i>
+    <i style="left:76%;width:16px;height:16px;animation-duration:38s;animation-delay:-27s"></i>
+    <i style="left:90%;width:24px;height:24px;animation-duration:28s;animation-delay:-16s"></i>
+  </div>
+  <div class="col">
+    <div class="top">
+      <div class="side"><button class="glass big" id="bDone" aria-label="Stop"><svg class="i"><use href="#i-close"/></svg><span>Done</span></button></div>
+      <div class="lbl">Bubble Breathing</div>
+      <div class="side"></div>
+    </div>
+    <div class="mid">
+      <div class="well"><div class="bubble" id="bubble"><span class="face" id="face">😌</span></div></div>
+      <div class="words">
+        <div class="word" id="word">Ready?</div>
+        <div class="meta" id="count">Grow big as you breathe in, shrink as you breathe out</div>
+      </div>
+    </div>
+    <div class="ctl">
+      <div class="chips" id="modes"></div>
+      <button class="go" id="go"><svg class="i"><use href="#i-play"/></svg><span>Start</span></button>
+    </div>
+  </div>
+</div>
+
+<script>
+function el(i){ return document.getElementById(i); }
+/* Bridges are looked up when used, never kept: MyLLM can add them after this
+   script has run. */
+function haptic(s){ if (window.myllmHaptic) try { myllmHaptic(s); } catch(e){} }
+
+/* [inhale, hold-in, exhale, hold-out] seconds */
+var MODES = [["Calm",[4,1,4,1],"😌"], ["Relax",[4,2,6,1],"😊"], ["Sleepy",[4,7,8,0],"😴"]];
+var HUES = [204, 212, 232, 212];                       /* in · hold · out · hold */
+var INTRO = "Grow big as you breathe in, shrink as you breathe out";
+var mode = 0, running = false, t0 = 0, raf = null, breaths = 0, lastPhase = -1, lastTxt = "";
+var bubble = el("bubble"), face = el("face"), word = el("word"), countEl = el("count");
+
+/* ---------- look ---------- */
+function isLight(){ return !(window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches); }
+/* A session takes the whole display and dims the room. Where MyLLM can't hide
+   its own title bar, a dark stage under a white bar looks cut in half — so in
+   light mode, without myllmImmersive, the stage stays light. */
+function syncLook(){
+  var s = el("stage");
+  s.classList.toggle("lite", isLight() && !(running && window.myllmImmersive));
+  s.classList.toggle("run", running);
 }
-function toggle(){
-  running=!running;
-  document.getElementById('go').textContent=running?'Stop':'Start';
-  renderModes();
-  if(running){breaths=0;lastPhase=-1;t0=performance.now();haptic('light');raf=requestAnimationFrame(frame)}
-  else{if(raf)cancelAnimationFrame(raf);bubble.style.transform='scale(0.7)';word.textContent='';face.textContent='😌';countEl.textContent=''}
+function syncChrome(){
+  if (!window.myllmImmersive) return;
+  try { myllmImmersive(running, {keepAwake:running}).catch(function(){}); } catch(_){}   /* nobody touches the screen while breathing */
 }
-renderModes();bubble.style.transform='scale(0.7)';
+function setHue(h){ el("stage").style.setProperty("--h", String(h)); }
+function fit(){
+  var m = document.querySelector(".mid"), wide = window.innerHeight <= 520;
+  var s = wide ? Math.min(m.clientHeight - 8, 300) : Math.min(m.clientWidth * .78, m.clientHeight - 110, 320);
+  el("stage").style.setProperty("--s", Math.max(120, Math.floor(s)) + "px");
+}
+function say(text){
+  if (text === lastTxt) return;
+  lastTxt = text; word.textContent = text;
+  word.classList.remove("swap"); void word.offsetWidth; word.classList.add("swap");
+}
+
+function renderModes(){
+  var M = el("modes"); M.innerHTML = "";
+  MODES.forEach(function(m, i){
+    var b = document.createElement("button"), p = m[1];
+    b.className = "glass" + (i === mode ? " hot" : "");
+    b.innerHTML = m[0] + "<small>" + p.filter(function(x){ return x > 0; }).join(" · ") + "</small>";
+    b.onclick = function(){ if (running) return; mode = i; haptic("selection"); renderModes(); };
+    M.appendChild(b);
+  });
+}
+
+/* ---------- session ---------- */
+function cycleLen(){ var p = MODES[mode][1]; return p[0] + p[1] + p[2] + p[3]; }
+function ease(x){ return 0.5 - 0.5 * Math.cos(Math.PI * x); }   /* smooth in/out */
+function frame(now){
+  if (!running) return;
+  var p = MODES[mode][1], L = cycleLen();
+  var t = ((now - t0) / 1000) % L, phase, frac, scale, txt;
+  if (t < p[0]){ phase = 0; frac = t / p[0]; scale = 0.55 + 0.45 * ease(frac); txt = "Breathe in…"; }
+  else if (t < p[0] + p[1]){ phase = 1; scale = 1; txt = "Hold"; }
+  else if (t < p[0] + p[1] + p[2]){ phase = 2; frac = (t - p[0] - p[1]) / p[2]; scale = 1 - 0.45 * ease(frac); txt = "Breathe out…"; }
+  else { phase = 3; scale = 0.55; txt = "Hold"; }
+  if (p[1] === 0 && phase === 1) phase = 2;
+  bubble.style.transform = "scale(" + scale.toFixed(4) + ")";
+  say(txt);
+  if (phase !== lastPhase){
+    lastPhase = phase; haptic(phase === 0 ? "medium" : phase === 2 ? "soft" : "selection");
+    setHue(HUES[phase]);
+    if (phase === 0){ breaths++; countEl.textContent = breaths + " breath" + (breaths === 1 ? "" : "s"); }
+    face.textContent = phase === 0 ? "🙂" : phase === 2 ? "😮" : MODES[mode][2];
+  }
+  raf = requestAnimationFrame(frame);
+}
+function start(){
+  running = true; breaths = 0; lastPhase = -1; t0 = performance.now(); haptic("light");
+  el("go").innerHTML = '<svg class="i"><use href="#i-stop"/></svg><span>Stop</span>';
+  countEl.textContent = "";
+  syncLook(); syncChrome(); fit();
+  raf = requestAnimationFrame(frame);
+}
+function stop(){
+  if (!running) return;
+  running = false; if (raf) cancelAnimationFrame(raf);
+  bubble.style.transition = "transform 1.4s ease"; bubble.style.transform = "scale(0.7)";
+  setTimeout(function(){ bubble.style.transition = ""; }, 1500);
+  face.textContent = "😌"; setHue(212);
+  el("go").innerHTML = '<svg class="i"><use href="#i-play"/></svg><span>Start</span>';
+  if (breaths > 1){ say("Well done"); countEl.textContent = (breaths - 1) + " breath" + (breaths === 2 ? "" : "s"); }
+  else { say("Ready?"); countEl.textContent = INTRO; }
+  renderModes(); syncLook(); syncChrome(); fit();
+}
+el("go").onclick = function(){ if (running) stop(); else start(); };
+el("bDone").onclick = stop;
+
+document.addEventListener("visibilitychange", function(){ if (document.hidden) stop(); });   /* leaving ends the session and lets the screen sleep */
+if (window.matchMedia){
+  var mq = matchMedia("(prefers-color-scheme: dark)");
+  if (mq.addEventListener) mq.addEventListener("change", syncLook); else if (mq.addListener) mq.addListener(syncLook);
+}
+window.addEventListener("resize", fit);
+
+/* ---------- boot ---------- */
+fit(); syncLook(); renderModes();
 </script></body></html>

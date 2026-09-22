@@ -6,17 +6,35 @@
 --><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Speedometer</title>
 <style>
-:root{--build-id:"74b2300b0a";color-scheme:dark;--bg:#0b0d12;--panel:#141824;--ink:#edf0f7;--mut:#7c86a0;--line:#232a3c;
-  --ac:#ffb04c;--ok:#5fd08a;--warn:#ffd23f;--bad:#ff6b60}
-*{box-sizing:border-box;margin:0}
+:root{--build-id:"74b2300b0a";color-scheme:light dark;--ok:#5fd08a;--warn:#ffd23f;--bad:#ff6b60;--acc:#ffb04c}
+@property --h{ syntax:'<number>'; inherits:true; initial-value:36; }
+*{box-sizing:border-box;margin:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%}
-body{font-family:-apple-system,system-ui,sans-serif;color:var(--ink);
-  position:fixed;inset:0;width:100%;height:100dvh;overflow:hidden;display:flex;flex-direction:column;
-  -webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;
-  background:radial-gradient(130% 100% at 50% 0%,#131a2c,var(--bg))}
-.top{padding:calc(12px + env(safe-area-inset-top)) 18px 0;display:flex;align-items:center;gap:8px}
-h1{font-size:17px;font-weight:800;letter-spacing:.04em}
-.gpsdot{width:9px;height:9px;border-radius:50%;background:#555;margin-left:auto}
+body{font-family:var(--myllm-font,-apple-system,system-ui,sans-serif);color:#fff;background:#0b0b10;
+  position:fixed;inset:0;width:100%;height:100dvh;overflow:hidden;user-select:none;-webkit-user-select:none}
+
+/* The stage: an amber instrument that shifts hue with speed — warm at rest,
+   through gold at road speed, to a cool blue at the top of the range. Two
+   layers, dark and light, so the change between them can fade. */
+.stage{position:absolute;inset:0;--h:36;transition:--h 1.2s ease;color:#fff;display:flex;flex-direction:column}
+.bg{position:absolute;inset:0;transition:opacity .6s ease}
+.bg.d{background:radial-gradient(120% 90% at 20% 10%,hsl(var(--h) 70% 30%),transparent 60%),
+  radial-gradient(120% 90% at 85% 95%,hsl(calc(var(--h) + 40) 62% 24%),transparent 62%),#0b0b10}
+.bg.l{opacity:0;background:radial-gradient(120% 90% at 20% 0%,hsl(var(--h) 85% 84%),transparent 60%),
+  radial-gradient(120% 90% at 85% 100%,hsl(calc(var(--h) + 40) 78% 87%),transparent 62%),#f4f4f8}
+.lite{color:#15151a}.lite .bg.l{opacity:1}.lite .bg.d{opacity:0}
+.stage>*:not(.bg){position:relative}
+.glass{border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.12);color:inherit;
+  -webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px)}
+.lite .glass{border-color:rgba(0,0,0,.09);background:rgba(255,255,255,.62)}
+svg.i{width:1.25em;height:1.25em;fill:currentColor;flex-shrink:0}
+button{font:inherit}button:active{transform:scale(.96)}
+
+.top{display:flex;align-items:center;gap:10px;flex-shrink:0;
+  padding:calc(12px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) 0 calc(16px + env(safe-area-inset-left))}
+.top .lbl{font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;opacity:.62;flex:1}
+.gps{height:36px;border-radius:99px;padding:0 13px 0 11px;display:flex;align-items:center;gap:8px;font-size:11.5px;font-weight:800;letter-spacing:.06em}
+.gpsdot{width:9px;height:9px;border-radius:50%;background:rgba(128,128,140,.6);flex-shrink:0}
 .gpsdot.ok{background:var(--ok);box-shadow:0 0 8px rgba(95,208,138,.7)}
 .gpsdot.mid{background:var(--warn)}
 .gpsdot.bad{background:var(--bad)}
@@ -24,59 +42,130 @@ h1{font-size:17px;font-weight:800;letter-spacing:.04em}
    breathes, so "connecting" never looks like "broken" */
 .gpsdot.search{background:var(--warn);animation:breathe 1.2s ease-in-out infinite}
 @keyframes breathe{0%,100%{opacity:.22;transform:scale(.75)}50%{opacity:1;transform:scale(1.3)}}
-.gpstxt{font-size:11px;color:var(--mut);font-weight:700}
-#gaugeWrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:0;padding:0 12px}
-canvas{max-width:100%}
-.readout{text-align:center;margin-top:-14dvh}
-.speed{font-size:min(19dvw,86px);font-weight:900;font-variant-numeric:tabular-nums;line-height:1;
-  text-shadow:0 0 30px rgba(255,176,76,.25);transition:opacity .35s}
+.rnd{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+
+#gaugeWrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:0;padding:0 12px;position:relative}
+#gaugeWrap canvas{max-height:calc(100% - 8px)}
+canvas{max-width:100%;display:block}
+.readout{position:absolute;left:0;right:0;top:50%;transform:translateY(-44%);text-align:center;pointer-events:none}
+.speed{font-size:var(--sp,86px);min-height:1em;font-weight:900;font-variant-numeric:tabular-nums;line-height:1;letter-spacing:-.03em;
+  text-shadow:0 0 30px hsl(var(--h) 90% 60% / .35);transition:opacity .35s}
+.lite .speed{text-shadow:none}
 /* a reading older than a few seconds is dimmed rather than shown as if live */
 .readout.stale .speed{opacity:.35;text-shadow:none}
-.vehicle{font-size:14px;color:var(--mut);font-weight:700;min-height:20px;margin-top:6px}
-.vehicle b{font-size:17px}
-.units{display:flex;gap:8px;justify-content:center;margin:10px 0 4px}
-.uchip{border:1.5px solid var(--line);background:none;color:var(--mut);border-radius:999px;
-  padding:7px 16px;font-size:13px;font-weight:800}
-.uchip.on{color:var(--ac);border-color:var(--ac)}
-.trip{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:8px 14px}
-.tcell{background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:9px 6px;text-align:center}
-.tcell .v{font-size:16px;font-weight:900;font-variant-numeric:tabular-nums}
-.tcell .l{font-size:9px;letter-spacing:.12em;color:var(--mut);font-weight:800;margin-top:2px}
-.bar{display:flex;gap:9px;padding:8px 14px calc(16px + env(safe-area-inset-bottom))}
-.btn{flex:1;border:1.5px solid var(--line);background:var(--panel);color:var(--ink);border-radius:13px;
-  padding:13px;font-size:14px;font-weight:800}
-.btn.go{background:linear-gradient(135deg,var(--ac),#e08a2f);border:0;color:#1a1206}
-.btn.stop{background:linear-gradient(135deg,#ff7a6b,#d05548);border:0;color:#2a0d0a}
-.hint{text-align:center;font-size:11.5px;color:var(--mut);padding:0 22px 6px;line-height:1.5;min-height:16px}
-.best{text-align:center;font-size:11px;color:var(--warn);font-weight:700;padding-bottom:2px}
-</style></head><body>
+.unitlbl{font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;opacity:.6;margin-top:4px}
+.vehicle{font-size:14px;opacity:.75;font-weight:700;min-height:20px;margin-top:8px;display:flex;align-items:center;justify-content:center;gap:7px}
+.vehicle svg{font-size:18px;opacity:.9}
 
-<div class="top"><h1>⛭ SPEEDOMETER</h1><div class="gpstxt" id="gpsTxt">GPS off</div><div class="gpsdot" id="gpsDot"></div></div>
-<div id="gaugeWrap">
-  <canvas id="gauge"></canvas>
-  <div class="readout">
-    <div class="speed" id="speedV">0</div>
-    <div class="vehicle" id="vehicle"></div>
+.lower{flex-shrink:0;padding:6px calc(14px + env(safe-area-inset-right)) calc(14px + env(safe-area-inset-bottom)) calc(14px + env(safe-area-inset-left))}
+.lowerin{max-width:560px;margin:0 auto}
+.units{display:flex;gap:7px;justify-content:center;margin:0 0 10px}
+.uchip{height:36px;border-radius:99px;padding:0 15px;font-size:13px;font-weight:700}
+.uchip.on{background:#fff;border-color:#fff;color:#0b0b10}
+.lite .uchip.on{background:#15151a;border-color:#15151a;color:#fff}
+.best{text-align:center;font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;opacity:.7;min-height:14px;margin-bottom:8px;font-variant-numeric:tabular-nums}
+.trip{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.tcell{border-radius:16px;padding:10px 6px;text-align:center}
+.tcell .v{font-size:17px;font-weight:800;font-variant-numeric:tabular-nums}
+.tcell .l{font-size:9.5px;letter-spacing:.12em;opacity:.6;font-weight:800;margin-top:2px}
+.hint{text-align:center;font-size:12px;opacity:.65;padding:8px 10px 2px;line-height:1.45;min-height:22px}
+.bar{display:flex;gap:9px;margin-top:8px}
+.btn{flex:1;height:52px;border-radius:99px;font-size:15.5px;font-weight:750;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn.go{background:#fff;color:#0b0b10;border:0;box-shadow:0 10px 30px rgba(0,0,0,.3)}
+.lite .btn.go{background:#15151a;color:#fff;box-shadow:0 10px 26px rgba(20,20,40,.22)}
+.btn.stop{background:rgba(255,107,96,.85);border-color:transparent;color:#fff}
+.lite .btn.stop{background:#d8452f;color:#fff}
+
+/* Dock: true black, the number and nothing else, drifting a little every
+   minute so nothing burns in. For a phone on a dash mount. */
+.dock{display:none;position:fixed;inset:0;z-index:60;background:#000;color:#fff;overflow:hidden}
+.dock.on{display:block}
+.dock .drift{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:0 24px;text-align:center;transition:transform 2s ease}
+.dock .dspeed{font-size:min(44vw,44vh,300px);font-weight:200;letter-spacing:-.02em;line-height:1;color:#c9c9cf;font-variant-numeric:tabular-nums}
+.dock .dspeed.stale{color:#55555c}
+.dock .dunit{font-size:14px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#5d5d66}
+.dock .dgps{font-size:12px;font-weight:700;letter-spacing:.08em;color:#4a4a52;margin-top:10px;display:flex;align-items:center;gap:8px}
+.dock .dgps .gpsdot{opacity:.8}
+.dock .ctl{position:absolute;left:0;right:0;bottom:calc(30px + env(safe-area-inset-bottom));display:flex;justify-content:center;gap:12px;opacity:0;pointer-events:none;transition:opacity .3s}
+.dock .ctl.on{opacity:1;pointer-events:auto}
+.dock .ctl button{border:1px solid #2c2c33;background:#121216;color:#eee;border-radius:99px;padding:12px 22px;font-size:15px;font-weight:700;display:inline-flex;align-items:center;gap:8px}
+.dock .dhint{position:absolute;bottom:calc(34px + env(safe-area-inset-bottom));left:0;right:0;text-align:center;font-size:12px;color:#4a4a52;transition:opacity .6s}
+
+@media (max-height:520px){                      /* on its side on a dash: gauge left, trip right */
+  .stage{display:grid;grid-template-columns:minmax(0,1fr) min(46%,360px);grid-template-rows:auto minmax(0,1fr)}
+  .top{grid-column:1 / 3}
+  #gaugeWrap{grid-column:1;grid-row:2;padding-bottom:8px}
+  .lower{grid-column:2;grid-row:2;display:flex;flex-direction:column;justify-content:center;padding-top:0}
+  .trip{grid-template-columns:repeat(2,1fr)} .readout{transform:translateY(-44%)}
+  .btn{font-size:14px;padding:0 6px;white-space:nowrap}
+}
+@media (prefers-reduced-motion:reduce){.gpsdot.search{animation:none;opacity:1}.stage,.bg{transition:none}.dock .drift{transition:none}}
+</style></head><body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5.5v13a1 1 0 0 0 1.52.85l10.4-6.5a1 1 0 0 0 0-1.7L9.52 4.65A1 1 0 0 0 8 5.5z"/></symbol>
+  <symbol id="i-pause" viewBox="0 0 24 24"><rect x="6" y="5" width="4.2" height="14" rx="1.4"/><rect x="13.8" y="5" width="4.2" height="14" rx="1.4"/></symbol>
+  <symbol id="i-reset" viewBox="0 0 24 24"><path d="M12 5V2.6a.6.6 0 0 0-1-.45L7.2 5.55a.6.6 0 0 0 0 .9L11 9.85a.6.6 0 0 0 1-.45V7a5.5 5.5 0 1 1-5.5 5.5 1 1 0 0 0-2 0A7.5 7.5 0 1 0 12 5z"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M12.3 2.4a1 1 0 0 0-1.1 1.3A7.5 7.5 0 0 1 3.7 13a1 1 0 0 0-1.3 1.1A9.5 9.5 0 1 0 12.3 2.4zm1.4 2.4a7.5 7.5 0 1 1-9.3 9.3 9.5 9.5 0 0 0 9.3-9.3z"/></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24"><path d="M6.4 5a1 1 0 0 0-1.4 1.4L10.6 12 5 17.6A1 1 0 0 0 6.4 19l5.6-5.6 5.6 5.6a1 1 0 0 0 1.4-1.4L13.4 12 19 6.4A1 1 0 0 0 17.6 5L12 10.6z"/></symbol>
+  <symbol id="i-walk" viewBox="0 0 24 24"><path d="M13.5 2.5a1.8 1.8 0 1 0 0 3.6 1.8 1.8 0 0 0 0-3.6zM11.6 7c-.6 0-1.1.3-1.5.7L7.6 10.4a1 1 0 0 0 1.4 1.4l2.2-2.2.9 2.8-2.6 3.4a1 1 0 0 0-.1 1l1.8 4.3a1 1 0 0 0 1.8-.8l-1.6-3.7 1.9-2.4 1.3 2.2 2.9 1.7a1 1 0 0 0 1-1.7l-2.5-1.5-1.7-4.4 1.5.9 2.2.6a1 1 0 0 0 .5-1.9l-2-.6-2.8-1.9c-.3-.2-.7-.3-1-.3z"/></symbol>
+  <symbol id="i-horse" viewBox="0 0 24 24"><path d="M15.5 3l-1.2 2.4-3.1.6L8 9.2 6.4 8.6 4 10.5l2 1.2 1.8-.6.6 2.6L6.6 20h2.2l1.4-5 2.6-1.6.4 2.6-.8 4h2.2l.9-4.6-.6-3.2 3.1-1.4 1.6 3.6 1.4-.8-1.4-4.8L21 7.4l-1.6-1.2-1.4.8-1.3-2.4z"/></symbol>
+  <symbol id="i-car" viewBox="0 0 24 24"><path d="M6.5 5a2 2 0 0 0-1.9 1.4L3.4 10.2A2 2 0 0 0 2 12.1V17a1 1 0 0 0 1 1h1a2 2 0 0 0 4 0h8a2 2 0 0 0 4 0h1a1 1 0 0 0 1-1v-4.9a2 2 0 0 0-1.4-1.9l-1.2-3.8A2 2 0 0 0 17.5 5zm0 2h11l1 3H5.5zM6 12.5a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zm12 0a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3z"/></symbol>
+  <symbol id="i-train" viewBox="0 0 24 24"><path d="M8 3a3 3 0 0 0-3 3v9a3 3 0 0 0 2.2 2.9L6 20h2.3l1-1.5h5.4l1 1.5H18l-1.2-2.1A3 3 0 0 0 19 15V6a3 3 0 0 0-3-3zm-1 4h10v4H7zm1.5 6.5a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zm7 0a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3z"/></symbol>
+  <symbol id="i-plane" viewBox="0 0 24 24"><path d="M21 15.5v-2l-8-5V3a1.5 1.5 0 0 0-3 0v5.5l-8 5v2l8-2.5v4.5l-2 1.5V21l3.5-1 3.5 1v-1.5l-2-1.5V13z"/></symbol>
+</defs></svg>
+
+<div class="stage" id="app">
+  <div class="bg d"></div><div class="bg l"></div>
+  <div class="top">
+    <div class="lbl">Speedometer</div>
+    <div class="glass gps"><span class="gpsdot" id="gpsDot"></span><span id="gpsTxt">GPS off</span></div>
+    <button class="glass rnd" id="dockBtn" aria-label="Dash mode"><svg class="i"><use href="#i-moon"/></svg></button>
   </div>
+  <div id="gaugeWrap">
+    <canvas id="gauge"></canvas>
+    <div class="readout">
+      <div class="speed" id="speedV">0</div>
+      <div class="unitlbl" id="unitLbl">km/h</div>
+      <div class="vehicle" id="vehicle"></div>
+    </div>
+  </div>
+  <div class="lower"><div class="lowerin">
+    <div class="units" id="units"></div>
+    <div class="best" id="best"></div>
+    <div class="trip">
+      <div class="tcell glass"><div class="v" id="tDist">0.0</div><div class="l" id="tDistU">KM</div></div>
+      <div class="tcell glass"><div class="v" id="tAvg">0</div><div class="l">AVG</div></div>
+      <div class="tcell glass"><div class="v" id="tMax">0</div><div class="l">MAX</div></div>
+      <div class="tcell glass"><div class="v" id="tTime">0:00</div><div class="l">MOVING</div></div>
+    </div>
+    <div class="hint" id="hint"></div>
+    <div class="bar">
+      <button class="btn glass" id="resetBtn"><svg class="i"><use href="#i-reset"/></svg>Reset trip</button>
+      <button class="btn go" id="goBtn"><svg class="i"><use href="#i-play"/></svg>Start</button>
+    </div>
+  </div></div>
 </div>
-<div class="units" id="units"></div>
-<div class="best" id="best"></div>
-<div class="trip">
-  <div class="tcell"><div class="v" id="tDist">0.0</div><div class="l" id="tDistU">KM</div></div>
-  <div class="tcell"><div class="v" id="tAvg">0</div><div class="l">AVG</div></div>
-  <div class="tcell"><div class="v" id="tMax">0</div><div class="l">MAX</div></div>
-  <div class="tcell"><div class="v" id="tTime">0:00</div><div class="l">MOVING</div></div>
-</div>
-<div class="hint" id="hint"></div>
-<div class="bar">
-  <button class="btn" id="resetBtn">Reset trip</button>
-  <button class="btn go" id="goBtn">Start</button>
+
+<div class="dock" id="dock">
+  <div class="drift" id="dDrift">
+    <div class="dspeed" id="dSpeed">0</div>
+    <div class="dunit" id="dUnit">km/h</div>
+    <div class="dgps"><span class="gpsdot" id="dDot"></span><span id="dTxt"></span></div>
+  </div>
+  <div class="dhint" id="dHint">Tap for controls</div>
+  <div class="ctl" id="dCtl">
+    <button id="dGo"><svg class="i"><use href="#i-pause"/></svg><span>Pause</span></button>
+    <button id="dExit"><svg class="i"><use href="#i-close"/></svg>Exit dash mode</button>
+  </div>
 </div>
 
 <script>
 "use strict";
-var store=window.myllmStorage||{getItem:function(){return Promise.resolve(null)},setItem:function(){return Promise.resolve()}};
 function el(i){return document.getElementById(i)}
+/* Bridges are looked up when used, never kept: MyLLM can add them after this
+   script has run. */
+var store={getItem:function(k){var s=window.myllmStorage;return s?s.getItem(k).catch(function(){return null}):Promise.resolve(null)},
+           setItem:function(k,v){var s=window.myllmStorage;if(s)try{s.setItem(k,v).catch(function(){})}catch(e){}}};
 function haptic(k){if(window.myllmHaptic)try{myllmHaptic(k||'light')}catch(e){}}
 
 /* ================= speed engine (pure — harness-tested) ================= */
@@ -150,11 +239,11 @@ function conv(ms,u){return ms*UNITS.find(function(x){return x[0]===u})[2]}
 /* what's likely carrying you, from km/h */
 function vehicleFor(kmh){
   if(kmh<1)return null;
-  if(kmh<7)return ['🚶','Walking pace'];
-  if(kmh<50)return ['🐎','Gallop territory'];
-  if(kmh<160)return ['🚗','Road speed'];
-  if(kmh<360)return ['🚄','Rail speed'];
-  return ['✈️','Air speed'];
+  if(kmh<7)return ['walk','Walking pace'];
+  if(kmh<50)return ['horse','Gallop territory'];
+  if(kmh<160)return ['car','Road speed'];
+  if(kmh<360)return ['train','Rail speed'];
+  return ['plane','Air speed'];
 }
 /* gauge range auto-grows in display units */
 var RANGES=[30,60,120,200,300,500,750,1000,1400];
@@ -183,7 +272,14 @@ function render(){
      no signal is worse than one that admits it doesn't know */
   el('speedV').textContent=lost?'—':(disp<10?disp.toFixed(1):Math.round(disp));
   var veh=lost?null:vehicleFor(ms*3.6);
-  el('vehicle').innerHTML=veh?('<b>'+veh[0]+'</b> '+veh[1]):(running&&!lost?'Waiting for movement…':'');
+  el('vehicle').innerHTML=veh?('<svg class="i"><use href="#i-'+veh[0]+'"/></svg>'+veh[1]):(running&&!lost?'Waiting for movement…':'');
+  el('unitLbl').textContent=UNITS.find(function(x){return x[0]===unit})[1];
+  /* the room warms with speed: amber at rest, gold on the road, blue in the air */
+  setHue(36+Math.min(1,(ms*3.6)/400)*180);
+  if(dockOn){
+    el('dSpeed').textContent=el('speedV').textContent;el('dSpeed').className='dspeed'+(stale||lost?' stale':'');
+    el('dUnit').textContent=el('unitLbl').textContent;
+  }
   el('tDist').textContent=unit==='mph'?(en.dist/1609.34).toFixed(1):unit==='kn'?(en.dist/1852).toFixed(1):(en.dist/1000).toFixed(1);
   el('tDistU').textContent=unit==='mph'?'MI':unit==='kn'?'NM':'KM';
   var avg=en.movingMs>2000?conv(en.dist/(en.movingMs/1000),unit):0;
@@ -196,38 +292,41 @@ function render(){
 /* ---- gauge ---- */
 var cv=el('gauge'),ctx=cv.getContext('2d');
 function drawGauge(disp){
-  var W=Math.min(innerWidth-24,430),H=W*0.62,D=Math.min(window.devicePixelRatio||1,2);
+  var wrap=el('gaugeWrap'),W=Math.max(160,Math.min(wrap.clientWidth-24,(wrap.clientHeight-16)/0.86,460)),H=W*0.86,D=Math.min(window.devicePixelRatio||1,3);
+  var L=el('app').classList.contains('lite');
+  el('app').style.setProperty('--sp',Math.round(W*0.22)+'px');
   /* the status clock redraws twice a second — only reallocate the backing store
      when the size actually changed, not on every frame */
   if(cv.width!==W*D||cv.height!==H*D){
     cv.width=W*D;cv.height=H*D;cv.style.width=W+'px';cv.style.height=H+'px';
   }
-  var cx=W/2*D,cy=H*0.92*D,r=W*0.44*D;
+  var cx=W/2*D,cy=H*0.56*D,r=W*0.45*D;
   var range=rangeFor(Math.max(disp,conv(en.peakMs,unit)));
-  var a0=Math.PI*1.05,a1=Math.PI*1.95;
+  var a0=Math.PI*0.75,a1=Math.PI*2.25;      /* 240°, opening at the bottom */
   function ang(v){return a0+(a1-a0)*Math.min(1,v/range)}
   ctx.clearRect(0,0,cv.width,cv.height);
   /* track */
-  ctx.lineWidth=10*D;ctx.lineCap='round';
-  ctx.strokeStyle='rgba(45,55,80,.8)';
+  ctx.lineWidth=12*D;ctx.lineCap='round';
+  ctx.strokeStyle=L?'rgba(20,20,40,.12)':'rgba(255,255,255,.12)';
   ctx.beginPath();ctx.arc(cx,cy,r,a0,a1);ctx.stroke();
   /* fill */
   if(disp>0.4){
     var grad=ctx.createLinearGradient(0,0,cv.width,0);
-    grad.addColorStop(0,'#ffb04c');grad.addColorStop(1,'#ff7a4c');
+    grad.addColorStop(0,'hsl('+hueNow+',92%,'+(L?48:62)+'%)');grad.addColorStop(1,'hsl('+(hueNow+40)+',88%,'+(L?42:58)+'%)');
     ctx.strokeStyle=grad;
-    ctx.beginPath();ctx.arc(cx,cy,r,a0,ang(disp));ctx.stroke();
+    ctx.save();ctx.shadowColor='hsl('+hueNow+',90%,60%)';ctx.shadowBlur=(L?0:14)*D;
+    ctx.beginPath();ctx.arc(cx,cy,r,a0,ang(disp));ctx.stroke();ctx.restore();
   }
   /* ticks + labels */
-  ctx.fillStyle='rgba(160,172,200,.8)';
-  ctx.font=(11*D)+'px -apple-system';ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillStyle=L?'rgba(21,21,26,.6)':'rgba(255,255,255,.62)';
+  ctx.font='700 '+(11*D)+'px -apple-system, system-ui, sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
   for(var i=0;i<=6;i++){
     var v=range*i/6,a=ang(v);
-    var x1=cx+Math.cos(a)*(r-16*D),y1=cy+Math.sin(a)*(r-16*D);
-    var x2=cx+Math.cos(a)*(r-7*D),y2=cy+Math.sin(a)*(r-7*D);
-    ctx.strokeStyle='rgba(160,172,200,.5)';ctx.lineWidth=2*D;
+    var x1=cx+Math.cos(a)*(r-20*D),y1=cy+Math.sin(a)*(r-20*D);
+    var x2=cx+Math.cos(a)*(r-11*D),y2=cy+Math.sin(a)*(r-11*D);
+    ctx.strokeStyle=L?'rgba(21,21,26,.3)':'rgba(255,255,255,.35)';ctx.lineWidth=2*D;
     ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
-    ctx.fillText(String(Math.round(v)),cx+Math.cos(a)*(r-30*D),cy+Math.sin(a)*(r-30*D));
+    ctx.fillText(String(Math.round(v)),cx+Math.cos(a)*(r-34*D),cy+Math.sin(a)*(r-34*D));
   }
 }
 /* ---- units ---- */
@@ -251,6 +350,7 @@ function buildUnits(){
 function setGps(state,txt){
   el('gpsDot').className='gpsdot'+(state?' '+state:'');
   el('gpsTxt').textContent=txt;
+  el('dDot').className=el('gpsDot').className;el('dTxt').textContent=txt;
 }
 function hint(t){if(el('hint').textContent!==t)el('hint').textContent=t}
 function idleHint(){
@@ -403,14 +503,16 @@ function start(){
   }
   running=true;denied=false;failStreak=0;inFlight=0;
   startedAt=Date.now();lastPollAt=0;lastFixAt=0;   // fresh session: "searching", not stale
-  el('goBtn').textContent='Pause';el('goBtn').className='btn stop';
+  el('goBtn').innerHTML='<svg class="i"><use href="#i-pause"/></svg>Pause';el('goBtn').className='btn glass stop';
+  syncLook();syncChrome();
   clearInterval(uiT);uiT=setInterval(tick,500);
   beginSource();tick();haptic('success');
 }
 function stop(){
   running=false;clearInterval(uiT);uiT=null;inFlight=0;
   releaseWatch();srcMode='none';   // let go of the GPS the moment the user pauses
-  el('goBtn').textContent='Start';el('goBtn').className='btn go';
+  el('goBtn').innerHTML='<svg class="i"><use href="#i-play"/></svg>Start';el('goBtn').className='btn go';
+  syncLook();syncChrome();
   paintStatus();render();haptic('light');
 }
 /* The native side also stops the stream on teardown; this just makes sure a
@@ -429,6 +531,55 @@ el('resetBtn').onclick=function(){
   render();haptic('warning');
 };
 window.addEventListener('resize',render);
+
+/* ================= look, chrome, dash mode =================
+   Tracking takes the whole display and keeps it awake — a speedometer on a
+   dash mount must not sleep. Where MyLLM can't hide its own title bar, a dark
+   stage under a white bar looks cut in half, so in light mode without
+   myllmImmersive the stage stays light. The bridge is looked up on each call. */
+var hue=36,hueNow=36,dockOn=false,dockDrift=null,dockCtlTimer=null,wakeLock=null;
+function setHue(h){if(Math.abs(h-hue)<0.5)return;hue=h;el('app').style.setProperty('--h',String(Math.round(h)))}
+function isLight(){return !(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches)}
+function syncLook(){el('app').classList.toggle('lite',isLight()&&!(running&&window.myllmImmersive))}
+function syncChrome(){
+  if(!window.myllmImmersive)return;
+  try{myllmImmersive(running||dockOn,{keepAwake:running||dockOn}).catch(function(){})}catch(e){}
+}
+function requestWake(){if(!('wakeLock' in navigator))return;navigator.wakeLock.request('screen').then(function(l){wakeLock=l}).catch(function(){wakeLock=null})}
+function releaseWake(){if(wakeLock){try{wakeLock.release()}catch(e){}wakeLock=null}}
+function driftOnce(){var x=Math.round((Math.random()-0.5)*44),y=Math.round((Math.random()-0.5)*44);el('dDrift').style.transform='translate('+x+'px,'+y+'px)'}
+function openDock(){
+  dockOn=true;haptic('medium');
+  el('dock').classList.add('on');el('dCtl').classList.remove('on');
+  el('dHint').style.opacity='1';setTimeout(function(){el('dHint').style.opacity='0'},4000);
+  driftOnce();dockDrift=setInterval(driftOnce,60000);
+  render();paintStatus();requestWake();syncChrome();
+}
+function closeDock(){
+  dockOn=false;el('dock').classList.remove('on');
+  clearInterval(dockDrift);clearTimeout(dockCtlTimer);dockDrift=dockCtlTimer=null;
+  releaseWake();syncChrome();
+}
+function dockTap(){
+  if(!dockOn)return;
+  el('dHint').style.opacity='0';el('dCtl').classList.add('on');
+  clearTimeout(dockCtlTimer);dockCtlTimer=setTimeout(function(){el('dCtl').classList.remove('on')},5000);
+}
+el('dockBtn').onclick=openDock;
+el('dock').addEventListener('click',function(e){if(!e.target.closest('button'))dockTap()});
+el('dExit').onclick=function(){haptic('light');closeDock()};
+el('dGo').onclick=function(){running?stop():start();el('dGo').innerHTML=running?'<svg class="i"><use href="#i-pause"/></svg><span>Pause</span>':'<svg class="i"><use href="#i-play"/></svg><span>Start</span>';dockTap()};
+document.addEventListener('visibilitychange',function(){
+  if(document.hidden){releaseWake();return}
+  if(dockOn)requestWake();
+  if(running||dockOn)syncChrome();          /* MyLLM puts its bars back when the app is left */
+});
+if(window.matchMedia){
+  var mq=matchMedia('(prefers-color-scheme: dark)');
+  if(mq.addEventListener)mq.addEventListener('change',function(){syncLook();render()});else if(mq.addListener)mq.addListener(function(){syncLook();render()});
+}
+(function ease(){hueNow+=(hue-hueNow)*0.08;requestAnimationFrame(ease)})();
+syncLook();
 
 store.getItem('speedo.unit').then(function(v){
   if(v&&UNITS.some(function(u){return u[0]===v}))unit=v;

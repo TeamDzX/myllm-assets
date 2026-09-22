@@ -9,19 +9,28 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Learn Guitar</title>
 <style>
-  :root { color-scheme: light dark; }
+  :root{ color-scheme:light dark;
+    --myllm-bg:var(--myllm-bg,#f2f2f7); }
+  /* dark fallbacks: without MyLLM's own --myllm-* vars a token-only page renders light in dark mode */
+  @media (prefers-color-scheme:dark){ :root{ --myllm-bg:#000; --myllm-surface:#1c1c1e; --myllm-text:#f2f2f7; --myllm-muted:#8e8e93; --myllm-border:#2c2c2e; } }
   * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
   body{
     font-family:var(--myllm-font,-apple-system,system-ui,sans-serif);
     background:var(--myllm-bg,#f2f2f7);
     color:var(--myllm-text,#111);
-    max-width:820px; margin:0 auto;
-    padding:16px 16px calc(40px + env(safe-area-inset-bottom));
+    max-width:820px; margin:0 auto; min-height:100dvh;
+    padding:calc(16px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) calc(40px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left));
   }
-  h1{ font-size:22px; font-weight:800; letter-spacing:-0.02em; margin:6px 2px 14px; }
+  svg.i{ width:1.25em; height:1.25em; fill:currentColor; flex-shrink:0; vertical-align:-.28em; }
+  button:active{ transform:scale(.97); }
+  h1{ font-size:22px; font-weight:800; letter-spacing:-0.02em; margin:6px 2px 14px; display:flex; align-items:center; gap:10px; }
+  .tile{ width:34px; height:34px; border-radius:10px; display:flex; align-items:center; justify-content:center; color:#fff; font-size:15px; flex-shrink:0;
+    background:linear-gradient(145deg, hsl(178 62% 40%), hsl(218 58% 24%)); }
+  .btn svg.i, .cat svg.i{ margin-right:5px; }
 
   .seg{ display:flex; background:var(--myllm-surface,#fff); border:1px solid var(--myllm-border,#e3e3e8); border-radius:14px; padding:3px; margin-bottom:14px; gap:2px; }
-  .seg button{ flex:1; border:none; background:none; color:var(--myllm-muted,#8a8a8e); border-radius:11px; padding:9px 4px; font-size:13.5px; font-weight:700; font-family:inherit; }
+  .seg button{ flex:1; border:none; background:none; color:var(--myllm-muted,#8a8a8e); border-radius:11px; padding:9px 2px; min-height:42px; font-size:13.5px; font-weight:700; font-family:inherit; }
+  @media (max-width:359px){ .seg button{ font-size:12px; } }
   .seg button.on{ background:var(--myllm-accent,#0a84ff); color:#fff; }
 
   .card{ background:var(--myllm-surface,#fff); border:1px solid var(--myllm-border,#e3e3e8); border-radius:16px; padding:14px; margin-bottom:12px; }
@@ -76,6 +85,7 @@
 
   /* ---- strumming ---- */
   .strumrow{ display:flex; gap:6px; justify-content:center; margin:14px 0 8px; flex-wrap:wrap; }
+  .beat svg.i{ width:1.4em; height:1.4em; vertical-align:0; }
   .beat{ width:38px; height:52px; border-radius:11px; border:1px solid var(--myllm-border,#e3e3e8); background:var(--myllm-bg,#f2f2f7); display:flex; align-items:center; justify-content:center; font-size:19px; font-weight:800; color:var(--myllm-text,#111); }
   .beat.rest{ color:var(--myllm-border,#c9c9cf); }
   .beat.hit{ background:var(--myllm-accent,#0a84ff); border-color:transparent; color:#fff; transform:scale(1.08); }
@@ -100,12 +110,22 @@
   .step .body .go{ margin-top:7px; }
   .prog{ height:7px; border-radius:4px; background:var(--myllm-border,#e3e3e8); overflow:hidden; margin:10px 0 2px; }
   .prog i{ display:block; height:100%; background:#30d158; width:0%; transition:width .3s; }
+  @media (max-height:520px){ .strumrow{ flex-wrap:nowrap; } .beat{ width:calc((100vw - 32px - env(safe-area-inset-left) - env(safe-area-inset-right)) / 8 - 6px); max-width:52px; } }
+  @media (min-width:768px){ .detail .name{ font-size:40px; } }
 </style>
 <style>:root{--build-id:"e787ce77dd";}</style>
 </head>
 <body>
 
-<h1>🎸 Learn Guitar</h1>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-guitar" viewBox="0 0 24 24"><path d="M19.6 2.3a1 1 0 0 0-1.4 0l-.7.7-.7-.7a1 1 0 0 0-1.4 1.4l.7.7-4.9 4.9a4.3 4.3 0 0 0-3.5.3 3.9 3.9 0 0 0-1.6 2.6c-.2 1-.9 1.6-1.8 1.9A3.7 3.7 0 0 0 2 18.5 3.5 3.5 0 0 0 5.5 22a3.7 3.7 0 0 0 4.4-2.3c.3-.9.9-1.6 1.9-1.8a3.9 3.9 0 0 0 2.6-1.6 4.3 4.3 0 0 0 .3-3.5l4.9-4.9.7.7a1 1 0 0 0 1.4-1.4l-.7-.7.7-.7a1 1 0 0 0 0-1.4zM7.5 15a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3z"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5.5v13a1 1 0 0 0 1.52.85l10.4-6.5a1 1 0 0 0 0-1.7L9.52 4.65A1 1 0 0 0 8 5.5z"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24"><path d="M12 4a1 1 0 0 0-1 1v11.2l-4.3-4.3a1 1 0 0 0-1.4 1.4l6 6a1 1 0 0 0 1.4 0l6-6a1 1 0 0 0-1.4-1.4L13 16.2V5a1 1 0 0 0-1-1z"/></symbol>
+  <symbol id="i-up" viewBox="0 0 24 24"><path d="M12 20a1 1 0 0 0 1-1V7.8l4.3 4.3a1 1 0 0 0 1.4-1.4l-6-6a1 1 0 0 0-1.4 0l-6 6a1 1 0 0 0 1.4 1.4L11 7.8V19a1 1 0 0 0 1 1z"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M9.5 16.2 5.3 12a1 1 0 0 0-1.4 1.4l4.9 4.9a1 1 0 0 0 1.4 0L20.1 8.4A1 1 0 0 0 18.7 7z"/></symbol>
+</defs></svg>
+
+<h1><span class="tile"><svg class="i"><use href="#i-guitar"/></svg></span>Learn Guitar</h1>
 
 <div class="seg">
   <button id="tabLearn" class="on" onclick="showTab('learn')">Learn</button>
@@ -138,7 +158,7 @@
       <div class="meta">
         <div class="name" id="cName">—</div>
         <div class="sub" id="cSub"></div>
-        <button class="btn sm" style="margin-top:9px" onclick="strumCurrent()">▶︎ Hear it</button>
+        <button class="btn sm" style="margin-top:9px" onclick="strumCurrent()"><svg class="i"><use href="#i-play"/></svg>Hear it</button>
       </div>
     </div>
     <ul class="tips" id="cTips"></ul>
@@ -159,7 +179,7 @@
       <select id="chA"></select><span>↔</span><select id="chB"></select>
     </div>
     <div class="row" style="gap:8px;margin-top:8px">
-      <button class="btn ghost sm grow" onclick="hearPair()">▶︎ Hear both</button>
+      <button class="btn ghost sm grow" onclick="hearPair()"><svg class="i"><use href="#i-play"/></svg>Hear both</button>
       <button class="btn sm grow" id="startDrill" onclick="toggleDrill()">Start 60s</button>
     </div>
   </div>
@@ -463,7 +483,7 @@ function setCat(c){ curCat=c; renderCats(); renderCatInfo(); renderGrid(); hapti
 function renderCatInfo(){
   var info = CATINFO[curCat]; if(!info) { el("catInfo").innerHTML=""; return; }
   var demos = (info.demos||[]).map(function(d,i){
-    return '<button onclick="playDemo(\''+curCat+'\','+i+')">▶︎ '+esc(d.n)+'</button>';
+    return '<button onclick="playDemo(\''+curCat+'\','+i+')"><svg class="i"><use href="#i-play"/></svg>'+esc(d.n)+'</button>';
   }).join("");
   el("catInfo").innerHTML =
       '<h3>'+esc(info.h)+'</h3>'
@@ -587,7 +607,7 @@ function setPat(i){ curPat=PATTERNS[i]; strumIdx=0; renderPats(); haptic("light"
 function renderStrumRow(active){
   el("strumRow").innerHTML = curPat.p.map(function(s,i){
     var cls = "beat"+(s==="-"?" rest":"")+(i===active?" hit":"");
-    return '<div class="'+cls+'">'+(s==="-"?"·":(s==="D"?"↓":"↑"))+'</div>';
+    return '<div class="'+cls+'">'+(s==="-"?"·":'<svg class="i"><use href="#'+(s==="D"?"i-down":"i-up")+'"/></svg>')+'</div>';
   }).join("");
 }
 function setBpm(v){ bpm = +v; el("bpmTxt").textContent = bpm+" BPM"; if(strumOn){ stopStrum(); startStrum(); } }
@@ -678,7 +698,7 @@ function heartStrings(){
 function renderSteps(){
   el("steps").innerHTML = STEPS.map(function(s,i){
     return '<div class="step'+(done[s.id]?' done':'')+'">'
-      + '<button class="tick" onclick="toggleDone(\''+s.id+'\')" aria-label="Mark done">'+(done[s.id]?'✓':(i+1))+'</button>'
+      + '<button class="tick" onclick="toggleDone(\''+s.id+'\')" aria-label="Mark done">'+(done[s.id]?'<svg class="i" style="vertical-align:0"><use href="#i-check"/></svg>':(i+1))+'</button>'
       + '<div class="body"><b>'+esc(s.t)+'</b><small>'+esc(s.d)+'</small>'
       + '<button class="btn ghost sm go" onclick="runStep('+i+')">'+esc(s.act)+'</button></div></div>';
   }).join("");
