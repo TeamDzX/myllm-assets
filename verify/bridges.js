@@ -115,6 +115,36 @@
     return later('Here you go:\n```json\n' + body + '\n```', 30);
   };
 
+  // 5.6+: myllmAskJSON(prompt, schema, options) resolves to the PARSED value. On
+  // the phone's own model the reply is grammar-fenced to the schema, so the stub
+  // answers with a value built from the schema itself — the shape an app gets on
+  // device. It goes through window.myllmAsk like the real bridge does, so an app's
+  // busy-indicator wrapper still fires and --ask-mode reject still rejects.
+  // --no-askjson removes it (and supportsSchema) to exercise the pre-5.6 fallback.
+  const fromSchema = (s, n = 1) => {
+    if (!s || typeof s !== 'object') return null;
+    if ('const' in s) return s.const;
+    if (Array.isArray(s.enum) && s.enum.length) return s.enum[(n - 1) % s.enum.length];
+    if (Array.isArray(s.anyOf) && s.anyOf.length) return fromSchema(s.anyOf[0], n);
+    const t = Array.isArray(s.type) ? s.type[0] : s.type;
+    if (t === 'object' || s.properties) {
+      const o = {};
+      for (const [k, v] of Object.entries(s.properties || {})) o[k] = fromSchema(v, n);
+      return o;
+    }
+    if (t === 'array') {
+      const len = Math.max(1, Math.min(s.minItems ?? 1, s.maxItems ?? Infinity));
+      return Array.from({ length: len }, (_, i) => fromSchema(s.items, i + 1));
+    }
+    if (t === 'integer' || t === 'number') return n;
+    if (t === 'boolean') return true;
+    if (t === 'null') return null;
+    return ('Sample ' + n).slice(0, s.maxLength ?? 99);
+  };
+  window.myllmAsk.supportsSchema = true;
+  window.myllmAskJSON = (prompt, schema, options) =>
+    window.myllmAsk(prompt, { ...(options || {}), schema }).then(() => fromSchema(schema));
+
   window.myllmFetch = (url, options) => {
     flag('bridge-network', String(url));  // recorded, not failed — legitimate for network apps
     return later(null, 20).then(() => {

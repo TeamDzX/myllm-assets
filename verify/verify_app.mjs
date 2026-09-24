@@ -14,6 +14,7 @@
 //   node verify_app.mjs --all
 //   node verify_app.mjs ../apps-src/2048.html --screenshots
 //   node verify_app.mjs --all --ask-mode prose      # AI returns prose, not JSON
+//   node verify_app.mjs --all --no-askjson          # pre-5.6: no myllmAskJSON (fallback path)
 //   node verify_app.mjs --all --no-bridges          # older build, bridges absent
 //
 // Exit 0 = every app clean. Exit 1 = at least one FAIL.
@@ -45,6 +46,7 @@ const CONFIG = {
   json: opt('--json', null),
   askMode: opt('--ask-mode', 'json'),      // json | prose | reject
   stripBridges: flag('--no-bridges'),
+  noAskJSON: flag('--no-askjson'),         // pre-5.6 build: myllmAsk but no myllmAskJSON
   browser: opt('--browser', 'webkit'),     // webkit is closest to WKWebView
   headed: flag('--headed'),
   settle: Number(opt('--settle', 1200)),   // ms to let boot animations/timers run
@@ -111,16 +113,20 @@ async function verifyApp(browser, file) {
 
   await context.addInitScript({ path: path.join(HERE, 'bridges.js') });
   await context.addInitScript(
-    ({ askMode, stripBridges }) => {
+    ({ askMode, stripBridges, noAskJSON }) => {
       window.__askMode = askMode;
       window.__stripBridges = stripBridges;
+      if (noAskJSON) {
+        delete window.myllmAskJSON;
+        if (window.myllmAsk) delete window.myllmAsk.supportsSchema;
+      }
       window.__rejections = [];
       addEventListener('unhandledrejection', (e) => {
         const r = e.reason;
         window.__rejections.push(String(r?.stack || r?.message || r));
       });
     },
-    { askMode: CONFIG.askMode, stripBridges: CONFIG.stripBridges },
+    { askMode: CONFIG.askMode, stripBridges: CONFIG.stripBridges, noAskJSON: CONFIG.noAskJSON },
   );
 
   const page = await context.newPage();
@@ -271,7 +277,8 @@ console.log(
   `\n${results.length} apps — ` +
   `✅ ${tally.PASS + tally.INFO} clean   ⚠️  ${tally.WARN} warn   ❌ ${tally.FAIL} fail` +
   `   [engine: ${CONFIG.browser}, ask-mode: ${CONFIG.askMode}` +
-  (CONFIG.stripBridges ? ', bridges stripped' : '') + `]`,
+  (CONFIG.stripBridges ? ', bridges stripped' : '') +
+  (CONFIG.noAskJSON ? ', no myllmAskJSON' : '') + `]`,
 );
 if (CONFIG.clicks === 0) console.log('note: --clicks 0 — no tap sweep ran, only load-time errors were checked.');
 

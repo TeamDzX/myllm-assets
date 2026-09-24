@@ -23,6 +23,7 @@ node verify_app.mjs --all                        # every app in apps.json
 node verify_app.mjs ../apps-src/2048.html        # one app
 node verify_app.mjs --all --screenshots          # PNG per app in out/
 node verify_app.mjs --all --no-bridges           # older build: no myllm* at all
+node verify_app.mjs --all --no-askjson          # pre-5.6 build: myllmAsk, no myllmAskJSON
 node verify_app.mjs --all --ask-mode prose       # AI returns prose, not JSON
 node verify_app.mjs --all --headed --clicks 0    # watch one boot, no tapping
 ```

@@ -165,6 +165,21 @@ function parsePlan(reply){
   if(days.length<5)throw new Error('the plan came back incomplete');
   return days;
 }
+/* MyLLM 5.6+: ask for the week as JSON fenced to a schema — on the phone's own
+   model the reply is grammar-constrained, so it always parses however small the
+   model. The parsed plan still goes through parsePlan's JSON branch so the echo
+   filter and the incomplete-week guard apply. Any failure falls through to the
+   labelled-line path, which is also all that older builds have. */
+function askPlanJSON(p){
+  if(typeof window.myllmAskJSON!=='function')return Promise.reject(new Error('no JSON bridge'));
+  var q=p.replace(/Reply with EXACTLY these labelled lines[\s\S]*$/,
+    'Reply as JSON: a "days" array with one item per day, Monday to Sunday, each with "day", "breakfast", "lunch" and "dinner" (the dish names).');
+  var dish={type:'string',maxLength:80};
+  var schema={type:'object',required:['days'],properties:{days:{type:'array',minItems:7,maxItems:7,
+    items:{type:'object',required:['day','breakfast','lunch','dinner'],
+      properties:{day:{type:'string',enum:DAYS},breakfast:dish,lunch:dish,dinner:dish}}}}};
+  return myllmAskJSON(q,schema).then(function(j){return parsePlan(JSON.stringify(j&&typeof j==='object'?j:{}))});
+}
 
 function generate(){
   if(!needAI())return;
@@ -172,7 +187,8 @@ function generate(){
   el('skeleton').hidden=false;el('week').hidden=true;el('empty').hidden=true;el('hint').textContent='';
   var p=prefsText()+'Create a 7-day meal plan (Monday to Sunday). Keep each meal under 9 words. Reply with EXACTLY these labelled lines and nothing else:\n'+
     DAYS.map(function(d){return d.toUpperCase()+': the breakfast dish | the lunch dish | the dinner dish'}).join('\n');
-  myllmAsk(p).then(function(r){return parsePlan(r||'')})
+  askPlanJSON(p)
+  .catch(function(){return myllmAsk(p).then(function(r){return parsePlan(r||'')})})
   .catch(function(){return myllmAsk(p+'\nIMPORTANT: fill each labelled line with real content — never repeat the instruction text.')
     .then(function(r){return parsePlan(r||'')})})
   .then(function(days){
@@ -185,7 +201,14 @@ function swap(di,meal){
   if(!needAI()||busyMeal)return;
   var d=plan[di];setStatus('Swapping '+meal+' for '+d.day+'…');
   busyMeal=di+':'+meal;render();
-  myllmAsk(prefsText()+'Suggest ONE different '+meal+' idea to replace "'+d[meal]+'" for '+d.day+'. Reply with ONLY the dish name, under 9 words, no trailing punctuation.')
+  var ask=prefsText()+'Suggest ONE different '+meal+' idea to replace "'+d[meal]+'" for '+d.day+'.';
+  // 5.6+: the dish arrives as schema-fenced JSON; a miss (or an older build) asks for plain text
+  (typeof window.myllmAskJSON==='function'
+    ? myllmAskJSON(ask+' Reply as JSON with the dish name, under 9 words, in "dish".',
+        {type:'object',required:['dish'],properties:{dish:{type:'string',maxLength:80}}})
+      .then(function(j){var v=j&&typeof j.dish==='string'?j.dish.trim():'';if(!v)throw new Error('no dish');return v})
+    : Promise.reject(new Error('no JSON bridge')))
+  .catch(function(){return myllmAsk(ask+' Reply with ONLY the dish name, under 9 words, no trailing punctuation.')})
   .then(function(reply){
     var dish=reply.trim().replace(/^["'\-\s]+|["'\.\s]+$/g,'').split('\n')[0];
     if(dish){d[meal]=dish;save();haptic('light')}

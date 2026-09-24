@@ -176,7 +176,19 @@ function tips(id){
   var p=byId(id);
   if(!window.myllmAsk){setStatus('Care tips need AI — enable “Allow apps to use the AI” in Settings.',true);return}
   setStatus('');busy[id]=true;render();
-  myllmAsk('Give 3 short, practical care tips for growing "'+p.name+'" (watering, light, and one extra). Reply as exactly 3 lines starting with "• " and nothing else.')
+  var ask='Give 3 short, practical care tips for growing "'+p.name+'" (watering, light, and one extra).';
+  // 5.6+: the tips arrive as schema-fenced JSON and are rebuilt into the same
+  // "• " lines; a miss (or an older build) asks for the lines as plain text
+  (typeof window.myllmAskJSON==='function'
+    ? myllmAskJSON(ask+' Reply as JSON with the 3 tips in "tips", one short sentence each.',
+        {type:'object',required:['tips'],properties:{tips:{type:'array',minItems:3,maxItems:3,items:{type:'string',maxLength:200}}}})
+      .then(function(j){
+        var t=(j&&Array.isArray(j.tips)?j.tips:[]).map(function(x){return String(x||'').replace(/^[\s•*-]+/,'').trim()}).filter(Boolean);
+        if(!t.length)throw new Error('no tips');
+        return t.map(function(x){return '• '+x}).join('\n');
+      })
+    : Promise.reject(new Error('no JSON bridge')))
+  .catch(function(){return myllmAsk(ask+' Reply as exactly 3 lines starting with "• " and nothing else.')})
   .then(function(reply){
     p.tips=String(reply).trim();save();
   }).catch(function(err){setStatus('Could not get tips: '+err.message,true)})

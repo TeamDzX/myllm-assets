@@ -185,6 +185,23 @@ function parseRecipe(reply){
     throw new Error('the chef didn’t return a proper recipe');
   return r;
 }
+/* MyLLM 5.6+: ask for the recipe as JSON fenced to a schema — on the phone's own
+   model the reply is grammar-constrained, so it always parses however small the
+   model. The parsed object still goes through parseRecipe's JSON branch so the
+   echo filter and the too-thin-recipe guard apply. Any failure falls through to
+   the labelled-line path, which is also all that older builds have. */
+function askRecipeJSON(p,sys){
+  if(typeof window.myllmAskJSON!=='function')return Promise.reject(new Error('no JSON bridge'));
+  var q=p.replace(/Reply with EXACTLY these labelled lines[\s\S]*$/,
+    'Reply as JSON with "title" (the recipe name), "servings" (how many people it serves), "time" (total cooking time), '+
+    '"ingredients" (one ingredient with its quantity per item) and "steps" (one short cooking step per item).');
+  var str=function(n){return{type:'string',maxLength:n}};
+  var schema={type:'object',required:['title','servings','time','ingredients','steps'],properties:{
+    title:str(80),servings:str(30),time:str(30),
+    ingredients:{type:'array',minItems:2,maxItems:20,items:str(120)},
+    steps:{type:'array',minItems:2,maxItems:12,items:str(300)}}};
+  return myllmAskJSON(q,schema,sys).then(function(j){return parseRecipe(JSON.stringify(j&&typeof j==='object'?j:{}))});
+}
 function goBtn(busy){var b=el('go');b.disabled=!!busy;b.innerHTML=busy?'<i class="spin"></i>':'Cook';b.setAttribute('aria-label',busy?'Cooking':'Cook')}
 function ask(prompt){
   if(!window.myllmAsk){setStatus('Recipes need AI — update MyLLM and enable “Allow apps to use the AI” in Settings.',true);return}
@@ -196,7 +213,8 @@ function ask(prompt){
     'INGREDIENT: one ingredient with its quantity (repeat this line for every ingredient)\n'+
     'STEP: one short cooking step (repeat this line for every step)';
   var sys={system:'You are a helpful home-cooking chef. Give clear, realistic recipes.'};
-  myllmAsk(p,sys).then(function(r){return parseRecipe(r||'')})
+  askRecipeJSON(p,sys)
+  .catch(function(){return myllmAsk(p,sys).then(function(r){return parseRecipe(r||'')})})
   .catch(function(){return myllmAsk(p+'\nIMPORTANT: fill each line with the real recipe — never repeat the instruction text.',sys)
     .then(function(r){return parseRecipe(r||'')})})
   .then(function(r){

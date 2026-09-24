@@ -615,7 +615,8 @@ function forgeMore(){
     have.map(function(q){return '- '+q}).join('\n')+'\n'+
     'Reply with EXACTLY these labelled lines and nothing else:\n'+
     'CARD: the question on the front | the answer on the back (repeat this line for all '+want+' cards)';
-  myllmAsk(p).then(function(r){return parseDeck(r||'')})
+  askDeckJSON(p,want)
+  .catch(function(){return myllmAsk(p).then(function(r){return parseDeck(r||'')})})
   .then(function(cards){
     // a model that ignores the exclusion list would silently bloat the deck
     var seen={};deck.cards.forEach(function(c){seen[c.q.toLowerCase().trim()]=1});
@@ -918,6 +919,19 @@ function parseDeck(reply){
   if(!cards.length)throw new Error('the model did not return a deck');
   return cards;
 }
+/* MyLLM 5.6+: ask for the deck as JSON fenced to a schema — on the phone's own
+   model the reply is grammar-constrained, so it always parses however small the
+   model. The parsed cards still go through parseDeck's JSON branch so the echo
+   filter and the empty-deck guard apply. Any failure falls through to the
+   labelled-line path, which is also all that older builds have. */
+function askDeckJSON(p,want){
+  if(typeof window.myllmAskJSON!=='function')return Promise.reject(new Error('no JSON bridge'));
+  var q=p.replace(/Reply with EXACTLY these labelled lines[\s\S]*$/,
+    'Reply as JSON: a "cards" array of '+want+' items, each with "q" (the question on the front) and "a" (the answer on the back).');
+  var schema={type:'object',required:['cards'],properties:{cards:{type:'array',minItems:1,maxItems:want,
+    items:{type:'object',required:['q','a'],properties:{q:{type:'string',maxLength:300},a:{type:'string',maxLength:500}}}}}};
+  return myllmAskJSON(q,schema).then(function(j){return parseDeck(JSON.stringify(j&&Array.isArray(j.cards)?j.cards:[]))});
+}
 function gen(){
   var notes=el('notes')?el('notes').value.trim():'';
   var topic=el('topic').value.trim();
@@ -939,7 +953,8 @@ function gen(){
     ? notesPrompt(body,want,lvl)
     : 'Create exactly '+want+' study flashcards about: '+topic+'. '+lvl+' Reply with EXACTLY these labelled lines and nothing else:\n'+
       'CARD: the question on the front | the answer on the back (repeat this line for all '+want+' cards)';
-  myllmAsk(p).then(function(r){return parseDeck(r||'')})
+  askDeckJSON(p,want)
+  .catch(function(){return myllmAsk(p).then(function(r){return parseDeck(r||'')})})
   .catch(function(){return myllmAsk(p+'\nIMPORTANT: fill each labelled line with real content — never repeat the instruction text.')
     .then(function(r){return parseDeck(r||'')})})
   .then(function(cards){
