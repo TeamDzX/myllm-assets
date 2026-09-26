@@ -6,33 +6,66 @@
 --><html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Mochi</title>
 <style>
-  :root { color-scheme: light; }
+  :root { color-scheme: light; --ink:#3f372e; --muted:#a3947f; --line:#eadfce; --card:#fffdf8; --mint:#7cc9a0; }
   * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  /* No double-tap zoom, no text or image selection on a double tap: it's a toy,
+     tapped a lot. Only the chat field keeps normal selection. */
+  html, body{ touch-action:manipulation; -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; overscroll-behavior:none; }
+  input{ -webkit-user-select:text; user-select:text; }
+  img{ -webkit-user-drag:none; }
   body{
-    font-family:var(--myllm-font,-apple-system,system-ui,sans-serif);
-    background:linear-gradient(180deg,#fdf6ec 0%,#f7ede0 100%);
-    color:#4a4238;
+    font-family:var(--myllm-font,ui-rounded,-apple-system,system-ui,sans-serif);
+    background:radial-gradient(120% 60% at 50% 0%,#fff6ea 0%,#fbefe0 55%,#f6e7d4 100%);
+    color:var(--ink);
     max-width:600px; margin:0 auto; min-height:100dvh;
-    padding:calc(14px + env(safe-area-inset-top)) calc(14px + env(safe-area-inset-right)) calc(24px + env(safe-area-inset-bottom)) calc(14px + env(safe-area-inset-left));
-    display:flex; flex-direction:column;
+    padding:calc(12px + env(safe-area-inset-top)) calc(14px + env(safe-area-inset-right)) calc(16px + env(safe-area-inset-bottom)) calc(14px + env(safe-area-inset-left));
+    display:flex; flex-direction:column; gap:12px;
   }
-  .top{ display:flex; align-items:baseline; justify-content:space-between; margin:2px 4px 6px; }
-  h1{ font-size:20px; font-weight:800; }
-  .age{ font-size:12.5px; color:#a89a88; font-weight:650; }
+  .top{ display:flex; align-items:center; justify-content:space-between; padding:2px 4px 0; }
+  .who{ display:flex; flex-direction:column; }
+  h1{ font-size:24px; font-weight:850; letter-spacing:-.2px; }
+  .age{ font-size:12.5px; color:var(--muted); font-weight:700; }
+  .moodchip{ font-size:13px; font-weight:750; color:var(--ink); background:var(--card); border:1.5px solid var(--line);
+             border-radius:99px; padding:7px 12px; box-shadow:0 2px 6px rgba(120,90,50,.06); }
+  .moodchip:empty{ display:none; }
 
-  .bars{ display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:8px; margin-bottom:10px; }
-  .bar{ background:#fffdf8; border:1.5px solid #eadfce; border-radius:12px; padding:7px 9px; }
-  .bar small{ font-size:10.5px; font-weight:750; color:#a89a88; display:flex; justify-content:space-between; }
-  .bar .track{ height:7px; border-radius:99px; background:#f1e7d6; margin-top:5px; overflow:hidden; }
-  .bar .fill{ height:100%; border-radius:99px; background:#8fd3a8; transition:width .6s, background .6s; }
-  .bar .fill.low{ background:#f2a65e; } .bar .fill.crit{ background:#e8806e; }
+  /* Four round gauges: a ring that empties, the emoji in the middle. */
+  .stats{ display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
+  .stat{ position:relative; display:flex; flex-direction:column; align-items:center; gap:3px; }
+  .ring{ position:relative; width:54px; height:54px; }
+  .ring svg{ width:100%; height:100%; transform:rotate(-90deg); }
+  .ring .rt{ fill:var(--card); stroke:#f0e5d3; stroke-width:5; }
+  .ring .rf{ fill:none; stroke:var(--mint); stroke-width:5; stroke-linecap:round; stroke-dasharray:113.1; stroke-dashoffset:113.1;
+             transition:stroke-dashoffset .7s cubic-bezier(.3,.8,.3,1), stroke .6s; }
+  .ring .rf.low{ stroke:#f2a65e; } .ring .rf.crit{ stroke:#e8806e; }
+  .stat.crit .ring{ animation:needs 1.6s ease-in-out infinite; }
+  @keyframes needs{ 50%{ transform:scale(1.07); } }
+  .ring .se{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:22px; }
+  .stat small{ font-size:11px; font-weight:750; color:var(--muted); }
+  .stat small b{ color:var(--ink); font-weight:800; margin-left:2px; }
+  .delta{ position:absolute; top:-4px; left:50%; font-size:13px; font-weight:850; color:#4f9e72; pointer-events:none;
+          animation:dpop 1.3s ease-out forwards; }
+  @keyframes dpop{ 0%{ opacity:0; transform:translate(-10%,6px) scale(.7); } 20%{ opacity:1; transform:translate(-10%,-4px) scale(1.1); } 100%{ opacity:0; transform:translate(-10%,-22px) scale(1); } }
 
-  .stage{ position:relative; flex:1; min-height:280px; display:flex; align-items:center; justify-content:center; }
-  .petbox{ position:relative; width:min(78vw,340px); }
-  .petbox #pet{ width:100%; height:auto; border-radius:26px; display:block; }
+  /* The stage is Mochi's room: a painted backdrop, Mochi sitting on the rug. */
+  .stage{ position:relative; flex:1; min-height:330px; border-radius:30px; overflow:hidden;
+          box-shadow:0 10px 30px rgba(120,90,50,.14), inset 0 0 0 1.5px rgba(255,255,255,.6); }
+  .room{ position:absolute; inset:0; background:#f6e6d6 url("https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/mochi/room.jpg") center 72% / cover no-repeat; }
+  .night{ position:absolute; inset:0; opacity:0; transition:opacity 1.4s ease; pointer-events:none;
+          background:radial-gradient(60% 40% at 50% 88%, rgba(255,210,140,.22), transparent 70%),
+                     linear-gradient(180deg, rgba(28,32,78,.62), rgba(22,22,56,.5)); }
+  .stage.sleeping .night{ opacity:1; }
+  .star{ position:absolute; width:3px; height:3px; border-radius:50%; background:#fff; opacity:0; animation:twinkle 3s ease-in-out infinite; }
+  .stage.sleeping .star{ opacity:.9; }
+  @keyframes twinkle{ 50%{ transform:scale(1.8); opacity:.4; } }
+  .petbox{ position:absolute; left:50%; bottom:4%; transform:translateX(-50%); width:min(64%,300px); }
+  .petbox #pet{ width:100%; height:auto; display:block; cursor:pointer; }
+  .fx{ position:absolute; inset:0; pointer-events:none; overflow:hidden; }
+  .fxp{ position:absolute; font-size:24px; animation:rise 1.7s cubic-bezier(.2,.7,.3,1) forwards; }
+  @keyframes rise{ 0%{ opacity:0; transform:translate(0,0) scale(.6); } 15%{ opacity:1; } 100%{ opacity:0; transform:translate(var(--dx,0px),-150px) scale(1.15) rotate(var(--rot,0deg)); } }
   /* Accessory overlays are taller than the sprite (extra band above the head so
      hats aren't clipped) and bottom-aligned, so their pet-region maps 1:1 onto
      the pet and the surplus sits above it. Placement is baked into each asset.
@@ -40,9 +73,11 @@
   .petbox .acc{ position:absolute; left:0; bottom:0; width:100%; height:auto; pointer-events:none;
                 animation:accbob 2.6s ease-in-out infinite alternate; }
   @keyframes accbob{ from{ transform:translateY(0); } to{ transform:translateY(-3px); } }
-  .stage.sleeping img{ filter:brightness(.82) saturate(.85); }
+  .stage.sleeping #pet{ filter:brightness(.9) saturate(.9); }
   .bubble{
-    position:absolute; top:2px; left:50%; transform:translateX(-50%) translateY(-6px);
+    position:absolute; top:64px; left:50%; transform:translateX(-50%) translateY(-6px); z-index:3;
+    width:max-content; max-width:84%;
+    box-shadow:0 4px 14px rgba(80,60,40,.12);
     max-width:88%; background:#fffdf8; border:2px solid #eadfce; border-radius:16px;
     padding:10px 14px; font-size:14.5px; line-height:1.45; opacity:0;
     transition:opacity .3s, transform .3s; pointer-events:none;
@@ -66,23 +101,29 @@
     border:2px dashed #ddd6f0;
     box-shadow:16px 8px 0 -3px #f4f1fb, 16px 8px 0 -1px #ddd6f0;
   }
-  .hint{ text-align:center; font-size:13px; color:#a89a88; margin:4px 0 8px; min-height:18px; }
+  /* Centred by margins, sized to its text: a left:50% box only gets half the
+     stage's width and wrapped after a few words. */
+  .hint{ position:absolute; top:12px; left:0; right:0; margin:0 auto; width:max-content; max-width:88%; z-index:2;
+          font-size:12.5px; font-weight:700; color:var(--ink); text-align:center;
+          background:rgba(255,253,248,.88); border-radius:99px; padding:7px 14px; box-shadow:0 2px 8px rgba(80,60,40,.1); }
+  .hint:empty{ display:none; }
 
-  .actions{ display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:9px; margin-bottom:10px; }
-  .actions button{
-    border:2px solid #eadfce; background:#fffdf8; color:#4a4238;
-    border-radius:15px; padding:11px 4px 9px; font-size:12px; font-weight:750;
-    -webkit-user-select:none; user-select:none; -webkit-touch-callout:none;
-  }
-  .actions button .ico{ display:block; font-size:22px; margin-bottom:2px; }
-  .actions button:disabled{ opacity:.4; }
+  /* Action dock: one colour per thing you can do. */
+  .dock{ display:grid; grid-template-columns:repeat(6,1fr); gap:4px; background:rgba(255,253,248,.92);
+         border:1.5px solid var(--line); border-radius:26px; padding:10px 6px 8px; box-shadow:0 6px 20px rgba(120,90,50,.08); }
+  .act{ border:none; background:none; color:var(--ink); display:flex; flex-direction:column; align-items:center; gap:5px;
+        font-size:11.5px; font-weight:750; font-family:inherit; }
+  .act .ico{ width:48px; height:48px; border-radius:17px; display:flex; align-items:center; justify-content:center; font-size:24px;
+             background:var(--c); box-shadow:inset 0 -3px 0 rgba(0,0,0,.07), 0 2px 6px rgba(0,0,0,.05); transition:transform .12s; }
+  .act:active .ico{ transform:scale(.88); }
+  .act:disabled{ opacity:.38; }
+  .act.feed{ --c:#ffe3c9; } .act.play{ --c:#d7ebff; } .act.bath{ --c:#d3f2ef; }
+  .act.walk{ --c:#e0f3d2; } .act.sleep{ --c:#e4dffb; } .act.style{ --c:#ffdbe7; }
 
-  .chatrow{ display:flex; gap:8px; }
-  .chatrow input{
-    flex:1; font-size:16px; padding:11px 13px; border-radius:14px;
-    border:2px solid #eadfce; background:#fffdf8; color:#4a4238;
-  }
-  .chatrow button{ border:none; border-radius:14px; width:48px; min-height:46px; font-size:17px; background:#8fd3a8; color:#fff; display:flex; align-items:center; justify-content:center; }
+  .chatrow{ display:flex; align-items:center; gap:6px; background:var(--card); border:1.5px solid var(--line);
+            border-radius:99px; padding:5px 5px 5px 16px; box-shadow:0 4px 14px rgba(120,90,50,.06); }
+  .chatrow input{ flex:1; min-width:0; font-size:16px; border:none; background:none; color:var(--ink); outline:none; font-family:inherit; }
+  .chatrow button{ border:none; border-radius:50%; width:40px; height:40px; background:var(--mint); color:#fff; display:flex; align-items:center; justify-content:center; flex:0 0 auto; }
 
   /* walk mode */
   .walkview{ position:fixed; inset:0; background:linear-gradient(180deg,#fdf6ec 0%,#f3ecdd 100%); display:none; flex-direction:column; z-index:8; }
@@ -174,18 +215,21 @@
 <body>
 
 <div class="top">
-  <h1 id="title">🥚 A little egg</h1>
-  <span class="age" id="age"></span>
+  <div class="who"><h1 id="title">🥚 A little egg</h1><span class="age" id="age"></span></div>
+  <span class="moodchip" id="moodchip"></span>
 </div>
 
-<div class="bars" id="bars" style="display:none">
-  <div class="bar"><small>🍙 Food <span id="vHunger"></span></small><div class="track"><div class="fill" id="bHunger"></div></div></div>
-  <div class="bar"><small>💖 Happy <span id="vHappy"></span></small><div class="track"><div class="fill" id="bHappy"></div></div></div>
-  <div class="bar"><small>⚡ Energy <span id="vEnergy"></span></small><div class="track"><div class="fill" id="bEnergy"></div></div></div>
-  <div class="bar"><small>🫧 Clean <span id="vClean"></span></small><div class="track"><div class="fill" id="bClean"></div></div></div>
+<div class="stats" id="bars" style="display:none">
+  <div class="stat" id="sHunger"><div class="ring"><svg viewBox="0 0 44 44"><circle class="rt" cx="22" cy="22" r="18"/><circle class="rf" id="bHunger" cx="22" cy="22" r="18"/></svg><span class="se">🍙</span></div><small>Food<b id="vHunger"></b></small></div>
+  <div class="stat" id="sHappy"><div class="ring"><svg viewBox="0 0 44 44"><circle class="rt" cx="22" cy="22" r="18"/><circle class="rf" id="bHappy" cx="22" cy="22" r="18"/></svg><span class="se">💖</span></div><small>Happy<b id="vHappy"></b></small></div>
+  <div class="stat" id="sEnergy"><div class="ring"><svg viewBox="0 0 44 44"><circle class="rt" cx="22" cy="22" r="18"/><circle class="rf" id="bEnergy" cx="22" cy="22" r="18"/></svg><span class="se">⚡</span></div><small>Energy<b id="vEnergy"></b></small></div>
+  <div class="stat" id="sClean"><div class="ring"><svg viewBox="0 0 44 44"><circle class="rt" cx="22" cy="22" r="18"/><circle class="rf" id="bClean" cx="22" cy="22" r="18"/></svg><span class="se">🫧</span></div><small>Clean<b id="vClean"></b></small></div>
 </div>
 
 <div class="stage" id="stage">
+  <div class="room"></div>
+  <div class="night"><i class="star" style="left:14%;top:10%;animation-delay:0.0s"></i><i class="star" style="left:24%;top:16%;animation-delay:0.8s"></i><i class="star" style="left:33%;top:8%;animation-delay:1.6s"></i><i class="star" style="left:19%;top:22%;animation-delay:2.2s"></i><i class="star" style="left:28%;top:12%;animation-delay:0.4s"></i><i class="star" style="left:71%;top:6%;animation-delay:1.2s"></i><i class="star" style="left:83%;top:14%;animation-delay:2.6s"></i></div>
+  <p class="hint" id="hint"></p>
   <div class="bubble" id="bubble"></div>
   <div class="petbox" id="petbox">
     <img id="pet" src="" alt="Your pet">
@@ -194,16 +238,16 @@
     <img class="acc" id="acc_neck" alt="" style="display:none">
     <img class="acc" id="smudge" alt="" style="display:none">
   </div>
+  <div class="fx" id="fx"></div>
 </div>
-<p class="hint" id="hint"></p>
 
-<div class="actions" id="actions" style="display:none; grid-template-columns:repeat(6,1fr);">
-  <button id="feedBtn"><span class="ico">🍙</span>Feed</button>
-  <button onclick="play()" id="playBtn"><span class="ico">⚽</span>Play</button>
-  <button onclick="bath()"><span class="ico">🫧</span>Bath</button>
-  <button onclick="startWalk()" id="walkBtn"><span class="ico">🌼</span>Walk</button>
-  <button onclick="toggleSleep()" id="sleepBtn"><span class="ico">🌙</span>Sleep</button>
-  <button onclick="openWardrobe()"><span class="ico">👒</span>Style</button>
+<div class="dock" id="actions" style="display:none">
+  <button class="act feed" id="feedBtn"><span class="ico">🍙</span><span>Feed</span></button>
+  <button class="act play" onclick="play()" id="playBtn"><span class="ico">⚽</span><span>Play</span></button>
+  <button class="act bath" onclick="bath()"><span class="ico">🫧</span><span>Bath</span></button>
+  <button class="act walk" onclick="startWalk()" id="walkBtn"><span class="ico">🌼</span><span>Walk</span></button>
+  <button class="act sleep" onclick="toggleSleep()" id="sleepBtn"><span class="ico">🌙</span><span>Sleep</span></button>
+  <button class="act style" onclick="openWardrobe()"><span class="ico">👒</span><span>Style</span></button>
 </div>
 
 <div class="walkview" id="walkview">
@@ -282,6 +326,10 @@ var ANIM = { egg:"anim_egg.webp", hatch:"anim_hatch.webp", idle:"anim_idle2.webp
              happy:"anim_happy.webp", eat:"anim_eat.webp", sleep:"anim_sleep.webp",
              sad:"anim_sad.webp", bath:"anim_bath.webp", play:"anim_play.webp",
              walk:"anim_walk.webp", pet:"anim_pet.webp" };
+/* v15: the home screen is a room, so Mochi needs to be cut out of the cream
+   the loops were rendered on. "<name>_k.webp" is the same loop with the
+   background keyed to alpha; the originals stay for older installs. */
+function keyed(file){ return file.replace(".webp", "_k.webp"); }
 
 /* ---------- wardrobe ---------- */
 /* Accessories are pre-positioned 400x400 overlays: "<id>.png" sits over the
@@ -372,7 +420,8 @@ function save(){ store.setItem("mochi_state", JSON.stringify(S)); }
 /* ---------- rendering ---------- */
 function render(){
   var m = mood();
-  el("pet").src = ART + ANIM[m];
+  var src = ART + keyed(ANIM[m]);
+  if (el("pet").getAttribute("src") !== src) el("pet").src = src;
   el("stage").className = "stage" + (S.sleeping && !transient ? " sleeping" : "");
   el("hint").textContent = moodHint();
   if (S.hatched){
@@ -383,16 +432,74 @@ function render(){
     el("actions").style.display = "grid";
     el("chatrow").style.display = "flex";
     bar("Hunger", S.hunger); bar("Happy", S.happy); bar("Energy", S.energy); bar("Clean", S.clean);
-    el("sleepBtn").innerHTML = S.sleeping ? '<span class="ico">☀️</span>Wake' : '<span class="ico">🌙</span>Sleep';
+    el("sleepBtn").innerHTML = S.sleeping ? '<span class="ico">☀️</span><span>Wake</span>' : '<span class="ico">🌙</span><span>Sleep</span>';
     el("playBtn").disabled = S.sleeping;
   }
+  el("moodchip").textContent = !S.hatched ? "" : S.sleeping ? "💤 Asleep" : m === "sad" ? "🥺 Needs you" :
+    (S.happy >= 80 && S.hunger >= 50) ? "😊 Happy" : "🙂 Content";
+  zzz(S.hatched && S.sleeping && !transient);
+}
+
+/* ---------- little bits of joy ---------- */
+/* A few emoji that float up from Mochi when something nice happens. */
+var FX = { pet:["💗","💕","💖","💗"], play:["⭐","✨","⚽","🌟"], bath:["🫧","🫧","✨","🫧"],
+           eat:["😋","✨","💛"], wake:["☀️","✨"], happy:["✨","🎶","💚"], hatch:["✨","🌱","💫","✨"] };
+function fx(kind){
+  var host = el("fx"), box = el("petbox");
+  if (!host || !box || !FX[kind]) return;
+  var hb = host.getBoundingClientRect(), pb = box.getBoundingClientRect();
+  var cx = pb.left - hb.left + pb.width / 2, cy = pb.top - hb.top + pb.height * 0.35;
+  FX[kind].forEach(function(e, i){
+    var s = document.createElement("span");
+    s.className = "fxp"; s.textContent = e;
+    s.style.left = (cx - 12 + (Math.random() - 0.5) * pb.width * 0.6) + "px";
+    s.style.top = (cy + Math.random() * 30) + "px";
+    s.style.setProperty("--dx", ((Math.random() - 0.5) * 70).toFixed(0) + "px");
+    s.style.setProperty("--rot", ((Math.random() - 0.5) * 40).toFixed(0) + "deg");
+    s.style.animationDelay = (i * 0.12) + "s";
+    host.appendChild(s);
+    setTimeout(function(){ if (s.parentNode) s.parentNode.removeChild(s); }, 2200 + i * 120);
+  });
+}
+/* "+26" rising over the gauge that just went up. */
+function delta(key, amount){
+  amount = Math.round(amount);
+  if (!amount || amount < 1) return;
+  var host = el("s" + key); if (!host) return;
+  var d = document.createElement("span");
+  d.className = "delta"; d.textContent = "+" + amount;
+  host.appendChild(d);
+  setTimeout(function(){ if (d.parentNode) d.parentNode.removeChild(d); }, 1400);
+}
+/* Change a stat and show the rise. */
+function bump(key, prop, by, cap){
+  var before = S[prop];
+  S[prop] = Math.min(cap == null ? 100 : cap, S[prop] + by);
+  delta(key, S[prop] - before);
+}
+var zzzTimer = null;
+function zzz(on){
+  if (on && !zzzTimer){
+    zzzTimer = setInterval(function(){
+      var host = el("fx"), box = el("petbox"); if (!host || !box) return;
+      var hb = host.getBoundingClientRect(), pb = box.getBoundingClientRect();
+      var s = document.createElement("span");
+      s.className = "fxp"; s.textContent = "💤"; s.style.fontSize = "20px";
+      s.style.left = (pb.left - hb.left + pb.width * 0.62) + "px";
+      s.style.top = (pb.top - hb.top + pb.height * 0.18) + "px";
+      s.style.setProperty("--dx", "26px");
+      host.appendChild(s);
+      setTimeout(function(){ if (s.parentNode) s.parentNode.removeChild(s); }, 1900);
+    }, 2600);
+  } else if (!on && zzzTimer){ clearInterval(zzzTimer); zzzTimer = null; }
 }
 
 function bar(key, v){
   v = Math.round(v);
   var f = el("b" + key);
-  f.style.width = v + "%";
-  f.className = "fill" + (v < 25 ? " crit" : v < 45 ? " low" : "");
+  f.style.strokeDashoffset = (113.1 * (1 - v / 100)).toFixed(1);
+  f.setAttribute("class", "rf" + (v < 25 ? " crit" : v < 45 ? " low" : ""));
+  el("s" + key).className = "stat" + (v < 25 ? " crit" : "");
   el("v" + key).textContent = v;
 }
 
@@ -433,8 +540,9 @@ function feedWith(id){
   if (S.sleeping){ bubble("Shh — " + esc(S.name) + " is sleeping."); return; }
   var f = food(id);
   haptic(f.fav ? "success" : "light");
-  S.hunger = Math.min(100, S.hunger + f.hunger);
-  S.happy  = Math.min(100, S.happy + f.happy);
+  bump("Hunger", "hunger", f.hunger);
+  bump("Happy", "happy", f.happy);
+  fx("eat");
   if (f.messy){
     S.messy = true;
     S.clean = Math.max(12, S.clean - 28);   /* chocolate = messy face */
@@ -473,7 +581,8 @@ function closeFoodMenu(){ el("foodmenu").classList.remove("show"); }
 function play(){
   if (S.sleeping) return;
   haptic("light");
-  S.happy = Math.min(100, S.happy + 26);
+  bump("Happy", "happy", 26);
+  fx("play");
   S.energy = Math.max(5, S.energy - 10);
   S.hunger = Math.max(12, S.hunger - 5);
   S.plays = (S.plays || 0) + 1;
@@ -482,7 +591,8 @@ function play(){
 function bath(){
   if (S.sleeping){ bubble("Bathtime after nap time."); return; }
   haptic("light");
-  S.clean = 100;
+  bump("Clean", "clean", 100 - S.clean);
+  fx("bath");
   if (S.messy){ S.messy = false; applyMessy(); bubble("All clean again! ✨", 2800); }
   pulse("bath", 5600); save();
 }
@@ -490,7 +600,8 @@ function toggleSleep(){
   haptic("selection");
   if (S.sleeping){
     S.sleeping = false;
-    S.happy = Math.min(100, S.happy + 6);
+    bump("Happy", "happy", 6);
+    fx("wake");
     pulse("happy", 3800);
   } else {
     S.sleeping = true;
@@ -507,7 +618,7 @@ function stageTap(){
     if (S.tapCount >= 3){
       S.hatched = true;
       transient = "hatch";
-      el("pet").src = ART + ANIM.hatch;
+      el("pet").src = ART + keyed(ANIM.hatch);
       setTimeout(function(){ el("namer").classList.add("show"); }, 2600);
     } else {
       el("hint").textContent = S.tapCount === 1 ? "It wobbled!" : "Something's moving in there…";
@@ -521,7 +632,8 @@ function stageTap(){
   }
   if (S.sleeping){ toggleSleep(); return; }
   haptic("light");
-  S.happy = Math.min(100, S.happy + 2);
+  bump("Happy", "happy", 2);
+  fx("pet");
   pulse("pet", 3400);          /* heart-eyes: being petted */
   save();
 }
@@ -535,6 +647,7 @@ function setName(){
   transient = null;
   render(); save();
   bubble("Hello! I'm " + esc(S.name) + "! 🌱", 5000);
+  fx("hatch");
 }
 
 /* ---------- talking (the MyLLM twist) ---------- */
@@ -912,7 +1025,10 @@ setInterval(function(){ ambientTick(Date.now(), Math.random); }, 9000);
 lastAmbient = Date.now() - 15000;
 
 el("say").addEventListener("keydown", function(e){ if (e.key === "Enter") talk(); });
-el("stage").addEventListener("click", stageTap);
+el("petbox").addEventListener("click", stageTap);
+/* Belt and braces against double-tap zoom and pinch in the web view. */
+document.addEventListener("dblclick", function(e){ e.preventDefault(); }, { passive:false });
+document.addEventListener("gesturestart", function(e){ e.preventDefault(); }, { passive:false });
 
 /* Feed: a quick tap gives the default snack; press-and-hold opens the picker.
    Pointer events give one unified path (no touch/mouse double-fire in WKWebView). */
