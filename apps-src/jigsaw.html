@@ -5,6 +5,7 @@
   Not for redistribution or republication. Terms: https://github.com/TeamDzX/myllm-assets/blob/main/LICENSE
 --><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,viewport-fit=cover">
 <title>Jigsaw</title>
+<meta name="myllm:immersive" content="on">
 <style>:root{--build-id:"43656b3082";color-scheme:light dark}
   @property --h{ syntax:'<number>'; inherits:true; initial-value:30; }
   *{ margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
@@ -133,6 +134,19 @@
   .conf{ position:fixed; top:-14px; width:9px; height:14px; border-radius:2px; z-index:90; pointer-events:none; animation:fall linear forwards; }
   @keyframes fall{ to{ transform:translateY(106dvh) rotate(620deg); } }
   @media (prefers-reduced-motion:reduce){ .conf{ display:none; } #ghost, #peek{ transition:none; } }
+
+/* myllm-fullscreen-v2 — MyLLM 5.6.2+ opens this app full screen; the ✕ is the way out. */
+.head .imm-acts{display:none;flex-shrink:0;margin-left:auto}
+.head .acts + .imm-acts{margin-left:0}
+body.imm .head .imm-acts{display:flex}
+.head .imm-acts button{width:40px;height:40px;border-radius:12px;border:1px solid var(--myllm-border,rgba(128,128,128,.28));
+  background:var(--myllm-surface,rgba(128,128,128,.12));color:var(--myllm-text,currentColor);display:grid;place-items:center;padding:0;cursor:pointer;transition:transform .12s}
+.head .imm-acts button:active,.head .imm-x:active{transform:scale(.94)}
+.head .imm-x{display:none !important}
+body.imm .head .imm-x{display:grid !important;place-items:center}
+.imm-x svg,.imm-acts svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round}
+.imm-safe{display:none}
+body.imm .imm-safe{display:block}
 </style></head><body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
   <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5.5v13a1 1 0 0 0 1.52.85l10.4-6.5a1 1 0 0 0 0-1.7L9.52 4.65A1 1 0 0 0 8 5.5z"/></symbol>
@@ -144,10 +158,10 @@
   <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.6l4.6 4.6L19.2 7.4" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
 </defs></svg>
 <div id="picker">
-  <div class="head">
+  <div class="imm-safe"></div><div class="head">
     <div class="tile"><svg><use href="#i-piece"/></svg></div>
     <div class="ht"><h1>Jigsaw</h1><p>Six little paintings, made just for this app. Pick one.</p></div>
-  </div>
+  <div class="imm-acts"><button type="button" aria-label="Close Jigsaw" onclick="myllmFSClose()"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div></div>
   <div class="seg" id="diffs"></div>
   <div class="pics" id="pics"></div>
 </div>
@@ -193,7 +207,7 @@ function syncChrome(force){
   var want = state !== "home";
   if (!window.myllmImmersive || (want === chromeOn && !force)) return;
   chromeOn = want;
-  try { myllmImmersive(want, {keepAwake:false}).catch(function(){}); } catch(_){}
+  try { myllmImmersive((window.myllmClose ? true : (want)), {keepAwake:false}).catch(function(){}); } catch(_){}
 }
 function setHue(h){ el("stage").style.setProperty("--h", String(h)); }
 function showSheet(html, acts){
@@ -512,4 +526,57 @@ Promise.all([load("jigsaw_done"), load("jigsaw_diff")]).then(function(vals){
   if (vals[1]){ var d = DIFFS.filter(function(x){ return x.id === vals[1]; })[0]; if (d) diff = d; }
   renderPicker();
 });
+
+/* myllm-fullscreen-v2 — full screen where MyLLM can also close the app for us
+   (myllmClose, 5.6.2+): full screen hides MyLLM's Done, and a page with no way
+   out is worse than a repeated title, so elsewhere nothing changes.
+   The spacer keeps the header clear of the status bar / Dynamic Island. It is
+   live CSS — env(safe-area-inset-top) — not a measured number: the inset is
+   still 0 when the page loads and only grows once MyLLM's bar has gone (v1
+   measured once, so the title sat under the island). If the page's own styles
+   already pad the header down by the inset, the spacer stays at 0. */
+(function(){
+  function full(){ return !!(window.myllmClose && window.myllmImmersive); }
+  /* Does any rule that applies to the header or an ancestor already use the top inset? */
+  function pageHandlesInset(head){
+    var chain = [], n, found = false;
+    for (n = head; n && n.nodeType === 1; n = n.parentElement) chain.push(n);
+    function walk(rules){
+      for (var i = 0; i < rules.length && !found; i++){
+        var r = rules[i];
+        if (r.cssRules && !r.selectorText) { walk(r.cssRules); continue; }
+        if (!r.selectorText || !/safe-area-inset-top/.test(r.cssText) || !/(padding|margin|top)\s*:/.test(r.cssText)) continue;
+        if (/\.imm-safe/.test(r.selectorText)) continue;
+        for (var k = 0; k < chain.length; k++){
+          try { if (chain[k].matches(r.selectorText)) { found = true; break; } } catch(e){}
+        }
+      }
+    }
+    for (var s = 0; s < document.styleSheets.length && !found; s++){
+      try { walk(document.styleSheets[s].cssRules); } catch(e){}
+    }
+    for (n = head; n && n.nodeType === 1 && !found; n = n.parentElement){
+      if (/safe-area-inset-top/.test(n.getAttribute("style") || "")) found = true;
+    }
+    return found;
+  }
+  function fit(){
+    var sp = document.querySelector(".imm-safe"), head = document.querySelector(".head");
+    if (!sp || !head) return;
+    sp.style.height = (document.body.classList.contains("imm") && !pageHandlesInset(head)) ? "env(safe-area-inset-top)" : "0px";
+  }
+  function sync(){
+    var f = full();
+    document.body.classList.toggle("imm", f);
+    fit();
+    if (!f) return;
+    try { window.myllmImmersive(true, { keepAwake:false }).catch(function(){}); } catch(e){}
+  }
+  window.myllmFSClose = function(){
+    try { if (window.myllmHaptic) window.myllmHaptic("light"); } catch(e){}
+    try { window.myllmClose().catch(function(){}); } catch(e){}
+  };
+  document.addEventListener("visibilitychange", function(){ if (!document.hidden) sync(); });
+  sync();
+})();
 </script></body></html>

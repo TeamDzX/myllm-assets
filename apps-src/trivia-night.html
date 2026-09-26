@@ -5,6 +5,7 @@
   Not for redistribution or republication. Terms: https://github.com/TeamDzX/myllm-assets/blob/main/LICENSE
 --><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Trivia Night</title>
+<meta name="myllm:immersive" content="on">
 <style>:root{--build-id:"e3bee5843c";color-scheme:light dark;
   --bg:var(--myllm-bg,#f2f2f7); --surface:var(--myllm-surface,#fff); --ink:var(--myllm-text,#111);
   --muted:var(--myllm-muted,#8a8a8e); --line:var(--myllm-border,#e3e3e8); --acc:var(--myllm-accent,#0a84ff); --h:264; }
@@ -119,6 +120,19 @@
   }
   @media (max-width:340px){ .qcard h2{ font-size:18px; } .opt{ font-size:15px; min-height:52px; } .hero h1{ font-size:21px; } }
   @media (prefers-reduced-motion:reduce){ .orb, .skel i, .fact.on{ animation:none; } }
+
+/* myllm-fullscreen-v2 — MyLLM 5.6.2+ opens this app full screen; the ✕ is the way out. */
+.head .imm-acts{display:none;flex-shrink:0;margin-left:auto}
+.head .acts + .imm-acts{margin-left:0}
+body.imm .head .imm-acts{display:flex}
+.head .imm-acts button{width:40px;height:40px;border-radius:12px;border:1px solid var(--myllm-border,rgba(128,128,128,.28));
+  background:var(--myllm-surface,rgba(128,128,128,.12));color:var(--myllm-text,currentColor);display:grid;place-items:center;padding:0;cursor:pointer;transition:transform .12s}
+.head .imm-acts button:active,.head .imm-x:active{transform:scale(.94)}
+.head .imm-x{display:none !important}
+body.imm .head .imm-x{display:grid !important;place-items:center}
+.imm-x svg,.imm-acts svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round}
+.imm-safe{display:none}
+body.imm .imm-safe{display:block}
 </style></head><body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
   <symbol id="i-brain" viewBox="0 0 24 24"><path d="M9 3a3.5 3.5 0 0 0-3.4 2.7A3.6 3.6 0 0 0 3 9.1c0 .9.3 1.7.8 2.3A3.8 3.8 0 0 0 3 13.8a3.7 3.7 0 0 0 2.6 3.6A3.6 3.6 0 0 0 9.2 21c1.2 0 2.2-.6 2.8-1.4V4.6A3.5 3.5 0 0 0 9 3zm6 0c-1.2 0-2.3.6-3 1.6v15c.6.8 1.6 1.4 2.8 1.4a3.6 3.6 0 0 0 3.6-3.6 3.7 3.7 0 0 0 2.6-3.6c0-.9-.3-1.7-.8-2.4.5-.6.8-1.4.8-2.3a3.6 3.6 0 0 0-2.6-3.4A3.5 3.5 0 0 0 15 3z"/></symbol>
@@ -175,7 +189,7 @@ function syncLook(){
 function syncChrome(){
   if (!window.myllmImmersive) return;
   /* a phone model can take a minute to write the quiz: don't let the screen sleep on it */
-  try { myllmImmersive(phase !== 'home', {keepAwake: phase === 'loading'}).catch(function(){}); } catch(e){}
+  try { myllmImmersive((window.myllmClose ? true : (phase !== 'home')), {keepAwake: phase === 'loading'}).catch(function(){}); } catch(e){}
 }
 function go(p){ var was = phase; phase = p; syncLook(); if (!(was === 'home' && p === 'home')) syncChrome(); }
 
@@ -183,7 +197,7 @@ function go(p){ var was = phase; phase = p; syncLook(); if (!(was === 'home' && 
 function setup(){
   go('home');
   el('home').innerHTML =
-    '<div class="head"><div class="tile">'+icon('brain')+'</div><div class="ht"><h1>Trivia Night</h1><p>A fresh AI quiz on any topic</p></div></div>'+
+    '<div class="imm-safe"></div><div class="head"><div class="tile">'+icon('brain')+'</div><div class="ht"><h1>Trivia Night</h1><p>A fresh AI quiz on any topic</p></div><div class="imm-acts"><button type="button" aria-label="Close Trivia Night" onclick="myllmFSClose()"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div></div>'+
     '<div class="hero"><div><p style="margin-top:0">Pick any topic — your AI writes a fresh quiz every time.</p></div>'+
     '<div class="stat" id="bestBox" style="visibility:hidden"><b id="best"></b><span>Best</span></div></div>'+
     '<h2 class="sec">Topic</h2><div class="card"><input id="topic" placeholder="90s movies, space, football…" autocomplete="off" enterkeyhint="go">'+
@@ -344,4 +358,57 @@ if (window.matchMedia){
   if (mq.addEventListener) mq.addEventListener('change', syncLook); else if (mq.addListener) mq.addListener(syncLook);
 }
 setup();
+
+/* myllm-fullscreen-v2 — full screen where MyLLM can also close the app for us
+   (myllmClose, 5.6.2+): full screen hides MyLLM's Done, and a page with no way
+   out is worse than a repeated title, so elsewhere nothing changes.
+   The spacer keeps the header clear of the status bar / Dynamic Island. It is
+   live CSS — env(safe-area-inset-top) — not a measured number: the inset is
+   still 0 when the page loads and only grows once MyLLM's bar has gone (v1
+   measured once, so the title sat under the island). If the page's own styles
+   already pad the header down by the inset, the spacer stays at 0. */
+(function(){
+  function full(){ return !!(window.myllmClose && window.myllmImmersive); }
+  /* Does any rule that applies to the header or an ancestor already use the top inset? */
+  function pageHandlesInset(head){
+    var chain = [], n, found = false;
+    for (n = head; n && n.nodeType === 1; n = n.parentElement) chain.push(n);
+    function walk(rules){
+      for (var i = 0; i < rules.length && !found; i++){
+        var r = rules[i];
+        if (r.cssRules && !r.selectorText) { walk(r.cssRules); continue; }
+        if (!r.selectorText || !/safe-area-inset-top/.test(r.cssText) || !/(padding|margin|top)\s*:/.test(r.cssText)) continue;
+        if (/\.imm-safe/.test(r.selectorText)) continue;
+        for (var k = 0; k < chain.length; k++){
+          try { if (chain[k].matches(r.selectorText)) { found = true; break; } } catch(e){}
+        }
+      }
+    }
+    for (var s = 0; s < document.styleSheets.length && !found; s++){
+      try { walk(document.styleSheets[s].cssRules); } catch(e){}
+    }
+    for (n = head; n && n.nodeType === 1 && !found; n = n.parentElement){
+      if (/safe-area-inset-top/.test(n.getAttribute("style") || "")) found = true;
+    }
+    return found;
+  }
+  function fit(){
+    var sp = document.querySelector(".imm-safe"), head = document.querySelector(".head");
+    if (!sp || !head) return;
+    sp.style.height = (document.body.classList.contains("imm") && !pageHandlesInset(head)) ? "env(safe-area-inset-top)" : "0px";
+  }
+  function sync(){
+    var f = full();
+    document.body.classList.toggle("imm", f);
+    fit();
+    if (!f) return;
+    try { window.myllmImmersive(true, { keepAwake:false }).catch(function(){}); } catch(e){}
+  }
+  window.myllmFSClose = function(){
+    try { if (window.myllmHaptic) window.myllmHaptic("light"); } catch(e){}
+    try { window.myllmClose().catch(function(){}); } catch(e){}
+  };
+  document.addEventListener("visibilitychange", function(){ if (!document.hidden) sync(); });
+  sync();
+})();
 </script></body></html>

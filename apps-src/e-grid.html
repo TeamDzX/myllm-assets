@@ -9,6 +9,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>E-Grid</title>
+<meta name="myllm:immersive" content="on">
 <style>
 :root{--build-id:"3b30c8afe2";
   --bg:var(--myllm-bg,#f2f2f7);--surface:var(--myllm-surface,#fff);
@@ -208,6 +209,10 @@ a{color:var(--accent)}
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #sheetbody{flex:1 1 auto;overflow-y:auto;padding:14px 16px calc(24px + env(safe-area-inset-bottom))}
 .shot{width:100%;height:210px;object-fit:cover;display:block}
+
+/* myllm-fullscreen-v2 — MyLLM 5.6.2+ opens E-Grid full screen; the ✕ beside Refresh is the way out. */
+#bar .imm-close{display:none}
+body.imm #bar .imm-close{display:grid;place-items:center}
 </style>
 </head>
 <body>
@@ -217,6 +222,7 @@ a{color:var(--accent)}
   <div class="tile" id="bartile"><svg viewBox="0 0 24 24"><path d="M5 21V3.5M5 4h13.5l-2.6 4 2.6 4H5"/><path d="M8 4v8M11 4v8M14 4v8" stroke-width="1.4"/></svg></div>
   <div class="ht"><h1>E<em>-</em>Grid</h1><p id="barsub">Every race, one app</p></div>
   <button class="iconbtn" id="refresh" data-act="refresh" aria-label="Refresh"><svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.6-5.9"/><path d="M20 4v5h-5"/></svg></button>
+  <button class="iconbtn imm-close" type="button" aria-label="Close E-Grid" onclick="myllmFSClose()"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
 </div>
 
 <main id="view"><div class="wrap"><div class="empty">Loading…</div></div></main>
@@ -1506,6 +1512,59 @@ hydrate().then(function(){
     });
   });
 });
+
+/* myllm-fullscreen-v2 — full screen where MyLLM can also close the app for us
+   (myllmClose, 5.6.2+): full screen hides MyLLM's Done, and a page with no way
+   out is worse than a repeated title, so elsewhere nothing changes.
+   The spacer keeps the header clear of the status bar / Dynamic Island. It is
+   live CSS — env(safe-area-inset-top) — not a measured number: the inset is
+   still 0 when the page loads and only grows once MyLLM's bar has gone (v1
+   measured once, so the title sat under the island). If the page's own styles
+   already pad the header down by the inset, the spacer stays at 0. */
+(function(){
+  function full(){ return !!(window.myllmClose && window.myllmImmersive); }
+  /* Does any rule that applies to the header or an ancestor already use the top inset? */
+  function pageHandlesInset(head){
+    var chain = [], n, found = false;
+    for (n = head; n && n.nodeType === 1; n = n.parentElement) chain.push(n);
+    function walk(rules){
+      for (var i = 0; i < rules.length && !found; i++){
+        var r = rules[i];
+        if (r.cssRules && !r.selectorText) { walk(r.cssRules); continue; }
+        if (!r.selectorText || !/safe-area-inset-top/.test(r.cssText) || !/(padding|margin|top)\s*:/.test(r.cssText)) continue;
+        if (/\.imm-safe/.test(r.selectorText)) continue;
+        for (var k = 0; k < chain.length; k++){
+          try { if (chain[k].matches(r.selectorText)) { found = true; break; } } catch(e){}
+        }
+      }
+    }
+    for (var s = 0; s < document.styleSheets.length && !found; s++){
+      try { walk(document.styleSheets[s].cssRules); } catch(e){}
+    }
+    for (n = head; n && n.nodeType === 1 && !found; n = n.parentElement){
+      if (/safe-area-inset-top/.test(n.getAttribute("style") || "")) found = true;
+    }
+    return found;
+  }
+  function fit(){
+    var sp = document.querySelector(".imm-safe"), head = document.querySelector(".head");
+    if (!sp || !head) return;
+    sp.style.height = (document.body.classList.contains("imm") && !pageHandlesInset(head)) ? "env(safe-area-inset-top)" : "0px";
+  }
+  function sync(){
+    var f = full();
+    document.body.classList.toggle("imm", f);
+    fit();
+    if (!f) return;
+    try { window.myllmImmersive(true, { keepAwake:false }).catch(function(){}); } catch(e){}
+  }
+  window.myllmFSClose = function(){
+    try { if (window.myllmHaptic) window.myllmHaptic("light"); } catch(e){}
+    try { window.myllmClose().catch(function(){}); } catch(e){}
+  };
+  document.addEventListener("visibilitychange", function(){ if (!document.hidden) sync(); });
+  sync();
+})();
 </script>
 </body>
 </html>

@@ -8,6 +8,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Mandala Maker</title>
+<meta name="myllm:immersive" content="on">
 <style>
 :root{--build-id:"49dda7a2d9";
   color-scheme:light dark;
@@ -72,6 +73,19 @@ body.focus .fbar{display:flex;position:fixed;left:50%;transform:translateX(-50%)
   body.focus canvas{width:min(100%,calc(100dvh - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom)))}
   body.focus .fbar{flex-direction:column;left:auto;right:calc(14px + env(safe-area-inset-right));bottom:50%;transform:translateY(50%)}}
 @media (prefers-reduced-motion:reduce){button:active{transform:none}}
+
+/* myllm-fullscreen-v2 — MyLLM 5.6.2+ opens this app full screen; the ✕ is the way out. */
+.head .imm-acts{display:none;flex-shrink:0;margin-left:auto}
+.head .acts + .imm-acts{margin-left:0}
+body.imm .head .imm-acts{display:flex}
+.head .imm-acts button{width:40px;height:40px;border-radius:12px;border:1px solid var(--myllm-border,rgba(128,128,128,.28));
+  background:var(--myllm-surface,rgba(128,128,128,.12));color:var(--myllm-text,currentColor);display:grid;place-items:center;padding:0;cursor:pointer;transition:transform .12s}
+.head .imm-acts button:active,.head .imm-x:active{transform:scale(.94)}
+.head .imm-x{display:none !important}
+body.imm .head .imm-x{display:grid !important;place-items:center}
+.imm-x svg,.imm-acts svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round}
+.imm-safe{display:none}
+body.imm .imm-safe{display:block}
 </style>
 </head>
 <body>
@@ -85,11 +99,11 @@ body.focus .fbar{display:flex;position:fixed;left:50%;transform:translateX(-50%)
   <symbol id="i-save" viewBox="0 0 24 24"><path d="M12 3a1 1 0 0 1 1 1v9.6l3.3-3.3a1 1 0 1 1 1.4 1.4l-5 5a1 1 0 0 1-1.4 0l-5-5a1 1 0 1 1 1.4-1.4l3.3 3.3V4a1 1 0 0 1 1-1zM4 18a1 1 0 0 1 1 1v.5h14V19a1 1 0 1 1 2 0v1.5a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V19a1 1 0 0 1 1-1z" fill="currentColor"/></symbol>
 </defs></svg>
 
-<div class="head">
+<div class="imm-safe"></div><div class="head">
   <div class="tile"><svg class="i"><use href="#i-mandala"/></svg></div>
   <div class="ht"><h1>Mandala Maker</h1><p>Symmetry drawing, meditative</p></div>
   <div class="acts" id="acts"></div>
-</div>
+<div class="imm-acts"><button type="button" aria-label="Close Mandala Maker" onclick="myllmFSClose()"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div></div>
 <div class="stage"><canvas id="c" width="1000" height="1000"></canvas></div>
 <div class="panel">
   <div class="lbl"><label>Symmetry</label><span id="symv">12</span></div>
@@ -173,7 +187,7 @@ document.getElementById('share').onclick=function(){haptic('light');if(window.my
 var focusOn=false;
 function syncChrome(){
   if(!window.myllmImmersive)return;
-  try{myllmImmersive(focusOn,{keepAwake:false}).catch(function(){})}catch(e){}
+  try{myllmImmersive((window.myllmClose ? true : (focusOn)), {keepAwake:false}).catch(function(){})}catch(e){}
 }
 function setFocus(on){
   if(on&&!window.myllmImmersive)return;
@@ -206,6 +220,59 @@ function load(){
   });
 }
 load();
+
+/* myllm-fullscreen-v2 — full screen where MyLLM can also close the app for us
+   (myllmClose, 5.6.2+): full screen hides MyLLM's Done, and a page with no way
+   out is worse than a repeated title, so elsewhere nothing changes.
+   The spacer keeps the header clear of the status bar / Dynamic Island. It is
+   live CSS — env(safe-area-inset-top) — not a measured number: the inset is
+   still 0 when the page loads and only grows once MyLLM's bar has gone (v1
+   measured once, so the title sat under the island). If the page's own styles
+   already pad the header down by the inset, the spacer stays at 0. */
+(function(){
+  function full(){ return !!(window.myllmClose && window.myllmImmersive); }
+  /* Does any rule that applies to the header or an ancestor already use the top inset? */
+  function pageHandlesInset(head){
+    var chain = [], n, found = false;
+    for (n = head; n && n.nodeType === 1; n = n.parentElement) chain.push(n);
+    function walk(rules){
+      for (var i = 0; i < rules.length && !found; i++){
+        var r = rules[i];
+        if (r.cssRules && !r.selectorText) { walk(r.cssRules); continue; }
+        if (!r.selectorText || !/safe-area-inset-top/.test(r.cssText) || !/(padding|margin|top)\s*:/.test(r.cssText)) continue;
+        if (/\.imm-safe/.test(r.selectorText)) continue;
+        for (var k = 0; k < chain.length; k++){
+          try { if (chain[k].matches(r.selectorText)) { found = true; break; } } catch(e){}
+        }
+      }
+    }
+    for (var s = 0; s < document.styleSheets.length && !found; s++){
+      try { walk(document.styleSheets[s].cssRules); } catch(e){}
+    }
+    for (n = head; n && n.nodeType === 1 && !found; n = n.parentElement){
+      if (/safe-area-inset-top/.test(n.getAttribute("style") || "")) found = true;
+    }
+    return found;
+  }
+  function fit(){
+    var sp = document.querySelector(".imm-safe"), head = document.querySelector(".head");
+    if (!sp || !head) return;
+    sp.style.height = (document.body.classList.contains("imm") && !pageHandlesInset(head)) ? "env(safe-area-inset-top)" : "0px";
+  }
+  function sync(){
+    var f = full();
+    document.body.classList.toggle("imm", f);
+    fit();
+    if (!f) return;
+    try { window.myllmImmersive(true, { keepAwake:false }).catch(function(){}); } catch(e){}
+  }
+  window.myllmFSClose = function(){
+    try { if (window.myllmHaptic) window.myllmHaptic("light"); } catch(e){}
+    try { window.myllmClose().catch(function(){}); } catch(e){}
+  };
+  document.addEventListener("visibilitychange", function(){ if (!document.hidden) sync(); });
+  sync();
+})();
 </script>
 </body>
 </html>
