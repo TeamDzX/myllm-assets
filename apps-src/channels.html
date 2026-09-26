@@ -8,6 +8,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Channels</title>
+<!-- MyLLM 5.6.2+: open full screen from the first frame (MyLLM's bar only
+     repeated the title). Those builds all have myllmClose, which the ✕ uses. -->
+<meta name="myllm:immersive" content="on">
 <style>
   :root { color-scheme: light dark; }
   /* Dark fallbacks for builds that do not supply the theme. :where() carries no
@@ -32,6 +35,16 @@
   .head h1{ font-size:22px; font-weight:800; letter-spacing:-.01em; }
   .head p{ font-size:13px; color:var(--myllm-muted,#8a8a8e); margin-top:1px; }
   .wrap{ padding:12px 14px; }
+  /* Full screen: the ✕ is the way out (MyLLM's Done is hidden), and the page
+     now starts under the status bar, so it keeps clear of it. */
+  .head .acts{ display:none; flex-shrink:0; }
+  .head .acts button{ width:40px; height:40px; border-radius:12px; border:1px solid var(--myllm-border,#e3e3e8);
+    background:var(--myllm-surface,#fff); color:var(--myllm-text,#111); display:grid; place-items:center; padding:0; transition:transform .12s; }
+  .head .acts button:active{ transform:scale(.94); }
+  .head .acts svg{ width:16px; height:16px; fill:none; stroke:currentColor; stroke-width:2.6; stroke-linecap:round; }
+  body.imm .head .acts{ display:flex; }
+  body.imm .wrap{ padding-top:calc(12px + env(safe-area-inset-top)); }
+  .head p{ text-wrap:balance; }
 
   .tabs{ display:flex; background:var(--myllm-surface,#fff); border:1px solid var(--myllm-border,#e3e3e8); border-radius:13px; padding:3px; margin-bottom:12px; }
   .tabs button{
@@ -106,6 +119,7 @@
   <div class="head">
     <div class="tile"><svg viewBox="0 0 24 24"><path d="M6.5 2.5h11a1 1 0 0 1 0 2h-11a1 1 0 0 1 0-2zM5 6h14a1 1 0 0 1 0 2H5a1 1 0 0 1 0-2zm-.5 3.5h15A2.5 2.5 0 0 1 22 12v7a2.5 2.5 0 0 1-2.5 2.5h-15A2.5 2.5 0 0 1 2 19v-7a2.5 2.5 0 0 1 2.5-2.5zm5.3 3.3v5.4a.6.6 0 0 0 .9.5l4.4-2.7a.6.6 0 0 0 0-1l-4.4-2.7a.6.6 0 0 0-.9.5z" fill-rule="evenodd"/></svg></div>
     <div class="ht"><h1>Channels</h1><p>Your creators, no account</p></div>
+    <div class="acts"><button type="button" id="closeBtn" aria-label="Close Channels" onclick="closeApp()"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
   </div>
   <div class="tabs">
     <button id="tabL" class="on" onclick="showTab('l')">Latest</button>
@@ -536,7 +550,26 @@ function showTab(t){
   el("tabC").className = t === "c" ? "on" : "";
 }
 
+/* ---------- full screen ----------
+   Only where MyLLM can also close the app for us (myllmClose, 5.6.2+): full
+   screen hides the Done button, and a page with no way out is worse than a
+   repeated title. Elsewhere nothing changes. Looked up each time, never kept. */
+function canGoFull(){ return !!(window.myllmClose && window.myllmImmersive); }
+function syncChrome(){
+  var full = canGoFull();
+  document.body.classList.toggle("imm", full);
+  if (!full) return;
+  try { myllmImmersive(true, { keepAwake:false }).catch(function(){}); } catch(e){}
+}
+function closeApp(){
+  haptic("light");
+  try { myllmClose().catch(function(){}); } catch(e){}
+}
+/* MyLLM puts its bar back whenever the app is left; ask again on return. */
+document.addEventListener("visibilitychange", function(){ if (!document.hidden) syncChrome(); });
+
 /* ---------- boot ---------- */
+syncChrome();
 
 Promise.all([store.getItem(K_CH), store.getItem(K_CACHE), store.getItem(K_SEEN)])
 .then(function(v){
