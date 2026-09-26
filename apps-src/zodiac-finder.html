@@ -101,7 +101,7 @@
   @media (max-height:520px) and (min-width:600px){ body{ max-width:none; display:grid; grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr); column-gap:22px; align-items:start; }
     .head{ grid-column:1 / -1; } .left{ grid-column:1; } .right{ grid-column:2; } }
 
-/* myllm-fullscreen-v1 — MyLLM 5.6.2+ opens this app full screen; the ✕ is the way out. */
+/* myllm-fullscreen-v2 — MyLLM 5.6.2+ opens this app full screen; the ✕ is the way out. */
 .head .imm-acts{display:none;flex-shrink:0;margin-left:auto}
 .head .acts + .imm-acts{margin-left:0}
 body.imm .head .imm-acts{display:flex}
@@ -193,24 +193,43 @@ el('zrow').innerHTML=['Aries','Leo','Libra','Pisces'].map(zg).join('');
 el('dob').addEventListener('change',find);
 store().getItem('dob').then(function(v){if(v){el('dob').value=v;find()}});
 
-/* myllm-fullscreen-v1 — full screen where MyLLM can also close the app for us (myllmClose,
-   5.6.2+): full screen hides MyLLM's Done, and a page with no way out is
-   worse than a repeated title, so elsewhere nothing changes. The spacer keeps
-   the header clear of the status bar only if the page doesn't already. */
+/* myllm-fullscreen-v2 — full screen where MyLLM can also close the app for us
+   (myllmClose, 5.6.2+): full screen hides MyLLM's Done, and a page with no way
+   out is worse than a repeated title, so elsewhere nothing changes.
+   The spacer keeps the header clear of the status bar / Dynamic Island. It is
+   live CSS — env(safe-area-inset-top) — not a measured number: the inset is
+   still 0 when the page loads and only grows once MyLLM's bar has gone (v1
+   measured once, so the title sat under the island). If the page's own styles
+   already pad the header down by the inset, the spacer stays at 0. */
 (function(){
   function full(){ return !!(window.myllmClose && window.myllmImmersive); }
-  function inset(){
-    var p = document.createElement("div");
-    p.style.cssText = "position:fixed;top:0;left:0;width:1px;visibility:hidden;height:env(safe-area-inset-top)";
-    document.body.appendChild(p); var h = p.offsetHeight; p.parentNode.removeChild(p); return h;
+  /* Does any rule that applies to the header or an ancestor already use the top inset? */
+  function pageHandlesInset(head){
+    var chain = [], n, found = false;
+    for (n = head; n && n.nodeType === 1; n = n.parentElement) chain.push(n);
+    function walk(rules){
+      for (var i = 0; i < rules.length && !found; i++){
+        var r = rules[i];
+        if (r.cssRules && !r.selectorText) { walk(r.cssRules); continue; }
+        if (!r.selectorText || !/safe-area-inset-top/.test(r.cssText) || !/(padding|margin|top)\s*:/.test(r.cssText)) continue;
+        if (/\.imm-safe/.test(r.selectorText)) continue;
+        for (var k = 0; k < chain.length; k++){
+          try { if (chain[k].matches(r.selectorText)) { found = true; break; } } catch(e){}
+        }
+      }
+    }
+    for (var s = 0; s < document.styleSheets.length && !found; s++){
+      try { walk(document.styleSheets[s].cssRules); } catch(e){}
+    }
+    for (n = head; n && n.nodeType === 1 && !found; n = n.parentElement){
+      if (/safe-area-inset-top/.test(n.getAttribute("style") || "")) found = true;
+    }
+    return found;
   }
   function fit(){
     var sp = document.querySelector(".imm-safe"), head = document.querySelector(".head");
     if (!sp || !head) return;
-    sp.style.height = "0px";
-    if (!document.body.classList.contains("imm")) return;
-    var need = inset() + 6 - (head.getBoundingClientRect().top + window.scrollY);
-    sp.style.height = Math.max(0, Math.round(need)) + "px";
+    sp.style.height = (document.body.classList.contains("imm") && !pageHandlesInset(head)) ? "env(safe-area-inset-top)" : "0px";
   }
   function sync(){
     var f = full();
@@ -224,7 +243,6 @@ store().getItem('dob').then(function(v){if(v){el('dob').value=v;find()}});
     try { window.myllmClose().catch(function(){}); } catch(e){}
   };
   document.addEventListener("visibilitychange", function(){ if (!document.hidden) sync(); });
-  window.addEventListener("resize", fit);
   sync();
 })();
 </script></body></html>
