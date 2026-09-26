@@ -8,6 +8,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Submit Your App</title>
+<meta name="myllm:immersive" content="on">
 <style>
   :root{ color-scheme:light dark;
     --bg:var(--myllm-bg,#f2f2f7); --surface:var(--myllm-surface,#fff); --ink:var(--myllm-text,#111);
@@ -61,6 +62,19 @@
   #out{ display:none; }
   #pkg{ min-height:110px; font-family:ui-monospace,Menlo,monospace; font-size:13px; }
   @media (prefers-reduced-motion:reduce){ button:active{ transform:none; } }
+
+/* myllm-fullscreen-v1 — MyLLM 5.6.2+ opens this app full screen; the ✕ is the way out. */
+.head .imm-acts{display:none;flex-shrink:0;margin-left:auto}
+.head .acts + .imm-acts{margin-left:0}
+body.imm .head .imm-acts{display:flex}
+.head .imm-acts button{width:40px;height:40px;border-radius:12px;border:1px solid var(--myllm-border,rgba(128,128,128,.28));
+  background:var(--myllm-surface,rgba(128,128,128,.12));color:var(--myllm-text,currentColor);display:grid;place-items:center;padding:0;cursor:pointer;transition:transform .12s}
+.head .imm-acts button:active,.head .imm-x:active{transform:scale(.94)}
+.head .imm-x{display:none !important}
+body.imm .head .imm-x{display:grid !important;place-items:center}
+.imm-x svg,.imm-acts svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round}
+.imm-safe{display:none}
+body.imm .imm-safe{display:block}
 </style>
 <style>:root{--build-id:"c24a549174";}</style>
 </head>
@@ -76,10 +90,10 @@
   <symbol id="i-info" viewBox="0 0 24 24"><path d="M12 10.2a1.4 1.4 0 0 1 1.4 1.4v6a1.4 1.4 0 0 1-2.8 0v-6a1.4 1.4 0 0 1 1.4-1.4zm0-5.2a1.7 1.7 0 1 1 0 3.4 1.7 1.7 0 0 1 0-3.4z" fill="currentColor"/></symbol>
 </defs></svg>
 
-<div class="head">
+<div class="imm-safe"></div><div class="head">
   <div class="tile"><svg class="i"><use href="#i-plane"/></svg></div>
   <div class="ht"><h1>Submit Your App</h1><p>Put your creation in this gallery</p></div>
-</div>
+<div class="imm-acts"><button type="button" aria-label="Close Submit Your App" onclick="myllmFSClose()"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div></div>
 <p class="sub">Built something good in MyLLM? Put it in this gallery, on iOS and Android, credited to you. This wizard checks the house rules and packages your submission — a human reviews every app before it goes live.</p>
 
 <div class="card how">
@@ -205,6 +219,41 @@ function openIssue(){
   var name = encodeURIComponent("[App] " + (el("name").value.trim() || "My app"));
   window.open("https://github.com/TeamDzX/myllm-assets/issues/new?template=app-submission.md&title=" + name);
 }
+
+/* myllm-fullscreen-v1 — full screen where MyLLM can also close the app for us (myllmClose,
+   5.6.2+): full screen hides MyLLM's Done, and a page with no way out is
+   worse than a repeated title, so elsewhere nothing changes. The spacer keeps
+   the header clear of the status bar only if the page doesn't already. */
+(function(){
+  function full(){ return !!(window.myllmClose && window.myllmImmersive); }
+  function inset(){
+    var p = document.createElement("div");
+    p.style.cssText = "position:fixed;top:0;left:0;width:1px;visibility:hidden;height:env(safe-area-inset-top)";
+    document.body.appendChild(p); var h = p.offsetHeight; p.parentNode.removeChild(p); return h;
+  }
+  function fit(){
+    var sp = document.querySelector(".imm-safe"), head = document.querySelector(".head");
+    if (!sp || !head) return;
+    sp.style.height = "0px";
+    if (!document.body.classList.contains("imm")) return;
+    var need = inset() + 6 - (head.getBoundingClientRect().top + window.scrollY);
+    sp.style.height = Math.max(0, Math.round(need)) + "px";
+  }
+  function sync(){
+    var f = full();
+    document.body.classList.toggle("imm", f);
+    fit();
+    if (!f) return;
+    try { window.myllmImmersive(true, { keepAwake:false }).catch(function(){}); } catch(e){}
+  }
+  window.myllmFSClose = function(){
+    try { if (window.myllmHaptic) window.myllmHaptic("light"); } catch(e){}
+    try { window.myllmClose().catch(function(){}); } catch(e){}
+  };
+  document.addEventListener("visibilitychange", function(){ if (!document.hidden) sync(); });
+  window.addEventListener("resize", fit);
+  sync();
+})();
 </script>
 </body>
 </html>

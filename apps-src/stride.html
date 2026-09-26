@@ -8,6 +8,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Stride</title>
+<meta name="myllm:immersive" content="on">
 <style>
 :root{--build-id:"6980d325e7";
   --bg:var(--myllm-bg,#f4f1ee);--surface:var(--myllm-surface,#fff);
@@ -152,6 +153,19 @@ svg.i{width:1.25em;height:1.25em;fill:currentColor;flex-shrink:0}
 .foot{margin:22px 4px 0;font-size:.8rem;color:var(--muted);font-weight:600;text-align:center}
 .hide{display:none!important}
 @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+/* myllm-fullscreen-v1 — MyLLM 5.6.2+ opens this app full screen; the ✕ is the way out. */
+.head .imm-acts{display:none;flex-shrink:0;margin-left:auto}
+.head .acts + .imm-acts{margin-left:0}
+body.imm .head .imm-acts{display:flex}
+.head .imm-acts button{width:40px;height:40px;border-radius:12px;border:1px solid var(--myllm-border,rgba(128,128,128,.28));
+  background:var(--myllm-surface,rgba(128,128,128,.12));color:var(--myllm-text,currentColor);display:grid;place-items:center;padding:0;cursor:pointer;transition:transform .12s}
+.head .imm-acts button:active,.head .imm-x:active{transform:scale(.94)}
+.head .imm-x{display:none !important}
+body.imm .head .imm-x{display:grid !important;place-items:center}
+.imm-x svg,.imm-acts svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round}
+.imm-safe{display:none}
+body.imm .imm-safe{display:block}
 </style>
 </head>
 <body>
@@ -168,10 +182,10 @@ svg.i{width:1.25em;height:1.25em;fill:currentColor;flex-shrink:0}
   <div class="sky" id="sky" aria-hidden="true"></div>
   <div class="veil" aria-hidden="true"></div>
   <div class="inner wrap">
-    <div class="head">
+    <div class="imm-safe"></div><div class="head">
       <div class="tile"><svg><use href="#i-walk"/></svg></div>
       <div class="ht"><h1>Stride</h1><p>Your steps, big and clear</p></div>
-    </div>
+    <div class="imm-acts"><button type="button" aria-label="Close Stride" onclick="myllmFSClose()"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div></div>
   </div>
 </header>
 
@@ -625,6 +639,41 @@ function boot(){
 }
 
 boot();
+
+/* myllm-fullscreen-v1 — full screen where MyLLM can also close the app for us (myllmClose,
+   5.6.2+): full screen hides MyLLM's Done, and a page with no way out is
+   worse than a repeated title, so elsewhere nothing changes. The spacer keeps
+   the header clear of the status bar only if the page doesn't already. */
+(function(){
+  function full(){ return !!(window.myllmClose && window.myllmImmersive); }
+  function inset(){
+    var p = document.createElement("div");
+    p.style.cssText = "position:fixed;top:0;left:0;width:1px;visibility:hidden;height:env(safe-area-inset-top)";
+    document.body.appendChild(p); var h = p.offsetHeight; p.parentNode.removeChild(p); return h;
+  }
+  function fit(){
+    var sp = document.querySelector(".imm-safe"), head = document.querySelector(".head");
+    if (!sp || !head) return;
+    sp.style.height = "0px";
+    if (!document.body.classList.contains("imm")) return;
+    var need = inset() + 6 - (head.getBoundingClientRect().top + window.scrollY);
+    sp.style.height = Math.max(0, Math.round(need)) + "px";
+  }
+  function sync(){
+    var f = full();
+    document.body.classList.toggle("imm", f);
+    fit();
+    if (!f) return;
+    try { window.myllmImmersive(true, { keepAwake:false }).catch(function(){}); } catch(e){}
+  }
+  window.myllmFSClose = function(){
+    try { if (window.myllmHaptic) window.myllmHaptic("light"); } catch(e){}
+    try { window.myllmClose().catch(function(){}); } catch(e){}
+  };
+  document.addEventListener("visibilitychange", function(){ if (!document.hidden) sync(); });
+  window.addEventListener("resize", fit);
+  sync();
+})();
 </script>
 </body>
 </html>

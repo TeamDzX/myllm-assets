@@ -8,6 +8,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Birthday Book</title>
+<meta name="myllm:immersive" content="on">
 <style>
   :root{ color-scheme:light dark;
     --bg:var(--myllm-bg,#f2f2f7); --surface:var(--myllm-surface,#fff); --ink:var(--myllm-text,#111);
@@ -101,6 +102,19 @@
   .note{ font-size:12.5px; color:var(--muted); margin-top:8px; line-height:1.5; }
   [hidden]{ display:none !important; }
   @media (prefers-reduced-motion:reduce){ .sheet{ transition:none; } .spin{ animation-duration:2.4s; } button:active{ transform:none; } }
+
+/* myllm-fullscreen-v1 — MyLLM 5.6.2+ opens this app full screen; the ✕ is the way out. */
+.head .imm-acts{display:none;flex-shrink:0;margin-left:auto}
+.head .acts + .imm-acts{margin-left:0}
+body.imm .head .imm-acts{display:flex}
+.head .imm-acts button{width:40px;height:40px;border-radius:12px;border:1px solid var(--myllm-border,rgba(128,128,128,.28));
+  background:var(--myllm-surface,rgba(128,128,128,.12));color:var(--myllm-text,currentColor);display:grid;place-items:center;padding:0;cursor:pointer;transition:transform .12s}
+.head .imm-acts button:active,.head .imm-x:active{transform:scale(.94)}
+.head .imm-x{display:none !important}
+body.imm .head .imm-x{display:grid !important;place-items:center}
+.imm-x svg,.imm-acts svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round}
+.imm-safe{display:none}
+body.imm .imm-safe{display:block}
 </style>
 <style>:root{--build-id:"905f50d9f9";}</style>
 </head>
@@ -113,10 +127,10 @@
   <symbol id="i-party" viewBox="0 0 24 24"><path d="M4.3 19.7l4.5-12 7.5 7.5zM14 3.5a1 1 0 0 1 1 1v1a1 1 0 0 1-2 0v-1a1 1 0 0 1 1-1zm5.5 5.5a1 1 0 0 1 0 2h-1a1 1 0 0 1 0-2zm-.9-4.6a1 1 0 0 1 0 1.4l-1.4 1.4a1 1 0 1 1-1.4-1.4l1.4-1.4a1 1 0 0 1 1.4 0zM17 13.5a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zM9.5 3a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3z" fill="currentColor"/></symbol>
 </defs></svg>
 
-<div class="head">
+<div class="imm-safe"></div><div class="head">
   <div class="tile"><svg class="i"><use href="#i-gift"/></svg></div>
   <div class="ht"><h1>Birthday Book</h1><p>Never miss a birthday again</p></div>
-</div>
+<div class="imm-acts"><button type="button" aria-label="Close Birthday Book" onclick="myllmFSClose()"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div></div>
 <div class="hero" id="hero" hidden></div>
 <h2 id="listLbl" hidden>Coming up</h2>
 <div class="list" id="list"></div>
@@ -344,6 +358,41 @@ store().getItem("bdays").then(function(v){
   if (v){ try{ people = JSON.parse(v) || []; }catch(e){} }
   render();
 });
+
+/* myllm-fullscreen-v1 — full screen where MyLLM can also close the app for us (myllmClose,
+   5.6.2+): full screen hides MyLLM's Done, and a page with no way out is
+   worse than a repeated title, so elsewhere nothing changes. The spacer keeps
+   the header clear of the status bar only if the page doesn't already. */
+(function(){
+  function full(){ return !!(window.myllmClose && window.myllmImmersive); }
+  function inset(){
+    var p = document.createElement("div");
+    p.style.cssText = "position:fixed;top:0;left:0;width:1px;visibility:hidden;height:env(safe-area-inset-top)";
+    document.body.appendChild(p); var h = p.offsetHeight; p.parentNode.removeChild(p); return h;
+  }
+  function fit(){
+    var sp = document.querySelector(".imm-safe"), head = document.querySelector(".head");
+    if (!sp || !head) return;
+    sp.style.height = "0px";
+    if (!document.body.classList.contains("imm")) return;
+    var need = inset() + 6 - (head.getBoundingClientRect().top + window.scrollY);
+    sp.style.height = Math.max(0, Math.round(need)) + "px";
+  }
+  function sync(){
+    var f = full();
+    document.body.classList.toggle("imm", f);
+    fit();
+    if (!f) return;
+    try { window.myllmImmersive(true, { keepAwake:false }).catch(function(){}); } catch(e){}
+  }
+  window.myllmFSClose = function(){
+    try { if (window.myllmHaptic) window.myllmHaptic("light"); } catch(e){}
+    try { window.myllmClose().catch(function(){}); } catch(e){}
+  };
+  document.addEventListener("visibilitychange", function(){ if (!document.hidden) sync(); });
+  window.addEventListener("resize", fit);
+  sync();
+})();
 </script>
 </body>
 </html>

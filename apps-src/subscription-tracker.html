@@ -8,6 +8,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Subscription Tracker</title>
+<meta name="myllm:immersive" content="on">
 <style>
   :root{ color-scheme:light dark;
     --bg:var(--myllm-bg,#f2f2f7); --surface:var(--myllm-surface,#fff); --ink:var(--myllm-text,#111);
@@ -123,6 +124,19 @@
   /* narrow phones: the title keeps the header row; the currency moves beside the money */
   @media (max-width:360px){ .head .acts{ display:none; } .hero select{ display:inline-block; } }
   @media (prefers-reduced-motion:reduce){ .sheet{ transition:none; } .spin{ animation-duration:2.4s; } button:active{ transform:none; } }
+
+/* myllm-fullscreen-v1 — MyLLM 5.6.2+ opens this app full screen; the ✕ is the way out. */
+.head .imm-acts{display:none;flex-shrink:0;margin-left:auto}
+.head .acts + .imm-acts{margin-left:0}
+body.imm .head .imm-acts{display:flex}
+.head .imm-acts button{width:40px;height:40px;border-radius:12px;border:1px solid var(--myllm-border,rgba(128,128,128,.28));
+  background:var(--myllm-surface,rgba(128,128,128,.12));color:var(--myllm-text,currentColor);display:grid;place-items:center;padding:0;cursor:pointer;transition:transform .12s}
+.head .imm-acts button:active,.head .imm-x:active{transform:scale(.94)}
+.head .imm-x{display:none !important}
+body.imm .head .imm-x{display:grid !important;place-items:center}
+.imm-x svg,.imm-acts svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round}
+.imm-safe{display:none}
+body.imm .imm-safe{display:block}
 </style>
 <style>:root{--build-id:"6b22e09c1a";}</style>
 </head>
@@ -143,7 +157,7 @@
   <symbol id="c-other" viewBox="0 0 24 24"><path d="M11.4 2.6a1.5 1.5 0 0 1 1.2 0l7.5 3.4a1 1 0 0 1 .4.3L12 10.4 3.5 6.3a1 1 0 0 1 .4-.3zM3 8l8 3.9v9.4l-7.4-3.4A1 1 0 0 1 3 17zm18 0v9a1 1 0 0 1-.6.9L13 21.3v-9.4z" fill="currentColor"/></symbol>
 </defs></svg>
 
-<div class="head">
+<div class="imm-safe"></div><div class="head">
   <div class="tile"><svg class="i"><use href="#i-repeat"/></svg></div>
   <div class="ht"><h1>Subscription Tracker</h1><p>Know what you really pay</p></div>
   <div class="acts">
@@ -151,7 +165,7 @@
       <option>£</option><option>$</option><option>€</option><option>¥</option><option>₹</option><option>kr</option><option>zł</option>
     </select>
   </div>
-</div>
+<div class="imm-acts"><button type="button" aria-label="Close Subscription Tracker" onclick="myllmFSClose()"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div></div>
 
 <div class="hero">
   <div class="main"><div class="k">Per month</div><div class="n" id="permo">–</div></div>
@@ -412,6 +426,41 @@ Promise.all([store().getItem("subs"), store().getItem("cur")]).then(function(val
   if (changed) save();
   render();
 });
+
+/* myllm-fullscreen-v1 — full screen where MyLLM can also close the app for us (myllmClose,
+   5.6.2+): full screen hides MyLLM's Done, and a page with no way out is
+   worse than a repeated title, so elsewhere nothing changes. The spacer keeps
+   the header clear of the status bar only if the page doesn't already. */
+(function(){
+  function full(){ return !!(window.myllmClose && window.myllmImmersive); }
+  function inset(){
+    var p = document.createElement("div");
+    p.style.cssText = "position:fixed;top:0;left:0;width:1px;visibility:hidden;height:env(safe-area-inset-top)";
+    document.body.appendChild(p); var h = p.offsetHeight; p.parentNode.removeChild(p); return h;
+  }
+  function fit(){
+    var sp = document.querySelector(".imm-safe"), head = document.querySelector(".head");
+    if (!sp || !head) return;
+    sp.style.height = "0px";
+    if (!document.body.classList.contains("imm")) return;
+    var need = inset() + 6 - (head.getBoundingClientRect().top + window.scrollY);
+    sp.style.height = Math.max(0, Math.round(need)) + "px";
+  }
+  function sync(){
+    var f = full();
+    document.body.classList.toggle("imm", f);
+    fit();
+    if (!f) return;
+    try { window.myllmImmersive(true, { keepAwake:false }).catch(function(){}); } catch(e){}
+  }
+  window.myllmFSClose = function(){
+    try { if (window.myllmHaptic) window.myllmHaptic("light"); } catch(e){}
+    try { window.myllmClose().catch(function(){}); } catch(e){}
+  };
+  document.addEventListener("visibilitychange", function(){ if (!document.hidden) sync(); });
+  window.addEventListener("resize", fit);
+  sync();
+})();
 </script>
 </body>
 </html>

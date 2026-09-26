@@ -5,6 +5,7 @@
   Not for redistribution or republication. Terms: https://github.com/TeamDzX/myllm-assets/blob/main/LICENSE
 --><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Weather</title>
+<meta name="myllm:immersive" content="on">
 <style>:root{--build-id:"73349fd0a0";color-scheme:light dark;
   --bg:var(--myllm-bg,#f2f2f7); --surface:var(--myllm-surface,#fff); --ink:var(--myllm-text,#111);
   --muted:var(--myllm-muted,#8a8a8e); --line:var(--myllm-border,#e3e3e8); --acc:var(--myllm-accent,#0a84ff);
@@ -102,6 +103,19 @@
   .myllm-ai-busy.on{opacity:1;transform:translateX(-50%) translateY(0)}
   .myllm-ai-cog{width:16px;height:16px;border-radius:50%;border:2.4px solid #a78bfa;border-right-color:transparent;animation:myllmAiSpin .9s linear infinite;flex-shrink:0}
   .myllm-ai-busy small{font-weight:400;opacity:.6}
+
+/* myllm-fullscreen-v1 — MyLLM 5.6.2+ opens this app full screen; the ✕ is the way out. */
+.head .imm-acts{display:none;flex-shrink:0;margin-left:auto}
+.head .acts + .imm-acts{margin-left:0}
+body.imm .head .imm-acts{display:flex}
+.head .imm-acts button{width:40px;height:40px;border-radius:12px;border:1px solid var(--myllm-border,rgba(128,128,128,.28));
+  background:var(--myllm-surface,rgba(128,128,128,.12));color:var(--myllm-text,currentColor);display:grid;place-items:center;padding:0;cursor:pointer;transition:transform .12s}
+.head .imm-acts button:active,.head .imm-x:active{transform:scale(.94)}
+.head .imm-x{display:none !important}
+body.imm .head .imm-x{display:grid !important;place-items:center}
+.imm-x svg,.imm-acts svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round}
+.imm-safe{display:none}
+body.imm .imm-safe{display:block}
 </style></head><body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
   <symbol id="w-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.6"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></symbol>
@@ -136,11 +150,11 @@ window.myllmAsk=function(){show();var p;try{p=orig.apply(this,arguments);}catch(
 return Promise.resolve(p).then(function(r){hide();return r;},function(e){hide();throw e;});};})();
 </script>
 
-<div class="head">
+<div class="imm-safe"></div><div class="head">
   <div class="tile"><svg class="i"><use href="#w-suncloud"/></svg></div>
   <div class="ht"><h1>Weather</h1><p>Live forecast for anywhere — no account, no tracking</p></div>
   <div class="acts"><div class="seg" role="group" aria-label="Units"><button id="uC" class="on" type="button">°C</button><button id="uF" type="button">°F</button></div></div>
-</div>
+<div class="imm-acts"><button type="button" aria-label="Close Weather" onclick="myllmFSClose()"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div></div>
 
 <div class="card">
   <div class="search">
@@ -300,4 +314,39 @@ Promise.all([store().getItem('place'),store().getItem('unit')]).then(function(r)
   if(r[0]){try{place=JSON.parse(r[0]);el('city').value=place.name;load()}catch(e){place=null}}
   if(!place){el('empty').hidden=false;if(!net())notice('off','Network access is off','Weather needs “Allow apps to use the internet” in MyLLM’s Settings.',null)}
 });
+
+/* myllm-fullscreen-v1 — full screen where MyLLM can also close the app for us (myllmClose,
+   5.6.2+): full screen hides MyLLM's Done, and a page with no way out is
+   worse than a repeated title, so elsewhere nothing changes. The spacer keeps
+   the header clear of the status bar only if the page doesn't already. */
+(function(){
+  function full(){ return !!(window.myllmClose && window.myllmImmersive); }
+  function inset(){
+    var p = document.createElement("div");
+    p.style.cssText = "position:fixed;top:0;left:0;width:1px;visibility:hidden;height:env(safe-area-inset-top)";
+    document.body.appendChild(p); var h = p.offsetHeight; p.parentNode.removeChild(p); return h;
+  }
+  function fit(){
+    var sp = document.querySelector(".imm-safe"), head = document.querySelector(".head");
+    if (!sp || !head) return;
+    sp.style.height = "0px";
+    if (!document.body.classList.contains("imm")) return;
+    var need = inset() + 6 - (head.getBoundingClientRect().top + window.scrollY);
+    sp.style.height = Math.max(0, Math.round(need)) + "px";
+  }
+  function sync(){
+    var f = full();
+    document.body.classList.toggle("imm", f);
+    fit();
+    if (!f) return;
+    try { window.myllmImmersive(true, { keepAwake:false }).catch(function(){}); } catch(e){}
+  }
+  window.myllmFSClose = function(){
+    try { if (window.myllmHaptic) window.myllmHaptic("light"); } catch(e){}
+    try { window.myllmClose().catch(function(){}); } catch(e){}
+  };
+  document.addEventListener("visibilitychange", function(){ if (!document.hidden) sync(); });
+  window.addEventListener("resize", fit);
+  sync();
+})();
 </script></body></html>
