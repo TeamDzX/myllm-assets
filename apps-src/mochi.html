@@ -8,6 +8,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Mochi</title>
+<!-- MyLLM 5.6.2+: open full screen from the first frame. Those builds all have
+     myllmClose, which the ✕ uses — full screen hides MyLLM's own Done. -->
+<meta name="myllm:immersive" content="on">
 <style>
   :root { color-scheme: light; --ink:#3f372e; --muted:#a3947f; --line:#eadfce; --card:#fffdf8; --mint:#7cc9a0; }
   * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
@@ -31,6 +34,12 @@
   .moodchip{ font-size:13px; font-weight:750; color:var(--ink); background:var(--card); border:1.5px solid var(--line);
              border-radius:99px; padding:7px 12px; box-shadow:0 2px 6px rgba(120,90,50,.06); }
   .moodchip:empty{ display:none; }
+  .topr{ display:flex; align-items:center; gap:8px; }
+  /* The way out in full screen (MyLLM's Done is hidden there). */
+  .closebtn{ display:none; width:36px; height:36px; border-radius:50%; border:1.5px solid var(--line); background:var(--card);
+             color:var(--muted); align-items:center; justify-content:center; box-shadow:0 2px 6px rgba(120,90,50,.06); }
+  .closebtn svg{ width:14px; height:14px; fill:none; stroke:currentColor; stroke-width:2.8; stroke-linecap:round; }
+  body.imm .closebtn{ display:flex; }
 
   /* Four round gauges: a ring that empties, the emoji in the middle. */
   .stats{ display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
@@ -216,7 +225,10 @@
 
 <div class="top">
   <div class="who"><h1 id="title">🥚 A little egg</h1><span class="age" id="age"></span></div>
-  <span class="moodchip" id="moodchip"></span>
+  <div class="topr">
+    <span class="moodchip" id="moodchip"></span>
+    <button class="closebtn" id="closeBtn" aria-label="Close Mochi" onclick="closeApp()"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+  </div>
 </div>
 
 <div class="stats" id="bars" style="display:none">
@@ -310,12 +322,21 @@
 var storeFallback = {getItem:function(){return Promise.resolve(null)}, setItem:function(){return Promise.resolve()}};
 Object.defineProperty(window, "ASK", { configurable:true, get:function(){ return window.myllmAsk || null; } });
 Object.defineProperty(window, "store", { configurable:true, get:function(){ return window.myllmStorage || storeFallback; } });
-/* A walk is a full-screen moment: MyLLM's own bars step aside while Mochi is
-   outside, and come back when she heads home. Builds without the bridge keep
-   today's overlay under the title bar. */
+/* Full screen, all the time, where MyLLM can also close the app for us
+   (myllmClose, 5.6.2+): the ✕ in the corner is then the way out. On a build
+   with immersive but no close (5.6.1), only a walk goes full screen, as
+   before — a page with no way out would be worse. Looked up each time. */
+function canGoFull(){ return !!(window.myllmClose && window.myllmImmersive); }
 function syncChrome(){
+  var full = canGoFull();
+  document.body.classList.toggle("imm", full);
   if (!window.myllmImmersive) return;
-  try { myllmImmersive(walking, {keepAwake:false}).catch(function(){}); } catch(_){}
+  try { myllmImmersive(full || walking, {keepAwake:false}).catch(function(){}); } catch(_){}
+}
+function closeApp(){
+  haptic("light");
+  if (walking) endWalk(false);
+  try { myllmClose().catch(function(){}); } catch(_){}
 }
 function haptic(k){ if(window.myllmHaptic){ try{ myllmHaptic(k||'light'); }catch(_){} } }
 function el(id){ return document.getElementById(id); }
@@ -967,7 +988,7 @@ function endWalk(tired){
 }
 
 /* MyLLM puts its bars back when the app is left; ask again on return. */
-document.addEventListener("visibilitychange", function(){ if (!document.hidden && walking) syncChrome(); });
+document.addEventListener("visibilitychange", function(){ if (!document.hidden) syncChrome(); });
 
 /* ---------- ambient life: idle mutterings & dreams ---------- */
 var CHATTER = {
@@ -1150,8 +1171,10 @@ function closeWardrobe(){ el("wardrobe").classList.remove("show"); }
 
 /* ---------- boot ---------- */
 (function boot(){
-  /* preload all loops so mood switches are instant */
-  Object.keys(ANIM).forEach(function(k){ new Image().src = ART + ANIM[k]; });
+  syncChrome();
+  /* preload the loops the room shows (the keyed ones) so mood switches are
+     instant; the walk uses its sprite sheet below */
+  Object.keys(ANIM).forEach(function(k){ if (k !== "walk") new Image().src = ART + keyed(ANIM[k]); });
   new Image().src = ART + "anim_walk_t.webp";     /* fallback loop, and old installs */
   preloadSheet();
   new Image().src = ART + "walk_bg.jpg";
