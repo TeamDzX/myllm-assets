@@ -1,5 +1,5 @@
 {
-  "updated": "2026-09-26",
+  "updated": "2026-09-27",
   "categories": [
     "Students",
     "Productivity",
@@ -16,6 +16,35 @@
     "Community"
   ],
   "apps": [
+    {
+      "id": "scientific-calculator",
+      "name": "Scientific Calculator",
+      "emoji": "🧮",
+      "tagline": "Beautiful maths, full screen",
+      "description": "A scientific calculator made to be a pleasure to use, full screen. Type the whole sum and watch the answer appear as you go, then press equals. Trig in degrees or radians with the inverse and hyperbolic functions, logs, powers and roots, factorials, combinations, percentages that work the way a shop till does (200 + 15% = 230), memory, Ans, and a history of every sum that you can tap to reuse. Turn the phone sideways for every key at once, or fold the scientific keys away for a bigger keypad. Tap an answer to copy it. Describe a sum in words (\"15% tip on 64.50 split between 3\") and your AI writes the expression; the calculator does the maths, so the answer is never guessed. Works offline, light or dark.",
+      "tags": [
+        "maths",
+        "calculator",
+        "science",
+        "students",
+        "utility",
+        "saves data"
+      ],
+      "iconSymbol": "plus.forwardslash.minus",
+      "iconColor": "orange",
+      "version": 1,
+      "featured": true,
+      "requiresAI": false,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/scientific-calculator.jpg",
+      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@main/apps-src/scientific-calculator.html",
+      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@main/apps-src/scientific-calculator.myllmapp",
+      "sizeKB": 42,
+      "category": "Utilities",
+      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/icons/scientific-calculator.jpg",
+      "aiUses": [
+        "ask"
+      ]
+    },
     {
       "id": "substack-reader",
       "name": "Substack Reader",
