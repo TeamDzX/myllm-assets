@@ -46,6 +46,88 @@
       ]
     },
     {
+      "id": "mind-map",
+      "name": "Mind Map",
+      "emoji": "🧠",
+      "tagline": "Think in branches",
+      "description": "Get an idea out of your head and into shape. Start from one thought and branch out: tap to add, drag to move a whole branch, fold what you're not looking at, and let Tidy lay it all out neatly, each branch in its own colour. Keep as many maps as you like. Stuck? Select an idea and tap Expand: your AI suggests a handful of next steps that fit where you are on the map, and one Undo takes them back. Save a map as an image, share it as an outline, or paste an indented list to turn it into a map. Works offline, light or dark.",
+      "tags": [
+        "mind map",
+        "ideas",
+        "planning",
+        "brainstorm",
+        "students",
+        "saves data"
+      ],
+      "iconSymbol": "point.3.connected.trianglepath.dotted",
+      "iconColor": "purple",
+      "version": 1,
+      "featured": true,
+      "requiresAI": false,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/mind-map.jpg",
+      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@main/apps-src/mind-map.html",
+      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@main/apps-src/mind-map.myllmapp",
+      "sizeKB": 58,
+      "category": "Productivity",
+      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/icons/mind-map.jpg",
+      "aiUses": [
+        "ask"
+      ]
+    },
+    {
+      "id": "periodic-table",
+      "name": "Periodic Table",
+      "emoji": "⚛️",
+      "tagline": "Every element, beautifully",
+      "description": "All 118 elements in a table that's a pleasure to explore. Colour it by family, or turn it into a heat map of electronegativity, atomic radius, melting point, density or the year each was discovered. Slide the temperature and watch which elements melt and boil. Tap any element for its full card: mass, electron configuration with an animated shell diagram, ionisation energy, radius, density and more, with units. Search, save favourites, and test yourself with a quick quiz. Ask your AI about any element for the story behind it. Data from PubChem (NIH). Works offline.",
+      "tags": [
+        "chemistry",
+        "science",
+        "students",
+        "reference",
+        "quiz",
+        "saves data"
+      ],
+      "iconSymbol": "atom",
+      "iconColor": "blue",
+      "version": 1,
+      "featured": true,
+      "requiresAI": false,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/periodic-table.jpg",
+      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@main/apps-src/periodic-table.html",
+      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@main/apps-src/periodic-table.myllmapp",
+      "sizeKB": 58,
+      "category": "Students",
+      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/icons/periodic-table.jpg",
+      "aiUses": [
+        "ask"
+      ]
+    },
+    {
+      "id": "password-generator",
+      "name": "Password Generator",
+      "emoji": "🔑",
+      "tagline": "Strong, private, made on your phone",
+      "description": "Strong passwords, memorable passphrases and PINs, made on this iPhone with its secure random generator. Nothing is saved and nothing is sent. Choose the length and characters, leave out look-alikes, or pick a passphrase of real words from the EFF word list that's easy to type and hard to guess. The strength meter shows the exact strength in bits and how long cracking would take, and you can check a password you already use to see how it holds up. Tap to copy. Works offline.",
+      "tags": [
+        "security",
+        "passwords",
+        "privacy",
+        "utility"
+      ],
+      "iconSymbol": "key.fill",
+      "iconColor": "teal",
+      "version": 1,
+      "featured": true,
+      "requiresAI": false,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/password-generator.jpg",
+      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@main/apps-src/password-generator.html",
+      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@main/apps-src/password-generator.myllmapp",
+      "sizeKB": 98,
+      "category": "Utilities",
+      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/icons/password-generator.jpg"
+    },
+    {
       "id": "substack-reader",
       "name": "Substack Reader",
       "emoji": "📬",
