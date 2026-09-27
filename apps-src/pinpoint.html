@@ -1,0 +1,3849 @@
+<!doctype html>
+<!--
+  Pinpoint — MyLLMos™ App Gallery · © 2026 Opticell Ltd
+  Source-available: read it, remix it, run your version inside MyLLM™.
+  Not for redistribution or republication. Terms: https://github.com/TeamDzX/myllm-assets/blob/main/LICENSE
+--><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>Pinpoint</title>
+<meta name="myllm:immersive" content="on">
+<style>:root{--build-id:"2675c2f86b";color-scheme:light dark;
+  --bg:#f3f5f9; --bg2:#e8ecf3; --surface:#ffffff; --surface2:#f6f8fb; --ink:#0f172a; --muted:#64748b; --faint:#a3adbd;
+  --line:rgba(15,23,42,.09); --chip:rgba(15,23,42,.06); --acc1:#06b6d4; --acc2:#2563eb; --acc:#1d6ff2; --accInk:#fff;
+  --good:#10b981; --warn:#f59e0b; --bad:#ef4444; --topo:rgba(37,99,235,.10);
+  --shadow:0 1px 0 rgba(255,255,255,.8) inset,0 10px 30px rgba(15,23,42,.08),0 2px 6px rgba(15,23,42,.05);
+  --font:-apple-system,"SF Pro Text",system-ui,sans-serif; --mono:ui-monospace,"SF Mono",Menlo,monospace; }
+@media (prefers-color-scheme:dark){ :root{
+  --bg:#070b14; --bg2:#0d1422; --surface:#111a2b; --surface2:#16213a; --ink:#eef2f8; --muted:#8b97ad; --faint:#56627a;
+  --line:rgba(255,255,255,.08); --chip:rgba(255,255,255,.07); --acc:#38a3ff; --topo:rgba(56,163,255,.10);
+  --shadow:0 1px 0 rgba(255,255,255,.04) inset,0 14px 34px rgba(0,0,0,.45); } }
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none !important}
+html,body{height:100%;overflow:hidden;overscroll-behavior:none}
+body{font-family:var(--font);color:var(--ink);background:radial-gradient(120% 60% at 50% 0%,var(--bg2),var(--bg) 70%);background-color:var(--bg);
+  height:100vh;height:100dvh;display:flex;flex-direction:column;
+  padding:env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left);-webkit-user-select:none;user-select:none;line-height:1.4}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
+input{font:inherit;color:inherit}
+
+/* Header */
+.head{display:flex;align-items:center;gap:10px;padding:8px 14px 6px;flex-shrink:0}
+.tile{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;flex-shrink:0;
+  background:linear-gradient(145deg,var(--acc1),var(--acc2));box-shadow:0 4px 14px rgba(37,99,235,.35)}
+.tile svg{width:19px;height:19px;color:#fff}
+.ht{min-width:0;flex:1}
+.ht h1{font-size:17px;font-weight:650;letter-spacing:-.2px;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.acts{display:flex;gap:8px;align-items:center}
+.hbtn{height:36px;min-width:36px;padding:0 10px;border-radius:11px;background:var(--chip);display:grid;place-items:center;color:var(--ink);transition:transform .12s}
+.hbtn:active{transform:scale(.93)}
+.hbtn svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.hbtn.sosb{color:#fff;background:linear-gradient(145deg,#f87171,#dc2626);font-size:12px;font-weight:800;letter-spacing:.6px}
+
+/* Views */
+main{flex:1 1 auto;min-height:0;position:relative}
+.view{position:absolute;inset:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:6px 16px 24px;display:none}
+.view.on{display:block;animation:vin .28s ease}
+@keyframes vin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* Here card */
+.card{position:relative;background:var(--surface);border-radius:26px;box-shadow:var(--shadow);padding:18px 18px 16px;overflow:hidden}
+.topo{position:absolute;inset:0;pointer-events:none;opacity:1}
+.topo path{fill:none;stroke:var(--topo);stroke-width:1.2}
+.row{display:flex;align-items:center;gap:10px}
+.lbl{font-size:12px;font-weight:700;letter-spacing:.9px;text-transform:uppercase;color:var(--muted);line-height:1.4}
+.fresh{margin-left:auto;font-size:12px;color:var(--muted);line-height:1.4;white-space:nowrap}
+.code{position:relative;font-family:var(--mono);font-weight:700;letter-spacing:.02em;line-height:1.25;margin:10px 0 2px;white-space:nowrap;font-size:40px}
+.code .area{color:var(--faint);font-weight:600}
+.code .plus{color:var(--acc);margin:0 .02em}
+.code.wait{color:var(--faint);font-weight:650;font-family:var(--font);font-size:26px !important;white-space:normal;letter-spacing:-.2px}
+.short{position:relative;font-size:18px;font-weight:600;line-height:1.4;color:var(--ink);min-height:25px}
+.short .loc{color:var(--muted);font-weight:500}
+.addr{position:relative;font-size:14px;color:var(--muted);line-height:1.45;margin-top:2px;min-height:20px}
+.meta{position:relative;display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.chip{display:inline-flex;align-items:center;gap:7px;height:32px;padding:0 12px;border-radius:10px;background:var(--chip);font-size:13.5px;font-weight:600;line-height:1.3;white-space:nowrap}
+.chip.coords{font-family:var(--mono);font-weight:600;font-size:13px;cursor:pointer}
+.pulse{position:relative;width:10px;height:10px;border-radius:50%;background:var(--good);flex-shrink:0}
+.pulse::before,.pulse::after{content:"";position:absolute;inset:0;border-radius:50%;border:2px solid var(--good);animation:ring 2.4s ease-out infinite}
+.pulse::after{animation-delay:1.2s}
+.pulse.mid{background:var(--warn)}.pulse.mid::before,.pulse.mid::after{border-color:var(--warn)}
+.pulse.poor{background:var(--bad)}.pulse.poor::before,.pulse.poor::after{border-color:var(--bad)}
+.pulse.off{background:var(--faint)}.pulse.off::before,.pulse.off::after{display:none}
+@keyframes ring{from{transform:scale(1);opacity:.8}to{transform:scale(3.2);opacity:0}}
+.btns{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:14px}
+.btn{height:64px;border-radius:18px;background:var(--surface);box-shadow:var(--shadow);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+  font-size:12.5px;font-weight:600;line-height:1.3;transition:transform .1s}
+.btn:active{transform:scale(.95)}
+.btn svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.btn.pri{background:linear-gradient(145deg,var(--acc1),var(--acc2));color:#fff;box-shadow:0 10px 24px rgba(37,99,235,.32)}
+.btn[disabled]{opacity:.45}
+.note{font-size:13px;color:var(--muted);line-height:1.5;margin:14px 4px 0}
+.note b{color:var(--ink);font-weight:600}
+.ai{margin-top:12px;width:100%;height:46px;border-radius:14px;background:var(--chip);display:flex;align-items:center;justify-content:center;gap:8px;font-size:14.5px;font-weight:600;color:var(--acc)}
+.ai svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.aibox{margin-top:10px;background:var(--surface);border-radius:18px;padding:14px 16px;box-shadow:var(--shadow);font-size:15px;line-height:1.5}
+.aibox small{display:block;color:var(--muted);font-size:12px;margin-top:8px;line-height:1.4}
+.state{text-align:center;padding:26px 10px 8px}
+.state svg{width:44px;height:44px;color:var(--acc);fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.state h2{font-size:19px;margin-top:10px;line-height:1.35}
+.state p{font-size:14.5px;color:var(--muted);margin-top:6px;line-height:1.5}
+.state button{margin-top:14px;height:44px;padding:0 20px;border-radius:13px;background:linear-gradient(145deg,var(--acc1),var(--acc2));color:#fff;font-weight:600}
+
+/* Find */
+.field{display:flex;gap:8px;align-items:stretch}
+.field input{flex:1;min-width:0;height:54px;border-radius:16px;border:1.5px solid var(--line);background:var(--surface);padding:0 14px;font-family:var(--mono);font-size:18px;font-weight:600;
+  letter-spacing:.03em;text-transform:uppercase;outline:none;-webkit-user-select:text;user-select:text;box-shadow:var(--shadow)}
+.field input:focus{border-color:var(--acc)}
+.field input::placeholder{text-transform:none;letter-spacing:0;font-family:var(--font);font-weight:500;color:var(--faint);font-size:15px}
+.field button{width:54px;border-radius:16px;background:linear-gradient(145deg,var(--acc1),var(--acc2));color:#fff;display:grid;place-items:center;flex-shrink:0}
+.field button svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.findtools{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.findtools button{height:36px;padding:0 12px;border-radius:11px;background:var(--chip);font-size:13.5px;font-weight:600;display:inline-flex;align-items:center;gap:6px}
+.findtools svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.fmsg{font-size:13.5px;color:var(--muted);margin:10px 4px 0;min-height:19px;line-height:1.45}
+.fmsg.err{color:var(--bad)}
+.dialwrap{display:flex;flex-direction:column;align-items:center;margin-top:14px}
+.dial{position:relative;width:min(72vw,260px);aspect-ratio:1;border-radius:50%;background:var(--surface);box-shadow:var(--shadow)}
+.dial .rose{position:absolute;inset:0;transition:transform .35s ease}
+.dial .rose span{position:absolute;left:50%;top:50%;font-size:13px;font-weight:700;color:var(--muted);line-height:1.2}
+.dial .rose span.n{color:var(--bad)}
+.dial .ticks{position:absolute;inset:8px;border-radius:50%;border:1.5px dashed var(--line)}
+.arrow{position:absolute;inset:0;display:grid;place-items:center;transition:transform .35s cubic-bezier(.2,.8,.2,1)}
+.arrow svg{width:44%;height:44%;filter:drop-shadow(0 8px 14px rgba(37,99,235,.35))}
+.dist{font-size:44px;font-weight:700;letter-spacing:-1px;line-height:1.2;margin-top:16px;text-align:center}
+.dir{font-size:16px;color:var(--muted);line-height:1.45;text-align:center}
+.tgt{margin-top:14px;width:100%;background:var(--surface);border-radius:18px;box-shadow:var(--shadow);padding:12px 16px}
+.tgt .c{font-family:var(--mono);font-size:19px;font-weight:700;line-height:1.35}
+.tgt .s{font-size:13px;color:var(--muted);line-height:1.45}
+.tgtbtns{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:12px;width:100%}
+.tgtbtns .btn{height:54px}
+.recents{margin-top:18px}
+.recents h3,.list h3{font-size:12px;font-weight:700;letter-spacing:.9px;text-transform:uppercase;color:var(--muted);margin:0 4px 8px;line-height:1.4}
+.ritem{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:14px;background:var(--surface);margin-bottom:8px;box-shadow:var(--shadow);width:100%;text-align:left}
+.ritem .c{font-family:var(--mono);font-weight:700;font-size:15px;line-height:1.35}
+.ritem .s{font-size:12.5px;color:var(--muted);line-height:1.4}
+
+/* Saved */
+.place{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:18px;background:var(--surface);box-shadow:var(--shadow);margin-bottom:10px}
+.place .em{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;font-size:23px;flex-shrink:0;line-height:1}
+.place .tx{flex:1;min-width:0}
+.place .nm{font-size:16px;font-weight:650;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.place .sb{font-size:12.5px;color:var(--muted);line-height:1.4;font-family:var(--mono);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.place .d{font-size:14px;font-weight:650;white-space:nowrap;line-height:1.35;text-align:right}
+.place .d small{display:block;font-size:11.5px;color:var(--muted);font-weight:500}
+.place .more{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;color:var(--muted)}
+.place .more svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
+.empty{text-align:center;color:var(--muted);padding:40px 20px;font-size:15px;line-height:1.5}
+.empty b{display:block;color:var(--ink);font-size:17px;margin-bottom:4px}
+.addplace{width:100%;height:52px;border-radius:16px;background:linear-gradient(145deg,var(--acc1),var(--acc2));color:#fff;font-weight:650;font-size:15.5px;margin-bottom:14px;display:flex;align-items:center;justify-content:center;gap:8px}
+.addplace svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round}
+
+/* Tab bar */
+.tabs{flex-shrink:0;display:grid;grid-template-columns:repeat(3,1fr);padding:6px 10px calc(6px + env(safe-area-inset-bottom));border-top:1px solid var(--line);
+  background:color-mix(in srgb,var(--bg) 88%,transparent);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px)}
+.tabs button{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 0;font-size:11.5px;font-weight:600;color:var(--muted);line-height:1.3}
+.tabs button svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.tabs button.on{color:var(--acc)}
+
+/* Sheets */
+.scrim{position:fixed;inset:0;background:rgba(2,6,23,.5);opacity:0;pointer-events:none;transition:opacity .25s;z-index:20}
+.scrim.on{opacity:1;pointer-events:auto}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:21;background:var(--surface);border-radius:24px 24px 0 0;max-height:88%;overflow-y:auto;
+  padding:10px calc(18px + env(safe-area-inset-right)) calc(20px + env(safe-area-inset-bottom)) calc(18px + env(safe-area-inset-left));
+  transform:translateY(105%);transition:transform .3s cubic-bezier(.2,.8,.2,1);box-shadow:0 -12px 40px rgba(0,0,0,.25)}
+.sheet.on{transform:none}
+.grab{width:38px;height:5px;border-radius:3px;background:var(--line);margin:0 auto 12px}
+.sheet h2{font-size:19px;line-height:1.35;margin-bottom:4px}
+.sheet p{font-size:14px;color:var(--muted);line-height:1.5}
+.qrbox{margin:16px auto 8px;background:#fff;border-radius:20px;padding:14px;width:min(78vw,300px);aspect-ratio:1;box-shadow:0 10px 30px rgba(0,0,0,.12)}
+.qrbox canvas{width:100%;height:100%;image-rendering:pixelated;display:block}
+.qrcap{text-align:center;font-family:var(--mono);font-weight:700;font-size:18px;line-height:1.4;margin-top:6px}
+.sbtns{display:flex;gap:10px;margin-top:16px}
+.sbtns button{flex:1;height:48px;border-radius:14px;background:var(--chip);font-weight:650;font-size:15px}
+.sbtns .go{background:linear-gradient(145deg,var(--acc1),var(--acc2));color:#fff}
+.sbtns .del{color:var(--bad)}
+.inp{width:100%;height:50px;border-radius:14px;border:1.5px solid var(--line);background:var(--surface2);padding:0 14px;font-size:17px;outline:none;margin-top:12px;-webkit-user-select:text;user-select:text}
+.inp:focus{border-color:var(--acc)}
+.emrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.emrow button{width:44px;height:44px;border-radius:13px;background:var(--chip);font-size:22px;line-height:1}
+.emrow button.on{box-shadow:0 0 0 2.5px var(--acc) inset;background:var(--surface2)}
+.about p{margin-top:10px}
+.about a{color:var(--acc)}
+
+/* Emergency */
+.sosv{position:fixed;inset:0;z-index:30;background:#000;color:#fff;display:none;flex-direction:column;
+  padding:calc(18px + env(safe-area-inset-top)) calc(22px + env(safe-area-inset-right)) calc(18px + env(safe-area-inset-bottom)) calc(22px + env(safe-area-inset-left));overflow-y:auto}
+.sosv.on{display:flex}
+.sosv .top{display:flex;align-items:center;justify-content:space-between}
+.sosv .top b{font-size:14px;letter-spacing:2px;color:#fca5a5;line-height:1.4}
+.sosv .x{height:44px;padding:0 18px;border-radius:14px;background:#262626;color:#fff;font-weight:700;font-size:16px}
+.sosv .big{font-family:var(--mono);font-weight:800;line-height:1.15;margin-top:22px;letter-spacing:.04em}
+.sosv .big .a{display:block;font-size:34px;color:#a3a3a3;font-weight:700}
+.sosv .big .l{display:block;white-space:nowrap;font-size:64px}
+.sosv .big .plus{color:#f87171}
+.sosv .ph{font-size:15px;color:#d4d4d4;line-height:1.55;margin-top:10px}
+.sosv .kv{margin-top:22px;display:grid;gap:14px}
+.sosv .kv div{border-top:1px solid #333;padding-top:12px}
+.sosv .kv small{display:block;font-size:12px;letter-spacing:1.5px;color:#a3a3a3;text-transform:uppercase;line-height:1.4}
+.sosv .kv span{font-size:26px;font-weight:700;line-height:1.35;font-variant-numeric:tabular-nums}
+.sosv .kv span.sm{font-size:19px;font-weight:600}
+.sosv .foot{margin-top:auto;padding-top:20px;font-size:13px;color:#a3a3a3;line-height:1.5}
+
+.toast{position:fixed;left:calc(10px + env(safe-area-inset-left));top:calc(7px + env(safe-area-inset-top));transform:translateY(-10px);max-width:calc(100% - 180px - env(safe-area-inset-left) - env(safe-area-inset-right));opacity:0;pointer-events:none;z-index:40;
+  background:var(--ink);color:var(--bg);font-size:14px;font-weight:600;padding:10px 14px;border-radius:13px;transition:.25s;display:flex;gap:12px;align-items:center;white-space:nowrap;line-height:1.3;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+.toast span{overflow:hidden;text-overflow:ellipsis}
+.toast.on{opacity:1;transform:none;pointer-events:auto}
+.toast button{color:var(--acc);font-weight:700}
+
+@media (orientation:landscape) and (max-height:560px){
+  #here.on{display:grid;grid-template-columns:1.25fr 1fr;grid-auto-rows:max-content;gap:14px;align-content:start}
+  #here .card{grid-row:span 2}
+  #here .btns{grid-template-columns:repeat(2,1fr);margin-top:0}
+  #here .note{grid-column:1/-1}
+  .dialwrap{flex-direction:row;gap:20px;align-items:center;flex-wrap:wrap;justify-content:center}
+  .dial{width:min(40vh,200px)}
+  .sosv .big{font-size:44px;margin-top:10px}
+}
+@media (max-width:360px){ .code{font-size:34px} .btns{gap:8px} .btn{font-size:11.5px} }
+@media (prefers-reduced-motion:reduce){ .pulse::before,.pulse::after{animation:none;display:none} .view.on{animation:none} .arrow,.dial .rose{transition:none} }
+
+/* myllm-fullscreen-v2 — MyLLM 5.6.2+ opens this app full screen; the ✕ is the way out. */
+.head .imm-acts{display:none;flex-shrink:0;margin-left:auto}
+.head .acts + .imm-acts{margin-left:0}
+body.imm .head .imm-acts{display:flex}
+.head .imm-acts button{width:36px;height:36px;border-radius:11px;border:1px solid var(--line);
+  background:var(--chip);color:var(--ink);display:grid;place-items:center;padding:0;cursor:pointer;transition:transform .12s}
+.head .imm-acts button:active{transform:scale(.94)}
+.imm-acts svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round}
+.imm-safe{display:none}
+body.imm .imm-safe{display:block}
+</style></head><body>
+
+<div class="imm-safe"></div><div class="head">
+  <div class="tile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0C18.5 15.4 12 21 12 21z"/><path d="M12 7v6M9 10h6"/></svg></div>
+  <div class="ht"><h1>Pinpoint</h1></div>
+  <div class="acts">
+    <button class="hbtn sosb" id="sosBtn" aria-label="Emergency card">SOS</button>
+    <button class="hbtn" id="aboutBtn" aria-label="About"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg></button>
+  </div>
+<div class="imm-acts"><button type="button" aria-label="Close Pinpoint" onclick="myllmFSClose()"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div></div>
+
+<main>
+  <!-- HERE -->
+  <section class="view on" id="here">
+    <div class="card" id="hereCard">
+      <svg class="topo" id="topo" preserveAspectRatio="none" aria-hidden="true"></svg>
+      <div class="row" style="position:relative"><span class="lbl">You are here</span><span class="fresh" id="fresh"></span></div>
+      <div class="code wait" id="code">Finding you…</div>
+      <div class="short" id="short"></div>
+      <div class="addr" id="addr"></div>
+      <div class="meta">
+        <span class="chip" id="accChip"><span class="pulse off" id="pulse"></span><span id="acc">Waiting for GPS</span></span>
+        <span class="chip coords" id="coords" hidden role="button" aria-label="Coordinates, tap to change format">—</span>
+      </div>
+    </div>
+    <div class="btns">
+      <button class="btn pri" id="shareBtn" disabled><svg viewBox="0 0 24 24"><path d="M12 3v12M7 8l5-5 5 5"/><path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/></svg>Share</button>
+      <button class="btn" id="qrBtn" disabled><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><path d="M14 14h3v3h-3zM20 14v.01M14 20h.01M17 20h3v-3"/></svg>QR code</button>
+      <button class="btn" id="copyBtn" disabled><svg viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2.5"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg>Copy</button>
+      <button class="btn" id="saveBtn" disabled><svg viewBox="0 0 24 24"><path d="M6 3h12v18l-6-4.5L6 21z"/></svg>Save</button>
+    </div>
+    <div id="stateBox"></div>
+    <button class="ai" id="aiBtn" hidden><svg viewBox="0 0 24 24"><path d="M12 3l1.8 4.6L18.5 9l-4.7 1.6L12 15l-1.8-4.4L5.5 9l4.7-1.4z"/></svg>Describe this spot</button>
+    <div id="aiOut"></div>
+    <p class="note">A <b>Plus Code</b> pinpoints a spot about 3 m across, anywhere on Earth, even where there's no street address. Friends can paste it into Google Maps and many other apps.</p>
+  </section>
+
+  <!-- FIND -->
+  <section class="view" id="find">
+    <div class="field">
+      <input id="findIn" placeholder="Paste a Plus Code, e.g. GV2F+7X London" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-label="Plus Code to find">
+      <button id="findGo" aria-label="Find"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></button>
+    </div>
+    <div class="findtools">
+      <button id="scanBtn" hidden><svg viewBox="0 0 24 24"><path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2M7 12h10"/></svg>Scan a sign</button>
+      <button id="compassBtn"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/></svg><span id="compassLbl">Use compass</span></button>
+    </div>
+    <div class="fmsg" id="fmsg">Type a code someone sent you. A short one needs its town, like <b>GV2F+7X London</b>.</div>
+    <div id="findRes" hidden>
+      <div class="dialwrap">
+        <div class="dial" id="dial">
+          <div class="ticks"></div>
+          <div class="rose" id="rose"><span class="n" style="transform:translate(-50%,-50%) translateY(-106px)">N</span><span style="transform:translate(-50%,-50%) translateX(106px)">E</span><span style="transform:translate(-50%,-50%) translateY(106px)">S</span><span style="transform:translate(-50%,-50%) translateX(-106px)">W</span></div>
+          <div class="arrow" id="arrow"><svg viewBox="0 0 100 100"><defs><linearGradient id="ag" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#06b6d4"/><stop offset="1" stop-color="#2563eb"/></linearGradient></defs><path d="M50 4 L80 88 L50 70 L20 88 Z" fill="url(#ag)"/></svg></div>
+        </div>
+        <div>
+          <div class="dist" id="dist">—</div>
+          <div class="dir" id="dir"></div>
+        </div>
+      </div>
+      <div class="tgt"><div class="c" id="tgtCode"></div><div class="s" id="tgtSub"></div></div>
+      <div class="tgtbtns">
+        <button class="btn" id="mapsBtn"><svg viewBox="0 0 24 24"><path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2z"/><path d="M9 4v14M15 6v14"/></svg>Open in Maps</button>
+        <button class="btn" id="tgtSave"><svg viewBox="0 0 24 24"><path d="M6 3h12v18l-6-4.5L6 21z"/></svg>Save</button>
+        <button class="btn" id="tgtShare"><svg viewBox="0 0 24 24"><path d="M12 3v12M7 8l5-5 5 5"/><path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/></svg>Share</button>
+      </div>
+    </div>
+    <div class="recents" id="recents"></div>
+  </section>
+
+  <!-- SAVED -->
+  <section class="view" id="saved">
+    <button class="addplace" id="addPlace"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Save where I am</button>
+    <div class="list" id="placeList"></div>
+  </section>
+</main>
+
+<nav class="tabs" role="tablist">
+  <button class="on" data-tab="here" role="tab"><svg viewBox="0 0 24 24"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0C18.5 15.4 12 21 12 21z"/><circle cx="12" cy="10" r="2.5"/></svg>Here</button>
+  <button data-tab="find" role="tab"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/></svg>Find</button>
+  <button data-tab="saved" role="tab"><svg viewBox="0 0 24 24"><path d="M6 3h12v18l-6-4.5L6 21z"/></svg>Saved</button>
+</nav>
+
+<div class="scrim" id="scrim"></div>
+<div class="sheet" id="qrSheet" role="dialog" aria-label="QR code">
+  <div class="grab"></div><h2>Scan to open this spot</h2><p>Any phone camera opens it on a map.</p>
+  <div class="qrbox"><canvas id="qrCanvas" width="400" height="400"></canvas></div>
+  <div class="qrcap" id="qrCap"></div>
+  <div class="sbtns"><button id="qrClose">Done</button><button class="go" id="qrSave">Save image</button></div>
+</div>
+<div class="sheet" id="placeSheet" role="dialog" aria-label="Save a place">
+  <div class="grab"></div><h2 id="psTitle">Save this spot</h2><p id="psSub"></p>
+  <input class="inp" id="psName" placeholder="Name it: car, tent, gate B…" maxlength="40">
+  <div class="emrow" id="psEmoji"></div>
+  <div class="sbtns"><button id="psCancel">Cancel</button><button class="go" id="psOk">Save</button></div>
+</div>
+<div class="sheet" id="actSheet" role="dialog" aria-label="Place actions">
+  <div class="grab"></div><h2 id="asTitle"></h2><p id="asSub"></p>
+  <div class="sbtns"><button id="asFind">Find it</button><button id="asShare">Share</button></div>
+  <div class="sbtns"><button class="del" id="asDel">Delete</button><button id="asCancel">Close</button></div>
+</div>
+<div class="sheet about" id="aboutSheet" role="dialog" aria-label="About Pinpoint">
+  <div class="grab"></div><h2>About Pinpoint</h2>
+  <p>Pinpoint turns where you are into a <b>Plus Code</b>, an open, free address for any spot on Earth, about 3 m across. It works offline; only the street name and town need a connection.</p>
+  <p>Plus Codes are the Open Location Code system by Google, published under the Apache 2.0 licence (open-location-code). QR codes are drawn by QR Code Generator for JavaScript, © Kazuhiko Arase, MIT licence. "QR Code" is a registered trademark of DENSO WAVE.</p>
+  <p id="geoCredit">Street names come from your iPhone's own maps service.</p>
+  <p>Your location and saved places stay on this iPhone. Nothing is sent anywhere unless you share it.</p>
+  <p>The emergency card is a help, not a replacement for calling your local emergency number.</p>
+  <div class="sbtns"><button id="aboutClose">Close</button></div>
+</div>
+
+<div class="sosv" id="sos" role="dialog" aria-label="Emergency card">
+  <div class="top"><b>MY LOCATION</b><button class="x" id="sosClose">Close</button></div>
+  <div class="big" id="sosCode">—</div>
+  <div class="ph" id="sosPh"></div>
+  <div class="kv">
+    <div><small>Coordinates</small><span id="sosLL">—</span></div>
+    <div><small>Accuracy</small><span id="sosAcc">—</span></div>
+    <div id="sosAddrRow"><small>Near</small><span class="sm" id="sosAddr">—</span></div>
+    <div><small>Updated</small><span class="sm" id="sosTime">—</span></div>
+  </div>
+  <div class="foot">Read the code out letter by letter. Emergency services in many countries can use Plus Codes and coordinates. Screen stays on while this card is open.</div>
+</div>
+
+<div class="toast" id="toast"><span id="toastMsg"></span><button id="toastBtn" hidden>Undo</button></div>
+
+<script>
+// Copyright 2014 Google Inc. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the 'License');
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an 'AS IS' BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+/**
+ * Convert locations to and from short codes.
+ *
+ * Plus Codes are short, 10-11 character codes that can be used instead
+ * of street addresses. The codes can be generated and decoded offline, and use
+ * a reduced character set that minimises the chance of codes including words.
+ *
+ * Codes are able to be shortened relative to a nearby location. This means that
+ * in many cases, only four to seven characters of the code are needed.
+ * To recover the original code, the same location is not required, as long as
+ * a nearby location is provided.
+ *
+ * Codes represent rectangular areas rather than points, and the longer the
+ * code, the smaller the area. A 10 character code represents a 13.5x13.5
+ * meter area (at the equator. An 11 character code represents approximately
+ * a 2.8x3.5 meter area.
+ *
+ * Two encoding algorithms are used. The first 10 characters are pairs of
+ * characters, one for latitude and one for longitude, using base 20. Each pair
+ * reduces the area of the code by a factor of 400. Only even code lengths are
+ * sensible, since an odd-numbered length would have sides in a ratio of 20:1.
+ *
+ * At position 11, the algorithm changes so that each character selects one
+ * position from a 4x5 grid. This allows single-character refinements.
+ *
+ * Examples:
+ *
+ *   Encode a location, default accuracy:
+ *   var code = OpenLocationCode.encode(47.365590, 8.524997);
+ *
+ *   Encode a location using one stage of additional refinement:
+ *   var code = OpenLocationCode.encode(47.365590, 8.524997, 11);
+ *
+ *   Decode a full code:
+ *   var coord = OpenLocationCode.decode(code);
+ *   var msg = 'Center is ' + coord.latitudeCenter + ',' + coord.longitudeCenter;
+ *
+ *   Attempt to trim the first characters from a code:
+ *   var shortCode = OpenLocationCode.shorten('8FVC9G8F+6X', 47.5, 8.5);
+ *
+ *   Recover the full code from a short code:
+ *   var code = OpenLocationCode.recoverNearest('9G8F+6X', 47.4, 8.6);
+ *   var code = OpenLocationCode.recoverNearest('8F+6X', 47.4, 8.6);
+ */
+(function(root, factory) {
+  /* global define, module */
+  if (typeof define === 'function' && define.amd) {
+    // AMD. Register as an anonymous module.
+    define(function() {
+      return (root.returnExportsGlobal = factory());
+    });
+  } else if (typeof module === 'object' && module.exports) {
+    // Node. Does not work with strict CommonJS, but
+    // only CommonJS-like environments that support module.exports,
+    // like Node.
+    module.exports = factory();
+  } else {
+    // Browser globals
+    root.OpenLocationCode = factory();
+  }
+}(this, function() {
+  var OpenLocationCode = {};
+
+  /**
+   * Provides a normal precision code, approximately 14x14 meters.
+   * @const {number}
+   */
+  OpenLocationCode.CODE_PRECISION_NORMAL = 10;
+
+  /**
+   * Provides an extra precision code, approximately 2x3 meters.
+   * @const {number}
+   */
+  OpenLocationCode.CODE_PRECISION_EXTRA = 11;
+
+  // A separator used to break the code into two parts to aid memorability.
+  var SEPARATOR_ = '+';
+
+  // The number of characters to place before the separator.
+  var SEPARATOR_POSITION_ = 8;
+
+  // The character used to pad codes.
+  var PADDING_CHARACTER_ = '0';
+
+  // The character set used to encode the values.
+  var CODE_ALPHABET_ = '23456789CFGHJMPQRVWX';
+
+  // The base to use to convert numbers to/from.
+  var ENCODING_BASE_ = CODE_ALPHABET_.length;
+
+  // The maximum value for latitude in degrees.
+  var LATITUDE_MAX_ = 90;
+
+  // The maximum value for longitude in degrees.
+  var LONGITUDE_MAX_ = 180;
+
+  // The min number of digits in a Plus Code.
+  var MIN_DIGIT_COUNT_ = 2;
+
+  // The max number of digits to process in a Plus Code.
+  var MAX_DIGIT_COUNT_ = 15;
+
+  // Maximum code length using lat/lng pair encoding. The area of such a
+  // code is approximately 13x13 meters (at the equator), and should be suitable
+  // for identifying buildings. This excludes prefix and separator characters.
+  var PAIR_CODE_LENGTH_ = 10;
+
+  // First place value of the pairs (if the last pair value is 1).
+  var PAIR_FIRST_PLACE_VALUE_ = Math.pow(
+      ENCODING_BASE_, (PAIR_CODE_LENGTH_ / 2 - 1));
+
+  // Inverse of the precision of the pair section of the code.
+  var PAIR_PRECISION_ = Math.pow(ENCODING_BASE_, 3);
+
+  // The resolution values in degrees for each position in the lat/lng pair
+  // encoding. These give the place value of each position, and therefore the
+  // dimensions of the resulting area.
+  var PAIR_RESOLUTIONS_ = [20.0, 1.0, .05, .0025, .000125];
+
+  // Number of digits in the grid precision part of the code.
+  var GRID_CODE_LENGTH_ = MAX_DIGIT_COUNT_ - PAIR_CODE_LENGTH_;
+
+  // Number of columns in the grid refinement method.
+  var GRID_COLUMNS_ = 4;
+
+  // Number of rows in the grid refinement method.
+  var GRID_ROWS_ = 5;
+
+  // First place value of the latitude grid (if the last place is 1).
+  var GRID_LAT_FIRST_PLACE_VALUE_ = Math.pow(
+      GRID_ROWS_, (GRID_CODE_LENGTH_ - 1));
+
+  // First place value of the longitude grid (if the last place is 1).
+  var GRID_LNG_FIRST_PLACE_VALUE_ = Math.pow(
+      GRID_COLUMNS_, (GRID_CODE_LENGTH_ - 1));
+
+  // Multiply latitude by this much to make it a multiple of the finest
+  // precision.
+  var FINAL_LAT_PRECISION_ = PAIR_PRECISION_ *
+      Math.pow(GRID_ROWS_, (MAX_DIGIT_COUNT_ - PAIR_CODE_LENGTH_));
+
+  // Multiply longitude by this much to make it a multiple of the finest
+  // precision.
+  var FINAL_LNG_PRECISION_ = PAIR_PRECISION_ *
+      Math.pow(GRID_COLUMNS_, (MAX_DIGIT_COUNT_ - PAIR_CODE_LENGTH_));
+
+  // Minimum length of a code that can be shortened.
+  var MIN_TRIMMABLE_CODE_LEN_ = 6;
+
+  /**
+    @return {string} Returns the OLC alphabet.
+   */
+  OpenLocationCode.getAlphabet = function() {
+    return CODE_ALPHABET_;
+  };
+
+  /**
+   * Determines if a code is valid.
+   *
+   * To be valid, all characters must be from the Open Location Code character
+   * set with at most one separator. The separator can be in any even-numbered
+   * position up to the eighth digit.
+   *
+   * @param {string} code The string to check.
+   * @return {boolean} True if the string is a valid code.
+   */
+  var isValid = OpenLocationCode.isValid = function(code) {
+    if (!code || typeof code !== 'string') {
+      return false;
+    }
+    // The separator is required.
+    if (code.indexOf(SEPARATOR_) == -1) {
+      return false;
+    }
+    if (code.indexOf(SEPARATOR_) != code.lastIndexOf(SEPARATOR_)) {
+      return false;
+    }
+    // Is it the only character?
+    if (code.length == 1) {
+      return false;
+    }
+    // Is it in an illegal position?
+    if (code.indexOf(SEPARATOR_) > SEPARATOR_POSITION_ ||
+        code.indexOf(SEPARATOR_) % 2 == 1) {
+      return false;
+    }
+    // We can have an even number of padding characters before the separator,
+    // but then it must be the final character.
+    if (code.indexOf(PADDING_CHARACTER_) > -1) {
+      // Short codes cannot have padding
+      if (code.indexOf(SEPARATOR_) < SEPARATOR_POSITION_) {
+        return false;
+      }
+      // Not allowed to start with them!
+      if (code.indexOf(PADDING_CHARACTER_) == 0) {
+        return false;
+      }
+      // There can only be one group and it must have even length.
+      var padMatch = code.match(new RegExp('(' + PADDING_CHARACTER_ + '+)', 'g'));
+      if (padMatch.length > 1 || padMatch[0].length % 2 == 1 ||
+          padMatch[0].length > SEPARATOR_POSITION_ - 2) {
+        return false;
+      }
+      // If the code is long enough to end with a separator, make sure it does.
+      if (code.charAt(code.length - 1) != SEPARATOR_) {
+        return false;
+      }
+    }
+    // If there are characters after the separator, make sure there isn't just
+    // one of them (not legal).
+    if (code.length - code.indexOf(SEPARATOR_) - 1 == 1) {
+      return false;
+    }
+
+    // Strip the separator and any padding characters.
+    code = code.replace(new RegExp('\\' + SEPARATOR_ + '+'), '')
+        .replace(new RegExp(PADDING_CHARACTER_ + '+'), '');
+    // Check the code contains only valid characters.
+    for (var i = 0, len = code.length; i < len; i++) {
+      var character = code.charAt(i).toUpperCase();
+      if (character != SEPARATOR_ && CODE_ALPHABET_.indexOf(character) == -1) {
+        return false;
+      }
+    }
+    return true;
+  };
+
+  /**
+   * Determines if a code is a valid short code.
+   *
+   * @param {string} code The string to check.
+   * @return {boolean} True if the string can be produced by removing four or
+   *     more characters from the start of a valid code.
+   */
+  var isShort = OpenLocationCode.isShort = function(code) {
+    // Check it's valid.
+    if (!isValid(code)) {
+      return false;
+    }
+    // If there are less characters than expected before the SEPARATOR.
+    if (code.indexOf(SEPARATOR_) >= 0 &&
+        code.indexOf(SEPARATOR_) < SEPARATOR_POSITION_) {
+      return true;
+    }
+    return false;
+  };
+
+  /**
+   * Determines if a code is a valid full Open Location Code.
+   *
+   * @param {string} code The string to check.
+   * @return {boolean} True if the code represents a valid latitude and
+   *     longitude combination.
+   */
+  var isFull = OpenLocationCode.isFull = function(code) {
+    if (!isValid(code)) {
+      return false;
+    }
+    // If it's short, it's not full.
+    if (isShort(code)) {
+      return false;
+    }
+
+    // Work out what the first latitude character indicates for latitude.
+    var firstLatValue = CODE_ALPHABET_.indexOf(
+        code.charAt(0).toUpperCase()) * ENCODING_BASE_;
+    if (firstLatValue >= LATITUDE_MAX_ * 2) {
+      // The code would decode to a latitude of >= 90 degrees.
+      return false;
+    }
+    if (code.length > 1) {
+      // Work out what the first longitude character indicates for longitude.
+      var firstLngValue = CODE_ALPHABET_.indexOf(
+          code.charAt(1).toUpperCase()) * ENCODING_BASE_;
+      if (firstLngValue >= LONGITUDE_MAX_ * 2) {
+        // The code would decode to a longitude of >= 180 degrees.
+        return false;
+      }
+    }
+    return true;
+  };
+
+  /**
+   * Encode a location into an Open Location Code.
+   *
+   * @param {number} latitude The latitude in signed decimal degrees. It will
+   *     be clipped to the range -90 to 90.
+   * @param {number} longitude The longitude in signed decimal degrees. Will be
+   *     normalised to the range -180 to 180.
+   * @param {?number} codeLength The length of the code to generate. If
+   *     omitted, the value OpenLocationCode.CODE_PRECISION_NORMAL will be used.
+   *     For a more precise result, OpenLocationCode.CODE_PRECISION_EXTRA is
+   *     recommended.
+   * @return {string} The code.
+   * @throws {Exception} if any of the input values are not numbers.
+   */
+  var encode = OpenLocationCode.encode = function(latitude,
+      longitude, codeLength) {
+    latitude = Number(latitude);
+    longitude = Number(longitude);
+
+    const locationIntegers = locationToIntegers(latitude, longitude);
+
+    return encodeIntegers(locationIntegers[0], locationIntegers[1], codeLength);
+  };
+
+  /**
+   * Convert a latitude, longitude location into integer values.
+   *
+   * This function is only exposed for testing.
+   *
+   * Latitude is converted into a positive integer clipped into the range
+   * 0 <= X < 180*2.5e7. (Latitude 90 needs to be adjusted to be slightly lower,
+   * so that the returned code can also be decoded.
+   * Longitude is converted into a positive integer and normalised into the range
+   * 0 <= X < 360*8.192e6.
+
+   * @param {number} latitude
+   * @param {number} longitude
+   * @return {Array<number>} A tuple of the latitude integer and longitude integer.
+   */
+  var locationToIntegers = OpenLocationCode.locationToIntegers = function(latitude, longitude) {
+    var latVal = Math.floor(latitude * FINAL_LAT_PRECISION_);
+    latVal += LATITUDE_MAX_ * FINAL_LAT_PRECISION_;
+    if (latVal < 0) {
+      latVal = 0;
+    } else if (latVal >= 2 * LATITUDE_MAX_ * FINAL_LAT_PRECISION_) {
+      latVal = 2 * LATITUDE_MAX_ * FINAL_LAT_PRECISION_ - 1;
+    }
+    var lngVal = Math.floor(longitude * FINAL_LNG_PRECISION_);
+    lngVal += LONGITUDE_MAX_ * FINAL_LNG_PRECISION_;
+    if (lngVal < 0) {
+      lngVal =
+        (lngVal % (2 * LONGITUDE_MAX_ * FINAL_LNG_PRECISION_)) +
+        2 * LONGITUDE_MAX_ * FINAL_LNG_PRECISION_;
+    } else if (lngVal >= 2 * LONGITUDE_MAX_ * FINAL_LNG_PRECISION_) {
+      lngVal = lngVal % (2 * LONGITUDE_MAX_ * FINAL_LNG_PRECISION_);
+    }
+    return [latVal, lngVal];
+  };
+
+  /**
+   * Encode a location that uses integer values into an Open Location Code.
+   *
+   * This is a testing function, and should not be called directly.
+   *
+   * @param {number} latInt An integer latitude.
+   * @param {number} lngInt An integer longitude.
+   * @param {number=} codeLength The number of significant digits in the output
+   *     code, not including any separator characters.
+   * @return {string} A code of the specified length or the default length if not
+   *     specified.
+   * @throws {Exception} if any of the input values are not numbers.
+   */
+  var encodeIntegers = OpenLocationCode.encodeIntegers = function(latInt, lngInt, codeLength) {
+    if (typeof codeLength == 'undefined') {
+      codeLength = OpenLocationCode.CODE_PRECISION_NORMAL;
+    } else {
+      codeLength = Math.min(MAX_DIGIT_COUNT_, Number(codeLength));
+    }
+    if (isNaN(latInt) || isNaN(lngInt) || isNaN(codeLength)) {
+      throw new Error('ValueError: Parameters are not numbers');
+    }
+    if (codeLength < MIN_DIGIT_COUNT_ ||
+        (codeLength < PAIR_CODE_LENGTH_ && codeLength % 2 == 1)) {
+      throw new Error('IllegalArgumentException: Invalid Open Location Code length');
+    }
+    // Javascript strings are immutable and it doesn't have a native
+    // StringBuilder, so we'll use an array.
+    const code = new Array(MAX_DIGIT_COUNT_ + 1);
+    code[SEPARATOR_POSITION_] = SEPARATOR_;
+
+    // Compute the grid part of the code if necessary.
+    if (codeLength > PAIR_CODE_LENGTH_) {
+      for (var i = MAX_DIGIT_COUNT_ - PAIR_CODE_LENGTH_; i >= 1; i--) {
+        var latDigit = latInt % GRID_ROWS_;
+        var lngDigit = lngInt % GRID_COLUMNS_;
+        var ndx = latDigit * GRID_COLUMNS_ + lngDigit;
+        code[SEPARATOR_POSITION_ + 2 + i] = CODE_ALPHABET_.charAt(ndx);
+        // Note! Integer division.
+        latInt = Math.floor(latInt / GRID_ROWS_);
+        lngInt = Math.floor(lngInt / GRID_COLUMNS_);
+      }
+    } else {
+      latInt = Math.floor(latInt / Math.pow(GRID_ROWS_, GRID_CODE_LENGTH_));
+      lngInt = Math.floor(lngInt / Math.pow(GRID_COLUMNS_, GRID_CODE_LENGTH_));
+    }
+
+    // Add the pair after the separator.
+    code[SEPARATOR_POSITION_ + 1] = CODE_ALPHABET_.charAt(latInt % ENCODING_BASE_);
+    code[SEPARATOR_POSITION_ + 2] = CODE_ALPHABET_.charAt(lngInt % ENCODING_BASE_);
+    latInt = Math.floor(latInt / ENCODING_BASE_);
+    lngInt = Math.floor(lngInt / ENCODING_BASE_);
+
+    // Compute the pair section of the code.
+    for (var i = PAIR_CODE_LENGTH_ / 2 + 1; i >= 0; i -= 2) {
+      code[i] = CODE_ALPHABET_.charAt(latInt % ENCODING_BASE_);
+      code[i + 1] = CODE_ALPHABET_.charAt(lngInt % ENCODING_BASE_);
+      latInt = Math.floor(latInt / ENCODING_BASE_);
+      lngInt = Math.floor(lngInt / ENCODING_BASE_);
+    }
+
+    // If we don't need to pad the code, return the requested section.
+    if (codeLength >= SEPARATOR_POSITION_) {
+      return code.slice(0, codeLength + 1).join('');
+    }
+    // Pad and return the code.
+    return code.slice(0, codeLength).join('') +
+        Array(SEPARATOR_POSITION_ - codeLength + 1).join(PADDING_CHARACTER_) + SEPARATOR_;
+  };
+
+  /**
+   * Decodes an Open Location Code into its location coordinates.
+   *
+   * Returns a CodeArea object that includes the coordinates of the bounding
+   * box - the lower left, center and upper right.
+   *
+   * @param {string} code The code to decode.
+   * @return {OpenLocationCode.CodeArea} An object with the coordinates of the
+   *     area of the code.
+   * @throws {Exception} If the code is not valid.
+   */
+  var decode = OpenLocationCode.decode = function(code) {
+    // This calculates the values for the pair and grid section separately, using
+    // integer arithmetic. Only at the final step are they converted to floating
+    // point and combined.
+    if (!isFull(code)) {
+      throw new Error('IllegalArgumentException: ' +
+          'Passed Plus Code is not a valid full code: ' + code);
+    }
+    // Strip the '+' and '0' characters from the code and convert to upper case.
+    code = code.replace('+', '').replace(/0/g, '').toLocaleUpperCase('en-US');
+
+    // Initialise the values for each section. We work them out as integers and
+    // convert them to floats at the end.
+    var normalLat = -LATITUDE_MAX_ * PAIR_PRECISION_;
+    var normalLng = -LONGITUDE_MAX_ * PAIR_PRECISION_;
+    var gridLat = 0;
+    var gridLng = 0;
+    // How many digits do we have to process?
+    var digits = Math.min(code.length, PAIR_CODE_LENGTH_);
+    // Define the place value for the most significant pair.
+    var pv = PAIR_FIRST_PLACE_VALUE_;
+    // Decode the paired digits.
+    for (var i = 0; i < digits; i += 2) {
+      normalLat += CODE_ALPHABET_.indexOf(code.charAt(i)) * pv;
+      normalLng += CODE_ALPHABET_.indexOf(code.charAt(i + 1)) * pv;
+      if (i < digits - 2) {
+        pv /= ENCODING_BASE_;
+      }
+    }
+    // Convert the place value to a float in degrees.
+    var latPrecision = pv / PAIR_PRECISION_;
+    var lngPrecision = pv / PAIR_PRECISION_;
+    // Process any extra precision digits.
+    if (code.length > PAIR_CODE_LENGTH_) {
+      // Initialise the place values for the grid.
+      var rowpv = GRID_LAT_FIRST_PLACE_VALUE_;
+      var colpv = GRID_LNG_FIRST_PLACE_VALUE_;
+      // How many digits do we have to process?
+      digits = Math.min(code.length, MAX_DIGIT_COUNT_);
+      for (var i = PAIR_CODE_LENGTH_; i < digits; i++) {
+        var digitVal = CODE_ALPHABET_.indexOf(code.charAt(i));
+        var row = Math.floor(digitVal / GRID_COLUMNS_);
+        var col = digitVal % GRID_COLUMNS_;
+        gridLat += row * rowpv;
+        gridLng += col * colpv;
+        if (i < digits - 1) {
+          rowpv /= GRID_ROWS_;
+          colpv /= GRID_COLUMNS_;
+        }
+      }
+      // Adjust the precisions from the integer values to degrees.
+      latPrecision = rowpv / FINAL_LAT_PRECISION_;
+      lngPrecision = colpv / FINAL_LNG_PRECISION_;
+    }
+    // Merge the values from the normal and extra precision parts of the code.
+    var lat = normalLat / PAIR_PRECISION_ + gridLat / FINAL_LAT_PRECISION_;
+    var lng = normalLng / PAIR_PRECISION_ + gridLng / FINAL_LNG_PRECISION_;
+    return new CodeArea(
+        lat,
+        lng,
+        lat + latPrecision,
+        lng + lngPrecision,
+        Math.min(code.length, MAX_DIGIT_COUNT_));
+  };
+
+  /**
+   * Recover the nearest matching code to a specified location.
+   *
+   * Given a valid short Open Location Code this recovers the nearest matching
+   * full code to the specified location.
+   *
+   * @param {string} shortCode A valid short code.
+   * @param {number} referenceLatitude The latitude to use for the reference
+   *     location.
+   * @param {number} referenceLongitude The longitude to use for the reference
+   *     location.
+   * @return {string} The nearest matching full code to the reference location.
+   * @throws {Exception} if the short code is not valid, or the reference
+   *     position values are not numbers.
+   */
+  OpenLocationCode.recoverNearest = function(
+      shortCode, referenceLatitude, referenceLongitude) {
+    if (!isShort(shortCode)) {
+      if (isFull(shortCode)) {
+        return shortCode.toUpperCase();
+      } else {
+        throw new Error(
+            'ValueError: Passed short code is not valid: ' + shortCode);
+      }
+    }
+    referenceLatitude = Number(referenceLatitude);
+    referenceLongitude = Number(referenceLongitude);
+    if (isNaN(referenceLatitude) || isNaN(referenceLongitude)) {
+      throw new Error('ValueError: Reference position are not numbers');
+    }
+    // Ensure that latitude and longitude are valid.
+    referenceLatitude = clipLatitude(referenceLatitude);
+    referenceLongitude = normalizeLongitude(referenceLongitude);
+
+    // Clean up the passed code.
+    shortCode = shortCode.toUpperCase();
+    // Compute the number of digits we need to recover.
+    var paddingLength = SEPARATOR_POSITION_ - shortCode.indexOf(SEPARATOR_);
+    // The resolution (height and width) of the padded area in degrees.
+    var resolution = Math.pow(20, 2 - (paddingLength / 2));
+    // Distance from the center to an edge (in degrees).
+    var halfResolution = resolution / 2.0;
+
+    // Use the reference location to pad the supplied short code and decode it.
+    var codeArea = decode(
+        encode(referenceLatitude, referenceLongitude).substr(0, paddingLength)
+        + shortCode);
+    // How many degrees latitude is the code from the reference? If it is more
+    // than half the resolution, we need to move it north or south but keep it
+    // within -90 to 90 degrees.
+    if (referenceLatitude + halfResolution < codeArea.latitudeCenter &&
+        codeArea.latitudeCenter - resolution >= -LATITUDE_MAX_) {
+      // If the proposed code is more than half a cell north of the reference location,
+      // it's too far, and the best match will be one cell south.
+      codeArea.latitudeCenter -= resolution;
+    } else if (referenceLatitude - halfResolution > codeArea.latitudeCenter &&
+               codeArea.latitudeCenter + resolution <= LATITUDE_MAX_) {
+      // If the proposed code is more than half a cell south of the reference location,
+      // it's too far, and the best match will be one cell north.
+      codeArea.latitudeCenter += resolution;
+    }
+
+    // How many degrees longitude is the code from the reference?
+    if (referenceLongitude + halfResolution < codeArea.longitudeCenter) {
+      codeArea.longitudeCenter -= resolution;
+    } else if (referenceLongitude - halfResolution > codeArea.longitudeCenter) {
+      codeArea.longitudeCenter += resolution;
+    }
+
+    return encode(
+        codeArea.latitudeCenter, codeArea.longitudeCenter, codeArea.codeLength);
+  };
+
+  /**
+   * Remove characters from the start of an OLC code.
+   *
+   * This uses a reference location to determine how many initial characters
+   * can be removed from the OLC code. The number of characters that can be
+   * removed depends on the distance between the code center and the reference
+   * location.
+   *
+   * @param {string} code The full code to shorten.
+   * @param {number} latitude The latitude to use for the reference location.
+   * @param {number} longitude The longitude to use for the reference location.
+   * @return {string} The code, shortened as much as possible that it is still
+   *     the closest matching code to the reference location.
+   * @throws {Exception} if the passed code is not a valid full code or the
+   *     reference location values are not numbers.
+   */
+  OpenLocationCode.shorten = function(
+      code, latitude, longitude) {
+    if (!isFull(code)) {
+      throw new Error('ValueError: Passed code is not valid and full: ' + code);
+    }
+    if (code.indexOf(PADDING_CHARACTER_) != -1) {
+      throw new Error('ValueError: Cannot shorten padded codes: ' + code);
+    }
+    code = code.toUpperCase();
+    var codeArea = decode(code);
+    if (codeArea.codeLength < MIN_TRIMMABLE_CODE_LEN_) {
+      throw new Error(
+          'ValueError: Code length must be at least ' +
+          MIN_TRIMMABLE_CODE_LEN_);
+    }
+    // Ensure that latitude and longitude are valid.
+    latitude = Number(latitude);
+    longitude = Number(longitude);
+    if (isNaN(latitude) || isNaN(longitude)) {
+      throw new Error('ValueError: Reference position are not numbers');
+    }
+    latitude = clipLatitude(latitude);
+    longitude = normalizeLongitude(longitude);
+    // How close are the latitude and longitude to the code center.
+    var range = Math.max(
+        Math.abs(codeArea.latitudeCenter - latitude),
+        Math.abs(codeArea.longitudeCenter - longitude));
+    for (var i = PAIR_RESOLUTIONS_.length - 2; i >= 1; i--) {
+      // Check if we're close enough to shorten. The range must be less than 1/2
+      // the resolution to shorten at all, and we want to allow some safety, so
+      // use 0.3 instead of 0.5 as a multiplier.
+      if (range < (PAIR_RESOLUTIONS_[i] * 0.3)) {
+        // Trim it.
+        return code.substring((i + 1) * 2);
+      }
+    }
+    return code;
+  };
+
+  /**
+   * Clip a latitude into the range -90 to 90.
+   *
+   * @param {number} latitude
+   * @return {number} The latitude value clipped to be in the range.
+   */
+  var clipLatitude = function(latitude) {
+    return Math.min(90, Math.max(-90, latitude));
+  };
+
+  /**
+   * Normalize a longitude into the range -180 to 180, not including 180.
+   *
+   * @param {number} longitude
+   * @return {number} Normalized into the range -180 to 180.
+   */
+  var normalizeLongitude = function(longitude) {
+    while (longitude < -180) {
+      longitude = longitude + 360;
+    }
+    while (longitude >= 180) {
+      longitude = longitude - 360;
+    }
+    return longitude;
+  };
+
+  /**
+   * Coordinates of a decoded Open Location Code.
+   *
+   * The coordinates include the latitude and longitude of the lower left and
+   * upper right corners and the center of the bounding box for the area the
+   * code represents.
+   * @param {number} latitudeLo
+   * @param {number} longitudeLo
+   * @param {number} latitudeHi
+   * @param {number} longitudeHi
+   * @param {number} codeLength
+   *
+   * @constructor
+   */
+  var CodeArea = OpenLocationCode.CodeArea = function(
+      latitudeLo, longitudeLo, latitudeHi, longitudeHi, codeLength) {
+    return new OpenLocationCode.CodeArea.fn.Init(
+        latitudeLo, longitudeLo, latitudeHi, longitudeHi, codeLength);
+  };
+  CodeArea.fn = CodeArea.prototype = {
+    Init: function(
+        latitudeLo, longitudeLo, latitudeHi, longitudeHi, codeLength) {
+      /**
+       * The latitude of the SW corner.
+       * @type {number}
+       */
+      this.latitudeLo = latitudeLo;
+      /**
+       * The longitude of the SW corner in degrees.
+       * @type {number}
+       */
+      this.longitudeLo = longitudeLo;
+      /**
+       * The latitude of the NE corner in degrees.
+       * @type {number}
+       */
+      this.latitudeHi = latitudeHi;
+      /**
+       * The longitude of the NE corner in degrees.
+       * @type {number}
+       */
+      this.longitudeHi = longitudeHi;
+      /**
+       * The number of digits in the code.
+       * @type {number}
+       */
+      this.codeLength = codeLength;
+      /**
+       * The latitude of the center in degrees.
+       * @type {number}
+       */
+      this.latitudeCenter = Math.min(
+          latitudeLo + (latitudeHi - latitudeLo) / 2, LATITUDE_MAX_);
+      /**
+       * The longitude of the center in degrees.
+       * @type {number}
+       */
+      this.longitudeCenter = Math.min(
+          longitudeLo + (longitudeHi - longitudeLo) / 2, LONGITUDE_MAX_);
+    },
+  };
+  CodeArea.fn.Init.prototype = CodeArea.fn;
+
+  return OpenLocationCode;
+}));
+
+</script>
+<script>
+//---------------------------------------------------------------------
+//
+// QR Code Generator for JavaScript
+//
+// Copyright (c) 2009 Kazuhiko Arase
+//
+// URL: http://www.d-project.com/
+//
+// Licensed under the MIT license:
+//  http://www.opensource.org/licenses/mit-license.php
+//
+// The word 'QR Code' is registered trademark of
+// DENSO WAVE INCORPORATED
+//  http://www.denso-wave.com/qrcode/faqpatent-e.html
+//
+//---------------------------------------------------------------------
+
+var qrcode = function() {
+
+  //---------------------------------------------------------------------
+  // qrcode
+  //---------------------------------------------------------------------
+
+  /**
+   * qrcode
+   * @param typeNumber 1 to 40
+   * @param errorCorrectionLevel 'L','M','Q','H'
+   */
+  var qrcode = function(typeNumber, errorCorrectionLevel) {
+
+    var PAD0 = 0xEC;
+    var PAD1 = 0x11;
+
+    var _typeNumber = typeNumber;
+    var _errorCorrectionLevel = QRErrorCorrectionLevel[errorCorrectionLevel];
+    var _modules = null;
+    var _moduleCount = 0;
+    var _dataCache = null;
+    var _dataList = [];
+
+    var _this = {};
+
+    var makeImpl = function(test, maskPattern) {
+
+      _moduleCount = _typeNumber * 4 + 17;
+      _modules = function(moduleCount) {
+        var modules = new Array(moduleCount);
+        for (var row = 0; row < moduleCount; row += 1) {
+          modules[row] = new Array(moduleCount);
+          for (var col = 0; col < moduleCount; col += 1) {
+            modules[row][col] = null;
+          }
+        }
+        return modules;
+      }(_moduleCount);
+
+      setupPositionProbePattern(0, 0);
+      setupPositionProbePattern(_moduleCount - 7, 0);
+      setupPositionProbePattern(0, _moduleCount - 7);
+      setupPositionAdjustPattern();
+      setupTimingPattern();
+      setupTypeInfo(test, maskPattern);
+
+      if (_typeNumber >= 7) {
+        setupTypeNumber(test);
+      }
+
+      if (_dataCache == null) {
+        _dataCache = createData(_typeNumber, _errorCorrectionLevel, _dataList);
+      }
+
+      mapData(_dataCache, maskPattern);
+    };
+
+    var setupPositionProbePattern = function(row, col) {
+
+      for (var r = -1; r <= 7; r += 1) {
+
+        if (row + r <= -1 || _moduleCount <= row + r) continue;
+
+        for (var c = -1; c <= 7; c += 1) {
+
+          if (col + c <= -1 || _moduleCount <= col + c) continue;
+
+          if ( (0 <= r && r <= 6 && (c == 0 || c == 6) )
+              || (0 <= c && c <= 6 && (r == 0 || r == 6) )
+              || (2 <= r && r <= 4 && 2 <= c && c <= 4) ) {
+            _modules[row + r][col + c] = true;
+          } else {
+            _modules[row + r][col + c] = false;
+          }
+        }
+      }
+    };
+
+    var getBestMaskPattern = function() {
+
+      var minLostPoint = 0;
+      var pattern = 0;
+
+      for (var i = 0; i < 8; i += 1) {
+
+        makeImpl(true, i);
+
+        var lostPoint = QRUtil.getLostPoint(_this);
+
+        if (i == 0 || minLostPoint > lostPoint) {
+          minLostPoint = lostPoint;
+          pattern = i;
+        }
+      }
+
+      return pattern;
+    };
+
+    var setupTimingPattern = function() {
+
+      for (var r = 8; r < _moduleCount - 8; r += 1) {
+        if (_modules[r][6] != null) {
+          continue;
+        }
+        _modules[r][6] = (r % 2 == 0);
+      }
+
+      for (var c = 8; c < _moduleCount - 8; c += 1) {
+        if (_modules[6][c] != null) {
+          continue;
+        }
+        _modules[6][c] = (c % 2 == 0);
+      }
+    };
+
+    var setupPositionAdjustPattern = function() {
+
+      var pos = QRUtil.getPatternPosition(_typeNumber);
+
+      for (var i = 0; i < pos.length; i += 1) {
+
+        for (var j = 0; j < pos.length; j += 1) {
+
+          var row = pos[i];
+          var col = pos[j];
+
+          if (_modules[row][col] != null) {
+            continue;
+          }
+
+          for (var r = -2; r <= 2; r += 1) {
+
+            for (var c = -2; c <= 2; c += 1) {
+
+              if (r == -2 || r == 2 || c == -2 || c == 2
+                  || (r == 0 && c == 0) ) {
+                _modules[row + r][col + c] = true;
+              } else {
+                _modules[row + r][col + c] = false;
+              }
+            }
+          }
+        }
+      }
+    };
+
+    var setupTypeNumber = function(test) {
+
+      var bits = QRUtil.getBCHTypeNumber(_typeNumber);
+
+      for (var i = 0; i < 18; i += 1) {
+        var mod = (!test && ( (bits >> i) & 1) == 1);
+        _modules[Math.floor(i / 3)][i % 3 + _moduleCount - 8 - 3] = mod;
+      }
+
+      for (var i = 0; i < 18; i += 1) {
+        var mod = (!test && ( (bits >> i) & 1) == 1);
+        _modules[i % 3 + _moduleCount - 8 - 3][Math.floor(i / 3)] = mod;
+      }
+    };
+
+    var setupTypeInfo = function(test, maskPattern) {
+
+      var data = (_errorCorrectionLevel << 3) | maskPattern;
+      var bits = QRUtil.getBCHTypeInfo(data);
+
+      // vertical
+      for (var i = 0; i < 15; i += 1) {
+
+        var mod = (!test && ( (bits >> i) & 1) == 1);
+
+        if (i < 6) {
+          _modules[i][8] = mod;
+        } else if (i < 8) {
+          _modules[i + 1][8] = mod;
+        } else {
+          _modules[_moduleCount - 15 + i][8] = mod;
+        }
+      }
+
+      // horizontal
+      for (var i = 0; i < 15; i += 1) {
+
+        var mod = (!test && ( (bits >> i) & 1) == 1);
+
+        if (i < 8) {
+          _modules[8][_moduleCount - i - 1] = mod;
+        } else if (i < 9) {
+          _modules[8][15 - i - 1 + 1] = mod;
+        } else {
+          _modules[8][15 - i - 1] = mod;
+        }
+      }
+
+      // fixed module
+      _modules[_moduleCount - 8][8] = (!test);
+    };
+
+    var mapData = function(data, maskPattern) {
+
+      var inc = -1;
+      var row = _moduleCount - 1;
+      var bitIndex = 7;
+      var byteIndex = 0;
+      var maskFunc = QRUtil.getMaskFunction(maskPattern);
+
+      for (var col = _moduleCount - 1; col > 0; col -= 2) {
+
+        if (col == 6) col -= 1;
+
+        while (true) {
+
+          for (var c = 0; c < 2; c += 1) {
+
+            if (_modules[row][col - c] == null) {
+
+              var dark = false;
+
+              if (byteIndex < data.length) {
+                dark = ( ( (data[byteIndex] >>> bitIndex) & 1) == 1);
+              }
+
+              var mask = maskFunc(row, col - c);
+
+              if (mask) {
+                dark = !dark;
+              }
+
+              _modules[row][col - c] = dark;
+              bitIndex -= 1;
+
+              if (bitIndex == -1) {
+                byteIndex += 1;
+                bitIndex = 7;
+              }
+            }
+          }
+
+          row += inc;
+
+          if (row < 0 || _moduleCount <= row) {
+            row -= inc;
+            inc = -inc;
+            break;
+          }
+        }
+      }
+    };
+
+    var createBytes = function(buffer, rsBlocks) {
+
+      var offset = 0;
+
+      var maxDcCount = 0;
+      var maxEcCount = 0;
+
+      var dcdata = new Array(rsBlocks.length);
+      var ecdata = new Array(rsBlocks.length);
+
+      for (var r = 0; r < rsBlocks.length; r += 1) {
+
+        var dcCount = rsBlocks[r].dataCount;
+        var ecCount = rsBlocks[r].totalCount - dcCount;
+
+        maxDcCount = Math.max(maxDcCount, dcCount);
+        maxEcCount = Math.max(maxEcCount, ecCount);
+
+        dcdata[r] = new Array(dcCount);
+
+        for (var i = 0; i < dcdata[r].length; i += 1) {
+          dcdata[r][i] = 0xff & buffer.getBuffer()[i + offset];
+        }
+        offset += dcCount;
+
+        var rsPoly = QRUtil.getErrorCorrectPolynomial(ecCount);
+        var rawPoly = qrPolynomial(dcdata[r], rsPoly.getLength() - 1);
+
+        var modPoly = rawPoly.mod(rsPoly);
+        ecdata[r] = new Array(rsPoly.getLength() - 1);
+        for (var i = 0; i < ecdata[r].length; i += 1) {
+          var modIndex = i + modPoly.getLength() - ecdata[r].length;
+          ecdata[r][i] = (modIndex >= 0)? modPoly.getAt(modIndex) : 0;
+        }
+      }
+
+      var totalCodeCount = 0;
+      for (var i = 0; i < rsBlocks.length; i += 1) {
+        totalCodeCount += rsBlocks[i].totalCount;
+      }
+
+      var data = new Array(totalCodeCount);
+      var index = 0;
+
+      for (var i = 0; i < maxDcCount; i += 1) {
+        for (var r = 0; r < rsBlocks.length; r += 1) {
+          if (i < dcdata[r].length) {
+            data[index] = dcdata[r][i];
+            index += 1;
+          }
+        }
+      }
+
+      for (var i = 0; i < maxEcCount; i += 1) {
+        for (var r = 0; r < rsBlocks.length; r += 1) {
+          if (i < ecdata[r].length) {
+            data[index] = ecdata[r][i];
+            index += 1;
+          }
+        }
+      }
+
+      return data;
+    };
+
+    var createData = function(typeNumber, errorCorrectionLevel, dataList) {
+
+      var rsBlocks = QRRSBlock.getRSBlocks(typeNumber, errorCorrectionLevel);
+
+      var buffer = qrBitBuffer();
+
+      for (var i = 0; i < dataList.length; i += 1) {
+        var data = dataList[i];
+        buffer.put(data.getMode(), 4);
+        buffer.put(data.getLength(), QRUtil.getLengthInBits(data.getMode(), typeNumber) );
+        data.write(buffer);
+      }
+
+      // calc num max data.
+      var totalDataCount = 0;
+      for (var i = 0; i < rsBlocks.length; i += 1) {
+        totalDataCount += rsBlocks[i].dataCount;
+      }
+
+      if (buffer.getLengthInBits() > totalDataCount * 8) {
+        throw 'code length overflow. ('
+          + buffer.getLengthInBits()
+          + '>'
+          + totalDataCount * 8
+          + ')';
+      }
+
+      // end code
+      if (buffer.getLengthInBits() + 4 <= totalDataCount * 8) {
+        buffer.put(0, 4);
+      }
+
+      // padding
+      while (buffer.getLengthInBits() % 8 != 0) {
+        buffer.putBit(false);
+      }
+
+      // padding
+      while (true) {
+
+        if (buffer.getLengthInBits() >= totalDataCount * 8) {
+          break;
+        }
+        buffer.put(PAD0, 8);
+
+        if (buffer.getLengthInBits() >= totalDataCount * 8) {
+          break;
+        }
+        buffer.put(PAD1, 8);
+      }
+
+      return createBytes(buffer, rsBlocks);
+    };
+
+    _this.addData = function(data, mode) {
+
+      mode = mode || 'Byte';
+
+      var newData = null;
+
+      switch(mode) {
+      case 'Numeric' :
+        newData = qrNumber(data);
+        break;
+      case 'Alphanumeric' :
+        newData = qrAlphaNum(data);
+        break;
+      case 'Byte' :
+        newData = qr8BitByte(data);
+        break;
+      case 'Kanji' :
+        newData = qrKanji(data);
+        break;
+      default :
+        throw 'mode:' + mode;
+      }
+
+      _dataList.push(newData);
+      _dataCache = null;
+    };
+
+    _this.isDark = function(row, col) {
+      if (row < 0 || _moduleCount <= row || col < 0 || _moduleCount <= col) {
+        throw row + ',' + col;
+      }
+      return _modules[row][col];
+    };
+
+    _this.getModuleCount = function() {
+      return _moduleCount;
+    };
+
+    _this.make = function() {
+      if (_typeNumber < 1) {
+        var typeNumber = 1;
+
+        for (; typeNumber < 40; typeNumber++) {
+          var rsBlocks = QRRSBlock.getRSBlocks(typeNumber, _errorCorrectionLevel);
+          var buffer = qrBitBuffer();
+
+          for (var i = 0; i < _dataList.length; i++) {
+            var data = _dataList[i];
+            buffer.put(data.getMode(), 4);
+            buffer.put(data.getLength(), QRUtil.getLengthInBits(data.getMode(), typeNumber) );
+            data.write(buffer);
+          }
+
+          var totalDataCount = 0;
+          for (var i = 0; i < rsBlocks.length; i++) {
+            totalDataCount += rsBlocks[i].dataCount;
+          }
+
+          if (buffer.getLengthInBits() <= totalDataCount * 8) {
+            break;
+          }
+        }
+
+        _typeNumber = typeNumber;
+      }
+
+      makeImpl(false, getBestMaskPattern() );
+    };
+
+    _this.createTableTag = function(cellSize, margin) {
+
+      cellSize = cellSize || 2;
+      margin = (typeof margin == 'undefined')? cellSize * 4 : margin;
+
+      var qrHtml = '';
+
+      qrHtml += '<table style="';
+      qrHtml += ' border-width: 0px; border-style: none;';
+      qrHtml += ' border-collapse: collapse;';
+      qrHtml += ' padding: 0px; margin: ' + margin + 'px;';
+      qrHtml += '">';
+      qrHtml += '<tbody>';
+
+      for (var r = 0; r < _this.getModuleCount(); r += 1) {
+
+        qrHtml += '<tr>';
+
+        for (var c = 0; c < _this.getModuleCount(); c += 1) {
+          qrHtml += '<td style="';
+          qrHtml += ' border-width: 0px; border-style: none;';
+          qrHtml += ' border-collapse: collapse;';
+          qrHtml += ' padding: 0px; margin: 0px;';
+          qrHtml += ' width: ' + cellSize + 'px;';
+          qrHtml += ' height: ' + cellSize + 'px;';
+          qrHtml += ' background-color: ';
+          qrHtml += _this.isDark(r, c)? '#000000' : '#ffffff';
+          qrHtml += ';';
+          qrHtml += '"/>';
+        }
+
+        qrHtml += '</tr>';
+      }
+
+      qrHtml += '</tbody>';
+      qrHtml += '</table>';
+
+      return qrHtml;
+    };
+
+    _this.createSvgTag = function(cellSize, margin, alt, title) {
+
+      var opts = {};
+      if (typeof arguments[0] == 'object') {
+        // Called by options.
+        opts = arguments[0];
+        // overwrite cellSize and margin.
+        cellSize = opts.cellSize;
+        margin = opts.margin;
+        alt = opts.alt;
+        title = opts.title;
+      }
+
+      cellSize = cellSize || 2;
+      margin = (typeof margin == 'undefined')? cellSize * 4 : margin;
+
+      // Compose alt property surrogate
+      alt = (typeof alt === 'string') ? {text: alt} : alt || {};
+      alt.text = alt.text || null;
+      alt.id = (alt.text) ? alt.id || 'qrcode-description' : null;
+
+      // Compose title property surrogate
+      title = (typeof title === 'string') ? {text: title} : title || {};
+      title.text = title.text || null;
+      title.id = (title.text) ? title.id || 'qrcode-title' : null;
+
+      var size = _this.getModuleCount() * cellSize + margin * 2;
+      var c, mc, r, mr, qrSvg='', rect;
+
+      rect = 'l' + cellSize + ',0 0,' + cellSize +
+        ' -' + cellSize + ',0 0,-' + cellSize + 'z ';
+
+      qrSvg += '<svg version="1.1" xmlns="http://www.w3.org/2000/svg"';
+      qrSvg += !opts.scalable ? ' width="' + size + 'px" height="' + size + 'px"' : '';
+      qrSvg += ' viewBox="0 0 ' + size + ' ' + size + '" ';
+      qrSvg += ' preserveAspectRatio="xMinYMin meet"';
+      qrSvg += (title.text || alt.text) ? ' role="img" aria-labelledby="' +
+          escapeXml([title.id, alt.id].join(' ').trim() ) + '"' : '';
+      qrSvg += '>';
+      qrSvg += (title.text) ? '<title id="' + escapeXml(title.id) + '">' +
+          escapeXml(title.text) + '</title>' : '';
+      qrSvg += (alt.text) ? '<description id="' + escapeXml(alt.id) + '">' +
+          escapeXml(alt.text) + '</description>' : '';
+      qrSvg += '<rect width="100%" height="100%" fill="white" cx="0" cy="0"/>';
+      qrSvg += '<path d="';
+
+      for (r = 0; r < _this.getModuleCount(); r += 1) {
+        mr = r * cellSize + margin;
+        for (c = 0; c < _this.getModuleCount(); c += 1) {
+          if (_this.isDark(r, c) ) {
+            mc = c*cellSize+margin;
+            qrSvg += 'M' + mc + ',' + mr + rect;
+          }
+        }
+      }
+
+      qrSvg += '" stroke="transparent" fill="black"/>';
+      qrSvg += '</svg>';
+
+      return qrSvg;
+    };
+
+    _this.createDataURL = function(cellSize, margin) {
+
+      cellSize = cellSize || 2;
+      margin = (typeof margin == 'undefined')? cellSize * 4 : margin;
+
+      var size = _this.getModuleCount() * cellSize + margin * 2;
+      var min = margin;
+      var max = size - margin;
+
+      return createDataURL(size, size, function(x, y) {
+        if (min <= x && x < max && min <= y && y < max) {
+          var c = Math.floor( (x - min) / cellSize);
+          var r = Math.floor( (y - min) / cellSize);
+          return _this.isDark(r, c)? 0 : 1;
+        } else {
+          return 1;
+        }
+      } );
+    };
+
+    _this.createImgTag = function(cellSize, margin, alt) {
+
+      cellSize = cellSize || 2;
+      margin = (typeof margin == 'undefined')? cellSize * 4 : margin;
+
+      var size = _this.getModuleCount() * cellSize + margin * 2;
+
+      var img = '';
+      img += '<img';
+      img += '\u0020src="';
+      img += _this.createDataURL(cellSize, margin);
+      img += '"';
+      img += '\u0020width="';
+      img += size;
+      img += '"';
+      img += '\u0020height="';
+      img += size;
+      img += '"';
+      if (alt) {
+        img += '\u0020alt="';
+        img += escapeXml(alt);
+        img += '"';
+      }
+      img += '/>';
+
+      return img;
+    };
+
+    var escapeXml = function(s) {
+      var escaped = '';
+      for (var i = 0; i < s.length; i += 1) {
+        var c = s.charAt(i);
+        switch(c) {
+        case '<': escaped += '&lt;'; break;
+        case '>': escaped += '&gt;'; break;
+        case '&': escaped += '&amp;'; break;
+        case '"': escaped += '&quot;'; break;
+        default : escaped += c; break;
+        }
+      }
+      return escaped;
+    };
+
+    var _createHalfASCII = function(margin) {
+      var cellSize = 1;
+      margin = (typeof margin == 'undefined')? cellSize * 2 : margin;
+
+      var size = _this.getModuleCount() * cellSize + margin * 2;
+      var min = margin;
+      var max = size - margin;
+
+      var y, x, r1, r2, p;
+
+      var blocks = {
+        '██': '█',
+        '█ ': '▀',
+        ' █': '▄',
+        '  ': ' '
+      };
+
+      var blocksLastLineNoMargin = {
+        '██': '▀',
+        '█ ': '▀',
+        ' █': ' ',
+        '  ': ' '
+      };
+
+      var ascii = '';
+      for (y = 0; y < size; y += 2) {
+        r1 = Math.floor((y - min) / cellSize);
+        r2 = Math.floor((y + 1 - min) / cellSize);
+        for (x = 0; x < size; x += 1) {
+          p = '█';
+
+          if (min <= x && x < max && min <= y && y < max && _this.isDark(r1, Math.floor((x - min) / cellSize))) {
+            p = ' ';
+          }
+
+          if (min <= x && x < max && min <= y+1 && y+1 < max && _this.isDark(r2, Math.floor((x - min) / cellSize))) {
+            p += ' ';
+          }
+          else {
+            p += '█';
+          }
+
+          // Output 2 characters per pixel, to create full square. 1 character per pixels gives only half width of square.
+          ascii += (margin < 1 && y+1 >= max) ? blocksLastLineNoMargin[p] : blocks[p];
+        }
+
+        ascii += '\n';
+      }
+
+      if (size % 2 && margin > 0) {
+        return ascii.substring(0, ascii.length - size - 1) + Array(size+1).join('▀');
+      }
+
+      return ascii.substring(0, ascii.length-1);
+    };
+
+    _this.createASCII = function(cellSize, margin) {
+      cellSize = cellSize || 1;
+
+      if (cellSize < 2) {
+        return _createHalfASCII(margin);
+      }
+
+      cellSize -= 1;
+      margin = (typeof margin == 'undefined')? cellSize * 2 : margin;
+
+      var size = _this.getModuleCount() * cellSize + margin * 2;
+      var min = margin;
+      var max = size - margin;
+
+      var y, x, r, p;
+
+      var white = Array(cellSize+1).join('██');
+      var black = Array(cellSize+1).join('  ');
+
+      var ascii = '';
+      var line = '';
+      for (y = 0; y < size; y += 1) {
+        r = Math.floor( (y - min) / cellSize);
+        line = '';
+        for (x = 0; x < size; x += 1) {
+          p = 1;
+
+          if (min <= x && x < max && min <= y && y < max && _this.isDark(r, Math.floor((x - min) / cellSize))) {
+            p = 0;
+          }
+
+          // Output 2 characters per pixel, to create full square. 1 character per pixels gives only half width of square.
+          line += p ? white : black;
+        }
+
+        for (r = 0; r < cellSize; r += 1) {
+          ascii += line + '\n';
+        }
+      }
+
+      return ascii.substring(0, ascii.length-1);
+    };
+
+    _this.renderTo2dContext = function(context, cellSize) {
+      cellSize = cellSize || 2;
+      var length = _this.getModuleCount();
+      for (var row = 0; row < length; row++) {
+        for (var col = 0; col < length; col++) {
+          context.fillStyle = _this.isDark(row, col) ? 'black' : 'white';
+          context.fillRect(row * cellSize, col * cellSize, cellSize, cellSize);
+        }
+      }
+    }
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // qrcode.stringToBytes
+  //---------------------------------------------------------------------
+
+  qrcode.stringToBytesFuncs = {
+    'default' : function(s) {
+      var bytes = [];
+      for (var i = 0; i < s.length; i += 1) {
+        var c = s.charCodeAt(i);
+        bytes.push(c & 0xff);
+      }
+      return bytes;
+    }
+  };
+
+  qrcode.stringToBytes = qrcode.stringToBytesFuncs['default'];
+
+  //---------------------------------------------------------------------
+  // qrcode.createStringToBytes
+  //---------------------------------------------------------------------
+
+  /**
+   * @param unicodeData base64 string of byte array.
+   * [16bit Unicode],[16bit Bytes], ...
+   * @param numChars
+   */
+  qrcode.createStringToBytes = function(unicodeData, numChars) {
+
+    // create conversion map.
+
+    var unicodeMap = function() {
+
+      var bin = base64DecodeInputStream(unicodeData);
+      var read = function() {
+        var b = bin.read();
+        if (b == -1) throw 'eof';
+        return b;
+      };
+
+      var count = 0;
+      var unicodeMap = {};
+      while (true) {
+        var b0 = bin.read();
+        if (b0 == -1) break;
+        var b1 = read();
+        var b2 = read();
+        var b3 = read();
+        var k = String.fromCharCode( (b0 << 8) | b1);
+        var v = (b2 << 8) | b3;
+        unicodeMap[k] = v;
+        count += 1;
+      }
+      if (count != numChars) {
+        throw count + ' != ' + numChars;
+      }
+
+      return unicodeMap;
+    }();
+
+    var unknownChar = '?'.charCodeAt(0);
+
+    return function(s) {
+      var bytes = [];
+      for (var i = 0; i < s.length; i += 1) {
+        var c = s.charCodeAt(i);
+        if (c < 128) {
+          bytes.push(c);
+        } else {
+          var b = unicodeMap[s.charAt(i)];
+          if (typeof b == 'number') {
+            if ( (b & 0xff) == b) {
+              // 1byte
+              bytes.push(b);
+            } else {
+              // 2bytes
+              bytes.push(b >>> 8);
+              bytes.push(b & 0xff);
+            }
+          } else {
+            bytes.push(unknownChar);
+          }
+        }
+      }
+      return bytes;
+    };
+  };
+
+  //---------------------------------------------------------------------
+  // QRMode
+  //---------------------------------------------------------------------
+
+  var QRMode = {
+    MODE_NUMBER :    1 << 0,
+    MODE_ALPHA_NUM : 1 << 1,
+    MODE_8BIT_BYTE : 1 << 2,
+    MODE_KANJI :     1 << 3
+  };
+
+  //---------------------------------------------------------------------
+  // QRErrorCorrectionLevel
+  //---------------------------------------------------------------------
+
+  var QRErrorCorrectionLevel = {
+    L : 1,
+    M : 0,
+    Q : 3,
+    H : 2
+  };
+
+  //---------------------------------------------------------------------
+  // QRMaskPattern
+  //---------------------------------------------------------------------
+
+  var QRMaskPattern = {
+    PATTERN000 : 0,
+    PATTERN001 : 1,
+    PATTERN010 : 2,
+    PATTERN011 : 3,
+    PATTERN100 : 4,
+    PATTERN101 : 5,
+    PATTERN110 : 6,
+    PATTERN111 : 7
+  };
+
+  //---------------------------------------------------------------------
+  // QRUtil
+  //---------------------------------------------------------------------
+
+  var QRUtil = function() {
+
+    var PATTERN_POSITION_TABLE = [
+      [],
+      [6, 18],
+      [6, 22],
+      [6, 26],
+      [6, 30],
+      [6, 34],
+      [6, 22, 38],
+      [6, 24, 42],
+      [6, 26, 46],
+      [6, 28, 50],
+      [6, 30, 54],
+      [6, 32, 58],
+      [6, 34, 62],
+      [6, 26, 46, 66],
+      [6, 26, 48, 70],
+      [6, 26, 50, 74],
+      [6, 30, 54, 78],
+      [6, 30, 56, 82],
+      [6, 30, 58, 86],
+      [6, 34, 62, 90],
+      [6, 28, 50, 72, 94],
+      [6, 26, 50, 74, 98],
+      [6, 30, 54, 78, 102],
+      [6, 28, 54, 80, 106],
+      [6, 32, 58, 84, 110],
+      [6, 30, 58, 86, 114],
+      [6, 34, 62, 90, 118],
+      [6, 26, 50, 74, 98, 122],
+      [6, 30, 54, 78, 102, 126],
+      [6, 26, 52, 78, 104, 130],
+      [6, 30, 56, 82, 108, 134],
+      [6, 34, 60, 86, 112, 138],
+      [6, 30, 58, 86, 114, 142],
+      [6, 34, 62, 90, 118, 146],
+      [6, 30, 54, 78, 102, 126, 150],
+      [6, 24, 50, 76, 102, 128, 154],
+      [6, 28, 54, 80, 106, 132, 158],
+      [6, 32, 58, 84, 110, 136, 162],
+      [6, 26, 54, 82, 110, 138, 166],
+      [6, 30, 58, 86, 114, 142, 170]
+    ];
+    var G15 = (1 << 10) | (1 << 8) | (1 << 5) | (1 << 4) | (1 << 2) | (1 << 1) | (1 << 0);
+    var G18 = (1 << 12) | (1 << 11) | (1 << 10) | (1 << 9) | (1 << 8) | (1 << 5) | (1 << 2) | (1 << 0);
+    var G15_MASK = (1 << 14) | (1 << 12) | (1 << 10) | (1 << 4) | (1 << 1);
+
+    var _this = {};
+
+    var getBCHDigit = function(data) {
+      var digit = 0;
+      while (data != 0) {
+        digit += 1;
+        data >>>= 1;
+      }
+      return digit;
+    };
+
+    _this.getBCHTypeInfo = function(data) {
+      var d = data << 10;
+      while (getBCHDigit(d) - getBCHDigit(G15) >= 0) {
+        d ^= (G15 << (getBCHDigit(d) - getBCHDigit(G15) ) );
+      }
+      return ( (data << 10) | d) ^ G15_MASK;
+    };
+
+    _this.getBCHTypeNumber = function(data) {
+      var d = data << 12;
+      while (getBCHDigit(d) - getBCHDigit(G18) >= 0) {
+        d ^= (G18 << (getBCHDigit(d) - getBCHDigit(G18) ) );
+      }
+      return (data << 12) | d;
+    };
+
+    _this.getPatternPosition = function(typeNumber) {
+      return PATTERN_POSITION_TABLE[typeNumber - 1];
+    };
+
+    _this.getMaskFunction = function(maskPattern) {
+
+      switch (maskPattern) {
+
+      case QRMaskPattern.PATTERN000 :
+        return function(i, j) { return (i + j) % 2 == 0; };
+      case QRMaskPattern.PATTERN001 :
+        return function(i, j) { return i % 2 == 0; };
+      case QRMaskPattern.PATTERN010 :
+        return function(i, j) { return j % 3 == 0; };
+      case QRMaskPattern.PATTERN011 :
+        return function(i, j) { return (i + j) % 3 == 0; };
+      case QRMaskPattern.PATTERN100 :
+        return function(i, j) { return (Math.floor(i / 2) + Math.floor(j / 3) ) % 2 == 0; };
+      case QRMaskPattern.PATTERN101 :
+        return function(i, j) { return (i * j) % 2 + (i * j) % 3 == 0; };
+      case QRMaskPattern.PATTERN110 :
+        return function(i, j) { return ( (i * j) % 2 + (i * j) % 3) % 2 == 0; };
+      case QRMaskPattern.PATTERN111 :
+        return function(i, j) { return ( (i * j) % 3 + (i + j) % 2) % 2 == 0; };
+
+      default :
+        throw 'bad maskPattern:' + maskPattern;
+      }
+    };
+
+    _this.getErrorCorrectPolynomial = function(errorCorrectLength) {
+      var a = qrPolynomial([1], 0);
+      for (var i = 0; i < errorCorrectLength; i += 1) {
+        a = a.multiply(qrPolynomial([1, QRMath.gexp(i)], 0) );
+      }
+      return a;
+    };
+
+    _this.getLengthInBits = function(mode, type) {
+
+      if (1 <= type && type < 10) {
+
+        // 1 - 9
+
+        switch(mode) {
+        case QRMode.MODE_NUMBER    : return 10;
+        case QRMode.MODE_ALPHA_NUM : return 9;
+        case QRMode.MODE_8BIT_BYTE : return 8;
+        case QRMode.MODE_KANJI     : return 8;
+        default :
+          throw 'mode:' + mode;
+        }
+
+      } else if (type < 27) {
+
+        // 10 - 26
+
+        switch(mode) {
+        case QRMode.MODE_NUMBER    : return 12;
+        case QRMode.MODE_ALPHA_NUM : return 11;
+        case QRMode.MODE_8BIT_BYTE : return 16;
+        case QRMode.MODE_KANJI     : return 10;
+        default :
+          throw 'mode:' + mode;
+        }
+
+      } else if (type < 41) {
+
+        // 27 - 40
+
+        switch(mode) {
+        case QRMode.MODE_NUMBER    : return 14;
+        case QRMode.MODE_ALPHA_NUM : return 13;
+        case QRMode.MODE_8BIT_BYTE : return 16;
+        case QRMode.MODE_KANJI     : return 12;
+        default :
+          throw 'mode:' + mode;
+        }
+
+      } else {
+        throw 'type:' + type;
+      }
+    };
+
+    _this.getLostPoint = function(qrcode) {
+
+      var moduleCount = qrcode.getModuleCount();
+
+      var lostPoint = 0;
+
+      // LEVEL1
+
+      for (var row = 0; row < moduleCount; row += 1) {
+        for (var col = 0; col < moduleCount; col += 1) {
+
+          var sameCount = 0;
+          var dark = qrcode.isDark(row, col);
+
+          for (var r = -1; r <= 1; r += 1) {
+
+            if (row + r < 0 || moduleCount <= row + r) {
+              continue;
+            }
+
+            for (var c = -1; c <= 1; c += 1) {
+
+              if (col + c < 0 || moduleCount <= col + c) {
+                continue;
+              }
+
+              if (r == 0 && c == 0) {
+                continue;
+              }
+
+              if (dark == qrcode.isDark(row + r, col + c) ) {
+                sameCount += 1;
+              }
+            }
+          }
+
+          if (sameCount > 5) {
+            lostPoint += (3 + sameCount - 5);
+          }
+        }
+      };
+
+      // LEVEL2
+
+      for (var row = 0; row < moduleCount - 1; row += 1) {
+        for (var col = 0; col < moduleCount - 1; col += 1) {
+          var count = 0;
+          if (qrcode.isDark(row, col) ) count += 1;
+          if (qrcode.isDark(row + 1, col) ) count += 1;
+          if (qrcode.isDark(row, col + 1) ) count += 1;
+          if (qrcode.isDark(row + 1, col + 1) ) count += 1;
+          if (count == 0 || count == 4) {
+            lostPoint += 3;
+          }
+        }
+      }
+
+      // LEVEL3
+
+      for (var row = 0; row < moduleCount; row += 1) {
+        for (var col = 0; col < moduleCount - 6; col += 1) {
+          if (qrcode.isDark(row, col)
+              && !qrcode.isDark(row, col + 1)
+              &&  qrcode.isDark(row, col + 2)
+              &&  qrcode.isDark(row, col + 3)
+              &&  qrcode.isDark(row, col + 4)
+              && !qrcode.isDark(row, col + 5)
+              &&  qrcode.isDark(row, col + 6) ) {
+            lostPoint += 40;
+          }
+        }
+      }
+
+      for (var col = 0; col < moduleCount; col += 1) {
+        for (var row = 0; row < moduleCount - 6; row += 1) {
+          if (qrcode.isDark(row, col)
+              && !qrcode.isDark(row + 1, col)
+              &&  qrcode.isDark(row + 2, col)
+              &&  qrcode.isDark(row + 3, col)
+              &&  qrcode.isDark(row + 4, col)
+              && !qrcode.isDark(row + 5, col)
+              &&  qrcode.isDark(row + 6, col) ) {
+            lostPoint += 40;
+          }
+        }
+      }
+
+      // LEVEL4
+
+      var darkCount = 0;
+
+      for (var col = 0; col < moduleCount; col += 1) {
+        for (var row = 0; row < moduleCount; row += 1) {
+          if (qrcode.isDark(row, col) ) {
+            darkCount += 1;
+          }
+        }
+      }
+
+      var ratio = Math.abs(100 * darkCount / moduleCount / moduleCount - 50) / 5;
+      lostPoint += ratio * 10;
+
+      return lostPoint;
+    };
+
+    return _this;
+  }();
+
+  //---------------------------------------------------------------------
+  // QRMath
+  //---------------------------------------------------------------------
+
+  var QRMath = function() {
+
+    var EXP_TABLE = new Array(256);
+    var LOG_TABLE = new Array(256);
+
+    // initialize tables
+    for (var i = 0; i < 8; i += 1) {
+      EXP_TABLE[i] = 1 << i;
+    }
+    for (var i = 8; i < 256; i += 1) {
+      EXP_TABLE[i] = EXP_TABLE[i - 4]
+        ^ EXP_TABLE[i - 5]
+        ^ EXP_TABLE[i - 6]
+        ^ EXP_TABLE[i - 8];
+    }
+    for (var i = 0; i < 255; i += 1) {
+      LOG_TABLE[EXP_TABLE[i] ] = i;
+    }
+
+    var _this = {};
+
+    _this.glog = function(n) {
+
+      if (n < 1) {
+        throw 'glog(' + n + ')';
+      }
+
+      return LOG_TABLE[n];
+    };
+
+    _this.gexp = function(n) {
+
+      while (n < 0) {
+        n += 255;
+      }
+
+      while (n >= 256) {
+        n -= 255;
+      }
+
+      return EXP_TABLE[n];
+    };
+
+    return _this;
+  }();
+
+  //---------------------------------------------------------------------
+  // qrPolynomial
+  //---------------------------------------------------------------------
+
+  function qrPolynomial(num, shift) {
+
+    if (typeof num.length == 'undefined') {
+      throw num.length + '/' + shift;
+    }
+
+    var _num = function() {
+      var offset = 0;
+      while (offset < num.length && num[offset] == 0) {
+        offset += 1;
+      }
+      var _num = new Array(num.length - offset + shift);
+      for (var i = 0; i < num.length - offset; i += 1) {
+        _num[i] = num[i + offset];
+      }
+      return _num;
+    }();
+
+    var _this = {};
+
+    _this.getAt = function(index) {
+      return _num[index];
+    };
+
+    _this.getLength = function() {
+      return _num.length;
+    };
+
+    _this.multiply = function(e) {
+
+      var num = new Array(_this.getLength() + e.getLength() - 1);
+
+      for (var i = 0; i < _this.getLength(); i += 1) {
+        for (var j = 0; j < e.getLength(); j += 1) {
+          num[i + j] ^= QRMath.gexp(QRMath.glog(_this.getAt(i) ) + QRMath.glog(e.getAt(j) ) );
+        }
+      }
+
+      return qrPolynomial(num, 0);
+    };
+
+    _this.mod = function(e) {
+
+      if (_this.getLength() - e.getLength() < 0) {
+        return _this;
+      }
+
+      var ratio = QRMath.glog(_this.getAt(0) ) - QRMath.glog(e.getAt(0) );
+
+      var num = new Array(_this.getLength() );
+      for (var i = 0; i < _this.getLength(); i += 1) {
+        num[i] = _this.getAt(i);
+      }
+
+      for (var i = 0; i < e.getLength(); i += 1) {
+        num[i] ^= QRMath.gexp(QRMath.glog(e.getAt(i) ) + ratio);
+      }
+
+      // recursive call
+      return qrPolynomial(num, 0).mod(e);
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // QRRSBlock
+  //---------------------------------------------------------------------
+
+  var QRRSBlock = function() {
+
+    var RS_BLOCK_TABLE = [
+
+      // L
+      // M
+      // Q
+      // H
+
+      // 1
+      [1, 26, 19],
+      [1, 26, 16],
+      [1, 26, 13],
+      [1, 26, 9],
+
+      // 2
+      [1, 44, 34],
+      [1, 44, 28],
+      [1, 44, 22],
+      [1, 44, 16],
+
+      // 3
+      [1, 70, 55],
+      [1, 70, 44],
+      [2, 35, 17],
+      [2, 35, 13],
+
+      // 4
+      [1, 100, 80],
+      [2, 50, 32],
+      [2, 50, 24],
+      [4, 25, 9],
+
+      // 5
+      [1, 134, 108],
+      [2, 67, 43],
+      [2, 33, 15, 2, 34, 16],
+      [2, 33, 11, 2, 34, 12],
+
+      // 6
+      [2, 86, 68],
+      [4, 43, 27],
+      [4, 43, 19],
+      [4, 43, 15],
+
+      // 7
+      [2, 98, 78],
+      [4, 49, 31],
+      [2, 32, 14, 4, 33, 15],
+      [4, 39, 13, 1, 40, 14],
+
+      // 8
+      [2, 121, 97],
+      [2, 60, 38, 2, 61, 39],
+      [4, 40, 18, 2, 41, 19],
+      [4, 40, 14, 2, 41, 15],
+
+      // 9
+      [2, 146, 116],
+      [3, 58, 36, 2, 59, 37],
+      [4, 36, 16, 4, 37, 17],
+      [4, 36, 12, 4, 37, 13],
+
+      // 10
+      [2, 86, 68, 2, 87, 69],
+      [4, 69, 43, 1, 70, 44],
+      [6, 43, 19, 2, 44, 20],
+      [6, 43, 15, 2, 44, 16],
+
+      // 11
+      [4, 101, 81],
+      [1, 80, 50, 4, 81, 51],
+      [4, 50, 22, 4, 51, 23],
+      [3, 36, 12, 8, 37, 13],
+
+      // 12
+      [2, 116, 92, 2, 117, 93],
+      [6, 58, 36, 2, 59, 37],
+      [4, 46, 20, 6, 47, 21],
+      [7, 42, 14, 4, 43, 15],
+
+      // 13
+      [4, 133, 107],
+      [8, 59, 37, 1, 60, 38],
+      [8, 44, 20, 4, 45, 21],
+      [12, 33, 11, 4, 34, 12],
+
+      // 14
+      [3, 145, 115, 1, 146, 116],
+      [4, 64, 40, 5, 65, 41],
+      [11, 36, 16, 5, 37, 17],
+      [11, 36, 12, 5, 37, 13],
+
+      // 15
+      [5, 109, 87, 1, 110, 88],
+      [5, 65, 41, 5, 66, 42],
+      [5, 54, 24, 7, 55, 25],
+      [11, 36, 12, 7, 37, 13],
+
+      // 16
+      [5, 122, 98, 1, 123, 99],
+      [7, 73, 45, 3, 74, 46],
+      [15, 43, 19, 2, 44, 20],
+      [3, 45, 15, 13, 46, 16],
+
+      // 17
+      [1, 135, 107, 5, 136, 108],
+      [10, 74, 46, 1, 75, 47],
+      [1, 50, 22, 15, 51, 23],
+      [2, 42, 14, 17, 43, 15],
+
+      // 18
+      [5, 150, 120, 1, 151, 121],
+      [9, 69, 43, 4, 70, 44],
+      [17, 50, 22, 1, 51, 23],
+      [2, 42, 14, 19, 43, 15],
+
+      // 19
+      [3, 141, 113, 4, 142, 114],
+      [3, 70, 44, 11, 71, 45],
+      [17, 47, 21, 4, 48, 22],
+      [9, 39, 13, 16, 40, 14],
+
+      // 20
+      [3, 135, 107, 5, 136, 108],
+      [3, 67, 41, 13, 68, 42],
+      [15, 54, 24, 5, 55, 25],
+      [15, 43, 15, 10, 44, 16],
+
+      // 21
+      [4, 144, 116, 4, 145, 117],
+      [17, 68, 42],
+      [17, 50, 22, 6, 51, 23],
+      [19, 46, 16, 6, 47, 17],
+
+      // 22
+      [2, 139, 111, 7, 140, 112],
+      [17, 74, 46],
+      [7, 54, 24, 16, 55, 25],
+      [34, 37, 13],
+
+      // 23
+      [4, 151, 121, 5, 152, 122],
+      [4, 75, 47, 14, 76, 48],
+      [11, 54, 24, 14, 55, 25],
+      [16, 45, 15, 14, 46, 16],
+
+      // 24
+      [6, 147, 117, 4, 148, 118],
+      [6, 73, 45, 14, 74, 46],
+      [11, 54, 24, 16, 55, 25],
+      [30, 46, 16, 2, 47, 17],
+
+      // 25
+      [8, 132, 106, 4, 133, 107],
+      [8, 75, 47, 13, 76, 48],
+      [7, 54, 24, 22, 55, 25],
+      [22, 45, 15, 13, 46, 16],
+
+      // 26
+      [10, 142, 114, 2, 143, 115],
+      [19, 74, 46, 4, 75, 47],
+      [28, 50, 22, 6, 51, 23],
+      [33, 46, 16, 4, 47, 17],
+
+      // 27
+      [8, 152, 122, 4, 153, 123],
+      [22, 73, 45, 3, 74, 46],
+      [8, 53, 23, 26, 54, 24],
+      [12, 45, 15, 28, 46, 16],
+
+      // 28
+      [3, 147, 117, 10, 148, 118],
+      [3, 73, 45, 23, 74, 46],
+      [4, 54, 24, 31, 55, 25],
+      [11, 45, 15, 31, 46, 16],
+
+      // 29
+      [7, 146, 116, 7, 147, 117],
+      [21, 73, 45, 7, 74, 46],
+      [1, 53, 23, 37, 54, 24],
+      [19, 45, 15, 26, 46, 16],
+
+      // 30
+      [5, 145, 115, 10, 146, 116],
+      [19, 75, 47, 10, 76, 48],
+      [15, 54, 24, 25, 55, 25],
+      [23, 45, 15, 25, 46, 16],
+
+      // 31
+      [13, 145, 115, 3, 146, 116],
+      [2, 74, 46, 29, 75, 47],
+      [42, 54, 24, 1, 55, 25],
+      [23, 45, 15, 28, 46, 16],
+
+      // 32
+      [17, 145, 115],
+      [10, 74, 46, 23, 75, 47],
+      [10, 54, 24, 35, 55, 25],
+      [19, 45, 15, 35, 46, 16],
+
+      // 33
+      [17, 145, 115, 1, 146, 116],
+      [14, 74, 46, 21, 75, 47],
+      [29, 54, 24, 19, 55, 25],
+      [11, 45, 15, 46, 46, 16],
+
+      // 34
+      [13, 145, 115, 6, 146, 116],
+      [14, 74, 46, 23, 75, 47],
+      [44, 54, 24, 7, 55, 25],
+      [59, 46, 16, 1, 47, 17],
+
+      // 35
+      [12, 151, 121, 7, 152, 122],
+      [12, 75, 47, 26, 76, 48],
+      [39, 54, 24, 14, 55, 25],
+      [22, 45, 15, 41, 46, 16],
+
+      // 36
+      [6, 151, 121, 14, 152, 122],
+      [6, 75, 47, 34, 76, 48],
+      [46, 54, 24, 10, 55, 25],
+      [2, 45, 15, 64, 46, 16],
+
+      // 37
+      [17, 152, 122, 4, 153, 123],
+      [29, 74, 46, 14, 75, 47],
+      [49, 54, 24, 10, 55, 25],
+      [24, 45, 15, 46, 46, 16],
+
+      // 38
+      [4, 152, 122, 18, 153, 123],
+      [13, 74, 46, 32, 75, 47],
+      [48, 54, 24, 14, 55, 25],
+      [42, 45, 15, 32, 46, 16],
+
+      // 39
+      [20, 147, 117, 4, 148, 118],
+      [40, 75, 47, 7, 76, 48],
+      [43, 54, 24, 22, 55, 25],
+      [10, 45, 15, 67, 46, 16],
+
+      // 40
+      [19, 148, 118, 6, 149, 119],
+      [18, 75, 47, 31, 76, 48],
+      [34, 54, 24, 34, 55, 25],
+      [20, 45, 15, 61, 46, 16]
+    ];
+
+    var qrRSBlock = function(totalCount, dataCount) {
+      var _this = {};
+      _this.totalCount = totalCount;
+      _this.dataCount = dataCount;
+      return _this;
+    };
+
+    var _this = {};
+
+    var getRsBlockTable = function(typeNumber, errorCorrectionLevel) {
+
+      switch(errorCorrectionLevel) {
+      case QRErrorCorrectionLevel.L :
+        return RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 0];
+      case QRErrorCorrectionLevel.M :
+        return RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 1];
+      case QRErrorCorrectionLevel.Q :
+        return RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 2];
+      case QRErrorCorrectionLevel.H :
+        return RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 3];
+      default :
+        return undefined;
+      }
+    };
+
+    _this.getRSBlocks = function(typeNumber, errorCorrectionLevel) {
+
+      var rsBlock = getRsBlockTable(typeNumber, errorCorrectionLevel);
+
+      if (typeof rsBlock == 'undefined') {
+        throw 'bad rs block @ typeNumber:' + typeNumber +
+            '/errorCorrectionLevel:' + errorCorrectionLevel;
+      }
+
+      var length = rsBlock.length / 3;
+
+      var list = [];
+
+      for (var i = 0; i < length; i += 1) {
+
+        var count = rsBlock[i * 3 + 0];
+        var totalCount = rsBlock[i * 3 + 1];
+        var dataCount = rsBlock[i * 3 + 2];
+
+        for (var j = 0; j < count; j += 1) {
+          list.push(qrRSBlock(totalCount, dataCount) );
+        }
+      }
+
+      return list;
+    };
+
+    return _this;
+  }();
+
+  //---------------------------------------------------------------------
+  // qrBitBuffer
+  //---------------------------------------------------------------------
+
+  var qrBitBuffer = function() {
+
+    var _buffer = [];
+    var _length = 0;
+
+    var _this = {};
+
+    _this.getBuffer = function() {
+      return _buffer;
+    };
+
+    _this.getAt = function(index) {
+      var bufIndex = Math.floor(index / 8);
+      return ( (_buffer[bufIndex] >>> (7 - index % 8) ) & 1) == 1;
+    };
+
+    _this.put = function(num, length) {
+      for (var i = 0; i < length; i += 1) {
+        _this.putBit( ( (num >>> (length - i - 1) ) & 1) == 1);
+      }
+    };
+
+    _this.getLengthInBits = function() {
+      return _length;
+    };
+
+    _this.putBit = function(bit) {
+
+      var bufIndex = Math.floor(_length / 8);
+      if (_buffer.length <= bufIndex) {
+        _buffer.push(0);
+      }
+
+      if (bit) {
+        _buffer[bufIndex] |= (0x80 >>> (_length % 8) );
+      }
+
+      _length += 1;
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // qrNumber
+  //---------------------------------------------------------------------
+
+  var qrNumber = function(data) {
+
+    var _mode = QRMode.MODE_NUMBER;
+    var _data = data;
+
+    var _this = {};
+
+    _this.getMode = function() {
+      return _mode;
+    };
+
+    _this.getLength = function(buffer) {
+      return _data.length;
+    };
+
+    _this.write = function(buffer) {
+
+      var data = _data;
+
+      var i = 0;
+
+      while (i + 2 < data.length) {
+        buffer.put(strToNum(data.substring(i, i + 3) ), 10);
+        i += 3;
+      }
+
+      if (i < data.length) {
+        if (data.length - i == 1) {
+          buffer.put(strToNum(data.substring(i, i + 1) ), 4);
+        } else if (data.length - i == 2) {
+          buffer.put(strToNum(data.substring(i, i + 2) ), 7);
+        }
+      }
+    };
+
+    var strToNum = function(s) {
+      var num = 0;
+      for (var i = 0; i < s.length; i += 1) {
+        num = num * 10 + chatToNum(s.charAt(i) );
+      }
+      return num;
+    };
+
+    var chatToNum = function(c) {
+      if ('0' <= c && c <= '9') {
+        return c.charCodeAt(0) - '0'.charCodeAt(0);
+      }
+      throw 'illegal char :' + c;
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // qrAlphaNum
+  //---------------------------------------------------------------------
+
+  var qrAlphaNum = function(data) {
+
+    var _mode = QRMode.MODE_ALPHA_NUM;
+    var _data = data;
+
+    var _this = {};
+
+    _this.getMode = function() {
+      return _mode;
+    };
+
+    _this.getLength = function(buffer) {
+      return _data.length;
+    };
+
+    _this.write = function(buffer) {
+
+      var s = _data;
+
+      var i = 0;
+
+      while (i + 1 < s.length) {
+        buffer.put(
+          getCode(s.charAt(i) ) * 45 +
+          getCode(s.charAt(i + 1) ), 11);
+        i += 2;
+      }
+
+      if (i < s.length) {
+        buffer.put(getCode(s.charAt(i) ), 6);
+      }
+    };
+
+    var getCode = function(c) {
+
+      if ('0' <= c && c <= '9') {
+        return c.charCodeAt(0) - '0'.charCodeAt(0);
+      } else if ('A' <= c && c <= 'Z') {
+        return c.charCodeAt(0) - 'A'.charCodeAt(0) + 10;
+      } else {
+        switch (c) {
+        case ' ' : return 36;
+        case '$' : return 37;
+        case '%' : return 38;
+        case '*' : return 39;
+        case '+' : return 40;
+        case '-' : return 41;
+        case '.' : return 42;
+        case '/' : return 43;
+        case ':' : return 44;
+        default :
+          throw 'illegal char :' + c;
+        }
+      }
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // qr8BitByte
+  //---------------------------------------------------------------------
+
+  var qr8BitByte = function(data) {
+
+    var _mode = QRMode.MODE_8BIT_BYTE;
+    var _data = data;
+    var _bytes = qrcode.stringToBytes(data);
+
+    var _this = {};
+
+    _this.getMode = function() {
+      return _mode;
+    };
+
+    _this.getLength = function(buffer) {
+      return _bytes.length;
+    };
+
+    _this.write = function(buffer) {
+      for (var i = 0; i < _bytes.length; i += 1) {
+        buffer.put(_bytes[i], 8);
+      }
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // qrKanji
+  //---------------------------------------------------------------------
+
+  var qrKanji = function(data) {
+
+    var _mode = QRMode.MODE_KANJI;
+    var _data = data;
+
+    var stringToBytes = qrcode.stringToBytesFuncs['SJIS'];
+    if (!stringToBytes) {
+      throw 'sjis not supported.';
+    }
+    !function(c, code) {
+      // self test for sjis support.
+      var test = stringToBytes(c);
+      if (test.length != 2 || ( (test[0] << 8) | test[1]) != code) {
+        throw 'sjis not supported.';
+      }
+    }('\u53cb', 0x9746);
+
+    var _bytes = stringToBytes(data);
+
+    var _this = {};
+
+    _this.getMode = function() {
+      return _mode;
+    };
+
+    _this.getLength = function(buffer) {
+      return ~~(_bytes.length / 2);
+    };
+
+    _this.write = function(buffer) {
+
+      var data = _bytes;
+
+      var i = 0;
+
+      while (i + 1 < data.length) {
+
+        var c = ( (0xff & data[i]) << 8) | (0xff & data[i + 1]);
+
+        if (0x8140 <= c && c <= 0x9FFC) {
+          c -= 0x8140;
+        } else if (0xE040 <= c && c <= 0xEBBF) {
+          c -= 0xC140;
+        } else {
+          throw 'illegal char at ' + (i + 1) + '/' + c;
+        }
+
+        c = ( (c >>> 8) & 0xff) * 0xC0 + (c & 0xff);
+
+        buffer.put(c, 13);
+
+        i += 2;
+      }
+
+      if (i < data.length) {
+        throw 'illegal char at ' + (i + 1);
+      }
+    };
+
+    return _this;
+  };
+
+  //=====================================================================
+  // GIF Support etc.
+  //
+
+  //---------------------------------------------------------------------
+  // byteArrayOutputStream
+  //---------------------------------------------------------------------
+
+  var byteArrayOutputStream = function() {
+
+    var _bytes = [];
+
+    var _this = {};
+
+    _this.writeByte = function(b) {
+      _bytes.push(b & 0xff);
+    };
+
+    _this.writeShort = function(i) {
+      _this.writeByte(i);
+      _this.writeByte(i >>> 8);
+    };
+
+    _this.writeBytes = function(b, off, len) {
+      off = off || 0;
+      len = len || b.length;
+      for (var i = 0; i < len; i += 1) {
+        _this.writeByte(b[i + off]);
+      }
+    };
+
+    _this.writeString = function(s) {
+      for (var i = 0; i < s.length; i += 1) {
+        _this.writeByte(s.charCodeAt(i) );
+      }
+    };
+
+    _this.toByteArray = function() {
+      return _bytes;
+    };
+
+    _this.toString = function() {
+      var s = '';
+      s += '[';
+      for (var i = 0; i < _bytes.length; i += 1) {
+        if (i > 0) {
+          s += ',';
+        }
+        s += _bytes[i];
+      }
+      s += ']';
+      return s;
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // base64EncodeOutputStream
+  //---------------------------------------------------------------------
+
+  var base64EncodeOutputStream = function() {
+
+    var _buffer = 0;
+    var _buflen = 0;
+    var _length = 0;
+    var _base64 = '';
+
+    var _this = {};
+
+    var writeEncoded = function(b) {
+      _base64 += String.fromCharCode(encode(b & 0x3f) );
+    };
+
+    var encode = function(n) {
+      if (n < 0) {
+        // error.
+      } else if (n < 26) {
+        return 0x41 + n;
+      } else if (n < 52) {
+        return 0x61 + (n - 26);
+      } else if (n < 62) {
+        return 0x30 + (n - 52);
+      } else if (n == 62) {
+        return 0x2b;
+      } else if (n == 63) {
+        return 0x2f;
+      }
+      throw 'n:' + n;
+    };
+
+    _this.writeByte = function(n) {
+
+      _buffer = (_buffer << 8) | (n & 0xff);
+      _buflen += 8;
+      _length += 1;
+
+      while (_buflen >= 6) {
+        writeEncoded(_buffer >>> (_buflen - 6) );
+        _buflen -= 6;
+      }
+    };
+
+    _this.flush = function() {
+
+      if (_buflen > 0) {
+        writeEncoded(_buffer << (6 - _buflen) );
+        _buffer = 0;
+        _buflen = 0;
+      }
+
+      if (_length % 3 != 0) {
+        // padding
+        var padlen = 3 - _length % 3;
+        for (var i = 0; i < padlen; i += 1) {
+          _base64 += '=';
+        }
+      }
+    };
+
+    _this.toString = function() {
+      return _base64;
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // base64DecodeInputStream
+  //---------------------------------------------------------------------
+
+  var base64DecodeInputStream = function(str) {
+
+    var _str = str;
+    var _pos = 0;
+    var _buffer = 0;
+    var _buflen = 0;
+
+    var _this = {};
+
+    _this.read = function() {
+
+      while (_buflen < 8) {
+
+        if (_pos >= _str.length) {
+          if (_buflen == 0) {
+            return -1;
+          }
+          throw 'unexpected end of file./' + _buflen;
+        }
+
+        var c = _str.charAt(_pos);
+        _pos += 1;
+
+        if (c == '=') {
+          _buflen = 0;
+          return -1;
+        } else if (c.match(/^\s$/) ) {
+          // ignore if whitespace.
+          continue;
+        }
+
+        _buffer = (_buffer << 6) | decode(c.charCodeAt(0) );
+        _buflen += 6;
+      }
+
+      var n = (_buffer >>> (_buflen - 8) ) & 0xff;
+      _buflen -= 8;
+      return n;
+    };
+
+    var decode = function(c) {
+      if (0x41 <= c && c <= 0x5a) {
+        return c - 0x41;
+      } else if (0x61 <= c && c <= 0x7a) {
+        return c - 0x61 + 26;
+      } else if (0x30 <= c && c <= 0x39) {
+        return c - 0x30 + 52;
+      } else if (c == 0x2b) {
+        return 62;
+      } else if (c == 0x2f) {
+        return 63;
+      } else {
+        throw 'c:' + c;
+      }
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // gifImage (B/W)
+  //---------------------------------------------------------------------
+
+  var gifImage = function(width, height) {
+
+    var _width = width;
+    var _height = height;
+    var _data = new Array(width * height);
+
+    var _this = {};
+
+    _this.setPixel = function(x, y, pixel) {
+      _data[y * _width + x] = pixel;
+    };
+
+    _this.write = function(out) {
+
+      //---------------------------------
+      // GIF Signature
+
+      out.writeString('GIF87a');
+
+      //---------------------------------
+      // Screen Descriptor
+
+      out.writeShort(_width);
+      out.writeShort(_height);
+
+      out.writeByte(0x80); // 2bit
+      out.writeByte(0);
+      out.writeByte(0);
+
+      //---------------------------------
+      // Global Color Map
+
+      // black
+      out.writeByte(0x00);
+      out.writeByte(0x00);
+      out.writeByte(0x00);
+
+      // white
+      out.writeByte(0xff);
+      out.writeByte(0xff);
+      out.writeByte(0xff);
+
+      //---------------------------------
+      // Image Descriptor
+
+      out.writeString(',');
+      out.writeShort(0);
+      out.writeShort(0);
+      out.writeShort(_width);
+      out.writeShort(_height);
+      out.writeByte(0);
+
+      //---------------------------------
+      // Local Color Map
+
+      //---------------------------------
+      // Raster Data
+
+      var lzwMinCodeSize = 2;
+      var raster = getLZWRaster(lzwMinCodeSize);
+
+      out.writeByte(lzwMinCodeSize);
+
+      var offset = 0;
+
+      while (raster.length - offset > 255) {
+        out.writeByte(255);
+        out.writeBytes(raster, offset, 255);
+        offset += 255;
+      }
+
+      out.writeByte(raster.length - offset);
+      out.writeBytes(raster, offset, raster.length - offset);
+      out.writeByte(0x00);
+
+      //---------------------------------
+      // GIF Terminator
+      out.writeString(';');
+    };
+
+    var bitOutputStream = function(out) {
+
+      var _out = out;
+      var _bitLength = 0;
+      var _bitBuffer = 0;
+
+      var _this = {};
+
+      _this.write = function(data, length) {
+
+        if ( (data >>> length) != 0) {
+          throw 'length over';
+        }
+
+        while (_bitLength + length >= 8) {
+          _out.writeByte(0xff & ( (data << _bitLength) | _bitBuffer) );
+          length -= (8 - _bitLength);
+          data >>>= (8 - _bitLength);
+          _bitBuffer = 0;
+          _bitLength = 0;
+        }
+
+        _bitBuffer = (data << _bitLength) | _bitBuffer;
+        _bitLength = _bitLength + length;
+      };
+
+      _this.flush = function() {
+        if (_bitLength > 0) {
+          _out.writeByte(_bitBuffer);
+        }
+      };
+
+      return _this;
+    };
+
+    var getLZWRaster = function(lzwMinCodeSize) {
+
+      var clearCode = 1 << lzwMinCodeSize;
+      var endCode = (1 << lzwMinCodeSize) + 1;
+      var bitLength = lzwMinCodeSize + 1;
+
+      // Setup LZWTable
+      var table = lzwTable();
+
+      for (var i = 0; i < clearCode; i += 1) {
+        table.add(String.fromCharCode(i) );
+      }
+      table.add(String.fromCharCode(clearCode) );
+      table.add(String.fromCharCode(endCode) );
+
+      var byteOut = byteArrayOutputStream();
+      var bitOut = bitOutputStream(byteOut);
+
+      // clear code
+      bitOut.write(clearCode, bitLength);
+
+      var dataIndex = 0;
+
+      var s = String.fromCharCode(_data[dataIndex]);
+      dataIndex += 1;
+
+      while (dataIndex < _data.length) {
+
+        var c = String.fromCharCode(_data[dataIndex]);
+        dataIndex += 1;
+
+        if (table.contains(s + c) ) {
+
+          s = s + c;
+
+        } else {
+
+          bitOut.write(table.indexOf(s), bitLength);
+
+          if (table.size() < 0xfff) {
+
+            if (table.size() == (1 << bitLength) ) {
+              bitLength += 1;
+            }
+
+            table.add(s + c);
+          }
+
+          s = c;
+        }
+      }
+
+      bitOut.write(table.indexOf(s), bitLength);
+
+      // end code
+      bitOut.write(endCode, bitLength);
+
+      bitOut.flush();
+
+      return byteOut.toByteArray();
+    };
+
+    var lzwTable = function() {
+
+      var _map = {};
+      var _size = 0;
+
+      var _this = {};
+
+      _this.add = function(key) {
+        if (_this.contains(key) ) {
+          throw 'dup key:' + key;
+        }
+        _map[key] = _size;
+        _size += 1;
+      };
+
+      _this.size = function() {
+        return _size;
+      };
+
+      _this.indexOf = function(key) {
+        return _map[key];
+      };
+
+      _this.contains = function(key) {
+        return typeof _map[key] != 'undefined';
+      };
+
+      return _this;
+    };
+
+    return _this;
+  };
+
+  var createDataURL = function(width, height, getPixel) {
+    var gif = gifImage(width, height);
+    for (var y = 0; y < height; y += 1) {
+      for (var x = 0; x < width; x += 1) {
+        gif.setPixel(x, y, getPixel(x, y) );
+      }
+    }
+
+    var b = byteArrayOutputStream();
+    gif.write(b);
+
+    var base64 = base64EncodeOutputStream();
+    var bytes = b.toByteArray();
+    for (var i = 0; i < bytes.length; i += 1) {
+      base64.writeByte(bytes[i]);
+    }
+    base64.flush();
+
+    return 'data:image/gif;base64,' + base64;
+  };
+
+  //---------------------------------------------------------------------
+  // returns qrcode function.
+
+  return qrcode;
+}();
+
+// multibyte support
+!function() {
+
+  qrcode.stringToBytesFuncs['UTF-8'] = function(s) {
+    // http://stackoverflow.com/questions/18729405/how-to-convert-utf8-string-to-byte-array
+    function toUTF8Array(str) {
+      var utf8 = [];
+      for (var i=0; i < str.length; i++) {
+        var charcode = str.charCodeAt(i);
+        if (charcode < 0x80) utf8.push(charcode);
+        else if (charcode < 0x800) {
+          utf8.push(0xc0 | (charcode >> 6),
+              0x80 | (charcode & 0x3f));
+        }
+        else if (charcode < 0xd800 || charcode >= 0xe000) {
+          utf8.push(0xe0 | (charcode >> 12),
+              0x80 | ((charcode>>6) & 0x3f),
+              0x80 | (charcode & 0x3f));
+        }
+        // surrogate pair
+        else {
+          i++;
+          // UTF-16 encodes 0x10000-0x10FFFF by
+          // subtracting 0x10000 and splitting the
+          // 20 bits of 0x0-0xFFFFF into two halves
+          charcode = 0x10000 + (((charcode & 0x3ff)<<10)
+            | (str.charCodeAt(i) & 0x3ff));
+          utf8.push(0xf0 | (charcode >>18),
+              0x80 | ((charcode>>12) & 0x3f),
+              0x80 | ((charcode>>6) & 0x3f),
+              0x80 | (charcode & 0x3f));
+        }
+      }
+      return utf8;
+    }
+    return toUTF8Array(s);
+  };
+
+}();
+
+(function (factory) {
+  if (typeof define === 'function' && define.amd) {
+      define([], factory);
+  } else if (typeof exports === 'object') {
+      module.exports = factory();
+  }
+}(function () {
+    return qrcode;
+}));
+
+</script>
+<script>
+'use strict';
+var $=function(i){return document.getElementById(i)};
+var OLC=window.OpenLocationCode;
+var PP={fix:null,addr:'',addrAt:null,locality:'',shortCode:'',target:null,heading:null,headingSrc:'',dms:false,places:[],recents:[],watching:false,emoji:'📍',editing:null,lastDeleted:null,geoOk:true};
+var STORE='pinpoint.v1';
+var EMOJI=['📍','🚗','⛺','🏠','🚪','🎪','🅿️','🏖️','⛰️','🍽️','🎒','⭐'];
+var TINT=['#dbeafe','#dcfce7','#fef3c7','#fce7f3','#ede9fe','#cffafe','#fee2e2','#e0e7ff','#f1f5f9','#ffedd5','#d1fae5','#fef9c3'];
+
+/* ---------- Storage ---------- */
+function save(){
+  var d=JSON.stringify({places:PP.places,recents:PP.recents.slice(0,8),dms:PP.dms});
+  try{ if(window.myllmStorage){ myllmStorage.setItem(STORE,d); return; } }catch(e){}
+  try{ localStorage.setItem(STORE,d); }catch(e){}
+}
+function load(done){
+  function apply(v){ if(v){ try{ var d=JSON.parse(v);
+    if(Array.isArray(d.places))PP.places=d.places.filter(function(p){return p&&isFinite(p.lat)&&isFinite(p.lon)});
+    if(Array.isArray(d.recents))PP.recents=d.recents.filter(function(r){return r&&r.code});
+    PP.dms=!!d.dms; }catch(e){} } done(); }
+  try{ if(window.myllmStorage){ myllmStorage.getItem(STORE).then(apply,function(){apply(null)}); return; } }catch(e){}
+  var v=null; try{ v=localStorage.getItem(STORE); }catch(e){} apply(v);
+}
+
+/* ---------- Helpers ---------- */
+function haptic(s){ try{ if(window.myllmHaptic)myllmHaptic(s||'light'); }catch(e){} }
+var tt;
+function toast(msg,undo){
+  $('toastMsg').textContent=msg; var b=$('toastBtn'); b.hidden=!undo; b.onclick=undo?function(){undo();hideToast();}:null;
+  $('toast').classList.add('on'); clearTimeout(tt); tt=setTimeout(hideToast,undo?5000:1800);
+}
+function hideToast(){ $('toast').classList.remove('on'); }
+function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]}); }
+function codeHTML(code){
+  var i=code.indexOf('+'); if(i<0)return esc(code);
+  var head=code.slice(0,i), tail=code.slice(i+1);
+  var area=head.length>4?head.slice(0,head.length-4):'', local=head.slice(area.length);
+  return (area?'<span class="area">'+esc(area)+'</span>':'')+esc(local)+'<span class="plus">+</span>'+esc(tail);
+}
+function toRad(d){return d*Math.PI/180}
+function distance(a,b,c,d){ // metres, haversine
+  var R=6371008.8, p1=toRad(a), p2=toRad(c), dp=toRad(c-a), dl=toRad(d-b);
+  var h=Math.sin(dp/2)*Math.sin(dp/2)+Math.cos(p1)*Math.cos(p2)*Math.sin(dl/2)*Math.sin(dl/2);
+  return 2*R*Math.asin(Math.min(1,Math.sqrt(h)));
+}
+function bearing(a,b,c,d){
+  var p1=toRad(a),p2=toRad(c),dl=toRad(d-b);
+  var y=Math.sin(dl)*Math.cos(p2), x=Math.cos(p1)*Math.sin(p2)-Math.sin(p1)*Math.cos(p2)*Math.cos(dl);
+  return (Math.atan2(y,x)*180/Math.PI+360)%360;
+}
+var DIRS=['north','north-east','east','south-east','south','south-west','west','north-west'];
+function dirName(b){ return DIRS[Math.round(b/45)%8]; }
+function fmtDist(m){
+  if(m<1)return 'Here';
+  if(m<1000)return Math.round(m)+' m';
+  if(m<10000)return (m/1000).toFixed(1)+' km';
+  return Math.round(m/1000).toLocaleString('en-GB')+' km';
+}
+function dec(lat,lon){ return lat.toFixed(5)+', '+lon.toFixed(5); }
+function dmsOne(v,pos,neg){ var a=Math.abs(v), d=Math.floor(a), mf=(a-d)*60, m=Math.floor(mf), s=((mf-m)*60).toFixed(1); if(s==='60.0'){s='0.0';m++;} if(m===60){m=0;d++;}
+  return d+'°'+m+'′'+s+'″'+(v>=0?pos:neg); }
+function dms(lat,lon){ return dmsOne(lat,'N','S')+' '+dmsOne(lon,'E','W'); }
+function prettyLL(lat,lon){ return lat.toFixed(5)+'° '+(lat>=0?'N':'S')+', '+Math.abs(lon).toFixed(5)+'° '+(lon>=0?'E':'W'); }
+var PH={'2':'Two','3':'Three','4':'Four','5':'Five','6':'Six','7':'Seven','8':'Eight','9':'Nine','C':'Charlie','F':'Foxtrot','G':'Golf','H':'Hotel','J':'Juliett','M':'Mike','P':'Papa','Q':'Quebec','R':'Romeo','V':'Victor','W':'Whiskey','X':'X-ray','+':'plus'};
+function phonetic(code){ return code.split('').map(function(c){return PH[c]||c}).join(' · '); }
+function mapsURL(lat,lon,label){ return 'https://maps.apple.com/?ll='+lat.toFixed(6)+','+lon.toFixed(6)+'&q='+encodeURIComponent(label); }
+function plusURL(code){ return 'https://plus.codes/'+code; }
+function shareText(code,lat,lon,shortForm,title,acc){
+  var lines=[(title||'My location')+': '+code+(shortForm?' ('+shortForm+')':'')];
+  lines.push(plusURL(code));
+  lines.push('Apple Maps: '+mapsURL(lat,lon,code));
+  if(acc!=null&&isFinite(acc)&&acc>0)lines.push('Accurate to about '+Math.round(acc)+' m');
+  return lines.join('\n');
+}
+function share(text){
+  haptic('light');
+  if(window.myllmShare){ Promise.resolve(myllmShare(text)).catch(function(){ copyText(text); }); }
+  else copyText(text);
+}
+function copyText(s){
+  var ok=false;
+  try{ var ta=document.createElement('textarea'); ta.value=s; ta.setAttribute('readonly',''); ta.style.position='fixed'; ta.style.opacity='0';
+    document.body.appendChild(ta); ta.select(); ta.setSelectionRange(0,s.length); ok=document.execCommand('copy'); document.body.removeChild(ta); }catch(e){}
+  if(!ok&&navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(s).then(function(){toast('Copied')},function(){toast('Copy not available')}); return; }
+  toast(ok?'Copied':'Copy not available');
+}
+
+/* ---------- Topographic backdrop (decorative, seeded by the code) ---------- */
+function drawTopo(seed){
+  var svg=$('topo'), w=400, h=240, s=0; for(var i=0;i<seed.length;i++)s=(s*31+seed.charCodeAt(i))>>>0;
+  function rnd(){ s=(s*1664525+1013904223)>>>0; return s/4294967296; }
+  var cx=w*(.55+rnd()*.35), cy=h*(.2+rnd()*.5), out='';
+  for(var r=1;r<=9;r++){
+    var pts=[], n=28, base=22*r;
+    for(var k=0;k<=n;k++){ var a=k/n*Math.PI*2, wob=1+.18*Math.sin(a*3+r*.7+rnd()*.25)+.08*Math.sin(a*5+r); pts.push([cx+Math.cos(a)*base*wob*1.35, cy+Math.sin(a)*base*wob]); }
+    out+='<path d="M'+pts.map(function(p){return p[0].toFixed(1)+' '+p[1].toFixed(1)}).join(' L')+'Z"/>';
+  }
+  svg.setAttribute('viewBox','0 0 '+w+' '+h); svg.innerHTML=out;
+}
+
+/* ---------- Location ---------- */
+function hasLoc(){ return !!(window.myllmLocation&&typeof myllmLocation.current==='function'); }
+function onFix(f){
+  if(!f||f.error){ if(f&&f.error)locError(f.error); return; }
+  if(!isFinite(f.latitude)||!isFinite(f.longitude))return;
+  var prev=PP.fix;
+  PP.fix={lat:f.latitude,lon:f.longitude,acc:f.accuracy,alt:isFinite(f.altitude)?f.altitude:null,course:f.course,speed:f.speed,t:f.timestamp||Date.now()};
+  if(f.address&&typeof f.address==='string'){ PP.addrAt={lat:f.latitude,lon:f.longitude}; setAddress(f.address); }
+  // movement-based heading when walking and no compass
+  if(PP.headingSrc!=='compass'&&isFinite(f.course)&&f.course>=0&&isFinite(f.speed)&&f.speed>1){ PP.heading=f.course; PP.headingSrc='course'; }
+  $('stateBox').innerHTML='';
+  if(!PP.addrAt||distance(PP.addrAt.lat,PP.addrAt.lon,f.latitude,f.longitude)>40)lookupAddress(f.latitude,f.longitude);
+  renderHere(); renderFind(); renderPlaces();
+  if(!prev)haptic('success');
+}
+function locError(msg){
+  var m=String(msg||'');
+  var denied=/denied|not allowed|permission|allow|off|disabled|restricted|settings/i.test(m);
+  if(PP.fix)return; // keep the last good fix on screen
+  $('code').className='code wait'; $('code').textContent=denied?'Location is off':'No location yet';
+  $('pulse').className='pulse off'; $('acc').textContent=denied?'Location off':'No signal';
+  $('stateBox').innerHTML='<div class="state"><svg viewBox="0 0 24 24"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0C18.5 15.4 12 21 12 21z"/><path d="M4 4l16 16"/></svg>'+
+    '<h2>'+(denied?'Pinpoint needs your location':'Can’t find you yet')+'</h2>'+
+    '<p>'+(denied?'In MyLLM, allow location for apps (Settings → MyLLMos Apps → Location), and allow MyLLM to use your location in the iPhone’s Settings → Privacy → Location Services.':'Step outside or near a window; GPS needs a view of the sky. '+esc(m))+'</p>'+
+    '<button id="retryLoc">Try again</button></div>';
+  var b=$('retryLoc'); if(b)b.onclick=function(){ haptic('light'); startLocation(true); };
+}
+function startLocation(force){
+  if(!hasLoc()){
+    if(navigator.geolocation&&!PP.triedWeb){ PP.triedWeb=true;
+      try{ navigator.geolocation.watchPosition(function(p){ onFix({latitude:p.coords.latitude,longitude:p.coords.longitude,accuracy:p.coords.accuracy,altitude:p.coords.altitude,timestamp:p.timestamp}); },
+        function(){ noBridge(); },{enableHighAccuracy:true,maximumAge:5000,timeout:20000}); return; }catch(e){}
+    }
+    return noBridge();
+  }
+  myllmLocation.current({accuracy:'best'}).then(onFix,function(e){ locError(e&&e.message); });
+  if(typeof myllmLocation.watch==='function'&&(!PP.watching||force)){
+    PP.watching=true;
+    myllmLocation.watch(onFix,{accuracy:'best',distanceFilter:2}).catch(function(e){ PP.watching=false; locError(e&&e.message); });
+  }
+}
+function stopLocation(){ if(PP.watching&&hasLoc()&&typeof myllmLocation.stop==='function'){ try{ myllmLocation.stop(); }catch(e){} } PP.watching=false; }
+function noBridge(){
+  if(PP.fix)return;
+  $('code').className='code wait'; $('code').textContent='Location unavailable';
+  $('pulse').className='pulse off'; $('acc').textContent='No location';
+  $('stateBox').innerHTML='<div class="state"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg><h2>Location isn’t available here</h2><p>Open Pinpoint in MyLLM on your iPhone to see your own Plus Code. You can still look up codes in Find.</p></div>';
+}
+
+/* Street and town: the phone's own geocoder; OpenStreetMap only as a fallback. */
+function lookupAddress(lat,lon){
+  PP.addrAt={lat:lat,lon:lon};
+  var p;
+  if(hasLoc()&&typeof myllmLocation.reverse==='function'){
+    p=myllmLocation.reverse(lat,lon).then(function(r){ return r&&r.address||''; });
+  } else if(window.myllmFetch){
+    PP.usedOSM=true; $('geoCredit').innerHTML='Street names from OpenStreetMap Nominatim, © OpenStreetMap contributors (ODbL).';
+    p=myllmFetch('https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=16&lat='+lat+'&lon='+lon,{headers:{Accept:'application/json'}})
+      .then(function(r){ if(!r||!r.ok)throw new Error('lookup failed'); var j=JSON.parse(r.body||'{}'); return j.display_name||''; });
+  } else return;
+  p.then(function(a){ setAddress(a||''); },function(){ renderHere(); });
+}
+function setAddress(a){
+  var changed=a!==PP.addr; PP.addr=a; renderHere();
+  if(changed||(PP.fix&&PP.shortFor!==OLC.encode(PP.fix.lat,PP.fix.lon)))computeShort();
+}
+/* The short form ("GV2F+7X London") is only offered when the town named
+   really recovers this exact code; otherwise the full code stands alone. */
+function localityCandidates(addr){
+  var parts=String(addr||'').split(',').map(function(s){return s.trim()}).filter(Boolean);
+  if(parts.length>=3)parts=parts.slice(1);          // the first part is the street
+  if(parts.length>1)parts=parts.slice(0,-1);        // the last is the country
+  var out=[];
+  parts.forEach(function(p){ if(/\d/.test(p))return; if(out.indexOf(p)<0)out.push(p); });
+  return out.slice(0,2);
+}
+function computeShort(){
+  var f=PP.fix; if(!f||!OLC)return;
+  var full=OLC.encode(f.lat,f.lon);
+  PP.shortCode=''; PP.locality=''; PP.shortFor=full;
+  var cands=localityCandidates(PP.addr); if(!cands.length||!hasLoc()||typeof myllmLocation.search!=='function'){ renderHere(); return; }
+  var chain=Promise.resolve(false);
+  cands.forEach(function(name){
+    chain=chain.then(function(done){ if(done)return true;
+      return myllmLocation.search(name,{limit:1}).then(function(list){
+        var hit=list&&list[0]; if(!hit||!isFinite(hit.latitude))return false;
+        // Always drop exactly the first four characters ("GV2F+7X London"):
+        // shorter forms only work very near the town's centre.
+        var sc=full.slice(4);
+        try{ if(OLC.recoverNearest(sc,hit.latitude,hit.longitude)!==full)return false; }catch(e){ return false; }
+        PP.shortCode=sc; PP.locality=name; return true;
+      },function(){ return false; });
+    });
+  });
+  chain.then(function(){ renderHere(); });
+}
+
+/* ---------- Here ---------- */
+function fitCode(el,max,min){
+  var size=max; el.style.fontSize=size+'px';
+  while(el.scrollWidth>el.clientWidth+1&&size>min){ size-=1; el.style.fontSize=size+'px'; }
+}
+function renderHere(){
+  var f=PP.fix;
+  ['shareBtn','qrBtn','copyBtn','saveBtn'].forEach(function(i){ $(i).disabled=!f; });
+  $('aiBtn').hidden=!(f&&typeof window.myllmAsk==='function');
+  $('coords').hidden=!f;
+  if(!f)return;
+  var full=OLC.encode(f.lat,f.lon);
+  if(PP.drawn!==full.slice(0,8)){ PP.drawn=full.slice(0,8); drawTopo(full.slice(0,8)); }
+  var c=$('code'); c.className='code'; c.innerHTML=codeHTML(full);
+  var land=matchMedia('(orientation:landscape) and (max-height:560px)').matches;
+  fitCode(c,land?36:(innerWidth<=360?36:44),22);
+  $('short').innerHTML=PP.shortCode?esc(PP.shortCode)+' <span class="loc">'+esc(PP.locality)+'</span>':'';
+  $('addr').textContent=PP.addr||'';
+  var acc=f.acc, pl=$('pulse');
+  pl.className='pulse '+(!isFinite(acc)||acc<0?'off':acc<=15?'':acc<=50?'mid':'poor');
+  $('acc').textContent=isFinite(acc)&&acc>=0?'±'+Math.round(acc)+' m':'Accuracy unknown';
+  $('coords').textContent=PP.dms?dms(f.lat,f.lon):prettyLL(f.lat,f.lon);
+  var age=(Date.now()-f.t)/1000;
+  $('fresh').textContent=age<5?'Live':age<60?Math.round(age)+' s ago':age<3600?Math.round(age/60)+' min ago':'Last known';
+}
+setInterval(function(){ if(PP.fix&&!document.hidden)renderHere(); },5000);
+$('coords').addEventListener('click',function(){ PP.dms=!PP.dms; haptic('light'); save(); renderHere(); });
+$('shareBtn').addEventListener('click',function(){ var f=PP.fix; if(!f)return; var full=OLC.encode(f.lat,f.lon);
+  share(shareText(full,f.lat,f.lon,PP.shortCode?PP.shortCode+' '+PP.locality:'', 'My location',f.acc)); });
+$('copyBtn').addEventListener('click',function(){ var f=PP.fix; if(!f)return; haptic('light'); copyText(OLC.encode(f.lat,f.lon)); });
+$('qrBtn').addEventListener('click',function(){ var f=PP.fix; if(!f)return; openQR(OLC.encode(f.lat,f.lon)); });
+$('saveBtn').addEventListener('click',function(){ if(PP.fix)openPlaceSheet(null,PP.fix.lat,PP.fix.lon,PP.fix.acc); });
+
+/* ---------- AI: describe this spot ---------- */
+$('aiBtn').addEventListener('click',function(){
+  var f=PP.fix; if(!f||typeof window.myllmAsk!=='function')return;
+  var btn=$('aiBtn'); btn.disabled=true; btn.lastChild.textContent='Describing…'; haptic('light');
+  var full=OLC.encode(f.lat,f.lon);
+  var q='In one or two short sentences, describe how a friend could find this exact spot when they get near it. Use only the address and place names given; do not invent landmarks, shops or directions you cannot know.\n'+
+        'Plus Code: '+full+'\nCoordinates: '+dec(f.lat,f.lon)+'\nNearest address: '+(PP.addr||'unknown')+(PP.locality?'\nTown: '+PP.locality:'');
+  Promise.resolve(myllmAsk(q)).then(function(r){
+    var t=String(r||'').trim(); if(!t)throw new Error('empty');
+    $('aiOut').innerHTML='<div class="aibox">'+esc(t)+'<small>Written by your AI from the address above. Check it before you rely on it.</small></div>';
+  }).catch(function(){ $('aiOut').innerHTML='<div class="aibox">Couldn’t reach your AI just now.<small>Your Plus Code above is all a friend needs.</small></div>'; })
+  .then(function(){ btn.disabled=false; btn.lastChild.textContent='Describe this spot'; });
+});
+
+/* ---------- QR ---------- */
+function drawQR(canvas,text){
+  var q=qrcode(0,'M'); q.addData(text); q.make();
+  var n=q.getModuleCount(), quiet=2, cells=n+quiet*2, px=Math.floor(canvas.width/cells), off=Math.floor((canvas.width-px*cells)/2);
+  var g=canvas.getContext('2d'); g.fillStyle='#fff'; g.fillRect(0,0,canvas.width,canvas.height); g.fillStyle='#0b1220';
+  for(var r=0;r<n;r++)for(var c=0;c<n;c++)if(q.isDark(r,c))g.fillRect(off+(c+quiet)*px,off+(r+quiet)*px,px,px);
+  return n;
+}
+function openQR(code){
+  drawQR($('qrCanvas'),plusURL(code)); $('qrCap').innerHTML=codeHTML(code); PP.qrCode=code; openSheet('qrSheet'); haptic('light');
+}
+$('qrClose').addEventListener('click',closeSheets);
+$('qrSave').addEventListener('click',function(){
+  var url=$('qrCanvas').toDataURL('image/png');
+  if(window.myllmSaveImage){ Promise.resolve(myllmSaveImage(url)).then(function(){ toast('Saved to Photos'); haptic('success'); },function(e){ toast('Couldn’t save'); }); }
+  else toast('Saving isn’t available here');
+});
+
+/* ---------- Sheets ---------- */
+function openSheet(id){ closeSheets(true); $('scrim').classList.add('on'); $(id).classList.add('on'); }
+function closeSheets(keepScrim){ document.querySelectorAll('.sheet.on').forEach(function(s){s.classList.remove('on')}); if(keepScrim!==true)$('scrim').classList.remove('on'); }
+$('scrim').addEventListener('click',closeSheets);
+$('aboutBtn').addEventListener('click',function(){ haptic('light'); openSheet('aboutSheet'); });
+$('aboutClose').addEventListener('click',closeSheets);
+
+/* ---------- Saved places ---------- */
+function newId(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
+function openPlaceSheet(existing,lat,lon,acc){
+  PP.editing=existing?existing.id:null; PP.pending={lat:lat,lon:lon,acc:acc};
+  PP.emoji=existing?existing.emoji:'📍';
+  $('psTitle').textContent=existing?'Rename this place':'Save this spot';
+  $('psSub').innerHTML=codeHTML(OLC.encode(lat,lon))+(isFinite(acc)&&acc>0?' · ±'+Math.round(acc)+' m':'');
+  $('psName').value=existing?existing.name:'';
+  var row=$('psEmoji'); row.innerHTML='';
+  EMOJI.forEach(function(e){ var b=document.createElement('button'); b.textContent=e; b.className=e===PP.emoji?'on':''; b.setAttribute('aria-label','Icon '+e);
+    b.onclick=function(){ PP.emoji=e; row.querySelectorAll('button').forEach(function(x){x.className=x===b?'on':''}); haptic('light'); }; row.appendChild(b); });
+  openSheet('placeSheet'); setTimeout(function(){ try{ $('psName').focus(); }catch(e){} },300);
+}
+$('psCancel').addEventListener('click',closeSheets);
+$('psOk').addEventListener('click',function(){
+  var name=$('psName').value.trim()||'Saved spot', p=PP.pending; if(!p)return;
+  if(PP.editing){ var ex=PP.places.find(function(x){return x.id===PP.editing}); if(ex){ ex.name=name; ex.emoji=PP.emoji; } }
+  else PP.places.unshift({id:newId(),name:name,emoji:PP.emoji,lat:p.lat,lon:p.lon,acc:isFinite(p.acc)?Math.round(p.acc):null,code:OLC.encode(p.lat,p.lon),t:Date.now()});
+  save(); closeSheets(); renderPlaces(); haptic('success'); toast('Saved “'+name+'”');
+});
+$('addPlace').addEventListener('click',function(){ if(!PP.fix){ toast('Waiting for your location'); return; } openPlaceSheet(null,PP.fix.lat,PP.fix.lon,PP.fix.acc); });
+function renderPlaces(){
+  var list=$('placeList');
+  if(!PP.places.length){ list.innerHTML='<div class="empty"><b>No saved places yet</b>Save where you parked, your tent, or the gate you’re meeting at. Pinpoint leads you back, even offline.</div>'; return; }
+  var f=PP.fix, h='<h3>Saved places</h3>';
+  PP.places.forEach(function(p,i){
+    var d=f?distance(f.lat,f.lon,p.lat,p.lon):null;
+    h+='<div class="place" data-id="'+esc(p.id)+'"><div class="em" style="background:'+TINT[EMOJI.indexOf(p.emoji)>=0?EMOJI.indexOf(p.emoji):i%TINT.length]+'">'+esc(p.emoji)+'</div>'+
+       '<div class="tx"><div class="nm">'+esc(p.name)+'</div><div class="sb">'+esc(p.code)+'</div></div>'+
+       (d!=null?'<div class="d">'+fmtDist(d)+'<small>'+dirName(bearing(f.lat,f.lon,p.lat,p.lon))+'</small></div>':'')+
+       '<button class="more" aria-label="More for '+esc(p.name)+'"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="19" cy="12" r="1.3"/></svg></button></div>';
+  });
+  list.innerHTML=h;
+  list.querySelectorAll('.place').forEach(function(el){
+    var p=PP.places.find(function(x){return x.id===el.getAttribute('data-id')});
+    el.querySelector('.more').onclick=function(ev){ ev.stopPropagation(); openActions(p); };
+    el.onclick=function(){ goFind({lat:p.lat,lon:p.lon,code:p.code,label:p.name}); };
+  });
+}
+function openActions(p){
+  PP.act=p; $('asTitle').textContent=p.emoji+' '+p.name; $('asSub').innerHTML=codeHTML(p.code)+(p.acc?' · ±'+p.acc+' m':''); openSheet('actSheet');
+}
+$('asCancel').addEventListener('click',closeSheets);
+$('asFind').addEventListener('click',function(){ var p=PP.act; closeSheets(); if(p)goFind({lat:p.lat,lon:p.lon,code:p.code,label:p.name}); });
+$('asShare').addEventListener('click',function(){ var p=PP.act; closeSheets(); if(p)share(shareText(p.code,p.lat,p.lon,'',p.name,p.acc)); });
+$('asDel').addEventListener('click',function(){
+  var p=PP.act; if(!p)return; var idx=PP.places.indexOf(p); if(idx<0)return;
+  PP.places.splice(idx,1); PP.lastDeleted={p:p,idx:idx}; save(); closeSheets(); renderPlaces(); haptic('medium');
+  toast('Deleted “'+p.name+'”',function(){ var d=PP.lastDeleted; if(!d)return; PP.places.splice(Math.min(d.idx,PP.places.length),0,d.p); PP.lastDeleted=null; save(); renderPlaces(); haptic('light'); });
+});
+
+/* ---------- Find ---------- */
+var CODE_RE=/([23456789CFGHJMPQRVWX]{2,8}\+[23456789CFGHJMPQRVWX]{0,3})/i;
+function fmsg(t,err){ var m=$('fmsg'); m.innerHTML=t; m.className='fmsg'+(err?' err':''); }
+function parseInput(raw){
+  var s=String(raw||'').trim(); var m=s.match(CODE_RE); if(!m)return null;
+  var code=m[1].toUpperCase(); var rest=(s.slice(0,m.index)+' '+s.slice(m.index+m[1].length)).replace(/https?:\/\/\S+/g,'').replace(/[,;]+/g,' ').trim();
+  return {code:code,locality:rest};
+}
+function resolveCode(raw){
+  if(!OLC)return Promise.reject(new Error('no-lib'));
+  var p=parseInput(raw); if(!p)return Promise.reject(new Error('That doesn’t look like a Plus Code. They look like <b>9C3XGV2F+7X</b> or <b>GV2F+7X London</b>.'));
+  if(OLC.isFull(p.code)){ var a=OLC.decode(p.code); return Promise.resolve({lat:a.latitudeCenter,lon:a.longitudeCenter,code:p.code,label:p.code}); }
+  if(!OLC.isValid(p.code)||!OLC.isShort(p.code))return Promise.reject(new Error('That code isn’t complete. Check it and try again.'));
+  function recoverAt(lat,lon,label){ var full=OLC.recoverNearest(p.code,lat,lon); var a=OLC.decode(full); return {lat:a.latitudeCenter,lon:a.longitudeCenter,code:full,label:label}; }
+  if(p.locality){
+    if(hasLoc()&&typeof myllmLocation.search==='function'){
+      return myllmLocation.search(p.locality,{limit:1}).then(function(list){ var h=list&&list[0]; if(!h||!isFinite(h.latitude))throw new Error('Couldn’t find the town “'+esc(p.locality)+'”.');
+        return recoverAt(h.latitude,h.longitude,p.code+' '+p.locality); });
+    }
+    if(window.myllmFetch){
+      return myllmFetch('https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q='+encodeURIComponent(p.locality),{headers:{Accept:'application/json'}}).then(function(r){
+        var j=JSON.parse(r&&r.body||'[]'); if(!j[0])throw new Error('Couldn’t find the town “'+esc(p.locality)+'”.');
+        return recoverAt(parseFloat(j[0].lat),parseFloat(j[0].lon),p.code+' '+p.locality); });
+    }
+  }
+  if(PP.fix)return Promise.resolve(recoverAt(PP.fix.lat,PP.fix.lon,p.code));
+  return Promise.reject(new Error('A short code needs its town, like <b>'+esc(p.code)+' London</b>, or your location.'));
+}
+function doFind(){
+  var v=$('findIn').value; if(!v.trim())return;
+  fmsg('Finding…'); haptic('light');
+  resolveCode(v).then(function(t){ goFind(t,true); },function(e){ fmsg(e&&e.message&&e.message!=='no-lib'?e.message:'Couldn’t read that code.',true); haptic('error'); });
+}
+$('findGo').addEventListener('click',doFind);
+$('findIn').addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); $('findIn').blur(); doFind(); } });
+function goFind(t,fromInput){
+  PP.target=t;
+  PP.recents=[{code:t.code,label:t.label||t.code,lat:t.lat,lon:t.lon}].concat(PP.recents.filter(function(r){return r.code!==t.code})).slice(0,8); save();
+  if(!fromInput)$('findIn').value=t.label&&t.label!==t.code?t.code:t.code;
+  switchTab('find'); fmsg(''); renderFind(); haptic('success');
+}
+function renderFind(){
+  var t=PP.target, res=$('findRes');
+  renderRecents();
+  if(!t){ res.hidden=true; return; }
+  res.hidden=false;
+  $('tgtCode').innerHTML=codeHTML(t.code);
+  $('tgtSub').textContent=(t.label&&t.label!==t.code?t.label+' · ':'')+prettyLL(t.lat,t.lon);
+  var f=PP.fix;
+  if(!f){ $('dist').textContent='—'; $('dir').textContent='Waiting for your location to point the way'; setArrow(null); return; }
+  var d=distance(f.lat,f.lon,t.lat,t.lon), b=bearing(f.lat,f.lon,t.lat,t.lon);
+  $('dist').textContent=fmtDist(d);
+  var hs=PP.heading!=null&&PP.headingSrc;
+  if(d<Math.max(8,(f.acc||0))){ $('dir').textContent='You’re there, within your GPS accuracy'; }
+  else $('dir').textContent=dirName(b)+' · '+Math.round(b)+'°'+(hs?(PP.headingSrc==='compass'?' · arrow follows your compass':' · arrow follows your walking direction'):' · arrow points from north');
+  setArrow(b);
+}
+function setArrow(b){
+  var h=(PP.heading!=null&&PP.headingSrc)?PP.heading:0;
+  $('rose').style.transform='rotate('+(-h)+'deg)';
+  $('arrow').style.transform=b==null?'rotate(0deg)':'rotate('+(b-h)+'deg)';
+  $('arrow').style.opacity=b==null?'.25':'1';
+}
+function renderRecents(){
+  var r=PP.recents.filter(function(x){return !PP.target||x.code!==PP.target.code}).slice(0,5), box=$('recents');
+  if(!r.length){ box.innerHTML=''; return; }
+  box.innerHTML='<h3>Recent</h3>'+r.map(function(x,i){ return '<button class="ritem" data-i="'+i+'"><div><div class="c">'+esc(x.code)+'</div><div class="s">'+esc(x.label&&x.label!==x.code?x.label:prettyLL(x.lat,x.lon))+'</div></div></button>'; }).join('');
+  box.querySelectorAll('.ritem').forEach(function(b){ b.onclick=function(){ goFind(r[+b.getAttribute('data-i')]); }; });
+}
+$('mapsBtn').addEventListener('click',function(){ var t=PP.target; if(!t)return; haptic('light'); window.open(mapsURL(t.lat,t.lon,t.label||t.code),'_blank'); });
+$('tgtSave').addEventListener('click',function(){ var t=PP.target; if(t)openPlaceSheet(null,t.lat,t.lon,null); });
+$('tgtShare').addEventListener('click',function(){ var t=PP.target; if(t)share(shareText(t.code,t.lat,t.lon,'',t.label&&t.label!==t.code?t.label:'Meet here',null)); });
+
+/* Scan a printed code (the scanner reads text; the code is picked out of it). */
+if(typeof window.myllmScan==='function')$('scanBtn').hidden=false;
+$('scanBtn').addEventListener('click',function(){
+  haptic('light');
+  Promise.resolve(myllmScan()).then(function(text){
+    if(!text){ fmsg('Nothing scanned.'); return; }
+    var p=parseInput(text); if(!p){ fmsg('No Plus Code found in what was scanned.',true); return; }
+    $('findIn').value=p.code+(p.locality?' '+p.locality.split(/\s+/).slice(0,3).join(' '):''); doFind();
+  },function(){ fmsg('The scanner isn’t available right now.',true); });
+});
+
+/* Compass: iOS gives webkitCompassHeading once motion access is allowed. */
+function onOrient(e){
+  var h=null;
+  if(typeof e.webkitCompassHeading==='number'&&isFinite(e.webkitCompassHeading))h=e.webkitCompassHeading;
+  else if(e.absolute&&typeof e.alpha==='number')h=(360-e.alpha)%360;
+  if(h==null)return;
+  PP.heading=h; PP.headingSrc='compass'; $('compassLbl').textContent='Compass on';
+  if(!PP.orientRaf){ PP.orientRaf=requestAnimationFrame(function(){ PP.orientRaf=0; if(PP.target)renderFind(); else setArrow(null); }); }
+}
+$('compassBtn').addEventListener('click',function(){
+  haptic('light');
+  function listen(){ window.addEventListener('deviceorientation',onOrient,true); window.addEventListener('deviceorientationabsolute',onOrient,true);
+    $('compassLbl').textContent='Hold the phone flat…';
+    setTimeout(function(){ if(PP.headingSrc!=='compass'){ $('compassLbl').textContent='No compass here'; fmsg('No compass reading: the arrow points from north, or follows you once you walk.'); } },2500); }
+  try{
+    if(window.DeviceOrientationEvent&&typeof DeviceOrientationEvent.requestPermission==='function'){
+      DeviceOrientationEvent.requestPermission().then(function(r){ if(r==='granted')listen(); else { $('compassLbl').textContent='Compass not allowed'; } },function(){ $('compassLbl').textContent='No compass here'; });
+    } else listen();
+  }catch(e){ $('compassLbl').textContent='No compass here'; }
+});
+
+/* ---------- Emergency card ---------- */
+function full(){ return !!(window.myllmClose&&window.myllmImmersive); }
+function renderSOS(){
+  var f=PP.fix;
+  if(!f){ $('sosCode').textContent='Finding you…'; $('sosPh').textContent=''; $('sosLL').textContent='—'; $('sosAcc').textContent='—'; $('sosAddr').textContent='—'; $('sosTime').textContent='—'; return; }
+  var code=OLC.encode(f.lat,f.lon), i=code.indexOf('+');
+  $('sosCode').innerHTML='<span class="a">'+esc(code.slice(0,4))+'</span><span class="l" id="sosL">'+esc(code.slice(4,i))+'<span class="plus">+</span>'+esc(code.slice(i+1))+'</span>';
+  var l=$('sosL'), sz=64; l.style.fontSize=sz+'px'; while(l.scrollWidth>l.clientWidth+1&&sz>30){ sz-=2; l.style.fontSize=sz+'px'; }
+  $('sosPh').textContent=phonetic(code);
+  $('sosLL').innerHTML=esc(f.lat.toFixed(5))+'<br>'+esc(f.lon.toFixed(5));
+  $('sosAcc').textContent=isFinite(f.acc)&&f.acc>=0?'± '+Math.round(f.acc)+' m':'Unknown';
+  $('sosAddrRow').style.display=PP.addr?'':'none'; $('sosAddr').textContent=PP.addr||'';
+  $('sosTime').textContent=new Date(f.t).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+}
+$('sosBtn').addEventListener('click',function(){
+  haptic('medium'); renderSOS(); $('sos').classList.add('on'); PP.sosOn=true;
+  try{ if(window.myllmImmersive)myllmImmersive(true,{keepAwake:true}).catch(function(){}); }catch(e){}
+});
+$('sosClose').addEventListener('click',function(){
+  $('sos').classList.remove('on'); PP.sosOn=false; haptic('light');
+  try{ if(window.myllmImmersive)myllmImmersive(full(),{keepAwake:false}).catch(function(){}); }catch(e){}
+});
+setInterval(function(){ if(PP.sosOn)renderSOS(); },2000);
+
+/* ---------- Tabs ---------- */
+function switchTab(id){
+  document.querySelectorAll('.view').forEach(function(v){ v.classList.toggle('on',v.id===id); });
+  document.querySelectorAll('.tabs button').forEach(function(b){ b.classList.toggle('on',b.getAttribute('data-tab')===id); b.setAttribute('aria-selected',b.getAttribute('data-tab')===id); });
+  if(id==='here')renderHere(); if(id==='find')renderFind(); if(id==='saved')renderPlaces();
+}
+document.querySelectorAll('.tabs button').forEach(function(b){ b.addEventListener('click',function(){ haptic('light'); switchTab(b.getAttribute('data-tab')); }); });
+
+document.addEventListener('visibilitychange',function(){ if(document.hidden)stopLocation(); else startLocation(true); });
+addEventListener('resize',function(){ renderHere(); });
+drawTopo('PINPOINT');
+load(function(){ renderPlaces(); renderRecents(); startLocation(); if(PP.fix)renderHere(); });
+
+/* myllm-fullscreen-v2 — full screen where MyLLM can also close the app for us
+   (myllmClose, 5.6.2+): full screen hides MyLLM's Done, and a page with no way
+   out is worse than a repeated title, so elsewhere nothing changes. This page
+   pads its own top by env(safe-area-inset-top), so the spacer stays at 0. */
+(function(){
+  function fullOK(){ return !!(window.myllmClose && window.myllmImmersive); }
+  function sync(){
+    var f = fullOK();
+    document.body.classList.toggle("imm", f);
+    var sp = document.querySelector(".imm-safe"); if (sp) sp.style.height = "0px";
+    if (!f) return;
+    try { window.myllmImmersive(true, { keepAwake:!!PP.sosOn }).catch(function(){}); } catch(e){}
+  }
+  window.myllmFSClose = function(){
+    try { if (window.myllmHaptic) window.myllmHaptic("light"); } catch(e){}
+    try { window.myllmClose().catch(function(){}); } catch(e){}
+  };
+  document.addEventListener("visibilitychange", function(){ if (!document.hidden) sync(); });
+  sync();
+})();
+</script></body></html>

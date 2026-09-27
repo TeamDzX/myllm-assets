@@ -46,6 +46,36 @@
       ]
     },
     {
+      "id": "pinpoint",
+      "name": "Pinpoint",
+      "emoji": "📍",
+      "tagline": "Share the exact spot you're standing on",
+      "description": "Share exactly where you are, down to a few metres, even where there's no street address: a festival gate, a trailhead, a car park row, a beach. Pinpoint shows your spot as a Plus Code, an open code that works anywhere on Earth, with the nearby address and live accuracy. Share it as a message with map links or as a QR code anyone's camera can open. Find a code someone sent you, or one on a sign, and get the distance and direction to walk. Save places like your car or your tent and find your way back, even offline. The SOS card shows your code, spelled out, with coordinates in huge type for an emergency call. Your AI can describe the spot in a sentence a friend can follow.",
+      "tags": [
+        "location",
+        "maps",
+        "share",
+        "travel",
+        "safety",
+        "offline",
+        "saves data"
+      ],
+      "iconSymbol": "mappin.and.ellipse",
+      "iconColor": "green",
+      "version": 1,
+      "featured": true,
+      "requiresAI": false,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/pinpoint.jpg",
+      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@main/apps-src/pinpoint.html",
+      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@main/apps-src/pinpoint.myllmapp",
+      "sizeKB": 140,
+      "category": "Utilities",
+      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/icons/pinpoint.jpg",
+      "aiUses": [
+        "ask"
+      ]
+    },
+    {
       "id": "metro-maps",
       "name": "Metro Maps",
       "emoji": "🚇",
