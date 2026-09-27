@@ -46,6 +46,33 @@
       ]
     },
     {
+      "id": "metro-maps",
+      "name": "Metro Maps",
+      "emoji": "🚇",
+      "tagline": "London, Paris and New York underground",
+      "description": "The metro systems of London, Paris and New York in your pocket, drawn as our own clear map from open data. Pan and pinch around every line and station, browse any line stop by stop with its branches, and tap a station to see which lines stop there. Plan a route between any two stations, fastest or with the fewest changes, and see where to change and which way to head. Check live line status for London and New York. Save your usual routes. The maps and route planner work offline, underground. Not affiliated with TfL, RATP or the MTA.",
+      "tags": [
+        "travel",
+        "metro",
+        "london",
+        "paris",
+        "new york",
+        "offline",
+        "saves data"
+      ],
+      "iconSymbol": "tram.fill",
+      "iconColor": "red",
+      "version": 1,
+      "featured": true,
+      "requiresAI": false,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/metro-maps.jpg",
+      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@main/apps-src/metro-maps.html",
+      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@main/apps-src/metro-maps.myllmapp",
+      "sizeKB": 99,
+      "category": "Utilities",
+      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/icons/metro-maps.jpg"
+    },
+    {
       "id": "mind-map",
       "name": "Mind Map",
       "emoji": "🧠",
