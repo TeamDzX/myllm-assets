@@ -43,6 +43,7 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
 /* Display */
 .display{position:relative;flex:1 1 auto;min-height:84px;display:flex;flex-direction:column;justify-content:flex-end;
   padding:6px 8px 10px;overflow:hidden}
+.prev,.main,.sub{flex-shrink:0}
 .prev{font-size:19px;line-height:1.4;color:var(--muted);text-align:right;min-height:27px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
   direction:ltr;transition:opacity .25s}
 .main{text-align:right;font-weight:300;letter-spacing:-1px;line-height:1.3;white-space:nowrap;overflow-x:auto;overflow-y:hidden;
@@ -83,15 +84,15 @@ body.nosci .mem .fold svg{transform:rotate(180deg)}
 .sci{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
 .basic{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
 body.nosci .sci{display:none}
-body.nosci .basic .k{height:clamp(60px,10.4vh,100px)}
+body.nosci .basic .k{height:var(--kb,clamp(60px,10.4vh,100px))}
 .k{position:relative;border-radius:18px;display:grid;place-items:center;font-variant-numeric:tabular-nums;
   transition:transform .09s ease,filter .15s;box-shadow:var(--shadow);overflow:hidden}
 .k::after{content:"";position:absolute;inset:0;border-radius:inherit;background:linear-gradient(180deg,var(--digit-hi),transparent 55%);pointer-events:none}
 .k:active,.k.down{transform:scale(.94);filter:brightness(1.18)}
-.sci .k{height:clamp(32px,4.6vh,46px);background:var(--sci);color:var(--sci-ink);font-size:16px;font-weight:500;border-radius:13px}
+.sci .k{height:var(--ks,clamp(32px,4.6vh,46px));background:var(--sci);color:var(--sci-ink);font-size:16px;font-weight:500;border-radius:13px}
 .sci .k.on{background:linear-gradient(145deg,var(--op1),var(--op2));color:#fff}
 .sci .k .sup{font-size:.68em;vertical-align:.55em}
-.basic .k{height:clamp(50px,7.6vh,84px);background:var(--digit);font-size:31px;font-weight:400}
+.basic .k{height:var(--kb,clamp(50px,7.6vh,84px));background:var(--digit);font-size:31px;font-weight:400}
 .basic .k.fn{background:var(--fn);font-size:22px;font-weight:500}
 .basic .k.op{background:linear-gradient(160deg,var(--op1),var(--op2));color:var(--op-ink);font-size:32px;font-weight:450}
 .basic .k.op.eq{box-shadow:0 8px 22px var(--glow),var(--shadow)}
@@ -463,9 +464,31 @@ function exprHTML(tokens,withGhost){
 function exprText(tokens){ var d=document.createElement('div'); d.innerHTML=exprHTML(tokens,false); return d.textContent; }
 
 var main=$('main'),sub=$('sub'),prev=$('prev');
+/* Portrait: share the height between the keys and the display so the
+   display always has room for a full line. The safe areas (Dynamic Island,
+   home bar) take ~100 px on a phone, which a desktop preview never shows —
+   v1 sized the keys from the screen height alone and the number was cut. */
+var DISPLAY_NEED=27+31+16+Math.ceil(56*1.3); // prev + sub + padding + a 56 px line
+function isLand(){ return matchMedia('(orientation:landscape) and (max-height:560px)').matches; }
+function layoutKeys(){
+  var st=document.body.style;
+  if(isLand()){ st.removeProperty('--kb'); st.removeProperty('--ks'); return; }
+  var cs=getComputedStyle(document.body);
+  var H=innerHeight-parseFloat(cs.paddingTop)-parseFloat(cs.paddingBottom);
+  var head=document.querySelector('.head').offsetHeight, mem=document.querySelector('.mem').offsetHeight;
+  var budget=H-head-mem-DISPLAY_NEED-4*10-(S.sci?3*8+10:0);
+  var kb,ks=0;
+  if(S.sci){ kb=budget/(5+4*.58); kb=Math.max(42,Math.min(84,kb)); ks=Math.max(28,Math.min(46,kb*.58)); }
+  else { kb=Math.max(48,Math.min(100,budget/5)); }
+  st.setProperty('--kb',Math.floor(kb)+'px'); if(ks)st.setProperty('--ks',Math.floor(ks)+'px');
+}
 function fitMain(){
-  var land=matchMedia('(orientation:landscape) and (max-height:560px)').matches;
-  var max=land?44:(innerWidth<=350?52:64), min=land?22:30, size=max;
+  var land=isLand();
+  var max=land?44:(innerWidth<=350?52:64), min=land?22:26;
+  // no taller than the display can hold under the lines above and below it
+  var d=$('display'), room=d.clientHeight-16-prev.offsetHeight-sub.offsetHeight;
+  if(room>0)max=Math.max(min,Math.min(max,Math.floor(room/1.3)));
+  var size=max;
   main.style.fontSize=size+'px';
   while(main.scrollWidth>main.clientWidth+1&&size>min){ size-=2; main.style.fontSize=size+'px'; }
   main.scrollLeft=main.scrollWidth;
@@ -475,6 +498,7 @@ function render(){
   $('memPill').classList.toggle('hide',S.mem===0);
   $('secPill').classList.toggle('hide',!S.second);
   document.body.classList.toggle('nosci',!S.sci);
+  layoutKeys();
   sub.classList.remove('err');
   if(S.shown!==null){
     prev.textContent=exprText(S.shownExpr)+' =';
