@@ -45,6 +45,8 @@ canvas#map{position:absolute;inset:0;width:100%;height:100%;touch-action:none;di
 .fab{position:absolute;right:12px;display:flex;flex-direction:column;gap:8px;z-index:2;transition:bottom .3s cubic-bezier(.2,.8,.2,1)}
 .fab button{width:42px;height:42px;border-radius:13px;background:var(--surface);box-shadow:var(--shadow);display:grid;place-items:center}
 .fab button:active{transform:scale(.93)}
+.fab button[aria-pressed="false"]{color:var(--faint)}
+.fab button[aria-pressed="false"] svg{opacity:.55}
 .fab svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
 .legend{transition:opacity .4s;position:absolute;left:12px;bottom:12px;font-size:11px;line-height:1.35;color:var(--muted);background:color-mix(in srgb,var(--surface) 85%,transparent);
   padding:5px 8px;border-radius:8px;z-index:1;pointer-events:none;max-width:60%}
@@ -207,6 +209,7 @@ body.imm .imm-safe{display:block}
   <div class="fab" id="fab">
     <button id="zin" aria-label="Zoom in"><svg viewBox="0 0 24 24"><path d="M12 6v12M6 12h12"/></svg></button>
     <button id="zout" aria-label="Zoom out"><svg viewBox="0 0 24 24"><path d="M6 12h12"/></svg></button>
+    <button id="lmBtn" aria-label="Landmarks" aria-pressed="true"><svg viewBox="0 0 24 24"><path d="M4 20h16M6 20V11l6-6 6 6v9"/><path d="M10 20v-5h4v5"/></svg></button>
     <button id="zfit" aria-label="Show the whole city"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
   </div>
   <div class="legend" id="legend"></div>
@@ -324,9 +327,9 @@ function applyMode(){
 
 /* ---------- State + storage ---------- */
 var STORE='metromaps.v1';
-var S={city:'london',recents:[],favs:[],views:{},mode:'fast',viewMode:{}};
+var S={city:'london',recents:[],favs:[],views:{},mode:'fast',viewMode:{},landmarks:true};
 function save(){
-  var d=JSON.stringify({city:S.city,recents:S.recents.slice(0,12),favs:S.favs.slice(0,30),views:S.views,mode:S.mode,viewMode:S.viewMode});
+  var d=JSON.stringify({city:S.city,recents:S.recents.slice(0,12),favs:S.favs.slice(0,30),views:S.views,mode:S.mode,viewMode:S.viewMode,landmarks:S.landmarks});
   try{ if(window.myllmStorage){ myllmStorage.setItem(STORE,d); return; } }catch(e){}
   try{ localStorage.setItem(STORE,d); }catch(e){}
 }
@@ -334,7 +337,7 @@ function load(done){
   function apply(v){ if(v){ try{ var d=JSON.parse(v);
     if(d.city&&CITY_LIST.some(function(c){return c.id===d.city}))S.city=d.city;
     if(Array.isArray(d.recents))S.recents=d.recents; if(Array.isArray(d.favs))S.favs=d.favs;
-    if(d.views&&typeof d.views==='object')S.views=d.views; if(d.viewMode&&typeof d.viewMode==='object')S.viewMode=d.viewMode; if(d.mode==='few'||d.mode==='fast')S.mode=d.mode; }catch(e){} }
+    if(d.views&&typeof d.views==='object')S.views=d.views; if(d.viewMode&&typeof d.viewMode==='object')S.viewMode=d.viewMode; if(d.landmarks===false)S.landmarks=false; if(d.mode==='few'||d.mode==='fast')S.mode=d.mode; }catch(e){} }
     done(); }
   try{ if(window.myllmStorage){ myllmStorage.getItem(STORE).then(apply,function(){apply(null)}); return; } }catch(e){}
   var v=null; try{ v=localStorage.getItem(STORE); }catch(e){} apply(v);
@@ -402,6 +405,7 @@ function draw(fast){
   ctx.lineJoin='round'; ctx.lineCap='round';
   ctx.strokeStyle=COL['--water']; ctx.lineWidth=Math.max(5,Math.min(60,22*view.s));
   city.rivers.forEach(function(r){ ctx.beginPath(); for(var i=0;i<r.length;i++){ var p=toScreen(r[i][0],r[i][1]); if(i)ctx.lineTo(p[0],p[1]); else ctx.moveTo(p[0],p[1]); } ctx.stroke(); });
+  drawLandmarks();
   // lines
   var onRoute=route?route.lineSet:null;
   city.lines.forEach(function(L){
@@ -498,6 +502,7 @@ function drawSch(){
   ctx.setTransform(DPR,0,0,DPR,0,0);
   ctx.fillStyle=COL['--map']; ctx.fillRect(0,0,W,H);
   var D=schDims(), z=view.s/baseS;
+  drawLandmarks();
   ctx.lineJoin='round'; ctx.lineCap='round';
   var onRoute=route?route.lineSet:null;
   city.lines.forEach(function(L){
@@ -635,6 +640,109 @@ function drawLabels(vis,r0,z){
 }
 function queueDraw(){ if(drawQueued)return; drawQueued=true; requestAnimationFrame(function(){ drawQueued=false; draw(true); }); }
 
+/* ---------- Ghost landmarks ----------
+   Faint line sketches of each city's famous sites, drawn under the lines
+   like a watermark. Hosted, not embedded; if they don't load (offline)
+   they are simply not drawn. */
+var LM_BASE='https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/metro/landmarks/';
+var PROJ={london:[51.5074,-0.1278],paris:[48.8566,2.3522],nyc:[40.7580,-73.9855]};
+var LANDMARKS={
+  london:[['lon-elizabeth-tower','Elizabeth Tower (Big Ben)',51.5007,-0.1246,'Westminster'],['lon-london-eye','London Eye',51.5033,-0.1196,'Waterloo'],
+    ['lon-tower-bridge','Tower Bridge',51.5055,-0.0754,'Tower Hill'],['lon-st-pauls',"St Paul's Cathedral",51.5138,-0.0984,"St. Paul's"],
+    ['lon-shard','The Shard',51.5045,-0.0865,'London Bridge'],['lon-buckingham','Buckingham Palace',51.5014,-0.1419,'Green Park']],
+  paris:[['par-eiffel','Eiffel Tower',48.8584,2.2945,'Bir-Hakeim'],['par-arc','Arc de Triomphe',48.8738,2.2950,'Charles de Gaulle'],
+    ['par-notre-dame','Notre-Dame',48.8530,2.3499,'Cité'],['par-sacre-coeur','Sacré-Cœur',48.8867,2.3431,'Anvers'],
+    ['par-louvre','The Louvre',48.8611,2.3358,'Palais Royal'],['par-pantheon','Panthéon',48.8462,2.3464,'Cardinal Lemoine']],
+  nyc:[['nyc-liberty','Statue of Liberty',40.6892,-74.0445,'South Ferry'],['nyc-empire','Empire State Building',40.7484,-73.9857,'34 St-Herald'],
+    ['nyc-chrysler','Chrysler Building',40.7516,-73.9755,'Grand Central'],['nyc-flatiron','Flatiron Building',40.7411,-73.9897,'23 St'],
+    ['nyc-one-wtc','One World Trade Center',40.7127,-74.0134,'World Trade Center'],['nyc-brooklyn-bridge','Brooklyn Bridge',40.7061,-73.9969,'Brooklyn Bridge']]
+};
+var lmImgs={}, lmTint={}, lmHits=[];
+function lmFor(c){
+  if(c.lm)return c.lm;
+  var p0=PROJ[c.id], k=Math.cos(p0[0]*Math.PI/180);
+  c.lm=(LANDMARKS[c.id]||[]).map(function(d){
+    var gx=(d[3]-p0[1])*k*11132, gy=(p0[0]-d[2])*11057.4, q=fold(d[4]);
+    // the named station; several share a name in New York, so the nearest
+    var cand=c.st.filter(function(s){return s.key.indexOf(q)>=0;});
+    var st=cand.sort(function(a,b){return Math.hypot(a.gx-gx,a.gy-gy)-Math.hypot(b.gx-gx,b.gy-gy);})[0]||null;
+    return {id:d[0],name:d[1],gx:gx,gy:gy,st:st?st.i:null};
+  });
+  if(c.sEdges)placeSchematic(c);
+  return c.lm;
+}
+/* Schematic: beside its station, towards the emptiest of eight directions. */
+function placeSchematic(c){
+  var pts=[];
+  c.st.forEach(function(s){ pts.push([s.sx,s.sy,2]); });
+  Object.values(c.sEdges).forEach(function(E){
+    var a=c.st[E.a],b=c.st[E.b], q=[[a.sx,a.sy]].concat(E.mid,[[b.sx,b.sy]]);
+    for(var i=1;i<q.length;i++){ var L=Math.hypot(q[i][0]-q[i-1][0],q[i][1]-q[i-1][1]), n=Math.ceil(L/.5);
+      for(var j=1;j<n;j++)pts.push([q[i-1][0]+(q[i][0]-q[i-1][0])*j/n,q[i-1][1]+(q[i][1]-q[i-1][1])*j/n,1]); }
+  });
+  var used=[];
+  c.lm.forEach(function(m){
+    if(m.st===null)return;
+    var s=c.st[m.st], best=null;
+    for(var d=0;d<8;d++){
+      var a=d*Math.PI/4, cx=s.sx+Math.cos(a)*3.2, cy=s.sy+Math.sin(a)*3.2, cost=0;
+      pts.forEach(function(p){ var r=Math.hypot(p[0]-cx,p[1]-cy); if(r<2.6)cost+=p[2]*(2.6-r); });
+      used.forEach(function(u){ var r=Math.hypot(u[0]-cx,u[1]-cy); if(r<5)cost+=40*(5-r); });
+      // prefer the side the landmark is really on
+      var ga=Math.atan2(m.gy-s.gy,m.gx-s.gx), da=Math.abs(((a-ga+3*Math.PI)%(2*Math.PI))-Math.PI);
+      cost+=da*1.2;
+      if(!best||cost<best[0])best=[cost,cx,cy];
+    }
+    m.sx=best[1]; m.sy=best[2]; used.push([m.sx,m.sy]);
+  });
+}
+function lmImage(id){
+  var r=lmImgs[id];
+  if(r)return r.ok?r.img:null;
+  r=lmImgs[id]={ok:false,img:new Image()};
+  r.img.onload=function(){ r.ok=true; queueDraw(); };
+  r.img.onerror=function(){ r.failed=true; };
+  r.img.src=LM_BASE+id+'.png';
+  return null;
+}
+function lmTinted(id,img){
+  var col=DARK.matches?'#e8ecf4':'#1b2130', k=id+col;
+  if(lmTint[k])return lmTint[k];
+  var cv2=document.createElement('canvas'); cv2.width=img.naturalWidth; cv2.height=img.naturalHeight;
+  var g=cv2.getContext('2d'); g.drawImage(img,0,0); g.globalCompositeOperation='source-in'; g.fillStyle=col; g.fillRect(0,0,cv2.width,cv2.height);
+  return (lmTint[k]=cv2);
+}
+/* Fully there at the overview and the central fit, gone past ~2.5× it. */
+function lmAlpha(){ var z=view.s/baseS; return (DARK.matches?.2:.16)*Math.max(0,Math.min(1,(2.5-z)/1.1)); }
+var lmLast={drawn:0,alpha:0};
+function drawLandmarks(){
+  lmHits=[]; lmLast={drawn:0,alpha:0};
+  if(!S.landmarks)return;
+  var a=lmAlpha(); lmLast.alpha=a; if(a<=.005)return;
+  var sch=viewMode()==='sch';
+  lmFor(city).forEach(function(m){
+    var img=lmImage(m.id); if(!img)return;
+    var x=sch?m.sx:m.gx, y=sch?m.sy:m.gy; if(x===undefined)return;
+    var p=toScreen(x,y);
+    var h=Math.max(46,Math.min(120,(sch?5.2:75)*view.s)), w=h*img.naturalWidth/img.naturalHeight;
+    if(p[0]+w<0||p[0]-w>W||p[1]+h<0||p[1]-h>H)return;
+    ctx.globalAlpha=a; ctx.drawImage(lmTinted(m.id,img),p[0]-w/2,p[1]-h/2,w,h); ctx.globalAlpha=1;
+    lmHits.push({m:m,x0:p[0]-w/2,y0:p[1]-h/2,x1:p[0]+w/2,y1:p[1]+h/2});
+    lmLast.drawn++;
+  });
+}
+function openLandmark(m){
+  var st=m.st!==null?city.st[m.st]:null;
+  openSheet(m.name,'<p class="note" style="margin-top:2px">'+(st?'Nearest station: <b style="color:var(--ink)">'+esc(st.name)+'</b>':'')+'</p>'+
+    (st?'<div class="chips" style="margin:10px 0 2px">'+st.lines.map(function(li){return chip(city.lines[li])}).join('')+'</div><div class="acts2"><button class="btn pri" id="lmRoute">Route to here</button><button class="btn" id="lmSt">Station</button></div>':''));
+  if(st){
+    $('lmRoute').onclick=function(){ haptic('light'); R.cityId=city.id; R.to=st.i; if(R.from===st.i)R.from=null; openTab('route'); };
+    $('lmSt').onclick=function(){ haptic('light'); openStation(st.i); };
+  }
+}
+$('lmBtn').onclick=function(){ S.landmarks=!S.landmarks; save(); haptic('light'); syncLmBtn(); draw(); };
+function syncLmBtn(){ $('lmBtn').setAttribute('aria-pressed',S.landmarks?'true':'false'); $('lmBtn').setAttribute('aria-label',S.landmarks?'Hide landmarks':'Show landmarks'); }
+
 /* ---------- Gestures ---------- */
 var ptrs={}, gest=null, lastTap=0, vel=null;
 cv.addEventListener('pointerdown',function(e){
@@ -685,8 +793,10 @@ function nearest(px,py,maxD){
 }
 function tapAt(px,py){
   var si=nearest(px,py,24);
-  if(si!==null){ haptic('light'); openStation(si); }
-  else if(focusSt!==null){ focusSt=null; draw(); }
+  if(si!==null){ haptic('light'); openStation(si); return; }
+  if(lmLast.alpha>=.06){ var h=lmHits.filter(function(r){return px>=r.x0&&px<=r.x1&&py>=r.y0&&py<=r.y1;})[0];
+    if(h){ haptic('light'); openLandmark(h.m); return; } }
+  if(focusSt!==null){ focusSt=null; draw(); }
 }
 $('zin').onclick=function(){ zoomAt(1.8,W/2,H/2,true); haptic('light'); };
 $('zout').onclick=function(){ zoomAt(1/1.8,W/2,H/2,true); haptic('light'); };
@@ -1029,6 +1139,7 @@ function showAbout(){
     '<div class="sec">Paris</div><p class="note">© OpenStreetMap contributors. Métro stations and lines from OpenStreetMap, available under the Open Database License (ODbL 1.0); the Paris data in this app is ODbL.</p>'+
     '<div class="sec">New York</div><p class="note">Subway and Staten Island Railway stations and routes from the MTA New York City Transit GTFS feed; live alerts from the MTA’s public GTFS alerts feed. Data provided by the MTA under its data feed terms.</p>'+
     '<div class="sec">Rivers</div><p class="note">© OpenStreetMap contributors, ODbL.</p>'+
+    '<div class="sec">Landmarks</div><p class="note">Landmark sketches: MyLLM.</p>'+
     '<div class="sec">Good to know</div><p class="note">Journey times are estimates from distance. Service patterns change; check live status and station signs before you travel. Everything except live status works offline.</p>';
   openSheet('About Metro Maps',h);
 }
@@ -1043,7 +1154,7 @@ DARK.addEventListener&&DARK.addEventListener('change',function(){ readColors(); 
 if(window.ResizeObserver)new ResizeObserver(function(){ resize(); placeFab(); }).observe(stage);
 addEventListener('resize',function(){ resize(); placeFab(); });
 resize(); renderCities();
-load(function(){ setCity(S.city,true); });
+load(function(){ syncLmBtn(); setCity(S.city,true); });
 
 /* myllm-fullscreen-v2 — full screen where MyLLM can also close the app for us
    (myllmClose, 5.6.2+): full screen hides MyLLM's Done, and a page with no way
