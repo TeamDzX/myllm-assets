@@ -46,6 +46,35 @@
       ]
     },
     {
+      "id": "airport-maps",
+      "name": "Airport Maps",
+      "emoji": "✈️",
+      "tagline": "Find your way around Heathrow",
+      "description": "A map of Heathrow for the moments that matter: find food, shops, toilets, lounges and your gate in Terminals 2 to 5, floor by floor. Filter by what you need, search a brand or a gate number, and see opening hours and whether a place is before or after security. Pick your gate to see the nearest coffee, toilets and lounges with walking times. Getting there shows trains, the transit trains between gates, buses, taxis and parking. Ask your AI about a terminal and it answers from the map. Built from OpenStreetMap, so coverage varies by terminal. Works offline. Not affiliated with Heathrow Airport.",
+      "tags": [
+        "travel",
+        "airport",
+        "heathrow",
+        "maps",
+        "offline",
+        "saves data"
+      ],
+      "iconSymbol": "airplane",
+      "iconColor": "cyan",
+      "version": 1,
+      "featured": true,
+      "requiresAI": false,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/airport-maps.jpg",
+      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@main/apps-src/airport-maps.html",
+      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@main/apps-src/airport-maps.myllmapp",
+      "sizeKB": 191,
+      "category": "Utilities",
+      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/icons/airport-maps.jpg",
+      "aiUses": [
+        "ask"
+      ]
+    },
+    {
       "id": "pinpoint",
       "name": "Pinpoint",
       "emoji": "📍",
