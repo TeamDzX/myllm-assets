@@ -115,6 +115,16 @@ a.cvg{display:flex;gap:11px;align-items:center;text-decoration:none;color:inheri
 }
 @media(min-width:1000px){.wrap{max-width:1080px}.hero .body h2{font-size:26px}}
 #more[disabled]{opacity:.5}
+/* Video stories that can play in the app: a play badge on the picture. It is a
+   pseudo-element because the thumbnail's contents get swapped (image rescue). */
+.vid .thumb::after{content:'';position:absolute;left:12px;bottom:12px;width:40px;height:40px;border-radius:50%;background:rgba(0,0,0,.58) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23fff' d='M8 5.5v13l11-6.5z'/%3E%3C/svg%3E") 55% 50%/20px no-repeat;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);box-shadow:0 0 0 1.5px rgba(255,255,255,.55)}
+.hero.vid .thumb::after{width:52px;height:52px;background-size:26px;left:16px;bottom:16px}
+.vplay{position:relative;aspect-ratio:16/9;margin:0 16px 12px;border-radius:14px;overflow:hidden;background:#000;color:#fff;display:flex;align-items:center;justify-content:center;text-align:center;font-size:14px;line-height:1.5}
+.vplay iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.vplay .vmsg{padding:0 24px;color:rgba(255,255,255,.8)}
+.vfoot{display:flex;align-items:center;gap:12px;padding:0 16px 16px}
+.vfoot .vsrc{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.02em;color:var(--accent)}
+.vfoot a{margin-left:auto;font-size:14px;font-weight:600;color:var(--accent);text-decoration:none;padding:8px 0}
 @media(prefers-reduced-motion:no-preference){a.card,a.hero{transition:transform .12s ease}a.card:active,a.hero:active{transform:scale(.985)}}
 /* The header every gallery home screen shares: hue tile, name, one line, actions. */
 .head{display:flex;align-items:center;gap:12px;margin:2px 2px 14px}
@@ -622,10 +632,62 @@ function summarize(a,entry,ovl){
   }).catch(function(){if(ovlNode)sum.style.display='none'});
 }
 
+// In-app video. Only outlets whose video pages name a YouTube id are played
+// here — The Guardian (a YoutubeBlockComponent's assetId) and Euronews (its
+// youtubevideoid) — and only through the official youtube-nocookie player,
+// the one iframe the gallery allows: the host is written out below, only the
+// id is interpolated, and the video keeps its own ads and view count. BBC,
+// Al Jazeera and the rest use players an app can't embed, so their video
+// links stay ordinary links and open in the browser as before.
+var VIDEO_HOSTS=/^https:\/\/(www\.)?(theguardian\.com|euronews\.com)\/(.*\/)?video\//i;
+var vidCache={};                      // link → YouTube id | null (null = looked, none)
+function isVideo(a){return !!(a&&a.link&&VIDEO_HOSTS.test(a.link))}
+function youtubeId(html){
+  var h=String(html||'').replace(/&quot;/g,'"').replace(/\\\//g,'/'),m;
+  m=h.match(/YoutubeBlockComponent[\s\S]{0,400}?"assetId":"([A-Za-z0-9_-]{11})"/)   // The Guardian
+   ||h.match(/"youtubevideoid":"([A-Za-z0-9_-]{11})"/)                             // Euronews
+   ||h.match(/youtube(?:-nocookie)?\.com\/embed\/([A-Za-z0-9_-]{11})/);            // a plain embed
+  return m?m[1]:null;
+}
+function wireVideo(node,a){
+  if(!node||!isVideo(a)||!window.myllmFetch)return;
+  node.addEventListener('click',function(e){e.preventDefault();openVideo(a)});
+}
+// Shares the coverage sheet's overlay slot, so closeCoverage() closes either —
+// and removing the node is what stops the video.
+function openVideo(a){
+  haptic('light');
+  closeCoverage();
+  var ovl=document.createElement('div');ovl.id='ovl';ovlNode=ovl;
+  ovl.innerHTML='<div class="sheet" role="dialog" aria-label="Video">'+
+    '<div class="sh-head"><div class="sh-t">Video</div><button class="sh-x" aria-label="Close"><svg class="i"><use href="#i-close"/></svg></button></div>'+
+    '<div class="sh-story">'+esc(a.title)+'</div>'+
+    '<div class="vplay" id="vPlay"><span class="vmsg">Finding the video…</span></div>'+
+    '<div class="vfoot"><span class="vsrc">'+esc(a.src||'')+'</span>'+
+      '<a href="'+esc(a.link)+'" target="_blank" rel="noopener">Open the story ↗</a></div></div>';
+  ovl.addEventListener('click',function(e){if(e.target===ovl)closeCoverage()});
+  document.body.appendChild(ovl);
+  ovl.querySelector('.sh-x').onclick=closeCoverage;
+  document.body.style.overflow='hidden';
+  function show(id){
+    if(ovlNode!==ovl)return;          // closed, or another sheet took over
+    var box=ovl.querySelector('#vPlay');
+    if(!id){box.innerHTML='<span class="vmsg">This story\u2019s video can\u2019t be played inside Headlines. Open the story to watch it on '+esc(a.src||'the publisher\u2019s site')+'.</span>';return}
+    box.innerHTML='<iframe src="https://www.youtube-nocookie.com/embed/'+id+
+      '?playsinline=1&rel=0&autoplay=1" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen title="Video"></iframe>';
+  }
+  if(vidCache[a.link]!==undefined){show(vidCache[a.link]);return}
+  myllmFetch(a.link).then(function(r){
+    var id=r&&r.ok?youtubeId(r.body):null;
+    vidCache[a.link]=id;
+    show(id);
+  },function(){show(null)});
+}
+
 function paint(){
   var hero=articles[0];
   el('hero').innerHTML=hero?(
-    '<a class="hero" href="'+esc(hero.link||'#')+'" target="_blank" rel="noopener">'+
+    '<a class="hero'+(isVideo(hero)?' vid':'')+'" href="'+esc(hero.link||'#')+'" target="_blank" rel="noopener">'+
       thumb(hero)+
       '<div class="body"><div class="meta">'+metaLine(hero)+'</div>'+
       '<h2>'+esc(hero.title)+'</h2>'+
@@ -633,7 +695,7 @@ function paint(){
       leanBadge(hero)+
       '</div></a>'
   ):'';
-  if(hero)wireLean(el('hero'),hero);
+  if(hero){wireLean(el('hero'),hero);wireVideo(el('hero').firstChild,hero)}
   ogBudget=10;                        // fresh rescue allowance per topic load
   ogQueue=[];
   if(hero)rescueImage(hero,el('hero'),loadGen);
@@ -645,9 +707,10 @@ function more(){
   var slice=articles.slice(shown,shown+PAGE),frag=document.createDocumentFragment();
   slice.forEach(function(a){
     var card=document.createElement('a');
-    card.className='card';card.href=a.link||'#';card.target='_blank';card.rel='noopener';
+    card.className='card'+(isVideo(a)?' vid':'');card.href=a.link||'#';card.target='_blank';card.rel='noopener';
     card.innerHTML=thumb(a)+'<div class="body"><div class="meta">'+metaLine(a)+'</div><h3>'+esc(a.title)+'</h3>'+leanBadge(a)+'</div>';
     wireLean(card,a);
+    wireVideo(card,a);
     card.addEventListener('click',function(){haptic('light')});
     if(!a.image)rescueImage(a,card,loadGen);
     frag.appendChild(card);
