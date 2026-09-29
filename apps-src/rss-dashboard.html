@@ -29,8 +29,13 @@
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 svg.i{width:1.25em;height:1.25em;fill:currentColor;flex-shrink:0;display:block}
 body{margin:0;font-family:var(--font);background:var(--bg);color:var(--text);-webkit-text-size-adjust:100%}
-.topbar{position:sticky;top:0;z-index:10;background:var(--glassbg);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);padding:10px env(safe-area-inset-right) 0 env(safe-area-inset-left);border-bottom:1px solid var(--border)}
+.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:10;background:var(--glassbg);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);padding:10px env(safe-area-inset-right) 0 env(safe-area-inset-left);border-bottom:1px solid var(--border)}
 .headrow{max-width:1080px;margin:0 auto}
+/* Full screen: the tab bar sticks just below the Dynamic Island, not under it.
+   Once it is stuck, this strip fills the gap above it so stories don't scroll
+   visibly behind the island. Hidden until then, or it would cover the header. */
+.topbar::before{content:"";position:absolute;left:0;right:0;bottom:100%;height:env(safe-area-inset-top,0px);background:var(--glassbg);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);opacity:0;pointer-events:none}
+.topbar.stuck::before{opacity:1}
 .headrow{display:flex;align-items:flex-start}
 #tabs{display:flex;gap:6px;overflow-x:auto;padding:0 16px 12px 16px;-webkit-overflow-scrolling:touch;scrollbar-width:none;flex:1;min-width:0}
 #tabs::-webkit-scrollbar{display:none}
@@ -874,6 +879,16 @@ function show(){ensure();depth++;node.classList.add('on');}
 function hide(){depth=Math.max(0,depth-1);if(depth===0&&node)node.classList.remove('on');}
 window.myllmAsk=function(){show();var p;try{p=orig.apply(this,arguments);}catch(e){hide();throw e;}
 return Promise.resolve(p).then(function(r){hide();return r;},function(e){hide();throw e;});};})();
+
+/* Flag the tab bar once it is pinned, so its island strip shows (see .topbar::before). */
+(function(){
+  var tb=document.querySelector('.topbar'); if(!tb) return;
+  function st(){
+    var t=parseFloat(getComputedStyle(tb).top)||0;
+    tb.classList.toggle('stuck', window.scrollY>0 && tb.getBoundingClientRect().top<=t+0.5);
+  }
+  addEventListener('scroll',st,{passive:true}); addEventListener('resize',st); st();
+})();
 
 /* myllm-fullscreen-v2 — full screen where MyLLM can also close the app for us
    (myllmClose, 5.6.2+): full screen hides MyLLM's Done, and a page with no way
