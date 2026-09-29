@@ -227,7 +227,14 @@ await Promise.all(
   Array.from({ length: Math.min(CONFIG.concurrency, queue.length) }, async () => {
     while (queue.length) {
       const file = queue.shift();
-      const r = await verifyApp(browser, file);
+      let r = await verifyApp(browser, file);
+      // WebKit occasionally kills a page mid-sweep on the CI runner (4 jobs in
+      // parallel). That is the engine, not the app — give it one more go, and
+      // only fail if it dies twice.
+      if (r.crashed?.includes('has been closed')) {
+        console.log(`↻ ${r.slug}: page closed mid-run, retrying once`);
+        r = await verifyApp(browser, file);
+      }
       results.push(r);
       if (!CONFIG.quiet) {
         const fails = r.findings.filter((f) => f.severity === 'FAIL').length;
