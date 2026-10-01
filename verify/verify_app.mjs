@@ -78,6 +78,7 @@ const SEVERITY = {
   'window-open': 'INFO',          // works — createWebViewWith hands the URL to Safari
   'remote-image': 'INFO',         // permitted by CONTRIBUTING rule 1
   'bridge-network': 'INFO',       // myllmFetch — legitimate for network apps
+  'bridge-tobot': 'INFO',         // myllmIntent.toBot — the user confirms on device
 };
 
 const rank = { FAIL: 0, WARN: 1, INFO: 2, PASS: 3 };

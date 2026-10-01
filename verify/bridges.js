@@ -247,6 +247,13 @@
       window.__myllmIntentHandler = cb;
       if (window.__myllmInitialIntent) { try { cb(window.__myllmInitialIntent); } catch (e) {} }
     },
+    // 5.8.3: bots as intent targets. On device the user confirms in a sheet;
+    // here the stub resolves as if they tapped Send.
+    bots: () => later([{ name: 'Daily Planner', icon: 'calendar', role: 'Plans your day.' }]),
+    toBot: (name, message, data) => {
+      flag('bridge-tobot', String(name));
+      return later({ sent: true });
+    },
   };
 
   // Tile state (roadmap #4). Publishing is fire-and-forget from the app's side.
