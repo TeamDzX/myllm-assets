@@ -1,0 +1,519 @@
+<!doctype html>
+<!--
+  Spirit Level — MyLLMos™ App Gallery · © 2026 Opticell Ltd
+  Source-available: read it, remix it, run your version inside MyLLM™.
+  Not for redistribution or republication. Terms: https://github.com/TeamDzX/myllm-assets/blob/main/LICENSE
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Spirit Level</title>
+<meta name="myllm:immersive" content="on">
+<style>
+:root{--build-id:"332a7b8f71";
+  color-scheme:light dark;
+  --font:var(--myllm-font,-apple-system,system-ui,sans-serif);
+  --bg:#0b0d10; --ink:#f4f6f8; --muted:rgba(244,246,248,.6); --line:rgba(255,255,255,.14);
+  --glass:rgba(255,255,255,.08); --vial:#1a1f24; --fluid:#c9f25b; --fluid-2:#9fd33a;
+  --ok:#3ddc84; --warn:#ffcf48; --acc:#c9f25b;
+}
+@media (prefers-color-scheme:light){
+  :root{--bg:#eef1ee; --ink:#14181c; --muted:rgba(20,24,28,.58); --line:rgba(0,0,0,.12);
+    --glass:rgba(255,255,255,.7); --vial:#dfe5dc; --fluid:#a8d63a; --fluid-2:#86b726; --acc:#5b8f12; --ok:#16a34a}
+}
+*{box-sizing:border-box;margin:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{font-family:var(--font);background:var(--bg);color:var(--ink);position:fixed;inset:0;height:100dvh;overflow:hidden;
+  user-select:none;-webkit-user-select:none;display:flex;flex-direction:column;transition:background .4s}
+body.level{background:radial-gradient(120% 80% at 50% 45%,color-mix(in srgb,var(--ok) 22%,var(--bg)),var(--bg) 70%)}
+button{font:inherit;color:inherit;cursor:pointer}
+svg.i{width:1.2em;height:1.2em;fill:currentColor;flex-shrink:0}
+
+/* The header every gallery home screen shares: hue tile, name, one line, actions. */
+.head{display:flex;align-items:center;gap:12px;flex-shrink:0;
+  padding:calc(12px + env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) 6px max(16px,env(safe-area-inset-left))}
+.tile{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;color:#14200a;
+  background:linear-gradient(145deg,#d6f56f,#86b726);flex-shrink:0}
+.tile svg{width:24px;height:24px}
+.ht{flex:1;min-width:0}
+.ht h1{font-size:20px;font-weight:800;letter-spacing:-.01em}
+.ht p{font-size:12.5px;color:var(--muted);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+.modes{display:flex;gap:4px;margin:6px auto 0;padding:4px;border-radius:99px;background:var(--glass);border:1px solid var(--line);flex-shrink:0}
+.modes button{border:0;background:transparent;padding:7px 15px;border-radius:99px;font-size:13px;font-weight:700;color:var(--muted)}
+.modes button.on{background:var(--ink);color:var(--bg)}
+
+/* The instrument: one of two faces, the bullseye (flat) or the vial (on an edge). */
+.stage{flex:1;min-height:0;position:relative;display:flex;align-items:center;justify-content:center}
+.face{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;transition:opacity .25s}
+.face[hidden]{display:flex;opacity:0;pointer-events:none}
+
+.eye{position:relative;width:min(74vw,46vh,330px);aspect-ratio:1;border-radius:50%;
+  background:radial-gradient(circle at 50% 50%,color-mix(in srgb,var(--fluid) 30%,var(--vial)),var(--vial) 72%);
+  border:2px solid var(--line);box-shadow:inset 0 10px 40px rgba(0,0,0,.35)}
+.eye .ring{position:absolute;border:1.5px solid var(--line);border-radius:50%;left:50%;top:50%;transform:translate(-50%,-50%)}
+.eye .ring b{position:absolute;top:-8px;left:50%;transform:translateX(-50%);font-size:9.5px;font-weight:700;color:var(--muted);background:var(--vial);padding:0 3px;border-radius:3px}
+.eye .cross{position:absolute;background:var(--line)}
+.eye .cross.h{left:6%;right:6%;top:50%;height:1px}
+.eye .cross.v{top:6%;bottom:6%;left:50%;width:1px}
+.bubble{position:absolute;left:50%;top:50%;width:19%;aspect-ratio:1;border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,rgba(255,255,255,.95),var(--fluid) 45%,var(--fluid-2));
+  box-shadow:0 4px 14px rgba(0,0,0,.35),0 0 0 2px rgba(255,255,255,.18);transform:translate(-50%,-50%);will-change:transform}
+body.level .bubble{box-shadow:0 0 22px var(--ok),0 0 0 2px var(--ok)}
+.eye .target{position:absolute;left:50%;top:50%;width:22%;aspect-ratio:1;border-radius:50%;border:2px dashed var(--muted);transform:translate(-50%,-50%)}
+
+.edge{position:relative;width:min(84vw,380px);display:flex;flex-direction:column;align-items:center;gap:22px;transition:transform .3s}
+.vial{position:relative;width:100%;height:64px;border-radius:32px;border:2px solid var(--line);overflow:hidden;
+  background:linear-gradient(180deg,color-mix(in srgb,var(--fluid) 26%,var(--vial)),var(--vial));box-shadow:inset 0 8px 24px rgba(0,0,0,.35)}
+.vial .mark{position:absolute;top:8px;bottom:8px;width:2px;background:var(--muted);border-radius:1px}
+.vial .vb{position:absolute;top:50%;left:50%;width:30%;height:34px;border-radius:17px;
+  background:radial-gradient(ellipse at 40% 30%,rgba(255,255,255,.95),var(--fluid) 45%,var(--fluid-2));
+  box-shadow:0 3px 10px rgba(0,0,0,.35);transform:translate(-50%,-50%);will-change:transform}
+body.level .vial .vb{box-shadow:0 0 20px var(--ok),0 0 0 2px var(--ok)}
+
+.read{text-align:center}
+.big{font-size:clamp(56px,17vw,92px);font-weight:900;font-variant-numeric:tabular-nums;letter-spacing:-.03em;line-height:1}
+body.level .big{color:var(--ok)}
+.unit{font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-top:6px}
+.sub{display:flex;gap:18px;justify-content:center;margin-top:10px;font-size:14px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--muted)}
+.sub span b{color:var(--ink);font-weight:800}
+.tag{display:inline-flex;gap:6px;align-items:center;margin-top:10px;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;
+  padding:5px 11px;border-radius:99px;background:var(--glass);border:1px solid var(--line);color:var(--muted)}
+.tag[hidden]{display:none}
+.tag.ok{color:var(--ok);border-color:var(--ok)}
+body.held .big{color:var(--warn)}
+
+.bar{flex-shrink:0;display:grid;grid-template-columns:repeat(4,1fr);gap:8px;
+  padding:8px max(14px,env(safe-area-inset-right)) calc(14px + env(safe-area-inset-bottom)) max(14px,env(safe-area-inset-left))}
+.bar button{border:1px solid var(--line);background:var(--glass);border-radius:16px;min-height:58px;padding:8px 4px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:12px;font-weight:700;
+  -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+.bar button.on{border-color:var(--acc);color:var(--acc)}
+.bar button:active,.modes button:active{transform:scale(.96)}
+
+/* Start: iOS only grants motion access from a tap, so the app opens on one. */
+.cover{position:absolute;inset:0;z-index:5;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
+  padding:0 32px;text-align:center;background:var(--bg)}
+.cover[hidden]{display:none}
+.cover h2{font-size:22px;font-weight:800}
+.cover p{color:var(--muted);font-size:14.5px;line-height:1.5;max-width:330px}
+.go{border:0;background:var(--acc);color:#14200a;font-weight:800;font-size:16px;padding:15px 30px;border-radius:16px;margin-top:6px}
+
+.sheet{position:fixed;inset:0;z-index:20;background:rgba(0,0,0,.5);display:flex;align-items:flex-end;justify-content:center}
+.sheet[hidden]{display:none}
+.sheet .card{width:100%;max-width:520px;background:var(--bg);border-radius:22px 22px 0 0;border-top:1px solid var(--line);
+  padding:20px max(20px,env(safe-area-inset-right)) calc(22px + env(safe-area-inset-bottom)) max(20px,env(safe-area-inset-left))}
+.sheet h3{font-size:18px;font-weight:800;margin-bottom:6px}
+.sheet p{color:var(--muted);font-size:14px;line-height:1.5}
+.steps{display:flex;gap:6px;margin:14px 0}
+.steps i{flex:1;height:4px;border-radius:2px;background:var(--line)}
+.steps i.on{background:var(--acc)}
+.row{display:flex;gap:10px;margin-top:16px}
+.row button{flex:1;border:1px solid var(--line);background:var(--glass);border-radius:14px;min-height:48px;font-weight:700}
+.row button.pri{background:var(--acc);border-color:var(--acc);color:#14200a}
+.toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(10px);z-index:30;
+  background:rgba(20,22,26,.94);color:#fff;font-size:13.5px;font-weight:600;padding:10px 16px;border-radius:99px;opacity:0;pointer-events:none;transition:.25s;max-width:88%;text-align:center}
+.toast.show{opacity:1;transform:translateX(-50%)}
+@media (max-height:600px){.head{padding-bottom:0}.ht p{display:none}.face{gap:12px}.bar button{min-height:48px}}
+@media (prefers-reduced-motion:reduce){.face,.edge,body{transition:none}}
+
+/* myllm-fullscreen-v2 — MyLLM 5.6.2+ opens this app full screen; the ✕ is the way out. */
+.head .imm-acts{display:none;flex-shrink:0;margin-left:auto}
+.head .acts + .imm-acts{margin-left:0}
+body.imm .head .imm-acts{display:flex}
+.head .imm-acts button{width:40px;height:40px;border-radius:12px;border:1px solid var(--myllm-border,rgba(128,128,128,.28));
+  background:var(--myllm-surface,rgba(128,128,128,.12));color:var(--myllm-text,currentColor);display:grid;place-items:center;padding:0;cursor:pointer;transition:transform .12s}
+.head .imm-acts button:active,.head .imm-x:active{transform:scale(.94)}
+.head .imm-x{display:none !important}
+body.imm .head .imm-x{display:grid !important;place-items:center}
+.imm-x svg,.imm-acts svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round}
+.imm-safe{display:none}
+body.imm .imm-safe{display:block}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-level" viewBox="0 0 24 24"><path d="M3.5 8A2.5 2.5 0 0 0 1 10.5v3A2.5 2.5 0 0 0 3.5 16h17a2.5 2.5 0 0 0 2.5-2.5v-3A2.5 2.5 0 0 0 20.5 8zm5.5 2h6a2 2 0 0 1 0 4H9a2 2 0 0 1 0-4zm-1.75.5a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5a.75.75 0 0 1 .75-.75zm9.5 0a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5a.75.75 0 0 1 .75-.75z"/></symbol>
+  <symbol id="i-pause" viewBox="0 0 24 24"><path d="M7 4.5h3.2v15H7zM13.8 4.5H17v15h-3.2z"/></symbol>
+  <symbol id="i-zero" viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zm0 2a7 7 0 0 1 5.6 11.2L7.8 6.4A6.97 6.97 0 0 1 12 5zM6.4 7.8l9.8 9.8A7 7 0 0 1 6.4 7.8z"/></symbol>
+  <symbol id="i-ruler" viewBox="0 0 24 24"><path d="M3 15.5 15.5 3 21 8.5 8.5 21zm3 0 1.2 1.2 1.1-1.1-1.2-1.2zm2.5-2.5 2 2 1.1-1.1-2-2zm2.6-2.6 1.2 1.2 1.1-1.1-1.2-1.2zm2.5-2.5 2 2 1.1-1.1-2-2z"/></symbol>
+  <symbol id="i-target" viewBox="0 0 24 24"><path d="M11 2h2v3.06A7 7 0 0 1 18.94 11H22v2h-3.06A7 7 0 0 1 13 18.94V22h-2v-3.06A7 7 0 0 1 5.06 13H2v-2h3.06A7 7 0 0 1 11 5.06zm1 5a5 5 0 1 0 0 10 5 5 0 0 0 0-10zm0 3a2 2 0 1 1 0 4 2 2 0 0 1 0-4z"/></symbol>
+</defs></svg>
+
+<div class="imm-safe"></div><div class="head">
+  <div class="tile"><svg class="i"><use href="#i-level"/></svg></div>
+  <div class="ht"><h1>Spirit Level</h1><p id="hint">Lay it flat, or stand it on an edge</p></div>
+<div class="imm-acts"><button type="button" aria-label="Close Spirit Level" onclick="myllmFSClose()"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div></div>
+
+<div class="modes" role="tablist" aria-label="Mode">
+  <button data-m="auto" class="on" role="tab" aria-selected="true">Auto</button>
+  <button data-m="surface" role="tab" aria-selected="false">Flat</button>
+  <button data-m="edge" role="tab" aria-selected="false">Edge</button>
+</div>
+
+<div class="stage">
+  <div class="face" id="fSurface">
+    <div class="eye" id="eye" aria-hidden="true">
+      <i class="cross h"></i><i class="cross v"></i>
+      <div class="target"></div>
+      <div class="bubble" id="bubble"></div>
+    </div>
+    <div class="read">
+      <div class="big" id="sBig">0.0°</div>
+      <div class="unit" id="sUnit">Tilt</div>
+      <div class="sub"><span>Left–right <b id="sX">0.0°</b></span><span>Front–back <b id="sY">0.0°</b></span></div>
+      <div class="tag" id="sTag" hidden></div>
+    </div>
+  </div>
+  <div class="face" id="fEdge" hidden>
+    <div class="edge" id="edge">
+      <div class="vial" aria-hidden="true">
+        <i class="mark" style="left:calc(50% - 22%)"></i><i class="mark" style="left:calc(50% + 22% - 2px)"></i>
+        <div class="vb" id="vb"></div>
+      </div>
+      <div class="read">
+        <div class="big" id="eBig">0.0°</div>
+        <div class="unit" id="eUnit">Off level</div>
+        <div class="sub"><span>Angle <b id="eAbs">0.0°</b></span><span id="eSideWrap">High side <b id="eSide">—</b></span></div>
+        <div class="tag" id="eTag" hidden></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="cover" id="cover">
+    <div class="tile" style="width:64px;height:64px;border-radius:18px"><svg class="i" style="width:36px;height:36px"><use href="#i-level"/></svg></div>
+    <h2>Spirit Level</h2>
+    <p id="coverText">Uses your phone's motion sensor. Lay the phone flat on a surface, or stand it on one of its edges against a shelf or a frame.</p>
+    <button class="go" id="go">Start measuring</button>
+  </div>
+</div>
+
+<div class="bar">
+  <button id="bHold" aria-pressed="false"><svg class="i"><use href="#i-pause"/></svg>Hold</button>
+  <button id="bZero" aria-pressed="false"><svg class="i"><use href="#i-zero"/></svg>Zero here</button>
+  <button id="bUnit"><svg class="i"><use href="#i-ruler"/></svg><span id="unitLbl">Degrees</span></button>
+  <button id="bCal"><svg class="i"><use href="#i-target"/></svg>Calibrate</button>
+</div>
+
+<div class="sheet" id="cal" hidden>
+  <div class="card" role="dialog" aria-label="Calibrate">
+    <h3 id="calT">Calibrate</h3>
+    <div class="steps"><i id="st1"></i><i id="st2"></i></div>
+    <p id="calP"></p>
+    <div class="row" id="calRow"></div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ---------------------------------------------------------------- state
+   Tilt comes from deviceorientation (beta/gamma), turned into the direction
+   of "up" in the phone's own axes: u = (-cosβ·sinγ, sinβ, cosβ·cosγ), with x
+   to the right of the screen, y to its top and z out of the glass. Working
+   from that vector, not from beta and gamma directly, keeps every face of the
+   level well-defined — beta/gamma alone fold over at 90° and would make the
+   edge vial jump as the phone is stood up. */
+var D = 180/Math.PI;
+var up = null;               // smoothed up-vector in device axes
+var mode = 'auto', face = 'surface', held = false, started = false, lastEvent = 0;
+var zero = null;             // relative zero: {x, y} on the flat face, {e} on an edge
+var cal = {sx:0, sy:0, e:0}; // sensor offsets from the two-step calibration
+var units = ['deg','pct','mmm','inft'], unitIx = 0;
+var wasLevel = false, quadrant = 0;
+var UNIT_LBL = {deg:'Degrees', pct:'Slope %', mmm:'mm per m', inft:'in per ft'};
+
+function $(id){ return document.getElementById(id); }
+function haptic(k){ try{ if(window.myllmHaptic) window.myllmHaptic(k); }catch(e){} }
+function toast(t){ var n=$('toast'); n.textContent=t; n.classList.add('show'); clearTimeout(toast.t); toast.t=setTimeout(function(){n.classList.remove('show')},2200); }
+
+/* Storage: the MyLLM bridge when there is one, memory otherwise. */
+var store = {
+  get:function(k){ try{ return window.myllmStorage ? Promise.resolve(window.myllmStorage.getItem(k)) : Promise.resolve(null); }catch(e){ return Promise.resolve(null); } },
+  set:function(k,v){ try{ if(window.myllmStorage) window.myllmStorage.setItem(k,v); }catch(e){} }
+};
+
+/* ---------------------------------------------------------------- maths */
+function fmt(deg){
+  var u = units[unitIx], t = Math.tan(Math.abs(deg)/D), s = deg<0?'-':'';
+  if(u==='deg')  return { v:(Math.abs(deg)<0.05?'0.0':s+Math.abs(deg).toFixed(1))+'°', unit:'' };
+  if(u==='pct')  return { v:(t*100<0.05?'0.0':s+(t*100).toFixed(1))+'%', unit:'slope' };
+  if(u==='mmm')  return { v:(t*1000<0.5?'0':s+(t*1000).toFixed(0)), unit:'mm per metre' };
+  return { v:(t*12<0.005?'0.00':s+(t*12).toFixed(2))+'"', unit:'inches per foot' };
+}
+// Level within a tenth of a degree, about 1.7 mm over a metre.
+var LEVEL = 0.1;
+
+function surfaceAngles(u){
+  // Bubble goes to the high side: right edge raised = +x, top raised = +y.
+  var x = Math.atan2(u[0], u[2])*D - cal.sx, y = Math.atan2(u[1], u[2])*D - cal.sy;
+  if(zero && zero.x!=null){ x -= zero.x; y -= zero.y; }
+  var tot = Math.sqrt(x*x + y*y);   // fine for the small angles a level shows
+  return {x:x, y:y, tot:tot};
+}
+function edgeAngles(u){
+  // Angle of "up" within the screen plane: 0 = standing on the bottom edge.
+  var raw = Math.atan2(u[0], u[1])*D;          // -180..180
+  var q = Math.round(raw/90);                  // which edge it rests on
+  var dev = raw - q*90 - cal.e;
+  if(zero && zero.e!=null) dev -= zero.e;
+  var abs = ((raw % 360) + 360) % 360;
+  if(abs >= 359.95) abs = 0;                   // so level reads 0.0°, not 360.0°
+  return {dev:dev, q:q, abs:abs};               // q: -2..2 quarter turns
+}
+
+/* ---------------------------------------------------------------- sensor */
+function onOrient(e){
+  if(e.beta==null || e.gamma==null) return;
+  lastEvent = Date.now();
+  var b = e.beta/D, g = e.gamma/D;
+  var u = [-Math.cos(b)*Math.sin(g), Math.sin(b), Math.cos(b)*Math.cos(g)];
+  if(!up) up = u;
+  else { var k = 0.18; for(var i=0;i<3;i++) up[i] += (u[i]-up[i])*k; }   // low-pass
+}
+function listen(){
+  window.addEventListener('deviceorientation', onOrient, true);
+  started = true; $('cover').hidden = true;
+  stayAwake();
+  setTimeout(function(){
+    if(!lastEvent){
+      $('cover').hidden = false;
+      $('coverText').textContent = 'No motion sensor is reporting. Open Spirit Level on your iPhone or iPad — and if you said no to motion access, close the app and open it again to be asked once more.';
+      $('go').textContent = 'Try again';
+      started = false;
+    }
+  }, 2500);
+}
+function start(){
+  haptic('light');
+  var DOE = window.DeviceOrientationEvent;
+  if(DOE && typeof DOE.requestPermission === 'function'){
+    DOE.requestPermission().then(function(r){
+      if(r === 'granted') listen();
+      else { $('coverText').textContent = 'Motion access was not allowed, so the level has nothing to read. Close Spirit Level and open it again to be asked once more.'; }
+    }, function(){ listen(); });
+  } else listen();
+}
+$('go').onclick = start;
+
+function stayAwake(){
+  try{ if(window.myllmImmersive) window.myllmImmersive(true, {keepAwake:true}).catch(function(){}); }catch(e){}
+}
+document.addEventListener('visibilitychange', function(){ if(!document.hidden && started) setTimeout(stayAwake, 0); });
+
+/* ---------------------------------------------------------------- drawing */
+function pickFace(u){
+  if(mode !== 'auto') return mode;
+  var tilt = Math.acos(Math.max(-1, Math.min(1, Math.abs(u[2]))))*D;
+  if(face === 'surface' && tilt > 55) return 'edge';
+  if(face === 'edge' && tilt < 35) return 'surface';
+  return face;
+}
+function setFace(f){
+  if(f === face) return;
+  face = f; zero = null; syncZero();
+  $('fSurface').hidden = f !== 'surface';
+  $('fEdge').hidden = f !== 'edge';
+  $('hint').textContent = f === 'surface' ? 'Flat: the bubble finds the high side' : 'On an edge: the bubble finds the high end';
+}
+function scaleR(deg, maxDeg){
+  // Square-root scale: a tenth of a degree still moves the bubble visibly,
+  // and 10° reaches the rim.
+  var r = Math.sqrt(Math.min(Math.abs(deg), maxDeg)/maxDeg);
+  return r;
+}
+function markLevel(ok){
+  document.body.classList.toggle('level', ok && !held);
+  if(ok && !wasLevel && !held) haptic('success');
+  wasLevel = ok;
+}
+function frame(){
+  requestAnimationFrame(frame);
+  if(!up || held) return;
+  setFace(pickFace(up));
+  if(face === 'surface'){
+    var a = surfaceAngles(up);
+    var eye = $('eye').clientWidth, R = eye*0.40;
+    var r = scaleR(a.tot, 10), ang = Math.atan2(a.y, a.x);
+    var px = a.tot ? Math.cos(ang)*r*R : 0, py = a.tot ? -Math.sin(ang)*r*R : 0;
+    $('bubble').style.transform = 'translate(calc(-50% + '+px.toFixed(1)+'px), calc(-50% + '+py.toFixed(1)+'px))';
+    var f = fmt(a.tot);
+    $('sBig').textContent = f.v.replace('-','');
+    $('sUnit').textContent = f.unit ? 'Tilt · '+f.unit : 'Tilt';
+    $('sX').textContent = fmt(a.x).v; $('sY').textContent = fmt(a.y).v;
+    markLevel(a.tot < LEVEL);
+  } else {
+    var e = edgeAngles(up);
+    // Turn the vial and its numbers with the phone, so they lie along the
+    // edge it rests on and read the right way up. ±2 are the same half turn.
+    var q = e.q === -2 ? 2 : e.q;
+    if(q !== quadrant){ quadrant = q; $('edge').style.transform = 'rotate('+(q*90)+'deg)'; }
+    var w = $('edge').clientWidth*0.35, m = scaleR(e.dev, 10)*w*(e.dev<0?-1:1);
+    $('vb').style.transform = 'translate(calc(-50% + '+m.toFixed(1)+'px), -50%)';
+    var g = fmt(e.dev);
+    $('eBig').textContent = g.v.replace('-','');
+    $('eUnit').textContent = g.unit ? 'Off level · '+g.unit : 'Off level';
+    $('eAbs').textContent = e.abs.toFixed(1)+'°';
+    $('eSide').textContent = Math.abs(e.dev) < LEVEL ? '—' : (e.dev > 0 ? 'right' : 'left');
+    markLevel(Math.abs(e.dev) < LEVEL);
+  }
+}
+requestAnimationFrame(frame);
+
+/* ---------------------------------------------------------------- controls */
+document.querySelectorAll('.modes button').forEach(function(b){
+  b.onclick = function(){
+    mode = b.getAttribute('data-m'); haptic('selection');
+    document.querySelectorAll('.modes button').forEach(function(x){ var on = x===b; x.classList.toggle('on',on); x.setAttribute('aria-selected',on); });
+    if(mode !== 'auto') setFace(mode);
+  };
+});
+$('bHold').onclick = function(){
+  held = !held; haptic('light');
+  document.body.classList.toggle('held', held); document.body.classList.remove('level');
+  this.classList.toggle('on', held); this.setAttribute('aria-pressed', held);
+  this.lastChild.textContent = held ? 'Held' : 'Hold';
+};
+function syncZero(){
+  var b = $('bZero'), on = !!zero;
+  b.classList.toggle('on', on); b.setAttribute('aria-pressed', on);
+  b.lastChild.textContent = on ? 'Clear zero' : 'Zero here';
+  var t = face === 'surface' ? $('sTag') : $('eTag');
+  $('sTag').hidden = $('eTag').hidden = true;
+  if(on){ t.hidden = false; t.textContent = 'Relative to the zero you set'; }
+}
+$('bZero').onclick = function(){
+  if(!up){ toast('Start measuring first'); return; }
+  haptic('medium');
+  if(zero){ zero = null; syncZero(); return; }
+  zero = null;
+  if(face === 'surface'){ var a = surfaceAngles(up); zero = {x:a.x, y:a.y}; }
+  else { var e = edgeAngles(up); zero = {e:e.dev}; }
+  syncZero(); toast('Zeroed: readings are now relative to this angle');
+};
+$('bUnit').onclick = function(){
+  unitIx = (unitIx + 1) % units.length; haptic('selection');
+  $('unitLbl').textContent = UNIT_LBL[units[unitIx]];
+  store.set('spiritlevel.unit', units[unitIx]);
+};
+
+/* Two-step calibration (the reversal method carpenters use on a real level):
+   read, turn the phone through 180° on the same spot, read again. The surface
+   tilt flips sign between the two; the sensor's own offset does not — so the
+   offset is the average of the two readings, whatever the surface. */
+var calStep = 0, calFirst = null;
+function sample(ms){
+  return new Promise(function(res){
+    var n = 0, acc = null, t0 = Date.now();
+    (function tick(){
+      if(!up){ res(null); return; }
+      var v = face === 'surface'
+        ? [Math.atan2(up[0],up[2])*D, Math.atan2(up[1],up[2])*D]
+        : [ (function(){ var raw=Math.atan2(up[0],up[1])*D; return raw-Math.round(raw/90)*90; })() ];
+      if(!acc) acc = v.map(function(){return 0});
+      v.forEach(function(x,i){ acc[i]+=x; }); n++;
+      if(Date.now()-t0 < ms) setTimeout(tick, 40); else res(acc.map(function(x){ return x/n; }));
+    })();
+  });
+}
+function calRender(){
+  var flat = face === 'surface';
+  $('st1').classList.toggle('on', calStep >= 1); $('st2').classList.toggle('on', calStep >= 2);
+  var row = $('calRow');
+  if(calStep === 0){
+    $('calT').textContent = flat ? 'Calibrate · flat' : 'Calibrate · on an edge';
+    $('calP').textContent = flat
+      ? 'Lay the phone on a firm surface that stays put — it does not need to be level. Mark where the phone sits, then tap Read.'
+      : 'Stand the phone on an edge against something steady. Mark where it sits, then tap Read.';
+    row.innerHTML = '<button id="cX">Cancel</button><button class="pri" id="cGo">Read</button>';
+  } else if(calStep === 1){
+    $('calP').textContent = flat
+      ? 'Now turn the phone round through 180° — top where the bottom was — in exactly the same spot, then tap Read again.'
+      : 'Now turn the phone round end for end, on the same edge and in the same spot, then tap Read again.';
+    row.innerHTML = '<button id="cX">Cancel</button><button class="pri" id="cGo">Read</button>';
+  } else {
+    $('calP').textContent = 'Calibrated. The correction is saved and used every time you open Spirit Level.';
+    row.innerHTML = '<button id="cReset">Reset to factory</button><button class="pri" id="cX">Done</button>';
+  }
+  var x = $('cX'), go = $('cGo'), rs = $('cReset');
+  if(x) x.onclick = function(){ $('cal').hidden = true; calStep = 0; };
+  if(rs) rs.onclick = function(){ cal = {sx:0,sy:0,e:0}; store.set('spiritlevel.cal', JSON.stringify(cal)); toast('Calibration reset'); $('cal').hidden = true; calStep = 0; };
+  if(go) go.onclick = function(){
+    go.disabled = true; go.textContent = 'Hold still…';
+    sample(1200).then(function(v){
+      if(!v){ toast('Start measuring first'); $('cal').hidden = true; calStep = 0; return; }
+      haptic('light');
+      if(calStep === 0){ calFirst = v; calStep = 1; calRender(); return; }
+      if(flat){ cal.sx = (calFirst[0]+v[0])/2; cal.sy = (calFirst[1]+v[1])/2; }
+      else cal.e = (calFirst[0]+v[0])/2;
+      store.set('spiritlevel.cal', JSON.stringify(cal));
+      haptic('success'); calStep = 2; calRender();
+    });
+  };
+}
+$('bCal').onclick = function(){
+  if(!up){ toast('Start measuring first'); return; }
+  haptic('light'); calStep = 0; $('cal').hidden = false; calRender();
+};
+$('cal').addEventListener('click', function(e){ if(e.target === this){ this.hidden = true; calStep = 0; } });
+
+/* Restore the saved unit and calibration. */
+store.get('spiritlevel.unit').then(function(u){ var i = units.indexOf(u); if(i >= 0){ unitIx = i; $('unitLbl').textContent = UNIT_LBL[u]; } });
+store.get('spiritlevel.cal').then(function(c){ try{ var o = JSON.parse(c||'null'); if(o && typeof o.sx === 'number') cal = o; }catch(e){} });
+</script>
+<script>
+/* myllm-fullscreen-v2 — full screen where MyLLM can also close the app for us
+   (myllmClose, 5.6.2+): full screen hides MyLLM's Done, and a page with no way
+   out is worse than a repeated title, so elsewhere nothing changes.
+   The spacer keeps the header clear of the status bar / Dynamic Island. It is
+   live CSS — env(safe-area-inset-top) — not a measured number: the inset is
+   still 0 when the page loads and only grows once MyLLM's bar has gone (v1
+   measured once, so the title sat under the island). If the page's own styles
+   already pad the header down by the inset, the spacer stays at 0. */
+(function(){
+  function full(){ return !!(window.myllmClose && window.myllmImmersive); }
+  /* Does any rule that applies to the header or an ancestor already use the top inset? */
+  function pageHandlesInset(head){
+    var chain = [], n, found = false;
+    for (n = head; n && n.nodeType === 1; n = n.parentElement) chain.push(n);
+    function walk(rules){
+      for (var i = 0; i < rules.length && !found; i++){
+        var r = rules[i];
+        if (r.cssRules && !r.selectorText) { walk(r.cssRules); continue; }
+        if (!r.selectorText || !/safe-area-inset-top/.test(r.cssText) || !/(padding|margin|top)\s*:/.test(r.cssText)) continue;
+        if (/\.imm-safe/.test(r.selectorText)) continue;
+        for (var k = 0; k < chain.length; k++){
+          try { if (chain[k].matches(r.selectorText)) { found = true; break; } } catch(e){}
+        }
+      }
+    }
+    for (var s = 0; s < document.styleSheets.length && !found; s++){
+      try { walk(document.styleSheets[s].cssRules); } catch(e){}
+    }
+    for (n = head; n && n.nodeType === 1 && !found; n = n.parentElement){
+      if (/safe-area-inset-top/.test(n.getAttribute("style") || "")) found = true;
+    }
+    return found;
+  }
+  function fit(){
+    var sp = document.querySelector(".imm-safe"), head = document.querySelector(".head");
+    if (!sp || !head) return;
+    sp.style.height = (document.body.classList.contains("imm") && !pageHandlesInset(head)) ? "env(safe-area-inset-top)" : "0px";
+  }
+  function sync(){
+    var f = full();
+    document.body.classList.toggle("imm", f);
+    fit();
+    if (!f) return;
+    try { window.myllmImmersive(true, { keepAwake:false }).catch(function(){}); } catch(e){}
+  }
+  window.myllmFSClose = function(){
+    try { if (window.myllmHaptic) window.myllmHaptic("light"); } catch(e){}
+    try { window.myllmClose().catch(function(){}); } catch(e){}
+  };
+  document.addEventListener("visibilitychange", function(){ if (!document.hidden) sync(); });
+  sync();
+})();
+</script>
+</body>
+</html>

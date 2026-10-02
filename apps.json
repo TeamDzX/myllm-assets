@@ -1,5 +1,5 @@
 {
-  "updated": "2026-09-30",
+  "updated": "2026-10-02",
   "categories": [
     "Students",
     "Productivity",
@@ -3416,6 +3416,32 @@
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b0bd826b7f72c562ee5bce3d2fbcef0be424c5df/apps-src/chess-clock.myllmapp",
       "sizeKB": 34,
       "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/icons/chess-clock.jpg"
+    },
+    {
+      "id": "spirit-level",
+      "name": "Spirit Level",
+      "emoji": "📐",
+      "tagline": "A precise level for shelves, frames and slopes",
+      "description": "A spirit level that uses your phone's motion sensor. Lay it flat and a bullseye bubble shows which way a surface tips, with left–right and front–back angles; stand it on any edge and it switches to a vial for shelves, frames and pictures, turning with the phone so the numbers always read the right way up. Readings to a tenth of a degree, in degrees, slope %, millimetres per metre or inches per foot. Zero here measures relative to an angle you already have (match an existing slope); Hold freezes a reading you can't see; a tap of haptic tells you when you're level. Calibrate uses the carpenter's turn-it-round method to cancel your phone's own sensor offset, and remembers it. Full screen, and keeps the screen awake while you measure. iOS asks once for motion access.",
+      "tags": [
+        "tools",
+        "diy",
+        "level",
+        "sensor",
+        "utility",
+        "saves data"
+      ],
+      "iconSymbol": "level",
+      "iconColor": "green",
+      "version": 1,
+      "featured": false,
+      "requiresAI": false,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/spirit-level.jpg",
+      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/icons/spirit-level.jpg",
+      "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/spirit-level.html",
+      "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/spirit-level.myllmapp",
+      "sizeKB": 28,
+      "category": "Utilities"
     }
   ]
 }
