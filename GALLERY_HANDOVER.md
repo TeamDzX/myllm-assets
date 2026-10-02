@@ -386,6 +386,7 @@ Adding a 4th language ≈ write one `langpacks/<code>.json` + run the builder.
 - **Don't rely on `opacity`** for must-read text; set explicit colour + weight.
 - **Keep `.html` and `.myllmapp` in sync.**
 - **`category` must be in the top-level `categories` list.**
+- **New apps: `html`/`json` must start on jsDelivr** (`https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@main/apps-src/<slug>.html`, any ref). `pin_jsdelivr.py` only re-pins URLs already on jsDelivr, so a raw.githubusercontent URL is never pinned (and its installs aren't counted).
 
 ---
 
