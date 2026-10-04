@@ -691,11 +691,15 @@ el('exLocal').textContent =
 /* The assistant can add a monitor from chat via the add-monitor action. */
 if(window.myllmIntent && myllmIntent.receive){
   myllmIntent.receive(function(intent){
+    /* The returned promise's line goes back to the assistant (MyLLM 5.9.2+);
+       a failure is passed on so it isn't reported as done. */
     if(intent && intent.action==='add-monitor' && intent.data && intent.data.url){
-      addMonitor(intent.data.name, intent.data.url).then(function(){
+      return addMonitor(intent.data.name, intent.data.url).then(function(id){
         renderMonitors(); render(); openMonitors();
-      }).catch(function(){});
+        return 'Added monitor "'+(intent.data.name||intent.data.url)+'" ('+intent.data.url+') and took a first reading.';
+      });
     }
+    if(intent && intent.action==='add-monitor') return 'Not added: the add-monitor action needs a url.';
   });
 }
 

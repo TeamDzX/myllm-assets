@@ -2569,13 +2569,22 @@ function doPost(e){
     myllmIntent.receive(function(intent){
       if(!intent || intent.action!=='add-expense' || !intent.data) return;
       var d=intent.data;
+      /* What happened goes back to the assistant (MyLLM 5.9.2+). */
+      var before=(typeof expenses!=='undefined' && expenses) ? expenses.length : -1;
+      var label=String(d.amount)+' for '+(d.description||d.note||d.item||'?');
       try{
         var amt=byId('amount'); if(amt) amt.value=String(d.amount==null?'':d.amount).replace(/[^0-9.]/g,'');
         var desc=byId('description'); if(desc) desc.value=d.description||d.note||d.item||'';
         if(d.category){ var cat=byId('category'); if(cat){ for(var n=0;n<cat.options.length;n++){
           var o=cat.options[n]; if(o.value.toLowerCase()===String(d.category).toLowerCase()||o.text.toLowerCase()===String(d.category).toLowerCase()){ cat.selectedIndex=n; break; } } } }
-        if(typeof addExpense==='function') addExpense();
-      }catch(e){}
+        if(typeof addExpense!=='function') return 'Not added: this version of the app can\'t take expenses from the assistant.';
+        return Promise.resolve(addExpense()).then(function(){
+          if(before<0) return 'Sent the expense ('+label+') to the form; check the app to confirm it saved.';
+          return expenses.length>before
+            ? 'Added expense: '+label+' ('+expenses.length+' expenses recorded).'
+            : 'Not added ('+label+'): the amount or description was missing, or the Google Sheet connection failed. The app shows the reason.';
+        });
+      }catch(e){ return 'Not added: '+e.message; }
     });
   }
 })();

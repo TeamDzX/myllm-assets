@@ -205,7 +205,11 @@ body.imm .imm-safe{display:block}
     myllmIntent.receive(function(intent){
       if(intent && intent.action === 'add-item' && intent.data){
         var text = intent.data.text || intent.data.item || intent.data.value || '';
-        if(text) addItem(text, { toast: 'Added ✓' });
+        if(!text) return 'Nothing added: no item text was given.';
+        var lines = String(text).split('\n').map(function(l){ return l.trim(); }).filter(Boolean);
+        addItem(text, { toast: 'Added ✓' });
+        /* Goes back to the assistant (MyLLM 5.9.2+). */
+        return 'Added '+lines.join(', ')+' to the shopping list ('+items.filter(function(i){ return !i.done; }).length+' still to buy).';
       }
     });
   }

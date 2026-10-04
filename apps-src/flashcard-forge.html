@@ -1316,10 +1316,12 @@ store.getItem('tools').then(function(v){
    that arrived before `decks` loaded would be overwritten by the load. */
 function registerActions(){
   if(!window.myllmIntent||!myllmIntent.receive)return;
+  /* The returned line goes back to the assistant (MyLLM 5.9.2+), so it can
+     tell the user what happened instead of guessing. */
   myllmIntent.receive(function(intent){
     if(!intent||!intent.action)return;
-    if(intent.action==='add-cards')addCardsFromIntent(intent.data||{});
-    else if(intent.action==='start-review')reviewDue();
+    if(intent.action==='add-cards')return addCardsFromIntent(intent.data||{});
+    else if(intent.action==='start-review')return reviewDue();
   });
 }
 function addCardsFromIntent(d){
@@ -1344,7 +1346,7 @@ function addCardsFromIntent(d){
     decks.splice(decks.indexOf(deck),1);
     save();renderDecks();updateViews();
     setStatus('Nothing added \u2014 each line needs \u201cquestion | answer\u201d.');
-    return;
+    return 'Nothing added: each line needs "question | answer".';
   }
   save();sortDecks();renderDecks();       // sortDecks may reorder: find by identity
   var at=-1;
@@ -1352,15 +1354,17 @@ function addCardsFromIntent(d){
   if(at>=0)openDeck(at); else updateViews();
   setStatus('Added '+added+' card'+(added===1?'':'s')+' to \u201c'+topic+'\u201d \u2713');
   haptic('success');
+  return 'Added '+added+' card'+(added===1?'':'s')+' to '+(created?'a new deck':'the deck')+' "'+topic+'" ('+deck.cards.length+' card'+(deck.cards.length===1?'':'s')+' in it now).';
 }
 function reviewDue(){
-  if(!decks.length){ setStatus('No decks yet \u2014 ask MyLLM to make you one.'); return; }
+  if(!decks.length){ setStatus('No decks yet \u2014 ask MyLLM to make you one.'); return 'No decks yet, so there is nothing to review.'; }
   var i,at=-1;
   for(i=0;i<decks.length;i++){ if(dueCount(decks[i])>0){at=i;break;} }
-  if(at<0){ setStatus('Nothing due today \u2014 everything is reviewed.'); return; }
+  if(at<0){ setStatus('Nothing due today \u2014 everything is reviewed.'); return 'Nothing is due today; every deck is reviewed.'; }
   setStatus('');                           // clear any message left by a previous action
   openDeck(at);                            // openDeck already builds the DUE queue
   haptic('light');
+  return 'Started reviewing "'+decks[at].topic+'" ('+dueCount(decks[at])+' card'+(dueCount(decks[at])===1?'':'s')+' due).';
 }
 
 /* myllm-fullscreen-v2 — full screen where MyLLM can also close the app for us
