@@ -121,7 +121,7 @@ var prevCwd = null;      /* for  cd -  */
 var batchId = null;      /* set while an approved batch runs, so undo reverses all of it */
 var RC = '.shellrc';     /* optional startup script, in the workspace root */
 var ASK_MAX = 8000;      /* how much material one `ask` may carry; a small on-device model has a small window */
-var VERBS = ['ls','tree','cat','head','tail','sed','stat','find','grep','diff','jq','wc','sort','uniq','cut','history','du','ask','dictate','open','share','mkdir','mv','cp','write','replace','edit','rm','rmdir','undo','log','revert','trash','restore','alias','unalias','mark','cd','pwd','clear','help'];
+var VERBS = ['ls','tree','cat','head','tail','sed','stat','find','grep','diff','jq','wc','sort','uniq','cut','tr','paste','comm','awk','xargs','man','changes','history','du','ask','dictate','open','share','mkdir','mv','cp','write','replace','edit','rm','rmdir','undo','log','revert','trash','restore','alias','unalias','mark','cd','pwd','clear','help'];
 var KNOWN = VERBS.concat(['dir']);   /* everything the switch below answers to */
 function inTrash(path){ return path === TRASH || path.indexOf(TRASH + '/') === 0; }
 
@@ -183,6 +183,8 @@ var HELP = [
   ['find -size +10k', 'bigger than 10 KB (-type d: folders)'],
   ['grep <text> [path]', 'search inside files (-l for names)'],
   ['grep -n -C 2 -v -c', 'numbers, context, non-matches, counts'],
+  ['grep -o -m 5 -w', 'match only, first 5, whole words'],
+  ['--include=*.md', 'grep only those (--exclude-dir=x)'],
   ['grep /re?gex/', 'a pattern (or -E); -s matches case'],
   ['diff <a> <b>', 'what changed between two files'],
   ['diff <path>@2', 'version 2 against now'],
@@ -192,6 +194,10 @@ var HELP = [
   ['sort [-r -n -k N]', 'sort lines (reverse, numbers, field)'],
   ['uniq [-c]', 'fold repeats, with counts'],
   ['cut -d , -f 2', 'pick fields (or -c 1-20)'],
+  ['awk \'{print $2}\'', 'columns (-F , for commas)'],
+  ['tr a-z A-Z', 'change characters (-d deletes)'],
+  ['paste a b / comm a b', 'side by side / what they share'],
+  ['… | xargs head -n 3', 'run a command on piped paths'],
   ['du', 'space used per folder'],
   '',
   ['ask "<question>"', 'ask MyLLM; pipe a file in to work on it'],
@@ -235,6 +241,8 @@ var HELP = [
   ['ls -a', 'show .trash too'],
   ['clear', 'clear the screen'],
   ['help', 'this list'],
+  ['man <command>', 'its exact flags'],
+  ['changes', 'what is new in Shell'],
   '',
   'Anything else is a question for MyLLM. It',
   'can run the read-only commands above to',
@@ -276,7 +284,10 @@ function print(text, cls){
   out.scrollTop = out.scrollHeight;
 }
 function printHTML(html){
-  if (capture !== null) capture.push(html.replace(/<[^>]+>/g, ''));
+  /* Tags off AND entities back: a grep hit with an & in it used to reach the
+     pipe (or the file) as &amp;. */
+  if (capture !== null) capture.push(html.replace(/<[^>]+>/g, '')
+    .replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, '&'));
   if (quiet) return;
   var d = document.createElement('div');
   d.innerHTML = html;
@@ -298,10 +309,29 @@ function haptic(k){ try{ window.myllmHaptic && myllmHaptic(k); }catch(e){} }
 
 function tokenize(s){
   var outv = [], cur = '', q = null;
+  /* grep/edit/replace: a /regex/ word may hold spaces (/todo \w+/). Only a
+     span with no other / in it, so two paths are never glued together. */
+  var rxVerb = /^\s*(grep|edit|replace)\b/i.test(s);
   for (var i=0;i<s.length;i++){
     var c = s[i];
-    if (q){ if (c === q) q = null; else cur += c; }
-    else if (c === '"' || c === "'"){ q = c; }
+    if (q){
+      if (c === '\\' && s[i+1] === q){ cur += q; i++; continue; }   /* \" inside "…" */
+      if (c === q) q = null; else cur += c;
+      continue;
+    }
+    if (rxVerb && c === '/' && !cur){
+      var close = -1;
+      for (var j = i + 1; j < s.length; j++){
+        if (s[j] === '\\'){ j++; continue; }
+        if (s[j] === '/'){ if (j + 1 === s.length || /[\s+]/.test(s[j+1])) close = j; break; }
+      }
+      if (close > i + 1 && /\s/.test(s.slice(i, close))){
+        cur = s.slice(i, close + 1); i = close;
+        if (s[i+1] === '+'){ cur += '+'; i++; }
+        continue;
+      }
+    }
+    if (c === '"' || c === "'"){ q = c; }
     else if (c === ' '){ if (cur){ outv.push(cur); cur = ''; } }
     else cur += c;
   }
@@ -353,6 +383,17 @@ function splitPipeline(line){
     var c = text.charAt(i);
     if (q){ cur += c; if (c === q) q = null; continue; }
     if (c === '"' || c === "'"){ q = c; cur += c; continue; }
+    /* v10: a /regex/ word is quoted too, so  grep /a(b|c)/  stays one stage.
+       Only when it opens a word and closes before a space or the end: an
+       absolute path like /notes.md never has a closing slash there. */
+    if (c === '/' && (!cur.length || /\s$/.test(cur))){
+      var close = -1;
+      for (var j = i + 1; j < text.length; j++){
+        if (text.charAt(j) === '\\'){ j++; continue; }
+        if (text.charAt(j) === '/' && (j + 1 === text.length || /\s/.test(text.charAt(j + 1)))){ close = j; break; }
+      }
+      if (close > i + 1 && text.slice(i + 1, close).indexOf('|') >= 0){ cur += text.slice(i, close + 1); i = close; continue; }
+    }
     if (c === '|'){ stages.push(cur); cur = ''; continue; }
     if (c === '>'){
       var append = text.charAt(i + 1) === '>';
@@ -392,8 +433,11 @@ function unsafeReason(line, allowed){
   if (pl.redirect) return 'writing to a file with > or >> is a change — propose it instead';
   if (!pl.stages.length) return 'empty command';
   for (var i = 0; i < pl.stages.length; i++){
-    var v = (tokenize(expandAlias(pl.stages[i]))[0] || '').toLowerCase();
-    if (allowed.indexOf(v) < 0) return 'only ' + allowed.join(', ') + ' may run without asking';
+    var tk = tokenize(expandAlias(pl.stages[i])), v = (tk[0] || '').toLowerCase();
+    if (KNOWN.indexOf(v) < 0) return 'stage ' + (i + 1) + ' "' + pl.stages[i] + '" is not a command (a | outside quotes or /regex/ was treated as a pipe)';
+    if (allowed.indexOf(v) < 0) return '"' + v + '" changes things, so it needs the user: propose it (read-only: ' + allowed.join(', ') + ')';
+    /* xargs runs another command: that one has to be read-only too. */
+    if (v === 'xargs'){ var inner = (tk[1] || '').toLowerCase(); if (allowed.indexOf(inner) < 0) return 'xargs ' + inner + ' changes things — propose it instead'; }
   }
   return null;
 }
@@ -493,7 +537,7 @@ function expandBang(line){
 /* .shellrc: the lines that run when Shell opens. Nobody is at the prompt yet,
    so it is held to the same bar as the agent — look around, set up, change
    nothing. A rm in a startup file would run before you could stop it. */
-var RC_SAFE = ['cd','alias','unalias','mark','clear','ls','dir','tree','pwd','du','cat','head','tail','sed','stat','find','grep','diff','jq','wc','sort','uniq','cut','history','log'];
+var RC_SAFE = ['cd','alias','unalias','mark','clear','ls','dir','tree','pwd','du','cat','head','tail','sed','stat','find','grep','diff','jq','wc','sort','uniq','cut','tr','paste','comm','awk','xargs','man','changes','history','log'];
 async function runRC(){
   var text = null;
   try { text = await files.read(RC); } catch(e){}
@@ -519,6 +563,14 @@ async function runLine(line){
   if (!pl.stages.length) return;
   if (pl.redirect && !pl.redirect.path) return print('> needs a file name, e.g.  ls > list.txt', 'err');
 
+  /* A stage that isn't a command would otherwise be sent to the assistant as a
+     question, which is never what a | meant. Say where the split happened. */
+  if (pl.stages.length > 1){
+    for (var si = 0; si < pl.stages.length; si++){
+      var sv = (tokenize(expandAlias(pl.stages[si]))[0] || '').toLowerCase();
+      if (KNOWN.indexOf(sv) < 0) return print('stage ' + (si + 1) + ' (' + pl.stages[si] + ') is not a command: a | outside quotes or /regex/ starts a new stage. Put the pattern in quotes or /…/.', 'err');
+    }
+  }
   var piped = null;
   for (var i = 0; i < pl.stages.length; i++){
     var stage = expandAlias(pl.stages[i]);
@@ -559,6 +611,36 @@ function glob(pattern, name){
   return new RegExp(rx,'i').test(name);
 }
 
+/* Path-aware globs: * stays inside one folder, ** crosses folders, ? is one
+   character. A pattern is relative to where you stand unless it starts with /. */
+function globRx(pattern){
+  var src = '', i = 0;
+  while (i < pattern.length){
+    var c = pattern.charAt(i);
+    if (c === '*' && pattern.charAt(i + 1) === '*'){ src += pattern.charAt(i + 2) === '/' ? '(?:.*/)?' : '.*'; i += pattern.charAt(i + 2) === '/' ? 3 : 2; continue; }
+    if (c === '*'){ src += '[^/]*'; i++; continue; }
+    if (c === '?'){ src += '[^/]'; i++; continue; }
+    src += c.replace(/[.+^${}()|[\]\\]/g, '\\$&'); i++;
+  }
+  return new RegExp('^' + src + '$', 'i');
+}
+function isGlob(s){ return /[*?]/.test(String(s)); }
+/* Expand the operands of a multi-path command. Plain paths pass through (even
+   missing ones, so the command can say so); a glob becomes every match. */
+function expandPaths(opsList, snap, withFolders){
+  var outp = [];
+  opsList.forEach(function(o){
+    if (!isGlob(o)){ outp.push(resolve(o)); return; }
+    var abs = o.charAt(0) === '/' ? normalise(o) : (cwd ? cwd + '/' : '') + o;
+    var rx = globRx(abs);
+    var hits = snap.files.map(function(f){ return f.path; }).filter(function(p){ return rx.test(p); });
+    if (withFolders) hits = hits.concat(snap.folders.filter(function(d){ return rx.test(d); }));
+    hits.sort();
+    if (!hits.length) outp.push({ noMatch: o }); else outp.push.apply(outp, hits);
+  });
+  return outp;
+}
+
 async function snapshot(includeHidden){
   var list = await files.list();
   var folders = files.folders ? await files.folders() : [];
@@ -597,6 +679,76 @@ async function pruneTrash(){
   }catch(e){}
 }
 function pathHTML(p, label){ return '<span class="path" data-path="' + esc(p) + '">' + esc(label == null ? p : label) + '</span>'; }
+
+/* ---------- man pages: the exact flags each command takes ----------
+   Kept beside the code they describe, so a flag added there is a line added here. */
+var MAN = {
+  ls: ['ls [path]   ls -R / tree   ls -a (show .trash)', '-t newest first   -S biggest first', '-l long: type, readable size, modified, name (folders: total + file count)', 'tree -L N  only N levels deep'],
+  tree: ['tree [path] [-L N]  — the whole tree, or N levels'],
+  cat: ['cat <path…>  (several paths or a glob: a header per file)', 'reads stdin when given no path'],
+  head: ['head [-n N] [-c N] <path…>  first N lines (20) or N characters', 'several paths or a glob (head -n 3 *.md): a header per file'],
+  tail: ['tail [-n N] [-c N] <path…>  last N lines or characters'],
+  sed: ["sed -n '40,80p' <path>   also '40p', '40,$p', '40,+20p'", 'reads ranges only — use  edit  to change lines'],
+  stat: ['stat <path…>  size (bytes and readable), modified; folders: file count, total', 'globs work: stat notes/*'],
+  find: ['find [start] [glob] — a glob with / matches the whole path (projects/**/*.md),', '  otherwise the file name', '-name/-path <glob>   -maxdepth N   -type f|d', '-mtime -7 (days)  -mtime -2h  -mtime -30m  +30 = older than', '-mmin -30   -newer <path>   -size +10k / -2k / +1m / exact bytes', 'time filters sort newest first'],
+  grep: ['grep [flags] <text|/regex/> [path]  — case-insensitive unless -s (-i accepted)', '-n line numbers (piped)  -C N context  -v non-matching  -c counts', '-l file names  -o only the match  -m N first N per file  -w whole words', '-E regex   --include=*.md   --exclude-dir=archives', 'a | inside /regex/ or quotes stays part of the pattern'],
+  diff: ['diff <a> <b>   diff <path>@N (version N vs now)   diff <path> (newest saved vs now)', 'diff <path>@3 <path>@1   two old versions   - = piped input', 'versions are numbered as  history <path>  lists them, 1 = newest'],
+  jq: ['jq [-r] <filter> <path>   or  cat x.json | jq <filter>', '.a.b  .list[0]  .list[]  ."odd key"  .a?  ..  (every value)', 'select(.n > 1)  select(.name | test("re"))  select(has("k"))', 'map(.name)  to_entries  from_entries  keys  length  type  values  not', '== != < <= > >=   -r prints strings without quotes'],
+  wc: ['wc [-l] [-w] [-c] <path…>  lines, words, characters (stdin too)'],
+  sort: ['sort [-r] [-n] [-u] [-k N] [-t X] [path]', '-r reverse  -n numeric  -u drop repeats  -k field N  -t field separator'],
+  uniq: ['uniq [-c] [-d]  folds repeated NEIGHBOURS (sort first)  -c counts  -d repeats only'],
+  cut: ['cut -d X -f 1,3 | -f 2-4   cut -c 1-20   (tab-separated by default)'],
+  tr: ['tr <from> <to>   tr -d <chars>   tr -s <chars>   ranges like a-z, and \\n \\t'],
+  paste: ['paste <a> <b>  side by side (tab; -d , for commas)   paste -s  one line per file'],
+  comm: ['comm <a> <b>  only-in-a | only-in-b | both (sorted)  -12 common only  -23 only in a'],
+  awk: ["awk [-F X] '[/regex/] {print $1, $3}'   $0 line  $NF last field  NF  NR  \"text\"", 'print is all this awk does'],
+  xargs: ['… | xargs <command>  runs it on the paths that came down the pipe', 'e.g.  grep -l TODO notes | xargs head -n 5   find *.md | xargs wc -l'],
+  history: ['history            the commands you typed  (!! / !5 / !gr rerun)', 'history <path>     saved versions of a file, 1 = newest'],
+  du: ['du  space per folder, biggest first (sizes are already readable; -h accepted)'],
+  ask: ['ask "question"   or   … | ask "instruction"  — one answer, no tools; pipe it on or > save it'],
+  open: ['open <path>  hand a text file to an app that opens text'],
+  share: ['share <path>  send the file out through the iOS share sheet'],
+  dictate: ['dictate  speak instead of typing; > saves it'],
+  mkdir: ['mkdir <path>'],
+  mv: ['mv [-f] <from> <to>   mv [-f] <a> <b> <folder>   mv *.md archive  (one undo for all)', '-f replaces an existing destination'],
+  cp: ['cp [-f] <from> <to>   cp <folder> <copy>   cp *.md backup  (one undo for all)'],
+  write: ['write <path> <text>  replaces the whole file (new files too)'],
+  replace: ['replace [-1] <path> "old" "new"   -1 first only   \\n = line break', 'replace -E <path> "re(gex)" "new $1"   or "/re/" as the old text'],
+  edit: ['edit <path> 3 "text"   edit <path> 3-5 "text"   edit <path> 5+ "insert after 5"', 'edit <path> /pattern/ "text"  the first matching line (-a every one)', 'edit <path> /pattern/+ "insert after it"   empty text deletes   \\n = line break'],
+  rm: ['rm <path>  to .trash (undo / restore)   rm -p  for good, asks first'],
+  rmdir: ['rmdir <path>  folder to .trash   rmdir -p  for good, asks first'],
+  undo: ['undo  reverses your last change — or the whole batch it was part of; survives closing Shell'],
+  log: ['log [-n N] [path]  recent changes, newest first; marks what undo would reverse'],
+  revert: ['revert <path> [N]  put saved version N back (1 = newest)'],
+  trash: ['trash  what is in .trash    trash empty  delete it for good (asks)'],
+  restore: ['restore [-f] <path>  from .trash back to where it was'],
+  alias: ['alias  list   alias ll "ls -l"  make one   unalias ll  remove'],
+  unalias: ['unalias <name>'],
+  mark: ['mark  list   mark work [path]  save here (or path) as @work   mark -d work', 'use @work anywhere a path goes: cd @work, ls @work/reports'],
+  cd: ['cd <path>   cd ..   cd /   cd -  (previous folder)   cd @mark'],
+  pwd: ['pwd  where you are'],
+  clear: ['clear  the screen'],
+  help: ['help  every command   man <command>  its flags   changes  what is new'],
+  man: ['man <command>  the flags a command takes'],
+  changes: ['changes  what is new in Shell, newest first']
+};
+var CHANGES = [
+  'Shell v10 (5 Oct 2026)',
+  '  | inside /regex/ or quotes stays in the pattern; a pipe stage that is not a command says so',
+  '  xargs · tr · paste · comm · awk {print $N} · head/tail -c N',
+  '  find: path globs (projects/**/*.md), start folder, -maxdepth, -mtime -2h/-30m, -mmin',
+  '  grep: --include=, --exclude-dir=, -o, -m N, -w',
+  '  jq: select, map, to_entries, from_entries, .., test/has/contains, comparisons',
+  '  ls -l, tree -L N · cat/head/tail/stat take several paths or globs',
+  '  log <path>, log -n N · replace -E (regex) · edit /pattern/ · mv/cp several or *.md',
+  '  man <command> · changes · the assistant sees ok / found nothing / failed per step',
+  'Shell v9 (5 Oct 2026)',
+  '  diff (file@N), grep -n -C -v -c -s /regex/, sed -n ranges, wc sort uniq cut,',
+  '  ls -t/-S, find -mtime/-newer/-size/-type d, jq, replace/edit with a diff before y,',
+  '  cp, batch proposals (one y, one undo), log, undo kept between visits, cd -, mark/@name',
+  'Shell v7–v8: pipes and > >>, ask as a filter, open/share/dictate, history !!, aliases, .shellrc',
+  'Shell v5: .trash, undo, restore, grep, tap-to-complete'
+];
 
 /* ---------- v9 helpers: options, text tools, diff, json, edits ---------- */
 
@@ -699,37 +851,107 @@ async function loadSpec(spec, sin){
   return { label: path + '@' + v + '  (' + when(vs[v - 1].stamp) + ')', text: old };
 }
 
-/* A small jq: paths (.a.b, .a[0], .a[], ."odd key", .["odd key"]), pipes, and
-   keys / length / type / values. Enough to pull one field out of a file. */
-function jqSplit(f){
+/* A small jq. Paths (.a.b, .a[0], .a[], ."odd key", .["odd key"], a trailing ?),
+   pipes, ..  (every value in the document), select(cond), map(f), to_entries,
+   from_entries, keys, length, type, values, not, test("re"), has("k"),
+   contains("s"), ascii_downcase, and == != < <= > >= against literals or paths. */
+function jqSplit(f, sep){
+  sep = sep || '|';
   var parts = [], cur = '', depth = 0, q = false;
   for (var i = 0; i < f.length; i++){
     var c = f.charAt(i);
-    if (q){ cur += c; if (c === '"' && f.charAt(i-1) !== '\\') q = false; continue; }
+    if (q){ cur += c; if (c === '\\'){ cur += f.charAt(++i); continue; } if (c === '"') q = false; continue; }
     if (c === '"'){ q = true; cur += c; continue; }
-    if (c === '[') depth++; if (c === ']') depth--;
-    if (c === '|' && !depth){ parts.push(cur.trim()); cur = ''; continue; }
+    if (c === '[' || c === '(') depth++;
+    if (c === ']' || c === ')') depth--;
+    if (c === sep && !depth){ parts.push(cur.trim()); cur = ''; continue; }
     cur += c;
   }
   parts.push(cur.trim());
   return parts;
 }
-function jqStage(stage, inputs){
-  var outv = [];
-  if (stage === '.' || stage === '') return inputs;
-  if (/^(keys|length|type|values)$/.test(stage)){
-    inputs.forEach(function(v){
-      if (stage === 'type') outv.push(v === null ? 'null' : Array.isArray(v) ? 'array' : typeof v);
-      else if (stage === 'length') outv.push(v == null ? 0 : typeof v === 'object' ? (Array.isArray(v) ? v.length : Object.keys(v).length) : String(v).length);
-      else if (stage === 'keys'){ if (!v || typeof v !== 'object') throw new Error('keys needs an object or array'); outv.push(Array.isArray(v) ? v.map(function(_, i){ return i; }) : Object.keys(v).sort()); }
-      else { if (!v || typeof v !== 'object') throw new Error('values needs an object or array'); outv = outv.concat(Array.isArray(v) ? v : Object.keys(v).map(function(k){ return v[k]; })); }
-    });
+function jqEval(filter, inputs){
+  return jqSplit(filter).reduce(function(acc, stage){
+    var outv = [];
+    acc.forEach(function(v){ outv = outv.concat(jqOne(stage, v)); });
     return outv;
+  }, inputs);
+}
+function jqLiteral(t){
+  t = t.trim();
+  if (/^-?\d+(\.\d+)?$/.test(t)) return { ok: true, v: +t };
+  if (/^"(?:[^"\\]|\\.)*"$/.test(t)) return { ok: true, v: JSON.parse(t) };
+  if (t === 'true' || t === 'false' || t === 'null') return { ok: true, v: JSON.parse(t) };
+  return { ok: false };
+}
+function jqTruthy(x){ return !(x === false || x === null || x === undefined); }
+function jqOne(stage, v){
+  var m;
+  if (stage === '.' || stage === '') return [v];
+  if (stage === '..'){
+    var all = [];
+    (function walk(x){ all.push(x); if (x && typeof x === 'object') (Array.isArray(x) ? x : Object.keys(x).map(function(k){ return x[k]; })).forEach(walk); })(v);
+    return all;
   }
-  if (stage.charAt(0) !== '.') throw new Error('unknown filter "' + stage + '" — try .field, .list[0], .list[], keys, length');
+  var lit = jqLiteral(stage); if (lit.ok) return [lit.v];
+  /* comparisons, at the top level of this stage */
+  var ops2 = ['==','!=','<=','>=','<','>'];
+  for (var oi = 0; oi < ops2.length; oi++){
+    var at = jqTopIndex(stage, ops2[oi]);
+    if (at > 0){
+      var L = jqEval(stage.slice(0, at), [v])[0], Rt = stage.slice(at + ops2[oi].length);
+      var R = jqLiteral(Rt).ok ? jqLiteral(Rt).v : jqEval(Rt.trim(), [v])[0];
+      switch (ops2[oi]){
+        case '==': return [JSON.stringify(L) === JSON.stringify(R)];
+        case '!=': return [JSON.stringify(L) !== JSON.stringify(R)];
+        case '<=': return [L <= R]; case '>=': return [L >= R];
+        case '<': return [L < R]; case '>': return [L > R];
+      }
+    }
+  }
+  if ((m = /^select\((.*)\)$/.exec(stage))) return jqEval(m[1], [v]).some(jqTruthy) ? [v] : [];
+  if ((m = /^map\((.*)\)$/.exec(stage))){
+    if (!Array.isArray(v)) throw new Error('map needs an array');
+    var mapped = []; v.forEach(function(x){ mapped = mapped.concat(jqEval(m[1], [x])); }); return [mapped];
+  }
+  if ((m = /^test\(\s*("(?:[^"\\]|\\.)*")\s*\)$/.exec(stage))) return [typeof v === 'string' && new RegExp(JSON.parse(m[1]), 'i').test(v)];
+  if ((m = /^has\(\s*("(?:[^"\\]|\\.)*"|\d+)\s*\)$/.exec(stage))){ var key = JSON.parse(m[1]); return [v != null && typeof v === 'object' && Object.prototype.hasOwnProperty.call(v, key)]; }
+  if ((m = /^contains\(\s*("(?:[^"\\]|\\.)*")\s*\)$/.exec(stage))) return [typeof v === 'string' ? v.indexOf(JSON.parse(m[1])) >= 0 : JSON.stringify(v).indexOf(JSON.parse(m[1])) >= 0];
+  switch (stage){
+    case 'not': return [!jqTruthy(v)];
+    case 'type': return [v === null ? 'null' : Array.isArray(v) ? 'array' : typeof v];
+    case 'length': return [v == null ? 0 : typeof v === 'object' ? (Array.isArray(v) ? v.length : Object.keys(v).length) : String(v).length];
+    case 'ascii_downcase': return [typeof v === 'string' ? v.toLowerCase() : v];
+    case 'keys': if (!v || typeof v !== 'object') throw new Error('keys needs an object or array'); return [Array.isArray(v) ? v.map(function(_, i){ return i; }) : Object.keys(v).sort()];
+    case 'values': if (!v || typeof v !== 'object') throw new Error('values needs an object or array'); return Array.isArray(v) ? v : Object.keys(v).map(function(k){ return v[k]; });
+    case 'to_entries': if (!v || typeof v !== 'object' || Array.isArray(v)) throw new Error('to_entries needs an object'); return [Object.keys(v).map(function(k){ return { key: k, value: v[k] }; })];
+    case 'from_entries': if (!Array.isArray(v)) throw new Error('from_entries needs an array'); var o2 = {}; v.forEach(function(e){ if (e && typeof e === 'object') o2[e.key != null ? e.key : e.name] = e.value; }); return [o2];
+  }
+  if (stage.charAt(0) !== '.') throw new Error('unknown filter "' + stage + '" — see  man jq');
+  return jqPath(stage, v);
+}
+/* Where `op` first appears outside quotes and brackets, or -1. */
+function jqTopIndex(s2, op){
+  var depth = 0, q = false;
+  for (var i = 0; i < s2.length; i++){
+    var c = s2.charAt(i);
+    if (q){ if (c === '\\') i++; else if (c === '"') q = false; continue; }
+    if (c === '"'){ q = true; continue; }
+    if (c === '[' || c === '(') depth++;
+    if (c === ']' || c === ')') depth--;
+    if (!depth && s2.substr(i, op.length) === op){
+      /* don't read the < of <= as < */
+      if ((op === '<' || op === '>') && s2.charAt(i + 1) === '=') continue;
+      if ((op === '==' || op === '!=') || op.length === 2 || (s2.charAt(i - 1) !== '!' && s2.charAt(i - 1) !== '=' )) return i;
+    }
+  }
+  return -1;
+}
+function jqPath(stage, v){
   var steps = [], i = 0, rx;
   while (i < stage.length){
     var rest = stage.slice(i);
+    if (rest.charAt(0) === '?'){ i++; continue; }
     if ((rx = /^\.\[/.exec(rest))){ i += 1; continue; }
     if ((rx = /^\.([A-Za-z_][A-Za-z0-9_$-]*)/.exec(rest))){ steps.push(['key', rx[1]]); i += rx[0].length; continue; }
     if ((rx = /^\."((?:[^"\\]|\\.)*)"/.exec(rest))){ steps.push(['key', rx[1]]); i += rx[0].length; continue; }
@@ -737,15 +959,15 @@ function jqStage(stage, inputs){
     if ((rx = /^\[\s*"((?:[^"\\]|\\.)*)"\s*\]/.exec(rest))){ steps.push(['key', rx[1]]); i += rx[0].length; continue; }
     if ((rx = /^\[\s*\]/.exec(rest))){ steps.push(['each']); i += rx[0].length; continue; }
     if (rest === '.') break;
-    throw new Error('cannot read "' + rest + '" in the filter');
+    throw new Error('cannot read "' + rest + '" in the filter — see  man jq');
   }
-  var cur = inputs;
+  var cur = [v];
   steps.forEach(function(st){
     var next = [];
-    cur.forEach(function(v){
-      if (st[0] === 'key') next.push(v != null && typeof v === 'object' && !Array.isArray(v) ? (v.hasOwnProperty(st[1]) ? v[st[1]] : null) : null);
-      else if (st[0] === 'idx') next.push(Array.isArray(v) ? v[st[1] < 0 ? v.length + st[1] : st[1]] : null);
-      else { if (!v || typeof v !== 'object') throw new Error('cannot iterate over ' + (v === null ? 'null' : typeof v)); next = next.concat(Array.isArray(v) ? v : Object.keys(v).map(function(k){ return v[k]; })); }
+    cur.forEach(function(x){
+      if (st[0] === 'key') next.push(x != null && typeof x === 'object' && !Array.isArray(x) ? (Object.prototype.hasOwnProperty.call(x, st[1]) ? x[st[1]] : null) : null);
+      else if (st[0] === 'idx') next.push(Array.isArray(x) ? x[st[1] < 0 ? x.length + st[1] : st[1]] : null);
+      else { if (!x || typeof x !== 'object') return; next = next.concat(Array.isArray(x) ? x : Object.keys(x).map(function(k){ return x[k]; })); }
     });
     cur = next.map(function(x){ return x === undefined ? null : x; });
   });
@@ -759,6 +981,7 @@ async function planEdit(line){
   var argv = tokenize(line), verb = (argv.shift() || '').toLowerCase();
   var o = parseOpts(argv, '');
   if (o.ops[0] === '-1'){ o.ops.shift(); o.flags['1'] = true; }   /* replace -1: first occurrence only */
+  if (o.ops[0] === '-1E' || o.ops[0] === '-E1'){ o.ops.shift(); o.flags['1'] = true; o.flags.E = true; }
   var path = o.ops[0] ? resolve(o.ops[0]) : '';
   if (!path) return { err: verb + ' needs a path' };
   var prev = await files.read(path);
@@ -769,9 +992,19 @@ async function planEdit(line){
   }
   if (prev == null) return { err: 'No such file: ' + path };
   if (verb === 'replace'){
-    if (o.ops.length < 3) return { err: 'replace <path> "old text" "new text"  (-1 changes only the first)' };
+    if (o.ops.length < 3) return { err: 'replace <path> "old text" "new text"  (-1 changes only the first, -E for a regex with $1 groups)' };
     var from = o.ops[1].replace(/\\n/g, '\n'), to = o.ops[2].replace(/\\n/g, '\n');
     if (!from) return { err: 'replace needs the text to find' };
+    /* -E (or /…/): a regular expression, with $1… in the new text. */
+    var reSrc = o.flags.E ? from : (from.length > 2 && from.charAt(0) === '/' && from.charAt(from.length - 1) === '/' ? from.slice(1, -1) : null);
+    if (reSrc != null){
+      var rre;
+      try { rre = new RegExp(reSrc, o.flags['1'] ? 'm' : 'gm'); } catch(e){ return { err: 'replace: not a valid regular expression (' + e.message + ')' }; }
+      var rCount = (prev.match(new RegExp(reSrc, 'gm')) || []).length;
+      if (!rCount) return { err: 'nothing in ' + path + ' matches /' + reSrc + '/' };
+      var rNext = prev.replace(rre, to), rN = o.flags['1'] ? 1 : rCount;
+      return { path: path, prev: prev, next: rNext, how: 'edited ', said: 'replaced ' + rN + ' match' + (rN === 1 ? '' : 'es') + ' of /' + reSrc + '/ in ' + path };
+    }
     var count = prev.split(from).length - 1;
     if (!count) return { err: '"' + o.ops[1] + '" is not in ' + path + ' — nothing to replace' };
     var next = o.flags['1'] ? prev.replace(from, function(){ return to; }) : prev.split(from).join(to);
@@ -782,6 +1015,20 @@ async function planEdit(line){
      (0+ is the top); an empty text deletes the lines. */
   var spec = o.ops[1] || '', text = o.ops.slice(2).join(' ').replace(/\\n/g, '\n');
   var ls = prev.split('\n'), mm;
+  /* edit <path> /pattern/ "text": the FIRST matching line (-a: every one) —
+     no line numbers to get wrong.  /pattern/+ inserts after it. */
+  if ((mm = /^\/(.+)\/(\+?)$/.exec(spec))){
+    var ere; try { ere = new RegExp(mm[1], 'i'); } catch(e){ return { err: 'edit: not a valid regular expression (' + e.message + ')' }; }
+    var at2 = []; ls.forEach(function(l, ix){ if (ere.test(l)) at2.push(ix); });
+    if (!at2.length) return { err: 'no line in ' + path + ' matches /' + mm[1] + '/' };
+    if (!o.flags.a) at2 = at2.slice(0, 1);
+    if (mm[2] && !text) return { err: 'edit ' + o.ops[0] + ' ' + spec + ' "text to insert"' };
+    for (var q5 = at2.length - 1; q5 >= 0; q5--){
+      if (mm[2]) ls.splice.apply(ls, [at2[q5] + 1, 0].concat(text.split('\n')));
+      else ls.splice.apply(ls, [at2[q5], 1].concat(text === '' ? [] : text.split('\n')));
+    }
+    return { path: path, prev: prev, next: ls.join('\n'), how: 'edited ', said: (mm[2] ? 'inserted after ' : text === '' ? 'deleted ' : 'replaced ') + at2.length + ' line' + (at2.length === 1 ? '' : 's') + ' matching /' + mm[1] + '/ in ' + path + ' (line ' + at2.map(function(x){ return x + 1; }).join(', ') + ')' };
+  }
   if ((mm = /^(\d+)\+$/.exec(spec))){
     var after = +mm[1]; if (after > ls.length) return { err: path + ' has ' + ls.length + ' lines' };
     if (!text) return { err: 'edit ' + o.ops[0] + ' ' + spec + ' "text to insert"' };
@@ -803,6 +1050,38 @@ async function previewEdit(line){
   if (d) printHTML(d.html);
 }
 
+async function copyOne(snap, ops, flags){
+      /* cp a b  ·  cp a folder/  ·  cp -r folder copy  — -f replaces what is there.
+         The store holds text, so this is read-and-write; undo removes the copies
+         (or puts back what -f replaced). */
+      if (ops.length < 2) return print('cp <from> <to>   (-f replaces an existing file)', 'err');
+      var cFrom = resolve(ops[0]), cTo = resolve(ops[1]);
+      if (!cTo) return print('cp needs a destination name', 'err');
+      var cIsDir = snap.folders.indexOf(cFrom) >= 0;
+      var cFile = snap.files.some(function(x){ return x.path === cFrom; });
+      if (!cIsDir && !cFile) return print('No such file or folder: ' + cFrom, 'err');
+      var into = snap.folders.indexOf(cTo) >= 0 || /\/$/.test(ops[1]);
+      var pairs = cIsDir
+        ? snap.files.filter(function(x){ return x.path.indexOf(cFrom + '/') === 0; }).map(function(x){
+            return [x.path, (into ? cTo + '/' + cFrom.split('/').pop() : cTo) + x.path.slice(cFrom.length)]; })
+        : [[cFrom, into ? cTo + '/' + cFrom.split('/').pop() : cTo]];
+      if (!pairs.length) return print(cFrom + '/ is empty', 'dim');
+      var clashes = pairs.filter(function(pr){ return snap.files.some(function(x){ return x.path === pr[1]; }); });
+      if (clashes.length && !flags.f) return print(clashes[0][1] + (clashes.length > 1 ? ' and ' + (clashes.length - 1) + ' more' : '') + ' already exist' + (clashes.length > 1 ? '' : 's') + ' — use  cp -f  to replace', 'err');
+      var items = [];
+      for (var ci = 0; ci < pairs.length; ci++){
+        var cBody = await files.read(pairs[ci][0]);
+        if (cBody == null){ print('skipped ' + pairs[ci][0] + ' (not readable as text)', 'dim'); continue; }
+        var cPrev = await files.read(pairs[ci][1]);
+        await files.write(pairs[ci][1], cBody);
+        items.push({ path: pairs[ci][1], prev: cPrev });
+      }
+      if (!items.length) return print('nothing copied', 'dim');
+      remember({ type: 'cp', to: cIsDir ? (into ? cTo + '/' + cFrom.split('/').pop() : cTo) + '/' : items[0].path, items: items });
+      haptic('success');
+      return print('copied ' + (items.length === 1 ? cFrom + ' -> ' + items[0].path : items.length + ' files to ' + (into ? cTo + '/' + cFrom.split('/').pop() : cTo) + '/') + '  —  undo  removes the copy', 'ok');
+    }
+
 /* ---------- commands ---------- */
 
 async function run(line){
@@ -814,9 +1093,14 @@ async function run(line){
   var verb = (argv.shift()||'').toLowerCase();
   var raw = argv.slice();   /* for commands whose options take values (find, sort, cut) */
 
-  var flags = {}, n = 20, ops = [], ctx = 0;
+  var flags = {}, n = 20, ops = [], ctx = 0, longs = {}, maxHits = 0, depthL = 0, nChars = 0;
   for (var i=0;i<argv.length;i++){
     var a = argv[i];
+    /* --include=*.md, --exclude-dir=archives: long options keep their value. */
+    if (a.indexOf('--') === 0 && a.length > 2){ var eq = a.indexOf('='); longs[eq > 0 ? a.slice(2, eq) : a.slice(2)] = eq > 0 ? a.slice(eq + 1) : true; continue; }
+    if (a === '-m' && argv[i+1] && !isNaN(+argv[i+1])){ maxHits = Math.max(1, +argv[i+1]); i++; continue; }
+    if (a === '-L' && argv[i+1] && !isNaN(+argv[i+1])){ depthL = Math.max(1, +argv[i+1]); i++; continue; }
+    if (a === '-c' && argv[i+1] && !isNaN(+argv[i+1]) && (verb === 'head' || verb === 'tail')){ nChars = Math.max(1, +argv[i+1]); i++; continue; }
     if (a === '-n' && argv[i+1] && !isNaN(+argv[i+1])){ n = Math.max(1, Math.min(+argv[i+1], 500)); i++; continue; }
     if (a === '-C' && argv[i+1] && !isNaN(+argv[i+1])){ ctx = Math.max(0, Math.min(+argv[i+1], 10)); i++; continue; }
     if (/^-C\d+$/.test(a)){ ctx = Math.min(+a.slice(2), 10); continue; }
@@ -865,74 +1149,123 @@ async function run(line){
     }
 
     case 'ls': case 'dir': case 'tree':
-      return listing(snap, target, verb === 'tree' || flags.R || flags.r, flags.t ? 't' : flags.S ? 'S' : null);
+      return listing(snap, target, verb === 'tree' || flags.R || flags.r, flags.t ? 't' : flags.S ? 'S' : null,
+                     { long: !!flags.l, depth: depthL });
 
     case 'cat': case 'head': case 'tail': {
-      var text;
-      if (sin != null && !ops.length) text = sin;          /* ... | head -n 5 */
-      else {
-        if (!target) return print(verb + ' needs a path', 'err');
-        text = await files.read(target);
-        if (text == null) return print('No such file: ' + target, 'err');
+      /* One file, what was piped in, or several (cat a b, head -n 3 *.md) with a
+         ==> name <== header each, as head does. -c N counts characters. */
+      var cut1 = function(text){
+        if (nChars) return verb === 'tail' ? text.slice(-nChars) : text.slice(0, nChars);
+        if (verb === 'cat') return text;
+        var ls1 = text.split('\n');
+        return (verb === 'head' ? ls1.slice(0, n) : ls1.slice(-n)).join('\n');
+      };
+      if (sin != null && !ops.length){ print(cut1(sin)); return; }
+      if (!ops.length) return print(verb + ' needs a path (or several, or a glob like *.md)', 'err');
+      /* Several files get a ==> name <== header each — except cat into a pipe or
+         a file, where it joins them the way cat always has (cat a b | sort). */
+      var cps = expandPaths(ops, snap, false), multi = cps.length > 1 && (verb !== 'cat' || !quiet), failed = 0;   /* quiet = mid-pipe or bound for a file */
+      for (var ci1 = 0; ci1 < cps.length; ci1++){
+        var cp1 = cps[ci1];
+        if (cp1.noMatch){ print('no file matches ' + cp1.noMatch, 'err'); failed++; continue; }
+        var t1 = await files.read(cp1);
+        if (t1 == null){ print('No such file: ' + cp1, 'err'); failed++; continue; }
+        if (multi) printHTML((ci1 ? '\n' : '') + '<span class="dim">==&gt; </span>' + pathHTML(cp1) + '<span class="dim"> &lt;==</span>');
+        print(cut1(t1));
+        if (!multi && !nChars && verb !== 'cat' && t1.split('\n').length > n) note('[' + t1.split('\n').length + ' lines total]');
       }
-      if (verb === 'cat') return print(text);
-      var lines = text.split('\n');
-      print((verb === 'head' ? lines.slice(0, n) : lines.slice(-n)).join('\n'));
-      if (lines.length > n) print('[' + lines.length + ' lines total]', 'dim');
       return;
     }
 
     case 'stat': {
-      var f = snap.files.filter(function(x){ return x.path === target; })[0];
-      if (f) return print(f.path + '\ntype: file\nsize: ' + f.size + ' bytes\nmodified: ' + when(f.modified*1000));
-      if (snap.folders.indexOf(target) >= 0){
-        var inside = snap.files.filter(function(x){ return x.path.indexOf(target + '/') === 0; });
-        var total = inside.reduce(function(a,b){ return a + b.size; }, 0);
-        return print(target + '/\ntype: folder\ncontains: ' + inside.length + ' file(s), ' + total + ' bytes');
+      var stps = ops.length ? expandPaths(ops, snap, true) : [cwd];
+      for (var sti = 0; sti < stps.length; sti++){
+        var tg = stps[sti];
+        if (tg.noMatch){ print('nothing matches ' + tg.noMatch, 'err'); continue; }
+        if (sti) print('');
+        var f = snap.files.filter(function(x){ return x.path === tg; })[0];
+        if (f){ print(f.path + '\ntype: file\nsize: ' + f.size + ' bytes (' + bytes(f.size) + ')\nmodified: ' + when(f.modified*1000)); continue; }
+        if (snap.folders.indexOf(tg) >= 0 || tg === ''){
+          var inside = snap.files.filter(function(x){ return !tg || x.path.indexOf(tg + '/') === 0; });
+          var total = inside.reduce(function(a,b){ return a + b.size; }, 0);
+          print((tg || '.') + '/\ntype: folder\ncontains: ' + inside.length + ' file(s), ' + total + ' bytes (' + bytes(total) + ')');
+          continue;
+        }
+        print('No such file or folder: ' + tg, 'err');
       }
-      return print('No such file or folder: ' + target, 'err');
+      return;
     }
 
     case 'find': {
-      /* find [glob] [-mtime -7] [-newer path] [-size +10k] [-type f|d]
-         -mtime counts days: -7 within the last 7, +30 older than 30. */
-      var fPat = null, fNewer = null, fMtime = null, fSize = null, fType = 'f';
+      /* find [start] [glob] [-name glob] [-maxdepth N] [-mtime -7|+30|-2h|-30m]
+              [-mmin -30] [-newer path] [-size +10k] [-type f|d]
+         A glob with a / is matched against the whole path (projects/** then /*.md);
+         without one, against the file name. -mtime counts days unless you give
+         h or m; newest first whenever time is involved. */
+      var fPat = null, fNewer = null, fAge = null, fSize = null, fType = 'f', fStart = null, fMax = 0;
+      var operands = [];
       for (var k = 0; k < raw.length; k++){
         var w = raw[k];
         if (w === '-newer' && raw[k+1]){ fNewer = raw[++k]; continue; }
-        if (w === '-mtime' && raw[k+1]){ fMtime = raw[++k]; continue; }
+        if (w === '-mtime' && raw[k+1]){ fAge = { v: raw[++k], unit: 'd' }; continue; }
+        if (w === '-mmin' && raw[k+1]){ fAge = { v: raw[++k], unit: 'm' }; continue; }
         if (w === '-size' && raw[k+1]){ fSize = raw[++k]; continue; }
         if (w === '-type' && raw[k+1]){ fType = raw[++k] === 'd' ? 'd' : 'f'; continue; }
-        if (w === '-name' && raw[k+1]){ fPat = raw[++k]; continue; }
-        if (w.charAt(0) === '-'){ return print('find: unknown option ' + w + ' — try -mtime -7, -newer <file>, -size +10k, -type d', 'err'); }
-        if (fPat === null) fPat = w;
+        if ((w === '-name' || w === '-path' || w === '-iname') && raw[k+1]){ fPat = raw[++k]; continue; }
+        if (w === '-maxdepth' && raw[k+1]){ fMax = Math.max(1, +raw[++k] || 1); continue; }
+        if (w.charAt(0) === '-' && w.length > 1){ return print('find: unknown option ' + w + ' — see  man find', 'err'); }
+        operands.push(w);
       }
-      if (fPat === null && fNewer === null && fMtime === null && fSize === null && fType === 'f')
-        return print('find needs a name or glob, e.g.  find *.json   or a filter:  find -mtime -7', 'err');
+      /* A first operand that is a folder is where to start (find notes -name *.md). */
+      if (operands.length && !isGlob(operands[0]) && (snap.folders.indexOf(resolve(operands[0])) >= 0 || operands[0] === '.' || operands[0] === '/')){
+        fStart = resolve(operands.shift());
+      }
+      if (operands.length && fPat === null) fPat = operands.shift();
+      if (fPat === null && fNewer === null && fAge === null && fSize === null && fType === 'f' && fStart === null)
+        return print('find needs a name or glob, e.g.  find *.json   or a filter:  find -mtime -7  (see  man find)', 'err');
+      var startDir = fStart === null ? '' : fStart;
       var now = Date.now() / 1000, newerThan = null;
       if (fNewer !== null){
         var ref = snap.files.filter(function(x){ return x.path === resolve(fNewer); })[0];
         if (!ref) return print('find -newer: no such file ' + resolve(fNewer), 'err');
         newerThan = ref.modified;
       }
-      var mt = fMtime === null ? null : /^([+-]?)(\d+(?:\.\d+)?)$/.exec(fMtime);
-      if (fMtime !== null && !mt) return print('find -mtime takes days: -7 (last week) or +30 (older than a month)', 'err');
+      var mt = null, unitSec = 86400;
+      if (fAge){
+        mt = /^([+-]?)(\d+(?:\.\d+)?)([dhm]?)$/i.exec(fAge.v);
+        if (!mt) return print('find -mtime takes -7 (days), -2h, -30m, or +30; -mmin takes minutes', 'err');
+        var u = (mt[3] || fAge.unit).toLowerCase();
+        unitSec = u === 'h' ? 3600 : u === 'm' ? 60 : 86400;
+      }
       var sz = fSize === null ? null : /^([+-]?)(\d+(?:\.\d+)?)([kKmM]?)$/.exec(fSize);
       if (fSize !== null && !sz) return print('find -size takes +10k, -2k, +1m or a byte count', 'err');
       var szBytes = sz ? +sz[2] * (/k/i.test(sz[3]) ? 1024 : /m/i.test(sz[3]) ? 1048576 : 1) : 0;
+      var pathRx = fPat !== null && fPat.indexOf('/') >= 0
+        ? globRx(fPat.charAt(0) === '/' ? normalise(fPat) : (startDir ? startDir + '/' : (cwd ? cwd + '/' : '')) + fPat) : null;
+      var nameOk = function(p){
+        if (fPat === null) return true;
+        if (pathRx) return pathRx.test(p);
+        return glob(fPat, p.split('/').pop());
+      };
+      var under = function(p){
+        if (startDir && p.indexOf(startDir + '/') !== 0) return false;
+        if (fMax){ var rel = startDir ? p.slice(startDir.length + 1) : p; if (rel.split('/').length > fMax) return false; }
+        return true;
+      };
       if (fType === 'd'){
-        var dHits = snap.folders.filter(function(d){ return fPat === null || glob(fPat, d.split('/').pop()) || glob(fPat, d); });
-        if (!dHits.length) return print('No matching folder', 'dim');
+        var dHits = snap.folders.filter(function(d){ return under(d) && nameOk(d); });
+        if (!dHits.length) return print('found nothing: no matching folder', 'dim');
         return printHTML(dHits.sort().map(function(d){ return pathHTML(d, d + '/'); }).join('\n'));
       }
       var hits = snap.files.filter(function(f){
-        if (fPat !== null && !(glob(fPat, f.path.split('/').pop()) || glob(fPat, f.path))) return false;
+        if (!under(f.path) || !nameOk(f.path)) return false;
         if (newerThan !== null && !(f.modified > newerThan)) return false;
         if (mt){
-          var age = (now - f.modified) / 86400, days = +mt[2];
-          if (mt[1] === '-' && !(age < days)) return false;
-          if (mt[1] === '+' && !(age > days)) return false;
-          if (!mt[1] && !(age >= days && age < days + 1)) return false;
+          var age = (now - f.modified) / unitSec, amt = +mt[2];
+          if (mt[1] === '-' && !(age < amt)) return false;
+          if (mt[1] === '+' && !(age > amt)) return false;
+          if (!mt[1] && !(age >= amt && age < amt + 1)) return false;
         }
         if (sz){
           if (sz[1] === '+' && !(f.size > szBytes)) return false;
@@ -941,8 +1274,7 @@ async function run(line){
         }
         return true;
       });
-      if (!hits.length) return print('No match' + (fPat ? ' for ' + fPat : ''), 'dim');
-      /* With a time filter you are asking "what changed?", so newest first. */
+      if (!hits.length) return print('found nothing' + (fPat ? ' matching ' + fPat : '') + (startDir ? ' in ' + startDir : ''), 'dim');
       hits.sort(function(a, b){ return (mt || newerThan !== null) ? b.modified - a.modified : (a.path < b.path ? -1 : 1); });
       return printHTML(hits.map(function(f){ return pathHTML(f.path); }).join('\n'));
     }
@@ -961,6 +1293,16 @@ async function run(line){
         catch(e){ return print('grep: that pattern is not a valid regular expression (' + e.message + ')', 'err'); }
       }
       var needle = flags.s ? pat : pat.toLowerCase();
+      /* -w: whole words only — a regex either way, with word boundaries. */
+      if (flags.w){
+        var wsrc = rx ? rx.source : pat.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        rx = new RegExp('\\b(?:' + wsrc + ')\\b', flags.s ? '' : 'i');
+      }
+      /* -o: just the matching text, every match on the line. */
+      var allMatches = function(l){
+        var g = rx ? new RegExp(rx.source, rx.flags + 'g') : new RegExp(pat.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), flags.s ? 'g' : 'gi');
+        return (l.match(g) || []).filter(function(x){ return x.length; });
+      };
       var findIn = function(l){
         if (rx){ var m = rx.exec(l); return m ? { at: m.index, len: Math.max(1, m[0].length) } : null; }
         var at = (flags.s ? l : l.toLowerCase()).indexOf(needle);
@@ -976,7 +1318,7 @@ async function run(line){
       };
       /* Which lines to show: the hits, plus ctx lines around each (null = a "--" gap). */
       var pick = function(ls){
-        var hitIdx = []; for (var q = 0; q < ls.length; q++) if (isHit(ls[q])) hitIdx.push(q);
+        var hitIdx = []; for (var q = 0; q < ls.length; q++) if (isHit(ls[q])){ hitIdx.push(q); if (maxHits && hitIdx.length >= maxHits) break; }
         if (!ctx) return { hits: hitIdx, rows: hitIdx.map(function(x){ return [x, true]; }) };
         var want = {}, rows = [], last = -2;
         hitIdx.forEach(function(x){ for (var y = Math.max(0, x - ctx); y <= Math.min(ls.length - 1, x + ctx); y++) want[y] = want[y] || (y === x); });
@@ -990,7 +1332,8 @@ async function run(line){
       if (sin != null && ops.length < 2){
         var sl = sin.split('\n'), pk = pick(sl);
         if (flags.c) return print(String(pk.hits.length));
-        if (!pk.hits.length) return print('No match for "' + ops[0] + '"', 'dim');
+        if (!pk.hits.length) return print('found nothing: no line matches "' + ops[0] + '"', 'dim');
+        if (flags.o && !flags.v) return print(pk.hits.map(function(x){ return allMatches(sl[x]).join('\n'); }).join('\n'));
         return printHTML(pk.rows.map(function(r){
           if (!r) return '<span class="dim">--</span>';
           var num = flags.n || ctx ? '<span class="dim">' + (r[0] + 1) + (r[1] ? ':' : '-') + '</span>' : '';
@@ -998,8 +1341,17 @@ async function run(line){
         }).join('\n'));
       }
       var scope = ops[1] ? resolve(ops[1]) : cwd;
-      var pool = snap.files.filter(function(f){ return !scope || f.path === scope || f.path.indexOf(scope + '/') === 0; });
-      if (!pool.length) return print('Nothing to search in ' + (scope || 'the workspace'), 'dim');
+      /* --include=*.md keeps matching file names; --exclude-dir=archives skips
+         any folder of that name (globs allowed in both). */
+      var incl = typeof longs.include === 'string' ? longs.include : null;
+      var exclD = typeof longs['exclude-dir'] === 'string' ? longs['exclude-dir'] : null;
+      var pool = snap.files.filter(function(f){
+        if (scope && f.path !== scope && f.path.indexOf(scope + '/') !== 0) return false;
+        if (incl && !glob(incl, f.path.split('/').pop())) return false;
+        if (exclD && f.path.split('/').slice(0, -1).some(function(seg){ return glob(exclD, seg); })) return false;
+        return true;
+      });
+      if (!pool.length) return print('found nothing to search in ' + (scope || 'the workspace') + (incl || exclD ? ' with those filters' : ''), 'dim');
       var rows = [], hitFiles = 0, shown = 0, LIMIT = 200;
       for (var fi = 0; fi < pool.length && shown < LIMIT; fi++){
         var f = pool[fi], txt = await files.read(f.path);
@@ -1009,6 +1361,10 @@ async function run(line){
         hitFiles++;
         if (flags.l){ rows.push(pathHTML(f.path)); continue; }
         if (flags.c){ rows.push(pathHTML(f.path) + '<span class="hit">:' + got.hits.length + '</span>'); continue; }
+        if (flags.o && !flags.v){
+          got.hits.forEach(function(x){ allMatches(ls[x]).forEach(function(mm3){ shown++; rows.push(pathHTML(f.path) + '<span class="hit">:' + (x + 1) + ': <b>' + esc(mm3) + '</b></span>'); }); });
+          continue;
+        }
         for (var ri = 0; ri < got.rows.length && shown < LIMIT; ri++){
           var r = got.rows[ri];
           if (!r){ rows.push('<span class="dim">--</span>'); continue; }
@@ -1018,7 +1374,7 @@ async function run(line){
             : '<span class="dim">-' + (r[0] + 1) + '- ' + esc(ls[r[0]].slice(0, 120)) + '</span>'));
         }
       }
-      if (!rows.length) return print('No match for "' + ops[0] + '" in ' + (scope || 'the workspace'), 'dim');
+      if (!rows.length) return print('found nothing: no match for "' + ops[0] + '" in ' + (scope || 'the workspace'), 'dim');
       printHTML(rows.join('\n'));
       if (!flags.l && !flags.c) print('[' + shown + (shown >= LIMIT ? '+' : '') + ' line(s) in ' + hitFiles + ' file(s)]', 'dim');
       return;
@@ -1105,6 +1461,125 @@ async function run(line){
       }).join('\n'));
     }
 
+    case 'tr': {
+      /* tr a-z A-Z  ·  tr -d '0-9'  ·  tr -s ' '  (ranges and \n \t work) */
+      var to2 = parseOpts(raw, '');
+      if (sin == null) return print('tr reads what is piped in:  cat x | tr a-z A-Z', 'err');
+      var setOf = function(sp){ sp = String(sp || '').replace(/\\n/g, '\n').replace(/\\t/g, '\t'); var r3 = [];
+        for (var q3 = 0; q3 < sp.length; q3++){ if (sp.charAt(q3 + 1) === '-' && q3 + 2 < sp.length){ for (var cc = sp.charCodeAt(q3); cc <= sp.charCodeAt(q3 + 2); cc++) r3.push(String.fromCharCode(cc)); q3 += 2; } else r3.push(sp.charAt(q3)); }
+        return r3; };
+      var s1 = setOf(to2.ops[0]);
+      if (!s1.length) return print("tr <from> <to>   ·   tr -d <chars>   ·   tr -s <chars>", 'err');
+      var outT = sin;
+      if (to2.flags.d) outT = outT.split('').filter(function(ch){ return s1.indexOf(ch) < 0; }).join('');
+      else if (to2.ops[1] != null){ var s2 = setOf(to2.ops[1]); outT = outT.split('').map(function(ch){ var ix = s1.indexOf(ch); return ix < 0 ? ch : s2[Math.min(ix, s2.length - 1)]; }).join(''); }
+      if (to2.flags.s){ var sq = to2.ops[1] != null ? setOf(to2.ops[1]) : s1;
+        outT = outT.split('').filter(function(ch, ix2, arr){ return !(ix2 && ch === arr[ix2 - 1] && sq.indexOf(ch) >= 0); }).join(''); }
+      return print(outT);
+    }
+
+    case 'paste': {
+      /* paste a b — side by side, tab between (-d X);  paste -s — one line per file */
+      var po = parseOpts(raw, 'd');
+      var pd = po.vals.d == null ? '\t' : po.vals.d === '\\t' ? '\t' : po.vals.d;
+      var cols2 = [];
+      if (sin != null && !po.ops.length) cols2.push(lines$(sin));
+      for (var pi = 0; pi < po.ops.length; pi++){
+        if (po.ops[pi] === '-'){ cols2.push(lines$(sin || '')); continue; }
+        var pt = await files.read(resolve(po.ops[pi]));
+        if (pt == null) return print('No such file: ' + resolve(po.ops[pi]), 'err');
+        cols2.push(lines$(pt));
+      }
+      if (!cols2.length) return print('paste <a> <b>   (-d , for commas, -s to join each file onto one line)', 'err');
+      if (po.flags.s) return print(cols2.map(function(c3){ return c3.join(pd); }).join('\n'));
+      var rowsP = Math.max.apply(null, cols2.map(function(c3){ return c3.length; })), outP = [];
+      for (var r4 = 0; r4 < rowsP; r4++) outP.push(cols2.map(function(c3){ return c3[r4] == null ? '' : c3[r4]; }).join(pd));
+      return print(outP.join('\n'));
+    }
+
+    case 'comm': {
+      /* comm a b — lines only in a | only in b | in both (sorted first, as comm
+         always wants). -1 -2 -3 hide a column: comm -12 a b = common lines only. */
+      var cmo = parseOpts(raw.filter(function(x){ return !/^-[123]+$/.test(x); }), '');
+      raw.forEach(function(x){ if (/^-[123]+$/.test(x)) x.slice(1).split('').forEach(function(d){ cmo.flags[d] = true; }); });
+      if (cmo.ops.length < 2) return print('comm <a> <b>   (-12 for common lines only, -23 for lines only in a)', 'err');
+      var ca = await loadSpec(cmo.ops[0], sin), cb = await loadSpec(cmo.ops[1], sin);
+      if (ca.err) return print(ca.err, 'err');
+      if (cb.err) return print(cb.err, 'err');
+      var la = lines$(ca.text).slice().sort(), lb = lines$(cb.text).slice().sort(), ia = 0, ib = 0, outC = [];
+      var col = function(k, t){ if (cmo.flags[k]) return; var lead = ''; for (var z = 1; z < +k; z++) if (!cmo.flags[String(z)]) lead += '\t'; outC.push(lead + t); };
+      while (ia < la.length || ib < lb.length){
+        if (ib >= lb.length || (ia < la.length && la[ia] < lb[ib])) col('1', la[ia++]);
+        else if (ia >= la.length || lb[ib] < la[ia]) col('2', lb[ib++]);
+        else { col('3', la[ia]); ia++; ib++; }
+      }
+      return print(outC.join('\n'));
+    }
+
+    case 'awk': {
+      /* The column-work subset: awk [-F ,] '[/regex/] {print $1, $3}'.
+         $0 is the line, NF the field count, NR the line number, $NF the last field. */
+      var ao = parseOpts(raw, 'F');
+      var prog = (ao.ops[0] || '').trim();
+      var am = /^(?:\/((?:[^\/\\]|\\.)*)\/\s*)?\{\s*print\s*(.*?)\s*;?\s*\}$/.exec(prog);
+      if (!am) return print("awk '{print $1, $3}'  ·  awk -F , '{print $2}'  ·  awk '/todo/ {print NR, $0}'  (print is all this awk does)", 'err');
+      var ast = await textFrom(sin, ao.ops[1], 'awk'); if (ast.err) return print(ast.err, 'err');
+      var arx;
+      try { arx = am[1] != null ? new RegExp(am[1], 'i') : null; } catch(e){ return print('awk: bad pattern (' + e.message + ')', 'err'); }
+      var fs = ao.vals.F == null ? null : ao.vals.F === '\\t' ? '\t' : ao.vals.F;
+      var items2 = am[2] ? am[2].split(/\s*,\s*/) : ['$0'];
+      var outA = [];
+      lines$(ast.text).forEach(function(l, ix){
+        if (arx && !arx.test(l)) return;
+        var fl = fs == null ? l.trim().split(/\s+/) : l.split(fs);
+        outA.push(items2.map(function(it){
+          if (it === '$0') return l;
+          if (/^\$\d+$/.test(it)) return fl[+it.slice(1) - 1] == null ? '' : fl[+it.slice(1) - 1];
+          if (it === '$NF') return fl[fl.length - 1] || '';
+          if (it === 'NF') return String(fl.length);
+          if (it === 'NR') return String(ix + 1);
+          if (/^".*"$/.test(it)) return it.slice(1, -1);
+          return it;
+        }).join(fs == null ? ' ' : fs));
+      });
+      return print(outA.join('\n'));
+    }
+
+    case 'xargs': {
+      /* grep -l TODO notes | xargs head -n 5 — the paths that came down the pipe
+         are handed to the command (made absolute, so where you stand doesn't
+         matter). The assistant may only xargs a read-only command. */
+      if (sin == null) return print('xargs runs a command on paths piped in:  grep -l TODO notes | xargs head -n 3', 'err');
+      var xCmd = restOf(line);
+      if (!xCmd) return print('xargs <command> — e.g.  find *.md | xargs wc -l', 'err');
+      var xv = (tokenize(xCmd)[0] || '').toLowerCase();
+      if (['xargs', 'ask', 'dictate'].indexOf(xv) >= 0 || KNOWN.indexOf(xv) < 0) return print('xargs: ' + xv + ' is not something xargs can run', 'err');
+      var xPaths = sin.split('\n').map(function(l){ return l.replace(/\t.*$/, '').replace(/:\d+:.*$/, '').trim(); })
+        .filter(Boolean).filter(function(x, ix3, arr){ return arr.indexOf(x) === ix3; }).slice(0, 50);
+      if (!xPaths.length) return print('found nothing: no paths came down the pipe', 'dim');
+      var quoted = function(x){ return '"/' + x.replace(/^\//, '') + '"'; };
+      var multiOk = ['cat','head','tail','stat','wc','paste','rm','cp','mv'].indexOf(xv) >= 0;
+      if (multiOk) return run(xCmd + ' ' + xPaths.map(quoted).join(' '));
+      for (var xi = 0; xi < xPaths.length; xi++){
+        printHTML('<span class="dim">==&gt; </span>' + pathHTML(xPaths[xi].replace(/^\//, '')) + '<span class="dim"> &lt;==</span>');
+        await run(xCmd + ' ' + quoted(xPaths[xi]));
+      }
+      return;
+    }
+
+    case 'man': {
+      var mv2 = (ops[0] || '').toLowerCase();
+      if (!mv2) return print('man <command> — the exact flags it takes.  help  lists every command;  changes  says what is new.', 'dim');
+      if (!MAN[mv2]) return print('no manual for ' + mv2 + ' — commands: ' + VERBS.join(' '), 'err');
+      return printHTML('<span class="cmd">' + esc(mv2) + '</span>\n' + MAN[mv2].map(function(l){ return '<span class="dim">' + esc(l) + '</span>'; }).join('\n'));
+    }
+
+    case 'changes': {
+      /* Shell's own changelog, so you (or the assistant) can check what already
+         exists before asking for it. */
+      return print(CHANGES.join('\n'));
+    }
+
     case 'diff': {
       /* diff a b  ·  diff notes.md@2  (that version vs now)  ·  diff notes.md
          (the newest saved version vs now)  ·  diff notes.md@3 notes.md@1 */
@@ -1130,13 +1605,13 @@ async function run(line){
       var jo = parseOpts(raw, '');
       var filter = '.', jpath = null;
       if (jo.ops.length >= 2){ filter = jo.ops[0]; jpath = jo.ops[1]; }
-      else if (jo.ops.length === 1){ if (sin != null || /^[.\[]|^(keys|length|type|values)\b/.test(jo.ops[0])) filter = jo.ops[0]; else jpath = jo.ops[0]; }
+      else if (jo.ops.length === 1){ if (sin != null || /^[.\[]|^(keys|length|type|values|to_entries|map|select)\b/.test(jo.ops[0])) filter = jo.ops[0]; else jpath = jo.ops[0]; }
       var jt = await textFrom(sin, jpath, 'jq'); if (jt.err) return print(jt.err, 'err');
       var data;
       try { data = JSON.parse(jt.text); }
       catch(e){ return print((jpath ? resolve(jpath) : 'that') + ' is not valid JSON (' + e.message + ')', 'err'); }
       var results;
-      try { results = jqSplit(filter).reduce(function(acc, stage){ return jqStage(stage, acc); }, [data]); }
+      try { results = jqEval(filter, [data]); }
       catch(e){ return print('jq: ' + e.message, 'err'); }
       return print(results.map(function(v){ return jo.flags.r && typeof v === 'string' ? v : JSON.stringify(v, null, 2); }).join('\n'));
     }
@@ -1260,7 +1735,27 @@ async function run(line){
       haptic('success');
       return print('created ' + target + '/', 'ok');
 
-    case 'mv': {
+    case 'mv': case 'cp': {
+      /* v10: several sources or a glob (mv *.md archive/) — the destination must
+         be a folder, and the moves run as one batch that one undo reverses. */
+      var mSrc = ops.length > 2 || (ops.length === 2 && isGlob(ops[0]));
+      if (mSrc){
+        var mDest = resolve(ops[ops.length - 1]);
+        if (snap.folders.indexOf(mDest) < 0) return print(verb + ' with several sources needs an existing folder last (mkdir it first)', 'err');
+        var mList = expandPaths(ops.slice(0, -1), snap, true);
+        var missing = mList.filter(function(x){ return x.noMatch; });
+        if (missing.length) return print('nothing matches ' + missing[0].noMatch, 'err');
+        if (!mList.length) return print('found nothing to ' + verb, 'dim');
+        var ownBatch = batchId == null;
+        if (ownBatch) batchId = Date.now();
+        try {
+          for (var mi = 0; mi < mList.length; mi++){
+            await run(verb + (flags.f ? ' -f ' : ' ') + '"/' + mList[mi] + '" "/' + mDest + '/' + mList[mi].split('/').pop() + '"');
+          }
+        } finally { if (ownBatch) batchId = null; }
+        return note(mList.length + ' item(s) — one  undo  reverses them all');
+      }
+      if (verb === 'cp') return copyOne(snap, ops, flags);
       if (ops.length < 2) return print('mv needs a source and a destination', 'err');
       var to = resolve(ops[1]);
       if (!to) return print('mv needs a destination name', 'err');
@@ -1289,38 +1784,6 @@ async function run(line){
       remember({ type: 'write', path: plan.path, prev: plan.prev, how: plan.how });
       haptic('success');
       return print(plan.said + '  —  undo  puts it back', 'ok');
-    }
-
-    case 'cp': {
-      /* cp a b  ·  cp a folder/  ·  cp -r folder copy  — -f replaces what is there.
-         The store holds text, so this is read-and-write; undo removes the copies
-         (or puts back what -f replaced). */
-      if (ops.length < 2) return print('cp <from> <to>   (-f replaces an existing file)', 'err');
-      var cFrom = resolve(ops[0]), cTo = resolve(ops[1]);
-      if (!cTo) return print('cp needs a destination name', 'err');
-      var cIsDir = snap.folders.indexOf(cFrom) >= 0;
-      var cFile = snap.files.some(function(x){ return x.path === cFrom; });
-      if (!cIsDir && !cFile) return print('No such file or folder: ' + cFrom, 'err');
-      var into = snap.folders.indexOf(cTo) >= 0 || /\/$/.test(ops[1]);
-      var pairs = cIsDir
-        ? snap.files.filter(function(x){ return x.path.indexOf(cFrom + '/') === 0; }).map(function(x){
-            return [x.path, (into ? cTo + '/' + cFrom.split('/').pop() : cTo) + x.path.slice(cFrom.length)]; })
-        : [[cFrom, into ? cTo + '/' + cFrom.split('/').pop() : cTo]];
-      if (!pairs.length) return print(cFrom + '/ is empty', 'dim');
-      var clashes = pairs.filter(function(pr){ return snap.files.some(function(x){ return x.path === pr[1]; }); });
-      if (clashes.length && !flags.f) return print(clashes[0][1] + (clashes.length > 1 ? ' and ' + (clashes.length - 1) + ' more' : '') + ' already exist' + (clashes.length > 1 ? '' : 's') + ' — use  cp -f  to replace', 'err');
-      var items = [];
-      for (var ci = 0; ci < pairs.length; ci++){
-        var cBody = await files.read(pairs[ci][0]);
-        if (cBody == null){ print('skipped ' + pairs[ci][0] + ' (not readable as text)', 'dim'); continue; }
-        var cPrev = await files.read(pairs[ci][1]);
-        await files.write(pairs[ci][1], cBody);
-        items.push({ path: pairs[ci][1], prev: cPrev });
-      }
-      if (!items.length) return print('nothing copied', 'dim');
-      remember({ type: 'cp', to: cIsDir ? (into ? cTo + '/' + cFrom.split('/').pop() : cTo) + '/' : items[0].path, items: items });
-      haptic('success');
-      return print('copied ' + (items.length === 1 ? cFrom + ' -> ' + items[0].path : items.length + ' files to ' + (into ? cTo + '/' + cFrom.split('/').pop() : cTo) + '/') + '  —  undo  removes the copy', 'ok');
     }
 
     case 'rm': case 'rmdir': {
@@ -1367,10 +1830,14 @@ async function run(line){
       /* Every change made here — by you, or proposals you approved — newest
          first, kept between sessions. "undo" marks what  undo  can still reverse. */
       if (!changeLog.length) return print('no changes yet', 'dim');
-      var howMany = Math.max(1, Math.min(ops[0] && !isNaN(+ops[0]) ? +ops[0] : 20, 200));
+      /* log [-n N] [path]: the last N (20), or only the changes that touched a path. */
+      var howMany = Math.max(1, Math.min(ops[0] && !isNaN(+ops[0]) ? +ops[0] : n, 200));
+      var logPath = ops[0] && isNaN(+ops[0]) ? resolve(ops[0]) : null;
       var live = {}; undoStack.forEach(function(u){ live[u.id] = true; });
       var nextUndo = undoStack.length ? undoStack[undoStack.length - 1].id : null;
-      print(changeLog.slice(-howMany).reverse().map(function(e, i4){
+      var pool2 = logPath ? changeLog.filter(function(e){ return e.text.indexOf(logPath) >= 0; }) : changeLog;
+      if (!pool2.length) return print('found nothing: no logged change touched ' + logPath, 'dim');
+      print(pool2.slice(-howMany).reverse().map(function(e, i4){
         return '#' + (i4 + 1) + '\t' + when(e.t) + '\t' + e.text + (e.id === nextUndo ? '   ← undo reverses this' : live[e.id] ? '   (undoable)' : '');
       }).join('\n'));
       return note('trash  lists deleted files;  restore <path>  puts one back');
@@ -1495,8 +1962,12 @@ async function undoOne(op){
   return true;
 }
 
-function listing(snap, root, recursive, sortBy){
+function listing(snap, root, recursive, sortBy, opt){
+  opt = opt || {};
   var prefix = root ? root + '/' : '';
+  /* tree -L N: only N levels below where you started. */
+  var baseDepth = prefix ? prefix.split('/').length - 1 : 0;
+  var within = function(p){ return !opt.depth || p.split('/').length - baseDepth <= opt.depth; };
   if (root && snap.folders.indexOf(root) < 0){
     var one = snap.files.filter(function(f){ return f.path === root; })[0];
     if (one) return printHTML(pathHTML(one.path) + '\t<span class="dim">' + one.size + 'B\t' + when(one.modified*1000) + '</span>');
@@ -1504,10 +1975,10 @@ function listing(snap, root, recursive, sortBy){
   }
   var depth = prefix ? prefix.split('/').length : 1;
   var subs = snap.folders.filter(function(f){
-    return f.indexOf(prefix) === 0 && f !== root && (recursive || f.split('/').length === depth);
+    return f.indexOf(prefix) === 0 && f !== root && (recursive || f.split('/').length === depth) && within(f);
   }).sort();
   var here = snap.files.filter(function(f){
-    return f.path.indexOf(prefix) === 0 && (recursive || f.path.split('/').length === depth);
+    return f.path.indexOf(prefix) === 0 && (recursive || f.path.split('/').length === depth) && within(f.path);
   }).sort(function(a,b){
     /* -t newest first, -S biggest first; otherwise by name */
     if (sortBy === 't' && a.modified !== b.modified) return b.modified - a.modified;
@@ -1515,6 +1986,20 @@ function listing(snap, root, recursive, sortBy){
     return a.path < b.path ? -1 : 1;
   });
   if (!subs.length && !here.length) return print(root ? root + '/ is empty' : 'The workspace is empty', 'dim');
+  if (opt.long){
+    /* ls -l: one aligned line each — readable size, modified, name. There is
+       no owner column: everything in the workspace is yours. */
+    var pad = function(t, w){ t = String(t); return t.length >= w ? t : '        '.slice(0, w - t.length) + t; };
+    var rowsL = subs.map(function(d){
+      var inD = snap.files.filter(function(x){ return x.path.indexOf(d + '/') === 0; });
+      var newest = inD.reduce(function(m, x){ return Math.max(m, x.modified); }, 0);
+      return '<span class="dim">d ' + pad(bytes(inD.reduce(function(a, b){ return a + b.size; }, 0)), 7) + '  ' + (newest ? when(newest*1000) : '                ') + '  </span>' + '<span class="dir">' + pathHTML(d, d.slice(prefix.length) + '/') + '</span><span class="dim">  (' + inD.length + ')</span>';
+    }).concat(here.map(function(f){
+      return '<span class="dim">- ' + pad(bytes(f.size), 7) + '  ' + when(f.modified*1000) + '  </span>' + pathHTML(f.path, f.path.slice(prefix.length));
+    }));
+    printHTML(rowsL.join('\n'));
+    return note(here.length + ' file(s), ' + subs.length + ' folder(s), ' + bytes(here.reduce(function(a, b){ return a + b.size; }, 0)));
+  }
   var html = subs.map(function(d){ return '<span class="dir">' + pathHTML(d, d + '/') + '</span>'; })
     .concat(here.map(function(f){
       return pathHTML(f.path) + '\t<span class="dim">' + f.size + 'B\t' + when(f.modified*1000) + '</span>';
@@ -1533,7 +2018,7 @@ function listing(snap, root, recursive, sortBy){
    proposal the user has to accept: a model running rm across someone's
    documents unattended is the one outcome worth designing against. */
 
-var READ_ONLY = ['ls','dir','tree','cat','head','tail','sed','stat','find','grep','diff','jq','wc','sort','uniq','cut','history','du','pwd','log'];
+var READ_ONLY = ['ls','dir','tree','cat','head','tail','sed','stat','find','grep','diff','jq','wc','sort','uniq','cut','tr','paste','comm','awk','xargs','man','changes','history','du','pwd','log'];
 var MAX_STEPS = 5;          /* myllmAsk is rate-limited; five is plenty and stays inside it */
 
 /* The system prompt for the `ask` VERB — a filter, not an assistant. Anything
@@ -1565,15 +2050,22 @@ function systemPrompt(listing){
     '  {"propose":["<command>","<command>",…],"why":"<reason>"} for several changes approved together, e.g. a folder reorganisation: they run in order, stop at the first failure, and one undo reverses all of them.',
     'To change part of a file, propose a SMALL edit rather than rewriting it: replace <path> "old text" "new text" (every occurrence; -1 for the first only), or edit <path> <A-B> "new lines" (\\n for a line break; empty text deletes the lines; <A>+ inserts after line A). The user sees the diff before approving. Use write only for a new file or a full rewrite.',
     '',
+    'More read-only tools: tr, paste, comm, awk \'{print $N}\', xargs <read-only command> (e.g. grep -l x | xargs head -n 3), and man <command> for its exact flags. Run `man <cmd>` instead of guessing a flag; `changes` lists what Shell can do now.',
+    'Each output ends with [status: ok], [status: found nothing] or [status: failed]; a blocked command says why.',
     'Prefer running a command over guessing. Answer in plain prose, briefly. Do not invent file contents.'
   ].join('\n');
 }
 
 async function runCaptured(line){
   /* The agent's steps stay visible on screen (silent: false) — watching it look
-     around is most of why the loop is trustworthy. */
+     around is most of why the loop is trustworthy. Each output ends with a
+     status the model can't misread: ok, found nothing, or failed (and why). */
   var text = await captureOf(function(){ return runLine(line); }, false);
-  return text.length > 4000 ? text.slice(0, 4000) + '\n[truncated]' : text;
+  var failed = lastCaptureError;
+  var empty = !text.trim() || /^(found nothing|no match|no file matches|nothing matches|.* is empty$)/i.test(text.trim());
+  var status = failed ? '[status: failed — the error is above]' : empty ? '[status: found nothing]' : '[status: ok]';
+  if (text.length > 4000) text = text.slice(0, 4000) + '\n[truncated]';
+  return text + '\n' + status;
 }
 
 function parseReply(raw){
@@ -1637,7 +2129,8 @@ async function agent(question){
          closing before the model finds it. */
       var why = unsafeReason(cmd, READ_ONLY);
       if (why){
-        transcript += '\n\nAssistant tried: ' + cmd + '\nBlocked: ' + why + '. Use "propose" for anything that changes files.';
+        print('blocked: ' + cmd + ' — ' + why, 'dim');
+        transcript += '\n\nAssistant tried: ' + cmd + '\n[status: blocked — ' + why + ']. Use "propose" for anything that changes files.';
         continue;
       }
       print('$ ' + cmd, 'step');

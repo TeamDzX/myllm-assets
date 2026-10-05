@@ -112,7 +112,7 @@ await check('grep /regex/ matches either word', async () => {
   return (t.includes('dentist') && t.includes('mum') && !t.includes('invoice')) || t;
 });
 await check('grep -s matches case', async () => {
-  const t = await after('cat notes.md | grep -s todo'); return t.includes('No match') || t;
+  const t = await after('cat notes.md | grep -s todo'); return t.includes('found nothing') || t;
 });
 await check('grep across files with -C keeps file:line', async () => {
   const t = await after('grep -C 1 invoice notes.md');
