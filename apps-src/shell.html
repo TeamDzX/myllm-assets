@@ -32,6 +32,21 @@
   header .hint{font-size:11.5px;color:#6b7a90}
   #out{flex:1;overflow:auto;padding:12px 14px 4px;white-space:pre-wrap;word-break:break-word}
   .cmd{color:#7ee787}
+  /* v13: your questions to MyLLM stand apart from its steps, notes and answers. */
+  .you{color:#e7eef8;background:#14233a;border-left:3px solid #58a6ff;border-radius:6px;
+       padding:7px 10px;margin:12px 0 6px;font-weight:550}
+  .you .who{color:#58a6ff;font-weight:650;margin-right:6px}
+  /* v13: the working bar — what MyLLM is doing right now, how long, and Stop. */
+  .work{display:flex;align-items:center;gap:9px;margin:0 12px 8px;padding:8px 10px;border-radius:10px;
+        background:#111b29;border:1px solid #23406a;color:#9db2cd;font-size:12.5px}
+  .work[hidden]{display:none}
+  .work .txt{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#cfe0f5}
+  .work .t{color:#6b7a90;font-variant-numeric:tabular-nums;flex:none}
+  .work button{flex:none;background:#2a1720;border:1px solid #6e2b3a;color:#ff9aa8;border-radius:8px;padding:4px 10px;font:inherit}
+  .work .spin{flex:none;width:12px;height:12px;border-radius:50%;border:2px solid #23406a;border-top-color:#58a6ff;animation:shspin .8s linear infinite}
+  @keyframes shspin{to{transform:rotate(360deg)}}
+  @media (prefers-reduced-motion: reduce){ .work .spin{animation:none;border-top-color:#58a6ff} }
+  body.busy form{border-color:#23406a}
   .err{color:#ff7b72}
   .ok{color:#79c0ff}
   .dim{color:#6b7a90}
@@ -85,6 +100,7 @@
 
 <div id="out"></div>
 
+<div class="work" id="work" hidden role="status" aria-live="polite"><span class="spin" aria-hidden="true"></span><span class="txt" id="workTxt">MyLLM is thinking…</span><span class="t" id="workT">0s</span><button type="button" id="workStop">Stop</button></div>
 <div class="chips" id="chips"></div>
 
 <div class="composer">
@@ -782,6 +798,10 @@ var MAN = {
   info: ['info  the workspace at a glance: files, size of 25 MB, top folders, newest changes, oldest file, bookmarks']
 };
 var CHANGES = [
+  'Shell v13 (5 Oct 2026)',
+  '  a working bar while MyLLM thinks or runs a step: what it is doing, seconds, and Stop',
+  '  a second Enter no longer re-sends a question that is still being worked on',
+  '  your questions to MyLLM have their own colour',
   'Shell v12 (5 Oct 2026)',
   '  full screen with a ✕ (MyLLM 5.6.2+) · no pinch or focus zoom',
   '  .scratch: the assistant\'s working notes, no approval needed (200 KB, emptied each launch) · scratch [clear]',
@@ -1821,10 +1841,11 @@ async function run(line){
         ? (q || 'Summarise this.') + '\n\n--- material ---\n' + material + (clipped ? '\n[truncated]' : '')
         : q;
       var spin = status('asking\u2026');
+      var askBar = workStart('MyLLM is working on: ' + (q || 'the piped text').slice(0, 60));
       var answer;
       try { answer = await myllmAsk(prompt, { system: FILTER_SYSTEM }); }
-      catch(e){ unstatus(spin); return print('ask failed: ' + (e && e.message || e), 'err'); }
-      unstatus(spin);
+      catch(e){ unstatus(spin); if (askBar) workEnd(); return print('ask failed: ' + (e && e.message || e), 'err'); }
+      unstatus(spin); if (askBar) workEnd();
       var clean = stripFence(String(answer == null ? '' : answer));
       if (!clean) return print('(no answer)', 'dim');
       if (clipped) print('[used the first ' + ASK_MAX + ' characters]', 'dim');
@@ -2100,7 +2121,6 @@ async function run(line){
     default:
       /* Not a command? Then it was a question. This is the line that turns a
          terminal into an assistant that happens to live in a directory. */
-      print('thinking…', 'dim');
       return agent(line);
   }
 }
@@ -2299,6 +2319,42 @@ function parseReply(raw){
   try { return JSON.parse(t.slice(a, b + 1)); } catch(e){ return null; }
 }
 
+/* ---------- v13: the working bar ----------
+   While MyLLM works you see what it is doing and for how long, and a second
+   Enter doesn't send the question again (sent three times, it confused the
+   model). Stop ends it after the current step. */
+var busy = null;
+function workStart(text){
+  if (busy) return false;
+  busy = { started: Date.now(), stopped: false, steps: 0 };
+  var bar = document.getElementById('work');
+  bar.hidden = false; document.body.classList.add('busy');
+  workStep(text);
+  busy.tick = setInterval(function(){
+    if (busy) document.getElementById('workT').textContent = Math.round((Date.now() - busy.started) / 1000) + 's';
+  }, 500);
+  input.setAttribute('data-ph', input.placeholder || '');
+  input.placeholder = 'MyLLM is working — wait, or tap Stop';
+  return true;
+}
+function workStep(text){
+  if (!busy) return;
+  document.getElementById('workTxt').textContent = text;
+  document.getElementById('workT').textContent = Math.round((Date.now() - busy.started) / 1000) + 's';
+}
+function workEnd(){
+  if (!busy) return;
+  clearInterval(busy.tick); busy = null;
+  document.getElementById('work').hidden = true; document.body.classList.remove('busy');
+  input.placeholder = input.getAttribute('data-ph') || '';
+}
+function workStopped(){ return !!(busy && busy.stopped); }
+document.getElementById('workStop').addEventListener('click', function(){
+  if (!busy) return;
+  busy.stopped = true; haptic('light');
+  workStep('stopping after this step…');
+});
+
 /* What the assistant remembers between questions in this session: what was
    asked, what it said, and what became of anything it proposed (approved and
    ran, approved but failed, declined). Before, it never learnt the outcome. */
@@ -2332,11 +2388,14 @@ async function agent(question){
   var userCwd = cwd;
   var transcript = memoryText() + 'User: ' + question;
   var memo = rememberAgent({ q: question });
+  var ownBar = workStart('MyLLM is thinking…');
   try {
     for (var step = 0; step < MAX_STEPS; step++){
       var raw;
+      workStep(step ? 'MyLLM is thinking · step ' + (step + 1) : 'MyLLM is thinking…');
       try { raw = await myllmAsk(transcript + '\n\nReply with one JSON object.', { system: systemPrompt(here) }); }
       catch(e){ print('ask failed: ' + (e.message || e), 'err'); return; }
+      if (workStopped()){ print('stopped — ask again whenever you like', 'dim'); memo.said = '(stopped by the user)'; return; }
 
       var reply = parseReply(raw);
       if (!reply){
@@ -2393,7 +2452,9 @@ async function agent(question){
             continue;
           }
           print('$ ' + cmd + (cwd !== userCwd ? '   (in /' + cwd + ')' : ''), 'step');
+          workStep('running  ' + cmd);
           var output = await runCaptured(cmd);
+          if (workStopped()){ print('stopped — ask again whenever you like', 'dim'); return; }
           transcript += '\n\nAssistant ran: ' + cmd + (cwd ? '  (working folder /' + cwd + ')' : '') + '\nOutput:\n' + (output || '(no output)');
         }
         continue;
@@ -2403,6 +2464,7 @@ async function agent(question){
     }
     print('Stopped after ' + MAX_STEPS + ' steps. Ask something narrower, or run the commands yourself.', 'dim');
   } finally {
+    if (ownBar) workEnd();
     if (cwd !== userCwd){ cwd = userCwd; paintPrompt(); }
   }
 }
@@ -2412,8 +2474,15 @@ async function agent(question){
 document.getElementById('form').addEventListener('submit', async function(ev){
   ev.preventDefault();
   var line = input.value.trim();
-  input.value = '';
   if (!line) return;
+  /* Still working: don't send it again. Keep what was typed. */
+  if (busy){
+    if (line.toLowerCase() === 'stop'){ input.value = ''; document.getElementById('workStop').click(); return; }
+    haptic('warning');
+    workStep(document.getElementById('workTxt').textContent.replace(/ — still working.*$/, '') + ' — still working, tap Stop to cancel');
+    return;
+  }
+  input.value = '';
 
   if (pending){
     var p = pending; pending = null;
@@ -2463,7 +2532,8 @@ document.getElementById('form').addEventListener('submit', async function(ev){
   cmdHistory.push(line); hIndex = cmdHistory.length;
   if (cmdHistory.length > 200) cmdHistory.shift();
   saveHistory();
-  print(prompt$() + ' \u276f ' + line, 'cmd');
+  if (isCommandLine(line)) print(prompt$() + ' \u276f ' + line, 'cmd');
+  else printHTML('<div class="you"><span class="who">you</span>' + esc(line) + '</div>');
   try { await runLine(line); }
   catch(e){ print(String(e && e.message || e), 'err'); }
   stdin = null;
