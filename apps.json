@@ -17,35 +17,6 @@
   ],
   "apps": [
     {
-      "id": "scientific-calculator",
-      "name": "Scientific Calculator",
-      "emoji": "🧮",
-      "tagline": "Beautiful maths, full screen",
-      "description": "A scientific calculator made to be a pleasure to use, full screen. Type the whole sum and watch the answer appear as you go, then press equals. Trig in degrees or radians with the inverse and hyperbolic functions, logs, powers and roots, factorials, combinations, percentages that work the way a shop till does (200 + 15% = 230), memory, Ans, and a history of every sum that you can tap to reuse. Turn the phone sideways for every key at once, or fold the scientific keys away for a bigger keypad. Tap an answer to copy it. Describe a sum in words (\"15% tip on 64.50 split between 3\") and your AI writes the expression; the calculator does the maths, so the answer is never guessed. Works offline, light or dark.",
-      "tags": [
-        "maths",
-        "calculator",
-        "science",
-        "students",
-        "utility",
-        "saves data"
-      ],
-      "iconSymbol": "plus.forwardslash.minus",
-      "iconColor": "orange",
-      "version": 3,
-      "featured": true,
-      "requiresAI": false,
-      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/scientific-calculator.jpg",
-      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@e18b3e0789dd42841b17d4dda554111a5a36b998/apps-src/scientific-calculator.html",
-      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@e18b3e0789dd42841b17d4dda554111a5a36b998/apps-src/scientific-calculator.myllmapp",
-      "sizeKB": 43,
-      "category": "Utilities",
-      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/icons/scientific-calculator.jpg",
-      "aiUses": [
-        "ask"
-      ]
-    },
-    {
       "id": "airport-maps",
       "name": "Airport Maps",
       "emoji": "✈️",
@@ -74,6 +45,93 @@
       "sizeKB": 367,
       "category": "Utilities",
       "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/icons/airport-maps.jpg",
+      "aiUses": [
+        "ask"
+      ]
+    },
+    {
+      "id": "mind-map",
+      "name": "Mind Map",
+      "emoji": "🧠",
+      "tagline": "Think in branches",
+      "description": "Get an idea out of your head and into shape. Start from one thought and branch out: tap to add, drag to move a whole branch, fold what you're not looking at, and let Tidy lay it all out neatly, each branch in its own colour. Keep as many maps as you like. Stuck? Select an idea and tap Expand: your AI suggests a handful of next steps that fit where you are on the map, and one Undo takes them back. Save a map as an image, share it as an outline, or paste an indented list to turn it into a map. Works offline, light or dark.",
+      "tags": [
+        "mind map",
+        "ideas",
+        "planning",
+        "brainstorm",
+        "students",
+        "saves data"
+      ],
+      "iconSymbol": "point.3.connected.trianglepath.dotted",
+      "iconColor": "purple",
+      "version": 1,
+      "featured": true,
+      "requiresAI": false,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/mind-map.jpg",
+      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@ed24d38bf4de48196e4f93ef02e2d8eb0dd0aa08/apps-src/mind-map.html",
+      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@ed24d38bf4de48196e4f93ef02e2d8eb0dd0aa08/apps-src/mind-map.myllmapp",
+      "sizeKB": 58,
+      "category": "Productivity",
+      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/icons/mind-map.jpg",
+      "aiUses": [
+        "ask"
+      ]
+    },
+    {
+      "id": "periodic-table",
+      "name": "Periodic Table",
+      "emoji": "⚛️",
+      "tagline": "Every element, beautifully",
+      "description": "All 118 elements in a table that's a pleasure to explore. Colour it by family, or turn it into a heat map of electronegativity, atomic radius, melting point, density or the year each was discovered. Slide the temperature and watch which elements melt and boil. Tap any element for its full card: mass, electron configuration with an animated shell diagram, ionisation energy, radius, density and more, with units. Search, save favourites, and test yourself with a quick quiz. Ask your AI about any element for the story behind it. Data from PubChem (NIH). Works offline.",
+      "tags": [
+        "chemistry",
+        "science",
+        "students",
+        "reference",
+        "quiz",
+        "saves data"
+      ],
+      "iconSymbol": "atom",
+      "iconColor": "blue",
+      "version": 1,
+      "featured": true,
+      "requiresAI": false,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/periodic-table.jpg",
+      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@ed24d38bf4de48196e4f93ef02e2d8eb0dd0aa08/apps-src/periodic-table.html",
+      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@ed24d38bf4de48196e4f93ef02e2d8eb0dd0aa08/apps-src/periodic-table.myllmapp",
+      "sizeKB": 58,
+      "category": "Students",
+      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/icons/periodic-table.jpg",
+      "aiUses": [
+        "ask"
+      ]
+    },
+    {
+      "id": "scientific-calculator",
+      "name": "Scientific Calculator",
+      "emoji": "🧮",
+      "tagline": "Beautiful maths, full screen",
+      "description": "A scientific calculator made to be a pleasure to use, full screen. Type the whole sum and watch the answer appear as you go, then press equals. Trig in degrees or radians with the inverse and hyperbolic functions, logs, powers and roots, factorials, combinations, percentages that work the way a shop till does (200 + 15% = 230), memory, Ans, and a history of every sum that you can tap to reuse. Turn the phone sideways for every key at once, or fold the scientific keys away for a bigger keypad. Tap an answer to copy it. Describe a sum in words (\"15% tip on 64.50 split between 3\") and your AI writes the expression; the calculator does the maths, so the answer is never guessed. Works offline, light or dark.",
+      "tags": [
+        "maths",
+        "calculator",
+        "science",
+        "students",
+        "utility",
+        "saves data"
+      ],
+      "iconSymbol": "plus.forwardslash.minus",
+      "iconColor": "orange",
+      "version": 3,
+      "featured": true,
+      "requiresAI": false,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/scientific-calculator.jpg",
+      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@e18b3e0789dd42841b17d4dda554111a5a36b998/apps-src/scientific-calculator.html",
+      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@e18b3e0789dd42841b17d4dda554111a5a36b998/apps-src/scientific-calculator.myllmapp",
+      "sizeKB": 43,
+      "category": "Utilities",
+      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/icons/scientific-calculator.jpg",
       "aiUses": [
         "ask"
       ]
@@ -138,64 +196,6 @@
       "sizeKB": 201,
       "category": "Utilities",
       "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/icons/metro-maps.jpg"
-    },
-    {
-      "id": "mind-map",
-      "name": "Mind Map",
-      "emoji": "🧠",
-      "tagline": "Think in branches",
-      "description": "Get an idea out of your head and into shape. Start from one thought and branch out: tap to add, drag to move a whole branch, fold what you're not looking at, and let Tidy lay it all out neatly, each branch in its own colour. Keep as many maps as you like. Stuck? Select an idea and tap Expand: your AI suggests a handful of next steps that fit where you are on the map, and one Undo takes them back. Save a map as an image, share it as an outline, or paste an indented list to turn it into a map. Works offline, light or dark.",
-      "tags": [
-        "mind map",
-        "ideas",
-        "planning",
-        "brainstorm",
-        "students",
-        "saves data"
-      ],
-      "iconSymbol": "point.3.connected.trianglepath.dotted",
-      "iconColor": "purple",
-      "version": 1,
-      "featured": true,
-      "requiresAI": false,
-      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/mind-map.jpg",
-      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@ed24d38bf4de48196e4f93ef02e2d8eb0dd0aa08/apps-src/mind-map.html",
-      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@ed24d38bf4de48196e4f93ef02e2d8eb0dd0aa08/apps-src/mind-map.myllmapp",
-      "sizeKB": 58,
-      "category": "Productivity",
-      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/icons/mind-map.jpg",
-      "aiUses": [
-        "ask"
-      ]
-    },
-    {
-      "id": "periodic-table",
-      "name": "Periodic Table",
-      "emoji": "⚛️",
-      "tagline": "Every element, beautifully",
-      "description": "All 118 elements in a table that's a pleasure to explore. Colour it by family, or turn it into a heat map of electronegativity, atomic radius, melting point, density or the year each was discovered. Slide the temperature and watch which elements melt and boil. Tap any element for its full card: mass, electron configuration with an animated shell diagram, ionisation energy, radius, density and more, with units. Search, save favourites, and test yourself with a quick quiz. Ask your AI about any element for the story behind it. Data from PubChem (NIH). Works offline.",
-      "tags": [
-        "chemistry",
-        "science",
-        "students",
-        "reference",
-        "quiz",
-        "saves data"
-      ],
-      "iconSymbol": "atom",
-      "iconColor": "blue",
-      "version": 1,
-      "featured": true,
-      "requiresAI": false,
-      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/periodic-table.jpg",
-      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@ed24d38bf4de48196e4f93ef02e2d8eb0dd0aa08/apps-src/periodic-table.html",
-      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@ed24d38bf4de48196e4f93ef02e2d8eb0dd0aa08/apps-src/periodic-table.myllmapp",
-      "sizeKB": 58,
-      "category": "Students",
-      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/icons/periodic-table.jpg",
-      "aiUses": [
-        "ask"
-      ]
     },
     {
       "id": "password-generator",
