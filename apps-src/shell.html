@@ -6,7 +6,8 @@
 -->
 <html lang="en"><head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="myllm:immersive" content="on">
 <title>Shell</title>
 <style>
   *{box-sizing:border-box}
@@ -16,6 +17,17 @@
   /* phone on its side: keep clear of the notch and the rounded corners */
   body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right)}
   header{padding:10px 14px;border-bottom:1px solid #1e2733;display:flex;align-items:center;gap:10px}
+  /* v12: full screen (MyLLM 5.6.2+), with the header clear of the Dynamic
+     Island — live env(), never measured — and a ✕ as the way out. */
+  body.imm header{padding-top:calc(10px + env(safe-area-inset-top))}
+  header .imm-x{display:none;margin-left:auto;width:34px;height:34px;border-radius:10px;border:1px solid #2a3646;
+                background:#111823;color:#9db2cd;place-items:center;padding:0;flex:none}
+  body.imm header .imm-x{display:grid}
+  header .imm-x svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round}
+  header .imm-x:active{transform:scale(.94)}
+  /* No pinch, no double-tap zoom: a terminal that rescales under your fingers
+     feels flimsy. (The viewport meta stops the focus-zoom on the prompt.) */
+  html,body{touch-action:manipulation;-webkit-text-size-adjust:100%}
   header b{font-size:14px;color:#e7eef8;font-weight:650}
   header .hint{font-size:11.5px;color:#6b7a90}
   #out{flex:1;overflow:auto;padding:12px 14px 4px;white-space:pre-wrap;word-break:break-word}
@@ -68,6 +80,7 @@
 <header>
   <b>Shell</b>
   <span class="hint">the shared workspace, on the command line</span>
+  <button type="button" class="imm-x" aria-label="Close Shell" onclick="shellClose()"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
 </header>
 
 <div id="out"></div>
@@ -122,9 +135,30 @@ var prevCwd = null;      /* for  cd -  */
 var batchId = null;      /* set while an approved batch runs, so undo reverses all of it */
 var RC = '.shellrc';     /* optional startup script, in the workspace root */
 var ASK_MAX = 8000;      /* how much material one `ask` may carry; a small on-device model has a small window */
-var VERBS = ['ls','tree','cat','head','tail','sed','stat','find','grep','diff','jq','wc','sort','uniq','cut','tr','paste','comm','awk','xargs','man','changes','preview','date','info','history','du','ask','dictate','open','share','mkdir','mv','cp','write','replace','edit','rm','rmdir','undo','log','revert','trash','restore','alias','unalias','mark','cd','pwd','clear','help'];
+var VERBS = ['ls','tree','cat','head','tail','sed','stat','find','grep','diff','jq','wc','sort','uniq','cut','tr','paste','comm','awk','xargs','man','changes','preview','date','info','scratch','versions','history','du','ask','dictate','open','share','mkdir','mv','cp','write','replace','edit','rm','rmdir','undo','log','revert','trash','restore','alias','unalias','mark','cd','pwd','clear','help'];
 var KNOWN = VERBS.concat(['dir']);   /* everything the switch below answers to */
 function inTrash(path){ return path === TRASH || path.indexOf(TRASH + '/') === 0; }
+/* v12 (#9): the assistant's scratch space. Hidden like .trash, always at the
+   workspace root, capped, emptied each time Shell opens — and the ONE place
+   the assistant may write without asking. Nothing of yours lives there. */
+var SCRATCH = '.scratch', SCRATCH_MAX = 200 * 1024;
+function inScratch(path){ return path === SCRATCH || path.indexOf(SCRATCH + '/') === 0; }
+function isHidden(path){ return inTrash(path) || inScratch(path); }
+/* Empty .scratch: every file, then the folder (folder removal alone is not
+   something every store does recursively). */
+async function clearScratch(){
+  var lst = await files.list(), gone = 0;
+  for (var i = 0; i < lst.length; i++) if (inScratch(lst[i].path)){ await files.remove(lst[i].path); gone++; }
+  try { var fl = files.folders ? await files.folders() : [];
+    var dirs = fl.filter(inScratch).sort(function(a, b){ return b.length - a.length; });
+    for (var j = 0; j < dirs.length; j++) await files.removeFolder(dirs[j], false);
+  } catch(e){}
+  return gone;
+}
+async function scratchUsed(except){
+  try { return (await files.list()).filter(function(f){ return inScratch(f.path) && f.path !== except; }).reduce(function(a, b){ return a + b.size; }, 0); }
+  catch(e){ return 0; }
+}
 
 /* The APP may be stateful — you are standing somewhere. The assistant's
    workspace_shell tool deliberately is NOT: state that persists between tool
@@ -132,6 +166,8 @@ function inTrash(path){ return path === TRASH || path.indexOf(TRASH + '/') === 0
    extra verb here. */
 function resolve(p){
   var s = String(p||'').trim();
+  /* .scratch is always the one at the root, wherever you (or the assistant) stand. */
+  if (s === SCRATCH || s.indexOf(SCRATCH + '/') === 0) return normalise(s);
   /* @name and @name/sub/path: a saved place, so a long path is typed once. */
   if (s.charAt(0) === '@'){
     var mSlash = s.indexOf('/'), mName = (mSlash < 0 ? s.slice(1) : s.slice(1, mSlash)).toLowerCase();
@@ -158,7 +194,7 @@ async function paintPrompt(){
   var r = document.getElementById('statusRight');
   if (r && files){
     try{
-      var list = (await files.list()).filter(function(f){ return !inTrash(f.path); });
+      var list = (await files.list()).filter(function(f){ return !isHidden(f.path); });
       var total = list.reduce(function(a,b){ return a + b.size; }, 0);
       r.textContent = list.length + (list.length === 1 ? ' file' : ' files') + '  \u00b7  ' + bytes(total);
     }catch(e){ r.textContent = ''; }
@@ -225,7 +261,7 @@ var HELP = [
   ['trash', 'what is in .trash'],
   ['restore <path>', 'put something back from .trash'],
   ['trash empty', 'delete all of it for good; asks first'],
-  ['history <path>', 'previous versions of a file'],
+  ['versions <path>', 'previous versions of a file'],
   ['revert <path> [N]', 'put version N back (1 = newest)'],
   '',
   ['history', 'the commands you have typed'],
@@ -246,6 +282,7 @@ var HELP = [
   ['changes', 'what is new in Shell'],
   ['preview <change>', 'what a change would do, safely'],
   ['date   info', 'the time / the workspace at a glance'],
+  ['scratch [clear]', "the assistant's notes (no approval)"],
   '',
   'Anything else is a question for MyLLM. It',
   'can run the read-only commands above to',
@@ -540,7 +577,7 @@ function expandBang(line){
 /* .shellrc: the lines that run when Shell opens. Nobody is at the prompt yet,
    so it is held to the same bar as the agent — look around, set up, change
    nothing. A rm in a startup file would run before you could stop it. */
-var RC_SAFE = ['cd','alias','unalias','mark','clear','ls','dir','tree','pwd','du','cat','head','tail','sed','stat','find','grep','diff','jq','wc','sort','uniq','cut','tr','paste','comm','awk','xargs','man','changes','preview','date','info','history','log'];
+var RC_SAFE = ['cd','alias','unalias','mark','clear','ls','dir','tree','pwd','du','cat','head','tail','sed','stat','find','grep','diff','jq','wc','sort','uniq','cut','tr','paste','comm','awk','xargs','man','changes','preview','date','info','scratch','versions','history','log'];
 async function runRC(){
   var text = null;
   try { text = await files.read(RC); } catch(e){}
@@ -592,7 +629,11 @@ async function runLine(line){
   var prev = await files.read(dest);
   if (pl.redirect.append && prev != null && prev.length)
     body = prev + (prev.charAt(prev.length - 1) === '\n' ? '' : '\n') + body;
+  if (inScratch(dest) && (await scratchUsed(dest)) + body.length > SCRATCH_MAX)
+    return print(SCRATCH + ' is full (200 KB) — scratch clear  empties it', 'err');
   await files.write(dest, body);
+  /* Scratch is the assistant's working paper: not on your undo stack or log. */
+  if (inScratch(dest)){ print((pl.redirect.append ? 'appended ' : 'wrote ') + added + ' chars to ' + dest + '  (scratch — cleared when Shell opens)', 'dim'); return; }
   remember({ type: 'write', path: dest, prev: prev });
   haptic('success');
   print((pl.redirect.append ? 'appended ' : 'wrote ') + added + ' chars to ' + dest +
@@ -649,9 +690,9 @@ async function snapshot(includeHidden){
   var folders = files.folders ? await files.folders() : [];
   var all = { files: list, folders: folders };
   lastSnap = all;
-  if (includeHidden || inTrash(cwd)) return all;
-  return { files: list.filter(function(f){ return !inTrash(f.path); }),
-           folders: folders.filter(function(d){ return !inTrash(d); }) };
+  if (includeHidden || isHidden(cwd)) return all;
+  return { files: list.filter(function(f){ return !isHidden(f.path); }),
+           folders: folders.filter(function(d){ return !isHidden(d); }) };
 }
 /* Where a deleted thing goes. Keeps the original path under .trash so restore
    is a straight move back; a second delete of the same name gets a suffix. */
@@ -706,7 +747,8 @@ var MAN = {
   comm: ['comm <a> <b>  only-in-a | only-in-b | both (sorted)  -12 common only  -23 only in a'],
   awk: ["awk [-F X] '[/regex/] {print $1, $3}'   $0 line  $NF last field  NF  NR  \"text\"", 'print is all this awk does'],
   xargs: ['… | xargs <command>  runs it on the paths that came down the pipe', 'e.g.  grep -l TODO notes | xargs head -n 5   find *.md | xargs wc -l'],
-  history: ['history            the commands you typed  (!! / !5 / !gr rerun)', 'history <path>     saved versions of a file, 1 = newest'],
+  history: ['history            the commands you typed  (!! / !5 / !gr rerun)', 'history <path>     same as versions <path>'],
+  versions: ['versions <path>  saved versions of a file, 1 = newest  (diff <path>@N shows a change; revert <path> N puts one back)'],
   du: ['du  space per folder, biggest first (sizes are already readable; -h accepted)'],
   ask: ['ask "question"   or   … | ask "instruction"  — one answer, no tools; pipe it on or > save it'],
   open: ['open <path>  hand a text file to an app that opens text'],
@@ -721,7 +763,7 @@ var MAN = {
   rm: ['rm <path>  to .trash (undo / restore)   rm -p  for good, asks first'],
   rmdir: ['rmdir <path>  folder to .trash   rmdir -p  for good, asks first'],
   undo: ['undo  reverses your last change — or the whole batch it was part of; survives closing Shell'],
-  log: ['log [-n N] [path]  recent changes, newest first; marks what undo would reverse'],
+  log: ['log [-n N] [path]  changes made via Shell (newest first, what undo would reverse), then files', 'changed OUTSIDE Shell in the last 7 days (other apps, the assistant, sync), from file times'],
   revert: ['revert <path> [N]  put saved version N back (1 = newest)'],
   trash: ['trash  what is in .trash    trash empty  delete it for good (asks)'],
   restore: ['restore [-f] <path>  from .trash back to where it was'],
@@ -736,9 +778,16 @@ var MAN = {
   changes: ['changes  what is new in Shell, newest first'],
   preview: ['preview <write|replace|edit|mv|cp|rm|rmdir|mkdir …>  what it WOULD do — the diff, the moves, clashes, missing files', 'changes nothing; the assistant can run it before proposing'],
   date: ['date  today, time, zone, ISO and unix time'],
+  scratch: ['scratch  what is in .scratch, the assistant\'s working paper   scratch clear  empty it', 'the assistant may write there without asking; 200 KB; emptied each time Shell opens; hidden from ls (ls -a shows it)'],
   info: ['info  the workspace at a glance: files, size of 25 MB, top folders, newest changes, oldest file, bookmarks']
 };
 var CHANGES = [
+  'Shell v12 (5 Oct 2026)',
+  '  full screen with a ✕ (MyLLM 5.6.2+) · no pinch or focus zoom',
+  '  .scratch: the assistant\'s working notes, no approval needed (200 KB, emptied each launch) · scratch [clear]',
+  '  log also lists files changed outside Shell · preview rm/rmdir names every file, size, date, recent edits',
+  '  times say their zone · key-like values are masked before anything reaches the model',
+  '  versions <path> (history <path> still works) · info shows hidden .trash/.scratch counts',
   'Shell v11 (5 Oct 2026)',
   '  the assistant: no folder dump on screen per question; several looks per step; a note to you',
   '  while it works; its own cd (yours is put back); it learns what became of its proposals',
@@ -759,6 +808,26 @@ var CHANGES = [
   'Shell v7–v8: pipes and > >>, ask as a filter, open/share/dictate, history !!, aliases, .shellrc',
   'Shell v5: .trash, undo, restore, grep, tap-to-complete'
 ];
+
+/* The phone's zone, said once wherever times are listed (BST ends 25 Oct). */
+function zoneLabel(){
+  var off = -new Date().getTimezoneOffset(), tz = '';
+  try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch(e){}
+  return (tz ? tz + ' ' : '') + 'UTC' + (off >= 0 ? '+' : '-') + Math.floor(Math.abs(off) / 60) + (Math.abs(off) % 60 ? ':' + ('0' + Math.abs(off) % 60).slice(-2) : '');
+}
+/* v12: anything bound for the MODEL (the assistant's steps, ask's material)
+   has values that look like keys masked. The person at the screen still sees
+   them; a token in system/github.json shouldn't travel to a cloud model. */
+var SECRET_KEY_RX = /(["']?)([A-Za-z0-9_.-]*(?:token|secret|password|passwd|api[_-]?key|access[_-]?key|private[_-]?key|authorization|credential|cookie)[A-Za-z0-9_.-]*)\1(\s*[:=]\s*)(["']?)([^"'\s,}\]]{8,})\4/gi;
+var SECRET_RAW_RX = /\b(?:sk-(?:ant-)?[A-Za-z0-9_-]{16,}|gh[pousr]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}|xox[abpr]-[A-Za-z0-9-]{10,}|AKIA[0-9A-Z]{16}|AIza[0-9A-Za-z_-]{30,}|eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,})\b|(Bearer\s+)[A-Za-z0-9._~+\/-]{12,}=*/g;
+function maskSecrets(t){
+  var masked = 0;
+  var r = String(t == null ? '' : t).replace(SECRET_KEY_RX, function(m, q1, key, sep, q2, val){
+    if (/^\d+$/.test(val) || /^(true|false|null)$/i.test(val)) return m;   /* "tokens": 1234 is a count */
+    masked++; return q1 + key + q1 + sep + q2 + '[masked]' + q2;
+  }).replace(SECRET_RAW_RX, function(m, bearer){ masked++; return bearer ? bearer + '[masked]' : '[masked]'; });
+  return masked ? r + '\n[' + masked + ' value(s) that look like keys were masked — the user sees them]' : r;
+}
 
 /* ---------- v9 helpers: options, text tools, diff, json, edits ---------- */
 
@@ -997,6 +1066,11 @@ async function planEdit(line){
   var prev = await files.read(path);
   if (verb === 'write'){
     var body = line.slice(line.indexOf(o.ops[0]) + o.ops[0].length).trim();
+    /* write x "the text" — one quoted text loses its quotes (and \" inside). */
+    var q0 = body.charAt(0);
+    if ((q0 === '"' || q0 === "'") && body.length > 1 && body.charAt(body.length - 1) === q0 && body.slice(1, -1).indexOf(q0) < 0) body = body.slice(1, -1);
+    else if (q0 === '"' && body.length > 1 && body.charAt(body.length - 1) === '"' && !/[^\\]"/.test(body.slice(1, -1).replace(/\\"/g, ''))) body = body.slice(1, -1).replace(/\\"/g, '"');
+    body = body.replace(/\\n/g, '\n');
     if (!body) return { err: 'write <path> <text>  — the text replaces the file' };
     return { path: path, prev: prev, next: body, how: prev == null ? 'created ' : 'rewrote ', said: 'wrote ' + body.length + ' chars to ' + path + (prev != null ? ' (replaced ' + prev.length + ')' : '') };
   }
@@ -1118,7 +1192,7 @@ async function run(line){
     ops.push(a);
   }
   var target = ops.length ? resolve(ops[0]) : cwd;
-  var snap = await snapshot(!!flags.a);
+  var snap = await snapshot(!!flags.a || isHidden(target));
 
   switch (verb){
     case 'help': printHTML(helpHTML()); return;
@@ -1195,7 +1269,7 @@ async function run(line){
         if (tg.noMatch){ print('nothing matches ' + tg.noMatch, 'err'); continue; }
         if (sti) print('');
         var f = snap.files.filter(function(x){ return x.path === tg; })[0];
-        if (f){ print(f.path + '\ntype: file\nsize: ' + f.size + ' bytes (' + bytes(f.size) + ')\nmodified: ' + when(f.modified*1000)); continue; }
+        if (f){ print(f.path + '\ntype: file\nsize: ' + f.size + ' bytes (' + bytes(f.size) + ')\nmodified: ' + when(f.modified*1000) + ' (' + zoneLabel() + ')'); continue; }
         if (snap.folders.indexOf(tg) >= 0 || tg === ''){
           var inside = snap.files.filter(function(x){ return !tg || x.path.indexOf(tg + '/') === 0; });
           var total = inside.reduce(function(a,b){ return a + b.size; }, 0);
@@ -1607,13 +1681,21 @@ async function run(line){
       if (pv === 'mkdir'){ var mk2 = resolve(pa.ops[0] || ''); return print(snap.folders.indexOf(mk2) >= 0 ? mk2 + '/ already exists — would do nothing' : 'would create ' + mk2 + '/'); }
       if (pv === 'rm' || pv === 'rmdir'){
         var targets = expandPaths(pa.ops, snap, true);
+        var dayAgo = Date.now() / 1000 - 86400;
         targets.forEach(function(t){
           if (t.noMatch) return lines2.push('nothing matches ' + t.noMatch);
           var isD = snap.folders.indexOf(t) >= 0, isF = snap.files.some(function(x){ return x.path === t; });
           if (!isD && !isF) return lines2.push('missing: ' + t + ' (the step would fail)');
-          var cnt2 = isD ? snap.files.filter(function(x){ return x.path.indexOf(t + '/') === 0; }).length : 1;
-          lines2.push('would move ' + t + (isD ? '/ (' + cnt2 + ' file(s))' : '') + ' to ' + TRASH + (pa.flags.p ? ' — no: -p deletes for good' : ''));
+          if (pv === 'rm' && isD) return lines2.push('would fail: ' + t + ' is a folder — use  rmdir ' + t + '  (no -r needed; it takes the contents too)');
+          if (pv === 'rmdir' && !isD) return lines2.push('would fail: ' + t + ' is a file — use  rm');
+          /* Name what goes: path, size, last change — and flag anything recent. */
+          var gone = isD ? snap.files.filter(function(x){ return x.path.indexOf(t + '/') === 0; }) : snap.files.filter(function(x){ return x.path === t; });
+          var tot2 = gone.reduce(function(a, b){ return a + b.size; }, 0);
+          lines2.push((pa.flags.p ? 'would DELETE FOR GOOD ' : 'would move to ' + TRASH + ': ') + t + (isD ? '/ — ' + gone.length + ' file(s), ' + bytes(tot2) : ''));
+          gone.slice(0, 25).forEach(function(x){ lines2.push('   ' + bytes(x.size) + '	' + when(x.modified * 1000) + '	' + x.path + (x.modified > dayAgo ? '   ⚠ changed in the last 24 h' : '')); });
+          if (gone.length > 25) lines2.push('   …and ' + (gone.length - 25) + ' more');
         });
+        if (targets.length) lines2.push('(times ' + zoneLabel() + ')');
         return print(lines2.join('\n') || 'nothing to do');
       }
       if (pv === 'mv' || pv === 'cp'){
@@ -1634,6 +1716,16 @@ async function run(line){
       return print('preview works on write, replace, edit, mv, cp, rm, rmdir and mkdir', 'err');
     }
 
+    case 'scratch': {
+      /* scratch          what is in .scratch
+         scratch clear    empty it (it is emptied anyway each time Shell opens) */
+      var allS = await snapshot(true);
+      var inS = allS.files.filter(function(f){ return inScratch(f.path); });
+      if ((ops[0] || '').toLowerCase() === 'clear') return print('emptied ' + SCRATCH + ' (' + (await clearScratch()) + ' file(s))', 'ok');
+      if (!inS.length) return print(SCRATCH + ' is empty — the assistant writes working notes there without asking (200 KB, cleared when Shell opens)', 'dim');
+      return print(inS.map(function(f){ return f.path + '\t' + bytes(f.size); }).join('\n') + '\n' + bytes(inS.reduce(function(a, b){ return a + b.size; }, 0)) + ' of 200 KB · cleared when Shell opens');
+    }
+
     case 'date': {
       /* For -mtime, "recent" and deadlines: the phone's own clock and zone. */
       var dnow = new Date(), off = -dnow.getTimezoneOffset();
@@ -1646,19 +1738,21 @@ async function run(line){
     case 'info': {
       /* The workspace at a glance: size, shape, what changed lately. */
       var allI = await snapshot(true);
-      var live = allI.files.filter(function(f){ return !inTrash(f.path); });
-      var trashN = allI.files.length - live.length;
+      var live = allI.files.filter(function(f){ return !isHidden(f.path); });
+      var trashN = allI.files.filter(function(f){ return inTrash(f.path); }).length;
       var totalI = live.reduce(function(a, b){ return a + b.size; }, 0);
       var tops = {};
       live.forEach(function(f){ var t = f.path.indexOf('/') < 0 ? '.' : f.path.split('/')[0]; tops[t] = tops[t] || { n: 0, b: 0 }; tops[t].n++; tops[t].b += f.size; });
       var newest = live.slice().sort(function(a, b){ return b.modified - a.modified; }).slice(0, 5);
       var oldest = live.slice().sort(function(a, b){ return a.modified - b.modified; })[0];
-      var outI = [live.length + ' files, ' + allI.folders.filter(function(d){ return !inTrash(d); }).length + ' folders, ' + bytes(totalI) + ' of 25 MB' + (trashN ? ' · ' + trashN + ' in .trash' : ''), '', 'top level:'];
+      var outI = [live.length + ' files, ' + allI.folders.filter(function(d){ return !isHidden(d); }).length + ' folders, ' + bytes(totalI) + ' of 25 MB' + (trashN ? ' · ' + trashN + ' in .trash' : ''), '', 'top level:'];
       Object.keys(tops).sort(function(a, b){ return tops[b].b - tops[a].b; }).forEach(function(t){ outI.push('  ' + (t === '.' ? '(root files)' : t + '/') + '\t' + tops[t].n + ' file(s)\t' + bytes(tops[t].b)); });
       if (newest.length){ outI.push('', 'changed most recently:'); newest.forEach(function(f){ outI.push('  ' + when(f.modified * 1000) + '  ' + f.path); }); }
       if (oldest) outI.push('', 'oldest: ' + when(oldest.modified * 1000) + '  ' + oldest.path);
       var mk3 = Object.keys(marks); if (mk3.length) outI.push('', 'bookmarks: ' + mk3.map(function(k){ return '@' + k; }).join(' '));
-      outI.push('', 'now: ' + when(Date.now()) + '  (date  for the zone)');
+      var scrN = allI.files.filter(function(f){ return inScratch(f.path); }).length;
+      outI.push('', 'hidden: ' + TRASH + ' ' + trashN + ' file(s) · ' + SCRATCH + ' ' + scrN + ' file(s) (the assistant\'s notes, emptied each launch) — ls -a or  trash / scratch  show them');
+      outI.push('', 'now: ' + when(Date.now()) + ' · times are ' + zoneLabel());
       return print(outI.join('\n'));
     }
 
@@ -1720,7 +1814,7 @@ async function run(line){
       if (!window.myllmAsk) return print('AI is off for apps — turn on "Allow apps to use the AI" in MyLLMos settings.', 'err');
       var q = unquote(restOf(line));
       if (!q && sin == null) return print('ask "a question"  —  or pipe something in:  cat notes.md | ask "summarise"', 'err');
-      var material = sin;
+      var material = sin == null ? null : maskSecrets(sin);
       var clipped = false;
       if (material != null && material.length > ASK_MAX){ material = material.slice(0, ASK_MAX); clipped = true; }
       var prompt = material != null
@@ -1862,6 +1956,11 @@ async function run(line){
       var plan = await planEdit(line);
       if (plan.err) return print(plan.err, 'err');
       if (plan.prev === plan.next) return print('no change to ' + plan.path, 'dim');
+      if (inScratch(plan.path)){
+        if ((await scratchUsed(plan.path)) + plan.next.length > SCRATCH_MAX) return print(SCRATCH + ' is full (200 KB) — scratch clear  empties it', 'err');
+        await files.write(plan.path, plan.next);
+        return print(plan.said + '  (scratch — cleared when Shell opens)', 'dim');
+      }
       await files.write(plan.path, plan.next);
       remember({ type: 'write', path: plan.path, prev: plan.prev, how: plan.how });
       haptic('success');
@@ -1909,22 +2008,32 @@ async function run(line){
     }
 
     case 'log': {
-      /* Every change made here — by you, or proposals you approved — newest
-         first, kept between sessions. "undo" marks what  undo  can still reverse. */
-      if (!changeLog.length) return print('no changes yet', 'dim');
-      /* log [-n N] [path]: the last N (20), or only the changes that touched a path. */
+      /* Changes made through Shell (yours, and proposals you approved), newest
+         first, kept between visits — plus files that changed OUTSIDE Shell
+         (other apps, the MyLLM assistant, collectors), read from file times so
+         "no changes" is never said when there were some. */
       var howMany = Math.max(1, Math.min(ops[0] && !isNaN(+ops[0]) ? +ops[0] : n, 200));
       var logPath = ops[0] && isNaN(+ops[0]) ? resolve(ops[0]) : null;
-      var live = {}; undoStack.forEach(function(u){ live[u.id] = true; });
-      var nextUndo = undoStack.length ? undoStack[undoStack.length - 1].id : null;
       var pool2 = logPath ? changeLog.filter(function(e){ return e.text.indexOf(logPath) >= 0; }) : changeLog;
-      if (!pool2.length) return print('found nothing: no logged change touched ' + logPath, 'dim');
-      print(pool2.slice(-howMany).reverse().map(function(e, i4){
-        return '#' + (i4 + 1) + '\t' + when(e.t) + '\t' + e.text + (e.id === nextUndo ? '   ← undo reverses this' : live[e.id] ? '   (undoable)' : '');
-      }).join('\n'));
-      return note('trash  lists deleted files;  restore <path>  puts one back');
+      var live2 = {}; undoStack.forEach(function(u){ live2[u.id] = true; });
+      var nextUndo = undoStack.length ? undoStack[undoStack.length - 1].id : null;
+      var shellRows = pool2.slice(-howMany).reverse().map(function(e, i4){
+        return '#' + (i4 + 1) + '\t' + when(e.t) + '\t' + e.text + (e.id === nextUndo ? '   ← undo reverses this' : live2[e.id] ? '   (undoable)' : '');
+      });
+      var weekAgo = Date.now() / 1000 - 7 * 86400;
+      var outside = snap.files.filter(function(f){
+        if (f.modified < weekAgo || (logPath && f.path !== logPath && f.path.indexOf(logPath + '/') !== 0)) return false;
+        return !changeLog.some(function(e){ return e.text.indexOf(f.path) >= 0 && Math.abs(e.t / 1000 - f.modified) < 15; });
+      }).sort(function(a, b){ return b.modified - a.modified; }).slice(0, howMany);
+      print(shellRows.length ? 'via Shell:\n' + shellRows.join('\n') : 'no changes made via Shell' + (logPath ? ' to ' + logPath : '') + ' yet');
+      if (outside.length) print('\nchanged outside Shell in the last 7 days (other apps, the assistant, sync — from file times):\n' +
+        outside.map(function(f){ return '  ' + when(f.modified * 1000) + '\t' + f.path; }).join('\n'));
+      return note('times are ' + zoneLabel() + ' · trash  lists deleted files;  restore <path>  puts one back');
     }
 
+    case 'versions':
+      if (!ops.length) return print('versions <path>  — saved versions of a file, 1 = newest  (history alone = your commands)', 'err');
+      /* falls through: versions <path> is history <path> */
     case 'history': {
       /* No path? Then you meant the other kind of history — the commands you
          typed. With a path it is the file's own versions, as the native
@@ -2080,7 +2189,7 @@ function listing(snap, root, recursive, sortBy, opt){
       return '<span class="dim">- ' + pad(bytes(f.size), 7) + '  ' + when(f.modified*1000) + '  </span>' + pathHTML(f.path, f.path.slice(prefix.length));
     }));
     printHTML(rowsL.join('\n'));
-    return note(here.length + ' file(s), ' + subs.length + ' folder(s), ' + bytes(here.reduce(function(a, b){ return a + b.size; }, 0)));
+    return note(here.length + ' file(s), ' + subs.length + ' folder(s), ' + bytes(here.reduce(function(a, b){ return a + b.size; }, 0)) + ' · times ' + zoneLabel());
   }
   var html = subs.map(function(d){ return '<span class="dir">' + pathHTML(d, d + '/') + '</span>'; })
     .concat(here.map(function(f){
@@ -2100,9 +2209,25 @@ function listing(snap, root, recursive, sortBy, opt){
    proposal the user has to accept: a model running rm across someone's
    documents unattended is the one outcome worth designing against. */
 
-var READ_ONLY = ['ls','dir','tree','cat','head','tail','sed','stat','find','grep','diff','jq','wc','sort','uniq','cut','tr','paste','comm','awk','xargs','man','changes','preview','date','info','history','du','pwd','log'];
+var READ_ONLY = ['ls','dir','tree','cat','head','tail','sed','stat','find','grep','diff','jq','wc','sort','uniq','cut','tr','paste','comm','awk','xargs','man','changes','preview','date','info','scratch','versions','history','du','pwd','log'];
 /* The assistant may also cd — its own working folder, put back afterwards. */
-var AGENT_OK = READ_ONLY.concat(['cd']);
+var AGENT_OK = READ_ONLY.concat(['cd', 'scratch']);
+/* Writes the assistant may make without asking: into .scratch only. A pipeline
+   of read-only stages redirected there, or write/replace/edit of a scratch file. */
+function scratchOnly(cmd){
+  var pl = splitPipeline(cmd);
+  if (!pl.stages.length) return false;
+  if (pl.redirect){
+    if (!pl.redirect.path || !inScratch(resolve(pl.redirect.path))) return false;
+    return pl.stages.every(function(st){ var v = (tokenize(expandAlias(st))[0] || '').toLowerCase(); return READ_ONLY.indexOf(v) >= 0; });
+  }
+  if (pl.stages.length !== 1) return false;
+  var tk = tokenize(pl.stages[0]), v1 = (tk[0] || '').toLowerCase();
+  if (['write','replace','edit'].indexOf(v1) < 0) return false;
+  var o = parseOpts(tk.slice(1), '');
+  if (o.ops[0] === '-1' || o.ops[0] === '-1E' || o.ops[0] === '-E1') o.ops.shift();
+  return !!o.ops[0] && inScratch(resolve(o.ops[0]));
+}
 var MAX_STEPS = 6;          /* myllmAsk is rate-limited; five is plenty and stays inside it */
 
 /* The system prompt for the `ask` VERB — a filter, not an assistant. Anything
@@ -2122,10 +2247,11 @@ function systemPrompt(listing){
     'Contents right now:',
     listing || '(empty)',
     '',
-    'You may run these READ-ONLY commands: ls [-R] [-t newest first | -S biggest first] [path], tree [path], cat <path>, head -n N <path>, tail -n N <path>, sed -n \'40,80p\' <path> (a line range), stat <path>, find <glob> [-mtime -7] [-newer <path>] [-size +10k] [-type d], grep [-n] [-C N] [-v] [-c] [-l] [-s] <text or /regex/> [path], diff <a> <b> or diff <path>@N (version N vs now), jq \'.field\' <path> (pull values out of JSON: .a.b, .list[0], .list[], keys, length), wc [-l], sort [-r] [-n] [-k N], uniq [-c], cut -d X -f N, history <path> (previous versions), log (recent changes), du.',
+    'You may run these READ-ONLY commands: ls [-R] [-t newest first | -S biggest first] [path], tree [path], cat <path>, head -n N <path>, tail -n N <path>, sed -n \'40,80p\' <path> (a line range), stat <path>, find <glob> [-mtime -7] [-newer <path>] [-size +10k] [-type d], grep [-n] [-C N] [-v] [-c] [-l] [-s] <text or /regex/> [path], diff <a> <b> or diff <path>@N (version N vs now), jq \'.field\' <path> (pull values out of JSON: .a.b, .list[0], .list[], keys, length), wc [-l], sort [-r] [-n] [-k N], uniq [-c], cut -d X -f N, versions <path> (saved versions; `history` alone is the command history), log (recent changes), du.',
     'You may pipe them: `a | b` sends a\'s output into b, and cat, head, tail, sed, grep, wc, sort, uniq, cut and jq read what is piped in — e.g. `grep -l invoice notes | wc -l` or `find *.md | cut -d / -f 1 | sort | uniq -c | sort -rn`. One pipeline is one step, so prefer it over three separate looks.',
     'Paths are relative to your working folder. You may `cd <path>` (also `cd ..`, `cd -`, `cd @bookmark`) to work deeper without spelling long paths; it is YOUR folder for this question and the user\'s prompt is put back afterwards.' + (Object.keys(marks).length ? ' Bookmarks: ' + Object.keys(marks).map(function(k){ return '@' + k + ' = /' + marks[k]; }).join(', ') + '.' : ''),
-    'Today: ' + when(Date.now()) + ' (run `date` for the zone; `info` summarises the whole workspace: size, top folders, newest changes).',
+    'Today: ' + when(Date.now()) + '. All times shown are ' + zoneLabel() + '. `info` summarises the workspace (size, top folders, newest changes, hidden .trash/.scratch counts); `log` lists changes made via Shell AND files changed outside it.',
+    'Hidden: .trash (deleted files; `trash`, `ls -a`) and .scratch (your notes). Values that look like keys or tokens are shown to you as [masked]; never ask the user to paste them.',
     'Writing output to a file with > or >> is a CHANGE: propose it, never run it.',
     '',
     'Reply with ONE JSON object and nothing else:',
@@ -2139,6 +2265,7 @@ function systemPrompt(listing){
     '',
     'More read-only tools: tr, paste, comm, awk \'{print $N}\', xargs <read-only command> (e.g. grep -l x | xargs head -n 3), date, info, and man <command> for its exact flags. Run `man <cmd>` instead of guessing a flag; `changes` lists what Shell can do now.',
     'Before proposing a change you are unsure of, run `preview <the command>` (e.g. preview replace -E notes.md "re" "new", preview mv *.md archive): it shows exactly what would change, touching nothing. A batch cannot branch, so check first, then propose the exact steps.',
+    'Scratch: you may WRITE working notes into /.scratch/ without asking — `write .scratch/notes.md "…"`, `grep -l x notes > .scratch/hits.txt`, `… >> .scratch/log.md`, replace/edit there too. It is hidden from the user\'s listings, capped at 200 KB, emptied each time Shell opens, and never the place for the user\'s documents: anything they should keep is still a proposal.',
     'Long output is cut at a line with a marker telling you how to read on. "Earlier in this session" tells you what became of your last proposals (approved, failed, or declined) — do not re-propose a declined change unless asked.',
     'Each output ends with [status: ok], [status: found nothing] or [status: failed]; a blocked command says why.',
     'Prefer running a command over guessing. Answer in plain prose, briefly. Do not invent file contents.'
@@ -2160,7 +2287,7 @@ async function runCaptured(line){
     var nKeep = Math.max(1, keep.length);
     text = keep.join('\n') + '\n[output cut at line ' + nKeep + ' of ' + allL.length + ' — read on with:  ' + line.replace(/\s*$/, '') + " | sed -n '" + (nKeep + 1) + ",+80p'  (or narrow it with grep/head)]";
   }
-  return text + '\n' + status;
+  return maskSecrets(text) + '\n' + status;
 }
 
 function parseReply(raw){
@@ -2259,7 +2386,7 @@ async function agent(question){
           /* Every stage, not just the first verb — and a redirect turns a pipeline
              of read-only commands into a write, which is exactly the hole worth
              closing before the model finds it. */
-          var why2 = unsafeReason(cmd, AGENT_OK);
+          var why2 = scratchOnly(cmd) ? null : unsafeReason(cmd, AGENT_OK);
           if (why2){
             print('blocked: ' + cmd + ' — ' + why2, 'dim');
             transcript += '\n\nAssistant tried: ' + cmd + '\n[status: blocked — ' + why2 + ']. Use "propose" for anything that changes files.';
@@ -2467,6 +2594,19 @@ out.addEventListener('click', function(e){
 });
 renderChips();
 
+/* Full screen where MyLLM can also close the app (5.6.2+); elsewhere nothing
+   changes, so there is never a full screen without a way out. */
+function fullScreenOK(){ return !!(window.myllmClose && window.myllmImmersive); }
+function syncFullScreen(){
+  var f = fullScreenOK();
+  document.body.classList.toggle('imm', f);
+  if (f) try { window.myllmImmersive(true, { keepAwake: false }).catch(function(){}); } catch(e){}
+}
+window.shellClose = function(){ haptic('light'); try { window.myllmClose().catch(function(){}); } catch(e){} };
+document.addEventListener('visibilitychange', function(){ if (!document.hidden) syncFullScreen(); });
+document.addEventListener('gesturestart', function(e){ e.preventDefault(); });
+syncFullScreen();
+
 paintPrompt();
 print('MyLLMos workspace shell. Type  help  for commands.', 'dim');
 print('Anything that is not a command is a question — MyLLM answers it from here,', 'dim');
@@ -2478,6 +2618,10 @@ print('rm moves things to .trash and  undo  reverses your last change. Tap any p
    can use an alias it defined last time and !! works on the first line typed. */
 (async function boot(){
   await loadState();
+  /* Scratch starts empty every time: working paper, not storage. */
+  try {
+    if (window.myllmFiles) await clearScratch();
+  } catch(e){}
   renderChips();
   if (!window.myllmFiles){ print('\nShared files are off — turn them on in MyLLMos settings.', 'err'); return; }
   try { await runRC(); } catch(e){ print('.shellrc: ' + (e && e.message || e), 'err'); }
