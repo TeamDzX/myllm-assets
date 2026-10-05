@@ -50,6 +50,7 @@
   .ask{color:#c9a3ff}
   .step{color:#6b7a90;border-left:2px solid #2d3a4d;padding-left:9px;margin:3px 0}
   .say{color:#e7eef8;border-left:2px solid #7ee787;padding-left:9px;margin:6px 0 8px;white-space:pre-wrap}
+  .note{color:#9fb3c8;font-style:italic;padding-left:11px;margin:4px 0;white-space:pre-wrap}
   .propose{color:#ffb86b;border-left:2px solid #ffb86b;padding-left:9px;margin:6px 0}
   .ps1{color:#7ee787;align-self:center;white-space:nowrap;max-width:46%;overflow:hidden;text-overflow:ellipsis}
   /* Tappable paths: a phone has no Tab key, so anything the shell prints that
@@ -121,7 +122,7 @@ var prevCwd = null;      /* for  cd -  */
 var batchId = null;      /* set while an approved batch runs, so undo reverses all of it */
 var RC = '.shellrc';     /* optional startup script, in the workspace root */
 var ASK_MAX = 8000;      /* how much material one `ask` may carry; a small on-device model has a small window */
-var VERBS = ['ls','tree','cat','head','tail','sed','stat','find','grep','diff','jq','wc','sort','uniq','cut','tr','paste','comm','awk','xargs','man','changes','history','du','ask','dictate','open','share','mkdir','mv','cp','write','replace','edit','rm','rmdir','undo','log','revert','trash','restore','alias','unalias','mark','cd','pwd','clear','help'];
+var VERBS = ['ls','tree','cat','head','tail','sed','stat','find','grep','diff','jq','wc','sort','uniq','cut','tr','paste','comm','awk','xargs','man','changes','preview','date','info','history','du','ask','dictate','open','share','mkdir','mv','cp','write','replace','edit','rm','rmdir','undo','log','revert','trash','restore','alias','unalias','mark','cd','pwd','clear','help'];
 var KNOWN = VERBS.concat(['dir']);   /* everything the switch below answers to */
 function inTrash(path){ return path === TRASH || path.indexOf(TRASH + '/') === 0; }
 
@@ -243,6 +244,8 @@ var HELP = [
   ['help', 'this list'],
   ['man <command>', 'its exact flags'],
   ['changes', 'what is new in Shell'],
+  ['preview <change>', 'what a change would do, safely'],
+  ['date   info', 'the time / the workspace at a glance'],
   '',
   'Anything else is a question for MyLLM. It',
   'can run the read-only commands above to',
@@ -537,7 +540,7 @@ function expandBang(line){
 /* .shellrc: the lines that run when Shell opens. Nobody is at the prompt yet,
    so it is held to the same bar as the agent — look around, set up, change
    nothing. A rm in a startup file would run before you could stop it. */
-var RC_SAFE = ['cd','alias','unalias','mark','clear','ls','dir','tree','pwd','du','cat','head','tail','sed','stat','find','grep','diff','jq','wc','sort','uniq','cut','tr','paste','comm','awk','xargs','man','changes','history','log'];
+var RC_SAFE = ['cd','alias','unalias','mark','clear','ls','dir','tree','pwd','du','cat','head','tail','sed','stat','find','grep','diff','jq','wc','sort','uniq','cut','tr','paste','comm','awk','xargs','man','changes','preview','date','info','history','log'];
 async function runRC(){
   var text = null;
   try { text = await files.read(RC); } catch(e){}
@@ -730,9 +733,16 @@ var MAN = {
   clear: ['clear  the screen'],
   help: ['help  every command   man <command>  its flags   changes  what is new'],
   man: ['man <command>  the flags a command takes'],
-  changes: ['changes  what is new in Shell, newest first']
+  changes: ['changes  what is new in Shell, newest first'],
+  preview: ['preview <write|replace|edit|mv|cp|rm|rmdir|mkdir …>  what it WOULD do — the diff, the moves, clashes, missing files', 'changes nothing; the assistant can run it before proposing'],
+  date: ['date  today, time, zone, ISO and unix time'],
+  info: ['info  the workspace at a glance: files, size of 25 MB, top folders, newest changes, oldest file, bookmarks']
 };
 var CHANGES = [
+  'Shell v11 (5 Oct 2026)',
+  '  the assistant: no folder dump on screen per question; several looks per step; a note to you',
+  '  while it works; its own cd (yours is put back); it learns what became of its proposals',
+  '  preview <change> (dry run) · date · info · long output says where it was cut and how to read on',
   'Shell v10 (5 Oct 2026)',
   '  | inside /regex/ or quotes stays in the pattern; a pipe stage that is not a command says so',
   '  xargs · tr · paste · comm · awk {print $N} · head/tail -c N',
@@ -1580,6 +1590,78 @@ async function run(line){
       return print(CHANGES.join('\n'));
     }
 
+    case 'preview': case 'dryrun': {
+      /* What a change WOULD do, without doing it — read-only, so the assistant
+         can check a replace -E or a batch step before proposing it. */
+      var pl2 = restOf(line), pv = (tokenize(pl2)[0] || '').toLowerCase();
+      if (!pv) return print('preview <write|replace|edit|mv|cp|rm|rmdir|mkdir …>  shows what it would do, changing nothing', 'err');
+      if (['write','replace','edit'].indexOf(pv) >= 0){
+        var pp = await planEdit(pl2);
+        if (pp.err) return print('would fail: ' + pp.err, 'err');
+        if (pp.prev === pp.next) return print('would change nothing in ' + pp.path, 'dim');
+        var pd2 = diffHTML(lineDiff(lines$(pp.prev || ''), lines$(pp.next)) || [], pp.prev == null ? '(new file)' : pp.path, pp.path + ' after');
+        if (pd2) printHTML(pd2.html);
+        return print('would: ' + pp.said + '  (nothing changed — preview only)', 'dim');
+      }
+      var pa = parseOpts(tokenize(pl2).slice(1), ''), lines2 = [];
+      if (pv === 'mkdir'){ var mk2 = resolve(pa.ops[0] || ''); return print(snap.folders.indexOf(mk2) >= 0 ? mk2 + '/ already exists — would do nothing' : 'would create ' + mk2 + '/'); }
+      if (pv === 'rm' || pv === 'rmdir'){
+        var targets = expandPaths(pa.ops, snap, true);
+        targets.forEach(function(t){
+          if (t.noMatch) return lines2.push('nothing matches ' + t.noMatch);
+          var isD = snap.folders.indexOf(t) >= 0, isF = snap.files.some(function(x){ return x.path === t; });
+          if (!isD && !isF) return lines2.push('missing: ' + t + ' (the step would fail)');
+          var cnt2 = isD ? snap.files.filter(function(x){ return x.path.indexOf(t + '/') === 0; }).length : 1;
+          lines2.push('would move ' + t + (isD ? '/ (' + cnt2 + ' file(s))' : '') + ' to ' + TRASH + (pa.flags.p ? ' — no: -p deletes for good' : ''));
+        });
+        return print(lines2.join('\n') || 'nothing to do');
+      }
+      if (pv === 'mv' || pv === 'cp'){
+        if (pa.ops.length < 2) return print(pv + ' needs a source and a destination', 'err');
+        var pDest = resolve(pa.ops[pa.ops.length - 1]), pInto = snap.folders.indexOf(pDest) >= 0;
+        var pSrc = expandPaths(pa.ops.slice(0, -1), snap, true);
+        if (pSrc.length > 1 && !pInto) return print('would fail: several sources need an existing folder last', 'err');
+        pSrc.forEach(function(t){
+          if (t.noMatch) return lines2.push('nothing matches ' + t.noMatch);
+          var exists2 = snap.files.some(function(x){ return x.path === t; }) || snap.folders.indexOf(t) >= 0;
+          if (!exists2) return lines2.push('missing: ' + t + ' (the step would fail)');
+          var to2b = pInto ? pDest + '/' + t.split('/').pop() : pDest;
+          var clash = snap.files.some(function(x){ return x.path === to2b; });
+          lines2.push('would ' + (pv === 'mv' ? 'move ' : 'copy ') + t + ' -> ' + to2b + (clash ? (pa.flags.f ? '  (replacing it)' : '  — CLASH: exists, the step would fail without -f') : ''));
+        });
+        return print(lines2.join('\n'));
+      }
+      return print('preview works on write, replace, edit, mv, cp, rm, rmdir and mkdir', 'err');
+    }
+
+    case 'date': {
+      /* For -mtime, "recent" and deadlines: the phone's own clock and zone. */
+      var dnow = new Date(), off = -dnow.getTimezoneOffset();
+      var tz = ''; try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch(e){}
+      return print(dnow.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) + ' ' + when(dnow.getTime()).slice(11) +
+        '\nzone ' + (tz || '?') + ' (UTC' + (off >= 0 ? '+' : '-') + Math.floor(Math.abs(off) / 60) + (Math.abs(off) % 60 ? ':' + ('0' + Math.abs(off) % 60).slice(-2) : '') + ')' +
+        '\niso ' + dnow.toISOString() + '\nunix ' + Math.floor(dnow.getTime() / 1000));
+    }
+
+    case 'info': {
+      /* The workspace at a glance: size, shape, what changed lately. */
+      var allI = await snapshot(true);
+      var live = allI.files.filter(function(f){ return !inTrash(f.path); });
+      var trashN = allI.files.length - live.length;
+      var totalI = live.reduce(function(a, b){ return a + b.size; }, 0);
+      var tops = {};
+      live.forEach(function(f){ var t = f.path.indexOf('/') < 0 ? '.' : f.path.split('/')[0]; tops[t] = tops[t] || { n: 0, b: 0 }; tops[t].n++; tops[t].b += f.size; });
+      var newest = live.slice().sort(function(a, b){ return b.modified - a.modified; }).slice(0, 5);
+      var oldest = live.slice().sort(function(a, b){ return a.modified - b.modified; })[0];
+      var outI = [live.length + ' files, ' + allI.folders.filter(function(d){ return !inTrash(d); }).length + ' folders, ' + bytes(totalI) + ' of 25 MB' + (trashN ? ' · ' + trashN + ' in .trash' : ''), '', 'top level:'];
+      Object.keys(tops).sort(function(a, b){ return tops[b].b - tops[a].b; }).forEach(function(t){ outI.push('  ' + (t === '.' ? '(root files)' : t + '/') + '\t' + tops[t].n + ' file(s)\t' + bytes(tops[t].b)); });
+      if (newest.length){ outI.push('', 'changed most recently:'); newest.forEach(function(f){ outI.push('  ' + when(f.modified * 1000) + '  ' + f.path); }); }
+      if (oldest) outI.push('', 'oldest: ' + when(oldest.modified * 1000) + '  ' + oldest.path);
+      var mk3 = Object.keys(marks); if (mk3.length) outI.push('', 'bookmarks: ' + mk3.map(function(k){ return '@' + k; }).join(' '));
+      outI.push('', 'now: ' + when(Date.now()) + '  (date  for the zone)');
+      return print(outI.join('\n'));
+    }
+
     case 'diff': {
       /* diff a b  ·  diff notes.md@2  (that version vs now)  ·  diff notes.md
          (the newest saved version vs now)  ·  diff notes.md@3 notes.md@1 */
@@ -2018,8 +2100,10 @@ function listing(snap, root, recursive, sortBy, opt){
    proposal the user has to accept: a model running rm across someone's
    documents unattended is the one outcome worth designing against. */
 
-var READ_ONLY = ['ls','dir','tree','cat','head','tail','sed','stat','find','grep','diff','jq','wc','sort','uniq','cut','tr','paste','comm','awk','xargs','man','changes','history','du','pwd','log'];
-var MAX_STEPS = 5;          /* myllmAsk is rate-limited; five is plenty and stays inside it */
+var READ_ONLY = ['ls','dir','tree','cat','head','tail','sed','stat','find','grep','diff','jq','wc','sort','uniq','cut','tr','paste','comm','awk','xargs','man','changes','preview','date','info','history','du','pwd','log'];
+/* The assistant may also cd — its own working folder, put back afterwards. */
+var AGENT_OK = READ_ONLY.concat(['cd']);
+var MAX_STEPS = 6;          /* myllmAsk is rate-limited; five is plenty and stays inside it */
 
 /* The system prompt for the `ask` VERB — a filter, not an assistant. Anything
    it says that is not the answer ends up in the user's file, so say none of it. */
@@ -2040,17 +2124,22 @@ function systemPrompt(listing){
     '',
     'You may run these READ-ONLY commands: ls [-R] [-t newest first | -S biggest first] [path], tree [path], cat <path>, head -n N <path>, tail -n N <path>, sed -n \'40,80p\' <path> (a line range), stat <path>, find <glob> [-mtime -7] [-newer <path>] [-size +10k] [-type d], grep [-n] [-C N] [-v] [-c] [-l] [-s] <text or /regex/> [path], diff <a> <b> or diff <path>@N (version N vs now), jq \'.field\' <path> (pull values out of JSON: .a.b, .list[0], .list[], keys, length), wc [-l], sort [-r] [-n] [-k N], uniq [-c], cut -d X -f N, history <path> (previous versions), log (recent changes), du.',
     'You may pipe them: `a | b` sends a\'s output into b, and cat, head, tail, sed, grep, wc, sort, uniq, cut and jq read what is piped in — e.g. `grep -l invoice notes | wc -l` or `find *.md | cut -d / -f 1 | sort | uniq -c | sort -rn`. One pipeline is one step, so prefer it over three separate looks.',
-    'Paths are relative to the current directory. There is no cd.',
+    'Paths are relative to your working folder. You may `cd <path>` (also `cd ..`, `cd -`, `cd @bookmark`) to work deeper without spelling long paths; it is YOUR folder for this question and the user\'s prompt is put back afterwards.' + (Object.keys(marks).length ? ' Bookmarks: ' + Object.keys(marks).map(function(k){ return '@' + k + ' = /' + marks[k]; }).join(', ') + '.' : ''),
+    'Today: ' + when(Date.now()) + ' (run `date` for the zone; `info` summarises the whole workspace: size, top folders, newest changes).',
     'Writing output to a file with > or >> is a CHANGE: propose it, never run it.',
     '',
     'Reply with ONE JSON object and nothing else:',
     '  {"run":"<command>"}                     to look at something first',
+    '  {"run":["<command>","<command>"]}         up to 4 unrelated looks in one step (e.g. cat two files and log)',
     '  {"say":"<answer>"}                      when you can answer',
+    '  add "say" to a run or propose to tell the user what you are doing ("checking the log first…")',
     '  {"propose":"<command>","why":"<reason>"} to CHANGE something (mkdir, mv, cp, write, replace, edit, rm, rmdir, revert <path> N) — the user approves it, you never run it. rm moves to a trash folder and can be undone; revert puts a previous version back.',
     '  {"propose":["<command>","<command>",…],"why":"<reason>"} for several changes approved together, e.g. a folder reorganisation: they run in order, stop at the first failure, and one undo reverses all of them.',
     'To change part of a file, propose a SMALL edit rather than rewriting it: replace <path> "old text" "new text" (every occurrence; -1 for the first only), or edit <path> <A-B> "new lines" (\\n for a line break; empty text deletes the lines; <A>+ inserts after line A). The user sees the diff before approving. Use write only for a new file or a full rewrite.',
     '',
-    'More read-only tools: tr, paste, comm, awk \'{print $N}\', xargs <read-only command> (e.g. grep -l x | xargs head -n 3), and man <command> for its exact flags. Run `man <cmd>` instead of guessing a flag; `changes` lists what Shell can do now.',
+    'More read-only tools: tr, paste, comm, awk \'{print $N}\', xargs <read-only command> (e.g. grep -l x | xargs head -n 3), date, info, and man <command> for its exact flags. Run `man <cmd>` instead of guessing a flag; `changes` lists what Shell can do now.',
+    'Before proposing a change you are unsure of, run `preview <the command>` (e.g. preview replace -E notes.md "re" "new", preview mv *.md archive): it shows exactly what would change, touching nothing. A batch cannot branch, so check first, then propose the exact steps.',
+    'Long output is cut at a line with a marker telling you how to read on. "Earlier in this session" tells you what became of your last proposals (approved, failed, or declined) — do not re-propose a declined change unless asked.',
     'Each output ends with [status: ok], [status: found nothing] or [status: failed]; a blocked command says why.',
     'Prefer running a command over guessing. Answer in plain prose, briefly. Do not invent file contents.'
   ].join('\n');
@@ -2064,7 +2153,13 @@ async function runCaptured(line){
   var failed = lastCaptureError;
   var empty = !text.trim() || /^(found nothing|no match|no file matches|nothing matches|.* is empty$)/i.test(text.trim());
   var status = failed ? '[status: failed — the error is above]' : empty ? '[status: found nothing]' : '[status: ok]';
-  if (text.length > 4000) text = text.slice(0, 4000) + '\n[truncated]';
+  /* Cut at a line, and say exactly where and how to read on. */
+  if (text.length > 4000){
+    var allL = text.split('\n'), keep = [], used = 0;
+    for (var li = 0; li < allL.length && used + allL[li].length + 1 <= 4000; li++){ keep.push(allL[li]); used += allL[li].length + 1; }
+    var nKeep = Math.max(1, keep.length);
+    text = keep.join('\n') + '\n[output cut at line ' + nKeep + ' of ' + allL.length + ' — read on with:  ' + line.replace(/\s*$/, '') + " | sed -n '" + (nKeep + 1) + ",+80p'  (or narrow it with grep/head)]";
+  }
   return text + '\n' + status;
 }
 
@@ -2077,71 +2172,112 @@ function parseReply(raw){
   try { return JSON.parse(t.slice(a, b + 1)); } catch(e){ return null; }
 }
 
+/* What the assistant remembers between questions in this session: what was
+   asked, what it said, and what became of anything it proposed (approved and
+   ran, approved but failed, declined). Before, it never learnt the outcome. */
+var agentMemory = [];
+var pendingMemo = null;   /* the memory entry whose proposal awaits y/n */
+function rememberAgent(entry){ agentMemory.push(entry); if (agentMemory.length > 6) agentMemory.shift(); return entry; }
+function memoryText(){
+  if (!agentMemory.length) return '';
+  return 'Earlier in this session (oldest first):\n' + agentMemory.map(function(m){
+    var t = '- User: ' + m.q.slice(0, 200);
+    if (m.said) t += '\n  You said: ' + m.said.slice(0, 300);
+    if (m.proposed) t += '\n  You proposed: ' + m.proposed.join(' ; ').slice(0, 300) + '\n  Outcome: ' + m.outcome;
+    return t;
+  }).join('\n') + '\n\n';
+}
+
 async function agent(question){
   if (!window.myllmAsk){
     print('AI is off for apps — turn on "Allow apps to use the AI" in MyLLMos settings.', 'err');
     return;
   }
+  /* The listing goes to the MODEL only. It used to be printed on screen with
+     every question (capture without quiet), which was most of the noise. */
   var snap = await snapshot();
-  capture = []; listing(snap, cwd, false); var here = capture.join('\n'); capture = null;
+  var here = await captureOf(function(){ return listing(snap, cwd, false); }, true);
+  var hl = here.split('\n');
+  if (hl.length > 40) here = hl.slice(0, 40).join('\n') + '\n[' + (hl.length - 40) + ' more — run ls]';
 
-  var transcript = 'User: ' + question;
-  for (var step = 0; step < MAX_STEPS; step++){
-    var raw;
-    try { raw = await myllmAsk(transcript + '\n\nReply with one JSON object.', { system: systemPrompt(here) }); }
-    catch(e){ print('ask failed: ' + (e.message || e), 'err'); return; }
+  /* The assistant may cd while it works; that is ITS working folder for this
+     question. Yours is put back when it finishes. */
+  var userCwd = cwd;
+  var transcript = memoryText() + 'User: ' + question;
+  var memo = rememberAgent({ q: question });
+  try {
+    for (var step = 0; step < MAX_STEPS; step++){
+      var raw;
+      try { raw = await myllmAsk(transcript + '\n\nReply with one JSON object.', { system: systemPrompt(here) }); }
+      catch(e){ print('ask failed: ' + (e.message || e), 'err'); return; }
 
-    var reply = parseReply(raw);
-    if (!reply){
-      /* Not JSON — treat it as the answer rather than failing in the user's face. */
+      var reply = parseReply(raw);
+      if (!reply){
+        /* Not JSON — treat it as the answer rather than failing in the user's face. */
+        print(String(raw).trim(), 'say'); memo.said = String(raw).trim();
+        return;
+      }
+      var acting = reply.run || reply.propose;
+      /* "say" alongside a command is a note to the user ("checking the log
+         first…"); on its own it is the answer. */
+      if (reply.say && acting) print(String(reply.say).trim(), 'note');
+      if (reply.say && !acting){ print(String(reply.say).trim(), 'say'); memo.said = String(reply.say).trim(); return; }
+
+      if (reply.propose){
+        var why = reply.why ? ' — ' + reply.why : '';
+        /* A list (or a multi-line string) is a batch: one approval, run in order. */
+        var steps = Array.isArray(reply.propose) ? reply.propose.map(String)
+          : String(reply.propose).split('\n');
+        steps = steps.map(function(x){ return x.trim(); }).filter(Boolean).slice(0, 20);
+        if (!steps.length){ print(String(raw).trim(), 'say'); return; }
+        /* Proposals are written relative to the assistant's folder; pin them to
+           absolute paths by running them from there. */
+        var runFrom = cwd;
+        memo.proposed = steps; memo.outcome = 'waiting for the user';
+        pendingMemo = memo;
+        if (steps.length === 1){
+          print('proposes: ' + steps[0] + why, 'propose');
+          await previewEdit(steps[0]);
+          print('run it? type  y  to confirm', 'propose');
+          pending = { verb: 'raw', line: steps[0], from: runFrom };
+          return;
+        }
+        print('proposes ' + steps.length + ' changes' + why + ':', 'propose');
+        for (var si2 = 0; si2 < steps.length; si2++){
+          print('  ' + (si2 + 1) + '. ' + steps[si2], 'propose');
+          await previewEdit(steps[si2]);
+        }
+        print('run all ' + steps.length + '? type  y  to confirm — one  undo  reverses the lot', 'propose');
+        pending = { verb: 'batch', lines: steps, from: runFrom };
+        return;
+      }
+      if (reply.run){
+        /* One command, or a few unrelated looks in one step (max 4). */
+        var cmds = (Array.isArray(reply.run) ? reply.run : [reply.run]).map(function(x){ return String(x).trim(); }).filter(Boolean).slice(0, 4);
+        for (var ci = 0; ci < cmds.length; ci++){
+          var cmd = cmds[ci];
+          /* Every stage, not just the first verb — and a redirect turns a pipeline
+             of read-only commands into a write, which is exactly the hole worth
+             closing before the model finds it. */
+          var why2 = unsafeReason(cmd, AGENT_OK);
+          if (why2){
+            print('blocked: ' + cmd + ' — ' + why2, 'dim');
+            transcript += '\n\nAssistant tried: ' + cmd + '\n[status: blocked — ' + why2 + ']. Use "propose" for anything that changes files.';
+            continue;
+          }
+          print('$ ' + cmd + (cwd !== userCwd ? '   (in /' + cwd + ')' : ''), 'step');
+          var output = await runCaptured(cmd);
+          transcript += '\n\nAssistant ran: ' + cmd + (cwd ? '  (working folder /' + cwd + ')' : '') + '\nOutput:\n' + (output || '(no output)');
+        }
+        continue;
+      }
       print(String(raw).trim(), 'say');
       return;
     }
-    if (reply.say){ print(String(reply.say).trim(), 'say'); return; }
-
-    if (reply.propose){
-      var why = reply.why ? ' — ' + reply.why : '';
-      /* A list (or a multi-line string) is a batch: one approval, run in order. */
-      var steps = Array.isArray(reply.propose) ? reply.propose.map(String)
-        : String(reply.propose).split('\n');
-      steps = steps.map(function(x){ return x.trim(); }).filter(Boolean).slice(0, 20);
-      if (!steps.length){ print(String(raw).trim(), 'say'); return; }
-      if (steps.length === 1){
-        print('proposes: ' + steps[0] + why, 'propose');
-        await previewEdit(steps[0]);
-        print('run it? type  y  to confirm', 'propose');
-        pending = { verb: 'raw', line: steps[0] };
-        return;
-      }
-      print('proposes ' + steps.length + ' changes' + why + ':', 'propose');
-      for (var si2 = 0; si2 < steps.length; si2++){
-        print('  ' + (si2 + 1) + '. ' + steps[si2], 'propose');
-        await previewEdit(steps[si2]);
-      }
-      print('run all ' + steps.length + '? type  y  to confirm — one  undo  reverses the lot', 'propose');
-      pending = { verb: 'batch', lines: steps };
-      return;
-    }
-    if (reply.run){
-      var cmd = String(reply.run).trim();
-      /* Every stage, not just the first verb — and a redirect turns a pipeline
-         of read-only commands into a write, which is exactly the hole worth
-         closing before the model finds it. */
-      var why = unsafeReason(cmd, READ_ONLY);
-      if (why){
-        print('blocked: ' + cmd + ' — ' + why, 'dim');
-        transcript += '\n\nAssistant tried: ' + cmd + '\n[status: blocked — ' + why + ']. Use "propose" for anything that changes files.';
-        continue;
-      }
-      print('$ ' + cmd, 'step');
-      var output = await runCaptured(cmd);
-      transcript += '\n\nAssistant ran: ' + cmd + '\nOutput:\n' + (output || '(no output)');
-      continue;
-    }
-    print(String(raw).trim(), 'say');
-    return;
+    print('Stopped after ' + MAX_STEPS + ' steps. Ask something narrower, or run the commands yourself.', 'dim');
+  } finally {
+    if (cwd !== userCwd){ cwd = userCwd; paintPrompt(); }
   }
-  print('Stopped after ' + MAX_STEPS + ' steps. Ask something narrower, or run the commands yourself.', 'dim');
 }
 
 /* ---------- prompt ---------- */
@@ -2154,17 +2290,26 @@ document.getElementById('form').addEventListener('submit', async function(ev){
 
   if (pending){
     var p = pending; pending = null;
+    var memoP = pendingMemo; pendingMemo = null;
     if (line.toLowerCase() === 'y' || line.toLowerCase() === 'yes'){
+      var heldCwd = cwd;
+      if (p.from != null) cwd = p.from;   /* run where the assistant wrote it */
       try{
-        if (p.verb === 'raw'){ print('$ ' + p.line, 'cmd'); await runLine(p.line); }
+        if (p.verb === 'raw'){
+          print('$ ' + p.line, 'cmd');
+          var rOut = await captureOf(function(){ return runLine(p.line); }, false);
+          if (memoP) memoP.outcome = lastCaptureError ? 'approved, but it FAILED: ' + rOut.slice(0, 200) : 'approved and done: ' + rOut.slice(0, 160);
+        }
         else if (p.verb === 'batch'){
           batchId = Date.now();
           try {
             for (var bi = 0; bi < p.lines.length; bi++){
               print('$ ' + p.lines[bi], 'cmd');
               await captureOf(function(){ return runLine(p.lines[bi]); }, false);
-              if (lastCaptureError){ print('stopped at step ' + (bi + 1) + ' of ' + p.lines.length + ' — undo reverses the steps that ran', 'err'); break; }
+              if (lastCaptureError){ print('stopped at step ' + (bi + 1) + ' of ' + p.lines.length + ' — undo reverses the steps that ran', 'err');
+                if (memoP) memoP.outcome = 'approved; steps 1–' + bi + ' ran, step ' + (bi + 1) + ' FAILED, the rest did not run'; break; }
             }
+            if (memoP && !lastCaptureError) memoP.outcome = 'approved and all ' + p.lines.length + ' steps ran';
           } finally { batchId = null; }
         }
         else if (p.verb === 'trash-empty') await files.removeFolder(TRASH, true);
@@ -2173,8 +2318,9 @@ document.getElementById('form').addEventListener('submit', async function(ev){
         haptic('warning');
         if (p.verb === 'trash-empty') print('emptied ' + TRASH, 'ok');
         else if (p.verb !== 'raw' && p.verb !== 'batch') print('deleted ' + p.target, 'ok');
-      }catch(e){ print(e.message, 'err'); }
-    } else print('cancelled', 'dim');
+      }catch(e){ print(e.message, 'err'); if (memoP) memoP.outcome = 'approved, but it failed: ' + e.message; }
+      finally { if (p.from != null) cwd = heldCwd; }
+    } else { print('cancelled', 'dim'); if (memoP) memoP.outcome = 'the user DECLINED it (typed "' + line.slice(0, 40) + '")'; }
     paintPrompt(); renderChips();
     return;
   }
