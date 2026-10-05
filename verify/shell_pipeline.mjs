@@ -279,7 +279,7 @@ const chips = async v => {
 };
 await check('after a pipe the chips are commands that read one', async () => {
   const c = await chips('cat notes.md | ');
-  return (c.slice(0, 5).join(',') === 'ask,grep,head,tail,cat') || 'chips: ' + c.join(',');
+  return (c.slice(0, 5).join(',') === 'grep,sort,uniq,wc,cut') || 'chips: ' + c.join(',');
 });
 await check('mid-command the chips are | and > then the file names', async () => {
   const c = await chips('cat not');

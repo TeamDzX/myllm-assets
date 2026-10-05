@@ -112,9 +112,16 @@ var stdin = null;        /* text piped into the next stage of a pipeline */
 var aliases = {};        /* name -> expansion, kept in myllmStorage */
 Object.defineProperty(window, "store", { configurable:true, get:function(){ return window.myllmStorage || null; } });
 var HISTORY_KEY = 'shell.history', ALIAS_KEY = 'shell.aliases';
+/* v9: the change log, the undo stack and path bookmarks survive closing the
+   app. Before, undo forgot everything the moment Shell was closed. */
+var LOG_KEY = 'shell.log', UNDO_KEY = 'shell.undo', MARK_KEY = 'shell.marks';
+var changeLog = [];      /* [{id, t, text}] newest last, the last 200 */
+var marks = {};          /* bookmark name -> path, used as @name */
+var prevCwd = null;      /* for  cd -  */
+var batchId = null;      /* set while an approved batch runs, so undo reverses all of it */
 var RC = '.shellrc';     /* optional startup script, in the workspace root */
 var ASK_MAX = 8000;      /* how much material one `ask` may carry; a small on-device model has a small window */
-var VERBS = ['ls','tree','cat','head','tail','stat','find','grep','history','du','ask','dictate','open','share','mkdir','mv','write','rm','rmdir','undo','revert','trash','restore','alias','unalias','cd','pwd','clear','help'];
+var VERBS = ['ls','tree','cat','head','tail','sed','stat','find','grep','diff','jq','wc','sort','uniq','cut','history','du','ask','dictate','open','share','mkdir','mv','cp','write','replace','edit','rm','rmdir','undo','log','revert','trash','restore','alias','unalias','mark','cd','pwd','clear','help'];
 var KNOWN = VERBS.concat(['dir']);   /* everything the switch below answers to */
 function inTrash(path){ return path === TRASH || path.indexOf(TRASH + '/') === 0; }
 
@@ -124,6 +131,11 @@ function inTrash(path){ return path === TRASH || path.indexOf(TRASH + '/') === 0
    extra verb here. */
 function resolve(p){
   var s = String(p||'').trim();
+  /* @name and @name/sub/path: a saved place, so a long path is typed once. */
+  if (s.charAt(0) === '@'){
+    var mSlash = s.indexOf('/'), mName = (mSlash < 0 ? s.slice(1) : s.slice(1, mSlash)).toLowerCase();
+    if (Object.prototype.hasOwnProperty.call(marks, mName)) s = '/' + marks[mName] + (mSlash < 0 ? '' : s.slice(mSlash));
+  }
   if (!s || s === '.') return cwd;
   if (s.charAt(0) === '/') return normalise(s);
   if (s === '..') return cwd.indexOf('/') < 0 ? '' : cwd.slice(0, cwd.lastIndexOf('/'));
@@ -163,8 +175,23 @@ var HELP = [
   ['head [-n N] <path>', 'the first N lines (default 20)'],
   ['tail [-n N] <path>', 'the last N lines'],
   ['stat <path>', 'size, modified, type'],
+  ['ls -t / ls -S', 'newest first / biggest first'],
+  ['sed -n 40,80p <path>', 'just lines 40 to 80'],
   ['find <glob>', 'match filenames, e.g. find *.json'],
+  ['find -mtime -7', 'changed in the last 7 days'],
+  ['find -newer <path>', 'changed since that file'],
+  ['find -size +10k', 'bigger than 10 KB (-type d: folders)'],
   ['grep <text> [path]', 'search inside files (-l for names)'],
+  ['grep -n -C 2 -v -c', 'numbers, context, non-matches, counts'],
+  ['grep /re?gex/', 'a pattern (or -E); -s matches case'],
+  ['diff <a> <b>', 'what changed between two files'],
+  ['diff <path>@2', 'version 2 against now'],
+  ['jq .a.b <path>', 'pull a value out of JSON'],
+  ['jq ".list[] | .name"', 'each name in a list (also keys)'],
+  ['wc [-l] <path>', 'count lines, words, characters'],
+  ['sort [-r -n -k N]', 'sort lines (reverse, numbers, field)'],
+  ['uniq [-c]', 'fold repeats, with counts'],
+  ['cut -d , -f 2', 'pick fields (or -c 1-20)'],
   ['du', 'space used per folder'],
   '',
   ['ask "<question>"', 'ask MyLLM; pipe a file in to work on it'],
@@ -180,10 +207,14 @@ var HELP = [
   ['mkdir <path>', 'create a folder'],
   ['mv <from> <to>', 'move or rename (-f replaces)'],
   ['write <path> <text>', 'replace a file with that text'],
+  ['replace <p> "old" "new"', 'swap text in a file (-1: first only)'],
+  ['edit <p> 3-5 "text"', 'change lines 3 to 5 (5+ inserts)'],
+  ['cp <from> <to>', 'copy a file or folder (-f replaces)'],
   ['rm <path>', 'move a file to .trash'],
   ['rmdir <path>', 'move a folder to .trash'],
   ['rm -p / rmdir -p', 'delete for good; asks first'],
-  ['undo', 'reverse your last change'],
+  ['undo', 'reverse your last change (or batch)'],
+  ['log', 'recent changes, kept between visits'],
   ['trash', 'what is in .trash'],
   ['restore <path>', 'put something back from .trash'],
   ['trash empty', 'delete all of it for good; asks first'],
@@ -197,13 +228,18 @@ var HELP = [
   ['alias / unalias ll', 'list them / remove one'],
   ['.shellrc', 'its lines run when Shell opens'],
   ['cd <path>', 'change directory (cd .. goes up)'],
+  ['cd -', 'back to the previous folder'],
+  ['mark work', 'save this folder as @work'],
+  ['cd @work   ls @work', 'use it anywhere in a path'],
+  ['mark / mark -d work', 'list them / forget one'],
   ['ls -a', 'show .trash too'],
   ['clear', 'clear the screen'],
   ['help', 'this list'],
   '',
   'Anything else is a question for MyLLM. It',
   'can run the read-only commands above to',
-  'answer, and asks before changing anything.',
+  'answer, and asks before changing anything,',
+  'showing the diff of any edit it proposes.',
   '',
   'Try:',
   'cat notes.md | ask "sum this up" > out.md'
@@ -407,6 +443,9 @@ async function loadState(){
     var a = await store.getItem(ALIAS_KEY);
     if (a){ var obj = JSON.parse(a); if (obj && typeof obj === 'object') aliases = obj; }
   } catch(e){}
+  try { var lg = JSON.parse(await store.getItem(LOG_KEY) || '[]'); if (Array.isArray(lg)) changeLog = lg.slice(-200); } catch(e){}
+  try { var us = JSON.parse(await store.getItem(UNDO_KEY) || '[]'); if (Array.isArray(us)) undoStack = us.slice(-30); } catch(e){}
+  try { var mk = JSON.parse(await store.getItem(MARK_KEY) || '{}'); if (mk && typeof mk === 'object') marks = mk; } catch(e){}
   hIndex = cmdHistory.length;
 }
 /* Written on every command rather than debounced: a command is something a
@@ -419,6 +458,24 @@ function saveHistory(){
 function saveAliases(){
   if (!store) return;
   try { store.setItem(ALIAS_KEY, JSON.stringify(aliases)); } catch(e){}
+}
+function saveMarks(){ if (store) try { store.setItem(MARK_KEY, JSON.stringify(marks)); } catch(e){} }
+function saveLog(){ if (store) try { store.setItem(LOG_KEY, JSON.stringify(changeLog.slice(-200))); } catch(e){} }
+/* App storage is ~1 MB for everything, and an undo entry for a rewritten file
+   carries the old text. Oldest entries go first until the stack fits; an entry
+   whose old text alone is too big is kept but marked, so undo can say so
+   rather than "restore" an empty file. */
+function saveUndo(){
+  if (!store) return;
+  var ops = undoStack.map(function(op){
+    if (op.prev != null && op.prev.length > 150000){ var c = Object.assign({}, op); delete c.prev; c.prevLost = true; return c; }
+    if (op.items){ var c2 = Object.assign({}, op); c2.items = op.items.map(function(it){
+      return it.prev != null && it.prev.length > 150000 ? { path: it.path, prevLost: true } : it; }); return c2; }
+    return op;
+  });
+  var json = JSON.stringify(ops);
+  while (json.length > 600000 && ops.length){ ops.shift(); json = JSON.stringify(ops); }
+  try { store.setItem(UNDO_KEY, json); } catch(e){}
 }
 
 /* !! / !5 / !gr — resolved before the line is echoed, so what you see in the
@@ -436,7 +493,7 @@ function expandBang(line){
 /* .shellrc: the lines that run when Shell opens. Nobody is at the prompt yet,
    so it is held to the same bar as the agent — look around, set up, change
    nothing. A rm in a startup file would run before you could stop it. */
-var RC_SAFE = ['cd','alias','unalias','clear','ls','dir','tree','pwd','du','cat','head','tail','stat','find','grep','history'];
+var RC_SAFE = ['cd','alias','unalias','mark','clear','ls','dir','tree','pwd','du','cat','head','tail','sed','stat','find','grep','diff','jq','wc','sort','uniq','cut','history','log'];
 async function runRC(){
   var text = null;
   try { text = await files.read(RC); } catch(e){}
@@ -541,6 +598,211 @@ async function pruneTrash(){
 }
 function pathHTML(p, label){ return '<span class="path" data-path="' + esc(p) + '">' + esc(label == null ? p : label) + '</span>'; }
 
+/* ---------- v9 helpers: options, text tools, diff, json, edits ---------- */
+
+/* Options for commands whose flags take a value (sort -k 2, cut -d ,).
+   `withValue` names those letters; everything else is a boolean flag. */
+function parseOpts(raw, withValue){
+  var o = { flags: {}, vals: {}, ops: [] };
+  for (var i = 0; i < raw.length; i++){
+    var a = raw[i];
+    if (a.length > 1 && a.charAt(0) === '-' && !/^-\d/.test(a)){
+      for (var j = 1; j < a.length; j++){
+        var c = a.charAt(j);
+        if (withValue.indexOf(c) >= 0){
+          var v = a.slice(j + 1); if (!v && i + 1 < raw.length) v = raw[++i];
+          o.vals[c] = v; break;
+        }
+        o.flags[c] = true;
+      }
+    } else o.ops.push(a);
+  }
+  return o;
+}
+/* What a text command works on: what was piped in, or a file. */
+async function textFrom(sin, pathArg, verb){
+  if (sin != null && !pathArg) return { text: sin };
+  if (!pathArg) return { err: verb + ' needs a path, or something piped in' };
+  var t = await files.read(resolve(pathArg));
+  if (t == null) return { err: 'No such file: ' + resolve(pathArg) };
+  return { text: t };
+}
+/* A footnote for the person at the screen. Never captured, so it can't land in
+   a pipe or a file the way head's "[N lines total]" does. */
+function note(text){ if (capture === null) print(text, 'dim'); }
+function lines$(t){ var l = String(t).split('\n'); if (l.length && l[l.length - 1] === '') l.pop(); return l; }
+
+/* Line diff: LCS over what is left after the common head and tail, then
+   unified hunks with 3 lines of context. Big files fall back to a summary
+   rather than freezing the page. */
+function lineDiff(a, b){
+  var pre = 0; while (pre < a.length && pre < b.length && a[pre] === b[pre]) pre++;
+  var suf = 0; while (suf < a.length - pre && suf < b.length - pre && a[a.length-1-suf] === b[b.length-1-suf]) suf++;
+  var A = a.slice(pre, a.length - suf), B = b.slice(pre, b.length - suf);
+  if (A.length * B.length > 4000000) return null;
+  var n = A.length, m = B.length, i, j;
+  var L = []; for (i = 0; i <= n; i++){ L.push(new Uint32Array(m + 1)); }
+  for (i = n - 1; i >= 0; i--) for (j = m - 1; j >= 0; j--)
+    L[i][j] = A[i] === B[j] ? L[i+1][j+1] + 1 : Math.max(L[i+1][j], L[i][j+1]);
+  var ops = [];
+  for (i = 0; i < pre; i++) ops.push([' ', a[i]]);
+  i = 0; j = 0;
+  while (i < n && j < m){
+    if (A[i] === B[j]){ ops.push([' ', A[i]]); i++; j++; }
+    else if (L[i+1][j] >= L[i][j+1]) ops.push(['-', A[i++]]);
+    else ops.push(['+', B[j++]]);
+  }
+  while (i < n) ops.push(['-', A[i++]]);
+  while (j < m) ops.push(['+', B[j++]]);
+  for (i = a.length - suf; i < a.length; i++) ops.push([' ', a[i]]);
+  return ops;
+}
+function diffHTML(ops, labelA, labelB){
+  var CTX = 3, out = ['<span class="dim">--- ' + esc(labelA) + '\n+++ ' + esc(labelB) + '</span>'];
+  var adds = 0, dels = 0, k, aN = 0, bN = 0, pos = [];
+  for (k = 0; k < ops.length; k++){ pos.push([aN, bN]); if (ops[k][0] !== '+') aN++; if (ops[k][0] !== '-') bN++; }
+  var changed = []; for (k = 0; k < ops.length; k++) if (ops[k][0] !== ' ') changed.push(k);
+  if (!changed.length) return null;
+  var hunks = [], s0 = Math.max(0, changed[0] - CTX), e0 = Math.min(ops.length - 1, changed[0] + CTX);
+  for (k = 1; k < changed.length; k++){
+    if (changed[k] - CTX <= e0 + 1) e0 = Math.min(ops.length - 1, changed[k] + CTX);
+    else { hunks.push([s0, e0]); s0 = Math.max(0, changed[k] - CTX); e0 = Math.min(ops.length - 1, changed[k] + CTX); }
+  }
+  hunks.push([s0, e0]);
+  hunks.forEach(function(h){
+    var aCount = 0, bCount = 0;
+    for (var x = h[0]; x <= h[1]; x++){ if (ops[x][0] !== '+') aCount++; if (ops[x][0] !== '-') bCount++; }
+    out.push('<span class="dim">@@ -' + (pos[h[0]][0] + 1) + ',' + aCount + ' +' + (pos[h[0]][1] + 1) + ',' + bCount + ' @@</span>');
+    for (var y = h[0]; y <= h[1]; y++){
+      var t = ops[y][0], line = esc(ops[y][1]);
+      if (t === '-'){ dels++; out.push('<span class="err">-' + line + '</span>'); }
+      else if (t === '+'){ adds++; out.push('<span class="ok">+' + line + '</span>'); }
+      else out.push('<span class="dim"> ' + line + '</span>');
+    }
+  });
+  return { html: out.join('\n'), adds: adds, dels: dels };
+}
+/* file, file@N (a saved version, 1 = newest), or - for what was piped in. */
+async function loadSpec(spec, sin){
+  if (spec === '-'){ if (sin == null) return { err: '- means piped input, and nothing was piped' }; return { label: '(piped)', text: sin }; }
+  var m = /^(.*)@(\d+)$/.exec(spec), path = resolve(m ? m[1] : spec);
+  if (!m){
+    var t = await files.read(path);
+    return t == null ? { err: 'No such file: ' + path } : { label: path, text: t };
+  }
+  if (!files.versions || !files.readVersion) return { err: 'Version history needs the latest MyLLM build.' };
+  var vs = await files.versions(path), v = +m[2];
+  if (!vs.length) return { err: 'No previous versions of ' + path };
+  if (v < 1 || v > vs.length) return { err: path + ' has versions 1\u2013' + vs.length + '  (see  history ' + path + ')' };
+  var old = await files.readVersion(path, vs[v - 1].stamp);
+  if (old == null) return { err: 'Could not read version ' + v + ' of ' + path };
+  return { label: path + '@' + v + '  (' + when(vs[v - 1].stamp) + ')', text: old };
+}
+
+/* A small jq: paths (.a.b, .a[0], .a[], ."odd key", .["odd key"]), pipes, and
+   keys / length / type / values. Enough to pull one field out of a file. */
+function jqSplit(f){
+  var parts = [], cur = '', depth = 0, q = false;
+  for (var i = 0; i < f.length; i++){
+    var c = f.charAt(i);
+    if (q){ cur += c; if (c === '"' && f.charAt(i-1) !== '\\') q = false; continue; }
+    if (c === '"'){ q = true; cur += c; continue; }
+    if (c === '[') depth++; if (c === ']') depth--;
+    if (c === '|' && !depth){ parts.push(cur.trim()); cur = ''; continue; }
+    cur += c;
+  }
+  parts.push(cur.trim());
+  return parts;
+}
+function jqStage(stage, inputs){
+  var outv = [];
+  if (stage === '.' || stage === '') return inputs;
+  if (/^(keys|length|type|values)$/.test(stage)){
+    inputs.forEach(function(v){
+      if (stage === 'type') outv.push(v === null ? 'null' : Array.isArray(v) ? 'array' : typeof v);
+      else if (stage === 'length') outv.push(v == null ? 0 : typeof v === 'object' ? (Array.isArray(v) ? v.length : Object.keys(v).length) : String(v).length);
+      else if (stage === 'keys'){ if (!v || typeof v !== 'object') throw new Error('keys needs an object or array'); outv.push(Array.isArray(v) ? v.map(function(_, i){ return i; }) : Object.keys(v).sort()); }
+      else { if (!v || typeof v !== 'object') throw new Error('values needs an object or array'); outv = outv.concat(Array.isArray(v) ? v : Object.keys(v).map(function(k){ return v[k]; })); }
+    });
+    return outv;
+  }
+  if (stage.charAt(0) !== '.') throw new Error('unknown filter "' + stage + '" — try .field, .list[0], .list[], keys, length');
+  var steps = [], i = 0, rx;
+  while (i < stage.length){
+    var rest = stage.slice(i);
+    if ((rx = /^\.\[/.exec(rest))){ i += 1; continue; }
+    if ((rx = /^\.([A-Za-z_][A-Za-z0-9_$-]*)/.exec(rest))){ steps.push(['key', rx[1]]); i += rx[0].length; continue; }
+    if ((rx = /^\."((?:[^"\\]|\\.)*)"/.exec(rest))){ steps.push(['key', rx[1]]); i += rx[0].length; continue; }
+    if ((rx = /^\[\s*(-?\d+)\s*\]/.exec(rest))){ steps.push(['idx', +rx[1]]); i += rx[0].length; continue; }
+    if ((rx = /^\[\s*"((?:[^"\\]|\\.)*)"\s*\]/.exec(rest))){ steps.push(['key', rx[1]]); i += rx[0].length; continue; }
+    if ((rx = /^\[\s*\]/.exec(rest))){ steps.push(['each']); i += rx[0].length; continue; }
+    if (rest === '.') break;
+    throw new Error('cannot read "' + rest + '" in the filter');
+  }
+  var cur = inputs;
+  steps.forEach(function(st){
+    var next = [];
+    cur.forEach(function(v){
+      if (st[0] === 'key') next.push(v != null && typeof v === 'object' && !Array.isArray(v) ? (v.hasOwnProperty(st[1]) ? v[st[1]] : null) : null);
+      else if (st[0] === 'idx') next.push(Array.isArray(v) ? v[st[1] < 0 ? v.length + st[1] : st[1]] : null);
+      else { if (!v || typeof v !== 'object') throw new Error('cannot iterate over ' + (v === null ? 'null' : typeof v)); next = next.concat(Array.isArray(v) ? v : Object.keys(v).map(function(k){ return v[k]; })); }
+    });
+    cur = next.map(function(x){ return x === undefined ? null : x; });
+  });
+  return cur;
+}
+
+/* write / replace / edit, worked out WITHOUT writing: the commands use it to
+   do the change, and a proposal uses it to show the diff before anyone types
+   y. Patch-sized edits are reviewable; a whole-file rewrite is not. */
+async function planEdit(line){
+  var argv = tokenize(line), verb = (argv.shift() || '').toLowerCase();
+  var o = parseOpts(argv, '');
+  if (o.ops[0] === '-1'){ o.ops.shift(); o.flags['1'] = true; }   /* replace -1: first occurrence only */
+  var path = o.ops[0] ? resolve(o.ops[0]) : '';
+  if (!path) return { err: verb + ' needs a path' };
+  var prev = await files.read(path);
+  if (verb === 'write'){
+    var body = line.slice(line.indexOf(o.ops[0]) + o.ops[0].length).trim();
+    if (!body) return { err: 'write <path> <text>  — the text replaces the file' };
+    return { path: path, prev: prev, next: body, how: prev == null ? 'created ' : 'rewrote ', said: 'wrote ' + body.length + ' chars to ' + path + (prev != null ? ' (replaced ' + prev.length + ')' : '') };
+  }
+  if (prev == null) return { err: 'No such file: ' + path };
+  if (verb === 'replace'){
+    if (o.ops.length < 3) return { err: 'replace <path> "old text" "new text"  (-1 changes only the first)' };
+    var from = o.ops[1].replace(/\\n/g, '\n'), to = o.ops[2].replace(/\\n/g, '\n');
+    if (!from) return { err: 'replace needs the text to find' };
+    var count = prev.split(from).length - 1;
+    if (!count) return { err: '"' + o.ops[1] + '" is not in ' + path + ' — nothing to replace' };
+    var next = o.flags['1'] ? prev.replace(from, function(){ return to; }) : prev.split(from).join(to);
+    var n = o.flags['1'] ? 1 : count;
+    return { path: path, prev: prev, next: next, how: 'edited ', said: 'replaced ' + n + ' occurrence' + (n === 1 ? '' : 's') + ' in ' + path };
+  }
+  /* edit <path> <A[-B]> <text>  replaces lines A..B;  <A>+ <text>  inserts after A
+     (0+ is the top); an empty text deletes the lines. */
+  var spec = o.ops[1] || '', text = o.ops.slice(2).join(' ').replace(/\\n/g, '\n');
+  var ls = prev.split('\n'), mm;
+  if ((mm = /^(\d+)\+$/.exec(spec))){
+    var after = +mm[1]; if (after > ls.length) return { err: path + ' has ' + ls.length + ' lines' };
+    if (!text) return { err: 'edit ' + o.ops[0] + ' ' + spec + ' "text to insert"' };
+    ls.splice.apply(ls, [after, 0].concat(text.split('\n')));
+    return { path: path, prev: prev, next: ls.join('\n'), how: 'edited ', said: 'inserted ' + text.split('\n').length + ' line(s) after line ' + after + ' of ' + path };
+  }
+  if (!(mm = /^(\d+)(?:-(\d+|\$))?$/.exec(spec))) return { err: 'edit <path> <line or A-B> "new text"   or   edit <path> <A>+ "inserted text"' };
+  var a = +mm[1], b = mm[2] === '$' ? ls.length : mm[2] ? +mm[2] : a;
+  if (a < 1 || b < a || b > ls.length) return { err: path + ' has lines 1\u2013' + ls.length };
+  ls.splice.apply(ls, [a - 1, b - a + 1].concat(text === '' ? [] : text.split('\n')));
+  return { path: path, prev: prev, next: ls.join('\n'), how: 'edited ', said: (text === '' ? 'deleted' : 'replaced') + ' line' + (a === b ? ' ' + a : 's ' + a + '\u2013' + b) + ' of ' + path };
+}
+async function previewEdit(line){
+  var v = (tokenize(line)[0] || '').toLowerCase();
+  if (['write','replace','edit'].indexOf(v) < 0) return;
+  var plan = await planEdit(line);
+  if (plan.err){ print('   (' + plan.err + ')', 'err'); return; }
+  var d = diffHTML(lineDiff(lines$(plan.prev || ''), lines$(plan.next)) || [], plan.prev == null ? '(new file)' : plan.path, plan.path + ' after');
+  if (d) printHTML(d.html);
+}
+
 /* ---------- commands ---------- */
 
 async function run(line){
@@ -550,11 +812,14 @@ async function run(line){
   var sin = stdin; stdin = null;
   var argv = tokenize(line);
   var verb = (argv.shift()||'').toLowerCase();
+  var raw = argv.slice();   /* for commands whose options take values (find, sort, cut) */
 
-  var flags = {}, n = 20, ops = [];
+  var flags = {}, n = 20, ops = [], ctx = 0;
   for (var i=0;i<argv.length;i++){
     var a = argv[i];
     if (a === '-n' && argv[i+1] && !isNaN(+argv[i+1])){ n = Math.max(1, Math.min(+argv[i+1], 500)); i++; continue; }
+    if (a === '-C' && argv[i+1] && !isNaN(+argv[i+1])){ ctx = Math.max(0, Math.min(+argv[i+1], 10)); i++; continue; }
+    if (/^-C\d+$/.test(a)){ ctx = Math.min(+a.slice(2), 10); continue; }
     if (a.charAt(0) === '-'){ a.slice(1).split('').forEach(function(f){ flags[f] = true; }); continue; }
     ops.push(a);
   }
@@ -567,14 +832,40 @@ async function run(line){
     case 'pwd': print('/' + cwd, 'dim'); return;
 
     case 'cd': {
-      var dest = ops.length ? resolve(ops[0]) : '';
+      var dest;
+      if (raw[0] === '-'){ if (prevCwd == null) return print('no previous folder yet', 'dim'); dest = prevCwd; }
+      else dest = ops.length ? resolve(ops[0]) : '';
+      if (ops[0] && ops[0].charAt(0) === '@' && !Object.prototype.hasOwnProperty.call(marks, ops[0].slice(1).split('/')[0].toLowerCase()))
+        return print('no bookmark ' + ops[0].split('/')[0] + ' — see  mark', 'err');
       if (dest && snap.folders.indexOf(dest) < 0) return print('No such folder: ' + dest, 'err');
-      cwd = dest; paintPrompt();
+      prevCwd = cwd; cwd = dest; paintPrompt();
       return print('/' + cwd, 'dim');
     }
 
+    case 'mark': {
+      /* mark            list bookmarks
+         mark name [p]   save p (default: here) as @name
+         mark -d name    forget one */
+      if (flags.d){
+        var dName = (ops[0] || '').toLowerCase().replace(/^@/, '');
+        if (!Object.prototype.hasOwnProperty.call(marks, dName)) return print('no bookmark @' + dName, 'dim');
+        delete marks[dName]; saveMarks(); return print('forgot @' + dName, 'ok');
+      }
+      if (!ops.length){
+        var mNames = Object.keys(marks).sort();
+        if (!mNames.length) return print('no bookmarks yet — stand somewhere and type  mark work  then use  cd @work  or  ls @work', 'dim');
+        return printHTML(mNames.map(function(k){ return '<span class="cmd">@' + esc(k) + '</span>\t' + pathHTML(marks[k], '/' + marks[k]); }).join('\n'));
+      }
+      var mName = ops[0].toLowerCase().replace(/^@/, '');
+      if (!/^[a-z0-9_-]+$/.test(mName)) return print('a bookmark name is letters, digits, - or _', 'err');
+      var mPath = ops[1] ? resolve(ops[1]) : cwd;
+      if (mPath && snap.folders.indexOf(mPath) < 0 && !snap.files.some(function(x){ return x.path === mPath; })) return print('No such file or folder: ' + mPath, 'err');
+      marks[mName] = mPath; saveMarks();
+      return print('@' + mName + ' -> /' + mPath, 'ok');
+    }
+
     case 'ls': case 'dir': case 'tree':
-      return listing(snap, target, verb === 'tree' || flags.R || flags.r);
+      return listing(snap, target, verb === 'tree' || flags.R || flags.r, flags.t ? 't' : flags.S ? 'S' : null);
 
     case 'cat': case 'head': case 'tail': {
       var text;
@@ -603,30 +894,108 @@ async function run(line){
     }
 
     case 'find': {
-      if (!ops[0]) return print('find needs a name or glob, e.g. find *.json', 'err');
-      var hits = snap.files.map(function(f){ return f.path; }).filter(function(p){
-        return glob(ops[0], p.split('/').pop()) || glob(ops[0], p);
+      /* find [glob] [-mtime -7] [-newer path] [-size +10k] [-type f|d]
+         -mtime counts days: -7 within the last 7, +30 older than 30. */
+      var fPat = null, fNewer = null, fMtime = null, fSize = null, fType = 'f';
+      for (var k = 0; k < raw.length; k++){
+        var w = raw[k];
+        if (w === '-newer' && raw[k+1]){ fNewer = raw[++k]; continue; }
+        if (w === '-mtime' && raw[k+1]){ fMtime = raw[++k]; continue; }
+        if (w === '-size' && raw[k+1]){ fSize = raw[++k]; continue; }
+        if (w === '-type' && raw[k+1]){ fType = raw[++k] === 'd' ? 'd' : 'f'; continue; }
+        if (w === '-name' && raw[k+1]){ fPat = raw[++k]; continue; }
+        if (w.charAt(0) === '-'){ return print('find: unknown option ' + w + ' — try -mtime -7, -newer <file>, -size +10k, -type d', 'err'); }
+        if (fPat === null) fPat = w;
+      }
+      if (fPat === null && fNewer === null && fMtime === null && fSize === null && fType === 'f')
+        return print('find needs a name or glob, e.g.  find *.json   or a filter:  find -mtime -7', 'err');
+      var now = Date.now() / 1000, newerThan = null;
+      if (fNewer !== null){
+        var ref = snap.files.filter(function(x){ return x.path === resolve(fNewer); })[0];
+        if (!ref) return print('find -newer: no such file ' + resolve(fNewer), 'err');
+        newerThan = ref.modified;
+      }
+      var mt = fMtime === null ? null : /^([+-]?)(\d+(?:\.\d+)?)$/.exec(fMtime);
+      if (fMtime !== null && !mt) return print('find -mtime takes days: -7 (last week) or +30 (older than a month)', 'err');
+      var sz = fSize === null ? null : /^([+-]?)(\d+(?:\.\d+)?)([kKmM]?)$/.exec(fSize);
+      if (fSize !== null && !sz) return print('find -size takes +10k, -2k, +1m or a byte count', 'err');
+      var szBytes = sz ? +sz[2] * (/k/i.test(sz[3]) ? 1024 : /m/i.test(sz[3]) ? 1048576 : 1) : 0;
+      if (fType === 'd'){
+        var dHits = snap.folders.filter(function(d){ return fPat === null || glob(fPat, d.split('/').pop()) || glob(fPat, d); });
+        if (!dHits.length) return print('No matching folder', 'dim');
+        return printHTML(dHits.sort().map(function(d){ return pathHTML(d, d + '/'); }).join('\n'));
+      }
+      var hits = snap.files.filter(function(f){
+        if (fPat !== null && !(glob(fPat, f.path.split('/').pop()) || glob(fPat, f.path))) return false;
+        if (newerThan !== null && !(f.modified > newerThan)) return false;
+        if (mt){
+          var age = (now - f.modified) / 86400, days = +mt[2];
+          if (mt[1] === '-' && !(age < days)) return false;
+          if (mt[1] === '+' && !(age > days)) return false;
+          if (!mt[1] && !(age >= days && age < days + 1)) return false;
+        }
+        if (sz){
+          if (sz[1] === '+' && !(f.size > szBytes)) return false;
+          if (sz[1] === '-' && !(f.size < szBytes)) return false;
+          if (!sz[1] && f.size !== szBytes) return false;
+        }
+        return true;
       });
-      if (!hits.length) return print('No match for ' + ops[0], 'dim');
-      return printHTML(hits.sort().map(function(p){ return pathHTML(p); }).join('\n'));
+      if (!hits.length) return print('No match' + (fPat ? ' for ' + fPat : ''), 'dim');
+      /* With a time filter you are asking "what changed?", so newest first. */
+      hits.sort(function(a, b){ return (mt || newerThan !== null) ? b.modified - a.modified : (a.path < b.path ? -1 : 1); });
+      return printHTML(hits.map(function(f){ return pathHTML(f.path); }).join('\n'));
     }
 
     case 'grep': {
-      /* Search INSIDE files — find only knows names. Case-insensitive, because
-         a phone keyboard capitalises the first letter whether you like it or
-         not; -l lists matching files only. Scope with a folder or file path. */
+      /* Search INSIDE files — find only knows names. Case-insensitive unless -s,
+         because a phone keyboard capitalises the first letter whether you like
+         it or not (-i is accepted too). -n numbers piped lines, -C N adds context,
+         -v keeps the lines that DON'T match, -c counts, -l names files only.
+         -E or /pattern/ is a regular expression. */
       if (!ops[0]) return print('grep needs some text, e.g. grep dentist  or  grep -l invoice notes', 'err');
-      var needle = ops[0].toLowerCase();
+      var pat = ops[0], rx = null;
+      var slashRe = pat.length > 2 && pat.charAt(0) === '/' && pat.lastIndexOf('/') > 0;
+      if (flags.E || slashRe){
+        try { rx = new RegExp(slashRe ? pat.slice(1, pat.lastIndexOf('/')) : pat, flags.s ? '' : 'i'); }
+        catch(e){ return print('grep: that pattern is not a valid regular expression (' + e.message + ')', 'err'); }
+      }
+      var needle = flags.s ? pat : pat.toLowerCase();
+      var findIn = function(l){
+        if (rx){ var m = rx.exec(l); return m ? { at: m.index, len: Math.max(1, m[0].length) } : null; }
+        var at = (flags.s ? l : l.toLowerCase()).indexOf(needle);
+        return at < 0 ? null : { at: at, len: needle.length };
+      };
+      var isHit = function(l){ var h = findIn(l); return flags.v ? !h : !!h; };
+      var mark = function(l, cut){
+        var h = flags.v ? null : findIn(l);
+        if (!h) return esc(cut ? l.slice(0, 120) : l);
+        if (!cut) return esc(l.slice(0, h.at)) + '<b>' + esc(l.slice(h.at, h.at + h.len)) + '</b>' + esc(l.slice(h.at + h.len));
+        var start = Math.max(0, h.at - 40), snippet = l.slice(start, start + 120), rel = h.at - start;
+        return (start ? '…' : '') + esc(snippet.slice(0, rel)) + '<b>' + esc(snippet.slice(rel, rel + h.len)) + '</b>' + esc(snippet.slice(rel + h.len));
+      };
+      /* Which lines to show: the hits, plus ctx lines around each (null = a "--" gap). */
+      var pick = function(ls){
+        var hitIdx = []; for (var q = 0; q < ls.length; q++) if (isHit(ls[q])) hitIdx.push(q);
+        if (!ctx) return { hits: hitIdx, rows: hitIdx.map(function(x){ return [x, true]; }) };
+        var want = {}, rows = [], last = -2;
+        hitIdx.forEach(function(x){ for (var y = Math.max(0, x - ctx); y <= Math.min(ls.length - 1, x + ctx); y++) want[y] = want[y] || (y === x); });
+        Object.keys(want).map(Number).sort(function(p1, p2){ return p1 - p2; }).forEach(function(y){
+          if (last >= 0 && y > last + 1) rows.push(null);
+          rows.push([y, hitIdx.indexOf(y) >= 0]); last = y;
+        });
+        return { hits: hitIdx, rows: rows };
+      };
       /* Piped in: there are no files here, just lines. */
       if (sin != null && ops.length < 2){
-        var sl = sin.split('\n'), keep = [];
-        for (var si = 0; si < sl.length; si++){
-          var sLower = sl[si].toLowerCase(), sAt = sLower.indexOf(needle);
-          if (sAt < 0) continue;
-          keep.push(esc(sl[si].slice(0, sAt)) + '<b>' + esc(sl[si].slice(sAt, sAt + needle.length)) + '</b>' + esc(sl[si].slice(sAt + needle.length)));
-        }
-        if (!keep.length) return print('No match for "' + ops[0] + '"', 'dim');
-        return printHTML(keep.join('\n'));
+        var sl = sin.split('\n'), pk = pick(sl);
+        if (flags.c) return print(String(pk.hits.length));
+        if (!pk.hits.length) return print('No match for "' + ops[0] + '"', 'dim');
+        return printHTML(pk.rows.map(function(r){
+          if (!r) return '<span class="dim">--</span>';
+          var num = flags.n || ctx ? '<span class="dim">' + (r[0] + 1) + (r[1] ? ':' : '-') + '</span>' : '';
+          return num + (r[1] ? mark(sl[r[0]], false) : '<span class="dim">' + esc(sl[r[0]]) + '</span>');
+        }).join('\n'));
       }
       var scope = ops[1] ? resolve(ops[1]) : cwd;
       var pool = snap.files.filter(function(f){ return !scope || f.path === scope || f.path.indexOf(scope + '/') === 0; });
@@ -634,24 +1003,142 @@ async function run(line){
       var rows = [], hitFiles = 0, shown = 0, LIMIT = 200;
       for (var fi = 0; fi < pool.length && shown < LIMIT; fi++){
         var f = pool[fi], txt = await files.read(f.path);
-        if (txt == null || txt.toLowerCase().indexOf(needle) < 0) continue;
+        if (txt == null) continue;
+        var ls = txt.split('\n'), got = pick(ls);
+        if (!got.hits.length) continue;
         hitFiles++;
         if (flags.l){ rows.push(pathHTML(f.path)); continue; }
-        var ls = txt.split('\n');
-        for (var li = 0; li < ls.length && shown < LIMIT; li++){
-          var lower = ls[li].toLowerCase(), at = lower.indexOf(needle);
-          if (at < 0) continue;
-          shown++;
-          var start = Math.max(0, at - 40), snippet = ls[li].slice(start, start + 120);
-          var rel = at - start;
-          var marked = esc(snippet.slice(0, rel)) + '<b>' + esc(snippet.slice(rel, rel + needle.length)) + '</b>' + esc(snippet.slice(rel + needle.length));
-          rows.push(pathHTML(f.path) + '<span class="hit">:' + (li + 1) + ': ' + (start ? '\u2026' : '') + marked + '</span>');
+        if (flags.c){ rows.push(pathHTML(f.path) + '<span class="hit">:' + got.hits.length + '</span>'); continue; }
+        for (var ri = 0; ri < got.rows.length && shown < LIMIT; ri++){
+          var r = got.rows[ri];
+          if (!r){ rows.push('<span class="dim">--</span>'); continue; }
+          if (r[1]) shown++;
+          rows.push(pathHTML(f.path) + (r[1]
+            ? '<span class="hit">:' + (r[0] + 1) + ': ' + mark(ls[r[0]], true) + '</span>'
+            : '<span class="dim">-' + (r[0] + 1) + '- ' + esc(ls[r[0]].slice(0, 120)) + '</span>'));
         }
       }
       if (!rows.length) return print('No match for "' + ops[0] + '" in ' + (scope || 'the workspace'), 'dim');
       printHTML(rows.join('\n'));
-      if (!flags.l) print('[' + shown + (shown >= LIMIT ? '+' : '') + ' line(s) in ' + hitFiles + ' file(s)]', 'dim');
+      if (!flags.l && !flags.c) print('[' + shown + (shown >= LIMIT ? '+' : '') + ' line(s) in ' + hitFiles + ' file(s)]', 'dim');
       return;
+    }
+
+    /* ---- v9: the text tools. Each reads a file or whatever was piped in, so
+       they chain:  find *.md | cut -d / -f 1 | sort | uniq -c | sort -rn ---- */
+
+    case 'sed': {
+      /* Only the read-a-range form:  sed -n '40,80p' file  (also 40,$p and 40p). */
+      var sm = /^(\d+|\$)(?:,(\d+|\$|\+\d+))?p$/.exec(ops[0] || '');
+      if (!flags.n || !sm) return print("sed -n '40,80p' <path>  prints lines 40 to 80 (this shell's sed reads ranges only; use  edit  to change lines)", 'err');
+      var st = await textFrom(sin, ops[1], 'sed'); if (st.err) return print(st.err, 'err');
+      var sls = lines$(st.text), total = sls.length;
+      var from = sm[1] === '$' ? total : +sm[1];
+      var to = !sm[2] ? from : sm[2] === '$' ? total : sm[2].charAt(0) === '+' ? from + +sm[2].slice(1) : +sm[2];
+      if (from < 1 || from > total) return print('there are ' + total + ' lines', 'err');
+      print(sls.slice(from - 1, Math.min(to, total)).join('\n'));
+      return note('[lines ' + from + '–' + Math.min(to, total) + ' of ' + total + ']');
+    }
+
+    case 'wc': {
+      var wo = parseOpts(raw, '');
+      var count = function(t){ var ls = lines$(t); return { l: ls.length, w: (t.match(/\S+/g) || []).length, c: t.length }; };
+      var cols = (wo.flags.l || wo.flags.w || wo.flags.c) ? ['l','w','c'].filter(function(k){ return wo.flags[k]; }) : ['l','w','c'];
+      var fmt = function(r, name){ return cols.map(function(k){ return String(r[k]); }).join('\t') + (name ? '\t' + name : ''); };
+      if (sin != null && !wo.ops.length) return print(fmt(count(sin)));
+      if (!wo.ops.length) return print('wc [-l|-w|-c] <path…>  — lines, words, characters', 'err');
+      var tot = { l: 0, w: 0, c: 0 }, rowsW = [];
+      for (var wi = 0; wi < wo.ops.length; wi++){
+        var wt = await files.read(resolve(wo.ops[wi]));
+        if (wt == null) return print('No such file: ' + resolve(wo.ops[wi]), 'err');
+        var r1 = count(wt); rowsW.push(fmt(r1, resolve(wo.ops[wi]))); tot.l += r1.l; tot.w += r1.w; tot.c += r1.c;
+      }
+      if (wo.ops.length > 1) rowsW.push(fmt(tot, 'total'));
+      if (cols.length === 3) note('lines\twords\tchars');
+      return print(rowsW.join('\n'));
+    }
+
+    case 'sort': {
+      /* -r reverse, -n numeric, -u drop repeats, -k N sort on field N, -t X fields split on X */
+      var so = parseOpts(raw, 'kt');
+      var sst = await textFrom(sin, so.ops[0], 'sort'); if (sst.err) return print(sst.err, 'err');
+      var keyOf = function(l){
+        if (!so.vals.k) return l;
+        var parts = so.vals.t ? l.split(so.vals.t) : l.trim().split(/\s+/);
+        return parts[(+so.vals.k || 1) - 1] || '';
+      };
+      var sorted = lines$(sst.text).slice().sort(function(x, y){
+        var a1 = keyOf(x), b1 = keyOf(y), c;
+        if (so.flags.n){ c = (parseFloat(a1) || 0) - (parseFloat(b1) || 0); if (c) return c; }
+        c = a1.localeCompare(b1, undefined, { sensitivity: 'base' });
+        return c || (x < y ? -1 : x > y ? 1 : 0);
+      });
+      if (so.flags.r) sorted.reverse();
+      if (so.flags.u) sorted = sorted.filter(function(x, i2){ return i2 === 0 || keyOf(x) !== keyOf(sorted[i2 - 1]); });
+      return print(sorted.join('\n'));
+    }
+
+    case 'uniq': {
+      /* Folds REPEATED NEIGHBOURS, as uniq always has — sort first. -c counts, -d repeats only. */
+      var uo = parseOpts(raw, '');
+      var ust = await textFrom(sin, uo.ops[0], 'uniq'); if (ust.err) return print(ust.err, 'err');
+      var runs = [];
+      lines$(ust.text).forEach(function(l){ if (runs.length && runs[runs.length - 1][0] === l) runs[runs.length - 1][1]++; else runs.push([l, 1]); });
+      if (uo.flags.d) runs = runs.filter(function(r2){ return r2[1] > 1; });
+      return print(runs.map(function(r2){ return uo.flags.c ? ('      ' + r2[1]).slice(-7) + ' ' + r2[0] : r2[0]; }).join('\n'));
+    }
+
+    case 'cut': {
+      /* cut -d , -f 1,3   or   -f 2-4   (tab-separated by default)   or  -c 1-20 */
+      var co = parseOpts(raw, 'dfc');
+      var cst = await textFrom(sin, co.ops[0], 'cut'); if (cst.err) return print(cst.err, 'err');
+      var spec2 = co.vals.f || co.vals.c;
+      if (!spec2) return print('cut -d , -f 1,3  (fields)   or   cut -c 1-20  (characters)', 'err');
+      var want = function(nn){ return spec2.split(',').some(function(part){
+        var mm2 = /^(\d*)-(\d*)$/.exec(part); if (!mm2) return +part === nn;
+        return nn >= (mm2[1] ? +mm2[1] : 1) && nn <= (mm2[2] ? +mm2[2] : Infinity); }); };
+      var delim = co.vals.d == null ? '\t' : co.vals.d === '\\t' ? '\t' : co.vals.d;
+      return print(lines$(cst.text).map(function(l){
+        if (co.vals.c) return l.split('').filter(function(_, i3){ return want(i3 + 1); }).join('');
+        if (l.indexOf(delim) < 0) return l;
+        return l.split(delim).filter(function(_, i3){ return want(i3 + 1); }).join(delim);
+      }).join('\n'));
+    }
+
+    case 'diff': {
+      /* diff a b  ·  diff notes.md@2  (that version vs now)  ·  diff notes.md
+         (the newest saved version vs now)  ·  diff notes.md@3 notes.md@1 */
+      if (!ops.length) return print('diff <a> <b>   or   diff <file>@N  (version N vs now — see  history <file>)', 'err');
+      var A, B;
+      if (ops.length === 1){
+        if (/@\d+$/.test(ops[0])){ A = await loadSpec(ops[0], sin); B = await loadSpec(ops[0].replace(/@\d+$/, ''), sin); }
+        else { A = await loadSpec(ops[0] + '@1', sin); B = await loadSpec(ops[0], sin); }
+      } else { A = await loadSpec(ops[0], sin); B = await loadSpec(ops[1], sin); }
+      if (A.err) return print(A.err, 'err');
+      if (B.err) return print(B.err, 'err');
+      var dops = lineDiff(lines$(A.text), lines$(B.text));
+      if (!dops) return print('too big to compare line by line (' + lines$(A.text).length + ' vs ' + lines$(B.text).length + ' lines)', 'err');
+      var dh = diffHTML(dops, A.label, B.label);
+      if (!dh) return print('no differences', 'dim');
+      printHTML(dh.html);
+      return note('[' + dh.adds + ' line(s) added, ' + dh.dels + ' removed]');
+    }
+
+    case 'jq': {
+      /* jq '.field.sub' file   ·   jq '.items[] | .name' file   ·   cat x.json | jq keys
+         -r prints strings without quotes. */
+      var jo = parseOpts(raw, '');
+      var filter = '.', jpath = null;
+      if (jo.ops.length >= 2){ filter = jo.ops[0]; jpath = jo.ops[1]; }
+      else if (jo.ops.length === 1){ if (sin != null || /^[.\[]|^(keys|length|type|values)\b/.test(jo.ops[0])) filter = jo.ops[0]; else jpath = jo.ops[0]; }
+      var jt = await textFrom(sin, jpath, 'jq'); if (jt.err) return print(jt.err, 'err');
+      var data;
+      try { data = JSON.parse(jt.text); }
+      catch(e){ return print((jpath ? resolve(jpath) : 'that') + ' is not valid JSON (' + e.message + ')', 'err'); }
+      var results;
+      try { results = jqSplit(filter).reduce(function(acc, stage){ return jqStage(stage, acc); }, [data]); }
+      catch(e){ return print('jq: ' + e.message, 'err'); }
+      return print(results.map(function(v){ return jo.flags.r && typeof v === 'string' ? v : JSON.stringify(v, null, 2); }).join('\n'));
     }
 
     case 'du': {
@@ -777,6 +1264,10 @@ async function run(line){
       if (ops.length < 2) return print('mv needs a source and a destination', 'err');
       var to = resolve(ops[1]);
       if (!to) return print('mv needs a destination name', 'err');
+      /* Checked here, not left to the store: a missing source used to "move"
+         nothing and report success, which a batch would sail past. */
+      if (!snap.files.some(function(x){ return x.path === target; }) && snap.folders.indexOf(target) < 0)
+        return print('No such file or folder: ' + target, 'err');
       var exists = snap.files.some(function(x){ return x.path === to; }) || snap.folders.indexOf(to) >= 0;
       /* The store replaces a destination silently, and a replaced file cannot be
          undone — so say so, and make replacing a deliberate flag. */
@@ -787,15 +1278,49 @@ async function run(line){
       return print(target + ' -> ' + to, 'ok');
     }
 
-    case 'write': {
-      if (!target) return print('write needs a path', 'err');
-      var body = line.slice(line.indexOf(ops[0]) + ops[0].length).trim();
-      if (!body) return print('write <path> <text>  — the text replaces the file', 'err');
-      var prev = await files.read(target);
-      await files.write(target, body);
-      remember({ type: 'write', path: target, prev: prev });
+    case 'write': case 'replace': case 'edit': {
+      /* write replaces the whole file; replace swaps text; edit changes lines.
+         All three are worked out by planEdit first, which is also what shows a
+         proposal's diff before anyone types y. */
+      var plan = await planEdit(line);
+      if (plan.err) return print(plan.err, 'err');
+      if (plan.prev === plan.next) return print('no change to ' + plan.path, 'dim');
+      await files.write(plan.path, plan.next);
+      remember({ type: 'write', path: plan.path, prev: plan.prev, how: plan.how });
       haptic('success');
-      return print('wrote ' + body.length + ' chars to ' + target + (prev != null ? ' (replaced ' + prev.length + ')' : ''), 'ok');
+      return print(plan.said + '  —  undo  puts it back', 'ok');
+    }
+
+    case 'cp': {
+      /* cp a b  ·  cp a folder/  ·  cp -r folder copy  — -f replaces what is there.
+         The store holds text, so this is read-and-write; undo removes the copies
+         (or puts back what -f replaced). */
+      if (ops.length < 2) return print('cp <from> <to>   (-f replaces an existing file)', 'err');
+      var cFrom = resolve(ops[0]), cTo = resolve(ops[1]);
+      if (!cTo) return print('cp needs a destination name', 'err');
+      var cIsDir = snap.folders.indexOf(cFrom) >= 0;
+      var cFile = snap.files.some(function(x){ return x.path === cFrom; });
+      if (!cIsDir && !cFile) return print('No such file or folder: ' + cFrom, 'err');
+      var into = snap.folders.indexOf(cTo) >= 0 || /\/$/.test(ops[1]);
+      var pairs = cIsDir
+        ? snap.files.filter(function(x){ return x.path.indexOf(cFrom + '/') === 0; }).map(function(x){
+            return [x.path, (into ? cTo + '/' + cFrom.split('/').pop() : cTo) + x.path.slice(cFrom.length)]; })
+        : [[cFrom, into ? cTo + '/' + cFrom.split('/').pop() : cTo]];
+      if (!pairs.length) return print(cFrom + '/ is empty', 'dim');
+      var clashes = pairs.filter(function(pr){ return snap.files.some(function(x){ return x.path === pr[1]; }); });
+      if (clashes.length && !flags.f) return print(clashes[0][1] + (clashes.length > 1 ? ' and ' + (clashes.length - 1) + ' more' : '') + ' already exist' + (clashes.length > 1 ? '' : 's') + ' — use  cp -f  to replace', 'err');
+      var items = [];
+      for (var ci = 0; ci < pairs.length; ci++){
+        var cBody = await files.read(pairs[ci][0]);
+        if (cBody == null){ print('skipped ' + pairs[ci][0] + ' (not readable as text)', 'dim'); continue; }
+        var cPrev = await files.read(pairs[ci][1]);
+        await files.write(pairs[ci][1], cBody);
+        items.push({ path: pairs[ci][1], prev: cPrev });
+      }
+      if (!items.length) return print('nothing copied', 'dim');
+      remember({ type: 'cp', to: cIsDir ? (into ? cTo + '/' + cFrom.split('/').pop() : cTo) + '/' : items[0].path, items: items });
+      haptic('success');
+      return print('copied ' + (items.length === 1 ? cFrom + ' -> ' + items[0].path : items.length + ' files to ' + (into ? cTo + '/' + cFrom.split('/').pop() : cTo) + '/') + '  —  undo  removes the copy', 'ok');
     }
 
     case 'rm': case 'rmdir': {
@@ -820,25 +1345,35 @@ async function run(line){
     }
 
     case 'undo': {
-      var op = undoStack.pop();
-      if (!op) return print('nothing to undo', 'dim');
-      switch (op.type){
-        case 'rm': await files.move(op.to, op.from); await pruneTrash(); print('restored ' + op.from, 'ok'); break;
-        case 'revert': {
-          var rv = files.versions ? await files.versions(op.path) : [];
-          if (rv.length) { await files.restoreVersion(op.path, rv[0].stamp); print('restored ' + op.path + ' to before the revert', 'ok'); }
-          else print('nothing to restore for ' + op.path, 'dim');
-          break;
-        }
-        case 'mv': await files.move(op.to, op.from); print(op.to + ' -> ' + op.from, 'ok'); break;
-        case 'mkdir': await files.removeFolder(op.path, false); print('removed ' + op.path + '/', 'ok'); break;
-        case 'write':
-          if (op.prev == null){ await files.remove(op.path); print('removed ' + op.path, 'ok'); }
-          else { await files.write(op.path, op.prev); print('restored ' + op.path + ' (' + op.prev.length + ' chars)', 'ok'); }
-          break;
+      /* Reverses the newest change — all of it, if it was an approved batch.
+         The stack is kept in app storage, so it survives closing Shell. */
+      if (!undoStack.length) return print('nothing to undo', 'dim');
+      var top = undoStack[undoStack.length - 1], group = [];
+      if (top.batch != null){ while (undoStack.length && undoStack[undoStack.length - 1].batch === top.batch) group.push(undoStack.pop()); }
+      else group.push(undoStack.pop());
+      if (group.length > 1) print('undoing a batch of ' + group.length + ' changes', 'dim');
+      for (var gi = 0; gi < group.length; gi++){
+        var okU = await undoOne(group[gi]);
+        if (okU === false){ undoStack.push.apply(undoStack, group.slice(gi).reverse()); break; }
+        changeLog.push({ id: Date.now() + Math.random(), t: Date.now(), text: 'undid: ' + describeOp(group[gi]) });
       }
+      if (changeLog.length > 200) changeLog.splice(0, changeLog.length - 200);
+      saveUndo(); saveLog();
       haptic('success');
       return;
+    }
+
+    case 'log': {
+      /* Every change made here — by you, or proposals you approved — newest
+         first, kept between sessions. "undo" marks what  undo  can still reverse. */
+      if (!changeLog.length) return print('no changes yet', 'dim');
+      var howMany = Math.max(1, Math.min(ops[0] && !isNaN(+ops[0]) ? +ops[0] : 20, 200));
+      var live = {}; undoStack.forEach(function(u){ live[u.id] = true; });
+      var nextUndo = undoStack.length ? undoStack[undoStack.length - 1].id : null;
+      print(changeLog.slice(-howMany).reverse().map(function(e, i4){
+        return '#' + (i4 + 1) + '\t' + when(e.t) + '\t' + e.text + (e.id === nextUndo ? '   ← undo reverses this' : live[e.id] ? '   (undoable)' : '');
+      }).join('\n'));
+      return note('trash  lists deleted files;  restore <path>  puts one back');
     }
 
     case 'history': {
@@ -913,11 +1448,54 @@ async function run(line){
 }
 
 function remember(op){
+  op.id = Date.now() + Math.random();
+  if (batchId != null) op.batch = batchId;
   undoStack.push(op);
   if (undoStack.length > 30) undoStack.shift();
+  changeLog.push({ id: op.id, t: Date.now(), text: describeOp(op) + (op.batch != null ? '  (batch)' : '') });
+  if (changeLog.length > 200) changeLog.shift();
+  saveUndo(); saveLog();
+}
+function describeOp(op){
+  switch (op.type){
+    case 'rm': return 'moved ' + op.from + (op.isDir ? '/' : '') + ' to ' + TRASH;
+    case 'mv': return op.from + ' -> ' + op.to;
+    case 'mkdir': return 'created ' + op.path + '/';
+    case 'write': return (op.how || (op.prev == null ? 'created ' : 'changed ')) + op.path;
+    case 'revert': return 'reverted ' + op.path;
+    case 'cp': return 'copied ' + op.items.length + ' file(s) to ' + op.to;
+  }
+  return op.type;
+}
+/* Reverse one change. Returns false when it cannot be done safely. */
+async function undoOne(op){
+  switch (op.type){
+    case 'rm': await files.move(op.to, op.from); await pruneTrash(); print('restored ' + op.from, 'ok'); break;
+    case 'revert': {
+      var rv = files.versions ? await files.versions(op.path) : [];
+      if (rv.length) { await files.restoreVersion(op.path, rv[0].stamp); print('restored ' + op.path + ' to before the revert', 'ok'); }
+      else print('nothing to restore for ' + op.path, 'dim');
+      break;
+    }
+    case 'mv': await files.move(op.to, op.from); print(op.to + ' -> ' + op.from, 'ok'); break;
+    case 'mkdir': await files.removeFolder(op.path, false); print('removed ' + op.path + '/', 'ok'); break;
+    case 'write':
+      if (op.prevLost){ print('cannot undo ' + op.path + ': the earlier text was too big to keep after Shell closed — try  history ' + op.path, 'err'); return false; }
+      if (op.prev == null){ await files.remove(op.path); print('removed ' + op.path, 'ok'); }
+      else { await files.write(op.path, op.prev); print('restored ' + op.path + ' (' + op.prev.length + ' chars)', 'ok'); }
+      break;
+    case 'cp':
+      for (var i = op.items.length - 1; i >= 0; i--){
+        var it = op.items[i];
+        if (it.prevLost){ print('cannot restore ' + it.path + ': the earlier text was too big to keep', 'err'); continue; }
+        if (it.prev == null) await files.remove(it.path); else await files.write(it.path, it.prev);
+      }
+      print('undid the copy of ' + op.items.length + ' file(s)', 'ok'); break;
+  }
+  return true;
 }
 
-function listing(snap, root, recursive){
+function listing(snap, root, recursive, sortBy){
   var prefix = root ? root + '/' : '';
   if (root && snap.folders.indexOf(root) < 0){
     var one = snap.files.filter(function(f){ return f.path === root; })[0];
@@ -930,7 +1508,12 @@ function listing(snap, root, recursive){
   }).sort();
   var here = snap.files.filter(function(f){
     return f.path.indexOf(prefix) === 0 && (recursive || f.path.split('/').length === depth);
-  }).sort(function(a,b){ return a.path < b.path ? -1 : 1; });
+  }).sort(function(a,b){
+    /* -t newest first, -S biggest first; otherwise by name */
+    if (sortBy === 't' && a.modified !== b.modified) return b.modified - a.modified;
+    if (sortBy === 'S' && a.size !== b.size) return b.size - a.size;
+    return a.path < b.path ? -1 : 1;
+  });
   if (!subs.length && !here.length) return print(root ? root + '/ is empty' : 'The workspace is empty', 'dim');
   var html = subs.map(function(d){ return '<span class="dir">' + pathHTML(d, d + '/') + '</span>'; })
     .concat(here.map(function(f){
@@ -950,7 +1533,7 @@ function listing(snap, root, recursive){
    proposal the user has to accept: a model running rm across someone's
    documents unattended is the one outcome worth designing against. */
 
-var READ_ONLY = ['ls','dir','tree','cat','head','tail','stat','find','grep','history','du','pwd'];
+var READ_ONLY = ['ls','dir','tree','cat','head','tail','sed','stat','find','grep','diff','jq','wc','sort','uniq','cut','history','du','pwd','log'];
 var MAX_STEPS = 5;          /* myllmAsk is rate-limited; five is plenty and stays inside it */
 
 /* The system prompt for the `ask` VERB — a filter, not an assistant. Anything
@@ -970,15 +1553,17 @@ function systemPrompt(listing){
     'Contents right now:',
     listing || '(empty)',
     '',
-    'You may run these READ-ONLY commands: ls [-R] [path], tree [path], cat <path>, head -n N <path>, tail -n N <path>, stat <path>, find <glob>, grep <text> [path] (searches inside files), history <path> (previous versions), du.',
-    'You may pipe them: `a | b` sends a\'s output into b, and cat, head, tail and grep all read what is piped in — e.g. `grep invoice notes | head -n 5`. One pipeline is one step, so prefer it over three separate looks.',
+    'You may run these READ-ONLY commands: ls [-R] [-t newest first | -S biggest first] [path], tree [path], cat <path>, head -n N <path>, tail -n N <path>, sed -n \'40,80p\' <path> (a line range), stat <path>, find <glob> [-mtime -7] [-newer <path>] [-size +10k] [-type d], grep [-n] [-C N] [-v] [-c] [-l] [-s] <text or /regex/> [path], diff <a> <b> or diff <path>@N (version N vs now), jq \'.field\' <path> (pull values out of JSON: .a.b, .list[0], .list[], keys, length), wc [-l], sort [-r] [-n] [-k N], uniq [-c], cut -d X -f N, history <path> (previous versions), log (recent changes), du.',
+    'You may pipe them: `a | b` sends a\'s output into b, and cat, head, tail, sed, grep, wc, sort, uniq, cut and jq read what is piped in — e.g. `grep -l invoice notes | wc -l` or `find *.md | cut -d / -f 1 | sort | uniq -c | sort -rn`. One pipeline is one step, so prefer it over three separate looks.',
     'Paths are relative to the current directory. There is no cd.',
     'Writing output to a file with > or >> is a CHANGE: propose it, never run it.',
     '',
     'Reply with ONE JSON object and nothing else:',
     '  {"run":"<command>"}                     to look at something first',
     '  {"say":"<answer>"}                      when you can answer',
-    '  {"propose":"<command>","why":"<reason>"} to CHANGE something (mkdir, mv, write, rm, rmdir, revert <path> N) — the user approves it, you never run it. rm moves to a trash folder and can be undone; revert puts a previous version back.',
+    '  {"propose":"<command>","why":"<reason>"} to CHANGE something (mkdir, mv, cp, write, replace, edit, rm, rmdir, revert <path> N) — the user approves it, you never run it. rm moves to a trash folder and can be undone; revert puts a previous version back.',
+    '  {"propose":["<command>","<command>",…],"why":"<reason>"} for several changes approved together, e.g. a folder reorganisation: they run in order, stop at the first failure, and one undo reverses all of them.',
+    'To change part of a file, propose a SMALL edit rather than rewriting it: replace <path> "old text" "new text" (every occurrence; -1 for the first only), or edit <path> <A-B> "new lines" (\\n for a line break; empty text deletes the lines; <A>+ inserts after line A). The user sees the diff before approving. Use write only for a new file or a full rewrite.',
     '',
     'Prefer running a command over guessing. Answer in plain prose, briefly. Do not invent file contents.'
   ].join('\n');
@@ -1024,9 +1609,25 @@ async function agent(question){
 
     if (reply.propose){
       var why = reply.why ? ' — ' + reply.why : '';
-      print('proposes: ' + reply.propose + why, 'propose');
-      print('run it? type  y  to confirm', 'propose');
-      pending = { verb: 'raw', line: String(reply.propose) };
+      /* A list (or a multi-line string) is a batch: one approval, run in order. */
+      var steps = Array.isArray(reply.propose) ? reply.propose.map(String)
+        : String(reply.propose).split('\n');
+      steps = steps.map(function(x){ return x.trim(); }).filter(Boolean).slice(0, 20);
+      if (!steps.length){ print(String(raw).trim(), 'say'); return; }
+      if (steps.length === 1){
+        print('proposes: ' + steps[0] + why, 'propose');
+        await previewEdit(steps[0]);
+        print('run it? type  y  to confirm', 'propose');
+        pending = { verb: 'raw', line: steps[0] };
+        return;
+      }
+      print('proposes ' + steps.length + ' changes' + why + ':', 'propose');
+      for (var si2 = 0; si2 < steps.length; si2++){
+        print('  ' + (si2 + 1) + '. ' + steps[si2], 'propose');
+        await previewEdit(steps[si2]);
+      }
+      print('run all ' + steps.length + '? type  y  to confirm — one  undo  reverses the lot', 'propose');
+      pending = { verb: 'batch', lines: steps };
       return;
     }
     if (reply.run){
@@ -1063,12 +1664,22 @@ document.getElementById('form').addEventListener('submit', async function(ev){
     if (line.toLowerCase() === 'y' || line.toLowerCase() === 'yes'){
       try{
         if (p.verb === 'raw'){ print('$ ' + p.line, 'cmd'); await runLine(p.line); }
+        else if (p.verb === 'batch'){
+          batchId = Date.now();
+          try {
+            for (var bi = 0; bi < p.lines.length; bi++){
+              print('$ ' + p.lines[bi], 'cmd');
+              await captureOf(function(){ return runLine(p.lines[bi]); }, false);
+              if (lastCaptureError){ print('stopped at step ' + (bi + 1) + ' of ' + p.lines.length + ' — undo reverses the steps that ran', 'err'); break; }
+            }
+          } finally { batchId = null; }
+        }
         else if (p.verb === 'trash-empty') await files.removeFolder(TRASH, true);
         else if (p.verb === 'rm') await files.remove(p.target);
         else await files.removeFolder(p.target, true);
         haptic('warning');
         if (p.verb === 'trash-empty') print('emptied ' + TRASH, 'ok');
-        else if (p.verb !== 'raw') print('deleted ' + p.target, 'ok');
+        else if (p.verb !== 'raw' && p.verb !== 'batch') print('deleted ' + p.target, 'ok');
       }catch(e){ print(e.message, 'err'); }
     } else print('cancelled', 'dim');
     paintPrompt(); renderChips();
@@ -1106,7 +1717,7 @@ input.addEventListener('keydown', function(e){
    trailing slash and keeps going. Empty input shows the usual shortcuts. */
 var chipsEl = document.getElementById('chips');
 var DEFAULT_CHIPS = ['ls','ls -R','ask ','grep ','open ','help'];
-var SINKS = ['ask','grep','head','tail','cat'];   /* the commands that read a pipe */
+var SINKS = ['grep','sort','uniq','wc','cut','jq','head','ask'];   /* the commands that read a pipe */
 /* The last | that is not inside quotes. */
 function lastPipe(v){
   var q = null, at = -1;
