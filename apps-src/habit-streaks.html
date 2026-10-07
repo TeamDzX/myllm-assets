@@ -68,6 +68,38 @@
   .empty .tile{ width:48px; height:48px; border-radius:14px; font-size:21px; margin:0 auto 10px; opacity:.9; }
   .empty b{ display:block; font-size:16px; font-weight:750; }
   .empty p{ font-size:13.5px; color:var(--muted); line-height:1.5; max-width:280px; margin:5px auto 0; }
+  /* v6: the heatmap — every day of the last 18 weeks, Monday at the top. */
+  .heat{ overflow:hidden; }
+  .heat .months{ display:grid; font-size:10.5px; color:var(--muted); font-weight:700; margin:0 0 4px 22px; height:14px; }
+  .heat .wrap{ display:flex; gap:4px; }
+  .heat .wd{ display:grid; grid-template-rows:repeat(7,1fr); font-size:9.5px; color:var(--muted); font-weight:700; width:18px; }
+  .heat .wd span{ display:flex; align-items:center; }
+  .heat .cells{ flex:1; display:grid; grid-auto-flow:column; grid-template-rows:repeat(7,1fr); gap:3px; }
+  .heat .cells button{ aspect-ratio:1/1; border-radius:3px; background:var(--fill); padding:0; min-width:0; }
+  .heat .cells button.l1{ background:hsl(var(--h) 80% 55% / .35); }
+  .heat .cells button.l2{ background:hsl(var(--h) 80% 52% / .58); }
+  .heat .cells button.l3{ background:hsl(var(--h) 80% 50% / .8); }
+  .heat .cells button.l4{ background:hsl(var(--h) 85% 46%); }
+  .heat .cells button.sel{ outline:2px solid var(--ink); outline-offset:1px; }
+  .heat .cells button.future{ visibility:hidden; }
+  .heat .foot{ display:flex; align-items:center; gap:8px; margin-top:10px; font-size:12.5px; color:var(--muted); min-height:20px; }
+  .heat .foot .txt{ flex:1; min-width:0; }
+  .heat .foot .txt b{ color:var(--ink); font-weight:700; }
+  .heat .legend{ display:flex; align-items:center; gap:3px; font-size:10.5px; }
+  .heat .legend i{ width:10px; height:10px; border-radius:2px; display:inline-block; background:var(--fill); }
+  .heat .legend i.l2{ background:hsl(var(--h) 80% 52% / .58); } .heat .legend i.l4{ background:hsl(var(--h) 85% 46%); }
+  .week7{ display:flex; gap:3px; margin-top:6px; }
+  .week7 i{ width:9px; height:9px; border-radius:50%; background:var(--fill); }
+  .week7 i.on{ background:hsl(var(--h) 80% 50%); }
+  .auto{ display:flex; align-items:center; gap:12px; background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:10px 12px; margin-bottom:8px; }
+  .auto .tile{ width:40px; height:40px; border-radius:12px; font-size:17px; }
+  .auto .nm{ flex:1; min-width:0; }
+  .auto .nm b{ display:block; font-size:15.5px; font-weight:650; }
+  .auto .nm small{ display:block; font-size:12.5px; color:var(--muted); margin-top:1px; }
+  .auto .n{ text-align:right; font-variant-numeric:tabular-nums; }
+  .auto .n b{ display:block; font-size:18px; font-weight:800; }
+  .auto .n small{ font-size:10.5px; color:var(--muted); font-weight:700; text-transform:uppercase; letter-spacing:.06em; }
+  .hint2{ font-size:12.5px; color:var(--muted); margin:-2px 2px 10px; }
   [hidden]{ display:none !important; }
   @media (prefers-reduced-motion:reduce){ .hero .bar i, .check{ transition:none; } button:active{ transform:none; } }
 
@@ -88,6 +120,8 @@ body.imm .imm-safe{display:block}
   <symbol id="i-flame" viewBox="0 0 24 24"><path d="M12.6 2.2c.4 2.8-.7 4.6-2 6.2-1.2 1.5-2.6 3-2.6 5.4a2.9 2.9 0 0 0 1.5 2.6c-.3-1.9.5-3.2 1.7-4.4.2 1.8 1.4 2.7 2.4 3.6.9.8 1.6 1.6 1.6 3.1A4.6 4.6 0 0 0 19 14.2c0-4.4-3.2-6.2-3.8-9.5-.3 1.3-.9 2.3-1.7 3 .3-2.4-.1-4.1-.9-5.5zM5.5 13.5c0 4.6 3 8.3 6.8 8.3-3.5-.4-6-3.5-5.9-7.2 0-.5 0-.9.1-1.4-.6.1-1 .1-1 .3z" fill="currentColor"/></symbol>
   <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.6l4.6 4.6L19.2 7.4" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></symbol>
   <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></symbol>
+  <symbol id="i-wind" viewBox="0 0 24 24"><path d="M3 9h11a3 3 0 1 0-3-3M3 15h15a3 3 0 1 1-3 3M3 12h8" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"/></symbol>
+  <symbol id="i-stretch" viewBox="0 0 24 24"><circle cx="12" cy="4.5" r="2.2" fill="currentColor"/><path d="M5 8.5l7 2 7-2M12 10.5v5l-4 5.5M12 15.5l4 5.5" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/></symbol>
   <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></symbol>
 </defs></svg>
 
@@ -103,8 +137,16 @@ body.imm .imm-safe{display:block}
 
 <div class="card"><div class="add"><input id="h" placeholder="New habit (e.g. Read 10 pages)" autocomplete="off" enterkeyhint="done"><button class="go" id="addBtn" type="button"><svg class="i"><use href="#i-plus"/></svg>Add</button></div></div>
 
+<h2 id="heatLbl" hidden>Last 18 weeks</h2>
+<div class="card heat" id="heat" hidden><div class="months" id="hmMonths"></div><div class="wrap"><div class="wd" id="hmWd"></div><div class="cells" id="hmCells"></div></div>
+  <div class="foot"><span class="txt" id="hmTxt">Tap a day to see what you did.</span><span class="legend">Less <i></i><i class="l2"></i><i class="l4"></i> More</span></div></div>
+
 <h2 id="listLbl" hidden>Your habits</h2>
 <div class="list" id="list"></div>
+
+<h2 id="autoLbl" hidden>From your apps</h2>
+<p class="hint2" id="autoHint" hidden>Counted automatically when you finish a session.</p>
+<div id="autoList"></div>
 
 <script>
 function el(i){return document.getElementById(i)}
@@ -112,34 +154,108 @@ function el(i){return document.getElementById(i)}
    script has run. */
 function store(){return window.myllmStorage||{getItem:function(){return Promise.resolve(null)},setItem:function(){return Promise.resolve()}}}
 function haptic(k){if(window.myllmHaptic)try{myllmHaptic(k)}catch(e){}}
-var habits=[];
-function today(){return new Date().toISOString().slice(0,10)}
-function save(){store().setItem('habits',JSON.stringify(habits))}
-function streak(h){var n=0;var d=new Date();if(h.days.indexOf(today())<0)d.setDate(d.getDate()-1);
-while(h.days.indexOf(d.toISOString().slice(0,10))>=0){n++;d.setDate(d.getDate()-1)}return n}
+var habits=[], activity=[], selDay=null;
+/* Local days. v5 used the UTC date, so a habit ticked after midnight in summer
+   time (00:00–01:00 BST) was put on the day before. */
+function p2(n){return (n<10?'0':'')+n}
+function dayOf(d){return d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate())}
+function today(){return dayOf(new Date())}
+function back(day,n){var d=new Date(+day.slice(0,4),+day.slice(5,7)-1,+day.slice(8,10));d.setDate(d.getDate()-n);return dayOf(d)}
+function save(){store().setItem('habits',JSON.stringify(habits));publish()}
+function streak(h){var n=0,d=today();if(h.days.indexOf(d)<0)d=back(d,1);while(h.days.indexOf(d)>=0){n++;d=back(d,1)}return n}
 function icon(n){return '<svg class="i"><use href="#i-'+n+'"/></svg>'}
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+
+/* ---- Shared data (docs/SHARED_DATA.md) ----
+   Writes data/habits.json for other apps; reads data/activity.json, where
+   Box Breathing and Stretch log finished sessions, for the heatmap. */
+function publish(){var F=window.myllmFiles;if(!F||!F.write)return;
+  var out={schema:'myllm.habits',version:1,source:'habit-streaks',updated:new Date().toISOString(),
+    habits:habits.map(function(h){return {id:h.id,name:h.name,days:h.days.slice()}})};
+  try{Promise.resolve(F.write('data/habits.json',JSON.stringify(out))).catch(function(){})}catch(e){}}
+function readActivity(){var F=window.myllmFiles;if(!F||!F.read)return Promise.resolve([]);
+  return Promise.resolve().then(function(){return F.read('data/activity.json')}).then(function(t){
+    var j=null;try{j=t?JSON.parse(t):null}catch(e){}
+    if(!j||j.schema!=='myllm.activity'||j.version!==1||!Array.isArray(j.events))return [];
+    return j.events.filter(function(e){return e&&typeof e.app==='string'&&/^\d{4}-\d\d-\d\d$/.test(e.date||'')});
+  }).catch(function(){return []})}
+var APPS={'box-breathing':{name:'Box Breathing',icon:'wind',h:192},'stretch':{name:'Stretch',icon:'stretch',h:150}};
+function appName(id){return (APPS[id]&&APPS[id].name)||id.replace(/-/g,' ').replace(/^./,function(c){return c.toUpperCase()})}
+
+/* What happened on a day: habits ticked, sessions finished. */
+function dayInfo(day){
+  var hs=habits.filter(function(h){return h.days.indexOf(day)>=0}).map(function(h){return h.name});
+  var by={};activity.forEach(function(e){if(e.date===day)by[e.app]=(by[e.app]||0)+1});
+  return {habits:hs,apps:by,count:hs.length+Object.keys(by).reduce(function(a,k){return a+by[k]},0)};
+}
+
+function renderHeat(){
+  var show=habits.length||activity.length;el('heat').hidden=!show;el('heatLbl').hidden=!show;if(!show)return;
+  var WEEKS=18,t=today(),now=new Date(),dow=(now.getDay()+6)%7,start=back(t,dow+7*(WEEKS-1));
+  var counts=[],max=1;for(var i=0;i<WEEKS*7;i++){var d=back(start,-i);var c=d>t?-1:dayInfo(d).count;counts.push([d,c]);if(c>max)max=c}
+  el('hmCells').innerHTML=counts.map(function(x){
+    var lvl=x[1]<=0?0:Math.min(4,Math.ceil(x[1]/max*4));
+    var lab=new Date(+x[0].slice(0,4),+x[0].slice(5,7)-1,+x[0].slice(8,10)).toLocaleDateString(undefined,{weekday:'short',day:'numeric',month:'short'});
+    return '<button type="button" data-day="'+x[0]+'" class="'+(x[1]<0?'future':'l'+lvl)+(x[0]===selDay?' sel':'')+'" aria-label="'+esc(lab+': '+Math.max(0,x[1]))+'"></button>'}).join('');
+  var wd=[];for(var k=0;k<7;k++)wd.push('<span>'+(k%2===0?esc(new Date(2024,0,1+k).toLocaleDateString(undefined,{weekday:'narrow'})):'')+'</span>');
+  el('hmWd').innerHTML=wd.join('');
+  var cols=[],last='';for(var w=0;w<WEEKS;w++){var first=back(start,-w*7),m=first.slice(5,7);cols.push(m!==last&&w>0?'<span>'+esc(new Date(+first.slice(0,4),+m-1,1).toLocaleDateString(undefined,{month:'short'}))+'</span>':'<span></span>');last=m}
+  el('hmMonths').style.gridTemplateColumns='repeat('+WEEKS+',1fr)';el('hmMonths').innerHTML=cols.join('');
+  paintSel();
+}
+function paintSel(){
+  if(!selDay){el('hmTxt').textContent='Tap a day to see what you did.';return}
+  var i=dayInfo(selDay),lab=new Date(+selDay.slice(0,4),+selDay.slice(5,7)-1,+selDay.slice(8,10)).toLocaleDateString(undefined,{weekday:'short',day:'numeric',month:'short'});
+  var parts=i.habits.map(esc).concat(Object.keys(i.apps).map(function(a){return esc(appName(a))+(i.apps[a]>1?' ×'+i.apps[a]:'')}));
+  el('hmTxt').innerHTML='<b>'+esc(lab)+'</b> · '+(parts.length?parts.join(', '):'nothing logged');
+}
+el('hmCells').addEventListener('click',function(e){var b=e.target.closest('button');if(!b||b.classList.contains('future'))return;selDay=b.getAttribute('data-day');haptic('selection');renderHeat()});
+
+function renderAuto(){
+  var ids=Object.keys(activity.reduce(function(a,e){a[e.app]=1;return a},{}));
+  el('autoLbl').hidden=!ids.length;el('autoHint').hidden=!ids.length;
+  var t=today(),wk=back(t,6);
+  el('autoList').innerHTML=ids.map(function(id){
+    var ev=activity.filter(function(e){return e.app===id}),days={};ev.forEach(function(e){days[e.date]=1});
+    var week=ev.filter(function(e){return e.date>=wk}).length,s=0,d=days[t]?t:back(t,1);while(days[d]){s++;d=back(d,1)}
+    var lastAt=ev.reduce(function(m,e){return e.date>m?e.date:m},''),info=APPS[id]||{icon:'flame',h:26};
+    var lastLbl=lastAt?(lastAt===t?'today':lastAt===back(t,1)?'yesterday':new Date(+lastAt.slice(0,4),+lastAt.slice(5,7)-1,+lastAt.slice(8,10)).toLocaleDateString(undefined,{day:'numeric',month:'short'})):'—';
+    return '<div class="auto"><div class="tile" style="--h:'+info.h+'">'+icon(info.icon)+'</div><div class="nm"><b>'+esc(appName(id))+'</b><small>'+(s?s+(s===1?' day':' days')+' in a row':'last '+esc(lastLbl))+'</small></div><div class="n"><b>'+week+'</b><small>this week</small></div></div>'}).join('');
+}
+
 function render(){var L=el('list');L.innerHTML='';
 el('hero').hidden=!habits.length;el('listLbl').hidden=!habits.length;
-if(!habits.length){L.innerHTML='<div class="card empty"><div class="tile">'+icon('flame')+'</div><b>Start your first streak</b><p>Add a habit, then tick it off each day to grow the streak.</p></div>';return}
-var done=0,best=0;
-habits.forEach(function(h,i){var doneToday=h.days.indexOf(today())>=0,s=streak(h);if(doneToday)done++;if(s>best)best=s;
+renderHeat();renderAuto();
+if(!habits.length){L.innerHTML='<div class="card empty"><div class="tile">'+icon('flame')+'</div><b>Start your first streak</b><p>Add a habit, then tick it off each day to grow the streak. Sessions you finish in Box Breathing and Stretch are counted here too.</p></div>';return}
+var done=0,best=0,t=today();
+habits.forEach(function(h,i){var doneToday=h.days.indexOf(t)>=0,s=streak(h);if(doneToday)done++;if(s>best)best=s;
 var d=document.createElement('div');d.className='habit'+(doneToday?' on':'');
 var b=document.createElement('button');b.className='check';b.type='button';b.innerHTML=icon('check');
 b.setAttribute('aria-label',doneToday?'Done today — tap to undo':'Mark done today');b.setAttribute('aria-pressed',doneToday);
-b.onclick=function(){if(doneToday)h.days=h.days.filter(function(x){return x!==today()});else h.days.push(today());haptic(doneToday?'light':'success');save();render()};
+b.onclick=function(){if(doneToday)h.days=h.days.filter(function(x){return x!==t});else h.days.push(t);haptic(doneToday?'light':'success');save();render()};
 var nm=document.createElement('div');nm.className='nm';
-var t=document.createElement('b');t.textContent=h.name;nm.appendChild(t);
+var tt=document.createElement('b');tt.textContent=h.name;nm.appendChild(tt);
 var st=document.createElement('small');st.innerHTML=icon('flame')+'<span></span>';st.querySelector('span').textContent=s+(s===1?' day':' days')+(doneToday?' · done today':'');nm.appendChild(st);
+var w7=document.createElement('div');w7.className='week7';w7.setAttribute('aria-hidden','true');
+for(var k=6;k>=0;k--){var ii=document.createElement('i');if(h.days.indexOf(back(t,k))>=0)ii.className='on';w7.appendChild(ii)}nm.appendChild(w7);
 var x=document.createElement('button');x.className='del';x.type='button';x.innerHTML=icon('x');x.setAttribute('aria-label','Delete habit');
 x.onclick=function(){habits.splice(i,1);haptic('light');save();render()};
 d.appendChild(b);d.appendChild(nm);d.appendChild(x);L.appendChild(d)});
 el('hDone').innerHTML=done+'<small>/'+habits.length+'</small>';
 el('hBar').style.width=(habits.length?done/habits.length*100:0)+'%';
 el('hBest').textContent=best}
-function add(){var t=el('h');var v=t.value.trim();if(!v)return;habits.push({name:v,days:[]});t.value='';haptic('success');save();render()}
+function add(){var t=el('h');var v=t.value.trim();if(!v)return;habits.push({id:'h_'+Date.now(),name:v,days:[]});t.value='';haptic('success');save();render()}
 el('addBtn').onclick=add;
 el('h').addEventListener('keydown',function(e){if(e.key==='Enter')add()});
-store().getItem('habits').then(function(v){if(v)try{habits=JSON.parse(v)}catch(e){}render()});
+function boot(){return Promise.all([store().getItem('habits'),readActivity()]).then(function(r){
+  if(r[0])try{habits=JSON.parse(r[0])}catch(e){}
+  if(!Array.isArray(habits))habits=[];
+  var fixed=false;habits.forEach(function(h,i){if(!h.id){h.id='h_legacy_'+(i+1);fixed=true}if(!Array.isArray(h.days))h.days=[]});
+  if(fixed)store().setItem('habits',JSON.stringify(habits));
+  activity=r[1];render();publish()})}
+boot();
+/* Sessions finish in other apps: count them as soon as you come back. */
+document.addEventListener('visibilitychange',function(){if(!document.hidden)readActivity().then(function(a){activity=a;render()})});
 
 /* myllm-fullscreen-v2 — full screen where MyLLM can also close the app for us
    (myllmClose, 5.6.2+): full screen hides MyLLM's Done, and a page with no way

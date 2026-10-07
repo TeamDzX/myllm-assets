@@ -142,6 +142,7 @@ function scan(){
     if(!text){ return; } // cancelled / nothing found
     scanBtn('read'); skeleton(true);
     return extract(text).then(function(rec){
+      rec.id = 'r_' + Date.now(); rec.added = new Date().toISOString();
       items.unshift(rec); save(); render(); haptic('success');
       if(typeof rec.total!=='number') hint('Saved, but the total couldn’t be read from that receipt.', false);
     });
@@ -193,12 +194,52 @@ function render(){
   el('clearB').onclick=function(){ items=[]; save(); render(); };
 }
 
-function save(){ store().setItem('receipts', JSON.stringify(items.slice(0,200))); }
+function save(){ store().setItem('receipts', JSON.stringify(items.slice(0,200))); publish(); }
 function load(){ return store().getItem('receipts').then(function(v){ try{return v?JSON.parse(v):[]}catch(e){return []} }); }
+
+/* ---- Shared data (docs/SHARED_DATA.md) ----
+   The receipts also go to data/receipts.json in the shared workspace, so
+   other apps (Budget Dashboard) can use them. Best effort: with shared files
+   off, this app works exactly as before. */
+var PUB_PATH = 'data/receipts.json';
+function pad2(n){ return (n < 10 ? '0' : '') + n; }
+function dayOf(d){ return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()); }
+var MONTHS = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
+/* A receipt's date, whatever shape it came in, as YYYY-MM-DD — or the day it
+   was added, or null. Day-first unless that can't be right (UK receipts). */
+function normDate(raw, addedIso){
+  var t = String(raw || '').trim().toLowerCase(), m, y, mo, d;
+  if ((m = /^(\d{4})-(\d{1,2})-(\d{1,2})/.exec(t))){ y = +m[1]; mo = +m[2]; d = +m[3]; }
+  else if ((m = /^(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{2,4})/.exec(t))){
+    d = +m[1]; mo = +m[2]; y = +m[3]; if (y < 100) y += 2000;
+    if (mo > 12 && d <= 12){ var sw = d; d = mo; mo = sw; }
+  }
+  else if ((m = /^(\d{1,2})\s+([a-z]{3})[a-z]*\.?,?\s+(\d{2,4})/.exec(t))){ d = +m[1]; mo = MONTHS.indexOf(m[2]) + 1; y = +m[3]; if (y < 100) y += 2000; }
+  else if ((m = /^([a-z]{3})[a-z]*\.?\s+(\d{1,2}),?\s+(\d{2,4})/.exec(t))){ mo = MONTHS.indexOf(m[1]) + 1; d = +m[2]; y = +m[3]; if (y < 100) y += 2000; }
+  if (y > 1990 && y < 2100 && mo >= 1 && mo <= 12 && d >= 1 && d <= 31) return y + '-' + pad2(mo) + '-' + pad2(d);
+  if (addedIso){ var a = new Date(addedIso); if (!isNaN(a)) return dayOf(a); }
+  return null;
+}
+function publish(){
+  var F = window.myllmFiles;
+  if (!F || !F.write) return;
+  var out = { schema: 'myllm.receipts', version: 1, source: 'receipt-logger', updated: new Date().toISOString(),
+    items: items.map(function(r){ return { id: r.id, merchant: r.merchant || 'Receipt',
+      total: typeof r.total === 'number' ? r.total : null, currency: r.currency || '',
+      date: normDate(r.date, r.added), added: r.added || null, category: r.category || null }; }) };
+  try { Promise.resolve(F.write(PUB_PATH, JSON.stringify(out))).catch(function(){}); } catch(e){}
+}
 
 el('goBtn').onclick=scan;
 scanBtn('');
-load().then(function(v){ items=v; render(); });
+load().then(function(v){
+  items = v;
+  /* Receipts saved before v4 have no id: give them stable ones, once. */
+  var fixed = false;
+  items.forEach(function(r, i){ if (!r.id){ r.id = 'r_legacy_' + (items.length - i); fixed = true; } });
+  if (fixed) store().setItem('receipts', JSON.stringify(items.slice(0,200)));
+  render(); publish();
+});
 
 /* myllm-fullscreen-v2 — full screen where MyLLM can also close the app for us
    (myllmClose, 5.6.2+): full screen hides MyLLM's Done, and a page with no way

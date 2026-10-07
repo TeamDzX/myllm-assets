@@ -3,7 +3,8 @@
   Box Breathing — MyLLMos™ App Gallery · © 2026 Opticell Ltd
   Source-available: read it, remix it, run your version inside MyLLM™.
   Not for redistribution or republication. Terms: https://github.com/TeamDzX/myllm-assets/blob/main/LICENSE
---><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+--><html><head><meta charset="utf-8"><meta name="myllm:immersive" content="on">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Box Breathing</title>
 <style>:root{--build-id:"488773e508";color-scheme:light dark}
   @property --h{ syntax:'<number>'; inherits:true; initial-value:192; }
@@ -90,7 +91,7 @@
     <div class="top">
       <button class="glass rnd hide" id="bClose" aria-label="Stop"><svg class="i"><use href="#i-close"/></svg></button>
       <div class="lbl">Box Breathing</div>
-      <div class="rnd hide"></div>
+      <button class="glass rnd hide" id="appClose" aria-label="Close Box Breathing"><svg class="i"><use href="#i-close"/></svg></button>
     </div>
     <div class="mid">
       <div class="box" id="box">
@@ -151,7 +152,10 @@ function syncLook(){
 }
 function syncChrome(){
   if (!window.myllmImmersive) return;
-  try { myllmImmersive(running, {keepAwake:running}).catch(function(){}); } catch(_){}   /* a session shouldn't end because the screen slept */
+  /* Full screen whenever MyLLM can also close the app (5.6.2+), with the ✕
+     top right as the way out; otherwise only during a session, as before. */
+  try { myllmImmersive((window.myllmClose ? true : running), {keepAwake:running}).catch(function(){}); } catch(_){}
+  el("appClose").classList.toggle("hide", running || !window.myllmClose);   /* a session shouldn't end because the screen slept */
 }
 function setHue(h){ el("stage").style.setProperty("--h", String(h)); }
 function fit(){
@@ -203,6 +207,23 @@ function start(){
   syncLook(); syncChrome(); fit();
   raf = requestAnimationFrame(paint);
 }
+/* ---- Shared data (docs/SHARED_DATA.md) ----
+   A finished session is logged in data/activity.json so Habit Streaks can count
+   it on its heatmap. Best effort: with shared files off, nothing changes here. */
+function logActivity(ev){
+  var F = window.myllmFiles; if (!F || !F.read || !F.write) return;
+  var now = new Date(), p2 = function(n){ return (n < 10 ? '0' : '') + n; };
+  ev.date = now.getFullYear() + '-' + p2(now.getMonth() + 1) + '-' + p2(now.getDate());
+  ev.at = now.toISOString();
+  Promise.resolve().then(function(){ return F.read('data/activity.json'); }).catch(function(){ return null; }).then(function(text){
+    var j = null; try { j = text ? JSON.parse(text) : null; } catch(e){}
+    if (j && j.schema === 'myllm.activity' && j.version !== 1) return;   /* a newer format: leave it alone */
+    if (!j || j.schema !== 'myllm.activity') j = { schema: 'myllm.activity', version: 1, source: 'shared', events: [] };
+    j.events = (Array.isArray(j.events) ? j.events : []).concat([ev]).slice(-3000);
+    j.updated = now.toISOString();
+    return F.write('data/activity.json', JSON.stringify(j));
+  }).catch(function(){});
+}
 function stop(finished){
   if (!running) return;
   var t = performance.now() - t0, rounds = Math.floor(t / ROUND);
@@ -217,13 +238,19 @@ function stop(finished){
     say("phase", "Nice work", true);
     say("meta", rounds + (rounds === 1 ? " round · " : " rounds · ") + clock(t));
     if (finished) haptic("success");
+    logActivity({ app: 'box-breathing', kind: 'session', minutes: Math.round(t / 6000) / 10, rounds: rounds });
   } else { say("phase", "Ready?", true); say("meta", "In 4 · hold 4 · out 4 · hold 4"); }
   syncLook(); syncChrome(); fit();
 }
 el("go").onclick = function(){ if (running) stop(false); else start(); };
 el("bClose").onclick = function(){ stop(false); };
+el("appClose").onclick = function(){ try { window.myllmClose && window.myllmClose().catch(function(){}); } catch(_){} };
 
 document.addEventListener("visibilitychange", function(){ if (document.hidden) stop(false); });   /* leaving ends the session and lets the screen sleep */
+/* Ask for full screen at launch, and again on return: MyLLM restores its bars
+   whenever the app is left. */
+document.addEventListener("visibilitychange", function(){ if (!document.hidden) syncChrome(); });
+syncChrome();
 if (window.matchMedia){
   var mq = matchMedia("(prefers-color-scheme: dark)");
   if (mq.addEventListener) mq.addEventListener("change", syncLook); else if (mq.addListener) mq.addListener(syncLook);

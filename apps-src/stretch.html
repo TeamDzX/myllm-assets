@@ -310,11 +310,29 @@ function paintHold(){
     raf=requestAnimationFrame(paintHold);
   }
 }
+/* ---- Shared data (docs/SHARED_DATA.md) ----
+   A finished session is logged in data/activity.json so Habit Streaks can count
+   it on its heatmap. Best effort: with shared files off, nothing changes here. */
+function logActivity(ev){
+  var F = window.myllmFiles; if (!F || !F.read || !F.write) return;
+  var now = new Date(), p2 = function(n){ return (n < 10 ? '0' : '') + n; };
+  ev.date = now.getFullYear() + '-' + p2(now.getMonth() + 1) + '-' + p2(now.getDate());
+  ev.at = now.toISOString();
+  Promise.resolve().then(function(){ return F.read('data/activity.json'); }).catch(function(){ return null; }).then(function(text){
+    var j = null; try { j = text ? JSON.parse(text) : null; } catch(e){}
+    if (j && j.schema === 'myllm.activity' && j.version !== 1) return;   /* a newer format: leave it alone */
+    if (!j || j.schema !== 'myllm.activity') j = { schema: 'myllm.activity', version: 1, source: 'shared', events: [] };
+    j.events = (Array.isArray(j.events) ? j.events : []).concat([ev]).slice(-3000);
+    j.updated = now.toISOString();
+    return F.write('data/activity.json', JSON.stringify(j));
+  }).catch(function(){});
+}
 function finishHold(){
   timer=null;cancelAnimationFrame(raf);holdLeft=0;
   $('sstate').textContent='Done — ease out slowly';
   $('sGo').innerHTML='<svg class="i"><use href="#i-reset"/></svg>';$('tStart').innerHTML='<svg class="i"><use href="#i-play"/></svg>Again';
   haptic('success');syncChrome();
+  logActivity({ app: 'stretch', kind: 'session', minutes: Math.round(ttotal / 6) / 10, title: (list[di] && list[di].name) || '' });
 }
 function resetTimer(sec){stopTimer();ttotal=sec;tleft=sec;holdLeft=sec;$('sstate').textContent='Ready';
   $('sGo').innerHTML='<svg class="i"><use href="#i-play"/></svg>';$('tStart').innerHTML='<svg class="i"><use href="#i-play"/></svg>Hold';paintHold()}

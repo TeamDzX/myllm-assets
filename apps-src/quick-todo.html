@@ -5,6 +5,8 @@
   Not for redistribution or republication. Terms: https://github.com/TeamDzX/myllm-assets/blob/main/LICENSE
 --><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Quick Todo</title>
+<meta name="myllm:intents" content="add-todo">
+<script type="application/myllm-actions">[{"name":"add-todo","description":"Add a task to the user's Quick Todo list, optionally due on a date","parameters":{"text":"the task","due":"optional due date, YYYY-MM-DD"}}]</script>
 <meta name="myllm:immersive" content="on">
 <style>:root{--build-id:"7491b81bef";color-scheme:light dark; --h:214;}
 
@@ -69,6 +71,16 @@
   textarea{ min-height:92px; resize:vertical; display:block; }
   .card input,.card textarea{ background:var(--bg); }
   .addrow{ display:flex; gap:8px; } .addrow input{ flex:1; min-width:0; }
+  /* v7: due dates. A chip beside the box picks one; every task can have one. */
+  .duechip{ flex-shrink:0; min-height:46px; min-width:46px; border-radius:12px; border:1px solid var(--line); background:var(--surface); color:var(--muted);
+    display:flex; align-items:center; justify-content:center; gap:5px; padding:0 10px; font-weight:700; font-size:13px; position:relative; }
+  .duechip.on{ color:var(--warn); border-color:hsl(32 90% 50% / .5); }
+  .duechip svg{ width:18px; height:18px; }
+  .datepick{ position:absolute; inset:0; opacity:0; width:100%; height:100%; border:0; padding:0; }
+  .rdate{ width:34px; height:34px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center; color:var(--muted); position:relative; }
+  .rdate svg{ width:15px; height:15px; }
+  .tag.when.late{ background:hsl(4 90% 58% / .16); color:var(--bad); }
+  .tag.when.today{ background:hsl(210 90% 55% / .16); color:var(--acc); }
   label{ display:block; font-size:11.5px; font-weight:800; letter-spacing:.07em; text-transform:uppercase; color:var(--muted); margin:13px 2px 7px; }
 
   .btn{ min-height:46px; padding:0 16px; border-radius:13px; font-size:15px; font-weight:700; display:inline-flex; align-items:center; justify-content:center; gap:7px; flex-shrink:0; }
@@ -144,6 +156,7 @@ body.imm .imm-safe{display:block}
   <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.6l4.6 4.6L19.2 7.4" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></symbol>
   <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></symbol>
   <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></symbol>
+  <symbol id="i-cal" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="3" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M3.5 10h17M8 3v4M16 3v4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></symbol>
   <symbol id="i-list" viewBox="0 0 24 24"><path d="M4.5 7.2l1.7 1.7 3-3.4M4.5 15.2l1.7 1.7 3-3.4M13 7.5h7M13 15.5h7" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/></symbol>
 </defs></svg>
 <div class="imm-safe"></div><div class="head">
@@ -156,7 +169,7 @@ body.imm .imm-safe{display:block}
   <div class="s" id="hS">Nothing yet</div>
   <div class="bar"><i id="hBar"></i></div>
 </div>
-<div class="addrow"><input id="t" placeholder="Add a task…" enterkeyhint="done" autocomplete="off"><button class="btn pri" id="addBtn"><svg><use href="#i-plus"/></svg>Add</button></div>
+<div class="addrow"><input id="t" placeholder="Add a task…" enterkeyhint="done" autocomplete="off"><label class="duechip" id="dueChip" aria-label="Due date"><svg><use href="#i-cal"/></svg><span id="dueLbl"></span><input type="date" class="datepick" id="due"></label><button class="btn pri" id="addBtn"><svg><use href="#i-plus"/></svg>Add</button></div>
 <h2>Tasks</h2>
 <div id="list"></div>
 <script>
@@ -177,7 +190,32 @@ document.addEventListener("click", function(e){
   if (b){ var f = el(b.getAttribute("data-focus")); if (f){ f.focus(); f.scrollIntoView({block:"center", behavior:"smooth"}); } }
 });
 var todos = [];
-function save(){ keep("todos", JSON.stringify(todos)); }
+function save(){ keep("todos", JSON.stringify(todos)); publish(); }
+
+/* ---- dates ---- */
+function pad2(n){ return (n < 10 ? "0" : "") + n; }
+function dayOf(d){ return d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate()); }
+function today(){ return dayOf(new Date()); }
+function addDays(day, n){ var d = new Date(+day.slice(0,4), +day.slice(5,7) - 1, +day.slice(8,10)); d.setDate(d.getDate() + n); return dayOf(d); }
+function validDay(v){ return /^\d{4}-\d{2}-\d{2}$/.test(String(v || "")) ? String(v) : null; }
+function dueLabel(day){
+  var t = today();
+  if (day === t) return "Today";
+  if (day === addDays(t, 1)) return "Tomorrow";
+  if (day === addDays(t, -1)) return "Yesterday";
+  var d = new Date(+day.slice(0,4), +day.slice(5,7) - 1, +day.slice(8,10)), soon = day > t && day <= addDays(t, 6);
+  return d.toLocaleDateString(undefined, soon ? { weekday: "short" } : { weekday: "short", day: "numeric", month: "short" });
+}
+
+/* ---- Shared data (docs/SHARED_DATA.md): the list also goes to data/todos.json
+   so other apps (Calendar Planner) can show it. Best effort. ---- */
+function publish(){
+  var F = window.myllmFiles; if (!F || !F.write) return;
+  var out = { schema: "myllm.todos", version: 1, source: "quick-todo", updated: new Date().toISOString(),
+    items: todos.map(function(t){ return { id: t.id, text: t.text, done: !!t.done, due: t.due || null, added: t.added || null, doneAt: t.doneAt || null }; }) };
+  try { Promise.resolve(F.write("data/todos.json", JSON.stringify(out))).catch(function(){}); } catch(e){}
+}
+function newTodo(text, due){ return { id: "t_" + Date.now() + "_" + Math.floor(Math.random() * 1000), text: text, done: false, due: validDay(due), added: new Date().toISOString(), doneAt: null }; }
 function render(){
   var L = el("list"), done = todos.filter(function(t){ return t.done; }).length, open = todos.length - done;
   el("hN").textContent = open;
@@ -187,20 +225,44 @@ function render(){
   L.innerHTML = ""; var card = document.createElement("div"); card.className = "card list";
   todos.forEach(function(td, i){
     var d = document.createElement("div"); d.className = "row" + (td.done ? " done" : "");
-    d.innerHTML = '<div class="ck">' + icon("check") + '</div><div class="body"><div class="tx"></div></div><button class="x" aria-label="Delete">' + icon("x") + '</button>';
+    var late = td.due && !td.done && td.due < today(), isToday = td.due === today();
+    d.innerHTML = '<div class="ck">' + icon("check") + '</div><div class="body"><div class="tx"></div>' +
+      (td.due ? '<div class="tags"><span class="tag when' + (late ? " late" : isToday ? " today" : "") + '">' + icon("cal") + '<span>' + esc((late ? "Overdue \u00b7 " : "") + dueLabel(td.due)) + '</span></span></div>' : '') +
+      '</div><label class="rdate" aria-label="' + (td.due ? "Change due date" : "Add a due date") + '">' + icon("cal") + '<input type="date" class="datepick"></label><button class="x" aria-label="Delete">' + icon("x") + '</button>';
     d.querySelector(".tx").textContent = td.text;
-    function flip(){ td.done = !td.done; haptic("selection"); save(); render(); }
+    var dp = d.querySelector(".rdate input"); dp.value = td.due || "";
+    dp.addEventListener("change", function(){ td.due = validDay(dp.value); haptic("selection"); save(); render(); });
+    function flip(){ td.done = !td.done; td.doneAt = td.done ? new Date().toISOString() : null; haptic("selection"); save(); render(); }
     d.querySelector(".ck").onclick = flip; d.querySelector(".body").onclick = flip;
     d.querySelector(".x").onclick = function(){ todos.splice(i, 1); haptic("light"); save(); render(); };
     card.appendChild(d);
   });
   L.appendChild(card);
 }
-function add(){ var t = el("t"), v = t.value.trim(); if (!v) return; todos.push({text:v, done:false}); t.value = ""; haptic("light"); save(); render(); }
+function add(){ var t = el("t"), v = t.value.trim(); if (!v) return; todos.push(newTodo(v, el("due").value)); t.value = ""; el("due").value = ""; paintDue(); haptic("light"); save(); render(); }
+function paintDue(){ var v = validDay(el("due").value); el("dueLbl").textContent = v ? dueLabel(v) : ""; el("dueChip").classList.toggle("on", !!v); }
+el("due").addEventListener("change", paintDue);
 el("addBtn").onclick = add;
 el("t").addEventListener("keydown", function(e){ if (e.key === "Enter") add(); });
 render();
-load("todos").then(function(v){ if (v) try { var a = JSON.parse(v); if (Array.isArray(a)) todos = a; } catch(e){} render(); });
+load("todos").then(function(v){
+  if (v) try { var a = JSON.parse(v); if (Array.isArray(a)) todos = a; } catch(e){}
+  /* Tasks from before v7 have no id: give them one, once. */
+  var fixed = false;
+  todos.forEach(function(td, i){ if (!td.id){ td.id = "t_legacy_" + (i + 1); fixed = true; } });
+  if (fixed) keep("todos", JSON.stringify(todos));
+  render(); publish();
+  /* add-todo: from Calendar Planner, or the MyLLM assistant. Registered after
+     the list has loaded, so the load can't overwrite what it adds. */
+  if (window.myllmIntent && myllmIntent.receive) myllmIntent.receive(function(intent){
+    if (!intent || intent.action !== "add-todo" || !intent.data) return;
+    var text = String(intent.data.text || intent.data.task || "").trim();
+    if (!text) return "Nothing added: the task had no text.";
+    var td = newTodo(text.slice(0, 200), intent.data.due);
+    todos.push(td); save(); render(); haptic("success");
+    return "Added \u201c" + td.text + "\u201d to Quick Todo" + (td.due ? ", due " + td.due : "") + " (" + todos.filter(function(x){ return !x.done; }).length + " still to do).";
+  });
+});
 
 /* myllm-fullscreen-v2 — full screen where MyLLM can also close the app for us
    (myllmClose, 5.6.2+): full screen hides MyLLM's Done, and a page with no way
