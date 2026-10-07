@@ -356,6 +356,15 @@ Adding a 4th language ≈ write one `langpacks/<code>.json` + run the builder.
 
 ---
 
+## 11b. Big apps live in myllm-assets-xl
+
+jsDelivr refuses a GitHub package over **50 MB**: past that, every new commit of this repo stops being served and the gallery falls back to raw. In Oct 2026 this repo's tracked files reached about 41.5 MB. Its biggest app, **Space Range** (2 MB page plus 2 MB bundle), moved to **TeamDzX/myllm-assets-xl** (local clone `~/Desktop/MyLLM/myllm-assets-xl`).
+
+- Its `apps.json` entry here points to `cdn.jsdelivr.net/gh/TeamDzX/myllm-assets-xl@<commit>/apps-src/space-range.*`.
+- **To update it:** commit in the xl repo, set the entry's `html`/`json` to the new commit by hand (`pin_jsdelivr.py` only re-pins this repo's URLs), then bump `version` here.
+- **Gallery stats:** installs of xl apps aren't counted by the stats page, which reads this repo's jsDelivr hits.
+- **Moving another app:** apps over about 1 MB go there too. Check the size with `git ls-files -z | xargs -0 du -ck | tail -1`.
+
 ## 12. New-app checklist
 
 1. Author `apps-src/<slug>.html` — self-contained, tokenised CSS, feature-detected
