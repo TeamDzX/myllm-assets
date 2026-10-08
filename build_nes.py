@@ -16,6 +16,7 @@ OUT   = os.path.join(HERE, 'apps-src', 'nes-emulator.html')
 WRAP  = os.path.join(HERE, 'apps-src', 'nes-emulator.myllmapp')
 MANIFEST = os.path.join(HERE, 'apps.json')
 RAWBASE = 'https://raw.githubusercontent.com/TeamDzX/myllm-assets/main'
+XLBASE = 'https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main'   # banners/icons live in -xl
 VERSION = 6
 
 shell = open(SHELL, encoding='utf-8').read()
@@ -42,7 +43,7 @@ entry = {
     "tags":["games","retro","emulator","8-bit"],
     "iconSymbol":"gamecontroller.fill", "iconColor":"pink",
     "version":VERSION, "featured":False, "requiresAI":False,
-    "banner":RAWBASE+"/apps/nes-emulator.jpg",
+    "banner":XLBASE+"/apps/nes-emulator.jpg",
     "html":RAWBASE+"/apps-src/nes-emulator.html?v=%d" % VERSION,
     "json":RAWBASE+"/apps-src/nes-emulator.myllmapp",
     "sizeKB":max(1, round(len(html.encode('utf-8'))/1024)), "category":"Games",

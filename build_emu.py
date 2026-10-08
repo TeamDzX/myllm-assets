@@ -15,6 +15,7 @@ OUT   = os.path.join(HERE, 'apps-src', 'retro-player.html')
 WRAP  = os.path.join(HERE, 'apps-src', 'retro-player.myllmapp')
 MANIFEST = os.path.join(HERE, 'apps.json')
 RAWBASE = 'https://raw.githubusercontent.com/TeamDzX/myllm-assets/main'
+XLBASE = 'https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main'   # banners/icons live in -xl
 VERSION = 15
 
 shell = open(SHELL, encoding='utf-8').read()
@@ -38,7 +39,7 @@ entry = {
     "tags":["games","retro","emulator","snes","game boy"],
     "iconSymbol":"gamecontroller.fill", "iconColor":"indigo",
     "version":VERSION, "featured":False, "requiresAI":False,
-    "banner":RAWBASE+"/apps/retro-player.jpg",
+    "banner":XLBASE+"/apps/retro-player.jpg",
     "html":RAWBASE+"/apps-src/retro-player.html?v=%d" % VERSION,
     "json":RAWBASE+"/apps-src/retro-player.myllmapp",
     "sizeKB":max(1, round(len(html.encode('utf-8'))/1024)), "category":"Games",

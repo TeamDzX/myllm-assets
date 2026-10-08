@@ -453,6 +453,8 @@ def main():
         {"name":"Hanyu – Learn Chinese","html":new,"kind":"html","iconSymbol":icon,"iconColor":color}, ensure_ascii=False))
 
     RAWBASE = 'https://raw.githubusercontent.com/TeamDzX/myllm-assets/main'
+
+    XLBASE = 'https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main'   # banners/icons live in -xl
     d = json.load(open(MANIFEST, encoding='utf-8'))
     d['apps'] = [a for a in d['apps'] if a.get('id') != 'hanyu']
     d['apps'].append({
@@ -462,7 +464,7 @@ def main():
         "tags":["AI-powered","learning","offline"],
         "category":"Students","iconSymbol":icon,"iconColor":color,
         "version":VERSION,"featured":True,"requiresAI":False,
-        "banner":RAWBASE+"/apps/hanyu.jpg","icon":RAWBASE+"/apps/hanyu-icon.png",
+        "banner":XLBASE+"/apps/hanyu.jpg","icon":XLBASE+"/apps/hanyu-icon.png",
         "html":RAWBASE+"/apps-src/hanyu.html?v=%d"%VERSION,"json":RAWBASE+"/apps-src/hanyu.myllmapp",
         "sizeKB":max(1,round(os.path.getsize(OUT)/1024))
     })

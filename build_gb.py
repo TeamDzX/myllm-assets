@@ -21,6 +21,7 @@ OUT    = os.path.join(HERE, 'apps-src', 'gb-player.html')
 WRAP   = os.path.join(HERE, 'apps-src', 'gb-player.myllmapp')
 MANIFEST = os.path.join(HERE, 'apps.json')
 RAWBASE = 'https://raw.githubusercontent.com/TeamDzX/myllm-assets/main'
+XLBASE = 'https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main'   # banners/icons live in -xl
 VERSION = 7
 
 shell  = open(SHELL, encoding='utf-8').read()
@@ -54,7 +55,7 @@ entry = {
     "tags":["games","retro","emulator","game boy","handheld","color"],
     "iconSymbol":"gamecontroller.fill", "iconColor":"green",
     "version":VERSION, "featured":False, "requiresAI":False,
-    "banner":RAWBASE+"/apps/gb-player.jpg",
+    "banner":XLBASE+"/apps/gb-player.jpg",
     "html":RAWBASE+"/apps-src/gb-player.html?v=%d" % VERSION,
     "json":RAWBASE+"/apps-src/gb-player.myllmapp",
     "sizeKB":max(1, round(len(html.encode('utf-8'))/1024)), "category":"Games",

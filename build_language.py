@@ -592,7 +592,7 @@ def build(langfile):
         "tags": lp.get("tags", ["learning", "AI-powered", "offline"]),
         "iconSymbol": icon_symbol, "iconColor": lp["iconColor"],
         "version": 1, "featured": False, "requiresAI": False,
-        "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/" + slug + ".jpg",
+        "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/" + slug + ".jpg",
         "html": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/" + slug + ".html",
         "json": "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps-src/" + slug + ".myllmapp",
         "sizeKB": round(len(html) / 1024), "category": "Students",

@@ -45,8 +45,11 @@ no rebuild.
 
 Typical publish flow:
 ```bash
+# images first, in ../myllm-assets-xl (see §11b)
+git -C ../myllm-assets-xl add apps/<slug>.jpg apps/icons/<slug>.jpg
+git -C ../myllm-assets-xl commit -m "<Name> banner and icon" && git -C ../myllm-assets-xl push origin main
 git add apps.json \
-  apps-src/<slug>.html apps-src/<slug>.myllmapp apps/<slug>.jpg
+  apps-src/<slug>.html apps-src/<slug>.myllmapp
 git commit -m "Add <Name> app"
 git push origin main
 ```
@@ -59,7 +62,7 @@ git push origin main
 apps.json              ← THE manifest (single source of truth for the gallery)
 apps-src/<slug>.html   ← the app itself (one self-contained file)
 apps-src/<slug>.myllmapp ← JSON bundle: { name, kind, iconSymbol, iconColor, html }
-apps/<slug>.jpg        ← 800×400 gallery banner
+(apps/ is in myllm-assets-xl: banners apps/<slug>.jpg, icons apps/icons/<slug>.jpg, app art folders — §11b)
 langpacks/*.json       ← data inputs for the language-app generator (see §10)
 build_*.py             ← generators for templated/adapted apps (see §10)
 features/<slug>.jpg    ← banner art for the marketing site (not the app gallery)
@@ -68,8 +71,8 @@ README.md              ← repo blurb
 ```
 
 Every gallery app needs **three files that share the same `<slug>`**:
-`apps-src/<slug>.html`, `apps-src/<slug>.myllmapp`, `apps/<slug>.jpg`, plus one
-entry in `apps.json`.
+`apps-src/<slug>.html`, `apps-src/<slug>.myllmapp` here, `apps/<slug>.jpg` (and
+`apps/icons/<slug>.jpg`) in myllm-assets-xl, plus one entry in `apps.json`.
 
 ---
 
@@ -108,7 +111,7 @@ Top level:
 | `version` | int | bump to ship an update (§2). |
 | `featured` | bool | surfaces the app in the featured rail. Use sparingly. |
 | `requiresAI` | bool | `true` only if the app is *useless* without `myllmAsk`. If AI is optional/partial (e.g. manual fallback), keep `false` and gate gracefully in-app. |
-| `banner` | url | raw URL to `apps/<slug>.jpg` (800×400). |
+| `banner` | url | raw URL to `apps/<slug>.jpg` (800×400) in **myllm-assets-xl**: `https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/<slug>.jpg`. |
 | `html` | url | raw URL to `apps-src/<slug>.html`. |
 | `json` | url | raw URL to `apps-src/<slug>.myllmapp`. |
 | `sizeKB` | int | rough size of the html, shown in the gallery. |
@@ -362,15 +365,17 @@ jsDelivr refuses a GitHub package over **50 MB**: past that, every new commit of
 
 - Its `apps.json` entry here points to `cdn.jsdelivr.net/gh/TeamDzX/myllm-assets-xl@<commit>/apps-src/space-range.*`.
 - **To update it:** commit in the xl repo, set the entry's `html`/`json` to the new commit by hand (`pin_jsdelivr.py` only re-pins this repo's URLs), then bump `version` here.
-- **Gallery stats:** installs of xl apps aren't counted by the stats page, which reads this repo's jsDelivr hits.
-- **Moving another app:** apps over about 1 MB go there too. Check the size with `git ls-files -z | xargs -0 du -ck | tail -1`.
+- **Gallery stats:** admin/gallery-stats.html reads both packages' jsDelivr hits and merges them by path (since 8 Oct 2026).
+- **Moving another app:** apps over about 1 MB go there too. Check the size with `python3 -c "import subprocess,os;print(sum(os.path.getsize(f) for f in subprocess.check_output(['git','ls-files']).decode().splitlines() if os.path.exists(f))/1e6)"` (a `du` over `xargs` prints several partial totals; that's how 41.5 MB was misread).
+
+**Images too (8 Oct 2026).** All of `apps/` — banners, `apps/icons/`, and the art folders Mochi, Draw, E-Grid, Kids Crossword, Metro Maps, Stretch, Stride, Jigsaw and Social load at runtime — moved to myllm-assets-xl at the same paths (~32 MB; this repo went from ~60 MB to ~28 MB). Manifest `banner`/`icon` and the apps' art bases use `raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/…` (raw `main`, so a new image is live on push; MyLLM 5.9.3+ mirrors it to jsDelivr on failure). **New banners and icons are committed in the xl repo.** One file stays here on purpose: `apps/draw/appicon.jpg`, which the Draw seed app bundled in already-shipped iOS builds loads from this repo.
 
 ## 12. New-app checklist
 
 1. Author `apps-src/<slug>.html` — self-contained, tokenised CSS, feature-detected
    bridges, AI cog wrapper if it uses `myllmAsk`, no native dialogs.
 2. Generate `apps-src/<slug>.myllmapp` (`{name,kind:"html",iconSymbol,iconColor,html}`).
-3. Generate `apps/<slug>.jpg` (800×400, no text).
+3. Generate `apps/<slug>.jpg` (800×400, no text) and `apps/icons/<slug>.jpg` **in myllm-assets-xl**; push them there first.
 4. Add the `apps.json` entry (surgical edit, valid category, good `description`/`tags`).
 5. `python3 stamp_apps.py --apply apps-src/<slug>.html` — adds the licence header
    and the app's `--build-id`, and rewrites the payload to match. Needs the

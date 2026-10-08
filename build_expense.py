@@ -19,6 +19,7 @@ OUT  = os.path.join(HERE, 'apps-src', 'expense-tracker.html')
 WRAP = os.path.join(HERE, 'apps-src', 'expense-tracker.myllmapp')
 MANIFEST = os.path.join(HERE, 'apps.json')
 RAWBASE = 'https://raw.githubusercontent.com/TeamDzX/myllm-assets/main'
+XLBASE = 'https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main'   # banners/icons live in -xl
 VERSION = 2
 
 # --- Apps Script the user deploys to their OWN sheet (implements the contract
@@ -344,7 +345,7 @@ def main():
         "tags":["productivity","expenses","household","shared","google sheets"],
         "iconSymbol":"creditcard.fill", "iconColor":"green",
         "version":VERSION, "featured":True, "requiresAI":False,
-        "banner":RAWBASE+"/apps/expense-tracker.jpg",
+        "banner":XLBASE+"/apps/expense-tracker.jpg",
         "html":RAWBASE+"/apps-src/expense-tracker.html?v=%d" % VERSION,
         "json":RAWBASE+"/apps-src/expense-tracker.myllmapp",
         "sizeKB":max(1, round(len(html.encode('utf-8'))/1024)), "category":"Productivity",

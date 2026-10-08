@@ -62,7 +62,7 @@
   /* The stage is Mochi's room: a painted backdrop, Mochi sitting on the rug. */
   .stage{ position:relative; flex:1; min-height:330px; border-radius:30px; overflow:hidden;
           box-shadow:0 10px 30px rgba(120,90,50,.14), inset 0 0 0 1.5px rgba(255,255,255,.6); }
-  .room{ position:absolute; inset:0; background:#f6e6d6 url("https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/mochi/room.jpg") center 72% / cover no-repeat; }
+  .room{ position:absolute; inset:0; background:#f6e6d6 url("https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/mochi/room.jpg") center 72% / cover no-repeat; }
   .night{ position:absolute; inset:0; opacity:0; transition:opacity 1.4s ease; pointer-events:none;
           background:radial-gradient(60% 40% at 50% 88%, rgba(255,210,140,.22), transparent 70%),
                      linear-gradient(180deg, rgba(28,32,78,.62), rgba(22,22,56,.5)); }
@@ -342,7 +342,7 @@ function haptic(k){ if(window.myllmHaptic){ try{ myllmHaptic(k||'light'); }catch
 function el(id){ return document.getElementById(id); }
 function esc(s){ return String(s==null?'':s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
 
-var ART = "https://raw.githubusercontent.com/TeamDzX/myllm-assets/main/apps/mochi/";
+var ART = "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/mochi/";
 var ANIM = { egg:"anim_egg.webp", hatch:"anim_hatch.webp", idle:"anim_idle2.webp",
              happy:"anim_happy.webp", eat:"anim_eat.webp", sleep:"anim_sleep.webp",
              sad:"anim_sad.webp", bath:"anim_bath.webp", play:"anim_play.webp",

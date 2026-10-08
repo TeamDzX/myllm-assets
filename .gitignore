@@ -1,0 +1,7 @@
+
+# Gallery images live in TeamDzX/myllm-assets-xl (GALLERY_HANDOVER §11b).
+# Only the Draw seed's App Store icon stays here, for shipped iOS builds.
+/apps/*
+!/apps/draw/
+/apps/draw/*
+!/apps/draw/appicon.jpg
