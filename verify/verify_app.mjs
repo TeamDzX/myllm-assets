@@ -201,7 +201,10 @@ if (files.length) {
   list = (await readdir(SRC)).filter((f) => f.endsWith('.html')).sort().map((f) => path.join(SRC, f));
 } else if (CONFIG.all) {
   const manifest = JSON.parse(await readFile(path.join(HERE, '..', 'apps.json'), 'utf8'));
-  list = manifest.apps.map((a) => path.join(SRC, `${a.id}.html`)).sort();
+  // Apps hosted in TeamDzX/myllm-assets-xl (GALLERY_HANDOVER §11b) have no
+  // file here; that repo is verified on its own.
+  list = manifest.apps.filter((a) => !/myllm-assets-xl[@/]/.test(a.html || ''))
+    .map((a) => path.join(SRC, `${a.id}.html`)).sort();
   const missing = [];
   for (const f of list) await readFile(f).catch(() => missing.push(path.basename(f)));
   if (missing.length) {
