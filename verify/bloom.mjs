@@ -235,6 +235,67 @@ await check('full screen with a ✕ on MyLLM 5.6.2+', async () => {
   const r = await p.evaluate(() => ({ asked: window.__imm.includes(true), closed: window.__closed })); await ctx.close();
   return (r.asked && r.closed === 1) || JSON.stringify(r);
 });
+// v2: Alex found no way out on the first screen and a scroll freeze.
+async function full({ late = 0, data = null } = {}) {
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  await ctx.addInitScript({ path: path.join(HERE, 'bridges.js') });
+  await ctx.addInitScript(([late, data]) => {
+    const add = () => { window.myllmImmersive = () => Promise.resolve(); window.myllmClose = () => { window.__closed = 1; return Promise.resolve(); }; };
+    if (late) setTimeout(add, late); else add();
+    if (data) window.myllmStorage.setItem('bloom.v1', data);
+  }, [late, data]);
+  const p = await load(ctx); await p.goto(ORIGIN, { waitUntil: 'load' }); await p.waitForTimeout(600);
+  return { p, close: () => ctx.close() };
+}
+await check('v2: the welcome screen has its own ✕ that closes Bloom', async () => {
+  const o = await full();
+  const vis = await o.p.isVisible('#welcome .over-x'); await o.p.click('#welcome .over-x'); await o.p.waitForTimeout(100);
+  const closed = await o.p.evaluate(() => window.__closed); await o.close();
+  return (vis && closed === 1) || JSON.stringify({ vis, closed });
+});
+await check('v2: the lock screen has its own ✕ that closes Bloom', async () => {
+  const o = await full({ data: log([42, 14]) });
+  await o.p.evaluate(() => document.getElementById('pcBtn').click()); await o.p.waitForTimeout(200);
+  const vis = await o.p.isVisible('#lock .over-x'); await o.p.click('#lock .over-x'); await o.p.waitForTimeout(100);
+  const closed = await o.p.evaluate(() => window.__closed); await o.close();
+  return (vis && closed === 1) || JSON.stringify({ vis, closed });
+});
+await check('v2: the header ✕ stays on screen after scrolling to the bottom', async () => {
+  const starts = []; for (let i = 0; i < 12; i++) starts.push(14 + i * 29);
+  const o = await full({ data: log(starts) });
+  await o.p.evaluate(() => window.scrollTo(0, document.body.scrollHeight)); await o.p.waitForTimeout(150);
+  const r = await o.p.evaluate(() => { const b = document.querySelector('.imm-acts button').getBoundingClientRect(); return { y: window.scrollY, top: b.top, h: b.height }; });
+  await o.p.click('.imm-acts button'); const closed = await o.p.evaluate(() => window.__closed); await o.close();
+  return (r.y > 150 && r.top >= 0 && r.top < 120 && r.h > 30 && closed === 1) || JSON.stringify({ r, closed });
+});
+await check('v2: the ✕ still appears when MyLLM\'s bridges arrive late', async () => {
+  const o = await full({ late: 250, data: log([14]) });
+  await o.p.waitForTimeout(1600);
+  const vis = await o.p.isVisible('.imm-acts button'); await o.close();
+  return vis || 'not visible';
+});
+await check('v2: hidden sheets take no touches; the page is pinned only while one is up', async () => {
+  const o = await open({ data: log([70, 42, 14]) });
+  const st = () => o.page.evaluate(() => ({ modal: document.documentElement.classList.contains('modal'),
+    vis: [...document.querySelectorAll('.sheet')].map(s => getComputedStyle(s).visibility).join(','),
+    over: getComputedStyle(document.body).overflowY }));
+  const before = await st();
+  await o.page.click('#logBtn'); await o.page.waitForTimeout(350); const during = await st();
+  const inner = await o.page.evaluate(() => getComputedStyle(document.getElementById('daySheet')).overscrollBehaviorY);
+  await o.page.click('#dDone'); await o.page.waitForTimeout(400); const after = await st();
+  await o.page.evaluate(() => window.scrollTo(0, 300)); const y = await o.page.evaluate(() => window.scrollY);
+  await o.close();
+  const ok = !before.modal && before.vis === 'hidden,hidden' && during.modal && during.vis.includes('visible') && during.over === 'hidden'
+    && inner === 'contain' && !after.modal && after.vis === 'hidden,hidden' && after.over !== 'hidden';
+  return ok || JSON.stringify({ before, during, inner, after, y });
+});
+await check('v2: the welcome screen pins the page; finishing it releases it', async () => {
+  const o = await open();
+  const a = await o.page.evaluate(() => document.documentElement.classList.contains('modal'));
+  await o.page.click('#wGo'); await o.page.waitForTimeout(200);
+  const b = await o.page.evaluate(() => document.documentElement.classList.contains('modal')); await o.close();
+  return (a && !b) || JSON.stringify({ a, b });
+});
 await check('dark mode and a long history render without errors', async () => {
   const starts = []; for (let i = 0; i < 24; i++) starts.push(14 + i * 29);
   const o = await open({ data: log(starts), dark: true });
