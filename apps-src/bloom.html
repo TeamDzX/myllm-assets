@@ -220,6 +220,24 @@ body.imm .over-x{display:grid}
 @media (prefers-reduced-motion:reduce){ .sheet,.scrim{transition:none} .shake{animation:none} .btn:active,.chip:active,.day:active{transform:none} }
 .hidden{display:none!important}
 
+/* v3: notices, the save-failed bar, import preview, cycle history */
+.notice{display:flex;gap:10px;align-items:flex-start;background:var(--peach-3);border-radius:18px;padding:12px 14px;margin-bottom:14px;font-size:14px;line-height:1.45}
+.notice p{margin:0;flex:1}
+.notice button{border:0;background:transparent;color:var(--muted);font-size:22px;line-height:1;padding:0 4px}
+.savebar{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:40;max-width:536px;margin:0 auto;display:flex;gap:10px;align-items:center;
+  background:var(--surface);border:1.5px solid var(--rose);border-radius:18px;box-shadow:var(--shadow);padding:12px 14px;font-size:14px;line-height:1.4}
+.savebar p{margin:0;flex:1}
+.counts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.counts .stat .v{font-size:22px}
+.hrow{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+.hrow:last-child{border-bottom:0}
+.hrow .hl{flex:1;font-size:15px;font-weight:600}
+.hrow .hl small{display:block;font-weight:500;color:var(--muted);font-size:12.5px;margin-top:2px}
+.hrow .hv{font-weight:700;font-size:16px;text-align:right}
+.hrow .hv small{display:block;font-weight:500;color:var(--muted);font-size:12px}
+.hrow.now .hv{color:var(--rose-ink)}
+.linkbtn{border:0;background:transparent;color:var(--rose-ink);font-weight:700;font-size:15px;padding:10px;display:block;margin:6px auto 0}
+
 /* myllm-fullscreen-v2 — MyLLM 5.6.2+ opens this app full screen; the ✕ is the way out. */
 .head .imm-acts{display:none;flex-shrink:0;margin-left:auto}
 .head .acts + .imm-acts{margin-left:0}
@@ -251,6 +269,7 @@ body.imm .imm-safe{display:block}
 <div class="imm-acts"><button type="button" aria-label="Close Bloom" onclick="myllmFSClose()"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div></div></div>
 
 <main class="wrap" id="app">
+  <div class="notice hidden" id="notice" role="status"><p id="noticeTxt"></p><button type="button" id="noticeX" aria-label="Dismiss">×</button></div>
   <div class="tabs" role="tablist">
     <button type="button" class="on" data-tab="today" role="tab">Today</button>
     <button type="button" data-tab="cal" role="tab">Calendar</button>
@@ -289,13 +308,15 @@ body.imm .imm-safe{display:block}
 
   <section class="view" id="v-ins">
     <div class="card"><h2>Your averages</h2><div class="stats" id="stats"></div><p class="note" id="statNote"></p></div>
-    <div class="card"><h2>Recent cycles</h2><div class="bars" id="bars"></div><p class="note" id="barNote"></p></div>
+    <div class="card"><h2>Recent cycles</h2><div class="bars" id="bars"></div><p class="note" id="barNote"></p><button type="button" class="btn ghost" id="histBtn" style="width:100%;margin-top:14px">Cycle history</button></div>
     <div class="card" id="tempCard"><h2>Temperature this cycle</h2><svg id="tchart" viewBox="0 0 320 150" preserveAspectRatio="none"></svg><p class="note" id="tempNote"></p></div>
     <div class="card"><h2>Symptoms &amp; moods</h2><div class="sub">The last 90 days, and the phase they mostly come in</div><div class="freq" id="freq" style="margin-top:12px"></div></div>
   </section>
 </main>
 
 <div class="scrim" id="scrim"></div>
+<div class="savebar hidden" id="saveBar" role="alert"><p id="saveTxt"></p><button type="button" class="btn pri" id="saveRetry" style="flex:0 0 auto;padding:9px 14px;font-size:14px">Retry</button></div>
+<input type="file" id="impFile" class="hidden" aria-hidden="true" tabindex="-1">
 
 <!-- log a day -->
 <div class="sheet" id="daySheet" role="dialog" aria-modal="true" aria-labelledby="dTitle">
@@ -309,8 +330,31 @@ body.imm .imm-safe{display:block}
   <div class="sec"><div class="lab">Temperature on waking</div>
     <div class="field"><input type="number" inputmode="decimal" step="0.01" id="fTemp" placeholder="36.45"><span id="fUnit">°C</span></div><div class="err hidden" id="tempErr"></div></div>
   <div class="sec"><div class="lab">Sex</div><div class="chips" id="fSex"></div></div>
+  <div class="sec" id="pillSec"><div class="lab">The pill</div><div class="chips" id="fPill"></div></div>
+  <div class="sec"><div class="lab">Pregnancy test</div><div class="chips lav" id="fPreg"></div></div>
+  <div class="sec"><div class="lab">Energy</div><div class="chips mint" id="fEnergy"></div></div>
+  <div class="sec"><div class="lab">Sleep</div><div class="field"><input type="number" inputmode="decimal" step="0.5" min="0" max="24" id="fSleep" placeholder="7.5"><span>hours</span></div></div>
+  <div class="sec"><div class="lab">Water</div><div class="step"><button type="button" data-water="-1" aria-label="One glass less">−</button><span id="fWater"></span><button type="button" data-water="1" aria-label="One glass more">+</button></div></div>
+  <div class="sec"><div class="lab">Weight</div><div class="field"><input type="number" inputmode="decimal" step="0.1" id="fWeight" placeholder="60.0"><span id="fWUnit">kg</span></div><div class="err hidden" id="bodyErr"></div></div>
   <div class="sec"><div class="lab">Note</div><textarea id="fNote" placeholder="Anything else about today" maxlength="500"></textarea></div>
   <div class="sec"><button type="button" class="btn ghost" id="dClear" style="width:100%">Clear this day</button></div>
+</div>
+
+<!-- cycle history -->
+<div class="sheet" id="histSheet" role="dialog" aria-modal="true" aria-label="Cycle history">
+  <div class="grab"></div>
+  <div class="shead"><div style="flex:1"><h3>Cycle history</h3><div class="sub" id="hSub"></div></div><button type="button" class="hbtn" id="hDone" style="width:auto;padding:0 14px;font-weight:700;color:var(--rose-ink)">Done</button></div>
+  <div class="card" style="padding:4px 16px" id="histList"></div>
+</div>
+
+<!-- import preview -->
+<div class="sheet" id="impSheet" role="dialog" aria-modal="true" aria-labelledby="iTitle">
+  <div class="grab"></div>
+  <div class="shead"><div style="flex:1"><h3 id="iTitle">Import</h3><div class="sub" id="iFrom"></div></div><button type="button" class="hbtn" id="iCancel" style="width:auto;padding:0 14px;font-weight:700;color:var(--rose-ink)">Cancel</button></div>
+  <div class="card"><div class="counts" id="iCounts"></div><p class="note" id="iNote"></p></div>
+  <button type="button" class="btn pri" id="iMerge" style="width:100%">Add to my log</button>
+  <button type="button" class="btn ghost" id="iReplace" style="width:100%;margin-top:10px">Replace my log with this</button>
+  <p class="disc">Nothing is saved until you choose. The file stays on this phone; Bloom reads it here and sends it nowhere.</p>
 </div>
 
 <!-- settings -->
@@ -323,6 +367,8 @@ body.imm .imm-safe{display:block}
     <div class="row"><div class="rl">Usual period length<small id="perNote"></small></div><div class="step"><button type="button" data-k="period" data-d="-1">−</button><span id="sPeriod"></span><button type="button" data-k="period" data-d="1">+</button></div></div>
     <div class="row"><div class="rl">Days from ovulation to period<small>Usually 14. Change it only if a doctor or your own temperature charts say otherwise.</small></div><div class="step"><button type="button" data-k="luteal" data-d="-1">−</button><span id="sLuteal"></span><button type="button" data-k="luteal" data-d="1">+</button></div></div>
     <div class="row"><div class="rl">Temperature</div><div class="seg" id="sUnit"><button type="button" data-v="C">°C</button><button type="button" data-v="F">°F</button></div></div>
+    <div class="row"><div class="rl">Weight</div><div class="seg" id="sWUnit"><button type="button" data-v="kg">kg</button><button type="button" data-v="lb">lb</button></div></div>
+    <div class="row"><div class="rl">Track the pill<small>Adds a Taken / Missed choice to each day.</small></div><div class="seg" id="sPill"><button type="button" data-v="off">Off</button><button type="button" data-v="on">On</button></div></div>
   </div>
   <div class="card" style="padding:4px 16px">
     <div class="row"><div class="rl"><b>Passcode</b><small id="pcNote"></small></div><button type="button" class="btn alt" id="pcBtn" style="flex:0 0 auto;padding:10px 14px;font-size:14px"></button></div>
@@ -330,6 +376,8 @@ body.imm .imm-safe{display:block}
   </div>
   <div class="privacy"><svg><use href="#i-shield"/></svg><div><b>Your data stays on this phone.</b> Bloom makes no internet requests, uses no AI, and shares nothing with other apps or with MyLLM's assistant. Your log is saved only inside MyLLM on this iPhone, and travels only in your phone's own backup, like your photos.</div></div>
   <div class="card" style="padding:4px 16px;margin-top:14px">
+    <div class="row"><div class="rl">Back up<small id="bakNote">A full copy of your log as a file, to keep somewhere safe — Files, iCloud Drive, your computer. Bloom can restore it later, even on a new phone.</small></div><button type="button" class="btn ghost" id="backupBtn" style="flex:0 0 auto;padding:10px 14px;font-size:14px">Back up</button></div>
+    <div class="row"><div class="rl">Import or restore<small>A Bloom backup, Bloom's spreadsheet, or a CSV from another app. You'll see what's in it before anything is saved.</small><span class="note warn hidden" id="impMsg" style="display:block"></span></div><button type="button" class="btn ghost" id="importBtn" style="flex:0 0 auto;padding:10px 14px;font-size:14px">Import</button></div>
     <div class="row"><div class="rl">Export my log<small>A spreadsheet (CSV) you send where you choose — for a doctor, say. Once it leaves Bloom, it's out of Bloom's hands.</small></div><button type="button" class="btn ghost" id="exportBtn" style="flex:0 0 auto;padding:10px 14px;font-size:14px">Export</button></div>
     <div class="row"><div class="rl">Erase everything<small>Deletes your whole log and settings from this phone. This can't be undone.</small></div><button type="button" class="btn danger" id="eraseBtn" style="flex:0 0 auto;padding:10px 14px;font-size:14px">Erase</button></div>
   </div>
@@ -341,12 +389,14 @@ body.imm .imm-safe{display:block}
   <button type="button" class="over-x" aria-label="Close Bloom" onclick="myllmFSClose()"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
   <div class="in">
     <div class="hero"><div class="tile"><svg><use href="#i-bloom"/></svg></div><h2>Welcome to Bloom</h2><p>A calm, private way to follow your cycle — your period, fertile days, ovulation and how you feel.</p></div>
+    <div class="notice hidden" id="wNote" role="status" style="margin-bottom:12px"></div>
     <div class="privacy" style="margin-bottom:12px"><svg><use href="#i-shield"/></svg><div><b>Private by design.</b> Everything stays on this phone. No account, no internet, no AI, no sharing. Add a passcode any time to encrypt it.</div></div>
     <div class="q"><div class="ql">When did your last period start?</div><div class="field"><input type="date" id="wStart"></div><div class="sub" style="margin-top:8px">Not sure? Leave it empty and log your next period when it comes.</div></div>
     <div class="q"><div class="ql">How long is your cycle, usually?</div><div class="step"><button type="button" data-w="cycle" data-d="-1">−</button><span id="wCycle">28 days</span><button type="button" data-w="cycle" data-d="1">+</button></div><div class="sub" style="margin-top:8px">From the first day of one period to the first day of the next. 28 is a fine guess; Bloom learns yours.</div></div>
     <div class="q"><div class="ql">And your period?</div><div class="step"><button type="button" data-w="period" data-d="-1">−</button><span id="wPeriod">5 days</span><button type="button" data-w="period" data-d="1">+</button></div></div>
     <div class="q"><div class="ql">What would you like Bloom to help with?</div><div class="seg" id="wGoal"><button type="button" data-v="track" class="on">Track my cycle</button><button type="button" data-v="ttc">Trying to conceive</button></div></div>
     <button type="button" class="btn pri" id="wGo" style="width:100%;margin-top:6px">Start</button>
+    <button type="button" class="linkbtn" id="wImport">Coming from another app? Import your data</button>
     <p class="disc">Bloom isn't contraception and isn't medical advice.</p>
   </div>
 </div>
@@ -372,10 +422,29 @@ var mem = {};
 var store = window.myllmStorage || {
   getItem: function(k){ return Promise.resolve(k in mem ? mem[k] : null); },
   setItem: function(k, v){ mem[k] = String(v); return Promise.resolve(); },
-  removeItem: function(k){ delete mem[k]; return Promise.resolve(); }
+  removeItem: function(k){ delete mem[k]; return Promise.resolve(); },
+  keys: function(){ return Promise.resolve(Object.keys(mem)); },
+  clear: function(){ mem = {}; return Promise.resolve(); }
 };
-var KEY = "bloom.v1", EKEY = "bloom.v1.enc";
-function fresh(){ return { v:1, settings:{ cycle:28, period:5, luteal:14, goal:"track", unit:"C", setup:false, seed:null }, days:{} }; }
+/* The log lives under KEY (or EKEY, encrypted). BAK/EBAK hold the last copy
+   that loaded cleanly, written once a session; an unreadable log is moved to
+   DMG + time and never overwritten. (The key names stay ".v1" — they are
+   slots; the log's own `v` says its shape.) */
+var KEY = "bloom.v1", EKEY = "bloom.v1.enc", BAK = "bloom.v1.bak", EBAK = "bloom.v1.enc.bak", DMG = "bloom.damaged.";
+var BIG = 300000;   // MyLLM gives each app 1 MB; past this, skip the spare copy
+function fresh(){ return { v:2, settings:{ cycle:28, period:5, luteal:14, goal:"track", unit:"C", wunit:"kg", pill:false, setup:false, seed:null }, days:{} }; }
+function validLog(o){ return !!o && typeof o === "object" && !!o.settings && typeof o.settings === "object" && !!o.days && typeof o.days === "object" && !Array.isArray(o.days); }
+/* v1 → v2: new settings get defaults; new day fields are optional, so nothing else moves. */
+function migrate(o){
+  var d = fresh().settings;
+  for (var k in d) if (!(k in o.settings)) o.settings[k] = d[k];
+  if (!(o.v >= 2)) o.v = 2;
+  return o;
+}
+function parseLog(raw){ try { var o = JSON.parse(raw); return validLog(o) ? migrate(o) : null; } catch(e){ return null; } }
+function parseBlob(raw){ try { var b = typeof raw === "string" ? JSON.parse(raw) : raw; return b && typeof b.salt === "string" && typeof b.iv === "string" && typeof b.ct === "string" && b.ct.length > 0 ? b : null; } catch(e){ return null; } }
+function parseBak(raw){ try { var b = JSON.parse(raw); return b && validLog(b.log) ? { at:b.at, log:migrate(b.log) } : null; } catch(e){ return null; } }
+function parseEBak(raw){ try { var b = JSON.parse(raw); return b && parseBlob(b.blob) ? { at:b.at, blob:b.blob } : null; } catch(e){ return null; } }
 var S = null;            // the whole log, in memory only while unlocked
 var cryptoKey = null;    // AES key while a passcode is on and the app is unlocked
 var salt = null;
@@ -404,6 +473,9 @@ var MOOD = ["Happy","Calm","Energetic","Sensitive","Irritable","Anxious","Low","
 var CM = [["dry","Dry"],["sticky","Sticky"],["creamy","Creamy"],["watery","Watery"],["eggwhite","Egg white"]];
 var LH = [["neg","Negative"],["pos","Positive"]];
 var SEX = [["yes","Had sex"],["protected","Protected"]];
+var ENERGY = [["low","Low"],["ok","Steady"],["high","High"]];
+var PREG = [["neg","Negative"],["pos","Positive"]];
+var PILL = [["taken","Taken"],["late","Taken late"],["missed","Missed"]];
 function isBleed(f){ return f === "light" || f === "medium" || f === "heavy"; }
 
 /* ---------- the model: periods, averages, predictions ---------- */
@@ -579,6 +651,12 @@ function renderToday(m){
     if (e.lh) bits.push("LH " + label(LH, e.lh).toLowerCase());
     if (typeof e.temp === "number") bits.push(e.temp.toFixed(2) + "°" + S.settings.unit);
     if (e.sex) bits.push(label(SEX, e.sex));
+    if (e.pill) bits.push("Pill " + label(PILL, e.pill).toLowerCase());
+    if (e.preg) bits.push("Pregnancy test " + label(PREG, e.preg).toLowerCase());
+    if (e.energy) bits.push(label(ENERGY, e.energy) + " energy");
+    if (typeof e.sleep === "number") bits.push(e.sleep + " h sleep");
+    if (typeof e.water === "number") bits.push(e.water + (e.water === 1 ? " glass" : " glasses") + " of water");
+    if (typeof e.weight === "number") bits.push(e.weight + " " + S.settings.wunit);
   }
   $("todayLog").innerHTML = '<h2>Today</h2>' + (bits.length || (e && e.note) ? (bits.length ? '<div class="tags">' + bits.map(function(b){ return '<span class="tag">' + esc(b) + '</span>'; }).join("") + '</div>' : '') + (e.note ? '<p class="note">' + esc(e.note) + '</p>' : '')
     : '<div class="sub">Nothing logged yet. How are you feeling?</div>');
@@ -587,7 +665,8 @@ function renderToday(m){
 function ovWord(m){ return m.ovHow === "temperature" ? "confirmed by your temperature" : m.ovHow === "lh" ? "from your positive LH test" : "estimated"; }
 function label(list, v){ for (var i = 0; i < list.length; i++) if (list[i][0] === v) return list[i][1]; return v; }
 function markClass(kind){ return kind ? "m-" + kind : ""; }
-function hasLog(k){ var e = S.days[k]; if (!e) return false; return !!((e.sym && e.sym.length) || (e.mood && e.mood.length) || e.cm || e.lh || typeof e.temp === "number" || e.sex || e.note); }
+function hasLog(k){ var e = S.days[k]; if (!e) return false; return !!((e.sym && e.sym.length) || (e.mood && e.mood.length) || e.cm || e.lh || typeof e.temp === "number" || e.sex || e.note
+  || e.energy || e.preg || e.pill || typeof e.sleep === "number" || typeof e.water === "number" || typeof e.weight === "number"); }
 function arc(cx, cy, r, a0, a1, col){
   function pt(a){ var t = (a - 90) * Math.PI / 180; return (cx + r * Math.cos(t)).toFixed(2) + " " + (cy + r * Math.sin(t)).toFixed(2); }
   return '<path d="M ' + pt(a0) + ' A ' + r + ' ' + r + ' 0 ' + (a1 - a0 > 180 ? 1 : 0) + ' 1 ' + pt(a1) + '" fill="none" stroke="' + col + '" stroke-width="18" stroke-linecap="butt"/>';
@@ -697,7 +776,7 @@ function openFuture(k){
   var what = { pred:"Your period is expected around now.", fert:"Predicted fertile day.", ov:"Predicted ovulation day.", period:"" }[kind] || "No prediction for this day.";
   $("dTitle").textContent = longDay(k); $("dSub").textContent = what + " You can log it when the day comes.";
   editing = null;
-  ["fFlow","fSym","fMood","fCm","fLh","fSex"].forEach(function(id){ $(id).innerHTML = ""; });
+  ["fFlow","fSym","fMood","fCm","fLh","fSex","fPill","fPreg","fEnergy"].forEach(function(id){ $(id).innerHTML = ""; });
   document.querySelectorAll("#daySheet .sec").forEach(function(s){ s.classList.add("hidden"); });
   open("daySheet");
 }
@@ -719,14 +798,24 @@ function fillDay(){
   $("fTemp").placeholder = S.settings.unit === "F" ? "97.70" : "36.45";
   $("fUnit").textContent = "°" + S.settings.unit; $("tempErr").classList.add("hidden");
   $("fNote").value = e.note || "";
+  $("fPill").innerHTML = PILL.map(function(c){ return chip(c[1], e.pill === c[0], "pill", c[0]); }).join("");
+  $("fPreg").innerHTML = PREG.map(function(c){ return chip(c[1], e.preg === c[0], "preg", c[0]); }).join("");
+  $("fEnergy").innerHTML = ENERGY.map(function(c){ return chip(c[1], e.energy === c[0], "energy", c[0]); }).join("");
+  $("pillSec").classList.toggle("hidden", !S.settings.pill && !e.pill);
+  $("fSleep").value = typeof e.sleep === "number" ? e.sleep : "";
+  $("fWater").textContent = (e.water || 0) + ((e.water || 0) === 1 ? " glass" : " glasses");
+  $("fWeight").value = typeof e.weight === "number" ? e.weight : "";
+  $("fWeight").placeholder = S.settings.wunit === "lb" ? "132.0" : "60.0";
+  $("fWUnit").textContent = S.settings.wunit; $("bodyErr").classList.add("hidden");
 }
 function chip(text, on, kind, val){ return '<button type="button" class="chip' + (on ? " on" : "") + '" data-' + kind + '="' + esc(val || text) + '">' + esc(text) + '</button>'; }
 function tidy(k){
   var e = S.days[k]; if (!e) return;
   if (e.flow === "none") delete e.flow;
   ["sym","mood"].forEach(function(f){ if (e[f] && !e[f].length) delete e[f]; });
-  ["cm","lh","sex","note"].forEach(function(f){ if (!e[f]) delete e[f]; });
-  if (typeof e.temp !== "number") delete e.temp;
+  ["cm","lh","sex","note","energy","preg","pill"].forEach(function(f){ if (!e[f]) delete e[f]; });
+  ["temp","sleep","weight"].forEach(function(f){ if (typeof e[f] !== "number") delete e[f]; });
+  if (!(e.water > 0)) delete e.water;
   if (!Object.keys(e).length) delete S.days[k];
 }
 $("daySheet").addEventListener("click", function(ev){
@@ -734,7 +823,9 @@ $("daySheet").addEventListener("click", function(ev){
   var e = entry(), d = b.dataset;
   if (d.flow) e.flow = d.flow;
   else if (d.sym || d.mood) { var f = d.sym ? "sym" : "mood", v = d.sym || d.mood, a = e[f] || (e[f] = []), i = a.indexOf(v); if (i >= 0) a.splice(i, 1); else a.push(v); }
-  else if (d.cm || d.lh || d.sex) { var key = d.cm ? "cm" : d.lh ? "lh" : "sex", val = d.cm || d.lh || d.sex; e[key] = e[key] === val ? "" : val; }
+  else if (d.cm || d.lh || d.sex || d.pill || d.preg || d.energy) {
+    var key = ["cm","lh","sex","pill","preg","energy"].filter(function(f){ return d[f]; })[0], val = d[key]; e[key] = e[key] === val ? "" : val; }
+  else if (d.water) e.water = Math.max(0, Math.min(30, (e.water || 0) + +d.water));
   else return;
   haptic("selection"); tidy(editing); fillDay(); changed();
 });
@@ -747,6 +838,19 @@ $("fTemp").addEventListener("change", function(){
   if (raw === "") delete e.temp; else e.temp = Math.round(v * 100) / 100;
   tidy(editing); changed();
 });
+function bodyField(id, f, lo, hi, msg){
+  $(id).addEventListener("change", function(){
+    if (!editing) return;
+    var raw = $(id).value.replace(",", "."), v = parseFloat(raw), e = entry(), r = typeof hi === "function" ? hi() : [lo, hi];
+    var ok = raw === "" || (isFinite(v) && v >= r[0] && v <= r[1]);
+    $("bodyErr").classList.toggle("hidden", ok);
+    if (!ok) { $("bodyErr").textContent = msg(); return; }
+    if (raw === "") delete e[f]; else e[f] = Math.round(v * 10) / 10;
+    tidy(editing); changed();
+  });
+}
+bodyField("fSleep", "sleep", 0, 24, function(){ return "Sleep is in hours, 0 to 24."; });
+bodyField("fWeight", "weight", 0, function(){ return S.settings.wunit === "lb" ? [44, 660] : [20, 300]; }, function(){ return S.settings.wunit === "lb" ? "That looks off — enter your weight in pounds." : "That looks off — enter your weight in kilograms."; });
 $("fNote").addEventListener("input", function(){ if (!editing) return; entry().note = $("fNote").value.slice(0, 500); tidy(editing); changed(); });
 $("dClear").addEventListener("click", function(){ if (!editing) return; delete S.days[editing]; haptic("light"); fillDay(); changed(); });
 $("dDone").addEventListener("click", closeSheets);
@@ -796,7 +900,9 @@ function fillSettings(){
   $("cycNote").textContent = m.cycles.length >= 2 ? "Bloom now uses your average of " + m.avgCycle + " days from your logged cycles." : "Used until you've logged two periods.";
   $("perNote").textContent = m.periods.some(function(p){ return p.logged; }) ? "Bloom now uses your logged periods." : "Used until you've logged a period.";
   $("goalNote").textContent = s.goal === "ttc" ? "Today's screen points out your best days to try." : "Periods, symptoms and moods, with fertile days shown too.";
-  seg("sGoal", s.goal); seg("sUnit", s.unit);
+  seg("sGoal", s.goal); seg("sUnit", s.unit); seg("sWUnit", s.wunit); seg("sPill", s.pill ? "on" : "off");
+  $("bakNote").textContent = "A full copy of your log as a file, to keep somewhere safe — Files, iCloud Drive, your computer. Bloom can restore it later, even on a new phone." +
+    (cryptoKey ? " It stays encrypted with your passcode." : "") + (lastSize > BIG ? " Your log is large now, so a backup file matters more: Bloom has less room to keep its own spare copy." : "");
   $("pcBtn").textContent = cryptoKey ? "Change" : "Set passcode";
   $("pcOffRow").classList.toggle("hidden", !cryptoKey);
   $("pcNote").textContent = !hasCrypto ? "Not available on this version of MyLLM." : cryptoKey ? "On. Your log is encrypted on this phone and Bloom locks whenever you leave it." : "Locks Bloom and encrypts your log on this phone. If you forget it, the only way back in is to erase everything.";
@@ -815,14 +921,23 @@ $("setSheet").addEventListener("click", function(ev){
       s.unit = b.dataset.v;
     }
   }
+  else if (b.closest("#sWUnit")) {
+    if (s.wunit !== b.dataset.v) {
+      var toLb = b.dataset.v === "lb";
+      Object.keys(S.days).forEach(function(d){ var e = S.days[d]; if (typeof e.weight === "number") e.weight = Math.round((toLb ? e.weight * 2.20462 : e.weight / 2.20462) * 10) / 10; });
+      s.wunit = b.dataset.v;
+    }
+  }
+  else if (b.closest("#sPill")) s.pill = b.dataset.v === "on";
   else return;
   haptic("selection"); fillSettings(); changed();
 });
 $("exportBtn").addEventListener("click", function(){
-  var rows = [["date","period","symptoms","mood","discharge","lh_test","temperature_" + S.settings.unit,"sex","note"]];
+  var rows = [["date","period","symptoms","mood","discharge","lh_test","temperature_" + S.settings.unit,"sex","note","energy","pregnancy_test","pill","sleep_hours","water_glasses","weight_" + S.settings.wunit]];
   Object.keys(S.days).sort().forEach(function(k){
-    var e = S.days[k];
-    rows.push([k, e.flow ? label(FLOW, e.flow) : "", (e.sym || []).join("; "), (e.mood || []).join("; "), e.cm ? label(CM, e.cm) : "", e.lh ? label(LH, e.lh) : "", typeof e.temp === "number" ? e.temp : "", e.sex ? label(SEX, e.sex) : "", e.note || ""]);
+    var e = S.days[k], num = function(v){ return typeof v === "number" ? v : ""; };
+    rows.push([k, e.flow ? label(FLOW, e.flow) : "", (e.sym || []).join("; "), (e.mood || []).join("; "), e.cm ? label(CM, e.cm) : "", e.lh ? label(LH, e.lh) : "", num(e.temp), e.sex ? label(SEX, e.sex) : "", e.note || "",
+      e.energy ? label(ENERGY, e.energy) : "", e.preg ? label(PREG, e.preg) : "", e.pill ? label(PILL, e.pill) : "", num(e.sleep), num(e.water), num(e.weight)]);
   });
   var csv = rows.map(function(r){ return r.map(function(c){ c = String(c); return /[",\n]/.test(c) ? '"' + c.replace(/"/g, '""') + '"' : c; }).join(","); }).join("\n");
   var b64 = btoa(unescape(encodeURIComponent(csv)));
@@ -834,8 +949,8 @@ $("eraseBtn").addEventListener("click", function(){
   eraseAll();
 });
 function eraseAll(){
-  cryptoKey = null; salt = null; S = fresh();
-  Promise.all([store.removeItem(KEY), store.removeItem(EKEY)]).then(function(){
+  cryptoKey = null; salt = null; S = fresh(); unlockSrc = null; retryWrite = null; $("saveBar").classList.add("hidden");
+  (store.clear ? store.clear() : Promise.all([KEY, EKEY, BAK, EBAK].map(function(k){ return store.removeItem(k); })).then(dropDamaged)).then(function(){
     haptic("success"); closeSheets(); $("lock").hidden = true; showWelcome();
   });
 }
@@ -843,14 +958,55 @@ function eraseAll(){
 /* ---------- saving (encrypted when a passcode is on) ---------- */
 var saveTimer = null;
 function changed(){ render(); clearTimeout(saveTimer); saveTimer = setTimeout(save, 250); }
+/* Every save writes the whole log; MyLLM swaps the file in atomically, so a
+   kill mid-save leaves the previous copy whole. What can still go wrong is a
+   write being refused (phone full, or the app's 1 MB) — that used to vanish
+   silently. Now the bar says so and Retry re-sends exactly what failed, even
+   if Bloom has locked since. save() never rejects. */
+var retryWrite = null, lastSize = 0;
 function save(){
   if (!S) return Promise.resolve();
-  var json = JSON.stringify(S);
-  if (!cryptoKey) return store.setItem(KEY, json);
+  var json = JSON.stringify(S); lastSize = json.length;
+  var write;
+  if (!cryptoKey) write = function(){ return store.setItem(KEY, json); };
+  else {
+    var key = cryptoKey, sl = salt;
+    write = function(){ return sealWith(key, sl, json).then(function(blob){ return store.setItem(EKEY, blob); }).then(function(){ return store.removeItem(KEY); }); };
+  }
+  return attempt(write);
+}
+function attempt(write){
+  return write().then(function(){ retryWrite = null; $("saveBar").classList.add("hidden"); },
+    function(e){
+      retryWrite = write;
+      var full = /limit|1 MB|space|quota/i.test(String(e && e.message || e));
+      $("saveTxt").textContent = full ? "Couldn't save — Bloom has run out of its storage space in MyLLM. Back up, then clear old notes, and try again."
+        : "Couldn't save — your last change isn't stored yet. Free some space on the iPhone and try again.";
+      $("saveBar").classList.remove("hidden"); haptic("error");
+    });
+}
+$("saveRetry").addEventListener("click", function(){ if (retryWrite) attempt(retryWrite); else $("saveBar").classList.add("hidden"); });
+function sealWith(key, sl, json){
   var iv = crypto.getRandomValues(new Uint8Array(12));
-  return crypto.subtle.encrypt({ name:"AES-GCM", iv:iv }, cryptoKey, new TextEncoder().encode(json)).then(function(ct){
-    return store.setItem(EKEY, JSON.stringify({ v:1, salt:b64(salt), iv:b64(iv), ct:b64(new Uint8Array(ct)) }));
-  }).then(function(){ return store.removeItem(KEY); });
+  return crypto.subtle.encrypt({ name:"AES-GCM", iv:iv }, key, new TextEncoder().encode(json)).then(function(ct){
+    return JSON.stringify({ v:1, salt:b64(sl), iv:b64(iv), ct:b64(new Uint8Array(ct)) });
+  });
+}
+/* The spare copy: once a session, after the log has loaded (or unlocked)
+   cleanly, so it is always a copy that is known to open. */
+var bakDone = false;
+function keepBak(encRaw){
+  if (bakDone || !S) return Promise.resolve(); bakDone = true;
+  var at = new Date().toISOString(), json = JSON.stringify(S); lastSize = json.length;
+  if (json.length > BIG) return Promise.resolve();
+  var w = encRaw ? store.setItem(EBAK, JSON.stringify({ at:at, blob:encRaw })) : store.setItem(BAK, JSON.stringify({ at:at, log:S }));
+  return w.catch(function(){});
+}
+/* An unreadable log is moved aside, never written over; only the newest is kept. */
+function keepDamaged(raw){
+  return Promise.resolve(store.keys ? store.keys() : []).then(function(ks){
+    return Promise.all((ks || []).filter(function(k){ return k.indexOf(DMG) === 0; }).map(function(k){ return store.removeItem(k); }));
+  }).catch(function(){}).then(function(){ return store.setItem(DMG + Date.now(), String(raw)); }).catch(function(){});
 }
 function b64(u8){ var s = ""; for (var i = 0; i < u8.length; i++) s += String.fromCharCode(u8[i]); return btoa(s); }
 function unb64(s){ var b = atob(s), u = new Uint8Array(b.length); for (var i = 0; i < b.length; i++) u[i] = b.charCodeAt(i); return u; }
@@ -870,8 +1026,9 @@ function drawPad(){
 function dots(){ var h = ""; for (var i = 0; i < 6; i++) h += '<i class="' + (i < pinBuf.length ? "f" : "") + '"></i>'; $("pinDots").innerHTML = h; }
 function showLock(mode){
   pinMode = mode; pinBuf = ""; pinFirst = "";
-  $("lockTitle").textContent = mode === "unlock" ? "Bloom is locked" : "Choose a passcode";
-  $("lockSub").textContent = mode === "unlock" ? "Enter your passcode" : "Six digits. Bloom will ask for it each time you open it.";
+  $("lockTitle").textContent = mode === "unlock" ? "Bloom is locked" : mode === "imp" ? "This backup is locked" : "Choose a passcode";
+  $("lockSub").textContent = mode === "unlock" ? (unlockSrc ? "Bloom's saved log was damaged, so it has been set aside. Enter your passcode to open your last good copy" + (unlockAt ? ", from " + when(unlockAt) : "") + "." : "Enter your passcode")
+    : mode === "imp" ? "Enter the passcode Bloom had when the backup was made." : "Six digits. Bloom will ask for it each time you open it.";
   $("lockMsg").textContent = ""; $("forgot").classList.toggle("hidden", mode !== "unlock");
   $("lockCancel").classList.toggle("hidden", mode === "unlock");
   $("lock").hidden = false; drawPad();
@@ -889,37 +1046,100 @@ function pinDone(){
   if (pinMode === "unlock") {
     $("lockMsg").textContent = "Unlocking…";
     unlock(pin).then(function(ok){
-      if (ok) { fails = 0; $("lock").hidden = true; haptic("success"); render(); return; }
+      if (ok === true) {
+        fails = 0; $("lock").hidden = true; haptic("success"); render();
+        if (unlockSrc) {   // opened the spare copy: make it the log again
+          unlockSrc = null; save();
+          showNotice("Bloom couldn't read its saved log, so it opened your last good copy" + (unlockAt ? ", from " + when(unlockAt) : "") + ". The damaged data has been set aside, not deleted.");
+        }
+        return;
+      }
+      if (ok === "damaged") { damagedAtUnlock(); return; }
       fails++; if (fails >= 5) waitUntil = Date.now() + 30000;
       bad(fails >= 5 ? "Wrong passcode. Wait 30 seconds." : "Wrong passcode");
+    });
+  } else if (pinMode === "imp") {
+    $("lockMsg").textContent = "Opening…";
+    openSealed(pendingSealed.blob, pin).then(function(data){
+      if (!data) { fails++; if (fails >= 5) waitUntil = Date.now() + 30000; bad(fails >= 5 ? "Wrong passcode. Wait 30 seconds." : "Wrong passcode"); return; }
+      fails = 0; $("lock").hidden = true;
+      var r = fromBloom(data, pendingSealed.label); pendingSealed = null;
+      if (r.error) say(r.error); else preview(r);
     });
   } else if (!pinFirst) { pinFirst = pin; $("lockSub").textContent = "Enter it once more to confirm"; dots(); }
   else if (pin !== pinFirst) { pinFirst = ""; $("lockSub").textContent = "Six digits. Bloom will ask for it each time you open it."; bad("They didn't match — try again"); }
   else {
     $("lockMsg").textContent = "Encrypting…";
     salt = crypto.getRandomValues(new Uint8Array(16));
-    derive(pin, salt).then(function(k){ cryptoKey = k; return save(); }).then(function(){
-      $("lock").hidden = true; haptic("success"); fillSettings();
-    });
+    // A new passcode: the plain spare copy and any set-aside plain copy go
+    // (the promise is that the log is encrypted), and the spare is re-made
+    // under the new passcode — an old one would need the old passcode.
+    derive(pin, salt).then(function(k){ cryptoKey = k; return save(); })
+      .then(function(){ return Promise.all([store.removeItem(BAK), dropDamaged()]); })
+      .then(function(){ return store.getItem(EKEY); })
+      .then(function(raw){ bakDone = false; if (parseBlob(raw)) return keepBak(raw); })
+      .catch(function(){})
+      .then(function(){ $("lock").hidden = true; haptic("success"); fillSettings(); });
   }
 }
 function bad(msg){ haptic("error"); $("lockMsg").textContent = msg; var p = $("pinDots"); p.classList.remove("shake"); void p.offsetWidth; p.classList.add("shake"); dots(); }
+/* true, false (wrong passcode), or "damaged". AES-GCM can't tell a wrong
+   passcode from a cut-short log — both just fail to open — so "damaged" means
+   what can be seen without the key: the stored text isn't a sealed log, or
+   what it opens to isn't a log. */
+var unlockSrc = null, unlockAt = null, lastRaw = null;
 function unlock(pin){
-  return store.getItem(EKEY).then(function(raw){
-    var blob = JSON.parse(raw), sb = unb64(blob.salt);
+  var src = unlockSrc ? Promise.resolve(unlockSrc) : store.getItem(EKEY);
+  return src.then(function(raw){
+    lastRaw = raw;
+    var blob = parseBlob(raw); if (!blob) return "damaged";
+    var sb = unb64(blob.salt);
     return derive(pin, sb).then(function(k){
       return crypto.subtle.decrypt({ name:"AES-GCM", iv:unb64(blob.iv) }, k, unb64(blob.ct)).then(function(pt){
-        S = JSON.parse(new TextDecoder().decode(pt)); cryptoKey = k; salt = sb; return true;
-      });
+        var o = parseLog(new TextDecoder().decode(pt)); if (!o) return "damaged";
+        S = o; cryptoKey = k; salt = sb;
+        if (!unlockSrc) keepBak(raw);
+        return true;
+      }, function(){ return false; });
     });
   }).catch(function(){ return false; });
 }
+function damagedAtUnlock(){
+  var raw = lastRaw;
+  (unlockSrc ? Promise.resolve() : keepDamaged(raw).then(function(){ return store.removeItem(EKEY); }))
+    .then(function(){ return unlockSrc ? null : store.getItem(EBAK); })
+    .then(function(b){
+      var bb = b && parseEBak(b);
+      if (bb) { unlockSrc = bb.blob; unlockAt = bb.at; showLock("unlock"); return; }
+      unlockSrc = null;
+      bad("Bloom's saved log is damaged and can't be opened. It hasn't been erased — if you have a backup file, erase and restore it.");
+    });
+}
+/* A sealed backup: the data, or null if this passcode doesn't open it. */
+function openSealed(blob, pin){
+  var b = parseBlob(blob); if (!b) return Promise.resolve(null);
+  return derive(pin, unb64(b.salt)).then(function(k){
+    return crypto.subtle.decrypt({ name:"AES-GCM", iv:unb64(b.iv) }, k, unb64(b.ct));
+  }).then(function(pt){ try { return JSON.parse(new TextDecoder().decode(pt)); } catch(e){ return null; } }, function(){ return null; });
+}
+function dropDamaged(){
+  return Promise.resolve(store.keys ? store.keys() : []).then(function(ks){
+    return Promise.all((ks || []).filter(function(k){ return k.indexOf(DMG) === 0; }).map(function(k){ return store.removeItem(k); }));
+  }).catch(function(){});
+}
 $("pcBtn").addEventListener("click", function(){ if (hasCrypto) { closeSheets(); showLock("set"); } });
-$("pcOff").addEventListener("click", function(){ cryptoKey = null; salt = null; store.setItem(KEY, JSON.stringify(S)).then(function(){ return store.removeItem(EKEY); }).then(function(){ haptic("success"); fillSettings(); }); });
-$("lockCancel").addEventListener("click", function(){ $("lock").hidden = true; });
+$("pcOff").addEventListener("click", function(){
+  cryptoKey = null; salt = null;
+  save().then(function(){ return retryWrite ? null : Promise.all([store.removeItem(EKEY), store.removeItem(EBAK)]); })
+    .then(function(){ bakDone = false; return keepBak(); }).then(function(){ haptic("success"); fillSettings(); });
+});
+$("lockCancel").addEventListener("click", function(){
+  $("lock").hidden = true;
+  if (pinMode === "imp") { pendingSealed = null; if (S && !S.settings.setup) showWelcome(); }
+});
 var forgotArmed = 0;
 $("forgot").addEventListener("click", function(){
-  if (Date.now() - forgotArmed > 5000) { forgotArmed = Date.now(); $("lockMsg").textContent = "Your log is encrypted with the passcode, so it can't be recovered. Tap again to erase everything and start over."; return; }
+  if (Date.now() - forgotArmed > 5000) { forgotArmed = Date.now(); $("lockMsg").textContent = "Your log is encrypted with the passcode, so it can't be recovered. Tap again to erase everything and start over — a backup file can be restored afterwards, with the passcode it was made with."; return; }
   eraseAll();
 });
 /* Leaving Bloom locks it: the decrypted log is dropped from memory and wiped
@@ -953,15 +1173,367 @@ $("wGo").addEventListener("click", function(){
 });
 
 /* ---------- start ---------- */
-store.getItem(EKEY).then(function(enc){
-  if (enc) { wipe(); showLock("unlock"); return; }
-  return store.getItem(KEY).then(function(raw){
-    try { S = raw ? JSON.parse(raw) : fresh(); } catch(e){ S = fresh(); }
-    if (!S.settings || !S.days) S = fresh();
-    render();
-    if (!S.settings.setup) showWelcome();
+/* v1 replaced a log it couldn't read with an empty one, and the next tap
+   saved over it. Now: set the unreadable copy aside, open the last good copy
+   if there is one, and say what happened either way. */
+function boot(){
+  return store.getItem(EKEY).then(function(enc){
+    if (enc != null) {
+      if (parseBlob(enc)) { wipe(); showLock("unlock"); return; }
+      return keepDamaged(enc).then(function(){ return store.removeItem(EKEY); }).then(function(){ return store.getItem(EBAK); }).then(function(b){
+        var bb = parseEBak(b);
+        if (bb) { unlockSrc = bb.blob; unlockAt = bb.at; wipe(); showLock("unlock"); return; }
+        return startPlain("Bloom couldn't read its encrypted log and had no earlier copy to open. The damaged data has been set aside, not deleted.");
+      });
+    }
+    return startPlain();
   });
+}
+function startPlain(notice){
+  return store.getItem(KEY).then(function(raw){
+    if (raw == null) { S = fresh(); started(notice); return; }
+    var o = parseLog(raw);
+    if (o) { S = o; started(notice); keepBak(); return; }
+    return keepDamaged(raw).then(function(){ return store.getItem(BAK); }).then(function(b){
+      var bb = parseBak(b);
+      if (bb) {
+        S = bb.log; bakDone = true; save();
+        started("Bloom couldn't read its saved log, so it opened your last good copy, from " + when(bb.at) + ". The damaged data has been set aside, not deleted.");
+      } else {
+        S = fresh();
+        started("Bloom couldn't read its saved log and had no earlier copy to open. The damaged data has been set aside, not deleted, and your log starts again from here. If you have a backup file, use Import in Settings.");
+      }
+    });
+  });
+}
+function started(notice){
+  render();
+  if (notice) showNotice(notice);
+  if (!S.settings.setup) showWelcome();
+}
+function showNotice(msg){
+  $("noticeTxt").textContent = msg; $("notice").classList.remove("hidden");
+  if (!$("welcome").hidden || !S.settings.setup) { $("wNote").textContent = msg; $("wNote").classList.remove("hidden"); }
+}
+$("noticeX").addEventListener("click", function(){ $("notice").classList.add("hidden"); });
+function when(iso){
+  var d = new Date(iso); if (isNaN(d)) return "earlier";
+  var k = dk(d); return k === todayK() ? "earlier today" : k === add(todayK(), -1) ? "yesterday" : longDay(k) + (d.getFullYear() !== new Date().getFullYear() ? " " + d.getFullYear() : "");
+}
+
+/* ---------- cycle history ---------- */
+function niceY(k){ return nice(k) + (k.slice(0, 4) !== todayK().slice(0, 4) ? " " + k.slice(0, 4) : ""); }
+function renderHist(){
+  var m = model(), ps = m.periods, rows = [];
+  for (var i = ps.length - 1; i >= 0; i--){
+    var p = ps[i], nx = ps[i + 1], per = diff(p.start, p.end) + 1;
+    var len = nx ? diff(p.start, nx.start) : null, odd = len && (len < 15 || len > 60);
+    var bits = ["Period " + per + (per === 1 ? " day" : " days")];
+    if (!p.logged) bits.push("from your setup");
+    if (odd) bits.push("not counted in averages");
+    rows.push('<div class="hrow' + (nx ? '' : ' now') + '"><div class="hl">' + (nx ? niceY(p.start) + " – " + niceY(add(nx.start, -1)) : "Since " + niceY(p.start)) +
+      '<small>' + esc(bits.join(" · ")) + '</small></div><div class="hv">' + (nx ? len + " days" : "Day " + (diff(p.start, m.today) + 1)) + '<small>' + (nx ? "cycle" : "in progress") + '</small></div></div>');
+  }
+  $("hSub").textContent = m.cycles.length >= 2 ? "Average " + m.avgCycle + "-day cycle, " + m.avgPeriod + "-day period" : ps.length ? "Averages appear once two cycles are logged" : "";
+  $("histList").innerHTML = rows.length ? rows.join("") : '<div class="sub" style="padding:14px 0">Your cycles appear here once you log a period.</div>';
+}
+$("histBtn").addEventListener("click", function(){ renderHist(); open("histSheet"); });
+$("hDone").addEventListener("click", closeSheets);
+
+/* ---------- back up ---------- */
+$("backupBtn").addEventListener("click", function(){
+  var env = { app:"bloom", kind:"backup", v:2, exported:new Date().toISOString() };
+  var pr = cryptoKey ? sealWith(cryptoKey, salt, JSON.stringify(S)).then(function(blob){ env.encrypted = JSON.parse(blob); return env; })
+                     : Promise.resolve((env.data = S, env));
+  pr.then(function(o){
+    var b64s = btoa(unescape(encodeURIComponent(JSON.stringify(o))));
+    if (window.myllmShareFile) return window.myllmShareFile("data:application/json;base64," + b64s, { filename:"Bloom backup " + todayK() + ".json", mime:"application/json" });
+  }).catch(function(){});
 });
+
+/* ---------- import / restore ---------- */
+/* Everything is read here, on the phone: the file is never sent anywhere.
+   Each importer says whether a file looks like its kind and turns it into
+   { label, days, unit, wunit, settings? }. Days use Bloom's own fields. */
+var pendingSealed = null, impFromWelcome = false;
+$("importBtn").addEventListener("click", function(){ impFromWelcome = false; $("impMsg").classList.add("hidden"); pick(); });
+$("wImport").addEventListener("click", function(){ impFromWelcome = true; $("wNote").classList.add("hidden"); pick(); });
+function pick(){ var f = $("impFile"); f.value = ""; f.click(); }
+$("impFile").addEventListener("change", function(){
+  var f = this.files && this.files[0]; if (!f) return;
+  if (f.size > 20 * 1024 * 1024) { say("That file is too big to be a cycle log (over 20 MB)."); return; }
+  var rd = new FileReader();
+  rd.onload = function(){ readImport(String(rd.result || ""), f.name); };
+  rd.onerror = function(){ say("Bloom couldn't open that file."); };
+  rd.readAsText(f);
+});
+function say(msg){
+  haptic("error");
+  if (!$("welcome").hidden || impFromWelcome && !S.settings.setup) {
+    if ($("welcome").hidden) showWelcome();
+    $("wNote").textContent = msg; $("wNote").classList.remove("hidden");
+    try { $("wNote").scrollIntoView({ block:"center", behavior:"smooth" }); } catch(e){}
+  }
+  else if ($("setSheet").classList.contains("on")) { $("impMsg").textContent = msg; $("impMsg").classList.remove("hidden"); }
+  else showNotice(msg);
+}
+function readImport(text, name){
+  text = text.replace(/^\uFEFF/, "");
+  var json = null; try { json = JSON.parse(text); } catch(e){}
+  for (var i = 0; i < IMPORTERS.length; i++){
+    var im = IMPORTERS[i];
+    if (!im.sniff(json, text, name || "")) continue;
+    var r = im.read(json, text, name || "");
+    if (r.sealed) { pendingSealed = r; showLock("imp"); return r; }
+    if (r.error) { say(r.error); return r; }
+    preview(r); return r;
+  }
+  var r2 = { error:"Bloom can't read this file. It reads Bloom backups, Bloom's spreadsheet export, and spreadsheets (CSV) with a date column and a period column." };
+  say(r2.error); return r2;
+}
+var IMPORTERS = [
+  { name:"bloom", sniff:function(j){ return !!j && (j.app === "bloom" || validLog(j)); },
+    read:function(j){
+      var label = "Bloom backup" + (j.exported ? " from " + when(j.exported) : "");
+      if (j.encrypted) return parseBlob(j.encrypted) ? { sealed:true, blob:j.encrypted, label:label } : { error:"This Bloom backup is damaged and can't be opened." };
+      return fromBloom(j.app === "bloom" ? j.data : j, label);
+    } },
+  { name:"csv", sniff:function(j, t){ var h = t.split(/\r?\n/)[0]; return !j && /date|day/i.test(h) && /[,;\t]/.test(h); }, read:readCSV },
+  /* Flo (and other apps' JSON exports). Flo doesn't publish its export's
+     layout, so until we have a real one this reads any JSON generically:
+     records with a date, and keys or values that name a period, a
+     temperature, symptoms and so on. The preview shows what it found. */
+  { name:"flo", sniff:function(j){ return !!j && typeof j === "object"; }, read:readOtherJSON }
+];
+function fromBloom(data, label){
+  if (!validLog(data)) return { error:"This Bloom backup is damaged and can't be opened." };
+  var o = migrate(JSON.parse(JSON.stringify(data))), days = {};
+  Object.keys(o.days).forEach(function(k){ var e = cleanDay(o.days[k]); if (okKey(k) && e) days[k] = e; });
+  return { label:label, days:days, unit:o.settings.unit === "F" ? "F" : "C", wunit:o.settings.wunit === "lb" ? "lb" : "kg", settings:o.settings, kind:"bloom" };
+}
+function okKey(k){ return /^\d{4}-\d{2}-\d{2}$/.test(k) && !isNaN(pd(k)) && k <= todayK() && k >= "1990-01-01"; }
+function inList(list, v){ for (var i = 0; i < list.length; i++) if (list[i][0] === v) return true; return false; }
+/* Only fields Bloom knows, each checked; anything else is dropped. */
+function cleanDay(e){
+  if (!e || typeof e !== "object") return null;
+  var o = {}, str = function(v, n){ return typeof v === "string" ? v.slice(0, n) : ""; };
+  if (inList(FLOW, e.flow) && e.flow !== "none") o.flow = e.flow;
+  ["sym","mood"].forEach(function(f){ if (Array.isArray(e[f])) { var a = e[f].filter(function(x){ return typeof x === "string" && x; }).map(function(x){ return x.slice(0, 40); }).slice(0, 30); if (a.length) o[f] = a; } });
+  [["cm",CM],["lh",LH],["sex",SEX],["energy",ENERGY],["preg",PREG],["pill",PILL]].forEach(function(p){ if (inList(p[1], e[p[0]])) o[p[0]] = e[p[0]]; });
+  if (typeof e.temp === "number" && e.temp >= 30 && e.temp <= 110) o.temp = e.temp;
+  if (typeof e.sleep === "number" && e.sleep >= 0 && e.sleep <= 24) o.sleep = e.sleep;
+  if (typeof e.water === "number" && e.water > 0 && e.water <= 30) o.water = Math.round(e.water);
+  if (typeof e.weight === "number" && e.weight >= 20 && e.weight <= 700) o.weight = e.weight;
+  if (str(e.note, 500)) o.note = str(e.note, 500);
+  return Object.keys(o).length ? o : null;
+}
+
+/* CSV: Bloom's own export, or another app's — headers are matched loosely. */
+function parseCSV(t){
+  var first = t.split(/\r?\n/)[0], d = (first.match(/;/g) || []).length > (first.match(/,/g) || []).length ? ";" : (first.indexOf("\t") >= 0 && first.indexOf(",") < 0 ? "\t" : ",");
+  var rows = [], row = [], cell = "", q = false;
+  for (var i = 0; i < t.length; i++){
+    var c = t[i];
+    if (q) { if (c === '"') { if (t[i + 1] === '"') { cell += '"'; i++; } else q = false; } else cell += c; }
+    else if (c === '"') q = true;
+    else if (c === d) { row.push(cell); cell = ""; }
+    else if (c === "\n" || c === "\r") { if (c === "\r" && t[i + 1] === "\n") i++; row.push(cell); rows.push(row); row = []; cell = ""; }
+    else cell += c;
+  }
+  if (cell !== "" || row.length) { row.push(cell); rows.push(row); }
+  return rows.filter(function(r){ return r.some(function(x){ return x.trim() !== ""; }); });
+}
+var COLS = { date:/^(date|day|dates|entry date|log date)$|date/, flow:/period|flow|menstrua|bleed/, sym:/symptom/, mood:/mood|feeling/, cm:/discharge|mucus|cervical/,
+  lh:/^lh|ovulation test|lh test|lh_test/, temp:/temp|bbt/, sex:/^sex|intercourse/, note:/note|comment/, energy:/energy/, preg:/pregnan/, pill:/pill|contracept/,
+  sleep:/sleep/, water:/water/, weight:/weight/ };
+function readCSV(j, t, name){
+  var rows = parseCSV(t); if (rows.length < 2) return { error:"That spreadsheet has no rows to import." };
+  var head = rows[0].map(function(h){ return h.trim().toLowerCase().replace(/[_]+/g, " ").replace(/\s+/g, " "); }), at = {};
+  var used = {};
+  Object.keys(COLS).forEach(function(f){ for (var i = 0; i < head.length; i++) if (!used[i] && COLS[f].test(head[i])) { at[f] = i; used[i] = 1; break; } });
+  if (at.date == null) return { error:"Bloom couldn't find a date column in that spreadsheet." };
+  var unit = head[at.temp] && /(°|\b|_| )f\b|fahrenheit/.test(head[at.temp]) ? "F" : null, wunit = head[at.weight] && /lb|pound/.test(head[at.weight]) ? "lb" : "kg";
+  var order = dateOrder(rows.slice(1).map(function(r){ return r[at.date] || ""; })), days = {}, extra = 0;
+  rows.slice(1).forEach(function(r){
+    var k = toKey(r[at.date], order); if (!k || !okKey(k)) return;
+    var cell = function(f){ return at[f] == null ? "" : String(r[at[f]] || "").trim(); }, e = {}, also = [];
+    var fl = flowOf(cell("flow")); if (fl) e.flow = fl;
+    ["sym","mood"].forEach(function(f){ var v = cell(f); if (!v) return; v.split(/\s*[;|,]\s*/).forEach(function(x){ var m = known(f === "sym" ? SYM : MOOD, x, f === "sym" ? SYN_SYM : SYN_MOOD); if (m) { (e[f] = e[f] || []).indexOf(m) < 0 && e[f].push(m); } else if (x) also.push(x); }); });
+    [["cm",CM],["lh",LH],["sex",SEX],["energy",ENERGY],["preg",PREG],["pill",PILL]].forEach(function(p){ var v = pickList(p[1], cell(p[0]), p[0]); if (v) e[p[0]] = v; });
+    var n = function(f){ var v = parseFloat(cell(f).replace(",", ".")); return isFinite(v) ? v : null; };
+    var tv = n("temp"); if (tv != null) { e.temp = tv; if (!unit && tv > 50) unit = "F"; }
+    if (n("sleep") != null) e.sleep = n("sleep"); if (n("water") != null) e.water = n("water"); if (n("weight") != null) e.weight = n("weight");
+    var note = cell("note"); if (also.length) note = (note ? note + " · " : "") + "Also: " + also.join(", ");
+    if (note) e.note = note;
+    var c = cleanDay(e); if (c) days[k] = merge1(days[k], c); else extra++;
+  });
+  var bloomCSV = /^date$/.test(head[0]) && head[1] === "period" && head[2] === "symptoms";
+  return { label:bloomCSV ? "Bloom spreadsheet" : "Spreadsheet" + (name ? " · " + name : ""), days:days, unit:unit || "C", wunit:wunit,
+    note:order === "dmy?" ? "Dates were read as day/month/year." : order === "mdy" ? "Dates were read as month/day/year." : "" };
+}
+function dateOrder(vals){
+  var dmy = false, mdy = false, any = false;
+  vals.forEach(function(v){ var m = /^\s*(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{2,4})/.exec(v); if (!m) return; any = true; if (+m[1] > 12) dmy = true; if (+m[2] > 12) mdy = true; });
+  return mdy && !dmy ? "mdy" : dmy ? "dmy" : any ? "dmy?" : "iso";
+}
+function toKey(v, order){
+  v = String(v == null ? "" : v).trim(); var m;
+  if ((m = /^(\d{4})-(\d{1,2})-(\d{1,2})/.exec(v))) return m[1] + "-" + pad2(+m[2]) + "-" + pad2(+m[3]);
+  if ((m = /^(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{2,4})/.exec(v))) { var y = +m[3] < 100 ? 2000 + +m[3] : +m[3], a = +m[1], b = +m[2]; var mo = order === "mdy" ? a : b, da = order === "mdy" ? b : a; if (mo < 1 || mo > 12 || da < 1 || da > 31) return null; return y + "-" + pad2(mo) + "-" + pad2(da); }
+  if ((m = /^(\d{4})(\d{2})(\d{2})$/.exec(v))) return m[1] + "-" + m[2] + "-" + m[3];
+  return null;
+}
+function norm(x){ return String(x).toLowerCase().replace(/[_\-]+/g, " ").replace(/\s+/g, " ").trim(); }
+var SYN_SYM = { "abdominal cramps":"Cramps", "cramp":"Cramps", "period pain":"Cramps", "headaches":"Headache", "migraine":"Headache", "bloated":"Bloating",
+  "breast tenderness":"Tender breasts", "tender breast":"Tender breasts", "sore breasts":"Tender breasts", "back pain":"Backache", "lower back pain":"Backache", "spots":"Acne", "pimples":"Acne",
+  "tired":"Fatigue", "tiredness":"Fatigue", "craving":"Cravings", "food cravings":"Cravings", "insomnia":"Trouble sleeping", "low sex drive":"Low libido", "high sex drive":"High libido" };
+var SYN_MOOD = { "sad":"Low", "depressed":"Low", "down":"Low", "anxiety":"Anxious", "stressed":"Anxious", "angry":"Irritable", "irritated":"Irritable", "mood swing":"Mood swings", "energised":"Energetic", "energized":"Energetic", "calmness":"Calm", "emotional":"Sensitive" };
+function known(list, x, syn){ var n = norm(x); if (!n) return null; for (var i = 0; i < list.length; i++) if (norm(list[i]) === n) return list[i]; return syn[n] || null; }
+function flowOf(v){
+  var n = norm(v); if (!n || /^(no|none|0|false|n|-)$/.test(n)) return null;
+  if (/spot/.test(n)) return "spot"; if (/heavy/.test(n)) return "heavy"; if (/light/.test(n)) return "light";
+  if (/medium|moderate|normal|^(yes|y|true|1|x|✓|period)$/.test(n)) return "medium";
+  var f = parseFloat(n); if (isFinite(f)) return f >= 3 ? "heavy" : f >= 2 ? "medium" : f >= 1 ? "light" : null;
+  return null;
+}
+function pickList(list, v, f){
+  var n = norm(v); if (!n || /^(no|none|-)$/.test(n) && f !== "lh" && f !== "preg") return null;
+  for (var i = 0; i < list.length; i++) if (norm(list[i][1]) === n || norm(list[i][0]) === n) return list[i][0];
+  if (f === "lh" || f === "preg") return /pos|peak|high|\+|yes/.test(n) ? "pos" : /neg|low|-|no/.test(n) ? "neg" : null;
+  if (f === "sex") return /protect|condom/.test(n) ? "protected" : /yes|had|true|1|unprotect/.test(n) ? "yes" : null;
+  if (f === "cm") return /egg/.test(n) ? "eggwhite" : /water/.test(n) ? "watery" : /cream/.test(n) ? "creamy" : /stick/.test(n) ? "sticky" : /dry/.test(n) ? "dry" : null;
+  if (f === "pill") return /miss/.test(n) ? "missed" : /late/.test(n) ? "late" : /taken|yes|true|1/.test(n) ? "taken" : null;
+  if (f === "energy") return /low|tired/.test(n) ? "low" : /high|energ/.test(n) ? "high" : /ok|steady|normal|medium/.test(n) ? "ok" : null;
+  return null;
+}
+/* Two entries for one day (two rows, or two records): fields add up, sym/mood join, first value wins otherwise. */
+function merge1(a, b){
+  if (!a) return b;
+  Object.keys(b).forEach(function(f){
+    if (f === "sym" || f === "mood") { a[f] = (a[f] || []).concat(b[f].filter(function(x){ return (a[f] || []).indexOf(x) < 0; })); }
+    else if (f === "note" && a.note && a.note !== b.note) a.note = (a.note + " · " + b.note).slice(0, 500);
+    else if (!(f in a)) a[f] = b[f];
+  });
+  return a;
+}
+
+function readOtherJSON(j, t, name){
+  var recs = [], seen = 0;
+  (function walk(node, path, depth){
+    if (depth > 12 || seen > 200000) return; seen++;
+    if (Array.isArray(node)) { node.forEach(function(x){ walk(x, path, depth + 1); }); return; }
+    if (!node || typeof node !== "object") return;
+    var keys = Object.keys(node), dates = [];
+    keys.forEach(function(k){ var d = dateish(node[k], k); if (d && !/birth|created|updated|modified|registered|install|signup|last ?seen|login|export|generated/i.test(k)) dates.push({ k:k, d:d }); });
+    // a container (it holds a list of records) isn't a record itself
+    var holds = keys.some(function(k){ return Array.isArray(node[k]) && node[k].some(function(x){ return x && typeof x === "object"; }); });
+    if (dates.length && !holds) recs.push({ o:node, path:path, dates:dates });
+    keys.forEach(function(k){ var v = node[k]; if (v && typeof v === "object") walk(v, path + " " + k, depth + 1); });
+  })(j, "", 0);
+  var days = {}, cap = 0;
+  recs.forEach(function(r){
+    var o = r.o, ctx = norm(r.path + " " + Object.keys(o).join(" ") + " " + Object.keys(o).map(function(k){ return typeof o[k] === "string" && o[k].length < 60 ? o[k] : ""; }).join(" "));
+    var pick = function(re){ for (var i = 0; i < r.dates.length; i++) if (re.test(norm(r.dates[i].k))) return r.dates[i].d; return null; };
+    var start = pick(/^(start|start ?date|period ?start|from|begin)/i) || pick(/^(date|day|time|timestamp|ts)$/i) || r.dates[0].d;
+    var end = pick(/^(end|end ?date|period ?end|to|finish)/i);
+    var e = {}, also = [];
+    // forecasts aren't history: a record flagged as one, or named as one, is skipped
+    var guess = Object.keys(o).some(function(k){ return /predict|forecast|estimat|expected/i.test(k) && o[k] === true; })
+      || /predict|forecast|estimat|expected|fertil|ovulation (day|window)/.test(norm(r.path + " " + Object.keys(o).map(function(k){ return typeof o[k] === "string" ? o[k] : ""; }).join(" ")));
+    var isPeriod = /period|menstrua|bleed|flow/.test(ctx) && !guess;
+    if (isPeriod) e.flow = flowOf(ctx.match(/spotting|light|medium|moderate|heavy/) ? ctx.match(/spotting|light|medium|moderate|heavy/)[0] : "yes") || "medium";
+    var num = function(re){ for (var k in o) if (re.test(k) && typeof o[k] === "number") return o[k]; return typeof o.value === "number" && re.test(ctx) ? o.value : null; };
+    var tv = num(/temp|bbt/i); if (tv != null && (tv >= 34 && tv <= 43 || tv >= 93 && tv <= 110)) e.temp = Math.round(tv * 100) / 100;
+    var wv = num(/weight/i); if (wv != null && wv >= 20 && wv <= 700) e.weight = Math.round(wv * 10) / 10;
+    var sv = num(/sleep/i); if (sv != null) { if (sv > 24) sv = sv / 60; if (sv >= 0 && sv <= 24) e.sleep = Math.round(sv * 10) / 10; }
+    var hv = num(/water/i); if (hv != null && hv > 0 && hv <= 30) e.water = Math.round(hv);
+    // symptoms and moods: any value (or key set to true) naming one Bloom knows
+    Object.keys(o).forEach(function(k){
+      var vals = Array.isArray(o[k]) ? o[k] : [o[k] === true ? k : o[k]];
+      vals.forEach(function(v){ if (typeof v !== "string") return;
+        var s = known(SYM, v, SYN_SYM), m = known(MOOD, v, SYN_MOOD);
+        if (s) (e.sym = e.sym || []).indexOf(s) < 0 && e.sym.push(s); else if (m) (e.mood = e.mood || []).indexOf(m) < 0 && e.mood.push(m); });
+    });
+    if (/ovulation test|\blh\b/.test(ctx)) { var lv = pickList(LH, Object.keys(o).map(function(k){ return typeof o[k] === "string" ? o[k] : ""; }).join(" "), "lh"); if (lv) e.lh = lv; }
+    if (/pregnan/.test(ctx)) { var pv = pickList(PREG, Object.keys(o).map(function(k){ return typeof o[k] === "string" ? o[k] : ""; }).join(" "), "preg"); if (pv) e.preg = pv; }
+    if (/intercourse|\bsex\b/.test(ctx)) e.sex = /protect|condom/.test(ctx) && !/unprotect/.test(ctx) ? "protected" : "yes";
+    if (/discharge|mucus/.test(ctx)) { var cv = pickList(CM, ctx, "cm"); if (cv) e.cm = cv; }
+    for (var nk in o) if (/note|comment/i.test(nk) && typeof o[nk] === "string" && o[nk].trim()) e.note = o[nk].trim().slice(0, 500);
+    var c = cleanDay(e); if (!c) return;
+    var span = [start];
+    if (end && c.flow && end > start) for (var d = add(start, 1); d <= end && span.length < 15; d = add(d, 1)) span.push(d);
+    span.forEach(function(k){ if (okKey(k)) { days[k] = merge1(days[k], JSON.parse(JSON.stringify(c))); cap++; } });
+  });
+  var flo = /flo/i.test(name) || /flo/i.test(JSON.stringify(Object.keys(j)).slice(0, 2000));
+  if (!Object.keys(days).length) return { error:(flo ? "Bloom couldn't find periods in this Flo file — Flo's export layout isn't supported yet." : "Bloom couldn't find periods or anything else it knows in this file.") + " Tell us in Feedback & Ideas and we'll add it (please don't send the file itself — it's your health data)." };
+  var temps = Object.keys(days).map(function(k){ return days[k].temp; }).filter(function(v){ return typeof v === "number"; });
+  return { label:(flo ? "Flo export" : "Another app's export") + (name ? " · " + name : ""), days:days, unit:temps.length && temps[0] > 50 ? "F" : "C", wunit:"kg",
+    note:"Read without knowing this app's exact layout — check the periods below look right before adding them." };
+}
+function dateish(v, k){
+  if (typeof v === "string") { var m = /^(\d{4})-(\d{2})-(\d{2})(?:$|[T ])/.exec(v); if (m) return v.length > 10 && /[T ]\d/.test(v.slice(10, 12)) && /Z|[+\-]\d\d:?\d\d$/.test(v) ? dk(new Date(v)) : m[1] + "-" + m[2] + "-" + m[3]; return null; }
+  if (typeof v === "number" && /date|time|day|start|end|ts/i.test(k)) { var ms = v > 1e12 ? v : v > 1e9 ? v * 1000 : 0; if (ms) return dk(new Date(ms)); }
+  return null;
+}
+
+/* ---------- preview, then merge or replace ---------- */
+var imp = null, replaceArmed = 0;
+function conv(r, unit, wunit){
+  var out = {};
+  Object.keys(r.days).forEach(function(k){
+    var e = JSON.parse(JSON.stringify(r.days[k]));
+    if (typeof e.temp === "number" && r.unit !== unit) e.temp = Math.round((unit === "F" ? e.temp * 9 / 5 + 32 : (e.temp - 32) * 5 / 9) * 100) / 100;
+    if (typeof e.weight === "number" && r.wunit !== wunit) e.weight = Math.round((wunit === "lb" ? e.weight * 2.20462 : e.weight / 2.20462) * 10) / 10;
+    out[k] = e;
+  });
+  return out;
+}
+function same(a, b){ return JSON.stringify(a, Object.keys(a).sort()) === JSON.stringify(b, Object.keys(b).sort()); }
+function preview(r){
+  imp = r; var mine = conv(r, S.settings.unit, S.settings.wunit), ks = Object.keys(mine).sort(), nNew = 0, nSame = 0, nDiff = 0;
+  ks.forEach(function(k){ var e = S.days[k]; if (!e) nNew++; else if (same(e, mine[k])) nSame++; else nDiff++; });
+  var periodsIn = ks.filter(function(k){ return isBleed(mine[k].flow); }).length;
+  $("iFrom").textContent = r.label;
+  $("iCounts").innerHTML = stat(nNew, "", "New days") + stat(nSame, "", "Already logged") + stat(nDiff, "", "Different");
+  var notes = [ks.length ? ks.length + (ks.length === 1 ? " day" : " days") + " in the file, " + niceY(ks[0]) + " – " + niceY(ks[ks.length - 1]) + ", with " + periodsIn + " period " + (periodsIn === 1 ? "day" : "days") + "." : "There are no days in this file."];
+  if (nDiff) notes.push("Where a day differs, Adding keeps yours and only fills in what you hadn't logged.");
+  if (r.note) notes.push(r.note);
+  $("iNote").textContent = notes.join(" ");
+  $("iMerge").disabled = !ks.length; $("iMerge").textContent = !S.settings.setup || !Object.keys(S.days).length ? "Add to Bloom" : "Add to my log";
+  $("iReplace").classList.toggle("hidden", !Object.keys(S.days).length); $("iReplace").textContent = "Replace my log with this"; replaceArmed = 0;
+  $("welcome").hidden = true; $("lock").hidden = true;
+  document.querySelectorAll(".sheet.on").forEach(function(x){ x.classList.remove("on"); });
+  open("impSheet");
+}
+function finishImport(n, how){
+  var from = imp.label;
+  if (!S.settings.setup) S.settings.setup = true;
+  imp = null; haptic("success"); closeSheets(); changed();
+  showNotice(how + " " + n + (n === 1 ? " day" : " days") + " from " + from + ".");
+}
+$("iMerge").addEventListener("click", function(){
+  if (!imp) return;
+  var adopt = imp.settings && (!S.settings.setup || !Object.keys(S.days).length);
+  if (adopt) { var keep = S.settings; S.settings = migrate({ settings:JSON.parse(JSON.stringify(imp.settings)), days:{} }).settings; S.settings.setup = true; if (keep.seed && !S.settings.seed) S.settings.seed = keep.seed; }
+  var mine = conv(imp, S.settings.unit, S.settings.wunit), n = 0;
+  Object.keys(mine).forEach(function(k){
+    var e = S.days[k];
+    if (!e) { S.days[k] = mine[k]; n++; return; }
+    var grew = false; Object.keys(mine[k]).forEach(function(f){ if (!(f in e)) { e[f] = mine[k][f]; grew = true; } }); if (grew) n++;
+  });
+  finishImport(n, "Added");
+});
+$("iReplace").addEventListener("click", function(){
+  if (!imp) return;
+  if (Date.now() - replaceArmed > 4000) { replaceArmed = Date.now(); $("iReplace").textContent = "Tap again to replace your whole log"; haptic("warning"); return; }
+  if (imp.settings) { S.settings = migrate({ settings:JSON.parse(JSON.stringify(imp.settings)), days:{} }).settings; }
+  S.settings.setup = true;
+  S.days = conv(imp, S.settings.unit, S.settings.wunit);
+  finishImport(Object.keys(S.days).length, "Replaced your log with");
+});
+$("iCancel").addEventListener("click", function(){ imp = null; closeSheets(); if (!S.settings.setup) showWelcome(); });
+
+boot();
 </script>
 <script>
 /* myllm-fullscreen-v2 — full screen where MyLLM can also close the app for us
