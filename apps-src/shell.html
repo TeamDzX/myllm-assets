@@ -2274,7 +2274,7 @@ function systemPrompt(listing){
     'Hidden: .trash (deleted files; `trash`, `ls -a`) and .scratch (your notes). Values that look like keys or tokens are shown to you as [masked]; never ask the user to paste them.',
     'Writing output to a file with > or >> is a CHANGE: propose it, never run it.',
     '',
-    'Reply with ONE JSON object and nothing else:',
+    'Reply with ONE JSON object and nothing else (inside a string, write a quote as \\" and a line break as \\n):',
     '  {"run":"<command>"}                     to look at something first',
     '  {"run":["<command>","<command>"]}         up to 4 unrelated looks in one step (e.g. cat two files and log)',
     '  {"say":"<answer>"}                      when you can answer',
@@ -2316,7 +2316,36 @@ function parseReply(raw){
   t = t.replace(/^```(?:json)?/i, '').replace(/```$/, '').trim();
   var a = t.indexOf('{'), b = t.lastIndexOf('}');
   if (a < 0 || b < a) return null;
-  try { return JSON.parse(t.slice(a, b + 1)); } catch(e){ return null; }
+  var body = t.slice(a, b + 1);
+  try { return JSON.parse(body); } catch(e){}
+  /* v14: smaller models (Jarvis, a 26B) write quotes inside a string without
+     escaping them — 'It is cumbersome to "see" …' — and raw line breaks. The
+     whole reply then failed to parse and its protocol envelope {"say": "…"}
+     was shown to the user as the answer. Repair and try once more. */
+  try { var r = JSON.parse(repairJSON(body)); return r && typeof r === 'object' ? r : null; } catch(e){ return null; }
+}
+
+/* Escape what a loose model leaves bare inside strings: line breaks and tabs,
+   and a quote that can't be the string's end (the end is followed by , } ] or
+   :, give or take spaces). */
+function repairJSON(s){
+  var out = '', inStr = false;
+  for (var i = 0; i < s.length; i++){
+    var c = s[i];
+    if (!inStr){ out += c; if (c === '"') inStr = true; continue; }
+    if (c === '\\'){ out += c + (s[i + 1] || ''); i++; continue; }
+    if (c === '\n'){ out += '\\n'; continue; }
+    if (c === '\r'){ continue; }
+    if (c === '\t'){ out += '\\t'; continue; }
+    if (c === '"'){
+      var j = i + 1; while (j < s.length && /\s/.test(s[j])) j++;
+      if (j >= s.length || ',}]:'.indexOf(s[j]) >= 0){ out += c; inStr = false; }
+      else out += '\\"';
+      continue;
+    }
+    out += c;
+  }
+  return out;
 }
 
 /* ---------- v13: the working bar ----------
