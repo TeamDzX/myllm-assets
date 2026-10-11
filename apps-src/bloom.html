@@ -138,6 +138,33 @@ button{font:inherit;color:inherit;cursor:pointer}
 .fr .nm{flex:1}
 .fr .ph{font-size:12px;color:var(--muted)}
 .fr .ct{font-weight:700;min-width:22px;text-align:right}
+/* quick log on Today */
+.qhead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+.qhead h2{margin:0}
+.seg.sm button{padding:5px 10px;font-size:13px}
+.chips.qk{gap:7px}
+.chips.qk .chip{padding:7px 12px}
+.chips + .chips{margin-top:9px}
+.chip .sv{display:inline-flex;gap:2px;margin-left:6px;vertical-align:middle}
+.chip .sv i{width:5px;height:5px;border-radius:50%;background:currentColor;opacity:.25}
+.chip .sv i.f{opacity:1}
+.chip.add,.chip.more{border-style:dashed;color:var(--muted);font-weight:600}
+.qsev{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px;font-size:14px}
+.qsev > span:first-child{flex-basis:100%}
+.qsev .chip{padding:6px 11px;font-size:13px}
+.qadd{display:flex;gap:8px;margin-top:10px}
+.qadd input{flex:1;min-width:0;border:1.5px solid var(--line);border-radius:12px;padding:9px 12px;font-size:15px;background:var(--surface);color:var(--ink)}
+.qacts{display:flex;gap:8px;margin-top:14px}
+.qacts .btn{padding:10px 8px;font-size:14px}
+.heads{margin-top:12px;font-size:13.5px;line-height:1.45;background:var(--lav-3);color:var(--lav-ink);border-radius:12px;padding:9px 12px}
+/* patterns */
+.pat{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--line);font-size:14.5px;line-height:1.45}
+.pat:last-child{border-bottom:0}
+.pat .pk{flex-shrink:0;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--lav-ink);background:var(--lav-3);border-radius:8px;padding:3px 7px;margin-top:2px;min-width:58px;text-align:center}
+.words{margin-top:12px;background:var(--bg2);border-radius:14px;padding:12px 14px;font-size:14.5px;line-height:1.5}
+.words .by{display:block;font-size:12px;color:var(--muted);margin-top:8px}
+.mine{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.mine .chip{padding:5px 10px;font-size:13px}
 .note{font-size:13px;line-height:1.45;color:var(--muted);margin:10px 0 0}
 .note.warn{color:var(--rose-ink)}
 #tchart{width:100%;height:150px;display:block}
@@ -287,6 +314,15 @@ body.imm .imm-safe{display:block}
       </div>
       <div class="wk" id="week"></div>
     </div>
+    <div class="card" id="quick" style="margin-top:14px">
+      <div class="qhead"><h2>How are you feeling?</h2><div class="seg sm" id="qDay"><button type="button" data-q="0" class="on">Today</button><button type="button" data-q="1">Yesterday</button></div></div>
+      <div class="chips qk" id="qSym" aria-label="Symptoms"></div>
+      <div class="chips qk lav" id="qMood" aria-label="Mood"></div>
+      <div class="qadd hidden" id="qAdd"><input type="text" id="qNew" maxlength="30" placeholder="Your own symptom" autocomplete="off"><button type="button" class="btn alt" id="qNewGo" style="flex:0 0 auto;padding:9px 14px;font-size:14px">Add</button></div>
+      <div class="qsev hidden" id="qSev"></div>
+      <div class="qacts"><button type="button" class="btn ghost" id="qSame">Same as yesterday</button><button type="button" class="btn ghost" id="qMore">Everything else…</button></div>
+      <div class="heads hidden" id="qHeads"></div>
+    </div>
     <div class="up" id="upcoming"></div>
     <div class="card" id="todayLog" style="margin-top:14px"></div>
     <div class="card"><div class="tip"><div class="ic"><svg><use href="#i-moon"/></svg></div><p id="phaseTip"></p></div></div>
@@ -310,6 +346,9 @@ body.imm .imm-safe{display:block}
     <div class="card"><h2>Your averages</h2><div class="stats" id="stats"></div><p class="note" id="statNote"></p></div>
     <div class="card"><h2>Recent cycles</h2><div class="bars" id="bars"></div><p class="note" id="barNote"></p><button type="button" class="btn ghost" id="histBtn" style="width:100%;margin-top:14px">Cycle history</button></div>
     <div class="card" id="tempCard"><h2>Temperature this cycle</h2><svg id="tchart" viewBox="0 0 320 150" preserveAspectRatio="none"></svg><p class="note" id="tempNote"></p></div>
+    <div class="card" id="patCard"><h2>Your patterns</h2><div id="pats"></div>
+      <div id="wordsBox"></div>
+      <p class="note" id="patNote">Bloom works these out itself, on this phone, by counting what you've logged. They're patterns in your own log, not a diagnosis, and not medical advice.</p></div>
     <div class="card"><h2>Symptoms &amp; moods</h2><div class="sub">The last 90 days, and the phase they mostly come in</div><div class="freq" id="freq" style="margin-top:12px"></div></div>
   </section>
 </main>
@@ -369,12 +408,16 @@ body.imm .imm-safe{display:block}
     <div class="row"><div class="rl">Temperature</div><div class="seg" id="sUnit"><button type="button" data-v="C">°C</button><button type="button" data-v="F">°F</button></div></div>
     <div class="row"><div class="rl">Weight</div><div class="seg" id="sWUnit"><button type="button" data-v="kg">kg</button><button type="button" data-v="lb">lb</button></div></div>
     <div class="row"><div class="rl">Track the pill<small>Adds a Taken / Missed choice to each day.</small></div><div class="seg" id="sPill"><button type="button" data-v="off">Off</button><button type="button" data-v="on">On</button></div></div>
+    <div class="row" id="mineRow"><div class="rl">Your own symptoms<small id="mineNote">Add one from Today with “+ Your own”. Removing one here keeps the days you logged it.</small><div class="mine" id="sMine"></div></div></div>
+  </div>
+  <div class="card hidden" style="padding:4px 16px" id="aiCard">
+    <div class="row"><div class="rl"><b>Describe patterns with this phone's model</b><small>Off unless you turn it on. Bloom then sends the pattern summary from Insights — never your log, dates or notes — to the AI model running on this iPhone inside MyLLM. MyLLM never sends it to a server or a cloud model, even when your chats use one; with no model on this phone, nothing is sent. The reply isn't saved.</small></div><div class="seg" id="sAI"><button type="button" data-v="off">Off</button><button type="button" data-v="on">On</button></div></div>
   </div>
   <div class="card" style="padding:4px 16px">
     <div class="row"><div class="rl"><b>Passcode</b><small id="pcNote"></small></div><button type="button" class="btn alt" id="pcBtn" style="flex:0 0 auto;padding:10px 14px;font-size:14px"></button></div>
     <div class="row hidden" id="pcOffRow"><div class="rl">Turn passcode off<small>Your log is kept unencrypted again.</small></div><button type="button" class="btn ghost" id="pcOff" style="flex:0 0 auto;padding:10px 14px;font-size:14px">Turn off</button></div>
   </div>
-  <div class="privacy"><svg><use href="#i-shield"/></svg><div><b>Your data stays on this phone.</b> Bloom makes no internet requests, uses no AI, and shares nothing with other apps or with MyLLM's assistant. Your log is saved only inside MyLLM on this iPhone, and travels only in your phone's own backup, like your photos.</div></div>
+  <div class="privacy"><svg><use href="#i-shield"/></svg><div><b>Your data stays on this phone.</b> Bloom makes no internet requests and shares nothing with other apps or with MyLLM's assistant. It finds your patterns itself, by counting, and uses no AI unless you turn on “Describe patterns with this phone's model”. Your log is saved only inside MyLLM on this iPhone, and travels only in your phone's own backup, like your photos.</div></div>
   <div class="card" style="padding:4px 16px;margin-top:14px">
     <div class="row"><div class="rl">Back up<small id="bakNote">A full copy of your log as a file, to keep somewhere safe — Files, iCloud Drive, your computer. Bloom can restore it later, even on a new phone.</small></div><button type="button" class="btn ghost" id="backupBtn" style="flex:0 0 auto;padding:10px 14px;font-size:14px">Back up</button></div>
     <div class="row"><div class="rl">Import or restore<small>A Bloom backup, Bloom's spreadsheet, or a CSV from another app. You'll see what's in it before anything is saved.</small><span class="note warn hidden" id="impMsg" style="display:block"></span></div><button type="button" class="btn ghost" id="importBtn" style="flex:0 0 auto;padding:10px 14px;font-size:14px">Import</button></div>
@@ -390,7 +433,7 @@ body.imm .imm-safe{display:block}
   <div class="in">
     <div class="hero"><div class="tile"><svg><use href="#i-bloom"/></svg></div><h2>Welcome to Bloom</h2><p>A calm, private way to follow your cycle — your period, fertile days, ovulation and how you feel.</p></div>
     <div class="notice hidden" id="wNote" role="status" style="margin-bottom:12px"></div>
-    <div class="privacy" style="margin-bottom:12px"><svg><use href="#i-shield"/></svg><div><b>Private by design.</b> Everything stays on this phone. No account, no internet, no AI, no sharing. Add a passcode any time to encrypt it.</div></div>
+    <div class="privacy" style="margin-bottom:12px"><svg><use href="#i-shield"/></svg><div><b>Private by design.</b> Everything stays on this phone. No account, no internet, no sharing, no AI unless you choose it. Add a passcode any time to encrypt it.</div></div>
     <div class="q"><div class="ql">When did your last period start?</div><div class="field"><input type="date" id="wStart"></div><div class="sub" style="margin-top:8px">Not sure? Leave it empty and log your next period when it comes.</div></div>
     <div class="q"><div class="ql">How long is your cycle, usually?</div><div class="step"><button type="button" data-w="cycle" data-d="-1">−</button><span id="wCycle">28 days</span><button type="button" data-w="cycle" data-d="1">+</button></div><div class="sub" style="margin-top:8px">From the first day of one period to the first day of the next. 28 is a fine guess; Bloom learns yours.</div></div>
     <div class="q"><div class="ql">And your period?</div><div class="step"><button type="button" data-w="period" data-d="-1">−</button><span id="wPeriod">5 days</span><button type="button" data-w="period" data-d="1">+</button></div></div>
@@ -432,12 +475,14 @@ var store = window.myllmStorage || {
    slots; the log's own `v` says its shape.) */
 var KEY = "bloom.v1", EKEY = "bloom.v1.enc", BAK = "bloom.v1.bak", EBAK = "bloom.v1.enc.bak", DMG = "bloom.damaged.";
 var BIG = 300000;   // MyLLM gives each app 1 MB; past this, skip the spare copy
-function fresh(){ return { v:2, settings:{ cycle:28, period:5, luteal:14, goal:"track", unit:"C", wunit:"kg", pill:false, setup:false, seed:null }, days:{} }; }
+function fresh(){ return { v:2, settings:{ cycle:28, period:5, luteal:14, goal:"track", unit:"C", wunit:"kg", pill:false, setup:false, seed:null, custom:[], aiWords:false }, days:{} }; }
 function validLog(o){ return !!o && typeof o === "object" && !!o.settings && typeof o.settings === "object" && !!o.days && typeof o.days === "object" && !Array.isArray(o.days); }
 /* v1 → v2: new settings get defaults; new day fields are optional, so nothing else moves. */
 function migrate(o){
   var d = fresh().settings;
   for (var k in d) if (!(k in o.settings)) o.settings[k] = d[k];
+  var c = o.settings.custom; o.settings.custom = (Array.isArray(c) ? c : []).filter(function(x){ return typeof x === "string" && x.trim(); }).map(function(x){ return x.trim().slice(0, 30); }).filter(function(x, i, a){ return a.indexOf(x) === i && SYM.indexOf(x) < 0; }).slice(0, 20);
+  o.settings.aiWords = o.settings.aiWords === true;
   if (!(o.v >= 2)) o.v = 2;
   return o;
 }
@@ -476,6 +521,10 @@ var SEX = [["yes","Had sex"],["protected","Protected"]];
 var ENERGY = [["low","Low"],["ok","Steady"],["high","High"]];
 var PREG = [["neg","Negative"],["pos","Positive"]];
 var PILL = [["taken","Taken"],["late","Taken late"],["missed","Missed"]];
+var SEV = ["", "Mild", "Moderate", "Severe"];   // e.sev[symptom] = 1–3; rating is optional
+var LOWMOOD = ["Low","Anxious","Irritable","Mood swings"];
+var QSYM = ["Cramps","Headache","Bloating","Fatigue","Tender breasts","Backache"], QMOOD = ["Happy","Calm","Low","Irritable","Anxious"];
+function symList(){ return SYM.concat((S && S.settings.custom) || []); }
 function isBleed(f){ return f === "light" || f === "medium" || f === "heavy"; }
 
 /* ---------- the model: periods, averages, predictions ---------- */
@@ -581,7 +630,7 @@ var $ = function(id){ return document.getElementById(id); };
 function render(){
   if (!S) return;
   var m = model();
-  renderToday(m); renderCal(m); renderIns(m);
+  renderToday(m); renderQuick(m); renderCal(m); renderIns(m);
 }
 function renderToday(m){
   var ring = $("ring"), t = m.today;
@@ -645,7 +694,7 @@ function renderToday(m){
   var e = S.days[t], bits = [];
   if (e) {
     if (e.flow && e.flow !== "none") bits.push(label(FLOW, e.flow) + (e.flow === "spot" ? "" : " flow"));
-    (e.sym || []).forEach(function(s){ bits.push(s); });
+    (e.sym || []).forEach(function(s){ bits.push(s + (e.sev && e.sev[s] ? " (" + SEV[e.sev[s]].toLowerCase() + ")" : "")); });
     (e.mood || []).forEach(function(s){ bits.push(s); });
     if (e.cm) bits.push(label(CM, e.cm) + " discharge");
     if (e.lh) bits.push("LH " + label(LH, e.lh).toLowerCase());
@@ -753,6 +802,9 @@ function renderIns(m){
     });
   });
   var top = Object.keys(counts).sort(function(a, b){ return counts[b].n - counts[a].n; }).slice(0, 8);
+  var pt = patterns(m);
+  $("pats").innerHTML = pt.list.length ? pt.list.map(function(p){ return '<div class="pat"><span class="pk">' + p.tag + '</span><span>' + esc(p.text) + '</span></div>'; }).join("") : '<div class="sub">' + esc(pt.why) + '</div>';
+  renderWords(pt.list, m);
   $("freq").innerHTML = top.length ? top.map(function(s){
     var c = counts[s], best = Object.keys(c.ph).sort(function(a, b){ return c.ph[b] - c.ph[a]; })[0];
     var where = best && c.n >= 3 && c.ph[best] / c.n >= 0.6 ? "mostly in your " + (best === "period" ? "period" : PHASE[best].toLowerCase()) : "";
@@ -789,7 +841,8 @@ function fillDay(){
     if (f[0] === "spot") drops = '<svg style="width:7px;height:9px"><use href="#i-drop"/></svg>';
     return '<button type="button" class="chip' + ((e.flow || "none") === f[0] ? " on" : "") + '" data-flow="' + f[0] + '"><span class="drops" style="color:var(--rose)">' + drops + '</span>' + f[1] + '</button>';
   }).join("");
-  $("fSym").innerHTML = SYM.map(function(s){ return chip(s, (e.sym || []).indexOf(s) >= 0, "sym"); }).join("");
+  var syms = symList(); (e.sym || []).forEach(function(s){ if (syms.indexOf(s) < 0) syms.push(s); });
+  $("fSym").innerHTML = syms.map(function(s){ return chip(s, (e.sym || []).indexOf(s) >= 0, "sym", null, e.sev && e.sev[s]); }).join("");
   $("fMood").innerHTML = MOOD.map(function(s){ return chip(s, (e.mood || []).indexOf(s) >= 0, "mood"); }).join("");
   $("fCm").innerHTML = CM.map(function(c){ return chip(c[1], e.cm === c[0], "cm", c[0]); }).join("");
   $("fLh").innerHTML = LH.map(function(c){ return chip(c[1], e.lh === c[0], "lh", c[0]); }).join("");
@@ -808,10 +861,12 @@ function fillDay(){
   $("fWeight").placeholder = S.settings.wunit === "lb" ? "132.0" : "60.0";
   $("fWUnit").textContent = S.settings.wunit; $("bodyErr").classList.add("hidden");
 }
-function chip(text, on, kind, val){ return '<button type="button" class="chip' + (on ? " on" : "") + '" data-' + kind + '="' + esc(val || text) + '">' + esc(text) + '</button>'; }
+function chip(text, on, kind, val, sev){ return '<button type="button" class="chip' + (on ? " on" : "") + '" data-' + kind + '="' + esc(val || text) + '"' + (sev ? ' aria-label="' + esc(text) + ', ' + SEV[sev].toLowerCase() + '"' : '') + '>' + esc(text) + (on && sev ? sevDots(sev) : '') + '</button>'; }
+function sevDots(n){ var d = ""; for (var i = 1; i <= 3; i++) d += '<i' + (i <= n ? ' class="f"' : '') + '></i>'; return '<span class="sv" aria-hidden="true">' + d + '</span>'; }
 function tidy(k){
   var e = S.days[k]; if (!e) return;
   if (e.flow === "none") delete e.flow;
+  if (e.sev) { Object.keys(e.sev).forEach(function(s){ if (!(e.sym || []).length || e.sym.indexOf(s) < 0 || !(e.sev[s] >= 1 && e.sev[s] <= 3)) delete e.sev[s]; }); if (!Object.keys(e.sev).length) delete e.sev; }
   ["sym","mood"].forEach(function(f){ if (e[f] && !e[f].length) delete e[f]; });
   ["cm","lh","sex","note","energy","preg","pill"].forEach(function(f){ if (!e[f]) delete e[f]; });
   ["temp","sleep","weight"].forEach(function(f){ if (typeof e[f] !== "number") delete e[f]; });
@@ -854,6 +909,195 @@ bodyField("fWeight", "weight", 0, function(){ return S.settings.wunit === "lb" ?
 $("fNote").addEventListener("input", function(){ if (!editing) return; entry().note = $("fNote").value.slice(0, 500); tidy(editing); changed(); });
 $("dClear").addEventListener("click", function(){ if (!editing) return; delete S.days[editing]; haptic("light"); fillDay(); changed(); });
 $("dDone").addEventListener("click", closeSheets);
+
+
+/* ---------- quick log (Today) ----------
+   One tap per symptom or mood, saved as you tap, for today or yesterday.
+   The chips are the ones you log most (the usual ones until there's a
+   history); "more" shows the rest and your own. A symptom just turned on can
+   be rated, if you want — leaving it unrated is fine. */
+var qOff = 0, qOpen = { sym:false, mood:false }, qFocus = null;
+function qDayK(){ return add(todayK(), -qOff); }
+function dayEntry(k){ return S.days[k] || (S.days[k] = {}); }
+function pickChips(all, f, defaults, n, chosen){
+  var since = add(todayK(), -90), c = {};
+  Object.keys(S.days).forEach(function(k){ if (k >= since) (S.days[k][f] || []).forEach(function(x){ c[x] = (c[x] || 0) + 1; }); });
+  var order = Object.keys(c).filter(function(x){ return all.indexOf(x) >= 0; }).sort(function(a, b){ return c[b] - c[a] || all.indexOf(a) - all.indexOf(b); });
+  defaults.concat(all).forEach(function(x){ if (order.indexOf(x) < 0) order.push(x); });
+  var out = order.slice(0, n);
+  (chosen || []).forEach(function(x){ if (out.indexOf(x) < 0) out.push(x); });
+  return out;
+}
+function renderQuick(m){
+  var k = qDayK(), e = S.days[k] || {}, all = symList();
+  document.querySelectorAll("#qDay button").forEach(function(b){ b.classList.toggle("on", +b.dataset.q === qOff); });
+  (e.sym || []).forEach(function(x){ if (all.indexOf(x) < 0) all.push(x); });
+  var syms = qOpen.sym ? all : pickChips(all, "sym", QSYM, 6, e.sym);
+  $("qSym").innerHTML = syms.map(function(x){ return chip(x, (e.sym || []).indexOf(x) >= 0, "qsym", null, e.sev && e.sev[x]); }).join("")
+    + (all.length > syms.length ? '<button type="button" class="chip more" data-qmore="sym">' + (all.length - syms.length) + ' more</button>' : qOpen.sym ? '<button type="button" class="chip more" data-qmore="sym">Fewer</button>' : '')
+    + '<button type="button" class="chip add" data-qadd="1">+ Your own</button>';
+  var moods = qOpen.mood ? MOOD : pickChips(MOOD, "mood", QMOOD, 5, e.mood);
+  $("qMood").innerHTML = moods.map(function(x){ return chip(x, (e.mood || []).indexOf(x) >= 0, "qmood"); }).join("")
+    + (MOOD.length > moods.length ? '<button type="button" class="chip more" data-qmore="mood">' + (MOOD.length - moods.length) + ' more</button>' : qOpen.mood ? '<button type="button" class="chip more" data-qmore="mood">Fewer</button>' : '');
+  var sv = $("qSev");
+  if (qFocus && (e.sym || []).indexOf(qFocus) >= 0) {
+    var cur = e.sev && e.sev[qFocus] || 0;
+    sv.innerHTML = '<span><b>' + esc(qFocus) + '</b> · how bad? <span class="sub">(optional)</span></span>' + [1, 2, 3].map(function(n){ return '<button type="button" class="chip' + (cur === n ? " on" : "") + '" data-qsev="' + n + '">' + SEV[n] + '</button>'; }).join("");
+    sv.classList.remove("hidden");
+  } else sv.classList.add("hidden");
+  var prev = S.days[add(k, -1)] || {}, carry = (prev.sym || []).filter(function(x){ return (e.sym || []).indexOf(x) < 0; }).length + (prev.mood || []).filter(function(x){ return (e.mood || []).indexOf(x) < 0; }).length;
+  $("qSame").textContent = qOff ? "Same as the day before" : "Same as yesterday";
+  $("qSame").disabled = !carry;
+  var hd = $("qHeads"), soon = qOff ? [] : headsUp(m);
+  hd.textContent = soon.length ? "Heads-up: you've often logged " + listWords(soon.map(nm)) + " in the days before your period, and it's due around " + nice(m.next) + "." : "";
+  hd.classList.toggle("hidden", !soon.length);
+}
+function listWords(a){ return a.length < 2 ? a.join("") : a.slice(0, -1).join(", ") + " and " + a[a.length - 1]; }
+$("quick").addEventListener("click", function(ev){
+  var b = ev.target.closest("button"); if (!b || !S) return;
+  var d = b.dataset, k = qDayK();
+  if (d.q != null) { qOff = +d.q; qFocus = null; haptic("selection"); render(); return; }
+  if (d.qmore) { qOpen[d.qmore] = !qOpen[d.qmore]; render(); return; }
+  if (d.qadd) { $("qAdd").classList.remove("hidden"); $("qNew").focus(); return; }
+  if (b.id === "qNewGo") { addOwn(); return; }
+  if (b.id === "qMore") { openDay(k); return; }
+  var e = dayEntry(k);
+  if (d.qsym || d.qmood) {
+    var f = d.qsym ? "sym" : "mood", v = d.qsym || d.qmood, a = e[f] || (e[f] = []), i = a.indexOf(v);
+    if (i >= 0) { a.splice(i, 1); if (qFocus === v) qFocus = null; } else { a.push(v); if (f === "sym") qFocus = v; }
+  } else if (d.qsev) {
+    if (!qFocus) return; e.sev = e.sev || {}; if (e.sev[qFocus] === +d.qsev) delete e.sev[qFocus]; else e.sev[qFocus] = +d.qsev;
+  } else if (b.id === "qSame") {
+    var p = S.days[add(k, -1)] || {};
+    ["sym","mood"].forEach(function(f){ (p[f] || []).forEach(function(x){ var a = e[f] || (e[f] = []); if (a.indexOf(x) < 0) { a.push(x); if (f === "sym" && p.sev && p.sev[x]) (e.sev = e.sev || {})[x] = p.sev[x]; } }); });
+    qFocus = null; toast("Copied " + (qOff ? "the day before's" : "yesterday's") + " symptoms and mood — tap any to take it off.");
+  } else return;
+  haptic("selection"); tidy(k); changed();
+});
+$("qNew").addEventListener("keydown", function(ev){ if (ev.key === "Enter") { ev.preventDefault(); addOwn(); } });
+/* Your own symptom: a name Bloom already knows (or a usual word for one) is
+   that one; otherwise it joins your list, up to 20. */
+function addOwn(){
+  var raw = $("qNew").value.replace(/\s+/g, " ").trim().slice(0, 30);
+  if (raw.length < 2) { $("qNew").focus(); return; }
+  var name = known(symList(), raw, SYN_SYM) || raw.charAt(0).toUpperCase() + raw.slice(1);
+  if (symList().indexOf(name) < 0) {
+    if (S.settings.custom.length >= 20) { toast("You have 20 of your own symptoms — remove one in Settings to add another."); return; }
+    S.settings.custom.push(name);
+  }
+  var e = dayEntry(qDayK()), a = e.sym || (e.sym = []); if (a.indexOf(name) < 0) a.push(name);
+  qFocus = name; qOpen.sym = qOpen.sym || pickChips(symList(), "sym", QSYM, 6, a).indexOf(name) < 0;
+  $("qNew").value = ""; $("qAdd").classList.add("hidden"); haptic("success"); tidy(qDayK()); changed();
+}
+
+/* ---------- patterns ----------
+   Plain counting over the last year of your own log — no model. Each finding
+   needs repeats (two cycles at least) and has to stand out from your other
+   days, so one bad week doesn't become a "pattern". */
+function has(k, x){ var e = S.days[k]; return !!e && ((e.sym || []).indexOf(x) >= 0 || (e.mood || []).indexOf(x) >= 0); }
+function nm(x){
+  if (MOOD.indexOf(x) >= 0) return { Low:"a low mood", "Mood swings":"mood swings", Anxious:"feeling anxious", Irritable:"feeling irritable", Sensitive:"feeling sensitive" }[x] || "feeling " + x.toLowerCase();
+  return SYM.indexOf(x) >= 0 ? x.toLowerCase() : x;
+}
+function frac(a, b){ return a + " of " + b; }
+function stands(hit, n, hit2, n2){ var r1 = hit / n, r2 = n2 ? hit2 / n2 : 0; return hit >= 3 && n2 >= 4 && r1 >= 2 * r2 && r1 - r2 >= 0.25; }
+function patterns(m){
+  var t = m.today, since = add(t, -365), out = [];
+  var logged = Object.keys(S.days).filter(function(k){ var e = S.days[k]; return k >= since && k <= t && ((e.sym || []).length || (e.mood || []).length); }).sort();
+  if (logged.length < 8) return { list:out, why:"Bloom starts looking for patterns once you've logged how you feel on a few more days" + (logged.length ? " — " + logged.length + " so far." : ".") };
+  var names = {}; logged.forEach(function(k){ (S.days[k].sym || []).concat(S.days[k].mood || []).forEach(function(x){ names[x] = (names[x] || 0) + 1; }); });
+  var ps = m.periods, cyc = [];
+  for (var i = 1; i < ps.length; i++){ var L = diff(ps[i-1].start, ps[i].start); if (L >= 15 && L <= 60 && ps[i].start >= since) cyc.push({ start:ps[i-1].start, next:ps[i].start }); }
+  var tracked = cyc.filter(function(c){ return logged.some(function(k){ return k >= c.start && k < c.next; }); }).slice(-6);
+  var before = {};
+  // 1. in the five days before a period, cycle after cycle
+  if (tracked.length >= 2) Object.keys(names).forEach(function(x){
+    var hits = 0, inW = 0, nW = 0, oth = 0, nO = 0;
+    tracked.forEach(function(c){
+      var w0 = add(c.next, -5), got = false;
+      for (var d = c.start; d < c.next; d = add(d, 1)) { var h = has(d, x); if (d >= w0) { nW++; if (h) { inW++; got = true; } } else { nO++; if (h) oth++; } }
+      if (got) hits++;
+    });
+    if (hits >= 2 && hits / tracked.length >= 0.6 && inW / nW >= 2 * (oth / Math.max(1, nO))) {
+      before[x] = 1;
+      out.push({ tag:"Before", score:1 + hits / tracked.length, text:"You logged " + nm(x) + " in the five days before your period in " + hits + " of your last " + tracked.length + " cycles." });
+    }
+  });
+  // 2. the same few cycle days
+  var startOf = function(k){ for (var j = ps.length - 1; j >= 0; j--) if (ps[j].start <= k) return ps[j].start; return null; };
+  Object.keys(names).forEach(function(x){
+    if (before[x] || names[x] < 4) return;
+    var cds = [], cs = {};
+    logged.forEach(function(k){ if (!has(k, x)) return; var st = startOf(k); if (!st) return; var cd = diff(st, k) + 1; if (cd <= 60) { cds.push(cd); cs[st] = 1; } });
+    if (cds.length < 4 || Object.keys(cs).length < 2) return;
+    cds.sort(function(a, b){ return a - b; });
+    var lo = cds[Math.floor(cds.length * 0.25)], hi = cds[Math.ceil(cds.length * 0.75) - 1], inside = cds.filter(function(c){ return c >= lo && c <= hi; }).length;
+    if (hi - lo <= 3 && inside / cds.length >= 0.6) out.push({ tag:"Cycle day", score:0.8 + inside / cds.length / 2,
+      text:"You usually log " + nm(x) + " on cycle day" + (lo === hi ? " " + lo : "s " + lo + "–" + hi) + " (" + frac(inside, cds.length) + " times), across " + Object.keys(cs).length + " cycles." });
+  });
+  // 3. links: short sleep, a low mood, low energy — on the same day
+  var sleepDays = Object.keys(S.days).filter(function(k){ return k >= since && k <= t && typeof S.days[k].sleep === "number"; });
+  var shortD = sleepDays.filter(function(k){ return S.days[k].sleep < 6.5; }), restD = sleepDays.filter(function(k){ return S.days[k].sleep >= 6.5; });
+  var symOnly = Object.keys(names).filter(function(x){ return MOOD.indexOf(x) < 0; });
+  if (shortD.length >= 4 && restD.length >= 4) symOnly.forEach(function(x){
+    var a = shortD.filter(function(k){ return has(k, x); }).length, b = restD.filter(function(k){ return has(k, x); }).length;
+    if (stands(a, shortD.length, b, restD.length)) out.push({ tag:"Sleep", score:0.6 + a / shortD.length - b / restD.length,
+      text:"On days you logged under 6½ hours' sleep, you also logged " + nm(x) + " on " + frac(a, shortD.length) + " — on other days, " + frac(b, restD.length) + "." });
+  });
+  var low = function(k){ return (S.days[k].mood || []).some(function(y){ return LOWMOOD.indexOf(y) >= 0; }); };
+  var tired = function(k){ return S.days[k].energy === "low"; };
+  [[low, "Mood", logged, "a low mood, anxiety, irritability or mood swings"],
+   [tired, "Energy", Object.keys(S.days).filter(function(k){ return k >= since && k <= t && S.days[k].energy; }), "low energy"]].forEach(function(L){
+    symOnly.forEach(function(x){
+      var w = L[2].filter(function(k){ return has(k, x); }), wo = L[2].filter(function(k){ return !has(k, x); });
+      if (w.length < 4) return;
+      var a = w.filter(L[0]).length, b = wo.filter(L[0]).length;
+      if (stands(a, w.length, b, wo.length)) out.push({ tag:L[1], score:0.5 + a / w.length - b / wo.length,
+        text:"On days with " + nm(x) + " you also logged " + L[3] + " on " + frac(a, w.length) + " — on other days, " + frac(b, wo.length) + "." });
+    });
+  });
+  out.sort(function(a, b){ return b.score - a.score; });
+  var why = tracked.length < 2 ? "Bloom compares cycles once you've logged how you feel through two of them. Keep going — patterns show up here." : "Nothing stands out yet. As your log grows, anything that keeps coming back shows up here.";
+  return { list:out.slice(0, 6), why:why, before:Object.keys(before) };
+}
+/* Recurring before-period symptoms, when the next period is 1–5 days away. */
+function headsUp(m){
+  if (!m.start || m.late || m.inPeriod) return [];
+  var to = diff(m.today, m.next); if (to < 1 || to > 5) return [];
+  return (patterns(m).before || []).slice(0, 3);
+}
+
+/* ---------- patterns in words (optional, on this phone only) ----------
+   Only where MyLLM promises {onDevice:true} is answered by the phone's own
+   model and never a server (myllmAsk.onDeviceOnly). Bloom sends the finished
+   pattern sentences — no dates, notes or log — and keeps the reply in memory
+   only; locking wipes it. */
+function aiOK(){ return !!(window.myllmAsk && window.myllmAsk.onDeviceOnly === true); }
+var words = null, wordsBusy = false;
+var WORDS_SYS = "You help someone understand patterns that a cycle-tracking app counted in their own log. Write 2 to 4 short, warm, plain sentences that say what the patterns mean together, speaking to them as \"you\". Use only the patterns given: add no numbers, causes, diagnoses or conditions, and give no medical advice. You may gently say that something is worth mentioning to a doctor or nurse. No lists, headings or markdown.";
+function renderWords(list, m){
+  var box = $("wordsBox");
+  if (!aiOK() || !S.settings.aiWords || !list.length) { box.innerHTML = ""; return; }
+  var key = list.map(function(p){ return p.text; }).join("|");
+  if (wordsBusy) box.innerHTML = '<div class="words">Writing on this phone…</div>';
+  else if (words && words.key === key && words.text) box.innerHTML = '<div class="words">' + esc(words.text) + '<span class="by">Written by the AI model on this phone from the patterns above. It can be wrong, and it isn\'t medical advice. Not saved.</span></div>';
+  else box.innerHTML = (words && words.key === key && words.err ? '<p class="note warn">' + esc(words.err) + '</p>' : '') + '<button type="button" class="btn alt" id="wordsBtn" style="width:100%;margin-top:12px">Put these in words, on this phone</button>';
+}
+$("wordsBox").addEventListener("click", function(ev){
+  if (!ev.target.closest("#wordsBtn") || wordsBusy || !S || !aiOK() || !S.settings.aiWords) return;
+  var m = model(), list = patterns(m).list; if (!list.length) return;
+  var key = list.map(function(p){ return p.text; }).join("|"), ph = m.start ? phaseOf(m.today, m) : null;
+  var prompt = "Patterns from my log:\n- " + list.map(function(p){ return p.text; }).join("\n- ") + (m.start ? "\n\nToday I'm on cycle day " + m.day + (ph ? ", " + PHASE[ph].toLowerCase() : "") + "." : "");
+  wordsBusy = true; words = null; render();
+  window.myllmAsk(prompt, { system:WORDS_SYS, onDevice:true }).then(function(txt){
+    wordsBusy = false; if (!S) return;
+    var clean = String(txt || "").replace(/[*_#`>]/g, "").replace(/\s+\n/g, "\n").trim().slice(0, 900);
+    words = clean ? { key:key, text:clean } : { key:key, err:"The phone's model didn't write anything. Try again." }; render();
+  }, function(e){
+    wordsBusy = false; if (!S) return;
+    words = { key:key, err:String(e && e.message || e || "The phone's model couldn't write this.") }; render();
+  });
+});
 
 /* ---------- sheets ---------- */
 function open(id){ $("scrim").classList.add("on"); $(id).classList.add("on"); $(id).scrollTop = 0; }
@@ -907,6 +1151,9 @@ function fillSettings(){
   $("pcOffRow").classList.toggle("hidden", !cryptoKey);
   $("pcNote").textContent = !hasCrypto ? "Not available on this version of MyLLM." : cryptoKey ? "On. Your log is encrypted on this phone and Bloom locks whenever you leave it." : "Locks Bloom and encrypts your log on this phone. If you forget it, the only way back in is to erase everything.";
   $("pcBtn").disabled = !hasCrypto;
+  $("sMine").innerHTML = s.custom.map(function(x){ return '<button type="button" class="chip" data-unmine="' + esc(x) + '" aria-label="Remove ' + esc(x) + '">' + esc(x) + ' ×</button>'; }).join("");
+  $("mineNote").textContent = s.custom.length ? "Tap one to take it off your list. The days you logged it keep it." : "Add one from Today with “+ Your own”.";
+  $("aiCard").classList.toggle("hidden", !aiOK()); seg("sAI", s.aiWords ? "on" : "off");
 }
 function seg(id, v){ document.querySelectorAll("#" + id + " button").forEach(function(b){ b.classList.toggle("on", b.dataset.v === v); }); }
 $("setSheet").addEventListener("click", function(ev){
@@ -929,6 +1176,8 @@ $("setSheet").addEventListener("click", function(ev){
     }
   }
   else if (b.closest("#sPill")) s.pill = b.dataset.v === "on";
+  else if (b.closest("#sAI")) { s.aiWords = b.dataset.v === "on" && aiOK(); words = null; }
+  else if (b.dataset.unmine != null) { var ix = s.custom.indexOf(b.dataset.unmine); if (ix >= 0) s.custom.splice(ix, 1); }
   else return;
   haptic("selection"); fillSettings(); changed();
 });
@@ -936,7 +1185,7 @@ $("exportBtn").addEventListener("click", function(){
   var rows = [["date","period","symptoms","mood","discharge","lh_test","temperature_" + S.settings.unit,"sex","note","energy","pregnancy_test","pill","sleep_hours","water_glasses","weight_" + S.settings.wunit]];
   Object.keys(S.days).sort().forEach(function(k){
     var e = S.days[k], num = function(v){ return typeof v === "number" ? v : ""; };
-    rows.push([k, e.flow ? label(FLOW, e.flow) : "", (e.sym || []).join("; "), (e.mood || []).join("; "), e.cm ? label(CM, e.cm) : "", e.lh ? label(LH, e.lh) : "", num(e.temp), e.sex ? label(SEX, e.sex) : "", e.note || "",
+    rows.push([k, e.flow ? label(FLOW, e.flow) : "", (e.sym || []).map(function(x){ return x + (e.sev && e.sev[x] ? " (" + SEV[e.sev[x]].toLowerCase() + ")" : ""); }).join("; "), (e.mood || []).join("; "), e.cm ? label(CM, e.cm) : "", e.lh ? label(LH, e.lh) : "", num(e.temp), e.sex ? label(SEX, e.sex) : "", e.note || "",
       e.energy ? label(ENERGY, e.energy) : "", e.preg ? label(PREG, e.preg) : "", e.pill ? label(PILL, e.pill) : "", num(e.sleep), num(e.water), num(e.weight)]);
   });
   var csv = rows.map(function(r){ return r.map(function(c){ c = String(c); return /[",\n]/.test(c) ? '"' + c.replace(/"/g, '""') + '"' : c; }).join(","); }).join("\n");
@@ -1145,7 +1394,8 @@ $("forgot").addEventListener("click", function(){
 /* Leaving Bloom locks it: the decrypted log is dropped from memory and wiped
    off the page, so nothing shows behind the lock or in the app switcher. */
 function wipe(){
-  ["week","upcoming","todayLog","grid","stats","bars","freq","tchart","status","statNote","barNote","tempNote","ring"].forEach(function(id){ $(id).innerHTML = ""; });
+  ["week","upcoming","todayLog","grid","stats","bars","freq","tchart","status","statNote","barNote","tempNote","ring","qSym","qMood","qSev","qHeads","pats","wordsBox"].forEach(function(id){ $(id).innerHTML = ""; });
+  words = null; wordsBusy = false; qFocus = null; $("qNew").value = "";
   $("rn").textContent = ""; $("rp").textContent = ""; $("rq").textContent = ""; $("phaseTip").textContent = "";
   document.querySelectorAll(".sheet.on").forEach(function(x){ x.classList.remove("on"); }); $("scrim").classList.remove("on"); editing = null;
 }
@@ -1325,6 +1575,7 @@ function cleanDay(e){
   if (typeof e.water === "number" && e.water > 0 && e.water <= 30) o.water = Math.round(e.water);
   if (typeof e.weight === "number" && e.weight >= 20 && e.weight <= 700) o.weight = e.weight;
   if (str(e.note, 500)) o.note = str(e.note, 500);
+  if (o.sym && e.sev && typeof e.sev === "object") { var sv = {}; o.sym.forEach(function(x){ var n = e.sev[x]; if (n === 1 || n === 2 || n === 3) sv[x] = n; }); if (Object.keys(sv).length) o.sev = sv; }
   return Object.keys(o).length ? o : null;
 }
 
@@ -1353,12 +1604,16 @@ function readCSV(j, t, name){
   Object.keys(COLS).forEach(function(f){ for (var i = 0; i < head.length; i++) if (!used[i] && COLS[f].test(head[i])) { at[f] = i; used[i] = 1; break; } });
   if (at.date == null) return { error:"Bloom couldn't find a date column in that spreadsheet." };
   var unit = head[at.temp] && /(°|\b|_| )f\b|fahrenheit/.test(head[at.temp]) ? "F" : null, wunit = head[at.weight] && /lb|pound/.test(head[at.weight]) ? "lb" : "kg";
+  var bloomCSV = /^date$/.test(head[0]) && head[1] === "period" && head[2] === "symptoms";
   var order = dateOrder(rows.slice(1).map(function(r){ return r[at.date] || ""; })), days = {}, extra = 0;
   rows.slice(1).forEach(function(r){
     var k = toKey(r[at.date], order); if (!k || !okKey(k)) return;
     var cell = function(f){ return at[f] == null ? "" : String(r[at[f]] || "").trim(); }, e = {}, also = [];
     var fl = flowOf(cell("flow")); if (fl) e.flow = fl;
-    ["sym","mood"].forEach(function(f){ var v = cell(f); if (!v) return; v.split(/\s*[;|,]\s*/).forEach(function(x){ var m = known(f === "sym" ? SYM : MOOD, x, f === "sym" ? SYN_SYM : SYN_MOOD); if (m) { (e[f] = e[f] || []).indexOf(m) < 0 && e[f].push(m); } else if (x) also.push(x); }); });
+    ["sym","mood"].forEach(function(f){ var v = cell(f); if (!v) return; v.split(/\s*[;|,]\s*/).forEach(function(x){
+      var sv = 0, r2 = /\s*\((mild|moderate|severe)\)$/i.exec(x); if (r2 && f === "sym") { sv = ["mild","moderate","severe"].indexOf(r2[1].toLowerCase()) + 1; x = x.slice(0, r2.index); }
+      var m = known(f === "sym" ? SYM : MOOD, x, f === "sym" ? SYN_SYM : SYN_MOOD) || (bloomCSV && f === "sym" && x ? x.slice(0, 30) : null);
+      if (m) { (e[f] = e[f] || []).indexOf(m) < 0 && e[f].push(m); if (sv) (e.sev = e.sev || {})[m] = sv; } else if (x) also.push(x); }); });
     [["cm",CM],["lh",LH],["sex",SEX],["energy",ENERGY],["preg",PREG],["pill",PILL]].forEach(function(p){ var v = pickList(p[1], cell(p[0]), p[0]); if (v) e[p[0]] = v; });
     var n = function(f){ var v = parseFloat(cell(f).replace(",", ".")); return isFinite(v) ? v : null; };
     var tv = n("temp"); if (tv != null) { e.temp = tv; if (!unit && tv > 50) unit = "F"; }
@@ -1367,7 +1622,6 @@ function readCSV(j, t, name){
     if (note) e.note = note;
     var c = cleanDay(e); if (c) days[k] = merge1(days[k], c); else extra++;
   });
-  var bloomCSV = /^date$/.test(head[0]) && head[1] === "period" && head[2] === "symptoms";
   return { label:bloomCSV ? "Bloom spreadsheet" : "Spreadsheet" + (name ? " · " + name : ""), days:days, unit:unit || "C", wunit:wunit,
     note:order === "dmy?" ? "Dates were read as day/month/year." : order === "mdy" ? "Dates were read as month/day/year." : "" };
 }
@@ -1412,6 +1666,7 @@ function merge1(a, b){
   Object.keys(b).forEach(function(f){
     if (f === "sym" || f === "mood") { a[f] = (a[f] || []).concat(b[f].filter(function(x){ return (a[f] || []).indexOf(x) < 0; })); }
     else if (f === "note" && a.note && a.note !== b.note) a.note = (a.note + " · " + b.note).slice(0, 500);
+    else if (f === "sev") { a.sev = a.sev || {}; for (var x in b.sev) if (!(x in a.sev)) a.sev[x] = b.sev[x]; }
     else if (!(f in a)) a[f] = b[f];
   });
   return a;
@@ -1506,7 +1761,8 @@ function preview(r){
   open("impSheet");
 }
 function finishImport(n, how){
-  var from = imp.label;
+  var from = imp.label, all = symList();
+  Object.keys(S.days).forEach(function(k){ (S.days[k].sym || []).forEach(function(x){ if (all.indexOf(x) < 0 && S.settings.custom.length < 20) { S.settings.custom.push(x); all.push(x); } }); });
   if (!S.settings.setup) S.settings.setup = true;
   imp = null; haptic("success"); closeSheets(); changed();
   showNotice(how + " " + n + (n === 1 ? " day" : " days") + " from " + from + ".");
