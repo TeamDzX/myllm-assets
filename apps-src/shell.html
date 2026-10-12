@@ -145,10 +145,11 @@ var HISTORY_KEY = 'shell.history', ALIAS_KEY = 'shell.aliases';
 /* v9: the change log, the undo stack and path bookmarks survive closing the
    app. Before, undo forgot everything the moment Shell was closed. */
 var LOG_KEY = 'shell.log', UNDO_KEY = 'shell.undo', MARK_KEY = 'shell.marks';
-var changeLog = [];      /* [{id, t, text}] newest last, the last 200 */
+var changeLog = [];      /* [{id, t, text, paths, batch, why}] newest last, the last 200 */
 var marks = {};          /* bookmark name -> path, used as @name */
 var prevCwd = null;      /* for  cd -  */
 var batchId = null;      /* set while an approved batch runs, so undo reverses all of it */
+var batchWhy = '';       /* v15: the reason given for that batch, kept in the log */
 var RC = '.shellrc';     /* optional startup script, in the workspace root */
 var ASK_MAX = 8000;      /* how much material one `ask` may carry; a small on-device model has a small window */
 var VERBS = ['ls','tree','cat','head','tail','sed','stat','find','grep','diff','jq','wc','sort','uniq','cut','tr','paste','comm','awk','xargs','man','changes','preview','date','info','scratch','versions','history','du','ask','dictate','open','share','mkdir','mv','cp','write','replace','edit','rm','rmdir','undo','log','revert','trash','restore','alias','unalias','mark','cd','pwd','clear','help'];
@@ -779,7 +780,7 @@ var MAN = {
   rm: ['rm <path>  to .trash (undo / restore)   rm -p  for good, asks first'],
   rmdir: ['rmdir <path>  folder to .trash   rmdir -p  for good, asks first'],
   undo: ['undo  reverses your last change — or the whole batch it was part of; survives closing Shell'],
-  log: ['log [-n N] [path]  changes made via Shell (newest first, what undo would reverse), then files', 'changed OUTSIDE Shell in the last 7 days (other apps, the assistant, sync), from file times'],
+  log: ['log [-n N] [path]  changes made via Shell (newest first, what undo would reverse), then files', 'changed OUTSIDE Shell in the last 7 days (other apps, the assistant, sync), from file times', 'a batch is one row with its reason and its parts', 'log show N  opens row N: each part, and an edit\'s diff from before it to now'],
   revert: ['revert <path> [N]  put saved version N back (1 = newest)'],
   trash: ['trash  what is in .trash    trash empty  delete it for good (asks)'],
   restore: ['restore [-f] <path>  from .trash back to where it was'],
@@ -798,6 +799,12 @@ var MAN = {
   info: ['info  the workspace at a glance: files, size of 25 MB, top folders, newest changes, oldest file, bookmarks']
 };
 var CHANGES = [
+  'Shell v15 (12 Oct 2026)',
+  '  log shows a batch as one row with its reason and parts, and says what each change did',
+  '  (the edit, the files a cp wrote) · log show N opens a row: its parts and each edit\'s diff',
+  '  the assistant knows its answer may run to several lines and that you see every step it runs',
+  'Shell v14 (5 Oct 2026)',
+  '  a reply that is almost JSON (unescaped quotes, bare line breaks) is still understood',
   'Shell v13 (5 Oct 2026)',
   '  a working bar while MyLLM thinks or runs a step: what it is doing, seconds, and Stop',
   '  a second Enter no longer re-sends a question that is still being worked on',
@@ -1944,12 +1951,12 @@ async function run(line){
         if (missing.length) return print('nothing matches ' + missing[0].noMatch, 'err');
         if (!mList.length) return print('found nothing to ' + verb, 'dim');
         var ownBatch = batchId == null;
-        if (ownBatch) batchId = Date.now();
+        if (ownBatch){ batchId = Date.now(); batchWhy = verb + ' ' + mList.length + ' items to ' + mDest + '/'; }
         try {
           for (var mi = 0; mi < mList.length; mi++){
             await run(verb + (flags.f ? ' -f ' : ' ') + '"/' + mList[mi] + '" "/' + mDest + '/' + mList[mi].split('/').pop() + '"');
           }
-        } finally { if (ownBatch) batchId = null; }
+        } finally { if (ownBatch){ batchId = null; batchWhy = ''; } }
         return note(mList.length + ' item(s) — one  undo  reverses them all');
       }
       if (verb === 'cp') return copyOne(snap, ops, flags);
@@ -1983,7 +1990,7 @@ async function run(line){
         return print(plan.said + '  (scratch — cleared when Shell opens)', 'dim');
       }
       await files.write(plan.path, plan.next);
-      remember({ type: 'write', path: plan.path, prev: plan.prev, how: plan.how });
+      remember({ type: 'write', path: plan.path, prev: plan.prev, how: plan.how }, plan.said);
       haptic('success');
       return print(plan.said + '  —  undo  puts it back', 'ok');
     }
@@ -2033,23 +2040,28 @@ async function run(line){
          first, kept between visits — plus files that changed OUTSIDE Shell
          (other apps, the MyLLM assistant, collectors), read from file times so
          "no changes" is never said when there were some. */
+      if (ops[0] === 'show') return logShow(+ops[1]);
       var howMany = Math.max(1, Math.min(ops[0] && !isNaN(+ops[0]) ? +ops[0] : n, 200));
       var logPath = ops[0] && isNaN(+ops[0]) ? resolve(ops[0]) : null;
-      var pool2 = logPath ? changeLog.filter(function(e){ return e.text.indexOf(logPath) >= 0; }) : changeLog;
+      var groups2 = logGroups().filter(function(g){ return !logPath || g.items.some(function(e){ return entryTouches(e, logPath); }); });
       var live2 = {}; undoStack.forEach(function(u){ live2[u.id] = true; });
-      var nextUndo = undoStack.length ? undoStack[undoStack.length - 1].id : null;
-      var shellRows = pool2.slice(-howMany).reverse().map(function(e, i4){
-        return '#' + (i4 + 1) + '\t' + when(e.t) + '\t' + e.text + (e.id === nextUndo ? '   ← undo reverses this' : live2[e.id] ? '   (undoable)' : '');
+      var top2 = undoStack.length ? undoStack[undoStack.length - 1] : null;
+      var shellRows = groups2.slice(0, howMany).map(function(g){
+        var next = top2 && g.items.some(function(e){ return e.id === top2.id; });
+        var undoable = g.items.some(function(e){ return live2[e.id]; });
+        var row = '#' + g.n + '\t' + when(g.t) + '\t' + groupHead(g) + (next ? '   ← undo reverses this' : undoable ? '   (undoable)' : '');
+        if (g.items.length > 1) row += '\n' + g.items.map(function(e){ return '\t\u00b7 ' + e.text; }).join('\n');
+        return row;
       });
       var weekAgo = Date.now() / 1000 - 7 * 86400;
       var outside = snap.files.filter(function(f){
         if (f.modified < weekAgo || (logPath && f.path !== logPath && f.path.indexOf(logPath + '/') !== 0)) return false;
-        return !changeLog.some(function(e){ return e.text.indexOf(f.path) >= 0 && Math.abs(e.t / 1000 - f.modified) < 15; });
+        return !changeLog.some(function(e){ return entryTouches(e, f.path) && Math.abs(e.t / 1000 - f.modified) < 15; });
       }).sort(function(a, b){ return b.modified - a.modified; }).slice(0, howMany);
       print(shellRows.length ? 'via Shell:\n' + shellRows.join('\n') : 'no changes made via Shell' + (logPath ? ' to ' + logPath : '') + ' yet');
       if (outside.length) print('\nchanged outside Shell in the last 7 days (other apps, the assistant, sync — from file times):\n' +
         outside.map(function(f){ return '  ' + when(f.modified * 1000) + '\t' + f.path; }).join('\n'));
-      return note('times are ' + zoneLabel() + ' · trash  lists deleted files;  restore <path>  puts one back');
+      return note('times are ' + zoneLabel() + ' · log show N  opens a row: its parts and diffs · trash  lists deleted files');
     }
 
     case 'versions':
@@ -2125,14 +2137,81 @@ async function run(line){
   }
 }
 
-function remember(op){
+function remember(op, said){
   op.id = Date.now() + Math.random();
   if (batchId != null) op.batch = batchId;
   undoStack.push(op);
   if (undoStack.length > 30) undoStack.shift();
-  changeLog.push({ id: op.id, t: Date.now(), text: describeOp(op) + (op.batch != null ? '  (batch)' : '') });
+  /* v15: the entry says what the change did (an edit's own summary, the files
+     a cp wrote) and keeps its batch and the reason given for it, so  log  can
+     show a batch as one change with its parts and  log show N  can open it. */
+  var entry = { id: op.id, t: Date.now(), text: said || describeOp(op), paths: opPaths(op) };
+  if (op.batch != null){ entry.batch = op.batch; if (batchWhy) entry.why = batchWhy; }
+  changeLog.push(entry);
   if (changeLog.length > 200) changeLog.shift();
   saveUndo(); saveLog();
+}
+function opPaths(op){
+  switch (op.type){
+    case 'rm': case 'mv': return [op.from, op.to];
+    case 'cp': return op.items.map(function(it){ return it.path; });
+  }
+  return [op.path];
+}
+/* Does a log entry touch this path (or something inside it)? Entries from
+   before v15 have no paths, so fall back to their text. */
+function entryTouches(e, p){
+  if (!e.paths) return e.text.indexOf(p) >= 0;
+  return e.paths.some(function(x){ return x && (x === p || x.indexOf(p + '/') === 0); });
+}
+/* The log as rows, newest first: a batch's entries fold into one row. Row
+   numbers come from the whole log, so  log show N  means the same row
+   whatever  log <path>  filtered. */
+function logGroups(){
+  var groups = [];
+  for (var i = changeLog.length - 1; i >= 0; i--){
+    var e = changeLog[i], g = groups[groups.length - 1];
+    if (e.batch != null && g && g.batch === e.batch) g.items.unshift(e);
+    else groups.push({ n: groups.length + 1, batch: e.batch, t: e.t, why: e.why || '', items: [e] });
+  }
+  return groups;
+}
+function groupHead(g){
+  return g.items.length > 1
+    ? 'batch of ' + g.items.length + ' changes' + (g.why ? ' \u2014 ' + g.why : '')
+    : g.items[0].text;
+}
+/* log show N: each part of a row, and for an edit the diff from before it to
+   the file as it is now. The detail lives in the undo stack (the last 30). */
+async function logShow(k){
+  var gs = logGroups(), g = gs[k - 1];
+  if (!g) return print('log show N  \u2014 N is a row number from  log  (1 = newest' + (gs.length ? ', ' + gs.length + ' = oldest' : '') + ')', 'err');
+  print('#' + k + '  ' + when(g.t) + '  ' + groupHead(g));
+  for (var i = 0; i < g.items.length; i++){
+    var e = g.items[i], op = null;
+    for (var u = 0; u < undoStack.length; u++) if (undoStack[u].id === e.id) op = undoStack[u];
+    if (g.items.length > 1) print('\u00b7 ' + e.text);
+    if (!op){ print('  details are no longer kept (undo holds the last 30 changes)' + (e.paths && e.paths[0] ? ' \u2014  versions ' + e.paths[0] + '  lists saved copies' : ''), 'dim'); continue; }
+    if (op.type === 'write'){
+      var later = changeLog.some(function(x){ return x.t > e.t && entryTouches(x, op.path); });
+      await showWas(op.path, op.prev, op.prevLost, later);
+    }
+    else if (op.type === 'cp'){
+      for (var c = 0; c < Math.min(5, op.items.length); c++) await showWas(op.items[c].path, op.items[c].prev, op.items[c].prevLost, false);
+      if (op.items.length > 5) print('  \u2026 and ' + (op.items.length - 5) + ' more file(s)', 'dim');
+    }
+    else if (op.type === 'rm') print('  in ' + op.to + ' \u2014  undo  or  restore ' + op.to + '  puts it back', 'dim');
+    else if (op.type === 'revert') print('  versions ' + op.path + '  lists the saved copies', 'dim');
+  }
+}
+async function showWas(path, prev, lost, later){
+  if (lost) return print('  ' + path + ': the earlier text was too big to keep', 'dim');
+  var now = null; try { now = await files.read(path); } catch(e){}
+  if (now == null) return print('  ' + path + ' no longer exists', 'dim');
+  var d = diffHTML(lineDiff(lines$(prev || ''), lines$(now)) || [], prev == null ? '(new file)' : path + ' before', path + ' now');
+  if (!d) return print('  ' + path + ' is back as it was before this change', 'dim');
+  printHTML(d.html);
+  if (later) print('  (later changes to ' + path + ' are included \u2014 this compares with the file as it is now)', 'dim');
 }
 function describeOp(op){
   switch (op.type){
@@ -2141,7 +2220,11 @@ function describeOp(op){
     case 'mkdir': return 'created ' + op.path + '/';
     case 'write': return (op.how || (op.prev == null ? 'created ' : 'changed ')) + op.path;
     case 'revert': return 'reverted ' + op.path;
-    case 'cp': return 'copied ' + op.items.length + ' file(s) to ' + op.to;
+    case 'cp': {
+      var names = op.items.map(function(it){ return it.path; });
+      return names.length === 1 ? 'copied to ' + names[0]
+        : 'copied ' + names.length + ' files to ' + op.to + ': ' + names.slice(0, 4).map(function(x){ return x.split('/').pop(); }).join(', ') + (names.length > 4 ? ' +' + (names.length - 4) + ' more' : '');
+    }
   }
   return op.type;
 }
@@ -2270,7 +2353,7 @@ function systemPrompt(listing){
     'You may run these READ-ONLY commands: ls [-R] [-t newest first | -S biggest first] [path], tree [path], cat <path>, head -n N <path>, tail -n N <path>, sed -n \'40,80p\' <path> (a line range), stat <path>, find <glob> [-mtime -7] [-newer <path>] [-size +10k] [-type d], grep [-n] [-C N] [-v] [-c] [-l] [-s] <text or /regex/> [path], diff <a> <b> or diff <path>@N (version N vs now), jq \'.field\' <path> (pull values out of JSON: .a.b, .list[0], .list[], keys, length), wc [-l], sort [-r] [-n] [-k N], uniq [-c], cut -d X -f N, versions <path> (saved versions; `history` alone is the command history), log (recent changes), du.',
     'You may pipe them: `a | b` sends a\'s output into b, and cat, head, tail, sed, grep, wc, sort, uniq, cut and jq read what is piped in — e.g. `grep -l invoice notes | wc -l` or `find *.md | cut -d / -f 1 | sort | uniq -c | sort -rn`. One pipeline is one step, so prefer it over three separate looks.',
     'Paths are relative to your working folder. You may `cd <path>` (also `cd ..`, `cd -`, `cd @bookmark`) to work deeper without spelling long paths; it is YOUR folder for this question and the user\'s prompt is put back afterwards.' + (Object.keys(marks).length ? ' Bookmarks: ' + Object.keys(marks).map(function(k){ return '@' + k + ' = /' + marks[k]; }).join(', ') + '.' : ''),
-    'Today: ' + when(Date.now()) + '. All times shown are ' + zoneLabel() + '. `info` summarises the workspace (size, top folders, newest changes, hidden .trash/.scratch counts); `log` lists changes made via Shell AND files changed outside it.',
+    'Today: ' + when(Date.now()) + '. All times shown are ' + zoneLabel() + '. `info` summarises the workspace (size, top folders, newest changes, hidden .trash/.scratch counts); `log` lists changes made via Shell AND files changed outside it; `log show N` opens row N (a batch\'s parts, each edit\'s diff).',
     'Hidden: .trash (deleted files; `trash`, `ls -a`) and .scratch (your notes). Values that look like keys or tokens are shown to you as [masked]; never ask the user to paste them.',
     'Writing output to a file with > or >> is a CHANGE: propose it, never run it.',
     '',
@@ -2279,6 +2362,7 @@ function systemPrompt(listing){
     '  {"run":["<command>","<command>"]}         up to 4 unrelated looks in one step (e.g. cat two files and log)',
     '  {"say":"<answer>"}                      when you can answer',
     '  add "say" to a run or propose to tell the user what you are doing ("checking the log first…")',
+    '  "say" may run to several lines (\\n). The user sees every step you run on screen, so to show a diff, a file or an example, run diff, preview, cat or log show rather than retyping it.',
     '  {"propose":"<command>","why":"<reason>"} to CHANGE something (mkdir, mv, cp, write, replace, edit, rm, rmdir, revert <path> N) — the user approves it, you never run it. rm moves to a trash folder and can be undone; revert puts a previous version back.',
     '  {"propose":["<command>","<command>",…],"why":"<reason>"} for several changes approved together, e.g. a folder reorganisation: they run in order, stop at the first failure, and one undo reverses all of them.',
     'To change part of a file, propose a SMALL edit rather than rewriting it: replace <path> "old text" "new text" (every occurrence; -1 for the first only), or edit <path> <A-B> "new lines" (\\n for a line break; empty text deletes the lines; <A>+ inserts after line A). The user sees the diff before approving. Use write only for a new file or a full rewrite.',
@@ -2463,7 +2547,7 @@ async function agent(question){
           await previewEdit(steps[si2]);
         }
         print('run all ' + steps.length + '? type  y  to confirm — one  undo  reverses the lot', 'propose');
-        pending = { verb: 'batch', lines: steps, from: runFrom };
+        pending = { verb: 'batch', lines: steps, from: runFrom, why: reply.why ? String(reply.why).slice(0, 160) : '' };
         return;
       }
       if (reply.run){
@@ -2526,7 +2610,7 @@ document.getElementById('form').addEventListener('submit', async function(ev){
           if (memoP) memoP.outcome = lastCaptureError ? 'approved, but it FAILED: ' + rOut.slice(0, 200) : 'approved and done: ' + rOut.slice(0, 160);
         }
         else if (p.verb === 'batch'){
-          batchId = Date.now();
+          batchId = Date.now(); batchWhy = p.why || '';
           try {
             for (var bi = 0; bi < p.lines.length; bi++){
               print('$ ' + p.lines[bi], 'cmd');
@@ -2535,7 +2619,7 @@ document.getElementById('form').addEventListener('submit', async function(ev){
                 if (memoP) memoP.outcome = 'approved; steps 1–' + bi + ' ran, step ' + (bi + 1) + ' FAILED, the rest did not run'; break; }
             }
             if (memoP && !lastCaptureError) memoP.outcome = 'approved and all ' + p.lines.length + ' steps ran';
-          } finally { batchId = null; }
+          } finally { batchId = null; batchWhy = ''; }
         }
         else if (p.verb === 'trash-empty') await files.removeFolder(TRASH, true);
         else if (p.verb === 'rm') await files.remove(p.target);
