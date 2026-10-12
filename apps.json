@@ -377,6 +377,32 @@
       "sizeKB": 26
     },
     {
+      "id": "follow",
+      "name": "Follow",
+      "emoji": "📡",
+      "tagline": "Projects you care about, newest first",
+      "description": "Follow the projects you care about without an account or an algorithm: a GitHub project's releases, a YouTube channel, a blog, a Substack, a Reddit community, a Mastodon or Bluesky profile. Paste an address, or a whole list, and Follow finds the project's public feed. Latest shows what's new, newest first; a busy project shows its newest three with the rest a tap away, and the list ends with \"You're all caught up\". Nothing is ranked and nothing is counted. It checks when you open it or tap Refresh, never in the background. This pocket version follows up to ten projects; our LinkFindr app for iPhone follows as many as you like, syncs them through your iCloud and saves any update to read later, offline. Needs app network access, which you can switch on in Settings.",
+      "tags": [
+        "following",
+        "projects",
+        "feeds",
+        "reader",
+        "network",
+        "saves data"
+      ],
+      "iconSymbol": "dot.radiowaves.up.forward",
+      "iconColor": "orange",
+      "version": 1,
+      "featured": false,
+      "requiresAI": false,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/follow.jpg",
+      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/follow.jpg",
+      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@main/apps-src/follow.html",
+      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@main/apps-src/follow.myllmapp",
+      "sizeKB": 35,
+      "category": "News & Web"
+    },
+    {
       "id": "currency",
       "name": "Currency",
       "emoji": "💱",

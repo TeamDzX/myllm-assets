@@ -1,0 +1,741 @@
+<!doctype html>
+<!--
+  Follow — MyLLMos™ App Gallery · © 2026 Opticell Ltd
+  Source-available: read it, remix it, run your version inside MyLLM™.
+  Not for redistribution or republication. Terms: https://github.com/TeamDzX/myllm-assets/blob/main/LICENSE
+--><html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Follow</title>
+<!-- MyLLM 5.6.2+: open full screen from the first frame. Those builds all
+     have myllmClose, which the ✕ uses. -->
+<meta name="myllm:immersive" content="on">
+<style>
+  :root { color-scheme: light dark; }
+  /* Dark fallbacks for builds that do not supply the theme. :where() carries no
+     specificity, so MyLLM's own :root values always win where they exist. */
+  @media (prefers-color-scheme:dark){ :where(:root){ --myllm-bg:#000; --myllm-surface:#1c1c1e; --myllm-text:#f2f2f7; --myllm-muted:#98989f; --myllm-border:#2c2c2e; } }
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body{
+    font-family:var(--myllm-font,-apple-system,system-ui,sans-serif);
+    background:var(--myllm-bg,#f2f2f7);
+    color:var(--myllm-text,#111);
+    max-width:640px; margin:0 auto; min-height:100dvh;
+    padding-bottom:calc(30px + env(safe-area-inset-bottom));
+  }
+  body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right)}
+  :root{--build-id:"5f46b38ac8"; --h:24; }
+  .head{ display:flex; align-items:center; gap:12px; margin:4px 2px 14px; }
+  .head .tile{ width:44px; height:44px; border-radius:13px; font-size:19px; display:flex; align-items:center; justify-content:center; color:#fff; flex-shrink:0;
+    background:linear-gradient(145deg, hsl(var(--h) 78% 52%), hsl(calc(var(--h) + 330) 62% 32%)); }
+  .head .tile svg{ width:1.25em; height:1.25em; fill:none; stroke:currentColor; stroke-width:2.2; stroke-linecap:round; }
+  .head .ht{ flex:1; min-width:0; }
+  .head h1{ font-size:22px; font-weight:800; letter-spacing:-.01em; }
+  .head p{ font-size:13px; color:var(--myllm-muted,#8a8a8e); margin-top:1px; text-wrap:balance; }
+  .wrap{ padding:12px 14px; }
+  .head .acts{ display:none; flex-shrink:0; }
+  .head .acts button{ width:40px; height:40px; border-radius:12px; border:1px solid var(--myllm-border,#e3e3e8);
+    background:var(--myllm-surface,#fff); color:var(--myllm-text,#111); display:grid; place-items:center; padding:0; transition:transform .12s; }
+  .head .acts button:active{ transform:scale(.94); }
+  .head .acts svg{ width:16px; height:16px; fill:none; stroke:currentColor; stroke-width:2.6; stroke-linecap:round; }
+  body.imm .head .acts{ display:flex; }
+  body.imm .wrap{ padding-top:calc(12px + env(safe-area-inset-top)); }
+
+  .tabs{ display:flex; background:var(--myllm-surface,#fff); border:1px solid var(--myllm-border,#e3e3e8); border-radius:13px; padding:3px; margin-bottom:12px; }
+  .tabs button{ flex:1; border:none; background:none; color:var(--myllm-muted,#8a8a8e);
+    border-radius:10px; padding:9px; font-size:14px; font-weight:700; font-family:inherit; }
+  .tabs button.on{ background:var(--myllm-accent,#0a84ff); color:#fff; }
+
+  .card{ background:var(--myllm-surface,#fff); border:1px solid var(--myllm-border,#e3e3e8);
+    border-radius:16px; padding:13px 14px; margin-bottom:10px; }
+  .group{ background:var(--myllm-surface,#fff); border:1px solid var(--myllm-border,#e3e3e8); border-radius:16px; overflow:hidden; margin-bottom:12px; }
+  .gh{ font-size:12.5px; font-weight:700; color:var(--myllm-muted,#8a8a8e); text-transform:uppercase; letter-spacing:.4px; margin:16px 4px 7px; }
+  .up{ display:block; text-decoration:none; color:inherit; padding:12px 14px; border-bottom:1px solid var(--myllm-border,#e3e3e8); }
+  .up:last-child{ border-bottom:none; }
+  .up .by{ font-size:12.5px; color:var(--myllm-muted,#8a8a8e); display:flex; align-items:center; gap:6px; }
+  .up .by .w{ margin-left:auto; flex-shrink:0; }
+  .up .by .src{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:650; }
+  .up h3{ font-size:15px; font-weight:650; line-height:1.32; margin-top:3px; }
+  .up.new h3{ font-weight:800; }
+  .up .sum{ font-size:13px; color:var(--myllm-muted,#8a8a8e); line-height:1.4; margin-top:3px;
+    display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+  .dot{ width:7px; height:7px; border-radius:50%; background:var(--myllm-accent,#0a84ff); flex-shrink:0; }
+  .more{ display:block; width:100%; text-align:left; border:none; background:none; font-family:inherit;
+    color:var(--myllm-accent,#0a84ff); font-size:14px; font-weight:650; padding:11px 14px; border-bottom:1px solid var(--myllm-border,#e3e3e8); }
+  .more:last-child{ border-bottom:none; }
+  .caught{ display:flex; align-items:center; gap:10px; padding:14px; }
+  .caught .tick{ width:26px; height:26px; border-radius:50%; background:#1a9a5b; color:#fff; display:grid; place-items:center; flex-shrink:0; }
+  .caught .tick svg{ width:14px; height:14px; fill:none; stroke:currentColor; stroke-width:3; stroke-linecap:round; stroke-linejoin:round; }
+  .caught b{ font-size:15px; display:block; }
+  .caught span{ font-size:12.5px; color:var(--myllm-muted,#8a8a8e); }
+
+  .row{ display:flex; align-items:center; gap:10px; padding:11px 2px; border-bottom:1px solid var(--myllm-border,#e3e3e8); }
+  .row:last-child{ border-bottom:none; }
+  .row .n{ flex:1; min-width:0; }
+  .row .n b{ font-size:15px; font-weight:700; display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .row .n span{ font-size:12px; color:var(--myllm-muted,#8a8a8e); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; display:block; }
+  .x{ border:none; background:none; color:var(--myllm-muted,#8a8a8e); font-size:19px; padding:4px 8px; font-family:inherit; }
+  .undo{ border:none; background:none; color:var(--myllm-accent,#0a84ff); font-size:14px; font-weight:700; padding:4px 8px; font-family:inherit; }
+
+  label{ display:block; font-size:12.5px; font-weight:700; color:var(--myllm-muted,#8a8a8e); margin-bottom:6px; text-transform:uppercase; letter-spacing:.4px; }
+  textarea{ width:100%; font-size:16px; padding:11px 12px; border-radius:12px; resize:none; min-height:46px;
+    border:1px solid var(--myllm-border,#e3e3e8); background:var(--myllm-bg,#f2f2f7);
+    color:var(--myllm-text,#111); font-family:inherit; line-height:1.35; }
+  .go{ border:none; border-radius:12px; padding:11px 18px; font-size:15px; font-weight:700;
+    background:var(--myllm-accent,#0a84ff); color:#fff; font-family:inherit; }
+  .go[disabled]{ opacity:.5; }
+  .go.wide{ width:100%; margin-top:9px; }
+  .ghost{ background:none; color:var(--myllm-accent,#0a84ff); border:1px solid var(--myllm-border,#e3e3e8); }
+  .small{ font-size:13px; font-weight:700; padding:8px 13px; }
+  .bar{ display:flex; align-items:center; gap:8px; margin-bottom:4px; }
+  .bar .sp{ flex:1; font-size:12.5px; color:var(--myllm-muted,#8a8a8e); }
+
+  .status{ text-align:center; color:var(--myllm-muted,#8a8a8e); font-size:14px; padding:22px 10px; line-height:1.5; }
+  .errline{ color:#d1345b; font-size:13.5px; margin-top:8px; line-height:1.45; }
+  .okline{ color:#1a9a5b; font-size:13.5px; margin-top:8px; line-height:1.45; }
+  .note{ font-size:12.5px; color:var(--myllm-muted,#8a8a8e); line-height:1.5; margin-top:9px; }
+  .chips{ display:flex; flex-wrap:wrap; gap:7px; }
+  .chip{ border:1px solid var(--myllm-border,#e3e3e8); background:var(--myllm-bg,#f2f2f7);
+    color:var(--myllm-text,#111); border-radius:999px; padding:8px 13px; font-size:13.5px; font-weight:650; font-family:inherit; }
+  .chip[disabled]{ opacity:.45; }
+  .chip b{ color:var(--myllm-accent,#0a84ff); font-weight:800; margin-left:4px; }
+
+  /* The LinkFindr card: the App Store app's real icon over a gradient tile,
+     which stays if the image can't load. */
+  .lf{ display:flex; gap:12px; align-items:center; text-decoration:none; color:inherit; }
+  .lf .ic{ width:52px; height:52px; border-radius:12px; flex-shrink:0; position:relative; overflow:hidden;
+    background:linear-gradient(145deg, hsl(24 78% 52%), hsl(354 62% 32%)); }
+  .lf .ic img{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+  .lf b{ font-size:15px; display:block; }
+  .lf span{ font-size:13px; color:var(--myllm-muted,#8a8a8e); line-height:1.4; display:block; margin-top:2px; }
+  .lf .get{ margin-left:auto; flex-shrink:0; border-radius:999px; padding:6px 14px; font-size:13.5px; font-weight:800;
+    background:var(--myllm-bg,#f2f2f7); color:var(--myllm-accent,#0a84ff); }
+  .tail{ display:block; text-align:center; font-size:13px; color:var(--myllm-muted,#8a8a8e); text-decoration:none; padding:6px 10px 2px; line-height:1.5; }
+  .tail u{ color:var(--myllm-accent,#0a84ff); text-decoration:none; font-weight:650; }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="head">
+    <div class="tile"><svg viewBox="0 0 24 24"><path d="M5 19.5a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/><path d="M4.5 12.5a7 7 0 0 1 7 7"/><path d="M4.5 5.5a14 14 0 0 1 14 14"/></svg></div>
+    <div class="ht"><h1>Follow</h1><p>Projects you care about, newest first</p></div>
+    <div class="acts"><button type="button" id="closeBtn" aria-label="Close Follow" onclick="closeApp()"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+  </div>
+  <div class="tabs">
+    <button id="tabL" class="on" onclick="showTab('l')">Latest</button>
+    <button id="tabF" onclick="showTab('f')">Following</button>
+  </div>
+
+  <div id="paneL">
+    <div class="bar">
+      <span class="sp" id="checked"></span>
+      <button class="go ghost small" id="refBtn" onclick="refresh(true)">Refresh</button>
+    </div>
+    <div id="feed"></div>
+  </div>
+
+  <div id="paneF" style="display:none">
+    <div class="card">
+      <label>Follow a project</label>
+      <textarea id="addr" rows="1" placeholder="paste an address, or a list" autocapitalize="none" autocorrect="off" spellcheck="false"></textarea>
+      <button class="go wide" id="addBtn" onclick="addFromField()">Follow</button>
+      <div id="addmsg"></div>
+      <p class="note">A GitHub project, a YouTube channel, a blog, a Substack, a Reddit community, a Mastodon or
+      Bluesky profile: anything that posts updates. Updates are read from the site's own public feed, so
+      there is no account. Instagram, Facebook, X and TikTok don't publish updates for other apps to read.</p>
+    </div>
+    <div class="card" id="sugCard">
+      <label>Start with a few</label>
+      <div id="suggest"></div>
+    </div>
+    <div class="card">
+      <label>Following (<span id="count">0</span> of <span id="cap"></span>)</label>
+      <div id="list"></div>
+    </div>
+    <div class="card">
+      <a class="lf" id="lfCard" href="#" target="_blank" rel="noopener">
+        <div class="ic"><img src="https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/follow.jpg" alt="" onerror="this.remove()"></div>
+        <div><b>LinkFindr for iPhone</b><span>Follow as many projects as you like, synced through your iCloud. Save any update to read later, offline, and share your list with a friend.</span></div>
+        <span class="get">View</span>
+      </a>
+    </div>
+  </div>
+</div>
+
+<script>
+/* Looked up on each use, never kept: MyLLM can add its bridges after this script has run. */
+var store={getItem:function(k){var s=window.myllmStorage;return s?s.getItem(k):Promise.resolve(null)},setItem:function(k,v){var s=window.myllmStorage;return s?s.setItem(k,v):Promise.resolve()}};
+function NET(u, o){ return window.myllmFetch(u, o); }
+function haptic(k){ if(window.myllmHaptic){ try{ myllmHaptic(k||'light'); }catch(_){} } }
+function el(id){ return document.getElementById(id); }
+function esc(s){ return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+
+var LINKFINDR_URL = "https://apps.apple.com/app/linkfindr/id6760857542";
+
+/* A pocket version: a handful of projects. LinkFindr has no limit. */
+var MAX_FOLLOWS = 10;
+/* A busy project (several releases a day) would fill the list on its own.
+   Order stays strictly newest first; each project shows its newest few per
+   section, then one "N more" row. */
+var PER_SOURCE = 3;
+
+/* Starting points: projects that post often and stay put. Each one's feed was
+   checked live before shipping (verify/follow.mjs --live). */
+var SUGGESTED = [
+  { title: "llama.cpp",        feed: "https://github.com/ggml-org/llama.cpp/releases.atom", site: "https://github.com/ggml-org/llama.cpp" },
+  { title: "Swift.org",        feed: "https://www.swift.org/atom.xml",                      site: "https://www.swift.org/blog/" },
+  { title: "NASA",             feed: "https://www.youtube.com/feeds/videos.xml?channel_id=UCLA_DiR1FfKNvjuUpBHmylQ", site: "https://www.youtube.com/@NASA" },
+  { title: "Simon Willison",   feed: "https://simonwillison.net/atom/everything/",          site: "https://simonwillison.net/" },
+  { title: "Kottke",           feed: "https://feeds.kottke.org/main",                       site: "https://kottke.org/" }
+];
+
+var K_F = "follows_v1";     /* [{feed, title, site}] */
+var K_CACHE = "cache_v1";   /* last merged updates, so it opens instantly */
+var K_SEEN = "seen_v1";     /* newest update already shown, for the new dot */
+var K_CHECKED = "checked_v1";
+
+var follows = [];
+var items = [];
+var lastSeen = 0;           /* updates newer than this are new on this visit */
+var checkedAt = 0;
+var expanded = {};
+var pendingRemove = null;
+var busy = false;
+
+/* ---------- small helpers ---------- */
+
+function timeAgo(at){
+  if (!at) return "";
+  var s = (Date.now() - at) / 1000;
+  if (s < 3600) return Math.max(1, Math.floor(s/60)) + "m ago";
+  if (s < 86400) return Math.floor(s/3600) + "h ago";
+  if (s < 2592000) return Math.floor(s/86400) + "d ago";
+  return new Date(at).toLocaleDateString();
+}
+
+/* Tags out, entities decoded, whitespace collapsed, cut on a word. */
+function plain(html, limit){
+  if (!html) return "";
+  var d = new DOMParser().parseFromString("<body>" + html + "</body>", "text/html");
+  var t = (d.body.textContent || "");
+  /* A summary that was itself escaped HTML shows its tags after one decode. */
+  if (/<\w+[^>]*>/.test(t)) t = (new DOMParser().parseFromString("<body>" + t + "</body>", "text/html").body.textContent || "");
+  t = t.replace(/\s+/g, " ").trim();
+  if (t.length <= limit) return t;
+  var cut = t.slice(0, limit), sp = cut.lastIndexOf(" ");
+  return (sp > limit / 2 ? cut.slice(0, sp) : cut) + "…";
+}
+
+/* XML namespaces make querySelector unreliable across feed dialects, so match
+   on localName — dc:date, content:encoded and friends differ only by prefix.
+   Direct children only, so an item's title never comes from a nested element. */
+function child(node, local){
+  for (var c = node.firstElementChild; c; c = c.nextElementSibling) if (c.localName === local) return c;
+  return null;
+}
+function childText(node, local){ var n = child(node, local); return n ? (n.textContent || "").trim() : ""; }
+
+function hostOf(u){ try { return new URL(u).host.replace(/^www\./, ""); } catch(e){ return u; } }
+
+/* ---------- reading a feed ---------- */
+
+/* RSS 2.0, RSS 1.0 (RDF), Atom or JSON Feed. Null if the text is none of them. */
+function parseFeed(text, feedUrl){
+  var head = String(text || "").slice(0, 2048).trim();
+  if (head.charAt(0) === "{") return parseJSONFeed(text, feedUrl);
+  if (!/<(rss|feed|rdf:RDF)[\s>]/i.test(head)) return null;
+  var doc = new DOMParser().parseFromString(text, "application/xml");
+  if (doc.getElementsByTagName("parsererror").length) return null;
+  var root = doc.documentElement;
+  var chan = child(root, "channel") || root;
+  var title = niceTitle(childText(chan, "title")) || hostOf(feedUrl);
+
+  var nodes = [];
+  var all = root.getElementsByTagName("*");
+  for (var i = 0; i < all.length; i++){
+    var ln = all[i].localName;
+    if (ln === "item" || ln === "entry") nodes.push(all[i]);
+  }
+  var out = [];
+  for (var j = 0; j < nodes.length && out.length < 30; j++){
+    var e = nodes[j];
+    var link = "";
+    for (var c = e.firstElementChild; c; c = c.nextElementSibling){
+      if (c.localName !== "link") continue;
+      var rel = c.getAttribute("rel");
+      var href = c.getAttribute("href") || (c.textContent || "").trim();
+      if (!href) continue;
+      if (!rel || rel === "alternate"){ link = href; if (rel === "alternate") break; }
+    }
+    if (!link){ var g = childText(e, "guid"); if (/^https?:/.test(g)) link = g; }
+    var body = childText(e, "summary") || childText(e, "description") || childText(e, "content") || childText(e, "encoded");
+    if (!body){ var grp = child(e, "group"); if (grp) body = childText(grp, "description"); }
+    var t = plain(childText(e, "title"), 200);
+    var sum = plain(body, 240);
+    if (!t && !sum) continue;
+    if (!/^https?:/i.test(link)) continue;
+    var when = childText(e, "published") || childText(e, "pubDate") || childText(e, "date") || childText(e, "updated");
+    var at = parseWhen(when);
+    out.push({ id: childText(e, "id") || childText(e, "guid") || link, title: t || sum.slice(0, 90),
+               summary: sum === t ? "" : sum, link: link, at: at, by: title, feed: feedUrl });
+  }
+  return { title: title, items: out };
+}
+
+function parseJSONFeed(text, feedUrl){
+  var o; try { o = JSON.parse(text); } catch(e){ return null; }
+  if (!o || !/jsonfeed\.org/.test(String(o.version || "")) || !Array.isArray(o.items)) return null;
+  var title = o.title || hostOf(feedUrl);
+  var out = o.items.slice(0, 30).map(function(it){
+    var t = plain(it.title || "", 200), sum = plain(it.summary || it.content_text || it.content_html || "", 240);
+    return { id: String(it.id || it.url || ""), title: t || sum.slice(0, 90), summary: sum === t ? "" : sum,
+             link: it.url || it.external_url || "", at: parseWhen(it.date_published || it.date_modified), by: title, feed: feedUrl };
+  }).filter(function(x){ return /^https?:/i.test(x.link) && x.title; });
+  return { title: title, items: out };
+}
+
+/* GitHub calls a release feed "Release notes from llama.cpp". */
+function niceTitle(t){
+  var m = String(t || "").match(/^Release notes from (.+)$/);
+  return m ? m[1] + " releases" : String(t || "").trim();
+}
+
+/* Date.parse covers ISO and most RFC 822 dates. Bluesky writes "09 Oct 2026
+   15:53 +0000" (no weekday, no seconds), which it reads too. A date in the
+   future is clamped to now, or it would stay "new" for ever. */
+function parseWhen(s){
+  var t = Date.parse(String(s || "").trim());
+  if (!t) return 0;
+  return Math.min(t, Date.now());
+}
+
+/* ---------- finding a project's feed ---------- */
+
+/* Feeds well-known sites keep at a predictable address. GitHub repo pages
+   announce none; the others do, but this saves a page load. */
+function knownFeeds(u){
+  var url; try { url = new URL(u); } catch(e){ return []; }
+  var host = url.host.toLowerCase().replace(/^www\./, "");
+  var p = url.pathname.split("/").filter(Boolean);
+  var out = [];
+  if (host === "github.com"){
+    if (p.length >= 2) out.push("https://github.com/" + p[0] + "/" + p[1] + "/releases.atom",
+                                "https://github.com/" + p[0] + "/" + p[1] + "/tags.atom",
+                                "https://github.com/" + p[0] + "/" + p[1] + "/commits.atom");
+    else if (p.length === 1) out.push("https://github.com/" + p[0] + ".atom");
+  } else if (host === "youtube.com" || host === "m.youtube.com"){
+    var list = url.searchParams.get("list");
+    if (list) out.push("https://www.youtube.com/feeds/videos.xml?playlist_id=" + list);
+    else if (p[0] === "channel" && p[1]) out.push("https://www.youtube.com/feeds/videos.xml?channel_id=" + p[1]);
+  } else if (host === "reddit.com" || host === "old.reddit.com"){
+    if (p[0] === "r" && p[1]) out.push("https://www.reddit.com/r/" + p[1] + "/.rss");
+    if ((p[0] === "user" || p[0] === "u") && p[1]) out.push("https://www.reddit.com/user/" + p[1] + "/.rss");
+  } else if (host === "bsky.app"){
+    if (p[0] === "profile" && p[1]) out.push("https://bsky.app/profile/" + p[1] + "/rss");
+  } else if (host === "medium.com"){
+    if (p[0]) out.push("https://medium.com/feed/" + p[0]);
+  } else {
+    if (/\.substack\.com$/.test(host)) out.push("https://" + host + "/feed");
+    if (/\.itch\.io$/.test(host) && p[0]) out.push("https://" + host + "/" + p[0] + "/devlog.rss");
+    /* Mastodon and most fediverse servers: /@user → /@user.rss */
+    if (p.length === 1 && p[0].charAt(0) === "@") out.push("https://" + url.host + "/" + p[0] + ".rss");
+  }
+  return out;
+}
+
+function commonFeeds(u){
+  var url; try { url = new URL(u); } catch(e){ return []; }
+  return ["/feed", "/rss", "/feed.xml", "/atom.xml", "/rss.xml", "/index.xml"].map(function(x){ return url.origin + x; });
+}
+
+/* Feeds a page announces in its <head>. Comment feeds aren't the project's updates. */
+function announcedFeeds(html, base){
+  var out = [];
+  var tags = String(html).slice(0, 400000).match(/<link\b[^>]*>/gi) || [];
+  tags.forEach(function(t){
+    if (!/\brel\s*=\s*["']?[^"'>]*alternate/i.test(t)) return;
+    if (!/type\s*=\s*["']?application\/(rss|atom)\+xml|type\s*=\s*["']?application\/feed\+json/i.test(t)) return;
+    var m = t.match(/href\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/i);
+    if (!m) return;
+    var href = (m[1] || m[2] || m[3] || "").replace(/&amp;/g, "&");
+    try { href = new URL(href, base).href; } catch(e){ return; }
+    if (/\/comments\/feed/i.test(href)) return;
+    if (out.indexOf(href) < 0) out.push(href);
+  });
+  /* YouTube @handles: the page carries the channel id. */
+  var yt = String(html).match(/"externalId":"(UC[\w-]{20,})"/) || String(html).match(/channel_id=(UC[\w-]{20,})/);
+  if (yt){
+    var f = "https://www.youtube.com/feeds/videos.xml?channel_id=" + yt[1];
+    if (out.indexOf(f) < 0) out.push(f);
+  }
+  return out;
+}
+
+function get(u){
+  return NET(u).then(function(r){
+    if (!r || r.status >= 400 || !r.body) return null;
+    return r.body;
+  }).catch(function(){ return null; });
+}
+
+function tryFeed(u, tried){
+  if (tried[u]) return Promise.resolve(null);
+  tried[u] = true;
+  return get(u).then(function(body){
+    var f = body ? parseFeed(body, u) : null;
+    return f ? { feed: u, title: f.title, items: f.items } : null;
+  });
+}
+
+function firstOf(list, tried){
+  var i = 0;
+  function next(){
+    if (i >= list.length) return Promise.resolve(null);
+    return tryFeed(list[i++], tried).then(function(r){ return r || next(); });
+  }
+  return next();
+}
+
+/* The feed behind an address: a known address for the site, the address
+   itself, what its page announces, then the usual paths. */
+function discover(raw){
+  var input = String(raw || "").trim().replace(/[)\].,;]+$/, "");
+  if (!input) return Promise.resolve(null);
+  if (!/^https?:\/\//i.test(input)) input = "https://" + input;
+  var tried = {};
+  return firstOf(knownFeeds(input), tried).then(function(r){
+    if (r) return r;
+    tried[input] = true;
+    return get(input).then(function(body){
+      if (!body) return null;
+      var f = parseFeed(body, input);
+      if (f) return { feed: input, title: f.title, items: f.items };
+      return firstOf(announcedFeeds(body, input), tried);
+    });
+  }).then(function(r){
+    return r || firstOf(commonFeeds(input), tried);
+  }).then(function(r){
+    if (r) r.site = input;
+    return r;
+  });
+}
+
+/* Every web address in a block of text (a shared list), once each. */
+function addresses(text){
+  var seen = {}, out = [];
+  (String(text).match(/https?:\/\/[^\s<>"']+/gi) || []).forEach(function(u){
+    u = u.replace(/[)\].,;]+$/, "");
+    if (!seen[u]){ seen[u] = true; out.push(u); }
+  });
+  if (!out.length){
+    var t = String(text).trim();
+    if (t && !/\s/.test(t) && /\./.test(t)) out.push(t);
+  }
+  return out;
+}
+
+/* ---------- the follow list ---------- */
+
+function saveFollows(){ return store.setItem(K_F, JSON.stringify(follows)); }
+function isFollowed(feed){ for (var i = 0; i < follows.length; i++) if (follows[i].feed === feed) return true; return false; }
+
+function capNote(){
+  return 'This pocket version follows up to ' + MAX_FOLLOWS + ' projects. ' +
+    '<a href="' + LINKFINDR_URL + '" target="_blank" rel="noopener" style="color:inherit;font-weight:700">LinkFindr</a> follows as many as you like.';
+}
+
+/* Adds what discover() found, merging its updates straight in so the new
+   project shows without a second fetch. */
+function adopt(r){
+  follows.push({ feed: r.feed, title: r.title, site: r.site || "" });
+  /* Following starts caught up: what was already there isn't news. */
+  r.items.forEach(function(x){ x.old = true; });
+  mergeItems(r.items);
+}
+
+function addFromField(){
+  var list = addresses(el("addr").value);
+  var msg = el("addmsg");
+  msg.innerHTML = "";
+  if (!list.length){ msg.innerHTML = '<div class="errline">Paste the address of a project first.</div>'; return; }
+  if (!window.myllmFetch){ msg.innerHTML = '<div class="errline">Needs internet access for apps (MyLLMos settings).</div>'; return; }
+  if (follows.length >= MAX_FOLLOWS){ msg.innerHTML = '<div class="errline">' + capNote() + '</div>'; return; }
+  haptic("light");
+  var btn = el("addBtn");
+  btn.disabled = true;
+  var added = [], missed = [], dup = [], full = false;
+  var i = 0;
+  function next(){
+    if (i >= list.length) return Promise.resolve();
+    var a = list[i++];
+    btn.textContent = list.length > 1 ? "Looking… " + i + " of " + list.length : "Looking…";
+    if (follows.length >= MAX_FOLLOWS){ full = true; return Promise.resolve(); }
+    return discover(a).then(function(r){
+      if (!r) missed.push(a);
+      else if (isFollowed(r.feed)) dup.push(r.title);
+      else { adopt(r); added.push(r.title); }
+    }).then(next);
+  }
+  next().then(function(){
+    var parts = [];
+    if (added.length) parts.push('<div class="okline">Following ' + added.map(esc).join(", ") + ' ✓</div>');
+    if (dup.length) parts.push('<div class="note">Already following ' + dup.map(esc).join(", ") + '.</div>');
+    if (missed.length) parts.push('<div class="errline">No updates found at ' + missed.map(function(m){ return esc(hostOf(m)); }).join(", ") +
+      '. Try the project\'s own page, or its feed address.</div>');
+    if (full) parts.push('<div class="errline">' + capNote() + '</div>');
+    msg.innerHTML = parts.join("");
+    if (added.length){ haptic("success"); el("addr").value = ""; el("addr").style.height = ""; }
+    return saveFollows();
+  }).then(function(){
+    btn.disabled = false;
+    btn.textContent = "Follow";
+    renderList(); renderFeed(); saveCache();
+  });
+}
+
+function followSuggested(i){
+  var s = SUGGESTED[i];
+  if (!s) return;
+  var msg = el("addmsg");
+  msg.innerHTML = "";
+  if (!window.myllmFetch){ msg.innerHTML = '<div class="errline">Needs internet access for apps (MyLLMos settings).</div>'; return; }
+  if (follows.length >= MAX_FOLLOWS){ msg.innerHTML = '<div class="errline">' + capNote() + '</div>'; return; }
+  haptic("light");
+  var b = el("sug" + i);
+  if (b){ b.disabled = true; b.textContent = "Adding…"; }
+  tryFeed(s.feed, {}).then(function(r){
+    if (!r){ msg.innerHTML = '<div class="errline">' + esc(s.title) + ' didn\'t answer just now. Try again in a moment.</div>'; renderSuggestions(); return; }
+    r.site = s.site;
+    adopt(r);
+    return saveFollows().then(function(){
+      msg.innerHTML = '<div class="okline">Following ' + esc(r.title) + ' ✓</div>';
+      haptic("success");
+      renderList(); renderFeed(); saveCache();
+    });
+  });
+}
+
+/* Removal without a dialog: the row becomes its own undo. */
+function removeFollow(i){
+  haptic("light");
+  pendingRemove = { at: i, f: follows[i] };
+  var feed = follows[i].feed;
+  follows.splice(i, 1);
+  items = items.filter(function(x){ return x.feed !== feed; });
+  saveFollows().then(function(){ renderList(); renderFeed(); saveCache(); });
+}
+function undoRemove(){
+  if (!pendingRemove) return;
+  follows.splice(pendingRemove.at, 0, pendingRemove.f);
+  pendingRemove = null;
+  saveFollows().then(function(){ renderList(); refresh(false); });
+}
+
+function renderSuggestions(){
+  var left = [];
+  for (var j = 0; j < SUGGESTED.length; j++) if (!isFollowed(SUGGESTED[j].feed)) left.push(j);
+  el("sugCard").style.display = left.length && follows.length < MAX_FOLLOWS ? "block" : "none";
+  el("suggest").innerHTML = '<div class="chips">' + left.map(function(j){
+    return '<button class="chip" id="sug' + j + '" onclick="followSuggested(' + j + ')">' + esc(SUGGESTED[j].title) + '<b>+</b></button>';
+  }).join("") + '</div>';
+}
+
+function renderList(){
+  renderSuggestions();
+  el("count").textContent = follows.length;
+  el("cap").textContent = MAX_FOLLOWS;
+  var html = follows.map(function(f, i){
+    return '<div class="row"><div class="n"><b>' + esc(f.title) + '</b><span>' + esc(hostOf(f.site || f.feed)) + '</span></div>' +
+           '<button class="x" onclick="removeFollow(' + i + ')" aria-label="Unfollow ' + esc(f.title) + '">✕</button></div>';
+  }).join("");
+  if (pendingRemove){
+    html += '<div class="row"><div class="n"><span>Unfollowed ' + esc(pendingRemove.f.title) + '</span></div>' +
+            '<button class="undo" onclick="undoRemove()">Undo</button></div>';
+  }
+  el("list").innerHTML = html || '<p class="status">Nothing yet. Paste an address above, or tap a suggestion.</p>';
+}
+
+/* ---------- the updates ---------- */
+
+function mergeItems(fresh){
+  var byKey = {};
+  items.forEach(function(x){ byKey[x.feed + "|" + x.id] = x; });
+  fresh.forEach(function(x){
+    var k = x.feed + "|" + x.id;
+    var old = byKey[k];
+    /* An undated update keeps the time it was first seen. */
+    if (!x.at) x.at = old && old.at ? old.at : Date.now();
+    if (old && old.old) x.old = true;
+    byKey[k] = x;
+  });
+  var all = Object.keys(byKey).map(function(k){ return byKey[k]; });
+  var live = {};
+  follows.forEach(function(f){ live[f.feed] = true; });
+  all = all.filter(function(x){ return live[x.feed]; });
+  all.sort(function(a, b){ return b.at - a.at; });
+  /* Keep each project's newest 20; plenty for a pocket list. */
+  var per = {};
+  items = all.filter(function(x){ per[x.feed] = (per[x.feed] || 0) + 1; return per[x.feed] <= 20; });
+}
+
+function saveCache(){ return store.setItem(K_CACHE, JSON.stringify(items.slice(0, 200))); }
+
+function rows(list, section){
+  var counts = {}, shown = {}, out = [];
+  list.forEach(function(x){ counts[x.feed] = (counts[x.feed] || 0) + 1; });
+  list.forEach(function(x){
+    var n = shown[x.feed] || 0;
+    shown[x.feed] = n + 1;
+    if (expanded[section + "|" + x.feed] || n < PER_SOURCE) out.push(upRow(x, section === "new"));
+    else if (n === PER_SOURCE){
+      var more = counts[x.feed] - PER_SOURCE;
+      out.push('<button class="more" onclick="expand(\'' + section + '\',' + JSON.stringify(x.feed).replace(/"/g, "&quot;") + ')">' +
+               more + ' more from ' + esc(x.by) + '</button>');
+    }
+  });
+  return out.join("");
+}
+
+function expand(section, feed){
+  haptic("light");
+  expanded[section + "|" + feed] = true;
+  renderFeed();
+}
+
+function upRow(x, isNew){
+  return '<a class="up' + (isNew ? ' new' : '') + '" href="' + esc(x.link) + '" target="_blank" rel="noopener">' +
+    '<div class="by">' + (isNew ? '<span class="dot"></span>' : '') + '<span class="src">' + esc(x.by) + '</span>' +
+    '<span class="w">' + esc(timeAgo(x.at)) + '</span></div>' +
+    '<h3>' + esc(x.title) + '</h3>' +
+    (x.summary ? '<div class="sum">' + esc(x.summary) + '</div>' : '') +
+  '</a>';
+}
+
+function caught(after){
+  return '<div class="caught"><span class="tick"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>' +
+    '<div><b>' + (after ? "That's everything new" : "You're all caught up") + '</b>' +
+    '<span>' + (checkedAt ? 'Checked ' + esc(timeAgo(checkedAt)) : '') + '</span></div></div>';
+}
+
+function isNew(x){ return x.at > lastSeen && !x.old; }
+
+function renderFeed(){
+  el("checked").textContent = busy ? "Checking…" : "";
+  if (!follows.length){
+    el("feed").innerHTML = '<p class="status">Nothing followed yet.<br>Add a project on the Following tab. There are a few suggestions there to start you off.</p>';
+    return;
+  }
+  if (!items.length){
+    el("feed").innerHTML = '<p class="status">' + (busy ? "Fetching the latest…" : "No updates yet. Tap Refresh.") + '</p>';
+    return;
+  }
+  var fresh = items.filter(isNew);
+  var earlier = items.filter(function(x){ return !isNew(x); }).slice(0, 80);
+  var html = "";
+  if (fresh.length){
+    html += '<div class="gh">New</div><div class="group">' + rows(fresh, "new") + caught(true) + '</div>';
+  } else {
+    html += '<div class="group" style="margin-top:8px">' + caught(false) + '</div>';
+  }
+  if (earlier.length) html += '<div class="gh">Earlier</div><div class="group">' + rows(earlier, "earlier") + '</div>';
+  html += '<a class="tail" href="' + LINKFINDR_URL + '" target="_blank" rel="noopener">Want to save these to read later, or follow more? <u>LinkFindr for iPhone</u></a>';
+  el("feed").innerHTML = html;
+}
+
+/* Reads every followed feed. The "new" line moves forward only once the
+   updates have been on screen, so what was new stays marked for this visit. */
+function refresh(manual){
+  if (!follows.length){ renderFeed(); return; }
+  if (!window.myllmFetch){
+    el("feed").innerHTML = '<p class="status">This app needs internet access for apps. Turn it on in MyLLMos settings, then reopen.</p>';
+    return;
+  }
+  if (busy) return;
+  busy = true;
+  if (manual) haptic("light");
+  el("refBtn").disabled = true;
+  renderFeed();
+  var jobs = follows.map(function(f){
+    return get(f.feed).then(function(body){
+      var r = body ? parseFeed(body, f.feed) : null;
+      if (!r) return [];
+      if (r.title && r.title !== f.title){ f.title = r.title; }
+      return r.items;
+    });
+  });
+  Promise.all(jobs).then(function(lists){
+    var all = [];
+    lists.forEach(function(l){ all = all.concat(l); });
+    busy = false;
+    el("refBtn").disabled = false;
+    if (!all.length && !items.length){
+      el("feed").innerHTML = '<p class="status">Couldn\'t reach those projects just now. Tap Refresh to try again.</p>';
+      return;
+    }
+    mergeItems(all);
+    checkedAt = Date.now();
+    renderFeed();
+    renderList();
+    if (manual) haptic("success");
+    saveFollows();
+    saveCache();
+    store.setItem(K_CHECKED, String(checkedAt));
+    var newest = items.length ? items[0].at : 0;
+    if (newest > lastSeenStored){ lastSeenStored = newest; store.setItem(K_SEEN, String(newest)); }
+  });
+}
+var lastSeenStored = 0;
+
+/* ---------- tabs ---------- */
+
+function showTab(t){
+  haptic("selection");
+  el("paneL").style.display = t === "l" ? "block" : "none";
+  el("paneF").style.display = t === "f" ? "block" : "none";
+  el("tabL").className = t === "l" ? "on" : "";
+  el("tabF").className = t === "f" ? "on" : "";
+}
+
+/* ---------- full screen ----------
+   Only where MyLLM can also close the app (myllmClose, 5.6.2+): full screen
+   hides the Done button, and a page with no way out is worse than a repeated
+   title. Looked up each time, never kept. */
+function canGoFull(){ return !!(window.myllmClose && window.myllmImmersive); }
+function syncChrome(){
+  var full = canGoFull();
+  document.body.classList.toggle("imm", full);
+  if (!full) return;
+  try { myllmImmersive(true, { keepAwake:false }).catch(function(){}); } catch(e){}
+}
+function closeApp(){
+  haptic("light");
+  try { myllmClose().catch(function(){}); } catch(e){}
+}
+document.addEventListener("visibilitychange", function(){ if (!document.hidden) syncChrome(); });
+
+/* The field grows with a pasted list. */
+el("addr").addEventListener("input", function(){
+  this.style.height = "auto";
+  this.style.height = Math.min(this.scrollHeight, 160) + "px";
+});
+el("lfCard").href = LINKFINDR_URL;
+
+/* ---------- boot ---------- */
+syncChrome();
+
+Promise.all([store.getItem(K_F), store.getItem(K_CACHE), store.getItem(K_SEEN), store.getItem(K_CHECKED)])
+.then(function(v){
+  try { follows = v[0] ? JSON.parse(v[0]) : []; } catch(e){ follows = []; }
+  try { items = v[1] ? JSON.parse(v[1]) : []; } catch(e){ items = []; }
+  lastSeen = lastSeenStored = Number(v[2] || 0) || 0;
+  checkedAt = Number(v[3] || 0) || 0;
+  if (!follows.length) showTab("f");
+  renderList();
+  renderFeed();
+  refresh(false);
+});
+</script>
+</body>
+</html>
