@@ -17,6 +17,83 @@
   ],
   "apps": [
     {
+      "id": "password-generator",
+      "name": "Password Generator",
+      "emoji": "🔑",
+      "tagline": "Strong, private, made on your phone",
+      "description": "Strong passwords, memorable passphrases and PINs, made on this iPhone with its secure random generator. Nothing is saved and nothing is sent. Choose the length and characters, leave out look-alikes, or pick a passphrase of real words from the EFF word list that's easy to type and hard to guess. The strength meter shows the exact strength in bits and how long cracking would take, and you can check a password you already use to see how it holds up. Tap to copy. Works offline.",
+      "tags": [
+        "security",
+        "passwords",
+        "privacy",
+        "utility"
+      ],
+      "iconSymbol": "key.fill",
+      "iconColor": "teal",
+      "version": 1,
+      "featured": true,
+      "requiresAI": false,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/password-generator.jpg",
+      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@ed24d38bf4de48196e4f93ef02e2d8eb0dd0aa08/apps-src/password-generator.html",
+      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@ed24d38bf4de48196e4f93ef02e2d8eb0dd0aa08/apps-src/password-generator.myllmapp",
+      "sizeKB": 98,
+      "category": "Utilities",
+      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/password-generator.jpg"
+    },
+    {
+      "id": "shell",
+      "name": "Shell",
+      "emoji": "⌨️",
+      "tagline": "A directory you can talk to",
+      "description": "A terminal for your shared workspace — and an assistant standing in it. ls, tree, cat, head, stat, find, grep, du and cd to look around; mkdir, mv, write and rm to change things; rm moves to a trash folder and undo reverses your last change. Pipe commands into each other with | and save the result with >, and ask is a command too, so  cat notes.md | ask \"summarise this\" > summary.md  runs your model over a file and keeps the answer. dictate speaks instead of typing, open hands a file to another app, share sends it out through iOS. Aliases, command history and a .shellrc all carry over between visits. Type anything that isn't a command and it becomes a question: MyLLM answers from inside the current directory, running the read-only commands itself to find out, and asking your permission before it changes a single file. The same command grammar works when you talk to MyLLM in chat. Nothing leaves your device.",
+      "category": "Utilities",
+      "iconSymbol": "terminal",
+      "iconColor": "gray",
+      "version": 15,
+      "featured": true,
+      "requiresAI": true,
+      "aiUses": [
+        "ask"
+      ],
+      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@8e19aacee50fc95c4af33ddf13daf1ffafe310c7/apps-src/shell.html",
+      "tags": [
+        "developer",
+        "files",
+        "utility",
+        "saves data"
+      ],
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/shell.jpg",
+      "sizeKB": 164
+    },
+    {
+      "id": "e-grid",
+      "name": "E-Grid",
+      "emoji": "🏁",
+      "tagline": "Every race, one app",
+      "description": "A race hub for thirteen championships — Formula 1, MotoGP, WRC, Formula E, IndyCar, NASCAR, WEC, IMSA, NHRA, Formula 2, Formula 3, Porsche Supercup and Clio Cup. A live countdown to the next race, the full season calendar, the F1 weekend broken down session by session in your own time zone, drivers' and constructors' standings, and motorsport headlines from Autosport, Motorsport.com, DirtFish and The Race. Follow the series you care about and they lead your home screen. Also carries illustrated guides to 88 circuits with lengths, corner counts and lap records, driver and team profiles, the current technical regulations and a country-by-country guide to where each series is televised. Calendars and track guides work offline once loaded; live standings and headlines need app network access, which you can switch on in Settings. There is also a companion E-Grid app for iPhone and iPad, which adds race reminders and a home-screen widget. E-Grid is not affiliated with any championship, team or governing body.",
+      "tags": [
+        "motorsport",
+        "racing",
+        "sport",
+        "news",
+        "F1",
+        "MotoGP",
+        "offline",
+        "saves data"
+      ],
+      "iconSymbol": "flag.checkered",
+      "iconColor": "red",
+      "version": 8,
+      "featured": true,
+      "requiresAI": false,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/e-grid.jpg",
+      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@c683914694e173be77210c5bfcc19e9d8678e6e0/apps-src/e-grid.html",
+      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@c683914694e173be77210c5bfcc19e9d8678e6e0/apps-src/e-grid.myllmapp",
+      "sizeKB": 77,
+      "category": "News & Web",
+      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/e-grid.png"
+    },
+    {
       "id": "airport-maps",
       "name": "Airport Maps",
       "emoji": "✈️",
@@ -198,30 +275,6 @@
       "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/metro-maps.jpg"
     },
     {
-      "id": "password-generator",
-      "name": "Password Generator",
-      "emoji": "🔑",
-      "tagline": "Strong, private, made on your phone",
-      "description": "Strong passwords, memorable passphrases and PINs, made on this iPhone with its secure random generator. Nothing is saved and nothing is sent. Choose the length and characters, leave out look-alikes, or pick a passphrase of real words from the EFF word list that's easy to type and hard to guess. The strength meter shows the exact strength in bits and how long cracking would take, and you can check a password you already use to see how it holds up. Tap to copy. Works offline.",
-      "tags": [
-        "security",
-        "passwords",
-        "privacy",
-        "utility"
-      ],
-      "iconSymbol": "key.fill",
-      "iconColor": "teal",
-      "version": 1,
-      "featured": true,
-      "requiresAI": false,
-      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/password-generator.jpg",
-      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@ed24d38bf4de48196e4f93ef02e2d8eb0dd0aa08/apps-src/password-generator.html",
-      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@ed24d38bf4de48196e4f93ef02e2d8eb0dd0aa08/apps-src/password-generator.myllmapp",
-      "sizeKB": 98,
-      "category": "Utilities",
-      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/password-generator.jpg"
-    },
-    {
       "id": "substack-reader",
       "name": "Substack Reader",
       "emoji": "📬",
@@ -348,6 +401,30 @@
       "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/currency.jpg"
     },
     {
+      "id": "bin",
+      "name": "Bin",
+      "emoji": "🗑️",
+      "tagline": "Deleted files, until you say so",
+      "description": "The bin for your shared workspace. Anything removed with rm or rmdir in the Shell app lands here instead of vanishing, and this app is the tile that shows it: every file with where it came from, its size and date, newest first. Tap one to restore it to its original place, look inside first, or delete it for good; if a file with the same name is already back in the workspace you choose whether to keep both or replace it. Select several to restore or delete together, and Empty Bin clears the lot when you are sure. It is simply the hidden .trash folder in the workspace, so the assistant can see and restore things too. A Rewind tab lists files that were overwritten, with their previous versions to look at or restore (needs MyLLM 5.1.2). Nothing leaves your device.",
+      "tags": [
+        "files",
+        "utility",
+        "workspace",
+        "trash"
+      ],
+      "category": "Utilities",
+      "iconSymbol": "trash.fill",
+      "iconColor": "mint",
+      "version": 9,
+      "featured": false,
+      "requiresAI": false,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/bin.jpg",
+      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@a9ed7322f0258b39515e53c4e390f2bdc3165daf/apps-src/bin.html",
+      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@a9ed7322f0258b39515e53c4e390f2bdc3165daf/apps-src/bin.myllmapp",
+      "sizeKB": 25,
+      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/bin.jpg"
+    },
+    {
       "id": "stocks",
       "name": "Stocks",
       "emoji": "📈",
@@ -374,83 +451,6 @@
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@a9ed7322f0258b39515e53c4e390f2bdc3165daf/apps-src/stocks.myllmapp",
       "sizeKB": 37,
       "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/stocks.jpg"
-    },
-    {
-      "id": "shell",
-      "name": "Shell",
-      "emoji": "⌨️",
-      "tagline": "A directory you can talk to",
-      "description": "A terminal for your shared workspace — and an assistant standing in it. ls, tree, cat, head, stat, find, grep, du and cd to look around; mkdir, mv, write and rm to change things; rm moves to a trash folder and undo reverses your last change. Pipe commands into each other with | and save the result with >, and ask is a command too, so  cat notes.md | ask \"summarise this\" > summary.md  runs your model over a file and keeps the answer. dictate speaks instead of typing, open hands a file to another app, share sends it out through iOS. Aliases, command history and a .shellrc all carry over between visits. Type anything that isn't a command and it becomes a question: MyLLM answers from inside the current directory, running the read-only commands itself to find out, and asking your permission before it changes a single file. The same command grammar works when you talk to MyLLM in chat. Nothing leaves your device.",
-      "category": "Utilities",
-      "iconSymbol": "terminal",
-      "iconColor": "gray",
-      "version": 15,
-      "featured": true,
-      "requiresAI": true,
-      "aiUses": [
-        "ask"
-      ],
-      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@8e19aacee50fc95c4af33ddf13daf1ffafe310c7/apps-src/shell.html",
-      "tags": [
-        "developer",
-        "files",
-        "utility",
-        "saves data"
-      ],
-      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/shell.jpg",
-      "sizeKB": 164
-    },
-    {
-      "id": "bin",
-      "name": "Bin",
-      "emoji": "🗑️",
-      "tagline": "Deleted files, until you say so",
-      "description": "The bin for your shared workspace. Anything removed with rm or rmdir in the Shell app lands here instead of vanishing, and this app is the tile that shows it: every file with where it came from, its size and date, newest first. Tap one to restore it to its original place, look inside first, or delete it for good; if a file with the same name is already back in the workspace you choose whether to keep both or replace it. Select several to restore or delete together, and Empty Bin clears the lot when you are sure. It is simply the hidden .trash folder in the workspace, so the assistant can see and restore things too. A Rewind tab lists files that were overwritten, with their previous versions to look at or restore (needs MyLLM 5.1.2). Nothing leaves your device.",
-      "tags": [
-        "files",
-        "utility",
-        "workspace",
-        "trash"
-      ],
-      "category": "Utilities",
-      "iconSymbol": "trash.fill",
-      "iconColor": "mint",
-      "version": 9,
-      "featured": false,
-      "requiresAI": false,
-      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/bin.jpg",
-      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@a9ed7322f0258b39515e53c4e390f2bdc3165daf/apps-src/bin.html",
-      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@a9ed7322f0258b39515e53c4e390f2bdc3165daf/apps-src/bin.myllmapp",
-      "sizeKB": 25,
-      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/bin.jpg"
-    },
-    {
-      "id": "e-grid",
-      "name": "E-Grid",
-      "emoji": "🏁",
-      "tagline": "Every race, one app",
-      "description": "A race hub for thirteen championships — Formula 1, MotoGP, WRC, Formula E, IndyCar, NASCAR, WEC, IMSA, NHRA, Formula 2, Formula 3, Porsche Supercup and Clio Cup. A live countdown to the next race, the full season calendar, the F1 weekend broken down session by session in your own time zone, drivers' and constructors' standings, and motorsport headlines from Autosport, Motorsport.com, DirtFish and The Race. Follow the series you care about and they lead your home screen. Also carries illustrated guides to 88 circuits with lengths, corner counts and lap records, driver and team profiles, the current technical regulations and a country-by-country guide to where each series is televised. Calendars and track guides work offline once loaded; live standings and headlines need app network access, which you can switch on in Settings. There is also a companion E-Grid app for iPhone and iPad, which adds race reminders and a home-screen widget. E-Grid is not affiliated with any championship, team or governing body.",
-      "tags": [
-        "motorsport",
-        "racing",
-        "sport",
-        "news",
-        "F1",
-        "MotoGP",
-        "offline",
-        "saves data"
-      ],
-      "iconSymbol": "flag.checkered",
-      "iconColor": "red",
-      "version": 8,
-      "featured": true,
-      "requiresAI": false,
-      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/e-grid.jpg",
-      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@c683914694e173be77210c5bfcc19e9d8678e6e0/apps-src/e-grid.html",
-      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@c683914694e173be77210c5bfcc19e9d8678e6e0/apps-src/e-grid.myllmapp",
-      "sizeKB": 77,
-      "category": "News & Web",
-      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/e-grid.png"
     },
     {
       "id": "nutrition-lens",
