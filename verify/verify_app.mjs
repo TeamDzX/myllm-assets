@@ -153,6 +153,16 @@ async function verifyApp(browser, file) {
       if (clicked >= CONFIG.clicks) break;
       try {
         if (!(await el.isVisible())) continue;
+        // A .card (or button) can be wholly a link, e.g. an App Store funnel
+        // card: tapping its centre would leave the page, and the harness then
+        // reports the store link as a remote 'document' load. Skip those.
+        const leaves = await el.evaluate((n) => {
+          const r = n.getBoundingClientRect();
+          const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+          const a = (hit && hit.closest('a[href]')) || n.closest('a[href]');
+          return !!a && !/^(#|javascript:)/i.test(a.getAttribute('href') || '');
+        });
+        if (leaves) continue;
         await el.click({ timeout: 900, noWaitAfter: true, force: false });
         clicked++;
         await page.waitForTimeout(120);
