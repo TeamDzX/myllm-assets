@@ -125,7 +125,119 @@
    store itself has no trash and no undo, so this app supplies both: rm moves
    into a hidden .trash folder, and undo reverses the last change. */
 /* Looked up on each use, never kept: MyLLM can add its bridges after this script has run. */
-Object.defineProperty(window, "files", { configurable:true, get:function(){ return window.myllmFiles || null; } });
+Object.defineProperty(window, "files", { configurable:true, get:function(){
+  var f = window.myllmFiles || null;
+  return f && window.myllmApps ? appsMount(f) : f;
+} });
+
+/* ---------- apps/: the user's saved MyLLMos apps, as files (v16, MyLLM 5.9.7+) ----------
+   Every command reads and writes through `files`, so the saved apps join the
+   workspace here and nowhere else: ls, cat, sed -n, grep -n, diff, edit,
+   replace, undo, versions and revert all work on them unchanged. That is what
+   lets a model on the phone change an app: it reads a slice, proposes a small
+   edit, and never has to hold the whole app. Saves go through myllmApps
+   (Shell only), which keeps the version each one replaced. Apps cannot be
+   created, deleted, moved or renamed here: that stays in MyLLMos. */
+var APPS = 'apps', appsByPath = {}, appsWrapped = null, appsBase = null;
+function inApps(path){ return path === APPS || String(path).indexOf(APPS + '/') === 0; }
+async function appsList(){
+  var list = [];
+  try { list = await window.myllmApps.list(); } catch(e){ list = []; }
+  appsByPath = {};
+  list.forEach(function(a){ appsByPath[APPS + '/' + a.file] = a; });
+  return list;
+}
+async function appFor(path){
+  if (!appsByPath[path]) await appsList();
+  return appsByPath[path] || null;
+}
+function appsRefuse(what){
+  throw new Error('saved apps can\'t be ' + what + ' from Shell — use MyLLMos for that. In ' + APPS + '/ you can read, edit, replace, revert and check.');
+}
+function appsMount(f){
+  if (appsWrapped && appsBase === f) return appsWrapped;
+  appsBase = f;
+  appsWrapped = {
+    list: async function(){
+      var base = await f.list(), apps = await appsList();
+      /* A real apps/ folder in the workspace wins; the mount moves aside. */
+      if (base.some(function(x){ return x.path === 'apps' || x.path.indexOf('apps/') === 0; })){
+        APPS = 'saved-apps'; await appsList();
+      }
+      return base.concat(apps.map(function(a){ return { path: APPS + '/' + a.file, size: a.size, modified: a.modified }; }));
+    },
+    folders: async function(){
+      var base = f.folders ? await f.folders() : [];
+      if (base.indexOf('apps') >= 0) APPS = 'saved-apps';
+      return base.concat([APPS]);
+    },
+    read: async function(p){
+      if (!inApps(p)) return f.read(p);
+      var a = await appFor(p); return a ? window.myllmApps.read(a.id) : null;
+    },
+    write: async function(p, text){
+      if (!inApps(p)) return f.write(p, text);
+      var a = await appFor(p);
+      if (!a) appsRefuse('created');
+      await window.myllmApps.write(a.id, text);
+      a.size = String(text).length; a.modified = Math.floor(Date.now() / 1000);
+    },
+    exists: async function(p){
+      if (!inApps(p)) return f.exists(p);
+      return p === APPS || !!(await appFor(p));
+    },
+    remove: async function(p){ if (inApps(p)) appsRefuse('deleted'); return f.remove(p); },
+    move: async function(a, b){ if (inApps(a) || inApps(b)) appsRefuse('moved or renamed'); return f.move(a, b); },
+    makeFolder: async function(p){ if (inApps(p)) appsRefuse('given folders'); return f.makeFolder(p); },
+    removeFolder: async function(p, r){ if (inApps(p)) appsRefuse('deleted'); return f.removeFolder(p, r); },
+    versions: async function(p){
+      if (!inApps(p)) return f.versions(p);
+      var a = await appFor(p); if (!a) return [];
+      var v = await window.myllmApps.versions(a.id);
+      return v.map(function(x){ return { path: p, stamp: x.stamp, size: x.size }; });
+    },
+    readVersion: async function(p, stamp){
+      if (!inApps(p)) return f.readVersion(p, stamp);
+      var a = await appFor(p); return a ? window.myllmApps.readVersion(a.id, stamp) : null;
+    },
+    restoreVersion: async function(p, stamp){
+      if (!inApps(p)) return f.restoreVersion(p, stamp);
+      var a = await appFor(p); if (!a) appsRefuse('created');
+      var old = await window.myllmApps.readVersion(a.id, stamp);
+      if (old == null) throw new Error('that version of ' + p + ' is gone');
+      await window.myllmApps.write(a.id, old);
+    }
+  };
+  return appsWrapped;
+}
+/* After an approved change to a saved app, check it straight away, and tell
+   the assistant what the check said, so "fix it" has something to go on. */
+async function checkTouchedApps(lines, memo){
+  if (!window.myllmApps) return;
+  var seen = {};
+  for (var i = 0; i < lines.length; i++){
+    var toks = tokenize(lines[i]).slice(1);
+    for (var j = 0; j < toks.length; j++){
+      var p = resolve(toks[j]);
+      if (!inApps(p) || seen[p] || !(await appFor(p))) continue;
+      seen[p] = true;
+      print('$ check ' + p, 'cmd');
+      var said = await captureOf(function(){ return checkApp(p); }, false);
+      if (memo) memo.outcome += '; then check ' + p + ' said: ' + said.replace(/\s+/g, ' ').slice(0, 400);
+      if (!/no errors/i.test(said)) print('ask MyLLM to fix it, or  undo  to put the app back', 'dim');
+    }
+  }
+}
+/* check <app>: open the app out of sight and report what broke (errors with
+   line numbers, a blank screen). Read-only, so the assistant may run it. */
+async function checkApp(path){
+  if (!window.myllmApps) return print('check needs MyLLM 5.9.7 or later', 'err');
+  if (!inApps(path)) return print('check works on saved apps: check ' + APPS + '/<app>.html', 'err');
+  var a = await appFor(path);
+  if (!a) return print('No such app: ' + path + ' — ls ' + APPS, 'err');
+  var report = String(await window.myllmApps.check(a.id) || 'checked — nothing to report').replace(/^run_check /, 'check ');
+  print(report.trim(), /no (errors|problems)|ran (fine|cleanly)|looks fine/i.test(report) ? 'ok' : '');
+}
 var out = document.getElementById('out');
 var input = document.getElementById('in');
 /* NOT `history` — that is window.history (the History API), so `var history`
@@ -253,6 +365,7 @@ var HELP = [
   ['paste a b / comm a b', 'side by side / what they share'],
   ['… | xargs head -n 3', 'run a command on piped paths'],
   ['du', 'space used per folder'],
+  ['check apps/<app>.html', 'open a saved app unseen, report errors'],
   '',
   ['ask "<question>"', 'ask MyLLM; pipe a file in to work on it'],
   ['dictate', 'speak instead of typing'],
@@ -796,9 +909,15 @@ var MAN = {
   preview: ['preview <write|replace|edit|mv|cp|rm|rmdir|mkdir …>  what it WOULD do — the diff, the moves, clashes, missing files', 'changes nothing; the assistant can run it before proposing'],
   date: ['date  today, time, zone, ISO and unix time'],
   scratch: ['scratch  what is in .scratch, the assistant\'s working paper   scratch clear  empty it', 'the assistant may write there without asking; 200 KB; emptied each time Shell opens; hidden from ls (ls -a shows it)'],
-  info: ['info  the workspace at a glance: files, size of 25 MB, top folders, newest changes, oldest file, bookmarks']
+  info: ['info  the workspace at a glance: files, size of 25 MB, top folders, newest changes, oldest file, bookmarks'],
+  check: ['check apps/<app>.html  open a saved app out of sight and report errors (with line numbers) or a blank screen', 'apps/ holds your saved MyLLMos apps (MyLLM 5.9.7+): read, grep, edit, replace, undo, versions, revert — create, delete and rename stay in MyLLMos']
 };
 var CHANGES = [
+  'Shell v16 (13 Oct 2026)',
+  '  apps/: your saved MyLLMos apps as files (MyLLM 5.9.7+) — read a slice, grep -n, edit, replace,',
+  '  undo, versions and revert work on them · check apps/<app> opens one out of sight and reports errors',
+  '  ask MyLLM to change an app: it reads only the lines it needs, proposes a small edit, and checks',
+  '  the app after you approve — so the model on your phone can do it too',
   'Shell v15 (12 Oct 2026)',
   '  log shows a batch as one row with its reason and parts, and says what each change did',
   '  (the edit, the files a cp wrote) · log show N opens a row: its parts and each edit\'s diff',
@@ -1225,6 +1344,10 @@ async function run(line){
     case 'help': printHTML(helpHTML()); return;
     case 'clear': out.innerHTML = ''; return;
     case 'pwd': print('/' + cwd, 'dim'); return;
+    case 'check': {
+      if (!ops.length) return print('check <app>  e.g.  check ' + APPS + '/Budget.html', 'err');
+      return checkApp(target);
+    }
 
     case 'cd': {
       var dest;
@@ -1503,8 +1626,12 @@ async function run(line){
       var from = sm[1] === '$' ? total : +sm[1];
       var to = !sm[2] ? from : sm[2] === '$' ? total : sm[2].charAt(0) === '+' ? from + +sm[2].slice(1) : +sm[2];
       if (from < 1 || from > total) return print('there are ' + total + ' lines', 'err');
-      print(sls.slice(from - 1, Math.min(to, total)).join('\n'));
-      return note('[lines ' + from + '–' + Math.min(to, total) + ' of ' + total + ']');
+      var slice = sls.slice(from - 1, Math.min(to, total));
+      /* For the assistant, number the lines: it writes edit A-B from them,
+         and a small model miscounts unnumbered ones. */
+      if (agentRunning) slice = slice.map(function(t, k){ return (from + k) + '| ' + t; });
+      print(slice.join('\n'));
+      return note('[lines ' + from + '–' + Math.min(to, total) + ' of ' + total + (agentRunning ? '; "40| " prefixes are line numbers, not text' : '') + ']');
     }
 
     case 'wc': {
@@ -2312,7 +2439,7 @@ function listing(snap, root, recursive, sortBy, opt){
    proposal the user has to accept: a model running rm across someone's
    documents unattended is the one outcome worth designing against. */
 
-var READ_ONLY = ['ls','dir','tree','cat','head','tail','sed','stat','find','grep','diff','jq','wc','sort','uniq','cut','tr','paste','comm','awk','xargs','man','changes','preview','date','info','scratch','versions','history','du','pwd','log'];
+var READ_ONLY = ['ls','dir','tree','cat','head','tail','sed','stat','find','grep','diff','jq','wc','sort','uniq','cut','tr','paste','comm','awk','xargs','man','changes','preview','date','info','scratch','versions','history','du','pwd','log','check'];
 /* The assistant may also cd — its own working folder, put back afterwards. */
 var AGENT_OK = READ_ONLY.concat(['cd', 'scratch']);
 /* Writes the assistant may make without asking: into .scratch only. A pipeline
@@ -2332,6 +2459,12 @@ function scratchOnly(cmd){
   return !!o.ops[0] && inScratch(resolve(o.ops[0]));
 }
 var MAX_STEPS = 6;          /* myllmAsk is rate-limited; five is plenty and stays inside it */
+var outCap = 4000;          /* characters of one step's output the model is shown */
+var agentRunning = false;   /* the assistant is running a step (sed numbers its lines) */
+/* On the model on this phone (a window of a few thousand tokens) everything the
+   assistant is sent is kept small: a short prompt, 1,200-character outputs, and
+   only the last two outputs in full (v16). */
+var SMALL_CAP = 1200;
 
 /* The system prompt for the `ask` VERB — a filter, not an assistant. Anything
    it says that is not the answer ends up in the user's file, so say none of it. */
@@ -2354,6 +2487,7 @@ function systemPrompt(listing){
     'You may pipe them: `a | b` sends a\'s output into b, and cat, head, tail, sed, grep, wc, sort, uniq, cut and jq read what is piped in — e.g. `grep -l invoice notes | wc -l` or `find *.md | cut -d / -f 1 | sort | uniq -c | sort -rn`. One pipeline is one step, so prefer it over three separate looks.',
     'Paths are relative to your working folder. You may `cd <path>` (also `cd ..`, `cd -`, `cd @bookmark`) to work deeper without spelling long paths; it is YOUR folder for this question and the user\'s prompt is put back afterwards.' + (Object.keys(marks).length ? ' Bookmarks: ' + Object.keys(marks).map(function(k){ return '@' + k + ' = /' + marks[k]; }).join(', ') + '.' : ''),
     'Today: ' + when(Date.now()) + '. All times shown are ' + zoneLabel() + '. `info` summarises the workspace (size, top folders, newest changes, hidden .trash/.scratch counts); `log` lists changes made via Shell AND files changed outside it; `log show N` opens row N (a batch\'s parts, each edit\'s diff).',
+    (window.myllmApps ? APPS + '/ holds the user\'s saved MyLLMos apps as files (.html, .py). To change one: grep -n to find the place, sed -n a range around it, then propose a small edit or replace -1 — never write the whole app. After the user approves a change to an app, Shell runs `check` on it and you are told what broke. You can also run `check ' + APPS + '/<app>` yourself. Apps cannot be created, deleted or renamed here.\n' : '') +
     'Hidden: .trash (deleted files; `trash`, `ls -a`) and .scratch (your notes). Values that look like keys or tokens are shown to you as [masked]; never ask the user to paste them.',
     'Writing output to a file with > or >> is a CHANGE: propose it, never run it.',
     '',
@@ -2376,6 +2510,22 @@ function systemPrompt(listing){
   ].join('\n');
 }
 
+function smallSystemPrompt(listing){
+  return [
+    'You work in the user\'s file workspace on their phone, like a terminal assistant. Folder: /' + (cwd || ''),
+    'Contents:', listing || '(empty)', '',
+    'Look with read-only commands: ls, cat <small file>, head -n N <path>, wc -l <path>, grep -n <text> <path>, sed -n \'40,80p\' <path> (at most 60 lines; "40| " prefixes are line numbers), diff, versions <path>' + (window.myllmApps ? ', check ' + APPS + '/<app>' : '') + '.',
+    window.myllmApps ? APPS + '/ holds the user\'s saved apps as files. Never cat a whole app: grep -n to find the place, then sed -n a small range around it.' : '',
+    'Reply with ONE JSON object and nothing else:',
+    '  {"run":"<command>"}  to look',
+    '  {"say":"<answer>"}  to answer, briefly',
+    '  {"propose":"<command>","why":"<reason>"}  to change a file; the user approves it',
+    'Changes: edit <path> A-B "new lines" (replaces lines A to B; \\n = line break; "" deletes; A+ inserts after line A), or replace -1 <path> "old" "new". Keep each change small. Copy text exactly as the file has it, without the "40| " numbers.',
+    window.myllmApps ? 'After the user approves a change to an app, Shell checks the app and tells you what broke.' : '',
+    'Output over ' + SMALL_CAP + ' characters is cut: narrow it with grep or a smaller range. Do not invent file contents.'
+  ].filter(function(x){ return x !== ''; }).join('\n');
+}
+
 async function runCaptured(line){
   /* The agent's steps stay visible on screen (silent: false) — watching it look
      around is most of why the loop is trustworthy. Each output ends with a
@@ -2385,9 +2535,9 @@ async function runCaptured(line){
   var empty = !text.trim() || /^(found nothing|no match|no file matches|nothing matches|.* is empty$)/i.test(text.trim());
   var status = failed ? '[status: failed — the error is above]' : empty ? '[status: found nothing]' : '[status: ok]';
   /* Cut at a line, and say exactly where and how to read on. */
-  if (text.length > 4000){
+  if (text.length > outCap){
     var allL = text.split('\n'), keep = [], used = 0;
-    for (var li = 0; li < allL.length && used + allL[li].length + 1 <= 4000; li++){ keep.push(allL[li]); used += allL[li].length + 1; }
+    for (var li = 0; li < allL.length && used + allL[li].length + 1 <= outCap; li++){ keep.push(allL[li]); used += allL[li].length + 1; }
     var nKeep = Math.max(1, keep.length);
     text = keep.join('\n') + '\n[output cut at line ' + nKeep + ' of ' + allL.length + ' — read on with:  ' + line.replace(/\s*$/, '') + " | sed -n '" + (nKeep + 1) + ",+80p'  (or narrow it with grep/head)]";
   }
@@ -2474,9 +2624,9 @@ document.getElementById('workStop').addEventListener('click', function(){
 var agentMemory = [];
 var pendingMemo = null;   /* the memory entry whose proposal awaits y/n */
 function rememberAgent(entry){ agentMemory.push(entry); if (agentMemory.length > 6) agentMemory.shift(); return entry; }
-function memoryText(){
+function memoryText(keep){
   if (!agentMemory.length) return '';
-  return 'Earlier in this session (oldest first):\n' + agentMemory.map(function(m){
+  return 'Earlier in this session (oldest first):\n' + agentMemory.slice(-(keep || 6)).map(function(m){
     var t = '- User: ' + m.q.slice(0, 200);
     if (m.said) t += '\n  You said: ' + m.said.slice(0, 300);
     if (m.proposed) t += '\n  You proposed: ' + m.proposed.join(' ; ').slice(0, 300) + '\n  Outcome: ' + m.outcome;
@@ -2491,22 +2641,37 @@ async function agent(question){
   }
   /* The listing goes to the MODEL only. It used to be printed on screen with
      every question (capture without quiet), which was most of the noise. */
+  /* The model on this phone gets the small version of everything. */
+  var room = null;
+  try { room = window.myllmAsk.room ? await window.myllmAsk.room() : null; } catch(e){ room = null; }
+  var small = !!(room && room.onDevice);
+  outCap = small ? SMALL_CAP : 4000;
+
   var snap = await snapshot();
   var here = await captureOf(function(){ return listing(snap, cwd, false); }, true);
-  var hl = here.split('\n');
-  if (hl.length > 40) here = hl.slice(0, 40).join('\n') + '\n[' + (hl.length - 40) + ' more — run ls]';
+  var hl = here.split('\n'), maxL = small ? 15 : 40;
+  if (hl.length > maxL) here = hl.slice(0, maxL).join('\n') + '\n[' + (hl.length - maxL) + ' more — run ls]';
 
   /* The assistant may cd while it works; that is ITS working folder for this
      question. Yours is put back when it finishes. */
   var userCwd = cwd;
-  var transcript = memoryText() + 'User: ' + question;
+  var opening = memoryText(small ? 2 : 6) + 'User: ' + question;
+  /* Each look the assistant takes. On a small model only the last two keep
+     their output; older ones shrink to the command, so the request stays
+     inside the phone's window however many steps it takes. */
+  var looks = [];
+  var transcriptOf = function(){
+    return opening + looks.map(function(l, k){
+      return '\n\n' + (small && k < looks.length - 2 ? l.head + '\n(output read earlier)' : l.head + (l.body ? '\n' + l.body : ''));
+    }).join('');
+  };
   var memo = rememberAgent({ q: question });
   var ownBar = workStart('MyLLM is thinking…');
   try {
     for (var step = 0; step < MAX_STEPS; step++){
       var raw;
       workStep(step ? 'MyLLM is thinking · step ' + (step + 1) : 'MyLLM is thinking…');
-      try { raw = await myllmAsk(transcript + '\n\nReply with one JSON object.', { system: systemPrompt(here) }); }
+      try { raw = await myllmAsk(transcriptOf() + '\n\nReply with one JSON object.', { system: small ? smallSystemPrompt(here) : systemPrompt(here) }); }
       catch(e){ print('ask failed: ' + (e.message || e), 'err'); return; }
       if (workStopped()){ print('stopped — ask again whenever you like', 'dim'); memo.said = '(stopped by the user)'; return; }
 
@@ -2561,14 +2726,16 @@ async function agent(question){
           var why2 = scratchOnly(cmd) ? null : unsafeReason(cmd, AGENT_OK);
           if (why2){
             print('blocked: ' + cmd + ' — ' + why2, 'dim');
-            transcript += '\n\nAssistant tried: ' + cmd + '\n[status: blocked — ' + why2 + ']. Use "propose" for anything that changes files.';
+            looks.push({ head: 'Assistant tried: ' + cmd, body: '[status: blocked — ' + why2 + ']. Use "propose" for anything that changes files.' });
             continue;
           }
           print('$ ' + cmd + (cwd !== userCwd ? '   (in /' + cwd + ')' : ''), 'step');
           workStep('running  ' + cmd);
-          var output = await runCaptured(cmd);
+          agentRunning = true;
+          var output;
+          try { output = await runCaptured(cmd); } finally { agentRunning = false; }
           if (workStopped()){ print('stopped — ask again whenever you like', 'dim'); return; }
-          transcript += '\n\nAssistant ran: ' + cmd + (cwd ? '  (working folder /' + cwd + ')' : '') + '\nOutput:\n' + (output || '(no output)');
+          looks.push({ head: 'Assistant ran: ' + cmd + (cwd ? '  (working folder /' + cwd + ')' : ''), body: 'Output:\n' + (output || '(no output)') });
         }
         continue;
       }
@@ -2608,6 +2775,7 @@ document.getElementById('form').addEventListener('submit', async function(ev){
           print('$ ' + p.line, 'cmd');
           var rOut = await captureOf(function(){ return runLine(p.line); }, false);
           if (memoP) memoP.outcome = lastCaptureError ? 'approved, but it FAILED: ' + rOut.slice(0, 200) : 'approved and done: ' + rOut.slice(0, 160);
+          if (!lastCaptureError) await checkTouchedApps([p.line], memoP);
         }
         else if (p.verb === 'batch'){
           batchId = Date.now(); batchWhy = p.why || '';
@@ -2619,6 +2787,7 @@ document.getElementById('form').addEventListener('submit', async function(ev){
                 if (memoP) memoP.outcome = 'approved; steps 1–' + bi + ' ran, step ' + (bi + 1) + ' FAILED, the rest did not run'; break; }
             }
             if (memoP && !lastCaptureError) memoP.outcome = 'approved and all ' + p.lines.length + ' steps ran';
+            if (!lastCaptureError) await checkTouchedApps(p.lines, memoP);
           } finally { batchId = null; batchWhy = ''; }
         }
         else if (p.verb === 'trash-empty') await files.removeFolder(TRASH, true);
@@ -2808,7 +2977,27 @@ print('rm moves things to .trash and  undo  reverses your last change. Tap any p
   renderChips();
   if (!window.myllmFiles){ print('\nShared files are off — turn them on in MyLLMos settings.', 'err'); return; }
   try { await runRC(); } catch(e){ print('.shellrc: ' + (e && e.message || e), 'err'); }
+  /* MyLLMos "Edit in Chat" on the phone's model hands an app here (5.9.7):
+     start in apps/, name the file, and begin the question for the user. */
+  var editing = null;
+  if (window.myllmIntent && window.myllmApps){
+    try {
+      var listed = await appsList();
+      myllmIntent.receive(function(it){
+        if (!it || it.action !== 'edit-app' || !it.data) return;
+        var hit = listed.filter(function(a){ return a.id === it.data.id; })[0];
+        if (!hit) return 'That app is not in Shell\'s apps/ folder.';
+        prevCwd = cwd; cwd = APPS; editing = APPS + '/' + hit.file;
+        return 'Opened ' + hit.file + ' in Shell.';
+      });
+    } catch(e){}
+  }
   await runLine('ls');
+  if (editing){
+    print('\nTell MyLLM what to change in ' + editing.split('/').pop() + '. It reads only the lines it needs,', 'dim');
+    print('shows you each edit before it is made, and checks the app afterwards.', 'dim');
+    input.value = 'In ' + editing.split('/').pop() + ', ';
+  }
   paintPrompt();
   renderChips();
 })();

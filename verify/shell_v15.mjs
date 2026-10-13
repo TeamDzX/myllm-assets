@@ -105,7 +105,7 @@ await check('the assistant is told about log show and multi-line answers', async
 });
 await check('changes lists v15 then v14; man log mentions log show', async () => {
   const c = await out('changes'); const m = await out('man log');
-  return (/^Shell v15/.test(c.trim()) && c.indexOf('Shell v14') > c.indexOf('Shell v15') && /log show N/.test(m)) || c.slice(0, 200) + ' | ' + m;
+  return (/^Shell v1[5-9]/.test(c.trim()) && c.indexOf('Shell v15') >= 0 && c.indexOf('Shell v14') > c.indexOf('Shell v15') && /log show N/.test(m)) || c.slice(0, 200) + ' | ' + m;
 });
 await check('no page errors', async () => errs.length === 0 || errs.join('; '));
 
