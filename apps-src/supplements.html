@@ -1,0 +1,603 @@
+<!doctype html>
+<!--
+  Supplements — MyLLMos™ App Gallery · © 2026 Opticell Ltd
+  Source-available: read it, remix it, run your version inside MyLLM™.
+  Not for redistribution or republication. Terms: https://github.com/TeamDzX/myllm-assets/blob/main/LICENSE
+--><html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Supplements</title>
+<meta name="myllm:immersive" content="on">
+<style>
+  :root { color-scheme: light dark; }
+  @media (prefers-color-scheme:dark){ :where(:root){ --myllm-bg:#000; --myllm-surface:#1c1c1e; --myllm-text:#f2f2f7; --myllm-muted:#98989f; --myllm-border:#2c2c2e; } }
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body{
+    font-family:var(--myllm-font,-apple-system,system-ui,sans-serif);
+    background:var(--myllm-bg,#f2f2f7); color:var(--myllm-text,#111);
+    max-width:640px; margin:0 auto; min-height:100dvh;
+    padding-bottom:calc(30px + env(safe-area-inset-bottom));
+    padding-left:env(safe-area-inset-left); padding-right:env(safe-area-inset-right);
+  }
+  :root{--build-id:"f88a9bff8e"; --h:150; --ok:#1a9a5b; --warn:#c77700; --no:#d1345b; }
+  .head{ display:flex; align-items:center; gap:12px; margin:4px 2px 14px; }
+  .head .tile{ width:44px; height:44px; border-radius:13px; display:flex; align-items:center; justify-content:center; color:#fff; flex-shrink:0;
+    background:linear-gradient(145deg, hsl(var(--h) 62% 44%), hsl(calc(var(--h) + 40) 58% 28%)); }
+  .head .tile svg{ width:24px; height:24px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+  .head .ht{ flex:1; min-width:0; }
+  .head h1{ font-size:22px; font-weight:800; letter-spacing:-.01em; }
+  .head p{ font-size:13px; color:var(--myllm-muted,#8a8a8e); margin-top:1px; }
+  .wrap{ padding:12px 14px; }
+  .head .acts{ display:none; flex-shrink:0; }
+  .head .acts button, .back{ width:40px; height:40px; border-radius:12px; border:1px solid var(--myllm-border,#e3e3e8);
+    background:var(--myllm-surface,#fff); color:var(--myllm-text,#111); display:grid; place-items:center; padding:0; flex-shrink:0; }
+  .head .acts svg, .back svg{ width:16px; height:16px; fill:none; stroke:currentColor; stroke-width:2.6; stroke-linecap:round; stroke-linejoin:round; }
+  body.imm .head .acts{ display:flex; }
+  body.imm .wrap{ padding-top:calc(12px + env(safe-area-inset-top)); }
+
+  .tabs{ display:flex; background:var(--myllm-surface,#fff); border:1px solid var(--myllm-border,#e3e3e8); border-radius:13px; padding:3px; margin-bottom:12px; }
+  .tabs button{ flex:1; border:none; background:none; color:var(--myllm-muted,#8a8a8e); border-radius:10px; padding:9px; font-size:14px; font-weight:700; font-family:inherit; }
+  .tabs button.on{ background:var(--myllm-accent,#0a84ff); color:#fff; }
+
+  .search{ width:100%; font-size:16px; padding:11px 12px 11px 38px; border-radius:12px; border:1px solid var(--myllm-border,#e3e3e8);
+    background:var(--myllm-surface,#fff) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238a8a8e' stroke-width='2.4' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='M20 20l-4-4'/%3E%3C/svg%3E") no-repeat 12px center / 17px;
+    color:var(--myllm-text,#111); font-family:inherit; }
+  .cats{ display:flex; gap:7px; overflow-x:auto; padding:10px 0 4px; scrollbar-width:none; }
+  .cats::-webkit-scrollbar{ display:none; }
+  .chip{ border:1px solid var(--myllm-border,#e3e3e8); background:var(--myllm-surface,#fff); color:var(--myllm-text,#111);
+    border-radius:999px; padding:7px 12px; font-size:13.5px; font-weight:650; font-family:inherit; white-space:nowrap; flex-shrink:0; }
+  .chip.on{ background:var(--myllm-accent,#0a84ff); border-color:transparent; color:#fff; }
+
+  .group{ background:var(--myllm-surface,#fff); border:1px solid var(--myllm-border,#e3e3e8); border-radius:16px; overflow:hidden; margin:8px 0 12px; }
+  .item{ display:flex; align-items:center; gap:11px; width:100%; text-align:left; border:none; background:none; font-family:inherit; color:inherit;
+    padding:11px 14px; border-bottom:1px solid var(--myllm-border,#e3e3e8); }
+  .item:last-child{ border-bottom:none; }
+  .item .n{ flex:1; min-width:0; }
+  .item b{ font-size:15.5px; font-weight:700; display:block; }
+  .item span{ font-size:12.5px; color:var(--myllm-muted,#8a8a8e); display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-top:1px; }
+  .item .chev{ color:var(--myllm-muted,#8a8a8e); font-size:20px; }
+  .sdot{ width:9px; height:9px; border-radius:50%; flex-shrink:0; background:var(--ok); }
+  .sdot.warn{ background:var(--warn); } .sdot.no{ background:var(--no); }
+  .gh{ font-size:12.5px; font-weight:700; color:var(--myllm-muted,#8a8a8e); text-transform:uppercase; letter-spacing:.4px; margin:16px 4px 6px; }
+  .legend{ display:flex; gap:14px; flex-wrap:wrap; font-size:12px; color:var(--myllm-muted,#8a8a8e); margin:2px 4px 0; }
+  .legend i{ display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:5px; vertical-align:1px; }
+
+  .card{ background:var(--myllm-surface,#fff); border:1px solid var(--myllm-border,#e3e3e8); border-radius:16px; padding:13px 14px; margin-bottom:10px; }
+  .card h3{ font-size:12.5px; font-weight:700; color:var(--myllm-muted,#8a8a8e); text-transform:uppercase; letter-spacing:.4px; margin-bottom:8px; }
+  .card p, .card li{ font-size:15px; line-height:1.45; }
+  .card ul{ list-style:none; }
+  .card li{ padding:4px 0 4px 16px; position:relative; }
+  .card li::before{ content:""; position:absolute; left:2px; top:12px; width:5px; height:5px; border-radius:50%; background:var(--myllm-muted,#8a8a8e); }
+  .ev{ display:flex; align-items:flex-start; gap:10px; padding:6px 0; font-size:15px; line-height:1.4; }
+  .ev + .ev{ border-top:1px solid var(--myllm-border,#e3e3e8); }
+  .pill{ font-size:11.5px; font-weight:800; border-radius:999px; padding:3px 8px; flex-shrink:0; margin-top:1px; text-transform:uppercase; letter-spacing:.3px; }
+  .pill.good{ background:color-mix(in srgb, var(--ok) 16%, transparent); color:var(--ok); }
+  .pill.some{ background:color-mix(in srgb, var(--warn) 16%, transparent); color:var(--warn); }
+  .pill.little{ background:color-mix(in srgb, var(--myllm-muted,#8a8a8e) 18%, transparent); color:var(--myllm-muted,#8a8a8e); }
+
+  .dtop{ display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+  .dtop .t{ flex:1; min-width:0; }
+  .dtop h2{ font-size:24px; font-weight:800; letter-spacing:-.01em; line-height:1.15; }
+  .dtop .aka{ font-size:13px; color:var(--myllm-muted,#8a8a8e); margin-top:3px; line-height:1.35; }
+  .tags{ display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px; }
+  .tag{ font-size:12.5px; font-weight:700; border-radius:8px; padding:4px 9px; background:var(--myllm-surface,#fff); border:1px solid var(--myllm-border,#e3e3e8); }
+  .tag.st-ok{ color:var(--ok); } .tag.st-warn{ color:var(--warn); } .tag.st-no{ color:var(--no); }
+
+  .mol{ display:block; width:100%; height:auto; max-height:260px; }
+  .mol text{ font-family:var(--myllm-font,-apple-system,system-ui,sans-serif); font-weight:700; }
+  .molcap{ font-size:13px; color:var(--myllm-muted,#8a8a8e); margin-top:6px; line-height:1.4; }
+  .molcap b{ color:var(--myllm-text,#111); }
+
+  .reg{ display:grid; grid-template-columns:auto 1fr; gap:8px 12px; font-size:14.5px; line-height:1.4; }
+  .reg dt{ font-weight:800; font-size:12.5px; color:var(--myllm-muted,#8a8a8e); padding-top:2px; }
+  .flag{ display:flex; gap:9px; align-items:flex-start; padding:5px 0; font-size:14.5px; line-height:1.4; }
+  .flag .fi{ font-size:15px; width:20px; text-align:center; flex-shrink:0; }
+  .src a{ display:block; color:var(--myllm-accent,#0a84ff); text-decoration:none; font-size:15px; font-weight:600; padding:6px 0; }
+  .src a + a{ border-top:1px solid var(--myllm-border,#e3e3e8); }
+  .muted{ color:var(--myllm-muted,#8a8a8e); font-size:13px; line-height:1.45; }
+  .bars{ margin-top:8px; }
+  .bar{ display:grid; grid-template-columns:1fr auto; gap:8px; font-size:13.5px; padding:3px 0; }
+  .bar .tr{ grid-column:1 / -1; height:5px; border-radius:3px; background:var(--myllm-bg,#f2f2f7); overflow:hidden; }
+  .bar .tr i{ display:block; height:100%; background:var(--myllm-accent,#0a84ff); border-radius:3px; }
+
+  .go{ border:none; border-radius:12px; padding:12px 16px; font-size:15px; font-weight:700; background:var(--myllm-accent,#0a84ff); color:#fff; font-family:inherit; width:100%; }
+  .go.ghost{ background:var(--myllm-surface,#fff); color:var(--myllm-accent,#0a84ff); border:1px solid var(--myllm-border,#e3e3e8); }
+  .go.on{ background:var(--ok); }
+  .alert{ border-radius:14px; padding:11px 13px; margin-bottom:9px; font-size:14.5px; line-height:1.45; border:1px solid; }
+  .alert b{ display:block; font-size:14px; margin-bottom:2px; }
+  .alert.red{ border-color:color-mix(in srgb, var(--no) 40%, transparent); background:color-mix(in srgb, var(--no) 9%, transparent); }
+  .alert.amber{ border-color:color-mix(in srgb, var(--warn) 40%, transparent); background:color-mix(in srgb, var(--warn) 9%, transparent); }
+  .alert.green{ border-color:color-mix(in srgb, var(--ok) 40%, transparent); background:color-mix(in srgb, var(--ok) 9%, transparent); }
+  .row{ display:flex; align-items:center; gap:10px; padding:9px 0; border-bottom:1px solid var(--myllm-border,#e3e3e8); }
+  .row:last-child{ border-bottom:none; }
+  .row .n{ flex:1; font-size:15px; font-weight:650; text-align:left; border:none; background:none; color:inherit; font-family:inherit; padding:0; }
+  .x{ border:none; background:none; color:var(--myllm-muted,#8a8a8e); font-size:19px; padding:4px 8px; font-family:inherit; }
+  .meds .chip{ margin:0 6px 7px 0; white-space:normal; text-align:left; flex-shrink:1; }
+  .empty{ text-align:center; color:var(--myllm-muted,#8a8a8e); font-size:14px; padding:22px 10px; line-height:1.5; }
+  .disc{ font-size:12.5px; color:var(--myllm-muted,#8a8a8e); line-height:1.5; text-align:center; padding:10px 8px 0; }
+  .about p{ font-size:14.5px; line-height:1.5; margin-bottom:8px; }
+  .about a{ color:var(--myllm-accent,#0a84ff); text-decoration:none; font-weight:600; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head">
+    <div class="tile"><svg viewBox="0 0 24 24"><rect x="3" y="8.5" width="18" height="7" rx="3.5" transform="rotate(-35 12 12)"/><path d="M9.2 7.9l5.6 8.2" /></svg></div>
+    <div class="ht"><h1>Supplements</h1><p>What's in them, what works, what's allowed</p></div>
+    <div class="acts"><button type="button" aria-label="Close" onclick="closeApp()"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+  </div>
+
+  <div id="main">
+    <div class="tabs">
+      <button id="tabB" class="on" onclick="showTab('b')">Browse</button>
+      <button id="tabS" onclick="showTab('s')">My stack</button>
+      <button id="tabA" onclick="showTab('a')">About</button>
+    </div>
+
+    <div id="paneB">
+      <input class="search" id="q" type="search" placeholder="Search a supplement or ingredient" autocomplete="off" autocapitalize="off" spellcheck="false">
+      <div class="cats" id="cats"></div>
+      <div class="legend"><span><i style="background:var(--ok)"></i>Supplement</span><span><i style="background:var(--warn)"></i>Restrictions</span><span><i style="background:var(--no)"></i>Not lawful</span></div>
+      <div id="list"></div>
+    </div>
+
+    <div id="paneS" style="display:none">
+      <div class="card">
+        <h3>In my stack</h3>
+        <div id="stackList"></div>
+      </div>
+      <div class="card meds">
+        <h3>I also take</h3>
+        <div id="meds"></div>
+      </div>
+      <div id="checks"></div>
+      <p class="disc">This checks the flags in this guide only. It can't know every interaction — ask a pharmacist before starting anything new.</p>
+    </div>
+
+    <div id="paneA" style="display:none" class="about">
+      <div class="card">
+        <h3>How to read this</h3>
+        <p>Each entry says what an ingredient is, how good the evidence is for what people take it for, typical amounts, cautions, and its legal status.</p>
+        <p><b style="color:var(--ok)">Good</b> means several solid human trials agree. <b style="color:var(--warn)">Some</b> means small or mixed trials. <b style="color:var(--myllm-muted,#8a8a8e)">Little</b> means mostly lab, animal or traditional use.</p>
+      </div>
+      <div class="card">
+        <h3>The rules, briefly</h3>
+        <p><b>US.</b> Under the Dietary Supplement Health and Education Act of 1994 (DSHEA), supplements don't need FDA approval before sale. Makers must make sure they're safe and labelled truthfully, and FDA acts after problems appear. A label may say how a product affects the body, but not that it treats a disease. Ingredients sold after October 1994 need a new dietary ingredient notification, and anything first approved or studied as a drug generally can't be sold as a supplement.</p>
+        <p><b>UK and EU.</b> Supplements are regulated as food. Ingredients not eaten widely before May 1997 need novel food authorisation. Herbal products making medicinal claims need a medicines licence or a Traditional Herbal Registration (THR) from the MHRA.</p>
+        <p><b>Sport.</b> Athletes are responsible for anything in their body. The WADA list applies whatever the label says.</p>
+      </div>
+      <div class="card">
+        <h3>Where the live data comes from</h3>
+        <p><b>Molecules</b> are drawn from PubChem (US National Library of Medicine). <b>Reports to FDA</b> come from openFDA's CAERS database: people and companies report problems after taking a product, which does not prove the product caused them. <b>Summaries</b> come from Wikipedia.</p>
+        <p class="muted">Guide written October 2026. Rules change — each entry links to its sources.</p>
+      </div>
+      <div class="card src">
+        <h3>Sources</h3>
+        <a href="https://www.fda.gov/food/dietary-supplements" target="_blank" rel="noopener">FDA — Dietary supplements</a>
+        <a href="https://ods.od.nih.gov/About/DSHEA_Wording.aspx" target="_blank" rel="noopener">DSHEA — the law's text (NIH ODS)</a>
+        <a href="https://ods.od.nih.gov/factsheets/list-all/" target="_blank" rel="noopener">NIH Office of Dietary Supplements fact sheets</a>
+        <a href="https://www.nccih.nih.gov/health/herbsataglance" target="_blank" rel="noopener">NCCIH — Herbs at a glance</a>
+        <a href="https://www.fda.gov/drugs/human-drug-compounding/certain-bulk-drug-substances-use-compounding-may-present-significant-safety-risks" target="_blank" rel="noopener">FDA — Substances that may be risky when compounded (peptides)</a>
+        <a href="https://www.gov.uk/government/collections/herbal-medicines-granted-a-traditional-herbal-registration-thr" target="_blank" rel="noopener">MHRA — Traditional Herbal Registrations</a>
+        <a href="https://www.wada-ama.org/en/prohibited-list" target="_blank" rel="noopener">WADA — Prohibited list</a>
+        <a href="https://pubchem.ncbi.nlm.nih.gov/" target="_blank" rel="noopener">PubChem</a>
+        <a href="https://open.fda.gov/data/caers/" target="_blank" rel="noopener">openFDA — CAERS adverse event reports</a>
+      </div>
+      <p class="disc">General information, not medical advice. Talk to a doctor or pharmacist before taking supplements, especially if you're pregnant, take medicines or have a health condition.</p>
+    </div>
+  </div>
+
+  <div id="detail" style="display:none"></div>
+</div>
+
+<script>
+/* Looked up on each use, never kept: MyLLM can add its bridges after this script has run. */
+var store={getItem:function(k){var s=window.myllmStorage;return s?s.getItem(k):Promise.resolve(null)},setItem:function(k,v){var s=window.myllmStorage;return s?s.setItem(k,v):Promise.resolve()}};
+function haptic(k){ if(window.myllmHaptic){ try{ myllmHaptic(k||'light'); }catch(_){} } }
+function el(id){ return document.getElementById(id); }
+function esc(s){ return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+
+/* The guide. Written from public sources (each entry lists its own) in
+   October 2026. Evidence levels: good / some / little. st: ok = sold as a
+   supplement, warn = restrictions somewhere, no = not a lawful supplement. */
+var DATA = [{"id":"vitamin-d","n":"Vitamin D","aka":["cholecalciferol","D3","ergocalciferol","D2"],"cat":"vitamin","wiki":"Vitamin D","what":"A vitamin the skin makes in sunlight. It helps the body absorb calcium and keep bones strong.","uses":[["Preventing deficiency, especially with little sun","good"],["Bone health alongside calcium in older adults","some"],["Preventing colds, depression or heart disease","little"]],"dose":"Adults: 15 mcg (600 IU) a day, 20 mcg (800 IU) over 70. Upper limit 100 mcg (4,000 IU) a day. The NHS suggests 10 mcg a day in autumn and winter.","cautions":["Too much over months raises blood calcium: nausea, weakness, kidney stones.","Check with a doctor if you have kidney disease or sarcoidosis."],"flags":[],"us":"Lawful dietary supplement (DSHEA).","uk":"Permitted food supplement.","src":[["NIH ODS fact sheet","https://ods.od.nih.gov/factsheets/VitaminD-Consumer/"],["NHS","https://www.nhs.uk/conditions/vitamins-and-minerals/vitamin-d/"]],"cid":5280795,"st":"ok"},{"id":"vitamin-c","n":"Vitamin C","aka":["ascorbic acid"],"cat":"vitamin","wiki":"Vitamin C","what":"An antioxidant vitamin found in fruit and vegetables, needed to make collagen and absorb iron from plants.","uses":[["Preventing or treating deficiency (scurvy)","good"],["Slightly shorter colds when taken every day","some"],["Preventing colds in most people","little"]],"dose":"Adults: 90 mg (men), 75 mg (women) a day; smokers add 35 mg. Upper limit 2,000 mg a day.","cautions":["High doses can upset the stomach and cause diarrhoea.","May raise kidney stone risk in people prone to them."],"flags":[],"us":"Lawful dietary supplement (DSHEA).","uk":"Permitted food supplement.","src":[["NIH ODS fact sheet","https://ods.od.nih.gov/factsheets/VitaminC-Consumer/"]],"cid":54670067,"st":"ok"},{"id":"vitamin-a","n":"Vitamin A","aka":["retinol","retinyl palmitate","beta-carotene"],"cat":"vitamin","wiki":"Vitamin A","what":"A vitamin for vision, immunity and skin. Preformed vitamin A (retinol) comes from animal foods and supplements; beta-carotene comes from plants.","uses":[["Preventing deficiency","good"],["Eye disease (AMD) as part of the AREDS formula","some"]],"dose":"Adults: 900 mcg RAE (men), 700 mcg RAE (women) a day. Upper limit 3,000 mcg a day of preformed vitamin A.","cautions":["High doses in pregnancy can cause birth defects.","Long-term excess can damage the liver and weaken bones.","Beta-carotene supplements raised lung cancer risk in smokers in large trials."],"flags":["pregnancy","liver"],"us":"Lawful dietary supplement (DSHEA).","uk":"Permitted food supplement. The NHS advises pregnant women not to take vitamin A supplements.","src":[["NIH ODS fact sheet","https://ods.od.nih.gov/factsheets/VitaminA-Consumer/"]],"cid":445354,"st":"ok"},{"id":"vitamin-e","n":"Vitamin E","aka":["alpha-tocopherol","tocopherol"],"cat":"vitamin","wiki":"Vitamin E","what":"A fat-soluble antioxidant found in nuts, seeds and vegetable oils.","uses":[["Preventing deficiency (rare)","good"],["Preventing heart disease or cancer","little"]],"dose":"Adults: 15 mg a day. Upper limit 1,000 mg a day from supplements.","cautions":["High doses can raise bleeding risk, especially with blood thinners.","A large trial (SELECT) found more prostate cancer in men taking 400 IU a day."],"flags":["bleeding"],"us":"Lawful dietary supplement (DSHEA).","uk":"Permitted food supplement.","src":[["NIH ODS fact sheet","https://ods.od.nih.gov/factsheets/VitaminE-Consumer/"]],"cid":14985,"st":"ok"},{"id":"vitamin-k","n":"Vitamin K","aka":["phylloquinone","K1","menaquinone","K2","MK-7"],"cat":"vitamin","wiki":"Vitamin K","what":"A vitamin the body needs to make clotting proteins and for bone. K1 is in leafy greens; K2 is in fermented foods.","uses":[["Preventing bleeding in newborns (given by injection)","good"],["Bone health","little"]],"dose":"Adults: 120 mcg (men), 90 mcg (women) a day. No upper limit has been set.","cautions":["Works against warfarin. People on warfarin should keep vitamin K intake steady and talk to their clinic first."],"flags":["vitk"],"us":"Lawful dietary supplement (DSHEA).","uk":"Permitted food supplement.","src":[["NIH ODS fact sheet","https://ods.od.nih.gov/factsheets/VitaminK-Consumer/"]],"cid":5284607,"st":"ok"},{"id":"vitamin-b12","n":"Vitamin B12","aka":["cobalamin","methylcobalamin","cyanocobalamin"],"cat":"vitamin","wiki":"Vitamin B12","what":"Needed for nerves and red blood cells. It is found almost only in animal foods.","uses":[["Preventing deficiency in vegans, older adults and people on metformin or acid-reducing medicines","good"],["Energy in people who aren't deficient","little"]],"dose":"Adults: 2.4 mcg a day. No upper limit has been set.","cautions":["Metformin and long-term stomach-acid medicines lower B12 levels."],"flags":[],"us":"Lawful dietary supplement (DSHEA).","uk":"Permitted food supplement.","src":[["NIH ODS fact sheet","https://ods.od.nih.gov/factsheets/VitaminB12-Consumer/"]],"cid":166596686,"st":"ok","fda":"b12"},{"id":"folate","n":"Folate / folic acid","aka":["vitamin B9","folic acid","methylfolate","5-MTHF"],"cat":"vitamin","wiki":"Folate","what":"A B vitamin needed to make DNA and cells. Folic acid is the form used in supplements and fortified foods.","uses":[["Preventing neural tube defects when taken before and early in pregnancy","good"],["Treating folate-deficiency anaemia","good"]],"dose":"Adults: 400 mcg DFE a day. Upper limit 1,000 mcg a day of folic acid. The NHS advises 400 mcg folic acid a day before conception and for the first 12 weeks of pregnancy.","cautions":["High folic acid can hide B12 deficiency.","Interacts with methotrexate and some epilepsy medicines."],"flags":[],"us":"Lawful dietary supplement (DSHEA).","uk":"Permitted food supplement.","src":[["NIH ODS fact sheet","https://ods.od.nih.gov/factsheets/Folate-Consumer/"],["NHS","https://www.nhs.uk/pregnancy/trying-for-a-baby/planning-your-pregnancy/"]],"cid":135398658,"st":"ok","fda":"folic acid"},{"id":"vitamin-b6","n":"Vitamin B6","aka":["pyridoxine","P5P","pyridoxal phosphate"],"cat":"vitamin","wiki":"Vitamin B6","what":"A B vitamin used in over 100 enzyme reactions, mostly protein metabolism.","uses":[["Preventing deficiency","good"],["Nausea in pregnancy (with a doctor)","some"]],"dose":"Adults 19–50: 1.3 mg a day. US upper limit 100 mg a day; Europe's food-safety body set 12 mg a day in 2023.","cautions":["Long-term high doses can damage nerves (numbness, tingling). It turns up in many multi-ingredient products, so doses can add up."],"flags":[],"us":"Lawful dietary supplement (DSHEA).","uk":"Permitted food supplement.","src":[["NIH ODS fact sheet","https://ods.od.nih.gov/factsheets/VitaminB6-Consumer/"]],"cid":1054,"st":"ok","fda":"b6"},{"id":"niacin","n":"Niacin (vitamin B3)","aka":["nicotinic acid","niacinamide","nicotinamide","B3"],"cat":"vitamin","wiki":"Niacin","what":"A B vitamin used to turn food into energy. It is part of NAD, the molecule NMN and NR supplements aim to raise.","uses":[["Preventing deficiency (pellagra)","good"],["Raising heart protection on top of statins","little"]],"dose":"Adults: 16 mg NE (men), 14 mg NE (women) a day. Upper limit 35 mg a day from supplements.","cautions":["Nicotinic acid causes flushing.","High doses can harm the liver and raise blood sugar."],"flags":["liver","sugar"],"us":"Lawful dietary supplement (DSHEA).","uk":"Permitted food supplement.","src":[["NIH ODS fact sheet","https://ods.od.nih.gov/factsheets/Niacin-Consumer/"]],"cid":938,"st":"ok","fda":"niacin"},{"id":"biotin","n":"Biotin","aka":["vitamin B7","vitamin H"],"cat":"vitamin","wiki":"Biotin","what":"A B vitamin used in fat and sugar metabolism, popular in hair, skin and nail products.","uses":[["Preventing deficiency (rare)","good"],["Hair, skin and nails in healthy people","little"]],"dose":"Adults: 30 mcg a day. No upper limit has been set.","cautions":["High doses can make some blood tests wrong, including heart (troponin) and thyroid tests. FDA has warned about this. Tell whoever takes your blood."],"flags":[],"us":"Lawful dietary supplement (DSHEA).","uk":"Permitted food supplement.","src":[["NIH ODS fact sheet","https://ods.od.nih.gov/factsheets/Biotin-Consumer/"]],"cid":171548,"st":"ok"},{"id":"magnesium","n":"Magnesium","aka":["magnesium glycinate","magnesium citrate","magnesium oxide"],"cat":"mineral","wiki":"Magnesium in biology","what":"A mineral used in muscles, nerves, blood sugar control and bone.","uses":[["Preventing deficiency","good"],["Fewer migraines","some"],["Constipation (as a laxative)","good"],["Sleep or cramps in most people","little"]],"dose":"Adults: 400–420 mg (men), 310–320 mg (women) a day from all sources. Upper limit 350 mg a day from supplements.","cautions":["Too much causes diarrhoea.","Avoid high doses with kidney disease.","Take apart from some antibiotics, osteoporosis and thyroid medicines."],"flags":["binds"],"us":"Lawful dietary supplement (DSHEA).","uk":"Permitted food supplement.","src":[["NIH ODS fact sheet","https://ods.od.nih.gov/factsheets/Magnesium-Consumer/"]],"cid":null,"st":"ok"},{"id":"calcium","n":"Calcium","aka":["calcium carbonate","calcium citrate"],"cat":"mineral","wiki":"Calcium in biology","what":"The main mineral in bone. Also used by muscles, nerves and the heart.","uses":[["Bone health with vitamin D when diet is short","some"]],"dose":"Adults: 1,000 mg a day; 1,200 mg for women over 50 and men over 70. Upper limit 2,500 mg (to 50), 2,000 mg (over 50).","cautions":["Can cause constipation. High supplement doses may raise kidney stone risk.","Take apart from thyroid medicine, iron and some antibiotics."],"flags":["binds"],"us":"Lawful dietary supplement (DSHEA).","uk":"Permitted food supplement.","src":[["NIH ODS fact sheet","https://ods.od.nih.gov/factsheets/Calcium-Consumer/"]],"cid":null,"st":"ok"},{"id":"iron","n":"Iron","aka":["ferrous sulfate","ferrous fumarate","ferrous bisglycinate"],"cat":"mineral","wiki":"Iron supplement","what":"A mineral needed to make haemoglobin, which carries oxygen in the blood.","uses":[["Treating iron-deficiency anaemia","good"],["Energy in people who aren't low in iron","little"]],"dose":"Adults: 8 mg (men and women over 50), 18 mg (women 19–50) a day. Upper limit 45 mg a day unless prescribed.","cautions":["Accidental overdose is a leading cause of poisoning deaths in young children — keep out of reach.","Can cause constipation and stomach upset.","Take apart from thyroid medicine, calcium and some antibiotics."],"flags":["binds"],"us":"Lawful dietary supplement. US law requires a child-poisoning warning on iron products.","uk":"Permitted food supplement.","src":[["NIH ODS fact sheet","https://ods.od.nih.gov/factsheets/Iron-Consumer/"]],"cid":null,"st":"ok"},{"id":"zinc","n":"Zinc","aka":["zinc gluconate","zinc picolinate","zinc acetate"],"cat":"mineral","wiki":"Zinc","what":"A mineral used by the immune system, wound healing, taste and smell.","uses":[["Preventing deficiency","good"],["Shorter colds with lozenges started early","some"]],"dose":"Adults: 11 mg (men), 8 mg (women) a day. Upper limit 40 mg a day.","cautions":["Long-term high doses cause copper deficiency.","Zinc nasal sprays have caused permanent loss of smell.","Take apart from some antibiotics."],"flags":["binds"],"us":"Lawful dietary supplement (DSHEA).","uk":"Permitted food supplement.","src":[["NIH ODS fact sheet","https://ods.od.nih.gov/factsheets/Zinc-Consumer/"]],"cid":null,"st":"ok"},{"id":"selenium","n":"Selenium","aka":["selenomethionine"],"cat":"mineral","wiki":"Selenium in biology","what":"A trace mineral used in antioxidant enzymes and thyroid hormone.","uses":[["Preventing deficiency","good"],["Preventing cancer or heart disease","little"]],"dose":"Adults: 55 mcg a day. Upper limit 400 mcg a day.","cautions":["Too much causes hair and nail loss, a garlic smell on the breath and nerve problems. Brazil nuts alone can supply a lot."],"flags":[],"us":"Lawful dietary supplement (DSHEA).","uk":"Permitted food supplement.","src":[["NIH ODS fact sheet","https://ods.od.nih.gov/factsheets/Selenium-Consumer/"]],"cid":15103,"st":"ok"},{"id":"iodine","n":"Iodine","aka":["potassium iodide","kelp"],"cat":"mineral","wiki":"Iodine in biology","what":"A mineral the thyroid needs to make its hormones.","uses":[["Preventing deficiency, especially in pregnancy","good"]],"dose":"Adults: 150 mcg a day (220 mcg in pregnancy). Upper limit 1,100 mcg a day.","cautions":["Too much can cause thyroid problems too.","Kelp and seaweed products vary widely in iodine."],"flags":["thyroid"],"us":"Lawful dietary supplement (DSHEA).","uk":"Permitted food supplement.","src":[["NIH ODS fact sheet","https://ods.od.nih.gov/factsheets/Iodine-Consumer/"]],"cid":null,"st":"ok"},{"id":"potassium","n":"Potassium","aka":["potassium citrate","potassium chloride"],"cat":"mineral","wiki":"Potassium in biology","what":"A mineral that balances fluids and keeps nerves, muscles and the heart working.","uses":[["Lower blood pressure from potassium-rich diets","some"]],"dose":"Adults: 3,400 mg (men), 2,600 mg (women) a day from food. US supplements usually hold no more than 99 mg a tablet.","cautions":["High levels are dangerous with kidney disease, or with ACE inhibitors, ARBs or potassium-sparing diuretics."],"flags":["potassium"],"us":"Lawful dietary supplement (DSHEA).","uk":"Permitted food supplement.","src":[["NIH ODS fact sheet","https://ods.od.nih.gov/factsheets/Potassium-Consumer/"]],"cid":null,"st":"ok"},{"id":"chromium","n":"Chromium","aka":["chromium picolinate"],"cat":"mineral","wiki":"Chromium(III) picolinate","what":"A trace mineral that may help insulin work.","uses":[["Blood sugar control in diabetes","little"],["Weight loss","little"]],"dose":"Adults: 35 mcg (men), 25 mcg (women) a day. No upper limit has been set.","cautions":["May add to the effect of diabetes medicines."],"flags":["sugar"],"us":"Lawful dietary supplement (DSHEA).","uk":"Permitted food supplement.","src":[["NIH ODS fact sheet","https://ods.od.nih.gov/factsheets/Chromium-Consumer/"]],"cid":151932,"st":"ok"},{"id":"ashwagandha","n":"Ashwagandha","aka":["Withania somnifera","Indian ginseng","winter cherry"],"cat":"traditional","trad":"Ayurveda","molNote":"Withaferin A, one of its withanolides","wiki":"Withania somnifera","what":"A shrub whose root has been used in Ayurvedic medicine for centuries.","uses":[["Stress and anxiety (small, short trials)","some"],["Sleep","some"],["Strength and fertility","little"]],"dose":"Studies often used 250–600 mg of root extract a day for up to 3 months.","cautions":["Rare cases of liver injury.","Avoid in pregnancy.","May raise thyroid hormone levels and add to sedatives."],"flags":["liver","sedation","thyroid","pregnancy"],"us":"Sold as a dietary supplement.","uk":"Sold as a food supplement; some European food-safety bodies have raised safety concerns.","src":[["NCCIH","https://www.nccih.nih.gov/health/ashwagandha"],["NIH ODS (stress)","https://ods.od.nih.gov/factsheets/Ashwagandha-Consumer/"]],"cid":265237,"st":"ok"},{"id":"turmeric","n":"Turmeric / curcumin","aka":["Curcuma longa","curcumin"],"cat":"traditional","trad":"Ayurveda, Chinese medicine","molNote":"Curcumin, its main pigment","wiki":"Curcumin","what":"A yellow spice from a root in the ginger family. Curcumin is the compound most studied.","uses":[["Knee osteoarthritis pain","some"],["Other conditions","little"]],"dose":"Studies often used 500–2,000 mg of curcumin extract a day. Curcumin is poorly absorbed; many products add black pepper (piperine).","cautions":["Liver injury has been reported, mostly with high-absorption products.","May raise bleeding risk with blood thinners.","May worsen gallstones."],"flags":["liver","bleeding"],"us":"Sold as a dietary supplement; turmeric is also a food.","uk":"Food and food supplement.","src":[["NCCIH","https://www.nccih.nih.gov/health/turmeric"],["LiverTox","https://www.ncbi.nlm.nih.gov/books/NBK549668/"]],"cid":969516,"st":"ok","fda":"turmeric"},{"id":"ginseng","n":"Ginseng (Asian)","aka":["Panax ginseng","Korean ginseng","red ginseng"],"cat":"traditional","trad":"Chinese and Korean medicine","molNote":"Ginsenoside Rb1","wiki":"Panax ginseng","what":"A root used in Chinese and Korean medicine for over 2,000 years.","uses":[["Thinking and mood","little"],["Blood sugar","some"],["Erectile dysfunction","some"]],"dose":"Studies often used 200–400 mg of extract a day for up to 12 weeks.","cautions":["Can lower blood sugar.","May reduce the effect of warfarin.","Sleeplessness with long use."],"flags":["sugar","stimulant"],"us":"Sold as a dietary supplement.","uk":"Sold as a food supplement; some products hold a Traditional Herbal Registration.","src":[["NCCIH","https://www.nccih.nih.gov/health/asian-ginseng"]],"cid":9898279,"st":"ok","fda":"ginseng"},{"id":"ginkgo","n":"Ginkgo","aka":["Ginkgo biloba","maidenhair tree"],"cat":"traditional","trad":"Chinese medicine","molNote":"Ginkgolide B","wiki":"Ginkgo biloba","what":"An extract of the leaves of one of the oldest living tree species.","uses":[["Preventing memory loss or dementia","little"],["Tinnitus","little"]],"dose":"Studies often used 120–240 mg of standardised leaf extract a day.","cautions":["May raise bleeding risk, especially with blood thinners or before surgery.","Raw seeds are poisonous."],"flags":["bleeding"],"us":"Sold as a dietary supplement.","uk":"Some products hold a Traditional Herbal Registration.","src":[["NCCIH","https://www.nccih.nih.gov/health/ginkgo"]],"cid":11973122,"st":"ok"},{"id":"st-johns-wort","n":"St John's wort","aka":["Hypericum perforatum","hypericum"],"cat":"herb","molNote":"Hyperforin","wiki":"Hypericum perforatum","what":"A flowering plant used for low mood.","uses":[["Mild to moderate depression","some"]],"dose":"Studies often used 900 mg of extract a day.","cautions":["Strong interactions: makes the contraceptive pill, warfarin, HIV medicines, transplant medicines, some heart and cancer medicines work less well.","With antidepressants it can cause serotonin syndrome.","Makes skin sensitive to sun."],"flags":["cyp","serotonin"],"us":"Sold as a dietary supplement.","uk":"Licensed as a traditional herbal medicine (THR); the MHRA warns about its interactions.","src":[["NCCIH","https://www.nccih.nih.gov/health/st-johns-wort"]],"cid":441298,"st":"ok","fda":"john's wort"},{"id":"valerian","n":"Valerian","aka":["Valeriana officinalis"],"cat":"herb","molNote":"Valerenic acid","wiki":"Valerian (herb)","what":"A root used for sleep and nerves since ancient Greece.","uses":[["Sleep","little"],["Anxiety","little"]],"dose":"Studies often used 300–600 mg of root extract before bed.","cautions":["Drowsiness; don't combine with alcohol or sleeping tablets.","Rare liver injury reports."],"flags":["sedation"],"us":"Sold as a dietary supplement.","uk":"Licensed as a traditional herbal medicine (THR) for sleep.","src":[["NCCIH","https://www.nccih.nih.gov/health/valerian"]],"cid":6440940,"st":"ok"},{"id":"echinacea","n":"Echinacea","aka":["purple coneflower","Echinacea purpurea"],"cat":"herb","molNote":"Chicoric acid","wiki":"Echinacea","what":"A daisy-family plant from North America, used for colds.","uses":[["Preventing or shortening colds","little"]],"dose":"Products vary widely; follow the label.","cautions":["Allergic reactions, especially if allergic to ragweed or daisies.","May act on the immune system: talk to a doctor if you take immune-suppressing medicines."],"flags":["immune"],"us":"Sold as a dietary supplement.","uk":"Licensed as a traditional herbal medicine (THR) for colds.","src":[["NCCIH","https://www.nccih.nih.gov/health/echinacea"]],"cid":5281764,"st":"ok"},{"id":"milk-thistle","n":"Milk thistle","aka":["Silybum marianum","silymarin","silibinin"],"cat":"herb","molNote":"Silibinin, the main part of silymarin","wiki":"Silybum marianum","what":"A thistle whose seeds hold silymarin, traditionally used for the liver.","uses":[["Liver disease","little"]],"dose":"Studies often used 420–600 mg of silymarin a day.","cautions":["Usually well tolerated; can upset the stomach.","May lower blood sugar."],"flags":["sugar"],"us":"Sold as a dietary supplement.","uk":"Licensed as a traditional herbal medicine (THR) for indigestion.","src":[["NCCIH","https://www.nccih.nih.gov/health/milk-thistle"]],"cid":31553,"st":"ok","fda":"milk thistle"},{"id":"garlic","n":"Garlic","aka":["Allium sativum","aged garlic extract","allicin"],"cat":"herb","molNote":"Allicin, made when garlic is crushed","wiki":"Garlic","what":"The kitchen bulb, sold as powder, oil or aged extract.","uses":[["Slightly lower blood pressure","some"],["Slightly lower cholesterol","some"],["Colds","little"]],"dose":"Studies often used 600–1,200 mg of garlic powder a day.","cautions":["May raise bleeding risk with blood thinners and before surgery.","Lowers levels of some HIV medicines."],"flags":["bleeding","bp"],"us":"Sold as a dietary supplement; also a food.","uk":"Food and food supplement.","src":[["NCCIH","https://www.nccih.nih.gov/health/garlic"]],"cid":65036,"st":"ok"},{"id":"ginger","n":"Ginger","aka":["Zingiber officinale","gingerol"],"cat":"traditional","trad":"Ayurveda, Chinese medicine","molNote":"6-Gingerol","wiki":"Ginger","what":"A root used as a spice and for sickness for thousands of years.","uses":[["Nausea in pregnancy","some"],["Nausea after surgery or chemotherapy","some"]],"dose":"Studies often used 500–1,500 mg of ginger a day, split into doses.","cautions":["Heartburn and stomach upset.","May add to blood thinners at high doses."],"flags":["bleeding"],"us":"Sold as a dietary supplement; also a food.","uk":"Food and food supplement.","src":[["NCCIH","https://www.nccih.nih.gov/health/ginger"]],"cid":442793,"st":"ok"},{"id":"green-tea","n":"Green tea extract","aka":["EGCG","Camellia sinensis","catechins"],"cat":"herb","molNote":"EGCG","wiki":"Epigallocatechin gallate","what":"A concentrated extract of green tea catechins, often sold for weight loss.","uses":[["Weight loss","little"],["Cholesterol","some"]],"dose":"Drinking green tea is safe for most people. Europe's food-safety body found 800 mg or more of EGCG a day from supplements raised liver injury risk.","cautions":["Liver injury with concentrated extracts, especially on an empty stomach.","Contains caffeine unless decaffeinated."],"flags":["liver","stimulant"],"us":"Sold as a dietary supplement.","uk":"The EU restricted green tea catechins in supplements in 2022.","src":[["NCCIH","https://www.nccih.nih.gov/health/green-tea"],["LiverTox","https://www.ncbi.nlm.nih.gov/books/NBK547925/"]],"cid":65064,"st":"ok","fda":"green tea"},{"id":"rhodiola","n":"Rhodiola","aka":["Rhodiola rosea","golden root","arctic root"],"cat":"traditional","trad":"Scandinavian and Russian folk medicine","molNote":"Salidroside","wiki":"Rhodiola rosea","what":"A cold-climate root used as an 'adaptogen' for stress and fatigue.","uses":[["Fatigue and stress","little"]],"dose":"Studies often used 200–600 mg of extract a day.","cautions":["Dizziness or dry mouth in some people.","Little is known about long-term use."],"flags":[],"us":"Sold as a dietary supplement.","uk":"Licensed as a traditional herbal medicine (THR) for stress.","src":[["NCCIH","https://www.nccih.nih.gov/health/rhodiola"]],"cid":159278,"st":"ok"},{"id":"saw-palmetto","n":"Saw palmetto","aka":["Serenoa repens"],"cat":"herb","wiki":"Saw palmetto extract","what":"Berries of a small palm, sold for prostate symptoms.","uses":[["Urinary symptoms of an enlarged prostate","little"]],"dose":"Studies often used 320 mg of extract a day. Large trials found no benefit over placebo.","cautions":["Usually mild stomach upset.","Get prostate symptoms checked by a doctor first."],"flags":[],"us":"Sold as a dietary supplement.","uk":"Licensed as a traditional herbal medicine (THR) for urinary symptoms.","src":[["NCCIH","https://www.nccih.nih.gov/health/saw-palmetto"]],"cid":null,"st":"ok","fda":"saw palmetto"},{"id":"black-cohosh","n":"Black cohosh","aka":["Actaea racemosa","Cimicifuga racemosa"],"cat":"herb","molNote":"Actein","wiki":"Actaea racemosa","what":"A North American root used for menopause symptoms.","uses":[["Hot flushes","little"]],"dose":"Studies often used 20–80 mg of extract a day.","cautions":["Liver injury has been reported; UK products must carry a liver warning.","Stop and see a doctor if you get tiredness, dark urine or yellow skin."],"flags":["liver"],"us":"Sold as a dietary supplement.","uk":"Licensed as a traditional herbal medicine (THR) with a liver warning.","src":[["NCCIH","https://www.nccih.nih.gov/health/black-cohosh"]],"cid":10032468,"st":"ok","fda":"black cohosh"},{"id":"kava","n":"Kava","aka":["Piper methysticum","kava kava"],"cat":"traditional","trad":"Pacific Islands","molNote":"Kavain, a kavalactone","wiki":"Kava","what":"A Pacific Island root drunk for relaxation and in ceremonies.","uses":[["Short-term anxiety","some"]],"dose":"Trials used 120–280 mg of kavalactones a day for a few weeks.","cautions":["Severe liver injury, including liver failure, has been reported.","Drowsiness; avoid alcohol and driving."],"flags":["liver","sedation"],"us":"FDA issued a consumer advisory on liver injury in 2002; still sold as a dietary supplement.","uk":"Banned in food in the UK since 2003.","src":[["NCCIH","https://www.nccih.nih.gov/health/kava"]],"cid":5281565,"st":"warn"},{"id":"elderberry","n":"Elderberry","aka":["Sambucus nigra","black elder"],"cat":"herb","molNote":"Cyanidin-3-glucoside, a pigment","wiki":"Sambucus nigra","what":"Dark berries of the elder tree, sold as syrups for colds and flu.","uses":[["Colds and flu","little"]],"dose":"Follow the label of a cooked, commercial product.","cautions":["Raw or unripe berries, leaves and stems can cause vomiting and worse."],"flags":["immune"],"us":"Sold as a dietary supplement.","uk":"Food and food supplement.","src":[["NCCIH","https://www.nccih.nih.gov/health/european-elder"]],"cid":441667,"st":"ok"},{"id":"holy-basil","n":"Holy basil (tulsi)","aka":["Ocimum tenuiflorum","tulsi"],"cat":"traditional","trad":"Ayurveda","molNote":"Eugenol","wiki":"Ocimum tenuiflorum","what":"A sacred plant in Hindu tradition, used in Ayurveda as tea and extract.","uses":[["Stress and blood sugar","little"]],"dose":"Products vary; follow the label.","cautions":["May lower blood sugar.","Avoid when trying to conceive or pregnant (animal studies)."],"flags":["sugar","pregnancy"],"us":"Sold as a dietary supplement.","uk":"Food and food supplement.","src":[["Wikipedia","https://en.wikipedia.org/wiki/Ocimum_tenuiflorum"]],"cid":3314,"st":"ok","fda":"holy basil"},{"id":"astragalus","n":"Astragalus","aka":["huang qi","Astragalus membranaceus"],"cat":"traditional","trad":"Chinese medicine","molNote":"Astragaloside IV","wiki":"Astragalus propinquus","what":"A root that is a staple of traditional Chinese medicine, used to 'strengthen' the body.","uses":[["Immunity, heart and kidney conditions","little"]],"dose":"Products vary; follow the label.","cautions":["May act on the immune system: talk to a doctor if you take immune-suppressing medicines."],"flags":["immune"],"us":"Sold as a dietary supplement.","uk":"Food and food supplement.","src":[["NCCIH","https://www.nccih.nih.gov/health/astragalus"]],"cid":13943297,"st":"ok"},{"id":"reishi","n":"Reishi mushroom","aka":["Ganoderma lucidum","lingzhi"],"cat":"traditional","trad":"Chinese and Japanese medicine","molNote":"Ganoderic acid A","wiki":"Lingzhi (mushroom)","what":"A woody mushroom prized in Chinese medicine.","uses":[["Immunity, tiredness, cancer support","little"]],"dose":"Products vary; follow the label.","cautions":["Rare liver injury reports with powders.","May add to blood thinners and blood pressure medicines."],"flags":["liver","bleeding","bp"],"us":"Sold as a dietary supplement.","uk":"Food and food supplement.","src":[["Wikipedia","https://en.wikipedia.org/wiki/Lingzhi_(mushroom)"]],"cid":471002,"st":"ok","fda":"reishi"},{"id":"berberine","n":"Berberine","aka":["goldenseal","barberry","Coptis"],"cat":"traditional","trad":"Chinese and Ayurvedic medicine","wiki":"Berberine","what":"A yellow plant compound from barberry, goldenseal and Chinese goldthread.","uses":[["Blood sugar in type 2 diabetes","some"],["Cholesterol","some"],["Weight loss","little"]],"dose":"Studies often used 900–1,500 mg a day, split with meals.","cautions":["Stomach upset and constipation.","Adds to diabetes medicines and changes how the liver clears many medicines.","Not in pregnancy, breastfeeding or newborns."],"flags":["sugar","cyp","pregnancy"],"us":"Sold as a dietary supplement.","uk":"Food supplement.","src":[["NCCIH (goldenseal)","https://www.nccih.nih.gov/health/goldenseal"],["Wikipedia","https://en.wikipedia.org/wiki/Berberine"]],"cid":2353,"st":"ok"},{"id":"licorice","n":"Liquorice root","aka":["licorice","Glycyrrhiza glabra","glycyrrhizin","DGL"],"cat":"traditional","trad":"Chinese and European herbal medicine","molNote":"Glycyrrhizin","wiki":"Liquorice","what":"A sweet root used for coughs and stomach complaints. DGL is a form with glycyrrhizin removed.","uses":[["Indigestion and ulcers (DGL)","little"]],"dose":"Avoid large amounts of glycyrrhizin-containing products for more than a few weeks.","cautions":["Glycyrrhizin raises blood pressure and lowers potassium; dangerous with heart or kidney disease and some diuretics.","Avoid in pregnancy."],"flags":["bp","potassium","pregnancy"],"us":"Sold as a dietary supplement; also a food.","uk":"Food and food supplement.","src":[["NCCIH","https://www.nccih.nih.gov/health/licorice-root"]],"cid":14982,"st":"ok","fda":"licorice"},{"id":"shilajit","n":"Shilajit","aka":["mumijo","mineral pitch"],"cat":"traditional","trad":"Ayurveda","wiki":"Shilajit","what":"A tar-like resin from mountain rocks, used in Ayurveda for vitality.","uses":[["Energy, testosterone, memory","little"]],"dose":"Products vary; there is no agreed dose.","cautions":["Raw or poorly made products can contain heavy metals and fungi; buy only purified, tested products."],"flags":[],"us":"Sold as a dietary supplement.","uk":"Sold as a food supplement.","src":[["Wikipedia","https://en.wikipedia.org/wiki/Shilajit"]],"cid":null,"st":"ok"},{"id":"red-yeast-rice","n":"Red yeast rice","aka":["monacolin K","Monascus purpureus"],"cat":"traditional","trad":"Chinese medicine and cooking","molNote":"Monacolin K, chemically identical to lovastatin","wiki":"Red yeast rice","what":"Rice fermented with a mould. Some products contain monacolin K, which is the same molecule as the statin drug lovastatin.","uses":[["Lowering LDL cholesterol (when it contains monacolin K)","good"]],"dose":"The amount of monacolin K varies from almost none to a drug-sized dose, so effects are unpredictable.","cautions":["Same side effects and interactions as a statin: muscle pain, liver effects. Don't combine with a statin.","Can contain citrinin, a kidney toxin. In 2024 a Japanese red yeast rice product was linked to kidney injuries and deaths."],"flags":["liver","cyp","kidney","statin"],"us":"FDA treats products with more than trace lovastatin as unapproved drugs.","uk":"The EU limited monacolins to under 3 mg a day in 2022.","src":[["NCCIH","https://www.nccih.nih.gov/health/red-yeast-rice"]],"cid":53232,"st":"warn","fda":"red yeast rice"},{"id":"creatine","n":"Creatine","aka":["creatine monohydrate"],"cat":"modern","wiki":"Creatine","what":"A compound the body makes and stores in muscle to supply quick energy. One of the best-studied sports supplements.","uses":[["Strength and power in short, intense exercise","good"],["Muscle mass with training","good"],["Thinking and older adults","little"]],"dose":"3–5 g of creatine monohydrate a day. A loading phase is optional.","cautions":["Small weight gain from water in muscle.","Talk to a doctor if you have kidney disease. It can raise a creatinine blood test without kidney harm."],"flags":["kidney"],"us":"Sold as a dietary supplement.","uk":"Food supplement.","sport":"Not prohibited by WADA.","src":[["Wikipedia","https://en.wikipedia.org/wiki/Creatine"]],"cid":586,"st":"ok"},{"id":"omega-3","n":"Omega-3 fish oil","aka":["fish oil","EPA","DHA","krill oil","algal oil"],"cat":"modern","molNote":"DHA","wiki":"Omega-3 fatty acid","what":"Fats from oily fish (EPA and DHA). Algal oil is a vegan source.","uses":[["Lowering high triglycerides","good"],["Preventing heart disease in most people","little"]],"dose":"Common supplements give 250–1,000 mg EPA+DHA a day. Higher doses for triglycerides are prescribed.","cautions":["High doses linked to a higher risk of atrial fibrillation.","May add slightly to blood thinners."],"flags":["bleeding"],"us":"Sold as a dietary supplement; FDA allows a qualified heart health claim.","uk":"Food supplement.","src":[["NIH ODS fact sheet","https://ods.od.nih.gov/factsheets/Omega3FattyAcids-Consumer/"],["NCCIH","https://www.nccih.nih.gov/health/omega3-supplements-what-you-need-to-know"]],"cid":445580,"st":"ok","fda":"fish oil"},{"id":"coq10","n":"Coenzyme Q10","aka":["CoQ10","ubiquinone","ubiquinol"],"cat":"modern","molNote":"Ubiquinone","wiki":"Coenzyme Q10","what":"A compound cells use to make energy. Statins lower the body's levels.","uses":[["Statin muscle pain","little"],["Heart failure (with a doctor)","some"],["Migraine","little"]],"dose":"Studies used 100–300 mg a day.","cautions":["May make warfarin work less well.","May lower blood pressure."],"flags":["bp"],"us":"Sold as a dietary supplement.","uk":"Food supplement.","src":[["NCCIH","https://www.nccih.nih.gov/health/coenzyme-q10"]],"cid":5281915,"st":"ok","fda":"coq10"},{"id":"nmn","n":"NMN","aka":["nicotinamide mononucleotide","β-NMN","beta-NMN"],"cat":"modern","wiki":"Nicotinamide mononucleotide","what":"A building block of NAD, a molecule that falls with age. Sold as an anti-ageing supplement.","uses":[["Raising NAD levels in the blood","some"],["Slowing ageing, energy or longevity in people","little"]],"dose":"Human studies used 250–1,200 mg a day for up to a few months.","cautions":["Long-term safety in people is not known.","Products vary in purity."],"flags":[],"us":"In 2022 FDA said NMN could not be sold as a supplement because it was first studied as a drug; in September 2025 FDA reversed that and said it can.","uk":"Not authorised as a novel food in the EU.","src":[["Wikipedia","https://en.wikipedia.org/wiki/Nicotinamide_mononucleotide"]],"cid":14180,"st":"ok"},{"id":"nr","n":"Nicotinamide riboside","aka":["NR","Niagen"],"cat":"modern","wiki":"Nicotinamide riboside","what":"A form of vitamin B3 that the body turns into NAD.","uses":[["Raising NAD levels","good"],["Health or ageing outcomes","little"]],"dose":"Studies used 300–2,000 mg a day.","cautions":["Long-term effects unknown; generally well tolerated in short studies."],"flags":[],"us":"Sold as a dietary supplement.","uk":"Nicotinamide riboside chloride is an authorised novel food in the EU.","src":[["Wikipedia","https://en.wikipedia.org/wiki/Nicotinamide_riboside"]],"cid":439924,"st":"ok","fda":"nicotinamide riboside"},{"id":"resveratrol","n":"Resveratrol","aka":["trans-resveratrol"],"cat":"modern","wiki":"Resveratrol","what":"A compound in grape skins, red wine and Japanese knotweed.","uses":[["Longevity, heart or blood sugar","little"]],"dose":"Studies used 150–1,000 mg a day.","cautions":["May add to blood thinners.","May change how some medicines are cleared."],"flags":["bleeding","cyp"],"us":"Sold as a dietary supplement.","uk":"Synthetic trans-resveratrol is an authorised novel food in the EU.","src":[["Wikipedia","https://en.wikipedia.org/wiki/Resveratrol"]],"cid":445154,"st":"ok"},{"id":"melatonin","n":"Melatonin","aka":[],"cat":"modern","wiki":"Melatonin as a medication and supplement","what":"The hormone the brain makes at night to signal sleep.","uses":[["Jet lag","some"],["Falling asleep slightly faster","some"],["Staying asleep","little"]],"dose":"0.5–5 mg about an hour before bed. More is not better.","cautions":["Drowsiness next day; don't drive if affected.","Gummies have been found to contain much more or less than the label says.","Ask a doctor before giving it to children."],"flags":["sedation","hormone"],"us":"Sold as a dietary supplement.","uk":"Prescription-only medicine in the UK; not sold as a supplement.","src":[["NCCIH","https://www.nccih.nih.gov/health/melatonin-what-you-need-to-know"]],"cid":896,"st":"ok"},{"id":"l-theanine","n":"L-theanine","aka":["theanine"],"cat":"modern","wiki":"Theanine","what":"An amino acid from tea leaves, sold for calm focus, often with caffeine.","uses":[["Calm and focus","little"],["Sleep","little"]],"dose":"Studies used 100–400 mg a day.","cautions":["Generally well tolerated. May add to blood pressure medicines."],"flags":[],"us":"Sold as a dietary supplement.","uk":"Food supplement.","src":[["Wikipedia","https://en.wikipedia.org/wiki/Theanine"]],"cid":439378,"st":"ok","fda":"theanine"},{"id":"glucosamine","n":"Glucosamine","aka":["glucosamine sulfate","chondroitin"],"cat":"modern","wiki":"Glucosamine","what":"A building block of cartilage, often sold with chondroitin for joints.","uses":[["Knee osteoarthritis pain","little"]],"dose":"Studies used 1,500 mg a day.","cautions":["Often made from shellfish.","May increase the effect of warfarin."],"flags":["bleeding"],"us":"Sold as a dietary supplement.","uk":"Food supplement; some glucosamine products are licensed medicines.","src":[["NCCIH","https://www.nccih.nih.gov/health/glucosamine-and-chondroitin-for-osteoarthritis"]],"cid":439213,"st":"ok"},{"id":"collagen","n":"Collagen peptides","aka":["hydrolysed collagen","collagen hydrolysate","gelatin"],"cat":"modern","wiki":"Collagen","what":"Collagen protein broken into short chains (peptides), from cattle, pigs or fish. Digested like other protein.","uses":[["Skin elasticity and joint pain","little"]],"dose":"Studies used 2.5–15 g a day.","cautions":["A protein food; few side effects. Not suitable for vegetarians."],"flags":[],"us":"Sold as a food or dietary supplement.","uk":"Food.","src":[["Wikipedia","https://en.wikipedia.org/wiki/Collagen"]],"cid":null,"st":"ok","fda":"collagen"},{"id":"probiotics","n":"Probiotics","aka":["Lactobacillus","Bifidobacterium","Saccharomyces boulardii"],"cat":"modern","wiki":"Probiotic","what":"Live microbes meant to benefit the gut. Effects depend on the exact strain.","uses":[["Diarrhoea from antibiotics (some strains)","some"],["General health","little"]],"dose":"Depends on the strain; follow the label.","cautions":["People with weak immune systems or serious illness can get infections. FDA warned in 2023 against giving probiotics to premature babies in hospital."],"flags":["immune"],"us":"Sold as dietary supplements and foods.","uk":"Food and food supplements.","src":[["NIH ODS fact sheet","https://ods.od.nih.gov/factsheets/Probiotics-Consumer/"],["NCCIH","https://www.nccih.nih.gov/health/probiotics-what-you-need-to-know"]],"cid":null,"st":"ok","fda":"probiotic"},{"id":"alpha-lipoic-acid","n":"Alpha-lipoic acid","aka":["ALA","thioctic acid","lipoic acid"],"cat":"modern","wiki":"Lipoic acid","what":"An antioxidant the body makes, used in Germany for diabetic nerve pain.","uses":[["Diabetic nerve pain","some"],["Weight loss","little"]],"dose":"Studies used 600 mg a day.","cautions":["May lower blood sugar."],"flags":["sugar"],"us":"Sold as a dietary supplement.","uk":"Food supplement.","src":[["Wikipedia","https://en.wikipedia.org/wiki/Lipoic_acid"]],"cid":6112,"st":"ok","fda":"alpha lipoic"},{"id":"caffeine","n":"Caffeine","aka":["guarana","caffeine anhydrous"],"cat":"modern","wiki":"Caffeine","what":"A stimulant in coffee, tea and many pre-workout and diet products.","uses":[["Alertness","good"],["Endurance and some sports performance","good"]],"dose":"FDA says up to 400 mg a day is not usually linked to harm in healthy adults. Less in pregnancy (200 mg in UK advice).","cautions":["Pure and highly concentrated powders are dangerous: a teaspoon can be fatal. FDA says bulk pure caffeine sold to consumers is unlawful.","Raises heart rate and blood pressure; adds up with other stimulants."],"flags":["stimulant","bp"],"us":"Allowed in supplements in normal doses; bulk pure caffeine is unlawful.","uk":"Food supplement; high-caffeine products need a warning.","sport":"Not prohibited; on WADA's monitoring programme.","src":[["FDA","https://www.fda.gov/consumers/consumer-updates/spilling-beans-how-much-caffeine-too-much"]],"cid":2519,"st":"ok"},{"id":"beta-alanine","n":"Beta-alanine","aka":["β-alanine"],"cat":"modern","wiki":"β-Alanine","what":"An amino acid that raises carnosine in muscle, which buffers acid during hard efforts.","uses":[["High-intensity exercise lasting 1–4 minutes","good"]],"dose":"3.2–6.4 g a day, split into smaller doses, for at least 4 weeks.","cautions":["Harmless tingling of the skin (paraesthesia), less with split doses."],"flags":[],"us":"Sold as a dietary supplement.","uk":"Food supplement.","sport":"Not prohibited by WADA.","src":[["Wikipedia","https://en.wikipedia.org/wiki/%CE%92-Alanine"]],"cid":239,"st":"ok"},{"id":"psyllium","n":"Psyllium","aka":["ispaghula","psyllium husk"],"cat":"modern","wiki":"Psyllium","what":"A soluble fibre from plant seed husks.","uses":[["Constipation","good"],["Lowering cholesterol","good"]],"dose":"5–10 g a day with plenty of water.","cautions":["Take with a full glass of water to avoid choking.","Take other medicines 2 hours apart."],"flags":["binds"],"us":"Sold as a supplement and an over-the-counter laxative; FDA allows a heart health claim for its soluble fibre.","uk":"Licensed laxative medicine (ispaghula).","src":[["Wikipedia","https://en.wikipedia.org/wiki/Psyllium"]],"cid":null,"st":"ok"},{"id":"nac","n":"NAC","aka":["N-acetyl cysteine","N-acetylcysteine","acetylcysteine"],"cat":"modern","wiki":"Acetylcysteine","what":"A form of the amino acid cysteine, used in hospitals for paracetamol overdose and sold as an antioxidant supplement.","uses":[["Paracetamol overdose (hospital use)","good"],["Thinning mucus","some"],["Mental health and general health","little"]],"dose":"Supplements commonly give 600–1,200 mg a day.","cautions":["Stomach upset. Can smell of sulphur."],"flags":[],"us":"NAC was approved as a drug in 1963. FDA said in 2022 it would not act against NAC sold as a supplement.","uk":"Medicine in the UK; not a permitted food supplement.","src":[["Wikipedia","https://en.wikipedia.org/wiki/Acetylcysteine"]],"cid":12035,"st":"warn"},{"id":"5-htp","n":"5-HTP","aka":["5-hydroxytryptophan","griffonia"],"cat":"modern","wiki":"5-Hydroxytryptophan","what":"A step on the way to serotonin, made from an African seed.","uses":[["Depression","little"],["Sleep and weight","little"]],"dose":"Studies used 150–800 mg a day.","cautions":["With antidepressants, migraine triptans or St John's wort it can cause serotonin syndrome.","Contamination has been linked to a serious blood disorder in the past."],"flags":["serotonin"],"us":"Sold as a dietary supplement.","uk":"Food supplement.","src":[["Wikipedia","https://en.wikipedia.org/wiki/5-Hydroxytryptophan"]],"cid":144,"st":"ok","fda":"5-htp"},{"id":"quercetin","n":"Quercetin","aka":[],"cat":"modern","wiki":"Quercetin","what":"A plant pigment in onions, apples and capers.","uses":[["Allergies, immunity, exercise","little"]],"dose":"Studies used 500–1,000 mg a day.","cautions":["May change how some medicines are cleared."],"flags":["cyp"],"us":"Sold as a dietary supplement.","uk":"Food supplement.","src":[["Wikipedia","https://en.wikipedia.org/wiki/Quercetin"]],"cid":5280343,"st":"ok"},{"id":"cbd","n":"CBD","aka":["cannabidiol","hemp extract"],"cat":"restricted","wiki":"Cannabidiol","what":"A non-intoxicating compound from cannabis and hemp.","uses":[["Rare childhood epilepsies (as the prescription medicine Epidiolex)","good"],["Anxiety, sleep and pain","little"]],"dose":"The UK Food Standards Agency advises healthy adults take no more than 10 mg a day from food products.","cautions":["Liver effects and drowsiness at higher doses.","Interacts with many medicines, including blood thinners and some epilepsy medicines.","Products often hold more or less CBD than labelled, or contain THC."],"flags":["liver","sedation","cyp"],"us":"FDA says CBD can't be sold as a dietary supplement because it was first approved as a drug.","uk":"Sold as food only under the novel food process; FSA advice is 10 mg a day at most.","src":[["FDA","https://www.fda.gov/news-events/public-health-focus/fda-regulation-cannabis-and-cannabis-derived-products-including-cannabidiol-cbd"]],"cid":644019,"st":"no"},{"id":"ephedra","n":"Ephedra","aka":["ma huang","ephedrine","Ephedra sinica"],"cat":"restricted","trad":"Chinese medicine","molNote":"Ephedrine","wiki":"Ephedra (medicine)","what":"A plant used in Chinese medicine whose alkaloids were sold for weight loss and energy.","uses":[["Weight loss (short-term, small)","some"]],"dose":"Not available as a supplement in the US.","cautions":["Linked to heart attacks, strokes and deaths."],"flags":["stimulant","bp"],"us":"Banned in dietary supplements by FDA in 2004.","uk":"Ephedrine is a prescription medicine.","sport":"Prohibited in competition by WADA above a set level.","src":[["NCCIH","https://www.nccih.nih.gov/health/ephedra"]],"cid":9294,"st":"no"},{"id":"dmaa","n":"DMAA","aka":["1,3-dimethylamylamine","methylhexanamine","geranium extract"],"cat":"restricted","wiki":"Methylhexanamine","what":"A synthetic stimulant once sold in pre-workout and weight-loss products, often labelled as 'geranium extract'.","uses":[],"dose":"Not a lawful supplement ingredient.","cautions":["Linked to heart attacks, strokes and deaths."],"flags":["stimulant","bp"],"us":"FDA says DMAA is not a lawful dietary ingredient and has seized products.","uk":"Not permitted.","sport":"Prohibited by WADA.","src":[["FDA","https://www.fda.gov/food/dietary-supplement-products-ingredients/dmaa-products-marketed-dietary-supplements"]],"cid":7753,"st":"no"},{"id":"kratom","n":"Kratom","aka":["Mitragyna speciosa","7-OH","7-hydroxymitragynine"],"cat":"restricted","trad":"Southeast Asia","molNote":"Mitragynine","wiki":"Mitragyna speciosa","what":"Leaves of a Southeast Asian tree with opioid-like effects at higher doses.","uses":[],"dose":"Not a lawful supplement ingredient in the US.","cautions":["Addiction, withdrawal, liver injury, seizures and deaths have been reported.","Concentrated 7-OH products are especially potent."],"flags":["sedation","liver"],"us":"FDA says kratom is not a lawful dietary ingredient and has an import alert. In 2025 FDA recommended scheduling 7-OH as a controlled substance.","uk":"Banned under the Psychoactive Substances Act 2016.","src":[["FDA","https://www.fda.gov/news-events/public-health-focus/fda-and-kratom"]],"cid":3034396,"st":"no"},{"id":"tianeptine","n":"Tianeptine","aka":["gas station heroin","Tianaa","Zaza"],"cat":"restricted","wiki":"Tianeptine","what":"An antidepressant used in some countries, sold illegally in the US as a 'supplement'.","uses":[],"dose":"Not a lawful supplement ingredient.","cautions":["Overdoses, seizures, addiction and deaths reported."],"flags":["sedation"],"us":"FDA says tianeptine is not a lawful dietary ingredient and has warned consumers not to use it.","uk":"Not licensed in the UK.","src":[["FDA","https://www.fda.gov/consumers/consumer-updates/tianeptine-products-linked-serious-harm-overdoses-death"]],"cid":68870,"st":"no"},{"id":"sarms","n":"SARMs","aka":["ostarine","enobosarm","ligandrol","RAD-140","selective androgen receptor modulators"],"cat":"restricted","molNote":"Ostarine (enobosarm)","wiki":"Selective androgen receptor modulator","what":"Experimental drugs that act on testosterone receptors, sold online for muscle building.","uses":[],"dose":"None are approved medicines.","cautions":["Liver injury, heart risk and shut-down of the body's own hormones.","Products are often mislabelled."],"flags":["liver","hormone"],"us":"FDA has warned SARMs are not lawful in dietary supplements.","uk":"Unlicensed medicines; not legal to sell for human use.","sport":"Prohibited by WADA.","src":[["Wikipedia","https://en.wikipedia.org/wiki/Selective_androgen_receptor_modulator"]],"cid":11326715,"st":"no","fda":"ostarine"},{"id":"dhea","n":"DHEA","aka":["dehydroepiandrosterone","prasterone"],"cat":"restricted","wiki":"Dehydroepiandrosterone","what":"A hormone made by the adrenal glands that the body turns into testosterone and oestrogen.","uses":[["Ageing, energy and muscle","little"]],"dose":"Talk to a doctor; it is a hormone.","cautions":["Acne, hair growth, mood changes; may affect hormone-sensitive cancers."],"flags":["hormone"],"us":"Sold as a dietary supplement.","uk":"Not sold as a food supplement in the UK.","sport":"Prohibited by WADA.","src":[["Wikipedia","https://en.wikipedia.org/wiki/Dehydroepiandrosterone"]],"cid":5881,"st":"warn"},{"id":"yohimbe","n":"Yohimbe","aka":["yohimbine","Pausinystalia johimbe"],"cat":"restricted","trad":"West African","molNote":"Yohimbine","wiki":"Yohimbine","what":"An African tree bark sold for sexual performance and fat loss.","uses":[["Erectile dysfunction","little"]],"dose":"Products often don't contain what the label says.","cautions":["Fast heartbeat, high blood pressure, anxiety; heart attacks and seizures have been reported."],"flags":["stimulant","bp"],"us":"Sold as a dietary supplement; FDA has warned about it.","uk":"","src":[["NCCIH","https://www.nccih.nih.gov/health/yohimbe"]],"cid":8969,"st":"warn"},{"id":"bpc-157","n":"BPC-157","aka":["body protection compound","pentadecapeptide"],"cat":"peptide","wiki":"BPC-157","what":"A lab-made peptide of 15 amino acids based on a protein in stomach juice. Sold online as a 'research chemical' for healing.","uses":[["Healing tendons, muscles or the gut in people","little"]],"dose":"There are no approved doses; it has not been tested properly in people.","cautions":["Injected products from unregulated sources may be impure or contaminated.","Effects in people are almost entirely unknown."],"flags":[],"us":"Not a lawful dietary ingredient. FDA lists it as a substance that may present significant safety risks when compounded.","uk":"Not licensed.","sport":"Prohibited by WADA.","src":[["FDA (compounding risks)","https://www.fda.gov/drugs/human-drug-compounding/certain-bulk-drug-substances-use-compounding-may-present-significant-safety-risks"],["Wikipedia","https://en.wikipedia.org/wiki/BPC-157"]],"cid":9941957,"st":"no"},{"id":"tb-500","n":"TB-500","aka":["thymosin beta-4","thymosin beta-4 fragment"],"cat":"peptide","wiki":"Thymosin beta-4","what":"A synthetic version of part of thymosin beta-4, a natural repair protein. Sold online for injury recovery.","uses":[["Injury recovery in people","little"]],"dose":"No approved doses.","cautions":["Unregulated injectable products; unknown safety."],"flags":[],"us":"Not a lawful dietary ingredient. FDA lists it as a substance that may present significant safety risks when compounded.","uk":"Not licensed.","sport":"Prohibited by WADA.","src":[["FDA (compounding risks)","https://www.fda.gov/drugs/human-drug-compounding/certain-bulk-drug-substances-use-compounding-may-present-significant-safety-risks"]],"cid":null,"st":"no"},{"id":"ipamorelin","n":"Ipamorelin","aka":["CJC-1295","growth hormone secretagogue","GHRP"],"cat":"peptide","wiki":"Ipamorelin","what":"A lab-made peptide that makes the pituitary release growth hormone. Often sold with CJC-1295.","uses":[["Muscle, fat loss or anti-ageing","little"]],"dose":"No approved doses.","cautions":["Unregulated injectable products; may raise blood sugar and fluid retention."],"flags":["hormone","sugar"],"us":"Not a lawful dietary ingredient. FDA lists ipamorelin and CJC-1295 as substances that may present significant safety risks when compounded.","uk":"Not licensed.","sport":"Prohibited by WADA.","src":[["FDA (compounding risks)","https://www.fda.gov/drugs/human-drug-compounding/certain-bulk-drug-substances-use-compounding-may-present-significant-safety-risks"]],"cid":9831659,"st":"no","fda":"ipamorelin"},{"id":"ghk-cu","n":"GHK-Cu","aka":["copper peptide","copper tripeptide-1"],"cat":"peptide","wiki":"Copper peptide GHK-Cu","what":"A small copper-carrying peptide found in blood. Widely used in skin creams; also sold to inject.","uses":[["Skin firmness in creams","little"],["Injected for healing or anti-ageing","little"]],"dose":"Skin creams are cosmetics. No approved injectable dose.","cautions":["Injected products are unregulated."],"flags":[],"us":"Allowed in cosmetics. FDA has flagged injectable use as a possible significant safety risk in compounding.","uk":"Cosmetic ingredient.","src":[["FDA (compounding risks)","https://www.fda.gov/drugs/human-drug-compounding/certain-bulk-drug-substances-use-compounding-may-present-significant-safety-risks"],["Wikipedia","https://en.wikipedia.org/wiki/Copper_peptide_GHK-Cu"]],"cid":139035031,"st":"warn"},{"id":"glp1-research","n":"GLP-1 'research' peptides","aka":["semaglutide","tirzepatide","retatrutide","research peptides"],"cat":"peptide","molNote":"Semaglutide","wiki":"Semaglutide","what":"Weight-loss drug molecules sold online as powders 'for research use only', outside pharmacies.","uses":[["Weight loss — as prescribed medicines","good"]],"dose":"Only as a prescribed medicine from a pharmacy.","cautions":["Online 'research' products may be fake, wrongly dosed or contaminated; FDA has reported overdoses from dosing errors.","Not a supplement in any country."],"flags":["sugar"],"us":"Prescription drugs; FDA warns against unapproved and 'research use' versions.","uk":"Prescription-only medicines; the MHRA warns against buying them online without a prescription.","src":[["FDA","https://www.fda.gov/drugs/postmarket-drug-safety-information-patients-and-providers/fdas-concerns-unapproved-glp-1-drugs-used-weight-loss"]],"cid":56843331,"st":"no","fda":"semaglutide"}];
+
+var CATS = [
+  ["all","All"],["vitamin","Vitamins"],["mineral","Minerals"],["herb","Herbs"],["traditional","Traditional"],
+  ["modern","Modern"],["peptide","Peptides"],["restricted","Restricted"]
+];
+var CAT_NAME = { vitamin:"Vitamin", mineral:"Mineral", herb:"Herb", traditional:"Traditional", modern:"Modern", peptide:"Peptide", restricted:"Restricted" };
+var ST_NAME = { ok:"Sold as a supplement", warn:"Restrictions apply", no:"Not a lawful supplement" };
+
+/* What each flag means, worded for the person taking it. */
+var FLAGS = {
+  bleeding:  ["🩸","May thin the blood or affect clotting"],
+  vitk:      ["🩸","Works against warfarin"],
+  serotonin: ["🧠","Acts on serotonin"],
+  cyp:       ["💊","Changes how the liver clears many medicines"],
+  liver:     ["⚠️","Liver injury has been reported"],
+  sedation:  ["😴","Causes drowsiness"],
+  bp:        ["❤️","Can change blood pressure"],
+  sugar:     ["🍬","Can lower blood sugar"],
+  binds:     ["⏱️","Blocks absorption of some medicines and minerals — take hours apart"],
+  stimulant: ["⚡","Stimulant"],
+  hormone:   ["⚖️","Acts on hormones"],
+  thyroid:   ["🦋","Affects the thyroid"],
+  immune:    ["🛡️","Acts on the immune system"],
+  kidney:    ["🫘","Take care with kidney disease"],
+  potassium: ["🧂","Raises or lowers potassium"],
+  pregnancy: ["🤰","Avoid in pregnancy"],
+  statin:    ["💊","Works like a statin"]
+};
+
+/* Medicines and situations, mapped to the flags that matter for them. */
+var MEDS = [
+  { id:"thinner",  n:"Blood thinners", hint:"warfarin, apixaban, aspirin, clopidogrel", hits:{ bleeding:"may add to bleeding risk.", vitk:"works against warfarin — keep intake steady and tell your clinic.", cyp:"may change blood-thinner levels." } },
+  { id:"ssri",     n:"Antidepressants or triptans", hint:"SSRIs, SNRIs, migraine triptans", hits:{ serotonin:"risk of serotonin syndrome.", cyp:"may change antidepressant levels." } },
+  { id:"pill",     n:"Contraceptive pill or HRT", hint:"", hits:{ cyp:"can make hormonal contraception fail — use another method too.", hormone:"acts on hormones." } },
+  { id:"diabetes", n:"Diabetes medicines", hint:"metformin, insulin, gliclazide, GLP-1", hits:{ sugar:"blood sugar may drop too low — check it more often." } },
+  { id:"bp",       n:"Blood pressure medicines", hint:"ACE inhibitors, ARBs, diuretics", hits:{ bp:"can change blood pressure.", potassium:"potassium can build up to dangerous levels." } },
+  { id:"thyroid",  n:"Thyroid medicine", hint:"levothyroxine", hits:{ binds:"take it 4 hours apart from levothyroxine.", thyroid:"changes thyroid levels." } },
+  { id:"statin",   n:"Statins", hint:"atorvastatin, simvastatin", hits:{ statin:"is itself a statin — don't double up.", cyp:"may change statin levels." } },
+  { id:"sedative", n:"Sleeping tablets, opioids or alcohol", hint:"", hits:{ sedation:"drowsiness adds up — don't drive." } },
+  { id:"immuno",   n:"Transplant or immune-suppressing medicines", hint:"ciclosporin, tacrolimus", hits:{ cyp:"can drop levels dangerously.", immune:"may work against immune suppression." } },
+  { id:"abx",      n:"Antibiotics", hint:"tetracyclines, ciprofloxacin", hits:{ binds:"take it 2–4 hours apart from these antibiotics." } },
+  { id:"stim",     n:"ADHD stimulants or decongestants", hint:"", hits:{ stimulant:"stimulant effects add up." } },
+  { id:"preg",     n:"Pregnant or trying", hint:"", hits:{ pregnancy:"avoid in pregnancy.", stimulant:"keep caffeine under 200 mg a day." } }
+];
+/* Two or more supplements sharing one of these add up. */
+var STACKABLE = { bleeding:"may add up to a higher bleeding risk", sedation:"add up to more drowsiness", serotonin:"together can cause serotonin syndrome",
+  sugar:"together may push blood sugar too low", stimulant:"add up as stimulants", liver:"each have liver injury reports", bp:"each change blood pressure" };
+
+var byId = {};
+DATA.forEach(function(e){ byId[e.id] = e; });
+
+var cat = "all", query = "", stack = [], meds = [], current = null, tab = "b";
+var K_STACK = "stack_v1", K_MEDS = "meds_v1";
+
+/* ---------- browse ---------- */
+
+function norm(s){ return String(s||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^a-z0-9]+/g," ").trim(); }
+function matches(e, q){
+  if (!q) return 0;
+  var name = norm(e.n), aka = e.aka.map(norm);
+  if (name === q || aka.indexOf(q) >= 0) return 3;
+  if (name.indexOf(q) === 0 || aka.some(function(a){ return a.indexOf(q) === 0; })) return 2;
+  if (name.indexOf(q) >= 0 || aka.some(function(a){ return a.indexOf(q) >= 0; })) return 1.5;
+  if (norm(e.what).indexOf(q) >= 0 || e.uses.some(function(u){ return norm(u[0]).indexOf(q) >= 0; })) return 1;
+  return 0;
+}
+function sub(e){
+  var best = e.uses.filter(function(u){ return u[1] === "good"; })[0] || e.uses.filter(function(u){ return u[1] === "some"; })[0] || e.uses[0];
+  if (e.st === "no") return CAT_NAME[e.cat] + " · " + ST_NAME.no;
+  return (e.trad ? e.trad : CAT_NAME[e.cat]) + (best ? " · " + best[0] : "");
+}
+function renderCats(){
+  el("cats").innerHTML = CATS.map(function(c){
+    return '<button class="chip' + (c[0] === cat ? ' on' : '') + '" onclick="setCat(\'' + c[0] + '\')">' + c[1] + '</button>';
+  }).join("");
+}
+function setCat(c){ cat = c; haptic("light"); renderCats(); renderList(); }
+function renderList(){
+  var q = norm(query), rows;
+  if (q){
+    rows = DATA.map(function(e){ return [matches(e, q), e]; }).filter(function(p){ return p[0] > 0; })
+      .sort(function(a, b){ return b[0] - a[0] || a[1].n.localeCompare(b[1].n); }).map(function(p){ return p[1]; });
+    if (cat !== "all") rows = rows.filter(function(e){ return e.cat === cat; });
+  } else {
+    rows = DATA.filter(function(e){ return cat === "all" || e.cat === cat; }).slice().sort(function(a, b){ return a.n.localeCompare(b.n); });
+  }
+  var html = "";
+  if (rows.length){
+    html += '<div class="group">' + rows.map(function(e){
+      return '<button class="item" onclick="openEntry(\'' + e.id + '\')"><i class="sdot ' + e.st + '"></i><div class="n"><b>' + esc(e.n) + '</b><span>' + esc(sub(e)) + '</span></div><span class="chev">›</span></button>';
+    }).join("") + '</div>';
+  } else {
+    html += '<div class="empty">Nothing in the guide matches “' + esc(query) + '”.</div>';
+  }
+  if (q && q.length >= 3) html += '<button class="go ghost" onclick="lookUp()">Look up “' + esc(query.trim()) + '” online</button>' +
+    '<p class="disc">Searches PubChem, Wikipedia and FDA reports. Online results have no safety or legal summary.</p>';
+  el("list").innerHTML = html;
+}
+
+/* ---------- detail ---------- */
+
+function openEntry(id){
+  var e = byId[id]; if (!e) return;
+  haptic("light");
+  current = e;
+  var inStack = stack.indexOf(e.id) >= 0;
+  var h = '<div class="dtop"><button class="back" aria-label="Back" onclick="closeDetail()"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>' +
+    '<div class="t"><h2>' + esc(e.n) + '</h2>' + (e.aka.length ? '<div class="aka">' + esc(e.aka.join(" · ")) + '</div>' : '') + '</div></div>';
+  h += '<div class="tags"><span class="tag">' + CAT_NAME[e.cat] + '</span>' + (e.trad ? '<span class="tag">' + esc(e.trad) + '</span>' : '') +
+    '<span class="tag st-' + e.st + '">' + ST_NAME[e.st] + '</span></div>';
+  h += '<div class="card"><h3>What it is</h3><p>' + esc(e.what) + '</p></div>';
+  if (e.cid) h += '<div class="card"><h3>Molecule</h3><div id="mol"><div class="muted">Drawing…</div></div></div>';
+  if (e.uses.length) h += '<div class="card"><h3>Evidence</h3>' + e.uses.map(function(u){
+    return '<div class="ev"><span class="pill ' + u[1] + '">' + u[1] + '</span><span>' + esc(u[0]) + '</span></div>'; }).join("") + '</div>';
+  h += '<div class="card"><h3>' + (e.st === "no" ? "Amounts" : "Typical amounts") + '</h3><p>' + esc(e.dose) + '</p></div>';
+  h += '<div class="card"><h3>Cautions</h3><ul>' + e.cautions.map(function(c){ return '<li>' + esc(c) + '</li>'; }).join("") + '</ul>' +
+    (e.flags.length ? '<div style="margin-top:8px">' + e.flags.map(function(f){ return '<div class="flag"><span class="fi">' + FLAGS[f][0] + '</span><span>' + FLAGS[f][1] + '</span></div>'; }).join("") + '</div>' : '') + '</div>';
+  h += '<div class="card"><h3>Legal status</h3><dl class="reg"><dt>US</dt><dd>' + esc(e.us) + '</dd>' +
+    (e.uk ? '<dt>UK / EU</dt><dd>' + esc(e.uk) + '</dd>' : '') + (e.sport ? '<dt>Sport</dt><dd>' + esc(e.sport) + '</dd>' : '') + '</dl></div>';
+  h += '<div style="margin-bottom:10px"><button class="go' + (inStack ? ' on' : '') + '" id="stackBtn" onclick="toggleStack(\'' + e.id + '\')">' + (inStack ? '✓ In my stack' : 'Add to my stack') + '</button></div>';
+  h += '<div class="card"><h3>Reports to FDA</h3><div id="fda"><div class="muted">Checking…</div></div></div>';
+  h += '<div class="card"><h3>From Wikipedia</h3><div id="wiki"><div class="muted">Loading…</div></div></div>';
+  h += '<div class="card src"><h3>Sources</h3>' + e.src.map(function(s){ return '<a href="' + esc(s[1]) + '" target="_blank" rel="noopener">' + esc(s[0]) + '</a>'; }).join("") +
+    (e.cid ? '<a href="https://pubchem.ncbi.nlm.nih.gov/compound/' + e.cid + '" target="_blank" rel="noopener">PubChem</a>' : '') + '</div>';
+  h += '<p class="disc">General information, not medical advice.</p>';
+  showDetail(h);
+  if (e.cid) loadMolecule(e.cid, e.molNote || "");
+  loadFDA(e.fda || e.n.replace(/\s*\(.*\)/, "").split(" / ")[0], "fda");
+  loadWiki(e.wiki, "wiki");
+}
+function showDetail(h){
+  el("main").style.display = "none";
+  el("detail").innerHTML = h; el("detail").style.display = "";
+  window.scrollTo(0, 0);
+}
+function closeDetail(){
+  haptic("light");
+  current = null;
+  el("detail").style.display = "none"; el("detail").innerHTML = "";
+  el("main").style.display = "";
+  if (tab === "s") renderStack(); else renderList();
+}
+
+/* ---------- live data (all through myllmFetch; every failure is quiet) ---------- */
+
+var memo = {};
+function getJSON(url){
+  if (memo[url]) return memo[url];
+  if (!window.myllmFetch) return Promise.reject(new Error("offline"));
+  var p = window.myllmFetch(url, { headers:{ "Accept":"application/json" } }).then(function(r){
+    if (!r || !r.ok){ var err = new Error("HTTP " + (r ? r.status : "?")); err.status = r && r.status; throw err; }
+    return JSON.parse(r.body);
+  });
+  memo[url] = p;
+  p.catch(function(){ delete memo[url]; });
+  return p;
+}
+function stillOn(id, slot){ var n = el(slot); return n && current && current.id === id ? n : null; }
+var NO_NET = 'Needs internet access for apps (MyLLMos settings).';
+
+/* openFDA CAERS: product names are free text, so the brand name is searched. */
+function loadFDA(term, slot){
+  var id = current ? current.id : null;
+  var q = encodeURIComponent('products.name_brand:"' + term.replace(/"/g, "") + '"');
+  var base = "https://api.fda.gov/food/event.json?search=" + q;
+  Promise.all([getJSON(base + "&limit=1"), getJSON(base + "&count=reactions.exact&limit=6")]).then(function(r){
+    var n = (current && current.id === id) || !id ? el(slot) : null; if (!n) return;
+    var total = r[0].meta.results.total, top = r[1].results || [];
+    var max = top.length ? top[0].count : 1;
+    n.innerHTML = '<p><b>' + total.toLocaleString() + '</b> report' + (total === 1 ? '' : 's') + ' to FDA mention a product with “' + esc(term) + '” in its name.</p>' +
+      (top.length ? '<div class="bars">' + top.map(function(t){
+        return '<div class="bar"><span>' + esc(t.term.charAt(0) + t.term.slice(1).toLowerCase()) + '</span><span class="muted">' + t.count + '</span><div class="tr"><i style="width:' + Math.max(4, t.count / max * 100) + '%"></i></div></div>'; }).join("") + '</div>' : '') +
+      '<p class="muted" style="margin-top:8px">Anyone can report a problem after taking a product. A report doesn\'t show the product caused it, and counts can\'t tell you how common a problem is.</p>';
+  }).catch(function(err){
+    var n = (current && current.id === id) || !id ? el(slot) : null; if (!n) return;
+    n.innerHTML = '<div class="muted">' + (!window.myllmFetch ? NO_NET : err && err.status === 404 ? 'No reports found under that name.' : 'FDA didn\'t answer just now.') + '</div>';
+  });
+}
+
+function loadWiki(title, slot){
+  var id = current ? current.id : null;
+  getJSON("https://en.wikipedia.org/api/rest_v1/page/summary/" + encodeURIComponent(title.replace(/ /g, "_"))).then(function(j){
+    var n = (current && current.id === id) || !id ? el(slot) : null; if (!n) return;
+    var url = j.content_urls && j.content_urls.mobile ? j.content_urls.mobile.page : "https://en.wikipedia.org/wiki/" + encodeURIComponent(title);
+    n.innerHTML = '<p>' + esc(j.extract || "No summary.") + '</p><p class="muted" style="margin-top:6px"><a href="' + esc(url) + '" target="_blank" rel="noopener" style="color:var(--myllm-accent,#0a84ff);text-decoration:none;font-weight:600">Read on Wikipedia</a> · text CC BY-SA</p>';
+  }).catch(function(){
+    var n = (current && current.id === id) || !id ? el(slot) : null; if (!n) return;
+    n.innerHTML = '<div class="muted">' + (!window.myllmFetch ? NO_NET : 'Wikipedia didn\'t answer just now.') + '</div>';
+  });
+}
+
+/* ---------- molecule drawing ----------
+   PubChem's 2D record gives each atom's position and every bond, so the
+   structure is drawn here as SVG: skeletal style, carbons unlabelled,
+   hydrogens folded into their atom's label. It follows light and dark mode,
+   which PubChem's own PNG can't. */
+var SYM = {1:"H",5:"B",6:"C",7:"N",8:"O",9:"F",11:"Na",12:"Mg",15:"P",16:"S",17:"Cl",19:"K",20:"Ca",24:"Cr",25:"Mn",26:"Fe",27:"Co",29:"Cu",30:"Zn",34:"Se",35:"Br",53:"I"};
+var COL = { N:"#3478f6", O:"#e5484d", S:"#d69e00", P:"#e8730c", Cl:"#21a366", F:"#21a366", Se:"#c77700" };
+var MAX_ATOMS = 130;
+
+function loadMolecule(cid, note){
+  var id = current ? current.id : null;
+  var rec = getJSON("https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/" + cid + "/record/JSON?record_type=2d");
+  var props = getJSON("https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/" + cid + "/property/MolecularFormula,MolecularWeight,Title/JSON");
+  Promise.all([rec, props]).then(function(r){
+    var n = stillOn(id, "mol"); if (!n) return;
+    var c = r[0].PC_Compounds[0], p = r[1].PropertyTable.Properties[0];
+    var svg = drawMolecule(c);
+    n.innerHTML = (svg || '<div class="muted">Too large to draw clearly here — see it on PubChem.</div>') +
+      '<div class="molcap">' + (note ? '<b>' + esc(note) + '</b> · ' : '<b>' + esc(p.Title || "") + '</b> · ') + fmtFormula(p.MolecularFormula) + ' · ' + Number(p.MolecularWeight).toFixed(1) + ' g/mol</div>';
+  }).catch(function(){
+    var n = stillOn(id, "mol"); if (!n) return;
+    n.innerHTML = '<div class="muted">' + (!window.myllmFetch ? NO_NET : 'PubChem didn\'t answer just now.') + '</div>';
+  });
+}
+function fmtFormula(f){ return esc(f || "").replace(/(\d+)/g, "<sub>$1</sub>").replace(/([+-])$/, "<sup>$1</sup>"); }
+
+function drawMolecule(c){
+  var aid = c.atoms.aid, z = c.atoms.element, conf = c.coords[0].conformers[0];
+  var pos = {}, el_ = {}, heavy = [];
+  c.coords[0].aid.forEach(function(a, i){ pos[a] = [conf.x[i], conf.y[i]]; });
+  aid.forEach(function(a, i){ el_[a] = z[i]; if (z[i] !== 1) heavy.push(a); });
+  if (heavy.length > MAX_ATOMS) return null;
+  var charge = {};
+  (c.atoms.charge || []).forEach(function(q){ charge[q.aid] = q.value; });
+  var hCount = {}, bonds = [], deg = {};
+  var b = c.bonds || { aid1:[], aid2:[], order:[] };
+  for (var i = 0; i < b.aid1.length; i++){
+    var a1 = b.aid1[i], a2 = b.aid2[i], o = b.order[i];
+    if (el_[a1] === 1 || el_[a2] === 1){ var hv = el_[a1] === 1 ? a2 : a1; hCount[hv] = (hCount[hv] || 0) + 1; continue; }
+    bonds.push([a1, a2, o]); deg[a1] = (deg[a1] || 0) + 1; deg[a2] = (deg[a2] || 0) + 1;
+  }
+  var xs = heavy.map(function(a){ return pos[a][0]; }), ys = heavy.map(function(a){ return pos[a][1]; });
+  var minX = Math.min.apply(null, xs), maxX = Math.max.apply(null, xs), minY = Math.min.apply(null, ys), maxY = Math.max.apply(null, ys);
+  var S = 40, pad = 26, W = (maxX - minX) * S + pad * 2, H = (maxY - minY) * S + pad * 2;
+  function X(a){ return (pos[a][0] - minX) * S + pad; }
+  function Y(a){ return (maxY - pos[a][1]) * S + pad; }   /* PubChem's y points up */
+  /* A carbon is drawn as a bare vertex unless it stands alone or carries a charge. */
+  function label(a){
+    var s = SYM[el_[a]] || "?";
+    if (s === "C" && deg[a] && !charge[a]) return null;
+    var h = hCount[a] || 0;
+    var t = s + (h ? "H" + (h > 1 ? h : "") : "");
+    if (charge[a]) t += (Math.abs(charge[a]) > 1 ? Math.abs(charge[a]) : "") + (charge[a] > 0 ? "+" : "−");
+    return t;
+  }
+  var labels = {};
+  heavy.forEach(function(a){ labels[a] = label(a); });
+  var ink = "currentColor", out = [];
+  bonds.forEach(function(bd){
+    var a = bd[0], c2 = bd[1], o = bd[2];
+    var x1 = X(a), y1 = Y(a), x2 = X(c2), y2 = Y(c2);
+    var dx = x2 - x1, dy = y2 - y1, L = Math.sqrt(dx*dx + dy*dy) || 1, ux = dx / L, uy = dy / L;
+    /* Leave room around a labelled atom so the line doesn't run into its text. */
+    var t1 = labels[a] ? 9 : 0, t2 = labels[c2] ? 9 : 0;
+    x1 += ux * t1; y1 += uy * t1; x2 -= ux * t2; y2 -= uy * t2;
+    var nx = -uy, ny = ux;
+    if (o === 2 || o === 3){
+      var off = o === 2 ? 2.6 : 3.6;
+      out.push(line(x1 + nx*off, y1 + ny*off, x2 + nx*off, y2 + ny*off), line(x1 - nx*off, y1 - ny*off, x2 - nx*off, y2 - ny*off));
+      if (o === 3) out.push(line(x1, y1, x2, y2));
+    } else {
+      out.push(line(x1, y1, x2, y2));
+    }
+  });
+  function line(a, b2, c3, d){ return '<line x1="' + a.toFixed(1) + '" y1="' + b2.toFixed(1) + '" x2="' + c3.toFixed(1) + '" y2="' + d.toFixed(1) + '"/>'; }
+  var txt = [];
+  heavy.forEach(function(a){
+    var t = labels[a]; if (!t) return;
+    var s = SYM[el_[a]] || "";
+    var col = COL[s] || "currentColor";
+    txt.push('<text x="' + X(a).toFixed(1) + '" y="' + Y(a).toFixed(1) + '" fill="' + col + '" font-size="13" text-anchor="middle" dominant-baseline="central">' + esc(t) + '</text>');
+  });
+  return '<svg class="mol" viewBox="0 0 ' + W.toFixed(0) + ' ' + H.toFixed(0) + '" role="img" aria-label="Structure"><g stroke="' + ink + '" stroke-width="1.6" stroke-linecap="round">' + out.join("") + '</g>' + txt.join("") + '</svg>';
+}
+
+/* ---------- look up something not in the guide ---------- */
+
+function lookUp(){
+  var term = query.trim(); if (!term) return;
+  haptic("light");
+  current = { id:"lookup:" + term };
+  var h = '<div class="dtop"><button class="back" aria-label="Back" onclick="closeDetail()"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>' +
+    '<div class="t"><h2>' + esc(term) + '</h2><div class="aka">Not in this guide — looked up online</div></div></div>' +
+    '<div class="alert amber"><b>No safety or legal summary</b>This isn\'t one of the ingredients reviewed here, so check the sources and ask a pharmacist before taking it.</div>' +
+    '<div class="card"><h3>Molecule</h3><div id="mol"><div class="muted">Searching PubChem…</div></div></div>' +
+    '<div class="card"><h3>Reports to FDA</h3><div id="fda"><div class="muted">Checking…</div></div></div>' +
+    '<div class="card"><h3>From Wikipedia</h3><div id="wiki"><div class="muted">Loading…</div></div></div>';
+  showDetail(h);
+  var id = current.id;
+  getJSON("https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/" + encodeURIComponent(term) + "/cids/JSON").then(function(j){
+    if (!stillOn(id, "mol")) return;
+    loadMolecule(j.IdentifierList.CID[0], "");
+  }).catch(function(){
+    var n = stillOn(id, "mol"); if (n) n.innerHTML = '<div class="muted">' + (!window.myllmFetch ? NO_NET : 'PubChem has no single compound by that name — it may be a plant, a blend or a brand.') + '</div>';
+  });
+  loadFDA(term, "fda");
+  loadWiki(term, "wiki");
+}
+
+/* ---------- my stack ---------- */
+
+function toggleStack(id){
+  var i = stack.indexOf(id);
+  if (i >= 0) stack.splice(i, 1); else stack.push(id);
+  haptic(i >= 0 ? "light" : "success");
+  store.setItem(K_STACK, JSON.stringify(stack));
+  var b = el("stackBtn");
+  if (b){ var on = stack.indexOf(id) >= 0; b.className = "go" + (on ? " on" : ""); b.textContent = on ? "✓ In my stack" : "Add to my stack"; }
+}
+function toggleMed(id){
+  var i = meds.indexOf(id);
+  if (i >= 0) meds.splice(i, 1); else meds.push(id);
+  haptic("light");
+  store.setItem(K_MEDS, JSON.stringify(meds));
+  renderStack();
+}
+function removeFromStack(id){ toggleStack(id); renderStack(); }
+
+function checkStack(){
+  var items = stack.map(function(id){ return byId[id]; }).filter(Boolean);
+  var out = [];
+  items.forEach(function(e){
+    if (e.st === "no") out.push({ lvl:"red", t:e.n + " isn't a lawful supplement", d:e.us });
+  });
+  /* One warning per supplement and medicine, with every reason in it. */
+  MEDS.forEach(function(m){
+    if (meds.indexOf(m.id) < 0) return;
+    items.forEach(function(e){
+      var why = e.flags.filter(function(f){ return m.hits[f]; });
+      if (!why.length) return;
+      var mild = why.every(function(f){ return f === "binds" || f === "bp"; });
+      out.push({ lvl:mild ? "amber" : "red", t:e.n + " + " + m.n, d:e.n + " " + listOf(why.map(function(f){ return m.hits[f].replace(/\.$/, ""); })) + "." });
+    });
+  });
+  Object.keys(STACKABLE).forEach(function(f){
+    var hit = items.filter(function(e){ return e.flags.indexOf(f) >= 0; });
+    if (hit.length >= 2) out.push({ lvl:"amber", t:FLAGS[f][1], d:listOf(hit.map(function(e){ return e.n; })) + " " + STACKABLE[f] + "." });
+  });
+  var binders = items.filter(function(e){ return e.flags.indexOf("binds") >= 0; });
+  if (binders.length >= 2) out.push({ lvl:"amber", t:"Take these at different times", d:listOf(binders.map(function(e){ return e.n; })) + " compete to be absorbed. Spread them across the day." });
+  /* One finding per sentence: a supplement can hit the same medicine twice. */
+  var seen = {};
+  return out.filter(function(o){ var k = o.t + "|" + o.d; if (seen[k]) return false; seen[k] = 1; return true; });
+}
+function listOf(a){ return a.length < 2 ? a.join("") : a.slice(0, -1).join(", ") + " and " + a[a.length - 1]; }
+
+function renderStack(){
+  el("stackList").innerHTML = stack.length ? stack.map(function(id){
+    var e = byId[id]; if (!e) return "";
+    return '<div class="row"><i class="sdot ' + e.st + '"></i><button class="n" onclick="openEntry(\'' + e.id + '\')">' + esc(e.n) + '</button><button class="x" aria-label="Remove ' + esc(e.n) + '" onclick="removeFromStack(\'' + e.id + '\')">×</button></div>';
+  }).join("") : '<div class="muted">Nothing yet. Open a supplement in Browse and tap Add to my stack.</div>';
+  el("meds").innerHTML = MEDS.map(function(m){
+    return '<button class="chip' + (meds.indexOf(m.id) >= 0 ? ' on' : '') + '" onclick="toggleMed(\'' + m.id + '\')">' + esc(m.n) + (m.hint ? ' <span style="opacity:.7;font-weight:500">(' + esc(m.hint) + ')</span>' : '') + '</button>';
+  }).join("");
+  var found = checkStack();
+  el("checks").innerHTML = !stack.length ? "" : found.length ? found.map(function(o){
+    return '<div class="alert ' + o.lvl + '"><b>' + esc(o.t) + '</b>' + esc(o.d) + '</div>'; }).join("")
+    : '<div class="alert green"><b>Nothing flagged</b>None of the interactions this guide knows about apply. That isn\'t a guarantee.</div>';
+}
+
+/* ---------- tabs, chrome, boot ---------- */
+
+function showTab(t){
+  tab = t; haptic("light");
+  ["b","s","a"].forEach(function(k){
+    el("pane" + k.toUpperCase()).style.display = k === t ? "" : "none";
+    el("tab" + k.toUpperCase()).classList.toggle("on", k === t);
+  });
+  if (t === "s") renderStack();
+}
+function canGoFull(){ return !!(window.myllmClose && window.myllmImmersive); }
+function syncChrome(){
+  var full = canGoFull();
+  document.body.classList.toggle("imm", full);
+  if (!full) return;
+  try { myllmImmersive(true, { keepAwake:false }).catch(function(){}); } catch(e){}
+}
+function closeApp(){ haptic("light"); try { myllmClose().catch(function(){}); } catch(e){} }
+document.addEventListener("visibilitychange", function(){ if (!document.hidden) syncChrome(); });
+
+var qTimer = null;
+el("q").addEventListener("input", function(){
+  var v = this.value;
+  clearTimeout(qTimer);
+  qTimer = setTimeout(function(){ query = v; renderList(); }, 120);
+});
+
+syncChrome();
+renderCats();
+renderList();
+Promise.all([store.getItem(K_STACK), store.getItem(K_MEDS)]).then(function(v){
+  try { stack = (v[0] ? JSON.parse(v[0]) : []).filter(function(id){ return byId[id]; }); } catch(e){ stack = []; }
+  try { meds = v[1] ? JSON.parse(v[1]) : []; } catch(e){ meds = []; }
+  if (tab === "s") renderStack();
+}).catch(function(){});
+</script>
+</body>
+</html>

@@ -153,6 +153,9 @@ async function verifyApp(browser, file) {
       if (clicked >= CONFIG.clicks) break;
       try {
         if (!(await el.isVisible())) continue;
+        // Measure where the tap will land: click() scrolls first, so an
+        // off-screen element must be scrolled into view before the check.
+        await el.scrollIntoViewIfNeeded({ timeout: 900 });
         // A .card (or button) can be wholly a link, e.g. an App Store funnel
         // card: tapping its centre would leave the page, and the harness then
         // reports the store link as a remote 'document' load. Skip those.
