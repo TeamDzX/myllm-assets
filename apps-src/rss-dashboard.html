@@ -126,6 +126,37 @@ a.cvg{display:flex;gap:11px;align-items:center;text-decoration:none;color:inheri
 .vfoot .vsrc{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.02em;color:var(--accent)}
 .vfoot a{margin-left:auto;font-size:14px;font-weight:600;color:var(--accent);text-decoration:none;padding:8px 0}
 @media(prefers-reduced-motion:no-preference){a.card,a.hero{transition:transform .12s ease}a.card:active,a.hero:active{transform:scale(.985)}}
+/* ---------- the in-app reader (from News): a story opens here, not in the browser ---------- */
+#reader{display:none;position:fixed;inset:0;background:var(--bg);z-index:300;overflow:auto;-webkit-overflow-scrolling:touch;
+  padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right);--read:17px}
+#reader.on{display:block}
+.rbar{position:sticky;top:0;display:flex;align-items:center;gap:4px;padding:calc(8px + env(safe-area-inset-top)) 10px 8px;
+  background:var(--glassbg);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);border-bottom:1px solid var(--border);z-index:2}
+.rbar .site{flex:1;min-width:0;font-size:12px;font-weight:700;letter-spacing:.02em;text-transform:uppercase;color:var(--accent);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 6px}
+.rbtn{flex:none;border:0;background:transparent;color:var(--text);min-width:40px;height:40px;border-radius:12px;font:inherit;font-size:15px;font-weight:650;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0 6px}
+.rbtn svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.rbtn:active{transform:scale(.94);background:var(--surface)}
+.art{padding:14px 20px calc(40px + env(safe-area-inset-bottom));max-width:700px;margin:0 auto}
+.art h2{font-size:26px;line-height:1.22;margin:6px 0 10px;letter-spacing:-.01em}
+.art .byline{font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.5}
+.art .byline .mini{display:inline-block;vertical-align:middle;margin-right:8px}
+.art figure{margin:18px 0}
+.art img{width:100%;border-radius:12px;display:block;background:var(--border)}
+.art figcaption{font-size:12.5px;color:var(--muted);margin-top:7px;line-height:1.4}
+.art p{font-size:var(--read);line-height:1.62;margin:0 0 1.05em}
+.art h3{font-size:calc(var(--read) + 3px);line-height:1.3;margin:1.5em 0 .5em}
+.art ul,.art ol{font-size:var(--read);line-height:1.6;padding-left:1.3em;margin:0 0 1.05em}
+.art li{margin-bottom:.4em}
+.art blockquote{margin:1.2em 0;padding-left:14px;border-left:3px solid var(--accent);color:var(--muted);font-size:var(--read)}
+.art pre{background:var(--surface);padding:12px;border-radius:9px;overflow-x:auto;font-size:14px}
+.art a{color:var(--accent)}
+.art .note{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:13px 15px;margin:4px 0 18px;font-size:14px;line-height:1.5;color:var(--muted)}
+/* .art a is (0,1,1) and would out-specify a bare .open, painting the label in
+   the accent colour ON the accent colour (News v5 shipped exactly that). */
+.art a.open{display:block;text-align:center;background:var(--accent);color:#fff;text-decoration:none;font-weight:700;padding:14px;border-radius:14px;margin-top:26px}
+.art .rskel{height:13px;border-radius:7px;background:var(--border);margin-bottom:11px;animation:rpulse 1.3s ease-in-out infinite}
+@keyframes rpulse{0%,100%{opacity:.45}50%{opacity:.85}}
+@media(prefers-reduced-motion:reduce){.art .rskel{animation:none}}
 /* The header every gallery home screen shares: hue tile, name, one line, actions. */
 .head{display:flex;align-items:center;gap:12px;margin:2px 2px 14px}
 .head .tile{display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0;width:44px;height:44px;border-radius:13px;background:linear-gradient(145deg,hsl(var(--h) 62% 50%),hsl(calc(var(--h) + 40) 58% 28%))}
@@ -191,6 +222,17 @@ body.imm .imm-safe{display:block}
   <div id="hero"></div>
   <div id="grid"></div>
   <button id="more" style="display:none">Load more</button>
+</div>
+
+<div id="reader" role="dialog" aria-label="Article" aria-hidden="true">
+  <div class="rbar">
+    <button class="rbtn" id="rBack" aria-label="Back to Headlines"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+    <span class="site" id="rSite"></span>
+    <button class="rbtn" id="rSmaller" aria-label="Smaller text">A&#8722;</button>
+    <button class="rbtn" id="rBigger" aria-label="Larger text">A+</button>
+    <button class="rbtn" id="rShare" aria-label="Share"><svg viewBox="0 0 24 24"><path d="M12 3v12"/><path d="M8 7l4-4 4 4"/><path d="M7 11H6a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-8a1 1 0 0 0-1-1h-1"/></svg></button>
+  </div>
+  <div class="art" id="art"></div>
 </div>
 
 <script>
@@ -350,7 +392,8 @@ function parse(xml){
       link:link,
       date:text(n,'pubDate')||text(n,'updated')||text(n,'published')||text(n,'date'),
       excerpt:strip(desc||bodyHtml),
-      image:imageOf(n,desc,bodyHtml)
+      image:imageOf(n,desc,bodyHtml),
+      full:bodyHtml               // WordPress/Substack feeds carry the whole article: read it without a fetch
     });
   }
   return out;
@@ -608,6 +651,10 @@ function renderCoverage(a,entry,ovl){
       '<span class="cbody"><span class="cvg-src">'+miniBar(SRC_LEAN[m.s.src].pos)+'<span>'+esc(m.s.src)+'</span>'+(t?'<span class="when">'+t+'</span>':'')+'</span>'+
       '<h4>'+esc(m.it.title)+'</h4></span></a>';
   }).join('');
+  body.querySelectorAll('a.cvg').forEach(function(node,i){
+    var m=entry.items[i];
+    if(m)wireRead(node,{title:m.it.title,link:m.it.link,date:m.it.date,image:m.it.image,excerpt:m.it.excerpt,full:m.it.full,src:m.s.src});
+  });
   if(entry.summary){showSummary(ovl,entry.summary)}
   else summarize(a,entry,ovl);
 }
@@ -695,7 +742,7 @@ function paint(){
       leanBadge(hero)+
       '</div></a>'
   ):'';
-  if(hero){wireLean(el('hero'),hero);wireVideo(el('hero').firstChild,hero)}
+  if(hero){wireLean(el('hero'),hero);wireVideo(el('hero').firstChild,hero);wireRead(el('hero').firstChild,hero)}
   ogBudget=10;                        // fresh rescue allowance per topic load
   ogQueue=[];
   if(hero)rescueImage(hero,el('hero'),loadGen);
@@ -711,7 +758,7 @@ function more(){
     card.innerHTML=thumb(a)+'<div class="body"><div class="meta">'+metaLine(a)+'</div><h3>'+esc(a.title)+'</h3>'+leanBadge(a)+'</div>';
     wireLean(card,a);
     wireVideo(card,a);
-    card.addEventListener('click',function(){haptic('light')});
+    wireRead(card,a);
     if(!a.image)rescueImage(a,card,loadGen);
     frag.appendChild(card);
   });
@@ -722,6 +769,367 @@ function more(){
   else{b.style.display='block';b.disabled=false;b.textContent='Load more'}
 }
 el('more').onclick=function(){haptic('selection');more()};
+
+// ===================== The in-app reader =====================
+// A story opens inside Headlines: the page is fetched through myllmFetch and
+// reduced to its prose on the device (the same extractor as News), so the
+// reader never leaves the app. The original is always one tap away, and when a
+// publisher refuses a non-browser (Reuters, Sky, AP answer 401/403 whatever the
+// user agent) the reader says so and shows the feed's summary instead.
+var artCache={}, readSize=17, readSizeLoaded=false, current=null;
+function host(u){try{return new URL(u).hostname.replace(/^www\./,'')}catch(e){return''}}
+function wireRead(node,a){
+  if(!node||!a||!a.link)return;
+  node.addEventListener('click',function(e){
+    if(e.defaultPrevented)return;                 // the video sheet or the lean dot took this tap
+    if(!window.myllmFetch&&!(a.full&&a.full.length>600))return;   // no network bridge: the link opens the browser as before
+    e.preventDefault();
+    openArticle(a);
+  });
+}
+function showReader(on){
+  var R=el('reader');
+  R.classList.toggle('on',on);
+  R.setAttribute('aria-hidden',on?'false':'true');
+  // the coverage sheet underneath keeps the page locked when the reader closes
+  document.body.style.overflow=(on||ovlNode)?'hidden':'';
+  if(on)R.scrollTop=0;
+  else current=null;
+}
+function setRead(px,quiet){
+  readSize=Math.max(14,Math.min(24,px));
+  el('reader').style.setProperty('--read',readSize+'px');
+  if(!quiet){store.setItem('readSize',String(readSize));haptic('selection')}
+}
+el('rBack').onclick=function(){showReader(false);haptic('selection')};
+el('rBigger').onclick=function(){setRead(readSize+1)};
+el('rSmaller').onclick=function(){setRead(readSize-1)};
+el('rShare').onclick=function(){
+  if(!current)return;
+  var text=current.title+'\n'+current.link;
+  if(window.myllmShare)try{myllmShare(text)['catch'](function(){})}catch(e){}
+  haptic('light');
+};
+document.addEventListener('keydown',function(e){if(e.key==='Escape'&&el('reader').classList.contains('on'))showReader(false)});
+
+function openArticle(item){
+  if(!readSizeLoaded){
+    readSizeLoaded=true;
+    store.getItem('readSize').then(function(v){var n=parseInt(v,10);if(n)setRead(n,true)},function(){});
+  }
+  current=item;
+  el('rSite').textContent=item.src||host(item.link);
+  showReader(true);haptic('light');
+  paintArticle(item,null,'loading');
+  var cached=artCache[item.link];
+  if(cached){paintArticle(item,cached.article,cached.how);return}
+  readArticle(item).then(function(res){
+    if(current!==item)return;                     // they moved on while we fetched
+    artCache[item.link]={article:res.article,how:res.how};
+    paintArticle(item,res.article,res.how);
+  })['catch'](function(err){
+    if(current!==item)return;
+    paintArticle(item,null,'failed',err&&err.message);
+  });
+}
+
+/* Full text, from the cheapest source that has it. */
+function readArticle(item){
+  if(item.full&&item.full.length>600){
+    var a=extractArticle(item.full,item.link);
+    if(a.blocks.length>=2)return Promise.resolve({article:a,how:'feed'});
+  }
+  if(!window.myllmFetch)return Promise.reject(new Error('network access for apps is off'));
+  return myllmFetch(item.link,{headers:{Accept:'text/html,application/xhtml+xml'}}).then(function(r){
+    if(!r)throw new Error('no response');
+    if(!r.ok){
+      if(r.status===401||r.status===403)throw new Error('blocked');
+      throw new Error('the site returned '+r.status);
+    }
+    var a=extractArticle(r.body||'',item.link);
+    if(!a.blocks.length)throw new Error('nothing readable');
+    return {article:a,how:'web'};
+  });
+}
+
+function paintArticle(item,article,how,why){
+  var A=el('art');A.innerHTML='';
+  var h=document.createElement('h2');h.textContent=(article&&article.title)||item.title;A.appendChild(h);
+
+  var bits=[];
+  if(article&&article.author)bits.push(article.author);
+  var when=ago((article&&article.published)||item.date);
+  if(when)bits.push(when);
+  bits.push(item.src||host(item.link));
+  var by=document.createElement('div');by.className='byline';
+  var lean=SRC_LEAN[item.src];
+  if(lean)by.innerHTML=miniBar(lean.pos);
+  by.appendChild(document.createTextNode(bits.join(' · ')));
+  A.appendChild(by);
+
+  if(how==='loading'){
+    if(item.image)A.appendChild(figure(item.image,''));
+    if(item.excerpt){var p0=document.createElement('p');p0.textContent=item.excerpt;A.appendChild(p0)}
+    for(var i=0;i<5;i++){var s=document.createElement('div');s.className='rskel';
+      s.style.width=(i===4?'55%':'100%');A.appendChild(s)}
+    return;
+  }
+
+  if(how==='failed'){
+    A.appendChild(note(why==='blocked'
+      ? (item.src||'This publisher')+' doesn’t let apps read its articles — only a browser. Here’s the summary from its feed.'
+      : 'Couldn’t read the full article here ('+(why||'unknown error')+'). Here’s the summary from the feed.'));
+    if(item.image)A.appendChild(figure(item.image,''));
+    if(item.excerpt){var p1=document.createElement('p');p1.textContent=item.excerpt;A.appendChild(p1)}
+    A.appendChild(openLink(item));
+    return;
+  }
+
+  var lead=(article.lead&&article.lead!==item.image)?article.lead:item.image;
+  var first=article.blocks[0];
+  if(lead&&!(first&&first.t==='img'))A.appendChild(figure(lead,''));
+
+  article.blocks.forEach(function(b){
+    if(b.t==='img'){A.appendChild(figure(b.src,b.cap));return}
+    if(b.t==='list'){
+      var l=document.createElement(b.ordered?'ol':'ul');
+      b.items.forEach(function(x){var li=document.createElement('li');li.textContent=x;l.appendChild(li)});
+      A.appendChild(l);return;
+    }
+    var tag=b.t==='h'?'h3':b.t==='quote'?'blockquote':b.t==='pre'?'pre':'p';
+    var n=document.createElement(tag);n.textContent=b.text;A.appendChild(n);
+  });
+
+  var chars=article.blocks.reduce(function(n,b){return n+(b.text?b.text.length:0)},0);
+  if(chars<600)A.appendChild(note('That’s all this page gave us — the original may have more.'));
+  A.appendChild(openLink(item));
+}
+function figure(src,cap){
+  var f=document.createElement('figure');
+  var im=document.createElement('img');im.loading='lazy';im.referrerPolicy='no-referrer';im.alt=cap||'';im.src=src;
+  im.onerror=function(){f.remove()};
+  f.appendChild(im);
+  if(cap){var c=document.createElement('figcaption');c.textContent=cap;f.appendChild(c)}
+  return f;
+}
+function note(text){var d=document.createElement('div');d.className='note';d.textContent=text;return d}
+function openLink(item){
+  var a=document.createElement('a');a.className='open';a.href=item.link;a.target='_top';a.rel='noopener';
+  a.textContent='Open the original on '+(item.src||host(item.link))+' ↗︎';
+  return a;
+}
+
+/* ===================== reading an article page =====================
+   The readability core, small enough to inline — a gallery app is one
+   self-contained file, so there is no library to reach for. */
+
+var JUNK=/(^|[\s_-])(nav|menu|banner|promo|advert|ads?|sponsor|share|social|comment|related|recirc|newsletter|subscribe|signup|sign-up|cookie|consent|sidebar|breadcrumb|most-read|trending|footer|header|masthead|tags?|meta-nav|skip)([\s_-]|$)/i;
+var BOILER=/^(sign up|subscribe|follow (us|bbc)|share this|read more|advertisement|related (stories|articles)|most read|this article|copyright|all rights reserved|getty images|image source|image caption|posts from this (topic|author)|are you personally affected|a free daily digest|by submitting your email|we use cookies)\b/i;
+var BLOCK='p,h2,h3,h4,ul,ol,blockquote,pre,figure,img';
+
+function txt(node){return node?(node.textContent||'').replace(/\s+/g,' ').trim():''}
+function absolute(url,base){if(!url)return'';try{return new URL(url,base).href}catch(e){return''}}
+function fromSrcset(set,base){
+  var best='',bestW=0;
+  String(set).split(',').forEach(function(part){
+    var bits=part.trim().split(/\s+/);
+    if(!bits[0])return;
+    var w=parseInt((bits[1]||'').replace(/[^\d]/g,''),10)||0;
+    if(w>=bestW){bestW=w;best=bits[0]}
+  });
+  return absolute(best,base);
+}
+function imgSrc(node,base){
+  return fromSrcset(node.getAttribute('srcset')||node.getAttribute('data-srcset')||'',base)
+      || absolute(node.getAttribute('src')||node.getAttribute('data-src')||node.getAttribute('data-lazy-src')||'',base);
+}
+function metaOf(doc,names){
+  for(var i=0;i<names.length;i++){
+    var e=doc.querySelector('meta[property="'+names[i]+'"], meta[name="'+names[i]+'"]');
+    var v=e&&(e.getAttribute('content')||'').trim();
+    if(v)return v;
+  }
+  return'';
+}
+/* schema.org JSON-LD is where a modern news site actually keeps its metadata —
+   the BBC's byline exists ONLY there, not in any meta tag or class name. Sites
+   wrap it in an array, or in an @graph, or both. */
+function jsonLd(doc){
+  var found=null;
+  doc.querySelectorAll('script[type="application/ld+json"]').forEach(function(node){
+    if(found)return;
+    var data;
+    try{data=JSON.parse(node.textContent||'')}catch(e){return}
+    var queue=[data];
+    while(queue.length&&!found){
+      var d=queue.shift();
+      if(Array.isArray(d)){queue=queue.concat(d);continue}
+      if(!d||typeof d!=='object')continue;
+      if(d['@graph'])queue=queue.concat(d['@graph']);
+      var t=[].concat(d['@type']||[]).join(' ');
+      if(/Article|BlogPosting|Report|NewsStory/i.test(t))found=d;
+    }
+  });
+  return found||{};
+}
+/* An author is a string, an object with a name, or an array of either. */
+function ldAuthor(ld){
+  var a=ld.author||ld.creator;
+  if(!a)return'';
+  a=[].concat(a)[0];
+  if(typeof a==='string')return a.trim();
+  return (a&&a.name?String(a.name):'').trim();
+}
+
+/* Bylines arrive as a name, a URL, an @handle or a whole social profile —
+   only the first of those is worth putting under a headline. */
+function byline(doc,ld){
+  var cands=[ldAuthor(ld||{}),
+             metaOf(doc,['author','article:author','parsely-author']),
+             txt(doc.querySelector('[rel="author"]')),
+             txt(doc.querySelector('[itemprop="author"] [itemprop="name"], [itemprop="author"]')),
+             txt(doc.querySelector('.byline, .author-name, [class*="byline" i]'))];
+  for(var i=0;i<cands.length;i++){
+    var c=(cands[i]||'').trim().replace(/^(by|words by)\s+/i,'');
+    if(!c||c.length>60)continue;
+    if(/^https?:\/\//i.test(c)||c.indexOf('@')===0)continue;
+    return c;
+  }
+  return'';
+}
+
+function qualifies(p){
+  var t=txt(p);
+  if(t.length<25)return 0;
+  var links=0;
+  p.querySelectorAll('a').forEach(function(a){links+=txt(a).length});
+  if(t.length&&links/t.length>0.5)return 0;      /* a link list, not a paragraph */
+  return t.length;
+}
+function proseIn(node){
+  var n=0;
+  node.querySelectorAll('p,blockquote,pre').forEach(function(p){n+=qualifies(p)});
+  return n;
+}
+
+/* Picking the article body.
+   Readability credits a paragraph's parent and grandparent. That fails badly on
+   a modern news site: the BBC wraps every THREE paragraphs in their own
+   container six levels below <article>, so the real root is credited by nothing
+   and each little wrapper wins on its own three.
+   So score by PROSE PURITY instead — how much of what an element contains is
+   actual paragraph text — which is scale-free and picks the same node whether
+   the prose sits one level down or eight. <body> loses because it also carries
+   the nav, the footer and the related-stories rail. */
+function pickRoot(doc){
+  /* Code is not text a reader sees, but it IS textContent: The Independent
+     interleaves ad-injection scripts with its paragraphs, which made every
+     candidate look mostly furniture and left no root at all. Metadata
+     (JSON-LD, meta tags) has already been read by now. */
+  doc.querySelectorAll('script,style,noscript,template').forEach(function(n){n.remove()});
+  var prose=new Map();
+  doc.querySelectorAll('p,blockquote,pre').forEach(function(p){
+    var n=qualifies(p);
+    if(!n)return;
+    var node=p.parentElement,depth=0;
+    while(node&&node.tagName!=='HTML'&&depth<12){
+      prose.set(node,(prose.get(node)||0)+n);
+      node=node.parentElement;depth++;
+    }
+  });
+  var best=null,bestScore=0;
+  prose.forEach(function(len,node){
+    if(len<200)return;
+    var all=txt(node).length;
+    var s=len-(all-len)*0.5;                     /* non-prose is furniture it dragged in */
+    var tag=node.tagName.toLowerCase();
+    if(tag==='article'||node.getAttribute('itemprop')==='articleBody')s*=1.15;
+    else if(tag==='main')s*=1.05;
+    else if(tag==='body')s*=0.9;
+    if(s>bestScore){bestScore=s;best=node}
+  });
+  return best;
+}
+
+function scrub(root){
+  root.querySelectorAll('script,style,noscript,iframe,svg,form,button,input,select,textarea,nav,aside,footer,header,video,audio,object,embed').forEach(function(n){n.remove()});
+  root.querySelectorAll('[aria-hidden="true"],[hidden],[role="navigation"],[role="banner"],[role="complementary"],[role="contentinfo"]').forEach(function(n){n.remove()});
+  /* A junk-named block goes — unless it holds a serious share of the prose, in
+     which case the name is a coincidence and it IS the article. Guarding on
+     "contains no <p>" instead (the obvious version) keeps every native ad and
+     newsletter box on the page, because those are made of paragraphs too.
+     NB: no isConnected check — scrub runs on a DETACHED clone, where
+     isConnected is false for every node, so it would remove nothing at all. */
+  var budget=proseIn(root)*0.25;
+  root.querySelectorAll('*').forEach(function(n){
+    var id=((n.getAttribute('id')||'')+' '+(n.getAttribute('class')||'')).trim();
+    if(!id||!JUNK.test(id))return;
+    if(proseIn(n)>=budget)return;
+    n.remove();
+  });
+}
+
+function extractArticle(html,base){
+  var doc=new DOMParser().parseFromString(html,'text/html');
+  var canonical=doc.querySelector('link[rel="canonical"]');
+  var ld=jsonLd(doc);
+  var info={
+    title:metaOf(doc,['og:title','twitter:title'])||(ld.headline||'').trim()||txt(doc.querySelector('h1'))||(doc.title||'').trim(),
+    site:metaOf(doc,['og:site_name'])||host(base),
+    author:byline(doc,ld),
+    published:metaOf(doc,['article:published_time','datePublished','og:published_time'])
+      ||(typeof ld.datePublished==='string'?ld.datePublished:'')
+      ||(doc.querySelector('time[datetime]')&&doc.querySelector('time[datetime]').getAttribute('datetime'))||'',
+    lead:metaOf(doc,['og:image','twitter:image']),
+    url:(canonical&&canonical.getAttribute('href'))||base,
+    blocks:[]
+  };
+  if(info.lead)info.lead=absolute(info.lead,base);
+
+  var root=pickRoot(doc);
+  if(!root)return info;
+  root=root.cloneNode(true);
+  scrub(root);
+
+  var seen={},out=[];
+  root.querySelectorAll(BLOCK).forEach(function(node){
+    /* Only the outermost of a nest — a <p> inside a <figure> is the caption. */
+    if(node.tagName!=='FIGURE'&&node.closest&&node.closest('figure'))return;
+    var tag=node.tagName.toLowerCase();
+    if(tag==='img'){
+      var s=imgSrc(node,base);
+      if(s&&!seen['i'+s]){seen['i'+s]=1;out.push({t:'img',src:s,cap:(node.getAttribute('alt')||'').trim()})}
+      return;
+    }
+    if(tag==='figure'){
+      var im=node.querySelector('img'),s2=im&&imgSrc(im,base),cap=txt(node.querySelector('figcaption'));
+      if(s2&&!seen['i'+s2]){seen['i'+s2]=1;out.push({t:'img',src:s2,cap:cap})}
+      return;
+    }
+    if(tag==='ul'||tag==='ol'){
+      var items=[];
+      node.querySelectorAll(':scope > li').forEach(function(li){var t=txt(li);if(t)items.push(t)});
+      if(items.length)out.push({t:'list',items:items,ordered:tag==='ol'});
+      return;
+    }
+    var t=txt(node);
+    if(!t||t.length<2)return;
+    if(BOILER.test(t))return;
+    if(seen['t'+t])return;
+    seen['t'+t]=1;
+    if(tag==='p'||tag==='pre'){
+      if(t.length<25&&node.querySelectorAll('a').length)return;   /* a short link is furniture */
+      out.push({t:tag==='pre'?'pre':'p',text:t});
+    }else if(tag==='blockquote'){
+      out.push({t:'quote',text:t});
+    }else{
+      out.push({t:'h',text:t});
+    }
+  });
+  while(out.length&&out[out.length-1].t==='h')out.pop();   /* a trailing heading heads nothing */
+  info.blocks=out;
+  return info;
+}
 
 // ===================== Region & perspective =====================
 // Regions swap the sources behind the news-core topics (Top, the local tab,

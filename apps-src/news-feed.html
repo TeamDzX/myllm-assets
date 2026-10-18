@@ -514,6 +514,11 @@ function proseIn(node){
    the prose sits one level down or eight. <body> loses because it also carries
    the nav, the footer and the related-stories rail. */
 function pickRoot(doc){
+  /* Code is not text a reader sees, but it IS textContent: The Independent
+     interleaves ad-injection scripts with its paragraphs, which made every
+     candidate look mostly furniture and left no root at all. Metadata
+     (JSON-LD, meta tags) has already been read by now. */
+  doc.querySelectorAll('script,style,noscript,template').forEach(function(n){n.remove()});
   var prose=new Map();
   doc.querySelectorAll('p,blockquote,pre').forEach(function(p){
     var n=qualifies(p);
