@@ -45,7 +45,7 @@ await writeFile(stub, `(() => {
     return new Promise(r => setTimeout(() => {
       if (u.endsWith('/channels.json')) return r({ ok: true, status: 200, headers: {}, body: CH });
       if (R[u]) return r({ ok: true, status: 200, headers: {}, body: R[u] });
-      if (/motorsport\\.com|autosport\\.com|refuser\\.test/.test(u)) return r({ ok: false, status: 403, headers: {}, body: '' });
+      if (/refuser\\.test/.test(u)) return r({ ok: false, status: 403, headers: {}, body: '' });
       return r({ ok: false, status: 404, headers: {}, body: '' });
     }, 15));
   };
@@ -129,8 +129,10 @@ await check('the full body is not written into saved storage', async () => {
 });
 await page.locator('#rBack').click(); await page.waitForTimeout(150);
 
-await check('Motorsport.com stories still open on the site (they refuse apps)', async () =>
-  (await tapLeftAlone('When can Mercedes')) === true && !(await readerOn()) || 'reader took the tap');
+// Motorsport.com is no longer special-cased: Apple's stack gets its pages (18 Oct).
+await check('a Motorsport.com story opens in the reader like any other', async () =>
+  (await tapLeftAlone('When can Mercedes')) === false || 'the tap was left to the browser');
+await page.locator('#rBack').click(); await page.waitForTimeout(150);
 
 await page.locator('a.news', { hasText: 'A new outlet' }).click(); await page.waitForTimeout(400);
 await check('an unknown outlet that refuses gets a plain note and the link', async () => {

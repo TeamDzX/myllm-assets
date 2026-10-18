@@ -1437,18 +1437,18 @@ function go(tab){
    non-browser gets a plain note instead of a failure.
    ============================================================ */
 var FULL = {}, artCache = {}, readSize = 17, readSizeLoaded = false, current = null;
-/* Motorsport.com and Autosport (17 of the 20 feeds) answer an app with 403 and
-   only serve a browser. Their stories open on the site as before rather than
-   in a reader that could only say no; any other outlet that refuses is
-   learned the first time and treated the same from then on. */
-var REFUSES = {'motorsport.com': 1, 'autosport.com': 1};
+/* An outlet that refuses apps (401/403) is learned the first time: the reader
+   shows a note and the link, and later taps go straight to the site.
+   Motorsport.com and Autosport 403 a Node or curl client, but serve the
+   article to Apple's networking stack with MyLLM's own user agent (checked
+   18 Oct), so nothing is listed up front and no browser user agent is sent. */
+var REFUSES = {};
 function refuses(u){ return !!REFUSES[host(u)]; }
 function learnRefusal(u){
   var h = host(u);
   if(!h || REFUSES[h]) return;
   REFUSES[h] = 1;
-  var learned = Object.keys(REFUSES).filter(function(k){ return k !== 'motorsport.com' && k !== 'autosport.com'; });
-  save('refuses', learned);
+  save('refuses', Object.keys(REFUSES));
 }
 function host(u){ try{ return new URL(u).hostname.replace(/^www\./, ''); }catch(e){ return ''; } }
 read('refuses').then(function(l){ (l || []).forEach(function(h){ REFUSES[h] = 1; }); });
@@ -1593,7 +1593,7 @@ function openLink(item){
    The readability core, small enough to inline — a gallery app is one
    self-contained file, so there is no library to reach for. */
 
-var JUNK=/(^|[\s_-])(nav|menu|banner|promo|advert|ads?|sponsor|share|social|comment|related|recirc|newsletter|subscribe|signup|sign-up|cookie|consent|sidebar|breadcrumb|most-read|trending|footer|header|masthead|tags?|meta-nav|skip)([\s_-]|$)/i;
+var JUNK=/(^|[\s_-])(nav|menu|banner|promo|advert|ads?|sponsor|share|social|comment|related|recirc|newsletter|subscribe|signup|sign-up|cookie|consent|sidebar|breadcrumb|most-read|trending|footer|header|masthead|tags?|meta-nav|skip|bookmark|modal|popover)([\s_-]|$)/i;
 var BOILER=/^(sign up|subscribe|follow (us|bbc)|share this|read more|advertisement|related (stories|articles)|most read|this article|copyright|all rights reserved|getty images|image source|image caption|posts from this (topic|author)|are you personally affected|a free daily digest|by submitting your email|we use cookies)\b/i;
 var BLOCK='p,h2,h3,h4,ul,ol,blockquote,pre,figure,img';
 
