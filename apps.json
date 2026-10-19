@@ -17,6 +17,85 @@
   ],
   "apps": [
     {
+      "id": "welcome-to-myllmos",
+      "name": "Welcome to MyLLMos",
+      "emoji": "👋",
+      "tagline": "Build apps by chatting",
+      "description": "New here? A three-minute swipe-through of everything MyLLM can do: describe an app in chat, watch MyLLM build it live, tap it to run it, save it to your springboard — and it's yours forever. Then the wider tour: the 80+ app gallery with a scrolling wall of real gallery art, tools, Skills and MCP servers, on-demand images and video, voice, memory, documents and routines, a guide to running your own LLM on your own hardware — and why there's no account, no cloud and no subscription. Ends with ready-to-try prompts so your first app is one message away.",
+      "tags": [
+        "welcome",
+        "getting started",
+        "tutorial",
+        "showcase",
+        "offline"
+      ],
+      "iconSymbol": "hand.wave.fill",
+      "iconColor": "mint",
+      "version": 13,
+      "featured": true,
+      "requiresAI": false,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/welcome-to-myllmos.jpg",
+      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@185eb9943cb9a38061c25158dbf1f91df71b5a54/apps-src/welcome-to-myllmos.html?v=9",
+      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@185eb9943cb9a38061c25158dbf1f91df71b5a54/apps-src/welcome-to-myllmos.myllmapp?v=9",
+      "sizeKB": 1244,
+      "category": "Utilities"
+    },
+    {
+      "id": "reflect",
+      "name": "Reflect",
+      "emoji": "🌅",
+      "tagline": "Your private AI journal",
+      "description": "A journal that stays yours: write a line a day, log your mood, and watch a month of feeling take shape — nothing ever leaves your device. Your own AI reads your week and reflects back what it notices: a pattern, something to celebrate, one gentle suggestion. Daily writing prompts (or ask the AI for one made just for you), streaks, search, and \"on this day\" memories. Journaling, moods and insights all work fully offline; the AI reflection needs \"Allow apps to use the AI\" in Settings.",
+      "tags": [
+        "journal",
+        "AI-powered",
+        "offline",
+        "wellbeing"
+      ],
+      "iconSymbol": "book.closed.fill",
+      "iconColor": "teal",
+      "version": 3,
+      "featured": true,
+      "requiresAI": false,
+      "aiUses": [
+        "ask"
+      ],
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/reflect.jpg",
+      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@a9ed7322f0258b39515e53c4e390f2bdc3165daf/apps-src/reflect.html",
+      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@a9ed7322f0258b39515e53c4e390f2bdc3165daf/apps-src/reflect.myllmapp",
+      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/reflect.jpg",
+      "sizeKB": 48,
+      "category": "Health & Wellbeing"
+    },
+    {
+      "id": "everquill",
+      "name": "Everquill",
+      "emoji": "🪶",
+      "tagline": "Endless AI adventure",
+      "description": "Your own AI is the storyteller. Choose a world — high fantasy, deep space, gaslight mystery or the high seas — name your hero, and the quill writes an adventure that has never been told before, one scene at a time. Pick a path or type anything; track your health and inventory; survive to the end and share the finished tale. If your server can paint, tap the brush to illustrate any scene. Requires \"Allow apps to use the AI\" in Settings — every word is written privately, on your device.",
+      "tags": [
+        "game",
+        "AI-powered",
+        "adventure",
+        "story"
+      ],
+      "iconSymbol": "wand.and.stars",
+      "iconColor": "purple",
+      "version": 7,
+      "featured": true,
+      "requiresAI": true,
+      "aiUses": [
+        "ask",
+        "image"
+      ],
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/everquill.jpg",
+      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@a717a477f0251b3c7c13b0bf6b537d66187c0db8/apps-src/everquill.html",
+      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@a717a477f0251b3c7c13b0bf6b537d66187c0db8/apps-src/everquill.myllmapp",
+      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/everquill.jpg",
+      "sizeKB": 394,
+      "category": "Games"
+    },
+    {
       "id": "password-generator",
       "name": "Password Generator",
       "emoji": "🔑",
@@ -303,80 +382,6 @@
       "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/substack-reader.jpg"
     },
     {
-      "id": "speed-check",
-      "name": "Speed Check",
-      "emoji": "⚡",
-      "tagline": "How fast is this connection?",
-      "description": "A clean internet speed test. Tap Start and watch the dial: it measures ping and jitter, then download and upload using several parallel streams that size themselves to your connection, so slow and fast links both get a fair reading in about fifteen seconds. Results are translated into plain English — whether this connection will cope with 4K streaming, video calls, gaming or a whole household at once — alongside your public IP, country and the Cloudflare edge you were tested against. Every run is kept in an on-device history so you can compare Wi-Fi with mobile, or the kitchen with the back bedroom, and share a result as text. Tests run against Cloudflare's public speed-test service through MyLLM's network bridge; nothing but test data is sent. A full test moves up to about 160 MB, so bear that in mind on a metered plan.",
-      "tags": [
-        "network",
-        "wifi",
-        "utility",
-        "saves data"
-      ],
-      "category": "Utilities",
-      "iconSymbol": "gauge.with.dots.needle.67percent",
-      "iconColor": "orange",
-      "version": 6,
-      "featured": true,
-      "requiresAI": false,
-      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/speed-check.jpg",
-      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@a9ed7322f0258b39515e53c4e390f2bdc3165daf/apps-src/speed-check.html",
-      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@a9ed7322f0258b39515e53c4e390f2bdc3165daf/apps-src/speed-check.myllmapp",
-      "sizeKB": 28,
-      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/speed-check.jpg"
-    },
-    {
-      "id": "workbench",
-      "name": "Workbench",
-      "emoji": "🧰",
-      "tagline": "Write, open and convert documents",
-      "description": "A word processor for your shared workspace. Start a blank page, a document, meeting notes, a checklist, a table, JSON or a web page, and it is created in your workspace straight away so nothing is lost before the first save. Open anything already there from inside the app, or hand it a file from the Files app: Markdown renders as formatted text with tables and task boxes, CSV as a real table, JSON pretty-printed, logs and plain text as they are. Edit with a formatting toolbar, set the typeface, size, spacing and column width to taste, then Save. Save a copy converts as it writes - Markdown to a standalone web page, a table to JSON, JSON back to CSV - and Export sends a copy out through the share sheet. Ask MyLLM hands the document to the assistant by path, so it reads the file itself rather than having it pasted into the chat. Everything stays on your device.",
-      "category": "Productivity",
-      "iconSymbol": "wrench.and.screwdriver",
-      "iconColor": "indigo",
-      "version": 6,
-      "featured": true,
-      "requiresAI": false,
-      "aiUses": [
-        "ask"
-      ],
-      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@a9ed7322f0258b39515e53c4e390f2bdc3165daf/apps-src/workbench.html",
-      "tags": [
-        "files",
-        "writing",
-        "documents",
-        "utility",
-        "saves data"
-      ],
-      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/workbench.jpg"
-    },
-    {
-      "id": "channels",
-      "name": "Channels",
-      "emoji": "📺",
-      "tagline": "Your creators, played here",
-      "description": "Follow the video channels you actually watch and see what's new in one place — no account, no sign-in, nothing tracking what you watch. Paste a channel's address or @handle, or start from a few suggestions. Videos play right here in MyLLM in the official player, so you don't lose your place; there's a link out whenever you want the full site. It also takes the feed address of any other video site or video podcast, so everything you follow lives in one list. Needs internet access for apps.",
-      "tags": [
-        "video",
-        "channels",
-        "reader",
-        "network",
-        "saves data"
-      ],
-      "category": "News & Web",
-      "iconSymbol": "play.square.stack.fill",
-      "iconColor": "indigo",
-      "version": 6,
-      "featured": true,
-      "requiresAI": false,
-      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/channels.jpg",
-      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/channels.jpg",
-      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@c783bdf71e81b8bffefe1dcd4315b08e6e4a7d74/apps-src/channels.html",
-      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@c783bdf71e81b8bffefe1dcd4315b08e6e4a7d74/apps-src/channels.myllmapp",
-      "sizeKB": 26
-    },
-    {
       "id": "follow",
       "name": "Follow",
       "emoji": "📡",
@@ -430,28 +435,28 @@
       "category": "Health & Wellbeing"
     },
     {
-      "id": "currency",
-      "name": "Currency",
-      "emoji": "💱",
-      "tagline": "Live exchange rates, simply",
-      "description": "A currency converter that stays out of your way. Type an amount, pick the two currencies from a searchable list of 160 with flags, and the answer is there, with the rate in both directions and when it was last updated. Swap with one tap, jump to common amounts, and star the currencies you use so the same amount shows in all of them at once. Rates are mid-market, refreshed daily from a public exchange-rate feed through MyLLM's network bridge, with the European Central Bank as a fallback; the latest rates are kept on this device so it works offline and tells you how old they are. Share a conversion as text. Indicative only — your bank or card applies its own spread.",
+      "id": "speed-check",
+      "name": "Speed Check",
+      "emoji": "⚡",
+      "tagline": "How fast is this connection?",
+      "description": "A clean internet speed test. Tap Start and watch the dial: it measures ping and jitter, then download and upload using several parallel streams that size themselves to your connection, so slow and fast links both get a fair reading in about fifteen seconds. Results are translated into plain English — whether this connection will cope with 4K streaming, video calls, gaming or a whole household at once — alongside your public IP, country and the Cloudflare edge you were tested against. Every run is kept in an on-device history so you can compare Wi-Fi with mobile, or the kitchen with the back bedroom, and share a result as text. Tests run against Cloudflare's public speed-test service through MyLLM's network bridge; nothing but test data is sent. A full test moves up to about 160 MB, so bear that in mind on a metered plan.",
       "tags": [
+        "network",
+        "wifi",
         "utility",
-        "money",
-        "travel",
         "saves data"
       ],
       "category": "Utilities",
-      "iconSymbol": "dollarsign.arrow.circlepath",
-      "iconColor": "mint",
+      "iconSymbol": "gauge.with.dots.needle.67percent",
+      "iconColor": "orange",
       "version": 6,
       "featured": true,
       "requiresAI": false,
-      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/currency.jpg",
-      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@a9ed7322f0258b39515e53c4e390f2bdc3165daf/apps-src/currency.html",
-      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@a9ed7322f0258b39515e53c4e390f2bdc3165daf/apps-src/currency.myllmapp",
-      "sizeKB": 27,
-      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/currency.jpg"
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/speed-check.jpg",
+      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@a9ed7322f0258b39515e53c4e390f2bdc3165daf/apps-src/speed-check.html",
+      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@a9ed7322f0258b39515e53c4e390f2bdc3165daf/apps-src/speed-check.myllmapp",
+      "sizeKB": 28,
+      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/speed-check.jpg"
     },
     {
       "id": "bin",
@@ -478,32 +483,29 @@
       "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/bin.jpg"
     },
     {
-      "id": "stocks",
-      "name": "Stocks",
-      "emoji": "📈",
-      "tagline": "Your watchlist, at a glance",
-      "description": "A clean stock watchlist. Search any company or ticker on the world's exchanges — London shares in pence, US in dollars, indexes too — and each one shows its price, today's move and a sparkline. Tap a stock for a proper chart over a day, a week, a month, six months or a year, with previous close, day and 52-week ranges, volume and exchange. Enter how many shares you hold and the app shows what the position is worth and how much it moved today, with totals per currency across your list. Ask the AI for a plain-English read of any stock's numbers — today's move against its ranges and the recent trend, from those figures alone, no news — or a one-tap digest of the whole list. Prices come from Yahoo Finance's public feed through MyLLM's network bridge and can be delayed by up to fifteen minutes; the last quotes are kept on this device. Not financial advice.",
-      "tags": [
-        "utility",
-        "money",
-        "stocks",
-        "charts",
-        "saves data"
-      ],
-      "category": "Utilities",
-      "iconSymbol": "chart.line.uptrend.xyaxis",
-      "iconColor": "green",
-      "version": 7,
+      "id": "workbench",
+      "name": "Workbench",
+      "emoji": "🧰",
+      "tagline": "Write, open and convert documents",
+      "description": "A word processor for your shared workspace. Start a blank page, a document, meeting notes, a checklist, a table, JSON or a web page, and it is created in your workspace straight away so nothing is lost before the first save. Open anything already there from inside the app, or hand it a file from the Files app: Markdown renders as formatted text with tables and task boxes, CSV as a real table, JSON pretty-printed, logs and plain text as they are. Edit with a formatting toolbar, set the typeface, size, spacing and column width to taste, then Save. Save a copy converts as it writes - Markdown to a standalone web page, a table to JSON, JSON back to CSV - and Export sends a copy out through the share sheet. Ask MyLLM hands the document to the assistant by path, so it reads the file itself rather than having it pasted into the chat. Everything stays on your device.",
+      "category": "Productivity",
+      "iconSymbol": "wrench.and.screwdriver",
+      "iconColor": "indigo",
+      "version": 6,
       "featured": true,
       "requiresAI": false,
       "aiUses": [
         "ask"
       ],
-      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/stocks.jpg",
-      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@a9ed7322f0258b39515e53c4e390f2bdc3165daf/apps-src/stocks.html",
-      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@a9ed7322f0258b39515e53c4e390f2bdc3165daf/apps-src/stocks.myllmapp",
-      "sizeKB": 37,
-      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/stocks.jpg"
+      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@a9ed7322f0258b39515e53c4e390f2bdc3165daf/apps-src/workbench.html",
+      "tags": [
+        "files",
+        "writing",
+        "documents",
+        "utility",
+        "saves data"
+      ],
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/workbench.jpg"
     },
     {
       "id": "nutrition-lens",
@@ -538,83 +540,81 @@
       "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/nutrition-lens.jpg"
     },
     {
-      "id": "welcome-to-myllmos",
-      "name": "Welcome to MyLLMos",
-      "emoji": "👋",
-      "tagline": "Build apps by chatting",
-      "description": "New here? A three-minute swipe-through of everything MyLLM can do: describe an app in chat, watch MyLLM build it live, tap it to run it, save it to your springboard — and it's yours forever. Then the wider tour: the 80+ app gallery with a scrolling wall of real gallery art, tools, Skills and MCP servers, on-demand images and video, voice, memory, documents and routines, a guide to running your own LLM on your own hardware — and why there's no account, no cloud and no subscription. Ends with ready-to-try prompts so your first app is one message away.",
+      "id": "channels",
+      "name": "Channels",
+      "emoji": "📺",
+      "tagline": "Your creators, played here",
+      "description": "Follow the video channels you actually watch and see what's new in one place — no account, no sign-in, nothing tracking what you watch. Paste a channel's address or @handle, or start from a few suggestions. Videos play right here in MyLLM in the official player, so you don't lose your place; there's a link out whenever you want the full site. It also takes the feed address of any other video site or video podcast, so everything you follow lives in one list. Needs internet access for apps.",
       "tags": [
-        "welcome",
-        "getting started",
-        "tutorial",
-        "showcase",
-        "offline"
+        "video",
+        "channels",
+        "reader",
+        "network",
+        "saves data"
       ],
-      "iconSymbol": "hand.wave.fill",
-      "iconColor": "mint",
-      "version": 13,
+      "category": "News & Web",
+      "iconSymbol": "play.square.stack.fill",
+      "iconColor": "indigo",
+      "version": 6,
       "featured": true,
       "requiresAI": false,
-      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/welcome-to-myllmos.jpg",
-      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@185eb9943cb9a38061c25158dbf1f91df71b5a54/apps-src/welcome-to-myllmos.html?v=9",
-      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@185eb9943cb9a38061c25158dbf1f91df71b5a54/apps-src/welcome-to-myllmos.myllmapp?v=9",
-      "sizeKB": 1244,
-      "category": "Utilities"
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/channels.jpg",
+      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/channels.jpg",
+      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@c783bdf71e81b8bffefe1dcd4315b08e6e4a7d74/apps-src/channels.html",
+      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@c783bdf71e81b8bffefe1dcd4315b08e6e4a7d74/apps-src/channels.myllmapp",
+      "sizeKB": 26
     },
     {
-      "id": "reflect",
-      "name": "Reflect",
-      "emoji": "🌅",
-      "tagline": "Your private AI journal",
-      "description": "A journal that stays yours: write a line a day, log your mood, and watch a month of feeling take shape — nothing ever leaves your device. Your own AI reads your week and reflects back what it notices: a pattern, something to celebrate, one gentle suggestion. Daily writing prompts (or ask the AI for one made just for you), streaks, search, and \"on this day\" memories. Journaling, moods and insights all work fully offline; the AI reflection needs \"Allow apps to use the AI\" in Settings.",
+      "id": "currency",
+      "name": "Currency",
+      "emoji": "💱",
+      "tagline": "Live exchange rates, simply",
+      "description": "A currency converter that stays out of your way. Type an amount, pick the two currencies from a searchable list of 160 with flags, and the answer is there, with the rate in both directions and when it was last updated. Swap with one tap, jump to common amounts, and star the currencies you use so the same amount shows in all of them at once. Rates are mid-market, refreshed daily from a public exchange-rate feed through MyLLM's network bridge, with the European Central Bank as a fallback; the latest rates are kept on this device so it works offline and tells you how old they are. Share a conversion as text. Indicative only — your bank or card applies its own spread.",
       "tags": [
-        "journal",
-        "AI-powered",
-        "offline",
-        "wellbeing"
+        "utility",
+        "money",
+        "travel",
+        "saves data"
       ],
-      "iconSymbol": "book.closed.fill",
-      "iconColor": "teal",
-      "version": 3,
+      "category": "Utilities",
+      "iconSymbol": "dollarsign.arrow.circlepath",
+      "iconColor": "mint",
+      "version": 6,
+      "featured": true,
+      "requiresAI": false,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/currency.jpg",
+      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@a9ed7322f0258b39515e53c4e390f2bdc3165daf/apps-src/currency.html",
+      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@a9ed7322f0258b39515e53c4e390f2bdc3165daf/apps-src/currency.myllmapp",
+      "sizeKB": 27,
+      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/currency.jpg"
+    },
+    {
+      "id": "stocks",
+      "name": "Stocks",
+      "emoji": "📈",
+      "tagline": "Your watchlist, at a glance",
+      "description": "A clean stock watchlist. Search any company or ticker on the world's exchanges — London shares in pence, US in dollars, indexes too — and each one shows its price, today's move and a sparkline. Tap a stock for a proper chart over a day, a week, a month, six months or a year, with previous close, day and 52-week ranges, volume and exchange. Enter how many shares you hold and the app shows what the position is worth and how much it moved today, with totals per currency across your list. Ask the AI for a plain-English read of any stock's numbers — today's move against its ranges and the recent trend, from those figures alone, no news — or a one-tap digest of the whole list. Prices come from Yahoo Finance's public feed through MyLLM's network bridge and can be delayed by up to fifteen minutes; the last quotes are kept on this device. Not financial advice.",
+      "tags": [
+        "utility",
+        "money",
+        "stocks",
+        "charts",
+        "saves data"
+      ],
+      "category": "Utilities",
+      "iconSymbol": "chart.line.uptrend.xyaxis",
+      "iconColor": "green",
+      "version": 7,
       "featured": true,
       "requiresAI": false,
       "aiUses": [
         "ask"
       ],
-      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/reflect.jpg",
-      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@a9ed7322f0258b39515e53c4e390f2bdc3165daf/apps-src/reflect.html",
-      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@a9ed7322f0258b39515e53c4e390f2bdc3165daf/apps-src/reflect.myllmapp",
-      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/reflect.jpg",
-      "sizeKB": 48,
-      "category": "Health & Wellbeing"
-    },
-    {
-      "id": "everquill",
-      "name": "Everquill",
-      "emoji": "🪶",
-      "tagline": "Endless AI adventure",
-      "description": "Your own AI is the storyteller. Choose a world — high fantasy, deep space, gaslight mystery or the high seas — name your hero, and the quill writes an adventure that has never been told before, one scene at a time. Pick a path or type anything; track your health and inventory; survive to the end and share the finished tale. If your server can paint, tap the brush to illustrate any scene. Requires \"Allow apps to use the AI\" in Settings — every word is written privately, on your device.",
-      "tags": [
-        "game",
-        "AI-powered",
-        "adventure",
-        "story"
-      ],
-      "iconSymbol": "wand.and.stars",
-      "iconColor": "purple",
-      "version": 7,
-      "featured": true,
-      "requiresAI": true,
-      "aiUses": [
-        "ask",
-        "image"
-      ],
-      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/everquill.jpg",
-      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@a717a477f0251b3c7c13b0bf6b537d66187c0db8/apps-src/everquill.html",
-      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@a717a477f0251b3c7c13b0bf6b537d66187c0db8/apps-src/everquill.myllmapp",
-      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/everquill.jpg",
-      "sizeKB": 394,
-      "category": "Games"
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/stocks.jpg",
+      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@a9ed7322f0258b39515e53c4e390f2bdc3165daf/apps-src/stocks.html",
+      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@a9ed7322f0258b39515e53c4e390f2bdc3165daf/apps-src/stocks.myllmapp",
+      "sizeKB": 37,
+      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/stocks.jpg"
     },
     {
       "id": "space-range",
