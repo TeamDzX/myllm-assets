@@ -27,8 +27,8 @@ Community apps belong to their authors ([GALLERY-TERMS.md](GALLERY-TERMS.md)),
 and bundled open-source libraries keep their own licences
 ([THIRD-PARTY.md](THIRD-PARTY.md)).
 
-Every app file carries a header stating this and a `--build-id` identifying it.
-`stamp_apps.py` applies both; it is idempotent, so run it after any rebuild.
+Every app file carries a header stating this, and marks that identify it as ours.
+Maintainers apply them before an app is published.
 
 "MyLLM", "MyLLMos" and "Opticell" are unregistered trade marks of Opticell Ltd;
 [BRAND.md](BRAND.md) records their first and continuous use, with dated sources.

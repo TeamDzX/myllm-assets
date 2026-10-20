@@ -377,10 +377,10 @@ jsDelivr refuses a GitHub package over **50 MB**: past that, every new commit of
 2. Generate `apps-src/<slug>.myllmapp` (`{name,kind:"html",iconSymbol,iconColor,html}`).
 3. Generate `apps/<slug>.jpg` (800×400, no text) and `apps/icons/<slug>.jpg` **in myllm-assets-xl**; push them there first.
 4. Add the `apps.json` entry (surgical edit, valid category, good `description`/`tags`).
-5. `python3 stamp_apps.py --apply apps-src/<slug>.html` — adds the licence header
-   and the app's `--build-id`, and rewrites the payload to match. Needs the
-   `apps.json` entry to exist first, hence the order. Idempotent, so run it again
-   after any rebuild (`build_*.py` emits an unstamped file).
+5. Stamp it: maintainers run the stamping step from the private gallery tools,
+   which adds the licence header and the app's identifying marks and rewrites the
+   payload to match. Needs the `apps.json` entry to exist first, hence the order.
+   Idempotent, so run it again after any rebuild (generated apps come out unstamped).
 6. `python3 -c "import json;json.load(open('apps.json'))"` to validate.
 7. Stage the **named** files (never `-A`), commit, `git push origin main`.
 8. Verify live: `curl -sI <raw html url>` → `200`; pull-to-refresh the gallery.

@@ -67,29 +67,11 @@ both load-bearing:
 
 ## Per-app harnesses
 
-`verify_app.mjs` answers *"does it boot and stay in the sandbox"*. Some apps have
-a behaviour worth pinning that the sweep structurally cannot reach, and those get
-a file of their own:
-
-```bash
-node speedometer_gps.mjs        # GPS reconnect + feedback, both bridge generations
-node mochi_walk_rig.mjs         # walk accessories ride the head instead of floating
-```
-
-**`speedometer_gps.mjs`** drives the app on a *fake clock* (`page.clock`) against
-a `myllmLocation` you can break on purpose — hang the promise, replay a cached
-fix, reject the permission, resolve `watch()` and then deliver nothing. That is
-how you ask "what does this look like 18 seconds into a tunnel", which no
-boot-and-poke sweep can. Both suites run: polling (MyLLM ≤ 4.5.5, no `watch()`)
-and live watch (≥ 4.5.6, plus its fallback). Exit `0`/`1` like the sweep.
-
-**`mochi_walk_rig.mjs`** actually walks her, then watches the accessories frame
-by frame. The regression it pins is a *constant* transform: accessories used to
-be rigidly parented to the walker box, so a hat never moved while Mochi's head
-travelled 32px inside her own sprite. If that assertion ever reads "1 distinct
-transform" again, the float is back. It also checks the sprite-sheet maths
-(ping-pong indexing, the `/(cols-1)` background-position step) and that a walk
-releases the 2400×2400 sheet on the way out.
+`verify_app.mjs` answers *"does it boot and stay in the sandbox"*. Apps with a
+behaviour worth pinning that the sweep can't reach (the GPS reconnect, the news
+reader's extractor, Shell's pipelines and so on) have rigs of their own. Those
+live in the maintainers' private gallery tools, beside a clone of this repo, and
+read the apps from here.
 
 ## Fidelity limits
 
