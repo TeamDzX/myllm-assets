@@ -6,7 +6,7 @@
 --><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Quick Todo</title>
 <meta name="myllm:intents" content="add-todo">
-<script type="application/myllm-actions">[{"name":"add-todo","description":"Add a task to the user's Quick Todo list, optionally due on a date","parameters":{"text":"the task","due":"optional due date, YYYY-MM-DD"}}]</script>
+<script type="application/myllm-actions">[{"name":"add-todo","description":"Add a task to the user's Quick Todo list, optionally due on a date","parameters":{"text":"the task","due":"optional due date, YYYY-MM-DD","list":"optional: the name of one of the user's lists (e.g. Work); the open list if left out"}}]</script>
 <meta name="myllm:immersive" content="on">
 <style>:root{--build-id:"7491b81bef";color-scheme:light dark; --h:214;--grain:0.369954771855;}
 
@@ -151,6 +151,48 @@ body.imm .head .imm-x{display:grid !important;place-items:center}
 .imm-x svg,.imm-acts svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round}
 .imm-safe{display:none}
 body.imm .imm-safe{display:block}
+/* lists-kit:css */
+/* lists-kit v1 — list bar + sheet (uses the app's --bg/--surface/--ink/--muted/--line/--acc/--fill) */
+.lk-bar{ display:flex; align-items:center; gap:8px; margin:0 0 12px; }
+.lk-chips{ flex:1; min-width:0; display:flex; gap:6px; overflow-x:auto; scrollbar-width:none; -webkit-overflow-scrolling:touch; padding:2px 1px; }
+.lk-chips::-webkit-scrollbar{ display:none; }
+.lk-chip{ flex-shrink:0; display:inline-flex; align-items:center; gap:6px; height:34px; padding:0 13px; border-radius:99px; font-size:13.5px; font-weight:700;
+  background:var(--surface); border:1px solid var(--line); color:var(--ink); max-width:62vw; }
+.lk-chip span{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.lk-chip.on{ background:var(--acc); border-color:var(--acc); color:#fff; }
+.lk-chip.lk-new{ color:var(--acc); border-style:dashed; }
+.lk-i{ width:15px; height:15px; flex-shrink:0; }
+.lk-dot{ width:7px; height:7px; border-radius:50%; background:#ff9f0a; flex-shrink:0; }
+.lk-share{ flex-shrink:0; display:inline-flex; align-items:center; gap:6px; height:34px; padding:0 12px; border-radius:99px; font-size:13px; font-weight:700;
+  color:var(--acc); background:var(--fill); }
+.lk-line{ font-size:12.5px; color:var(--muted); margin:-6px 4px 10px; min-height:0; }
+.lk-line:empty{ display:none; }
+.lk-line.bad{ color:#e8890c; }
+.lk-wrap{ position:fixed; inset:0; z-index:50; background:rgba(0,0,0,0); display:flex; align-items:flex-end; justify-content:center; transition:background .2s; }
+.lk-wrap.show{ background:rgba(0,0,0,.38); }
+.lk-sheet{ width:100%; max-width:520px; background:var(--surface); color:var(--ink); border-radius:22px 22px 0 0; display:flex; flex-direction:column; gap:10px;
+  padding:18px 16px calc(18px + env(safe-area-inset-bottom)); transform:translateY(100%); transition:transform .25s cubic-bezier(.2,.8,.2,1); max-height:88dvh; overflow:auto; }
+.lk-wrap.show .lk-sheet{ transform:none; }
+.lk-sheet h3{ font-size:19px; font-weight:800; overflow-wrap:anywhere; }
+.lk-sub{ font-size:13.5px; color:var(--muted); margin-top:-6px; }
+.lk-sheet input{ width:100%; font:inherit; font-size:16px; color:var(--ink); background:var(--bg); border:1px solid var(--line); border-radius:12px; padding:11px 12px; outline:none; -webkit-appearance:none; }
+.lk-sheet input:focus{ border-color:var(--acc); }
+.lk-sheet input:disabled{ opacity:.6; }
+.lk-field{ display:flex; gap:8px; } .lk-field input{ flex:1; min-width:0; }
+.lk-row{ display:flex; gap:8px; } .lk-row .lk-btn{ flex:1; }
+.lk-btn{ min-height:44px; padding:0 14px; border-radius:13px; font-size:15px; font-weight:700; background:var(--fill); color:var(--ink);
+  display:inline-flex; align-items:center; justify-content:center; gap:8px; flex-shrink:0; }
+.lk-btn.wide{ width:100%; }
+.lk-btn.pri{ background:var(--acc); color:#fff; }
+.lk-btn.danger{ color:#ff453a; }
+.lk-btn:disabled{ opacity:.45; }
+.lk-note{ font-size:12.5px; color:var(--muted); line-height:1.4; }
+.lk-err{ color:#ff453a; }
+.lk-toast{ position:fixed; left:50%; bottom:calc(24px + env(safe-area-inset-bottom)); transform:translate(-50%, 20px); opacity:0; pointer-events:none; z-index:60;
+  background:rgba(30,30,32,.94); color:#fff; font-size:14px; font-weight:600; padding:10px 16px; border-radius:99px; max-width:86vw; text-align:center; transition:all .25s; }
+.lk-toast.show{ opacity:1; transform:translate(-50%, 0); }
+@media (prefers-reduced-motion:reduce){ .lk-wrap,.lk-sheet,.lk-toast{ transition:none; } }
+/* /lists-kit:css */
 </style></head><body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
   <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.6l4.6 4.6L19.2 7.4" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></symbol>
@@ -161,9 +203,9 @@ body.imm .imm-safe{display:block}
 </defs></svg>
 <div class="imm-safe"></div><div class="head">
   <div class="tile"><svg><use href="#i-list"/></svg></div>
-  <div class="ht"><h1>Quick Todo</h1><p>Tasks that stay done</p></div>
+  <div class="ht"><h1>Quick Todo</h1><p>Lists you can share through iCloud</p></div>
 <div class="imm-acts"><button type="button" aria-label="Close Quick Todo" onclick="myllmFSClose()"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div></div>
-<div class="hero" id="hero">
+<!-- lists-kit:bar --><div class="lk-bar" id="lkBar"></div><p class="lk-line" id="lkLine"></p><!-- /lists-kit:bar --><div class="hero" id="hero">
   <div class="k">To do</div>
   <div class="n" id="hN">0</div>
   <div class="s" id="hS">Nothing yet</div>
@@ -172,6 +214,331 @@ body.imm .imm-safe{display:block}
 <div class="addrow"><input id="t" placeholder="Add a task…" enterkeyhint="done" autocomplete="off"><label class="duechip" id="dueChip" aria-label="Due date"><svg><use href="#i-cal"/></svg><span id="dueLbl"></span><input type="date" class="datepick" id="due"></label><button class="btn pri" id="addBtn"><svg><use href="#i-plus"/></svg>Add</button></div>
 <h2>Tasks</h2>
 <div id="list"></div>
+<script id="lists-kit">
+/* lists-kit v1 — several lists in one app; any of them can move to iCloud and
+   be shared with other iCloud users, who edit the same list from their own
+   MyLLM (myllmLists, MyLLM 6.1+). Without iCloud everything stays on this
+   device, as before.
+   The app keeps its own item code and calls:
+     ListsKit.start({kind, storeKey, defaultName, noun, fix, legacy, render, main, changed, ready})
+     main(items): the first list changed · changed(list): any list changed
+     ListsKit.items()  → the open list's items (the app may mutate it)
+     ListsKit.set(arr[, list]) → after any change (saves, mirrors, syncs)
+     ListsKit.byName(name) / ListsKit.current() / ListsKit.all() */
+(function(){
+  var K = window.ListsKit = {};
+  var o = null, st = { current: null, lists: [] };
+  var cloud = null, why = "";           // null = not asked yet
+  var pushing = {}, timers = {}, polling = null;
+
+  function el(id){ return document.getElementById(id); }
+  function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
+  function haptic(k){ try { if (window.myllmHaptic) myllmHaptic(k || "light"); } catch(e){} }
+  function uid(){ return "l_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+  function find(id){ for (var i = 0; i < st.lists.length; i++) if (st.lists[i].id === id) return st.lists[i]; return null; }
+  function cur(){ return find(st.current) || st.lists[0]; }
+  function fixAll(a){ return (Array.isArray(a) ? a : []).filter(function(x){ return x && typeof x === "object"; }).map(o.fix); }
+  function same(a, b){ return JSON.stringify(a) === JSON.stringify(b); }
+
+  /* ---- this device ---- */
+  /* myllmStorage only: MyLLM always has it, and outside MyLLM the lists just
+     last while the page is open. */
+  function persist(){
+    var S = window.myllmStorage;
+    try { if (S) S.setItem(o.storeKey, JSON.stringify(st)).catch(function(){}); } catch(e){}
+  }
+  function restore(){
+    var S = window.myllmStorage;
+    if (!S) return Promise.resolve(null);
+    return Promise.resolve().then(function(){ return S.getItem(o.storeKey); }).catch(function(){ return null; })
+      .then(function(v){ try { return v ? JSON.parse(v) : null; } catch(e){ return null; } });
+  }
+  function afterChange(list){
+    persist();
+    if (list === st.lists[0] && o.main) try { o.main(list.items); } catch(e){}
+    if (o.changed) try { o.changed(list); } catch(e){}
+  }
+
+  /* ---- merge: what changed here since `base` wins, the rest follows `remote`
+     (the same rules MyLLM uses in iCloud) ---- */
+  function merge(base, local, remote){
+    function idx(a){ var m = {}; a.forEach(function(x){ m[x.id] = x; }); return m; }
+    var b = idx(base), r = idx(remote), out = [], placed = {};
+    local.forEach(function(x){
+      if (placed[x.id]) return;
+      var mine = !same(x, b[x.id]);
+      if (r[x.id]) out.push(mine ? x : r[x.id]);
+      else if (!b[x.id] || mine) out.push(x);
+      else return;
+      placed[x.id] = 1;
+    });
+    var prev = null;
+    remote.forEach(function(x){
+      var p = prev; prev = x.id;
+      if (placed[x.id] || b[x.id]) return;
+      var at = 0;
+      if (p != null) for (var i = 0; i < out.length; i++) if (out[i].id === p) { at = i + 1; break; }
+      out.splice(at, 0, x); placed[x.id] = 1;
+    });
+    return out;
+  }
+  K._merge = merge;
+
+  /* ---- iCloud ---- */
+  function check(){
+    if (!window.myllmLists) { cloud = false; why = "Sharing needs MyLLM 6.1 or later on iPhone, iPad or Mac."; return Promise.resolve(); }
+    return myllmLists.available().then(function(a){ cloud = !!(a && a.available); why = (a && a.reason) || ""; })
+      .catch(function(e){ cloud = false; why = e.message || "iCloud couldn't be reached."; });
+  }
+  function meta(l, r){
+    l.name = r.name || l.name;
+    l.cloud = { shared: !!r.shared, owner: !!r.owner, ownerName: r.ownerName || "", people: r.people || [] };
+  }
+  function pull(){
+    if (!cloud) return Promise.resolve();
+    return myllmLists.all(o.kind).then(function(remote){
+      var seen = {}, gone = [];
+      remote.forEach(function(r){
+        seen[r.id] = 1;
+        var l = find(r.id);
+        if (!l) { l = { id: r.id, items: fixAll(r.items) }; meta(l, r); st.lists.push(l); return; }
+        l.err = null;
+        if (l.dirty || pushing[l.id]) { meta(l, r); return; }    // our change is on its way
+        l.items = fixAll(r.items); meta(l, r);
+      });
+      st.lists = st.lists.filter(function(l){ if (l.cloud && !seen[l.id]) { gone.push(l.name); return false; } return true; });
+      if (!st.lists.length) st.lists.push({ id: uid(), name: o.defaultName, items: [] });
+      if (!find(st.current)) st.current = st.lists[0].id;
+      if (gone.length) toast("“" + gone[0] + "” was deleted or is no longer shared with you");
+      afterChange(st.lists[0]); paint(); o.render();
+    }).catch(function(e){
+      st.lists.forEach(function(l){ if (l.cloud) l.err = e.message; }); paint();
+    });
+  }
+  function schedule(l){
+    clearTimeout(timers[l.id]);
+    timers[l.id] = setTimeout(function(){ push(l.id); }, 450);
+  }
+  function push(id){
+    var l = find(id);
+    if (!l || !l.cloud || !l.dirty || !cloud) return Promise.resolve();
+    if (pushing[id]) return pushing[id];
+    var sent = JSON.parse(JSON.stringify(l.items));
+    l.dirty = false;
+    pushing[id] = myllmLists.save(id, sent).then(function(r){
+      var now = find(id); if (!now) return;
+      var merged = fixAll(r.items);
+      if (same(now.items, sent)) now.items = merged;
+      else { now.items = merge(sent, now.items, merged); now.dirty = true; }   // edited while saving
+      meta(now, r); now.err = null;
+    }).catch(function(e){
+      var now = find(id); if (now) { now.dirty = true; now.err = e.message || "Not synced"; }
+    }).then(function(){
+      delete pushing[id];
+      var now = find(id);
+      if (now) { afterChange(now); if (now === cur()) o.render(); paint(); if (now.dirty && !now.err) schedule(now); }
+    });
+    return pushing[id];
+  }
+  function accepted(){
+    if (!cloud || !myllmLists.takeAccepted) return Promise.resolve();
+    return myllmLists.takeAccepted(o.kind).then(function(id){
+      if (!id) return;
+      return pull().then(function(){
+        var l = find(id); if (!l) return;
+        st.current = id; persist(); paint(); o.render();
+        toast("You've joined “" + l.name + "”");
+      });
+    }).catch(function(){});
+  }
+  function tick(){
+    if (document.hidden) return;
+    var errs = st.lists.filter(function(l){ return l.cloud && l.dirty && l.err; });
+    errs.forEach(function(l){ l.err = null; push(l.id); });
+    pull();
+  }
+
+  /* ---- the list bar ---- */
+  function people(l){
+    if (!l.cloud) return "";
+    if (!l.cloud.owner) return "Shared by " + (l.cloud.ownerName || "someone");
+    if (l.cloud.people.length) return "Shared with " + l.cloud.people.join(", ");
+    return "In your iCloud";
+  }
+  function paint(){
+    var bar = el("lkBar"); if (!bar) return;
+    var c = cur(), h = '<div class="lk-chips" role="tablist">';
+    st.lists.forEach(function(l){
+      h += '<button class="lk-chip' + (l === c ? " on" : "") + '" role="tab" aria-selected="' + (l === c) + '" data-lk="' + esc(l.id) + '">' +
+        (l.cloud && (l.cloud.shared || !l.cloud.owner) ? '<svg class="lk-i" viewBox="0 0 24 24" aria-label="Shared"><use href="#lk-people"/></svg>' : "") +
+        '<span>' + esc(l.name) + '</span>' + (l.cloud && l.err ? '<i class="lk-dot" title="Not synced"></i>' : "") + '</button>';
+    });
+    h += '<button class="lk-chip lk-new" data-lk-new aria-label="New ' + o.noun + '"><svg class="lk-i" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg><span>New</span></button></div>';
+    h += '<button class="lk-share" data-lk-menu aria-label="Share or edit this ' + o.noun + '"><svg class="lk-i" viewBox="0 0 24 24"><use href="#lk-people"/></svg><span>' + (c.cloud && (c.cloud.shared || !c.cloud.owner) ? "Shared" : "Share") + '</span></button>';
+    bar.innerHTML = h;
+    var line = el("lkLine");
+    if (line) {
+      var t = people(c);
+      if (c.cloud && c.err) t = (t ? t + " · " : "") + "Not synced: " + c.err;
+      line.textContent = t; line.classList.toggle("bad", !!(c.cloud && c.err));
+    }
+    var on = bar.querySelector(".lk-chip.on");
+    if (on && on.scrollIntoView) try { on.scrollIntoView({ block: "nearest", inline: "nearest" }); } catch(e){}
+  }
+
+  /* ---- sheet ---- */
+  function sheet(html, wire){
+    close();
+    var w = document.createElement("div");
+    w.className = "lk-wrap"; w.id = "lkWrap";
+    w.innerHTML = '<div class="lk-sheet" role="dialog" aria-modal="true">' + html + '</div>';
+    w.addEventListener("click", function(e){ if (e.target === w) close(); });
+    document.body.appendChild(w);
+    requestAnimationFrame(function(){ w.classList.add("show"); });
+    wire(w);
+  }
+  function close(){ var w = el("lkWrap"); if (w) w.remove(); }
+  function busy(btn, on, label){ if (!btn) return; btn.disabled = on; if (label) btn.textContent = label; }
+
+  function newSheet(){
+    sheet('<h3>New ' + o.noun + '</h3><input id="lkName" maxlength="60" placeholder="Name, e.g. ' + esc(o.example) + '" enterkeyhint="done" autocomplete="off">' +
+      '<div class="lk-row"><button class="lk-btn" data-x>Cancel</button><button class="lk-btn pri" id="lkMake">Create</button></div>' +
+      '<p class="lk-note">' + (cloud ? "Kept on this device until you share it." : "Kept on this device.") + '</p>', function(w){
+      var inp = w.querySelector("#lkName"), go = w.querySelector("#lkMake");
+      w.querySelector("[data-x]").onclick = close;
+      function make(){
+        var name = inp.value.trim(); if (!name) { inp.focus(); return; }
+        var l = { id: uid(), name: name.slice(0, 60), items: [] };
+        st.lists.push(l); st.current = l.id; persist(); close(); haptic("success"); paint(); o.render();
+      }
+      go.onclick = make;
+      inp.addEventListener("keydown", function(e){ if (e.key === "Enter") make(); });
+      setTimeout(function(){ inp.focus(); }, 60);
+    });
+  }
+
+  function menuSheet(){
+    var l = cur(), isCloud = !!l.cloud, owner = !isCloud || l.cloud.owner, only = st.lists.length < 2;
+    var status = isCloud ? people(l) : "On this device only";
+    var shareLabel = !isCloud ? "Share with people…" : owner ? "Manage sharing…" : "See who's sharing…";
+    var del = !owner ? "Leave this " + o.noun : isCloud && l.cloud.shared ? "Delete for everyone" : "Delete " + o.noun;
+    sheet('<h3>' + esc(l.name) + '</h3><p class="lk-sub">' + esc(status) + '</p>' +
+      '<button class="lk-btn pri wide" id="lkShare"><svg class="lk-i" viewBox="0 0 24 24"><use href="#lk-people"/></svg>' + shareLabel + '</button>' +
+      (cloud === false ? '<p class="lk-note">' + esc(why) + '</p>' : !isCloud ? '<p class="lk-note">Sharing moves this ' + o.noun + ' to your iCloud. People you invite need MyLLM 6.1 or later and edit it from their own app.</p>' : "") +
+      '<div class="lk-field"><input id="lkRename" maxlength="60" value="' + esc(l.name) + '" aria-label="Name" enterkeyhint="done" autocomplete="off"' + (owner ? "" : " disabled") + '>' +
+      (owner ? '<button class="lk-btn" id="lkSave">Rename</button>' : "") + '</div>' +
+      '<button class="lk-btn danger wide" id="lkDel"' + (only && owner ? " disabled" : "") + '>' + del + '</button>' +
+      (only && owner ? '<p class="lk-note">This is your only ' + o.noun + '. Make another first to delete it.</p>' : "") +
+      '<button class="lk-btn wide" data-x>Done</button>', function(w){
+      w.querySelector("[data-x]").onclick = close;
+      var share = w.querySelector("#lkShare"), msg = function(t){ var n = w.querySelector(".lk-err") || w.querySelector(".lk-sheet").appendChild(Object.assign(document.createElement("p"), { className: "lk-note lk-err" })); n.textContent = t; };
+      share.disabled = cloud === false;
+      share.onclick = function(){ busy(share, true); shareList(l).then(close, function(e){ busy(share, false); msg(e.message || String(e)); }); };
+      var ren = w.querySelector("#lkSave");
+      if (ren) ren.onclick = function(){
+        var name = w.querySelector("#lkRename").value.trim().slice(0, 60); if (!name || name === l.name) return;
+        busy(ren, true);
+        (l.cloud ? myllmLists.rename(l.id, name).then(function(r){ meta(l, r); }) : Promise.resolve(l.name = name))
+          .then(function(){ persist(); paint(); close(); haptic("success"); }, function(e){ busy(ren, false); msg(e.message); });
+      };
+      var d = w.querySelector("#lkDel"), armed = false;
+      d.onclick = function(){
+        if (!armed) { armed = true; d.textContent = "Tap again to " + del.charAt(0).toLowerCase() + del.slice(1); haptic("warning"); return; }
+        busy(d, true);
+        (l.cloud ? myllmLists.remove(l.id) : Promise.resolve()).then(function(){
+          st.lists = st.lists.filter(function(x){ return x !== l; });
+          if (!st.lists.length) st.lists.push({ id: uid(), name: o.defaultName, items: [] });
+          st.current = st.lists[0].id; afterChange(st.lists[0]); close(); paint(); o.render(); haptic("light");
+        }, function(e){ busy(d, false); msg(e.message); });
+      };
+    });
+  }
+
+  /* Moving a list to iCloud the first time it's shared: create it there, put
+     the items in, swap it into place, then open Apple's sharing sheet. */
+  function shareList(l){
+    var go = cloud === null ? check() : Promise.resolve();
+    return go.then(function(){
+      if (!cloud) throw new Error(why || "iCloud isn't available.");
+      if (l.cloud) return myllmLists.share(l.id);
+      return myllmLists.create(o.kind, l.name).then(function(c){
+        return myllmLists.save(c.id, l.items).then(function(r){
+          var at = st.lists.indexOf(l), moved = { id: r.id, items: fixAll(r.items) };
+          meta(moved, r);
+          if (at >= 0) st.lists[at] = moved; else st.lists.push(moved);
+          if (st.current === l.id) st.current = moved.id;
+          afterChange(moved); paint(); o.render();
+          return myllmLists.share(moved.id);
+        });
+      });
+    });
+  }
+
+  var toastT = null;
+  function toast(t){
+    var n = el("lkToast");
+    if (!n) { n = document.createElement("div"); n.id = "lkToast"; n.className = "lk-toast"; document.body.appendChild(n); }
+    n.textContent = t; n.classList.add("show");
+    clearTimeout(toastT); toastT = setTimeout(function(){ n.classList.remove("show"); }, 2600);
+  }
+
+  /* ---- public ---- */
+  K.items = function(){ return cur().items; };
+  K.current = function(){ return cur(); };
+  K.all = function(){ return st.lists; };
+  K.byName = function(name){
+    var n = String(name || "").trim().toLowerCase(); if (!n) return null;
+    for (var i = 0; i < st.lists.length; i++) if (st.lists[i].name.toLowerCase() === n) return st.lists[i];
+    return null;
+  };
+  K.set = function(arr, list){
+    var l = list || cur(); l.items = arr;
+    afterChange(l); paint();
+    if (l.cloud) { l.dirty = true; schedule(l); }
+  };
+  K.start = function(opts){
+    o = opts; o.noun = o.noun || "list"; o.example = o.example || "Weekend";
+    var defs = document.createElement("div");
+    defs.innerHTML = '<svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="lk-people" viewBox="0 0 24 24">' +
+      '<circle cx="9" cy="8" r="3.4" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M2.8 19.5c.6-3.3 3.1-5.2 6.2-5.2s5.6 1.9 6.2 5.2" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>' +
+      '<path d="M15.6 4.9a3.2 3.2 0 0 1 0 6.2M18 14.6c1.7.7 2.9 2.4 3.2 4.9" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></symbol></svg>';
+    document.body.appendChild(defs.firstChild);
+    document.addEventListener("click", function(e){
+      var t = e.target.closest ? e.target : null; if (!t) return;
+      var chip = t.closest("[data-lk]"), add = t.closest("[data-lk-new]"), menu = t.closest("[data-lk-menu]");
+      if (chip) { var id = chip.getAttribute("data-lk"); if (id !== st.current) { st.current = id; persist(); haptic("selection"); paint(); o.render(); } else menuSheet(); }
+      else if (add) newSheet();
+      else if (menu) menuSheet();
+    });
+    return restore().then(function(saved){
+      if (saved && Array.isArray(saved.lists) && saved.lists.length) {
+        st = saved;
+        st.lists.forEach(function(l){ l.items = fixAll(l.items); l.err = null; });
+        return null;
+      }
+      return Promise.resolve(o.legacy ? o.legacy() : []).catch(function(){ return []; }).then(function(items){
+        st = { current: null, lists: [{ id: uid(), name: o.defaultName, items: fixAll(items) }] };
+        st.current = st.lists[0].id; persist();
+      });
+    }).then(function(){
+      if (!find(st.current)) st.current = st.lists[0].id;
+      paint(); o.render();
+      if (o.ready) try { o.ready(); } catch(e){}     // lists are usable now; iCloud follows
+      return check();
+    }).then(function(){
+      paint();
+      if (!cloud) return;
+      return pull().then(function(){
+        st.lists.forEach(function(l){ if (l.cloud && l.dirty) push(l.id); });
+        return accepted();
+      }).then(function(){
+        polling = setInterval(tick, 12000);
+        document.addEventListener("visibilitychange", function(){ if (!document.hidden) { tick(); accepted(); } });
+      });
+    });
+  };
+})();
+</script>
 <script>
 function el(i){ return document.getElementById(i); }
 /* Bridges are looked up when used, never kept: MyLLM can add them after this
@@ -190,7 +557,10 @@ document.addEventListener("click", function(e){
   if (b){ var f = el(b.getAttribute("data-focus")); if (f){ f.focus(); f.scrollIntoView({block:"center", behavior:"smooth"}); } }
 });
 var todos = [];
-function save(){ keep("todos", JSON.stringify(todos)); publish(); }
+/* v8: the lists live in ListsKit (this app's storage, or iCloud once shared). */
+function fixTodo(td){ return { id: String(td.id || ("t_" + Date.now() + "_" + Math.floor(Math.random() * 100000))), text: String(td.text || ""), done: !!td.done,
+  due: validDay(td.due), added: td.added || null, doneAt: td.doneAt || null }; }
+function save(list){ if (list) ListsKit.set(list.items, list); else ListsKit.set(todos); }
 
 /* ---- dates ---- */
 function pad2(n){ return (n < 10 ? "0" : "") + n; }
@@ -207,16 +577,20 @@ function dueLabel(day){
   return d.toLocaleDateString(undefined, soon ? { weekday: "short" } : { weekday: "short", day: "numeric", month: "short" });
 }
 
-/* ---- Shared data (docs/SHARED_DATA.md): the list also goes to data/todos.json
-   so other apps (Calendar Planner) can show it. Best effort. ---- */
+/* ---- Shared data (docs/SHARED_DATA.md): every list also goes to
+   data/todos.json so other apps (Calendar Planner) can show it; `list` says
+   which. Best effort. ---- */
 function publish(){
   var F = window.myllmFiles; if (!F || !F.write) return;
-  var out = { schema: "myllm.todos", version: 1, source: "quick-todo", updated: new Date().toISOString(),
-    items: todos.map(function(t){ return { id: t.id, text: t.text, done: !!t.done, due: t.due || null, added: t.added || null, doneAt: t.doneAt || null }; }) };
+  var all = [];
+  ListsKit.all().forEach(function(l){ l.items.forEach(function(t){
+    all.push({ id: t.id, text: t.text, done: !!t.done, due: t.due || null, added: t.added || null, doneAt: t.doneAt || null, list: l.name }); }); });
+  var out = { schema: "myllm.todos", version: 1, source: "quick-todo", updated: new Date().toISOString(), items: all };
   try { Promise.resolve(F.write("data/todos.json", JSON.stringify(out))).catch(function(){}); } catch(e){}
 }
 function newTodo(text, due){ return { id: "t_" + Date.now() + "_" + Math.floor(Math.random() * 1000), text: text, done: false, due: validDay(due), added: new Date().toISOString(), doneAt: null }; }
 function render(){
+  todos = ListsKit.items();
   var L = el("list"), done = todos.filter(function(t){ return t.done; }).length, open = todos.length - done;
   el("hN").textContent = open;
   el("hS").textContent = !todos.length ? "Nothing yet" : open ? done + " of " + todos.length + " done" : "All " + todos.length + " done";
@@ -244,25 +618,27 @@ function paintDue(){ var v = validDay(el("due").value); el("dueLbl").textContent
 el("due").addEventListener("change", paintDue);
 el("addBtn").onclick = add;
 el("t").addEventListener("keydown", function(e){ if (e.key === "Enter") add(); });
-render();
-load("todos").then(function(v){
-  if (v) try { var a = JSON.parse(v); if (Array.isArray(a)) todos = a; } catch(e){}
-  /* Tasks from before v7 have no id: give them one, once. */
-  var fixed = false;
-  todos.forEach(function(td, i){ if (!td.id){ td.id = "t_legacy_" + (i + 1); fixed = true; } });
-  if (fixed) keep("todos", JSON.stringify(todos));
-  render(); publish();
-  /* add-todo: from Calendar Planner, or the MyLLM assistant. Registered after
-     the list has loaded, so the load can't overwrite what it adds. */
+/* Lists from before v8: the single list in this app's storage. Tasks from
+   before v7 have no id: fixTodo gives them one. */
+function legacy(){
+  return load("todos").then(function(v){ try { var a = JSON.parse(v || "[]"); return Array.isArray(a) ? a : []; } catch(e){ return []; } });
+}
+/* add-todo: from Calendar Planner, or the MyLLM assistant. Registered after
+   the lists have loaded, so the load can't overwrite what it adds. */
+function listen(){
   if (window.myllmIntent && myllmIntent.receive) myllmIntent.receive(function(intent){
     if (!intent || intent.action !== "add-todo" || !intent.data) return;
     var text = String(intent.data.text || intent.data.task || "").trim();
     if (!text) return "Nothing added: the task had no text.";
+    var asked = String(intent.data.list || "").trim(), list = ListsKit.byName(asked) || ListsKit.current();
     var td = newTodo(text.slice(0, 200), intent.data.due);
-    todos.push(td); save(); render(); haptic("success");
-    return "Added \u201c" + td.text + "\u201d to Quick Todo" + (td.due ? ", due " + td.due : "") + " (" + todos.filter(function(x){ return !x.done; }).length + " still to do).";
+    list.items.push(td); save(list); render(); haptic("success");
+    return "Added \u201c" + td.text + "\u201d to " + list.name + (td.due ? ", due " + td.due : "") + " (" + list.items.filter(function(x){ return !x.done; }).length + " still to do)." +
+      (asked && list.name.toLowerCase() !== asked.toLowerCase() ? " There is no list called \u201c" + asked + "\u201d; the user's lists are: " + ListsKit.all().map(function(l){ return l.name; }).join(", ") + "." : "");
   });
-});
+}
+ListsKit.start({ kind: "todo", storeKey: "lists", defaultName: "To do", example: "Work, House",
+  fix: fixTodo, legacy: legacy, render: render, changed: publish, ready: listen });
 
 /* myllm-fullscreen-v2 — full screen where MyLLM can also close the app for us
    (myllmClose, 5.6.2+): full screen hides MyLLM's Done, and a page with no way
