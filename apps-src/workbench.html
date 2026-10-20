@@ -15,7 +15,7 @@
   /* Dark fallbacks for builds that do not supply the theme. :where() carries no
      specificity, so MyLLM's own :root values always win where they exist. */
   @media (prefers-color-scheme:dark){ :where(:root){ --myllm-bg:#000; --myllm-surface:#1c1c1e; --myllm-text:#f2f2f7; --myllm-muted:#98989f; --myllm-border:#2c2c2e; } }
-  :root{--h:238;color-scheme:light dark}
+  :root{--h:238;color-scheme:light dark;--grain:0.469114308132}
   *{box-sizing:border-box}
   body{margin:0;font:16px/1.5 var(--myllm-font,-apple-system,system-ui,sans-serif);
        background:var(--myllm-bg,#fff);color:var(--myllm-text,#0b0c0f);
