@@ -32,13 +32,27 @@ def uses(html):
     if "myllmGenerateImage" in html: out.append("image")
     return out
 
+def source_path(app):
+    """The app's local source. Apps moved to TeamDzX/myllm-assets-xl (Space
+    Range, 7 Oct 2026) are read from that repo's clone beside this one."""
+    url = app["html"]
+    name = url.split("/apps-src/")[-1].split("?")[0]
+    root = "../myllm-assets-xl/" if "/myllm-assets-xl" in url else ""
+    return root + "apps-src/" + name
+
 def main():
     check = "--check" in sys.argv
     data = json.load(open("apps.json", encoding="utf-8"))
     changed = []
     for i, app in enumerate(data["apps"]):
-        src = "apps-src/" + app["html"].split("/apps-src/")[-1].split("?")[0]
-        found = uses(open(src, encoding="utf-8").read())
+        src = source_path(app)
+        try:
+            found = uses(open(src, encoding="utf-8").read())
+        except FileNotFoundError:
+            # Not cloned here (CI checks out only this repo): keep what the
+            # entry already says rather than wiping it or failing the run.
+            print(f"  skip {app['id']}: {src} not found locally", file=sys.stderr)
+            continue
         need = [n for n in NEEDS.get(app["id"], []) if n in found]
         want = dict(app)
         want.pop("aiUses", None); want.pop("aiNeeds", None)

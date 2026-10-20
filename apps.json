@@ -195,15 +195,15 @@
       "version": 2,
       "featured": true,
       "requiresAI": false,
+      "aiUses": [
+        "ask"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/airport-maps.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@061d20053223e72a33d71d9954685bdb1b8db3bc/apps-src/airport-maps.html",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@061d20053223e72a33d71d9954685bdb1b8db3bc/apps-src/airport-maps.myllmapp",
       "sizeKB": 367,
       "category": "Utilities",
-      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/airport-maps.jpg",
-      "aiUses": [
-        "ask"
-      ]
+      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/airport-maps.jpg"
     },
     {
       "id": "mind-map",
@@ -224,15 +224,15 @@
       "version": 1,
       "featured": true,
       "requiresAI": false,
+      "aiUses": [
+        "ask"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/mind-map.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@ed24d38bf4de48196e4f93ef02e2d8eb0dd0aa08/apps-src/mind-map.html",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@ed24d38bf4de48196e4f93ef02e2d8eb0dd0aa08/apps-src/mind-map.myllmapp",
       "sizeKB": 58,
       "category": "Productivity",
-      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/mind-map.jpg",
-      "aiUses": [
-        "ask"
-      ]
+      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/mind-map.jpg"
     },
     {
       "id": "periodic-table",
@@ -253,15 +253,15 @@
       "version": 1,
       "featured": true,
       "requiresAI": false,
+      "aiUses": [
+        "ask"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/periodic-table.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@ed24d38bf4de48196e4f93ef02e2d8eb0dd0aa08/apps-src/periodic-table.html",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@ed24d38bf4de48196e4f93ef02e2d8eb0dd0aa08/apps-src/periodic-table.myllmapp",
       "sizeKB": 58,
       "category": "Students",
-      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/periodic-table.jpg",
-      "aiUses": [
-        "ask"
-      ]
+      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/periodic-table.jpg"
     },
     {
       "id": "scientific-calculator",
@@ -282,15 +282,15 @@
       "version": 3,
       "featured": true,
       "requiresAI": false,
+      "aiUses": [
+        "ask"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/scientific-calculator.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@e18b3e0789dd42841b17d4dda554111a5a36b998/apps-src/scientific-calculator.html",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@e18b3e0789dd42841b17d4dda554111a5a36b998/apps-src/scientific-calculator.myllmapp",
       "sizeKB": 43,
       "category": "Utilities",
-      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/scientific-calculator.jpg",
-      "aiUses": [
-        "ask"
-      ]
+      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/scientific-calculator.jpg"
     },
     {
       "id": "pinpoint",
@@ -312,15 +312,15 @@
       "version": 1,
       "featured": true,
       "requiresAI": false,
+      "aiUses": [
+        "ask"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/pinpoint.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@62b42a62b949bd880927b4c9c23713aefb3f4b4c/apps-src/pinpoint.html",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@62b42a62b949bd880927b4c9c23713aefb3f4b4c/apps-src/pinpoint.myllmapp",
       "sizeKB": 140,
       "category": "Utilities",
-      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/pinpoint.jpg",
-      "aiUses": [
-        "ask"
-      ]
+      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/pinpoint.jpg"
     },
     {
       "id": "metro-maps",
@@ -761,6 +761,9 @@
       "version": 1,
       "featured": false,
       "requiresAI": false,
+      "aiUses": [
+        "ask"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/budget-dashboard.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@cbb43344d4c46560008ed1fbfa4554e8c9e26107/apps-src/budget-dashboard.html",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@cbb43344d4c46560008ed1fbfa4554e8c9e26107/apps-src/budget-dashboard.myllmapp",
@@ -1301,6 +1304,9 @@
       "version": 4,
       "featured": false,
       "requiresAI": false,
+      "aiUses": [
+        "ask"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/bloom.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@e03f61fd48e5f8d479ec4c19bfcbf181ed7765d3/apps-src/bloom.html",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@e03f61fd48e5f8d479ec4c19bfcbf181ed7765d3/apps-src/bloom.myllmapp",
