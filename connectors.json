@@ -1,0 +1,343 @@
+{
+  "version": 1,
+  "checked": "2026-10-26",
+  "connectors": [
+    {
+      "id": "notion",
+      "name": "Notion",
+      "url": "https://mcp.notion.com/mcp",
+      "summary": "Search, read and update your pages and databases",
+      "category": "Work & projects",
+      "icon": "doc.richtext",
+      "keywords": [
+        "notes",
+        "docs",
+        "wiki",
+        "pages",
+        "database"
+      ],
+      "auth": "oauth"
+    },
+    {
+      "id": "linear",
+      "name": "Linear",
+      "url": "https://mcp.linear.app/mcp",
+      "summary": "Find, create and update issues and projects",
+      "category": "Work & projects",
+      "icon": "checklist",
+      "keywords": [
+        "issues",
+        "tickets",
+        "bugs",
+        "projects",
+        "sprint"
+      ],
+      "auth": "oauth"
+    },
+    {
+      "id": "atlassian",
+      "name": "Jira & Confluence",
+      "url": "https://mcp.atlassian.com/v1/mcp",
+      "summary": "Jira issues and Confluence pages",
+      "category": "Work & projects",
+      "icon": "square.stack.3d.up",
+      "keywords": [
+        "jira",
+        "confluence",
+        "issues",
+        "tickets",
+        "wiki",
+        "atlassian"
+      ],
+      "auth": "oauth"
+    },
+    {
+      "id": "monday",
+      "name": "monday.com",
+      "url": "https://mcp.monday.com/mcp",
+      "summary": "Boards, items and updates",
+      "category": "Work & projects",
+      "icon": "rectangle.split.3x1",
+      "keywords": [
+        "boards",
+        "tasks",
+        "projects",
+        "monday"
+      ],
+      "auth": "oauth"
+    },
+    {
+      "id": "todoist",
+      "name": "Todoist",
+      "url": "https://ai.todoist.net/mcp",
+      "summary": "Your tasks and projects",
+      "category": "Work & projects",
+      "icon": "checkmark.circle",
+      "keywords": [
+        "tasks",
+        "todo",
+        "reminders",
+        "projects"
+      ],
+      "auth": "oauth"
+    },
+    {
+      "id": "airtable",
+      "name": "Airtable",
+      "url": "https://mcp.airtable.com/mcp",
+      "summary": "Read and update your bases and records",
+      "category": "Work & projects",
+      "icon": "tablecells",
+      "keywords": [
+        "spreadsheet",
+        "table",
+        "records",
+        "base",
+        "database"
+      ],
+      "auth": "oauth"
+    },
+    {
+      "id": "miro",
+      "name": "Miro",
+      "url": "https://mcp.miro.com/",
+      "summary": "Read and add to your boards",
+      "category": "Work & projects",
+      "icon": "square.on.square.dashed",
+      "keywords": [
+        "whiteboard",
+        "board",
+        "sticky",
+        "diagram"
+      ],
+      "auth": "oauth"
+    },
+    {
+      "id": "dropbox",
+      "name": "Dropbox",
+      "url": "https://mcp.dropbox.com/mcp",
+      "summary": "Find and read your files",
+      "category": "Files",
+      "icon": "shippingbox",
+      "keywords": [
+        "files",
+        "documents",
+        "storage",
+        "folder"
+      ],
+      "auth": "oauth"
+    },
+    {
+      "id": "zapier",
+      "name": "Zapier",
+      "url": "https://mcp.zapier.com/api/mcp/mcp",
+      "summary": "Run the actions you've set up in Zapier",
+      "category": "Automation",
+      "icon": "bolt.horizontal",
+      "keywords": [
+        "automation",
+        "zap",
+        "workflow",
+        "actions"
+      ],
+      "auth": "oauth"
+    },
+    {
+      "id": "canva",
+      "name": "Canva",
+      "url": "https://mcp.canva.com/mcp",
+      "summary": "Find, create and export designs",
+      "category": "Design & web",
+      "icon": "paintpalette",
+      "keywords": [
+        "design",
+        "poster",
+        "presentation",
+        "graphics"
+      ],
+      "auth": "oauth"
+    },
+    {
+      "id": "figma",
+      "name": "Figma",
+      "url": "https://mcp.figma.com/mcp",
+      "summary": "Read your design files",
+      "category": "Design & web",
+      "icon": "pencil.and.ruler",
+      "keywords": [
+        "design",
+        "ui",
+        "mockup",
+        "prototype"
+      ],
+      "auth": "oauth"
+    },
+    {
+      "id": "webflow",
+      "name": "Webflow",
+      "url": "https://mcp.webflow.com/mcp",
+      "summary": "Manage your sites and CMS content",
+      "category": "Design & web",
+      "icon": "globe",
+      "keywords": [
+        "website",
+        "cms",
+        "site",
+        "blog"
+      ],
+      "auth": "oauth"
+    },
+    {
+      "id": "wix",
+      "name": "Wix",
+      "url": "https://mcp.wix.com/mcp",
+      "summary": "Manage your Wix sites",
+      "category": "Design & web",
+      "icon": "globe.europe.africa",
+      "keywords": [
+        "website",
+        "site",
+        "store",
+        "blog"
+      ],
+      "auth": "oauth"
+    },
+    {
+      "id": "paypal",
+      "name": "PayPal",
+      "url": "https://mcp.paypal.com/mcp",
+      "summary": "Invoices, orders and transactions",
+      "category": "Business",
+      "icon": "creditcard",
+      "keywords": [
+        "payments",
+        "invoice",
+        "orders",
+        "transactions"
+      ],
+      "auth": "oauth"
+    },
+    {
+      "id": "square",
+      "name": "Square",
+      "url": "https://mcp.squareup.com/mcp",
+      "summary": "Sales, catalogue and customers",
+      "category": "Business",
+      "icon": "cart",
+      "keywords": [
+        "payments",
+        "sales",
+        "catalog",
+        "customers",
+        "shop"
+      ],
+      "auth": "oauth"
+    },
+    {
+      "id": "intercom",
+      "name": "Intercom",
+      "url": "https://mcp.intercom.com/mcp",
+      "summary": "Customer conversations and contacts",
+      "category": "Business",
+      "icon": "bubble.left.and.bubble.right",
+      "keywords": [
+        "support",
+        "customers",
+        "conversations",
+        "helpdesk"
+      ],
+      "auth": "oauth"
+    },
+    {
+      "id": "sentry",
+      "name": "Sentry",
+      "url": "https://mcp.sentry.dev/mcp",
+      "summary": "Errors and issues from your apps",
+      "category": "Developer",
+      "icon": "ant",
+      "keywords": [
+        "errors",
+        "crashes",
+        "bugs",
+        "monitoring"
+      ],
+      "auth": "oauth"
+    },
+    {
+      "id": "cloudflare",
+      "name": "Cloudflare",
+      "url": "https://bindings.mcp.cloudflare.com/mcp",
+      "summary": "Workers, storage and databases on your account",
+      "category": "Developer",
+      "icon": "cloud",
+      "keywords": [
+        "workers",
+        "kv",
+        "d1",
+        "hosting",
+        "dns"
+      ],
+      "auth": "oauth"
+    },
+    {
+      "id": "vercel",
+      "name": "Vercel",
+      "url": "https://mcp.vercel.com",
+      "summary": "Projects, deployments and logs",
+      "category": "Developer",
+      "icon": "triangle",
+      "keywords": [
+        "deploy",
+        "hosting",
+        "deployments",
+        "logs"
+      ],
+      "auth": "oauth"
+    },
+    {
+      "id": "supabase",
+      "name": "Supabase",
+      "url": "https://mcp.supabase.com/mcp",
+      "summary": "Your projects, tables and SQL",
+      "category": "Developer",
+      "icon": "cylinder",
+      "keywords": [
+        "database",
+        "sql",
+        "postgres",
+        "tables"
+      ],
+      "auth": "oauth"
+    },
+    {
+      "id": "neon",
+      "name": "Neon",
+      "url": "https://mcp.neon.tech/mcp",
+      "summary": "Postgres projects and queries",
+      "category": "Developer",
+      "icon": "cylinder.split.1x2",
+      "keywords": [
+        "database",
+        "postgres",
+        "sql"
+      ],
+      "auth": "oauth"
+    },
+    {
+      "id": "huggingface",
+      "name": "Hugging Face",
+      "url": "https://huggingface.co/mcp",
+      "summary": "Search models, datasets and papers",
+      "category": "Developer",
+      "icon": "face.smiling",
+      "keywords": [
+        "models",
+        "datasets",
+        "papers",
+        "ai",
+        "ml"
+      ],
+      "auth": "none"
+    }
+  ]
+}
