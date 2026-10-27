@@ -64,6 +64,9 @@
       "version": 14,
       "featured": true,
       "requiresAI": false,
+      "uses": [
+        "internet"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/space-range.jpg",
       "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/space-range.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets-xl@d2d2a6fc49e9091ac9539b82cb5a6e785286a63c/apps-src/space-range.html",
@@ -199,6 +202,9 @@
         "ask",
         "image"
       ],
+      "uses": [
+        "files"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/everquill.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/everquill.html",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/everquill.myllmapp",
@@ -245,6 +251,10 @@
       "aiUses": [
         "ask"
       ],
+      "uses": [
+        "microphone",
+        "files"
+      ],
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/shell.html",
       "tags": [
         "developer",
@@ -276,6 +286,9 @@
       "version": 10,
       "featured": true,
       "requiresAI": false,
+      "uses": [
+        "internet"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/e-grid.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/e-grid.html",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/e-grid.myllmapp",
@@ -393,6 +406,9 @@
       "version": 1,
       "featured": false,
       "requiresAI": false,
+      "uses": [
+        "internet"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/follow.jpg",
       "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/follow.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/follow.html",
@@ -420,6 +436,9 @@
       "version": 1,
       "featured": false,
       "requiresAI": false,
+      "uses": [
+        "internet"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/supplements.jpg",
       "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/supplements.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/supplements.html",
@@ -474,6 +493,9 @@
       "version": 9,
       "featured": false,
       "requiresAI": false,
+      "uses": [
+        "files"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/bin.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/bin.html",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/bin.myllmapp",
@@ -502,6 +524,10 @@
       "requiresAI": false,
       "aiUses": [
         "ask"
+      ],
+      "uses": [
+        "internet",
+        "location"
       ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/pinpoint.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/pinpoint.html",
@@ -566,6 +592,9 @@
       "version": 6,
       "featured": true,
       "requiresAI": false,
+      "uses": [
+        "internet"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/metro-maps.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/metro-maps.html",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/metro-maps.myllmapp",
@@ -595,6 +624,9 @@
       "aiUses": [
         "ask"
       ],
+      "uses": [
+        "internet"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/substack-reader.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/substack-reader.html",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/substack-reader.myllmapp",
@@ -619,6 +651,9 @@
       "version": 6,
       "featured": true,
       "requiresAI": false,
+      "uses": [
+        "internet"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/speed-check.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/speed-check.html",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/speed-check.myllmapp",
@@ -639,6 +674,9 @@
       "requiresAI": false,
       "aiUses": [
         "ask"
+      ],
+      "uses": [
+        "files"
       ],
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/workbench.html",
       "tags": [
@@ -669,6 +707,9 @@
       "version": 6,
       "featured": true,
       "requiresAI": false,
+      "uses": [
+        "internet"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/channels.jpg",
       "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/channels.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/channels.html",
@@ -691,6 +732,9 @@
       "version": 3,
       "featured": false,
       "requiresAI": false,
+      "uses": [
+        "memory"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/about-me.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/about-me.html",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/about-me.myllmapp",
@@ -741,6 +785,9 @@
       "aiUses": [
         "ask"
       ],
+      "uses": [
+        "files"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/receipt-logger.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/receipt-logger.html",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/receipt-logger.myllmapp",
@@ -770,6 +817,9 @@
       "aiUses": [
         "ask"
       ],
+      "uses": [
+        "files"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/budget-dashboard.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/budget-dashboard.html",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/budget-dashboard.myllmapp",
@@ -795,6 +845,9 @@
       "version": 6,
       "featured": true,
       "requiresAI": false,
+      "uses": [
+        "internet"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/currency.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/currency.html",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/currency.myllmapp",
@@ -881,6 +934,9 @@
       "aiUses": [
         "ask"
       ],
+      "uses": [
+        "internet"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/stocks.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/stocks.html",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/stocks.myllmapp",
@@ -960,6 +1016,9 @@
       "version": 4,
       "featured": true,
       "requiresAI": false,
+      "uses": [
+        "location"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/essentials-finder.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/essentials-finder.html",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/essentials-finder.myllmapp",
@@ -987,6 +1046,9 @@
       "aiUses": [
         "ask"
       ],
+      "uses": [
+        "location"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/day-out-planner.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/day-out-planner.html",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/day-out-planner.myllmapp",
@@ -1011,6 +1073,9 @@
       "version": 4,
       "featured": true,
       "requiresAI": false,
+      "uses": [
+        "location"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/near-me.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/near-me.html",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/near-me.myllmapp",
@@ -1036,6 +1101,9 @@
       "version": 6,
       "featured": true,
       "requiresAI": false,
+      "uses": [
+        "internet"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/expense-tracker.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/expense-tracker.html?v=3",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/expense-tracker.myllmapp",
@@ -1258,6 +1326,9 @@
       "version": 8,
       "featured": false,
       "requiresAI": false,
+      "uses": [
+        "files"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/quick-todo.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@165bbc0918e605c98add762c2511f51ef9d511ef/apps-src/quick-todo.html",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@165bbc0918e605c98add762c2511f51ef9d511ef/apps-src/quick-todo.myllmapp",
@@ -1284,6 +1355,9 @@
       "version": 1,
       "featured": false,
       "requiresAI": false,
+      "uses": [
+        "files"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/calendar-planner.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/calendar-planner.html",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/calendar-planner.myllmapp",
@@ -1306,6 +1380,9 @@
       "version": 6,
       "featured": true,
       "requiresAI": false,
+      "uses": [
+        "files"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/habit-streaks.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/habit-streaks.html",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/habit-streaks.myllmapp",
@@ -1378,6 +1455,9 @@
       "version": 5,
       "featured": false,
       "requiresAI": false,
+      "uses": [
+        "files"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/box-breathing.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/box-breathing.html",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/box-breathing.myllmapp",
@@ -1655,6 +1735,9 @@
       "version": 11,
       "featured": true,
       "requiresAI": false,
+      "uses": [
+        "internet"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/news-feed.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/news-feed.html",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/news-feed.myllmapp",
@@ -1681,6 +1764,9 @@
       "aiUses": [
         "ask"
       ],
+      "uses": [
+        "internet"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/rss-dashboard.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/rss-dashboard.html?v=11",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/rss-dashboard.myllmapp?v=11",
@@ -1705,6 +1791,9 @@
       "requiresAI": false,
       "aiUses": [
         "ask"
+      ],
+      "uses": [
+        "internet"
       ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/reader.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/reader.html",
@@ -1937,6 +2026,9 @@
       "aiUses": [
         "ask"
       ],
+      "uses": [
+        "internet"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/weather.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/weather.html",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/weather.myllmapp",
@@ -1959,6 +2051,9 @@
       "version": 5,
       "featured": false,
       "requiresAI": false,
+      "uses": [
+        "internet"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/hacker-news.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/hacker-news.html",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/hacker-news.myllmapp",
@@ -1981,6 +2076,9 @@
       "version": 5,
       "featured": false,
       "requiresAI": false,
+      "uses": [
+        "internet"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/on-this-day.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/on-this-day.html",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/on-this-day.myllmapp",
@@ -2075,6 +2173,9 @@
       "version": 8,
       "featured": false,
       "requiresAI": false,
+      "uses": [
+        "microphone"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/voice-memos.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/voice-memos.html",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/voice-memos.myllmapp",
@@ -2119,6 +2220,9 @@
       "version": 5,
       "featured": false,
       "requiresAI": false,
+      "uses": [
+        "internet"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/qr-generator.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/qr-generator.html",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/qr-generator.myllmapp",
@@ -2413,6 +2517,9 @@
       "version": 7,
       "featured": true,
       "requiresAI": false,
+      "uses": [
+        "files"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/shopping-list.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@165bbc0918e605c98add762c2511f51ef9d511ef/apps-src/shopping-list.html",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@165bbc0918e605c98add762c2511f51ef9d511ef/apps-src/shopping-list.myllmapp",
@@ -2462,6 +2569,9 @@
       "requiresAI": false,
       "aiUses": [
         "ask"
+      ],
+      "uses": [
+        "internet"
       ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/hanyu.jpg",
       "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/hanyu-icon.png",
@@ -2564,6 +2674,9 @@
       "requiresAI": false,
       "aiUses": [
         "ask"
+      ],
+      "uses": [
+        "files"
       ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/stretch.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/stretch.html?v=2",
@@ -2764,6 +2877,9 @@
       "aiUses": [
         "ask"
       ],
+      "uses": [
+        "internet"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/packing-planner.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/packing-planner.html",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/packing-planner.myllmapp",
@@ -2794,6 +2910,10 @@
       "requiresAI": false,
       "aiUses": [
         "ask"
+      ],
+      "uses": [
+        "internet",
+        "location"
       ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/sky-tonight.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/sky-tonight.html",
@@ -2849,6 +2969,9 @@
       "version": 6,
       "featured": false,
       "requiresAI": false,
+      "uses": [
+        "microphone"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/guitar-tuner.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/guitar-tuner.html?v=2",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/guitar-tuner.myllmapp?v=2",
@@ -2983,6 +3106,9 @@
       "version": 4,
       "featured": false,
       "requiresAI": false,
+      "uses": [
+        "internet"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/bluesky-feed.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/bluesky-feed.html",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/bluesky-feed.myllmapp",
@@ -3009,6 +3135,9 @@
       "version": 4,
       "featured": false,
       "requiresAI": false,
+      "uses": [
+        "internet"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/mastodon-feed.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/mastodon-feed.html",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/mastodon-feed.myllmapp",
@@ -3060,6 +3189,9 @@
       "version": 4,
       "featured": false,
       "requiresAI": false,
+      "uses": [
+        "internet"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/submit-app.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/submit-app.html",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/submit-app.myllmapp",
@@ -3120,6 +3252,9 @@
       "aiUses": [
         "ask"
       ],
+      "uses": [
+        "internet"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/book-nook.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/book-nook.html",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/book-nook.myllmapp",
@@ -3176,6 +3311,10 @@
       "version": 4,
       "featured": false,
       "requiresAI": false,
+      "uses": [
+        "internet",
+        "location"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/air-quality.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/air-quality.html",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/air-quality.myllmapp",
@@ -3231,6 +3370,9 @@
       "version": 3,
       "featured": false,
       "requiresAI": false,
+      "uses": [
+        "microphone"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/decibel-meter.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/decibel-meter.html",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/decibel-meter.myllmapp",
@@ -3257,6 +3399,9 @@
       "version": 7,
       "featured": false,
       "requiresAI": false,
+      "uses": [
+        "internet"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/internet-radio.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/internet-radio.html",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/internet-radio.myllmapp",
@@ -3455,6 +3600,10 @@
       "version": 9,
       "featured": false,
       "requiresAI": false,
+      "uses": [
+        "internet",
+        "files"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/command-center.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/command-center.html",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/command-center.myllmapp",
@@ -3556,6 +3705,9 @@
       "version": 6,
       "featured": false,
       "requiresAI": false,
+      "uses": [
+        "location"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/speedometer.jpg",
       "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/speedometer.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/speedometer.html",
@@ -3583,6 +3735,9 @@
       "version": 5,
       "featured": true,
       "requiresAI": false,
+      "uses": [
+        "steps"
+      ],
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/stride.jpg",
       "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/stride.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/stride.html",
@@ -3665,6 +3820,12 @@
       "version": 1,
       "featured": false,
       "requiresAI": false,
+      "uses": [
+        "microphone",
+        "camera",
+        "flashlight"
+      ],
+      "minAppVersion": "6.4",
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/signal-kit.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@93e06ec9bd2af727f5dcefd1605586408cf0b045/apps-src/signal-kit.html",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@93e06ec9bd2af727f5dcefd1605586408cf0b045/apps-src/signal-kit.myllmapp",
