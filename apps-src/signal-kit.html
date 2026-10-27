@@ -1,0 +1,758 @@
+<!doctype html>
+<!--
+  Signal Kit — MyLLMos™ App Gallery · © 2026 Opticell Ltd
+  Source-available: read it, remix it, run your version inside MyLLM™.
+  Not for redistribution or republication. Terms: https://github.com/TeamDzX/myllm-assets/blob/main/LICENSE
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Signal Kit</title>
+<style>
+  :root{--build-id:"67210c52bc"; color-scheme:light dark;
+    --bg:var(--myllm-bg,#f2f2f7); --surface:var(--myllm-surface,#fff); --ink:var(--myllm-text,#111);
+    --muted:var(--myllm-muted,#6e6e73); --line:var(--myllm-border,#e3e3e8); --acc:var(--myllm-accent,#ff8a00);
+    --warn:#c2410c; --ok:#15803d;--grain:0.774474124204;}
+  @media (prefers-color-scheme:dark){ :root{ --bg:var(--myllm-bg,#000); --surface:var(--myllm-surface,#1c1c1e);
+    --ink:var(--myllm-text,#f2f2f7); --muted:var(--myllm-muted,#a1a1a6); --line:var(--myllm-border,#2c2c2e);
+    --warn:#fb923c; --ok:#4ade80; } }
+  *{ margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body{ font-family:var(--myllm-font,-apple-system,system-ui,sans-serif); background:var(--bg); color:var(--ink);
+    max-width:620px; margin:0 auto; min-height:100dvh; -webkit-user-select:none; user-select:none;
+    padding:calc(12px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) calc(40px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left)); }
+  input,textarea{ -webkit-user-select:text; user-select:text; font:inherit; color:inherit; }
+  button{ font:inherit; color:inherit; cursor:pointer; } button:active{ transform:scale(.97); }
+  button:disabled{ opacity:.45; cursor:default; transform:none; }
+  h1{ font-size:22px; font-weight:800; letter-spacing:-.02em; margin:4px 2px 12px; display:flex; align-items:center; gap:10px; }
+  .tile{ width:34px; height:34px; border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0;
+    background:linear-gradient(145deg,#ff9f0a,#c2410c); }
+  .tile svg{ width:20px; height:20px; fill:#fff; }
+  .hero{ width:100%; aspect-ratio:3/1; border-radius:18px; object-fit:cover; display:block; margin-bottom:12px; background:#0b1530; }
+  .seg{ display:flex; background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:3px; margin-bottom:12px;
+    position:sticky; top:calc(4px + env(safe-area-inset-top)); z-index:5; }
+  .seg button{ flex:1; border:none; background:none; color:var(--muted); border-radius:11px; padding:9px 4px; min-height:42px; font-size:15px; font-weight:700; }
+  .seg button.on{ background:var(--acc); color:#fff; }
+  .card{ background:var(--surface); border:1px solid var(--line); border-radius:18px; padding:14px; margin-bottom:12px; }
+  .card h2{ font-size:13px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin-bottom:10px; }
+  .row{ display:flex; align-items:center; gap:10px; }
+  .row + .row{ margin-top:12px; }
+  .row label{ flex:0 0 auto; min-width:92px; font-size:15px; font-weight:600; }
+  .row input[type=range]{ flex:1; accent-color:var(--acc); }
+  .row .val{ min-width:58px; text-align:right; font-variant-numeric:tabular-nums; color:var(--muted); font-size:14px; }
+  textarea{ width:100%; min-height:76px; resize:vertical; border:1px solid var(--line); border-radius:12px; padding:10px 12px;
+    background:var(--bg); font-size:17px; text-transform:uppercase; }
+  .code{ font-family:ui-monospace,Menlo,monospace; font-size:15px; letter-spacing:.06em; line-height:1.7; word-break:break-word;
+    color:var(--muted); margin-top:10px; min-height:1.7em; }
+  .code .ch{ border-radius:5px; padding:0 1px; }
+  .code .ch.now{ background:var(--acc); color:#fff; }
+  .chips{ display:flex; flex-wrap:wrap; gap:8px; }
+  .chip{ border:1px solid var(--line); background:var(--bg); border-radius:999px; padding:8px 14px; min-height:40px; font-size:15px; font-weight:600; }
+  .chip.on{ background:var(--acc); border-color:var(--acc); color:#fff; }
+  .big{ width:100%; border:none; border-radius:14px; padding:14px; min-height:52px; font-size:18px; font-weight:800; background:var(--acc); color:#fff; margin-top:12px; }
+  .big.stop{ background:#dc2626; }
+  .note{ font-size:13px; color:var(--muted); margin-top:8px; line-height:1.4; }
+  .note.warn{ color:var(--warn); font-weight:600; }
+  .hidden{ display:none !important; }
+
+  /* Receive */
+  .meter{ position:relative; height:16px; border-radius:8px; background:var(--bg); border:1px solid var(--line); overflow:hidden; margin-top:10px; }
+  .meter .fill{ position:absolute; left:0; top:0; bottom:0; width:0; background:var(--muted); transition:width .05s linear; }
+  .meter .fill.on{ background:var(--acc); }
+  .meter .notch{ position:absolute; top:-2px; bottom:-2px; width:2px; background:var(--ink); left:50%; }
+  .lamp{ width:16px; height:16px; border-radius:50%; background:var(--line); flex-shrink:0; }
+  .lamp.on{ background:var(--acc); box-shadow:0 0 10px var(--acc); }
+  .decoded{ font-family:ui-monospace,Menlo,monospace; font-size:22px; font-weight:700; min-height:3.2em; line-height:1.45; word-break:break-word;
+    background:var(--bg); border:1px solid var(--line); border-radius:12px; padding:10px 12px; margin-top:10px; -webkit-user-select:text; user-select:text; }
+  .decoded .pend{ color:var(--acc); }
+  .stat{ font-size:13px; color:var(--muted); font-variant-numeric:tabular-nums; }
+  .cam{ position:relative; width:100%; aspect-ratio:4/3; background:#000; border-radius:12px; overflow:hidden; margin-top:10px; }
+  .cam video{ width:100%; height:100%; object-fit:cover; display:block; }
+  .cam .target{ position:absolute; left:30%; top:30%; width:40%; height:40%; border:2px dashed rgba(255,255,255,.85); border-radius:12px; }
+  .msg{ font-size:14px; margin-top:10px; line-height:1.4; }
+  .msg.err{ color:var(--warn); font-weight:600; }
+
+  /* Light */
+  .swatches{ display:flex; flex-wrap:wrap; gap:10px; }
+  .sw{ width:46px; height:46px; border-radius:50%; border:3px solid var(--line); }
+  .sw.on{ border-color:var(--acc); box-shadow:0 0 0 2px var(--surface) inset; }
+  .sw.custom{ position:relative; overflow:hidden; background:conic-gradient(red,yellow,lime,cyan,blue,magenta,red); }
+  .sw.custom input{ position:absolute; inset:0; opacity:0; width:100%; height:100%; }
+  .torchbtn{ display:flex; align-items:center; justify-content:center; gap:10px; }
+  .torchbtn svg{ width:22px; height:22px; fill:currentColor; }
+
+  /* Code chart */
+  .chart{ display:grid; grid-template-columns:repeat(auto-fill,minmax(88px,1fr)); gap:8px; }
+  .chart button{ border:1px solid var(--line); background:var(--bg); border-radius:12px; padding:8px 4px; min-height:56px; display:flex; flex-direction:column; align-items:center; gap:2px; }
+  .chart b{ font-size:19px; }
+  .chart span{ font-size:14px; font-weight:700; letter-spacing:.02em; color:var(--muted); }
+  ul.tips{ padding-left:18px; font-size:15px; line-height:1.5; }
+  ul.tips li + li{ margin-top:6px; }
+
+  /* Full-screen light */
+  #overlay{ position:fixed; inset:0; z-index:50; background:#000; display:none; }
+  #overlay.show{ display:block; }
+  #overlay .hint{ position:absolute; left:0; right:0; bottom:calc(18px + env(safe-area-inset-bottom)); text-align:center; font-size:13px;
+    color:rgba(128,128,128,.9); font-weight:600; pointer-events:none; }
+</style>
+</head>
+<body>
+<h1><span class="tile"><svg viewBox="0 0 24 24"><path d="M7 2h10v4l-2 3v12a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1V9L7 6V2zm4 9v3h2v-3h-2z"/></svg></span>Signal Kit</h1>
+<img class="hero" id="hero" alt="" src="data:image/webp;base64,UklGRrIvAABXRUJQVlA4IKYvAAAQMgGdASqEAywBPrFWo02nJKesJJVp6YAWCWduLdK79fY6ZB/07HlqxiF7Qa6xuTd1/8XlU9RxqT8+vv042XB03o6xzm9tot5lyFWa55nhO4Ktrv5MZv4yArtH6W/V3Irve7aGJ/6vKTwgd/hr3EpUCvn9jz5Bfc3sED2L7a765lsCSEhegH6eAlfpJiVeiK44WNyhF3kjtdc+oIzW1DVE2uTC8TnYT+1JHaltVLaOEG+YKg5z5vgEk6XIfZ6YtrQAFGAN4nU996PuYOyq3/DEd8LDRCOf0bw+w6U1uQwtGjyESwLQtOKZZFlU6iNtwHpSmGDeQ1/CQZOXX9973xkBmgC4Ye19GV23ZhRZ6Y5Ma7S9xyGhVBQu69WASeozaFjbschXlKpfSfs4DjyXDa3Gvd+CmMHsVxRfCUwd7Kw5r/tOLj0/KINMXin1m/fvFPVUkql91ww0TydUceZXvS6bibufbieXHo+52tNEeY22zkuKtX6+BWb4gAqyF+mWpJZirUTdCdWON+bVI+/ej8ldCueSH5iL5hy6Dm0p3tLNLn4cyByTysky6kFt2qMtaCTIH9DszV/7T5NHmwUSk1Moa1Ilmgq+8ib7YqphFs9NULMvHaZ2MWnWKQayX1kudECMhuNBcuED+kymDdyFqoWBopWm2X5l0OhmpmF6DalvF59omz010HWDktcQwJaKqXdLUpFyToiijzNqMIzpGpOFcwP7y0L7rkL7yRhiLB/2BLQCsnqshKmeUO+KtsQlfANkP+rCPjNSEMUbPDUFTpYzFoP3Q3UcQMTDztqqRPfPZY3B90qUeJpoQxFl6LErJ2RkGPrjgvO8RD6z0FEZB7zCeOY0kg4TBaHObCHFcuYTQgq/oLBMHZL17Wa8EtG4XaEHWPgw1Oy+hdbFBGsGs28Mp1blLq3xZbIXNSlQlMYLLqirsbUrTtb1IWc7eMr5ZoVFYd0qGWAxaOhXg1Z7MBQcRgpGwyDtma4FbTqqvx5j9pMVnrJgN11G1Qlk9jopcgji1U0Pdo4A+e20agYYAHPMw95BcYLg6FfLVWcyFMpR+5P2to9bnprItUyTM7wB4Kv01P+ogpUCbP6/Ti1Z9hQPqNg2fbiEFpF2S6LO/lp6Ze5j8FOJuGc1Dl+5Aw+fI3lspFuYde3p6NDbFgO3VuCH8juPewkKyF+xSGTbHxFV6LmXjE2R6Uc+F0+0kg5DR6kHp0wqJm6nuSkHx5AetrLQK7OpmWpqfmXjo9sK4kntt2Mj3hy4kBXBueDG/J9f0V+zqbUhuCL7QvslOA61aM7XBGJRNrNpHfZsb4Lbn9yHiSArUvY9HrHh6EKmu3b3scK1X627S2x3XV6WP1bNioJBgXz3+U33EfeAusHWz6RozL0fzF0RJsRnPkPIO2wSoNLuZ78QrdzCe5rjdGRLB+V2ovEluZjqpiklHTvO1NSiKgTxUSiEBd+q0HvndtvEq8r9pk0D5GmBUCLHBSt2wiU5iS/oPLkEddQyfELvQfGt8ndt4WDRCOsLjLzwoz+HziAKXAWBu74vvwkWQA0cHhpQrHdFd74PMYUmeh+F7Vl+Fp1Ln5aw6Dhir7meRCvtThmeVAZrcTxi5fr9Tr2iaMZmg4E5QsK79Zo9HrJ49NXJraphFKSCwwQoHAw2r8bQFWeoSWQT3mXzGtTq5WHGnsU1ZidyAwxcfpyIf4AwTzSUJs00FopcQPk+YsbS1PMw7s99xlG+Q2tPlpoNFvAYT/68qLpb7Fv0zIY0hcW3HmSW62hVsMqdX7AVEN2QE/m2iF2GFQ8SZDN30nV0tqvsb9H+Fk2HwefraQ7lMRital+isIML9cZ4/L4i1mqgobuDwp59GzMDcAqCnivMsONmjjtNSkLxHl2bvNid7pYTOCTe42PYXXXQveaEVHH1aV7k1RSXt0Zha0sfcoINa1srEDKHtQenJX+a//h6KR5zK4lCMOrhftQ/6t30mv6nLENdXVBTZqOHg4wRr/Jz60SJvjvuybtPZAZtUIE260yzTTwK6TCxWOSa/Ib2pDykceCAJ6D8k9BFftIKrz8tTGlI5Qjw6wHTFNMbz3lC/VwoBZq8Gu4pIKAtFx1vTX8PNlBrmz1y+Uz5e+DC9gvemKbFNWsZIEeKDtwWrmMybRlq+xq+rsQAeUpKzD0cvolK+AOI6n9n5XLYOEuaBGRM0Rm5+QlJDyqqf+KlaS0dtkTRmKWnhj1SoD3Dti9t8f7on1zmmGYvo2t4lFshxQkymsAKUQg+sMpY9bDDrlHOdViPU+aKPOwOWD7JKA8bap6jRDxOy/+URms/f18oufDD+evVq1plSzpUGjtV54+zQl5exmSizgpFkANSikJNGV9oP0WtQqxjp/svapxPrpv1RXFt/kh27razpkDL/pR67ZROnKXCsmhVc5vVXE2Wtj7Vbei4etCQBXp9YrHjEcAFXcIwWTOyi/7ARwWSBretOapfSj4lOAbxmZ3pUtI+OIw+G5BD8cpnoJRQMdf+qT/Ca+wk3E0uHSq4i5xCmfPydM3xudjImq4he89RoOynCW9INCGAIcYIXZ+XA4fnPmJ+XAc7BKsWM9uHMphDbVcK+hXdS7DwAlVvo50xMvcbgmE1jbcXqCs4kb+1gC5rFmtY3XboTJVObpkEnqJ/YKjhp5TPA1X0xHBUZCoiAavXWbBbX1p3QbgyEoWXIvOVnraKJG9iMhdmAN6sEeMIwBhMLvdNEyxqD/c5xtWwORecQI0hKKgvt/0DACjcuYG60viHrS60XAZDPjem2CUZlImK2Mtd+JGi2W/hgT2KZCYVQ1X8doGdb2RlkxJjts+YDDPtKELW7zqpFPOmAJUb2OLZlrzm60qFpvuMTVwA5VqEHf/xRfJJG96vwajqToWk+TD/iIQlwV6zCg0GXEM18jhjQpXR6jf2Ozo4X4Kk4pveLBzZLuCsbcBvgDtQQOaZAOuo7+iU5YDMvhwGh4OnddiDPj4a7fWKtV55JP4rQljQoO5y7Z4TunF+DDht1O9O8Rcl0HwvaMJOfCRJ6z5ddcxav5STDIfpQiOzzT3sFruK8KCsY+ZzymB6Rj/3pr9D2E5pL1sVQSMesRpWzdU9fUkLbofgQFeo05lf8J94ubJ5OXR6iPc2sm6GVVxPjWPIL6vyXpaCn4ZjHLyf0SZSn9PTFdlP/IWwCn25BMKGDb0QFnP78UPuH66UfvXFWQpJkaFZKDdD8xvXkbBmGr7Ddk5VZMf/qCjWJhBAazcAifkNcOwfDuA8l0PhictGhExKsaAA/t+3zCeGA7SmRIHscdPPcvi7a5U9OjU/Fc51C1DgxobUerotNCag59FKbhe+5/t/soob/lIgSZUYRSekIoRu8o3ovkdF9DUBA8V1JaVlTi/4ibkLA6tloD0JKdq7DcPjbwgf2qtjkmjwLHMiZjQ9gDniOL0IUbTHypM+QJKXLMubMLF3m4iyqJ+3qZ1IWcGObhYjyYPjSE4QUpFevUoH5qiNMeq6tNkrybq/6C97l2kJN+Q5bT6lZamjonOW+ucNpUIyr2x7Neha/+6FoBFhfF+kdWQNxSYmsJGACLb+LnTPuDuj8xfUfXXXfUGcyyozH9+jNykfwqtLAXx+/HzCeFPjlLeFLKUJGhkkWr2bMmnPTxX97mUfGgEXJ3fAcuTNANe3nhkNhqzQf7eidyw8HTpl6AQi6D5PjoOpCVE2se6KGSVKsoS7GXGmLbVFNc01NjFcZn2/vF2EPhQ4m2AnXgW80Tm3SKU3LHlV6L0UsiNiIsBDAhheRNfW34jh9EPBGSSxPSstygFgU1EF3tYoog8gH2tNXpk4eZJL2nimhUANIDTTvEoPTTeLJrujb1IUowjLeMuXBGjYNPPS18haIHilnWswZW/zEazMODtWHYTxiU7AINod+DT+q/kZIQmVfTf/8L083dJpy+q+5jW12XAFr/Cp2lwVYjuGfUibrFwKlznZCwCpcSBuSg8WEoI/WemicJ58JFGnN+hYDhEVHCUWFFtqILtV22W5H66RQeHMcke2ZnZ9/0F5L+9NnKkMgwdpt5GrqsGb1OODnuHjqzUlrb+L6adQef56KhibexDEB0IWCgijTyNwwxJ7AKoBcOJVIrjg9CR0VPuxmlCdQn73S3omp+Xp30msl2zmvi51JQNgpU8cxegVPZX/uYra7klGmB7htRtnbUCqgkLUT1D45je+4IRu2zVeseUYI6wPvFyuqF6Ot15Nle3dh9BwnlN2MU2Sr8WEnF3w/bWBSXaOAtqxGkYCdc2OcFz4MKMcwcvGaHLW7gHc4Mh0pspldKLxHbE0gbQM3feNsptaOOCsFtXPSXURuB/FFkqU1YzCa7BGKaTCZDllMFqKpCMiFG5SckOqr5UOLMDlWaLAZbqh6R8R9/jZul1X4kwlHPGfIl/tR4BWSl1eGDWwTu9ZObqV4iA/CDHkC2HZBRy2FsZ/P3i7pGkeG3CEtvi3jtVdMPyrptg0voKFcNnwBuvDi2fxfsbKbB46W4atfuumi8JKXUSQ21nFfsaCSpdpgWDNmWMuz4jq2p5vDD2N+ZWLobF0HFT3GtmUA9BoM8MxXLANurv8NzHkfm+AYid99Q9Vb+dntrol9m4WrWaWdxbNSY5Hb5y1Znm9qldZB5t8XvHg/IWBJEKS1u3kcxps2J3A8P5EsFe5D+G7QsAimmd5jS2a0rlxlT7bfJ+gMLKOmpRFLC65nonz5Q1MII9fTSe3+2r979xsJhQUAVk0s0F7RcTodCxDbP/BteRcUl5w29wsrM0wK9pDCoN3Wbx53aqVsSJrZ/QG6bmnOT9fPV8LQIWQBAdBDIfpxcULxnJfEUvJq3QXndPOb0twAHi2WDueGdQILDU56JxRvAt+NghdoH1we75e069JLAHnekzQH8sCURFlYMPQtjPlUYBjYc01ELm2/BPDwK9TPcwAr3edJksHDja0iniJDtMHAW0zF3a4LywelZy1lEv/Li+879zT3U2Iv5dVoQVEzsR+AXYNAC0r7eM8ekpjEaA8SkdOoTsvx57KMVLBxzd8qtmHB0l2llq0SMNDo8ddjlYuO0RtcSyWqBQGu8+5Y2Zrgl/9fpR67diHUDwJ2HrxXq5gFKgbzn7FzQXW3gUwEWuhain1W2e50IsBcDcxUbmmNXq0Ij1VVC8hG3j76iOFm7/fXBqyUHs3svSpFGayebI80HnyocmQB0xOUXGxT4u7keNQMA5IYgXkkBtdljpGrFav447frXDiMNuBcgm2/a3NgyxPJLZmIxesaA+a0ZyIE7aEmECekku/akKY1XaL5BkRN0Uo3MfK1NtuVFjGkl83hoySbqODD8P7i1VSI7JRw3z0/d3LVfmRRa35L/TVqIfpPp5YhyZUR83IBzMoVe8FuHo2Q4xqW0M9O2btPrXsQZlUYNt2Ic+/+L1mmOG+vHaQmu/pGFCHkV5PzHIPOwWOLOsCe8hZcS2pdOOgkNENaK6ArSRsy5mTqS4MBQE8T9Pf6FBV02Kq9+fMhboFGUuiZxUw0VzvwRKVBvjDBZ8g/YaT4TcOyPO7dUDFDwozPpKXTDJqJ7jhcCs8FD7WcRED8NJrLrJzlEh6t1H5bVZF865su0LwZLW+C9mKdzRWBs+/rV1CWnmJlnilvmBZsBm4lq2iGdIF/KLYAXo3golfITkUEm6XNQdl9F2NfI8JapGq6h1QUceOhVGGRydPW7zLdeySNrZL0iYRVV3vyUcBLa4DI+iFLISeg5kShj5egVSzWr3XTIZSL6qNujrkBLiu1w4vJQknoIJbe5AtyiiOV8/7T/iJ2h1AjaYZCbvq25LMRINjHUagx0vb0/Py0tlY9nAWRf97h5AvpAFF93JRbSKwv6bV5MGxrctbFEkQ8XsdvmI9aRsEgvPXJ37ATR1Nvm3sGNFYjCZb3rUb7fg93moTMAJFAUM96CAHfTbaRkFJvbNJcExLmR8EOdNiPwMbyBW141qhYil977mJTR0M3ObT9AqAQvLg0LY+7uekedYCbXRGOaFSv5ow6Er17QW6bi4e3M57LbkJoYuDj7WjKjhSHXyuUCBkW4d/CKT/GEe6flwAcN+vlckK5rxiKtqbGt0yhy/EopUPClxPF+y9j+DZkkFUAXXaN3bcQXtKMW6EeDb3KszVxdnND8ZQR7apMqUA2NEJCrvx9K0CFec6caXSWr6j3j1X3PfTvGH6Gtnyr6kdT3xwsPeDvwAgpdIjqwP0JTdM61wCegKnX2LeD78zr2klW7olVSLNoy1J4YqaIdFVGITA/cEhsYSlZRofjgkPxZdWc06CmCj8Xf0+vWS3Syc/0wbJ02KOOcIdu5G1IkhOIiC/SMFfbDi2oFIgzxdRsRCWMdvsRhNsz5nz/3rRqXlXOnTzaKs8VYk5MLX5R4/q5pQ96gUPj2SCBp4LOkLtgSKKaTWx6JrDkBLsRyW/HRz8L/NlSJE0pvoF63TF4LahBesTK3dtdWF3z8x6FF7R6Gle5jY/+8U+7l9B1m/voyrAHZ7ihlmHiSMIc+CAbNTpdaEULwHCnVnEq4VSco50mA+n8+E1LgyIwqsbsYiUIEUrWubHIJfJ9pOb6MMJ1lY7kQrhyCRDELdLW9gzls/DT+UsWKzp3zDw8+7Iv4RNfoUqskg2/DYa3EuVtXc5de/Iw2ltXChEv+fH3CVaKrHxOQqVLJ//MjG888hFdwAYtCVjKOsuL8cS2hZiDQCQ4q1QHqCeIP0Z0kyaVc6kxzpoyQhogxtPiwdlpHkY/IdwFwHeqpT5IW17071j3C5IGkvRpv8fclh/FCZHSyeZABEC4gh09zJsXo4kZHFbHD/Vhuum+fn8W5oL9dMeYeEE5YEIzcmNyAMaBOn1Yf/NLZowb0w9z0DBJuiNVD+wTR30K98QXgS9n7sf74k7/h5bhVVSR6HRisZQrZGJKTNvaKt9B9bDAiaUWvQCk12zBl9jhTnvseqZIWWuprg+i0iZYxBMQjug778O4tlwH9AiaWsSj9leGJRCz2ih70kTE1rk1H2Wj5J3grz+upuTIOx/jFdeQu5ooCSdNiFbVvQZyr0zASUtwOm0F/5VAlBWcyliugJW9ZtHUi/R9AAgwJNnAxelcjAn2d5obxr/nBxtVz9CdokrfaSG3iXJ6+ZPkrXvhnjt+IBg1R6Lo1T4JQB2tvqKjNS8Oa3/wihsnMoToANeObFXBQfA/4DyzFH9xXvXpt0X8MlDi4mwQvFB1sT4qBYz1tT6nfzIYH/mMuqLWwGyAsApRBFs/pWyrH6CwHRq38lhVEV3vKT7erREK03HrL+BZz1PWMMDh7U6mAYTWYzUgUONcivgu3zyFpvpHcLPz90F6DWC+vI4SqUIl7voGPH/tEbUzE2QEUkIS9VBwBMagsr3gbviZWFvu+rQ5W0nMcJTRifvGKbwYfDLBVgQnsZX5W7OYnM2N/noV+HVpf4lKiOnpyfqmyJYLYeA7tb0ch6Gfqoz9T45TC13j3dplObYnBV9F5YRrxdCKqlsi5YVgPSl2yaKZH/kuaFSNQFmgefUk/PEmclrkwK+vGXxMqT2iyevisvECZBoBtwX9/tHj1jfloWolGITybJUXrAr236Jb7wYKh0ezF3CXAm1OteORrEE0UDYk6vlnY+s/UeSh1y28M2Dsi9flc6P2Nq6d8ANVrW5OVcCqmFhqNAQoXHjhDClfRkyBoRraNhv5WZ8yalRB5kQlqwjp4lEQzUe+bBUZt4tN9toFxuBbNKapiZ11ymN8gie4j7+rgrUiYtQk3LsnFJ/l5usFQivMw4jzo7H9zdULzATqsAJ7iheyNF0j9yY7gIYAjCvgAPP9AfvB32rgPycPWwyabiz9OiT6TkXGZN4VJxZNwImSJkrfPNoVsoP+42HXtG6y759dCSiPq4n8pyDEQnkK++HcW6c+IcEcbh/Nt+AQxpOXDn1mWb9Um65J1kFsw6wYsPbvNUgwMVOrVeDcwNISxc3r4fairzJct8Q8utaWwM+Qqwe0BE2kTp4aZRC9148gxlhtUVYYkalaEACVI4V8Nt1N7Kpue23lSZE9vIC3ibQuR8lryR1pQUx2C0fb91X1nwmUNY3gym8bT6hLXrO8hmez1vqiwSw9L8QV5BDMgubVbOYV4c29Fdn8XMcVB10fl8aOIcQK2oL/LCZiFhjer63FS6EM4DWrvagabZVeaJqUnfKjjeKVaGsAwaben837UalHjKsDO1N0gWFCo99oXAatgSKonHKHXn4dMbM0wVFJFarewwTX0BnVSRTKJ9jokAg9R/mmVWUFNvmWFD9MhEI321w0AH2bcL1pp1Tr9ceq4KrWiatW6sd8kNQTZxcksjWmfA1PUjpnRwL3fKdqS4UkakeyOZ2Ic7H043aeqA6ICvVKFTJY8PqOInYHnMcXI6VZ57fyHMbUcPc2Jxx9etYXPOp9wKaku8NRESqKYHJYArhFBIyd4kseUD0GKAEugvPDGOjh0bE039c8McRvrw+AK+FXej9lbaaEqiVbwmNS8kZhNIUWI17BcW+lXzNeBQ7+3DEFkeRT0mwIksqbff6ASleFuoSMw8frUB/M+ISAj+46+2S64Xvjllfgd9CKBg9VnZ3MZvWQcKPQAjaVFIIzNg7A+3bZq4s4XnnPnuxKbRFjC/7ncPtilqBI/7Gq8s2GIF+d6EPlR6BMe9c/xHXV45a8GR8MJXke42eEfJOLZ2ESF+GUl12xdsn2BRG+afOeE9zF3G+wJKEW1MMGiwFUom/GPZOWijUymeeSHw1jomuwDJdfSKupoePpOD1m/z27+3LP42+koQFBbMvmZv+vftxhcBSr4nSEMch/uvqfSL1yAciyfmWDG9y9Kidn01pL3pZgGVE/b6UQBJfGFcajV35bVgaeQ3HHp0ASo1u+VLpF6TGvZMYPRFFTqmlZoUJpalNfulZMtHUxrL21ajO0pDE7At6rhxMZAGLO5101OI+uVCJT1er7E4e5c2pOWD4sXJ0szpoC7D/CeL4N5Mjy/t5bLaNR1VmIy0ZG4nK96jIj8054I2zEa7rWqGbk9Lxa96OvU6ef6H74vCcVbjZDTWLe2TO3VzRQqHO59c1vDwFDzV8QgPkWCRntvfDM6QzGLXkaVfYKP0PH8KX2o2c5+qzRrBwEKcrl9PNoroeVUX0cJCfTXcQnbZgLuFeil2hkszhSDFWpyuXlw7HNC0rORVLixi4sNtxF/3LTNQR+iyyTPulO49YWYOk9ZZFKwIp8eiSH2mKlBXCwy4isa/oDEhDytOruR48Oa850+AjTka0ohVS8JggqfHBS/7iPPdRSA5jvLQCS127XIUonDCMFDU7iJziK7SDezY9UuJes2o7xRTbZAhx4oagaGai3Vg9QRwKfwkTuL+kPaGJayeWMflki70m9wX3PgTDRori+hlSRixw6KAGGaZZjTqFdlDkDHwguNwoXJDr3M5FPWDHhRst6qB6MlYzrImMJWlg+BxBr7XcaN2+vAlvkdOgfbkFVA0fvNxD6wEOJ1pP0bsUrg5a9w/dSYCaj/tI8Tf1Xqnh4W8DPAooHZS8icPyeMUyGTLaWSB4W8/qtO0Dc9ajQmGfEJd022OEotLRiDEgfZD53/icokvp8MxvxR6/WEPiew6K8P0Cc3fdU9cc7V7KSRrP5IaTx0/aY2JW1FUjA1nkp8NwTHoMi059T96kIzz6eJ+GS6jAxyIXugl29o/r3rUzZNWsrKyy2X5xBmW1txYCxzq+UpTCsOc36WFpeRxZqcuxVMmoKmtM+W1ARYDXM8f0IDvetoIAWGSatLjS8YB44kJfxovyfxnX7w8U2DOIVdImBx3VhxnXUsuP4vcxAQZJwuY6IEMd8NRX0tGg3iySfx9Y9KkPuF8L3vlYNTl9cOZeGUuKdcDK5cK+Cxas3jkpkFUZBj6JVq5nc3uKQ/a9fLvx7/G2mau9cGbHVcPftSORGIpkXF66ogOlg6OvDAa9xb5SE6Rya3DPT9z8zMfWqFa2WA3cLwFk4EcLQ9Kp+GbcLJd7kARssp5so3NGXZkiB2Nj17HgHvJ7lC3RqbCsEOSVY2XTb/vOblUwYlYAgS50TJ6wxNiNc8C4B2pR4Zp2eUjgYOHiFX39NixkQSk1rMNtkxvNWhJLOiYvcDd14jrAhY3GCnisDRuIcPHaAciKgdmVy+nwDoLIs+g9tuSiqXSsIuUJXB6hNcFncieA7fgcooqXzAm1SaDNw4xsR7pmYQKxCJiEvvHhrPx6htlk0Vwp8Mxb7m01ycInzLiQlDoZFBR+Pe2Vc5Uk/wHZB39GjRWQ0rZIOM+VINucxu06/mhx+dqM5caPckjq4ng9YuUFI2URdmqz4UPzZ/Plb9NYgzMmjl5VjAnLuk3ERFMCUUyl0Hfxkktz4PNEF38kWK6LP/k294kgPTuPmsqRmXZYn2hP/4Nm8wsolBUyFIUzFBImfqHPTpcvFEUV42NMHhAvOZ6+BpKt+gtQgHfrxIRC+Gn+2fTPi/UbcBCu1QRgXRCnUYnkOZRus3Oxnvsb13t333fx7QCBTxW5Exvn5RZ8Dc0/ZQKnDpqTFgeAHlHFdFg8LoA82cSBbOPXfMxXMO66fY7FufS8GN8x/DsbtoLgt0uTccPWKFcFOI3SRnOzOgC8hZjGXjXsIUkhuS+BL2O7bKIst/wCSmOJvLfKXUJXezeBJ7NqH6opnMWmgtC4vw9tsWgCr8LyTdF+W3+XHN6MSFJg2h8/EnlndI3pr3Q3kml1POa8GZJHGoBJMBfrYZQ3rVNNaaV6e7mkjVgi2qPggONbGYbIeGI05eDMO8CNkHsvSmirmhllJxWaw521UrYt5/9obMWtDzcsIaA5bDSfcDVvfLaYmhi1JbhIM+garYRwJ3DlFStGQxkl72cZe/wWwpfB61VAyjfplKhlEOC3shuaH9EI5gm7fxe+DPQaWkiPjZTU11/zH9OXSOA/75uIfFUyfLvC5uyNxwzc5Jrbe1FC8vIl2TMKNWZHaspa/0i1oPl2Si6OSE77y1Yqp1tHliIEhToZ7siC0IzQcYSBFOwlIYEFOnERNDViL9H2lAybWaAAPI7DP6lT5AIvkYnag2sOg/UqEcJtIDqu01nwnsXFGMtUwskFbMflyS4gdTg/CF8LY8vvAc1HvFSBcu+Thmq29kLyAt79xEweHmTvChhRQojEOROlgvLY5KYu1AjLxuLZqnEi9f7axnXAhNvs/stLTd/v8mwSc2mm1sddoaE8iaRGqfGO07rbkstjnc7ScNQ7HwqEXC8tiQ88ANiri5YUEOSzKIU8SbFcQpKmQK81BJcyfI+hqbDucmYBp3VtiqH954vuiYvAPFjaUOvTYMrEf/7R35UiQAmJzLamgQw2Dt+40u+ePV2/7m+HeL7k1VSou5fP6g/JAQ173L9GseV7ifh14J3yn1avIV2tBHwevjADaaN68QhFmuMYYkWukklZkxWHiRf2q/xGQqt721GcfvPGChQ4cOsLQPII1NA/Xjc9wYl3q0Gdzw9Y1XhLhitoPYkRe74Nlc/2+mo+9yHae8L81DQBpLRlmdJwfOHM1WsRInpmTNc07xpvDh5AiFlo5JtG5sSg9b9Q8sY9RSLLsPzYDyIml0MyXEm2HQajREI9zJn0uu7hu7C9LGQJRtkT1EkUqmh9b2LFo0w1B6K9JexgDEUgFeg4QWWSqJ6hGXSNoaiudRx24AIeeJuj9BA+Zof6XvkQqsjT3zc6+FARo+ka5088THBAhY6vcnAuuSKVgfBG7bwCk6QgrnPdn/LZbwIPI4h+U1GxIL0Z5OGeAaoZudIwCQ/0zovI7a/6zj+SziHDco9aGtMgmCdqma31tZIeTpuAn9rgNySerBWx1qZAdt5GHhYe663iuNr5017c+A4uJuUC2+A+Ius5VX5QVeY1/dequqlq0KeH8AcoU5JxIXodAkQ5lWiUx16HIsaUOkmbvFxXT7S9Li/uiQHfISWQ3Ay7grvjYFY1sbCq8/XodOcnCrhud6F/EPkSor14LUSFIW5EMDiQgAwX5ex6eeXs9RAmHQcI3etJPlm2fkgcdrsRsh/RAkgn0HHlWZALXcNOqpARJZLmcW7OylLXPvqY8WFGyyShOyw5p97LCH5VqIpiSWxFhhtzS2ZTxCoT1Mwcz9FjhXUYwpHeWFKaiZnTS1LW0YzoGsD15nwyMjDyePZZI8V2efXPnP+1O8JyGU5ZDisweOZn0Q4xwlqviNjmpe9RORiMRX4vpWqIet58xMYOTVc9KyI0E9ID4oiBlmnPDGDS0jQMT0UwWFmNaN01zLdK0ELunr/uycpoFw0Sp5k8FW4A4DnO8egdDRxx4WBWe8GIUVyPG5pDtdovGhfCH68aNkXsZfM7U10buphMt/DQXS+DDZVtTT1guulgVilyvKEGYljohxV7LzEblNXiBHFwMp5zgQwGVr+gln28oJGX+zHzQcetKQRACL+hflAm1uQxlavNh6Un+0kcUnHa5r0un4XvJHEtf7+xWizi57BlT/BxeCvf2yN+21C6k14oGuSf5E0ioTb0HdEK7qmQH/0X4KPzQuDbsamP2AUQjwEUxVXBUhsvc3W9W1SmGik6c/Q7efmE70T7ahr4B9e3udsyQN7xRemmjstosjf/S+w/DtYDkMepnRg7OWwabD/QNoZW4G0SZv377mwGGgfmM/uTFh6eCon6QzUbylMJF4LtmniMjjHh2uADgctQPzhUaAO7X9w71DReGmoQdKtcelhuxk+9Ee1NWyPqUpKwLHmsQvhzkf2lEcac8Wv86otSLBUTRp3s7e0qdZabGtGIMVayNBqJH2XOpgPqgWSuLRreDnuqBoiyRNPJPfvLQjqUZFOENZKgoJ6klPmEy+IWzyXxNph3NtSNmv8RFQGxMKIS1qjVdC/iWr/udpqMPG0GmrWcZYs4fqJ+le0wDnhtDx8E4+Nv7QgLfuDMNuiWMbNZkr3Mo9uFvABajsVDtT+CP2YIC8DOAHikaSwYLNLTsZtdyzzha8+jhd7oPApOBqHc3THmsCoeH4lZ0CwEw84xwFLSlzJOAX7vDXYa/1/yjlQJsXSPGMt72SltGsxxUJ6nPi+zgAxh3hJC/BnGccaGD3Wf0BP95cgmhcmG4wFERklkl+5ClkODAosRWnGkhVNryYTU7rImMqlV0a7eOhFv9E5ZVfVNAdgrmySRtSwfMexSuNc+Tdr/xaeGH05J5tRSWt3MqST093m0TJB5u1d+XLpVZAF/wcxW9ERqv0ZSlEShOKpp2OL91ZXQwZjrsyuUEYGH4svGSusK0S/ucGeb2V1cnrnPD515/4JLxvq3dxDG2wI9JzUAsgwpQlT/UshotSXixo+V0/tIkO3jp4jMgKTbhhG+mqdRot1F1OFcFGUhiqTvfqUjX6qJBBW+DIopTe++CFXLnFMiDAJ73Hr8gkSFGO+HYDF2BQdym/yEBFwD2PBXCaHKc1g7bu9ixiL6ns1p9oP2b8L2yPmRrO7b8j4hGi4CJs6lUxC/xHNCZ+ekM9rTUBn4KgqIhi9D8Vawt4eE4nk2n52mIp8wZFQD9EkI210+buxdmbtVS/nlKOotkEOqDp1vY6McNffB5u9cKnD91XWyNYnOe9Rbi++xr1qpO/rgsM/3nT8RJvlj3MwHEB9tA1J7PkQZiGCtFp7EsAyYVz0qO+Z/Pj5KbyBd8owApMvhoYFcU/NaQJTsCFynNUlxLZW4WQ03pHOLQaTHHV+NM5y1Cxal5sjMVrsziNtYkRDUP9d3EJuoNY5q1H4yG36S+Mawr6ZkJO/Y21lt73wnLKv5EVUI4ouzMFeSf2CMTCUT+vyfWT7GahJUPMw1alPA37XZql6VSCXQjw+YNn2SEQgZmSIQiqLPETK8RS4fLFIng8KfHxO7wF2oTXAjqfyOobM6letI5H6WNCjr36xUaAX+Bp0CEyXjGGWcVvA26CMbwKz1fHW+f1By46eg6HEi6tgc1SCvemZQTDSRvLu4sNO+cTEEK7TWNRLnhPdJv0GcgAAAAAAFmJrCL6GUhbxBGAJ4Uf8OMc/A2DGQlEhsNj3Jg8CWFMW4Iv6KnXlVN9neN01PSBIjPMug2FrEgjQrioknaq5UGYBtR+P5AqgJDCxlqdHo4SWNTRUudm2lncwEx0/64n+eQ53KO60jVjD4Wk+6a39bq2zjC28EKbcx2rzL88C+YFt1x9fxJaFMLLG4M9S7mSS8am4zmZ9FNR6GTczcXfNgDKmqfTrCOHXsmwIMHCqpXz+SUATE7vCtJUeL6WIzZc+XHhwAbstUMPVgNg9cm+5nYFeFsyRYaMq7c0mP6yyBRCXBTyB2PWZZJk3OZbBA36oK6s1vfU15vdPYSQe8tNuxyXAiP3rBVbwRdPS1Dr3YTtGQRClkH3db1xe+ttv9C1ruEwoNCxMnENg1iOb9N7muh6vetvXKrVZ8y4n8uIkpsSTnWfeEzq1tqKLj4/5NyL7qSUxUOOx8DvWwd+v8GiZQBMH8Gox54gBoCiRkM6bk/y3gU8jAj1uOZ7y1+i16QoDfMIHXDcuyJbm/ymG/GkLS1DhFXsrbkrLzf6qsW3nDWP8t4/SNBt3keNv82U4/48p1sia03seWSk1WUu8gPn8fa+93sA35rVCboQpKw636SlYfPRnxaBk50xW1MJ7D5TPXAnbJYOKqaYMc05YpTYKlVZ+OVSMUaFkoGvyPghUJEMgnJNkkUraGCX5N24H3Uu1RPFgGvggvG/Ttto+7vI5claDogNBE4u35mTrT3MMv9RpNlP8vM86G3Fr/D4VdGAZgoM8rwsylYL6GonPoA4DM8RRQUv3jGrNeUFQAA0k6xaYnNwVCfHrbEiSdD0Wde69TF1xYz/MzjQA4W6LYYF1aXxISebSBMXl53nJLpAJQ10YD7fpPlD3NkxV5WohKsQcEnz41EAlG6dNIgEVvSjtJCsaPGA2yasfUWYE+v14+TEnxQqvmBK0AZubGB4XKtFk1tKDY59DNByRXrnhe9EcUm3kj9XO9uAWseg+Yd5K406zg5QL3GjSSl8YJBmpYYe3sJNoUEyvEgMTrVwyGD1ndDzh/GTt3EPVSwE1bd2DPj3FWYukSrjelJCK3MuwMOUpDSEROLQuhG3A7w+g/l+fy4szHlnIpchStKbetq0I0P8nsk0u6ssKOqfHzu7s6Zbp2gmw9u43fzPGB8GfKI/J884F+uRmn6Z/pT9JBT2A/ngQnXokB93jNdK8BUhX8/cS1fVE6d2v1Qwbt/WrA1VSLYrwRNUeGM/vTq6NFsPvl9YqkVrMkZPaiy+wwGEziNVliS58opWBZhNEYvauHlWHeM/tPvv2nLrg7Ss8y/E39tgxG+25jETtnSClQU7fItlr25X814aWdBVA/tHwAVyHCZ8wlKJHQrrnsOiPHHFFY9VkW6AgGC0xS94QVOZpXbpo+T/VXmflAkacamFsYwlNEjH+f8NACPYwUm2HZEtb/HVlTnzr5VY20ABP/srCstHeS1qTGIG9CXTu8qHOws5TAjVZnbfXcaYuSjZLwN5E8CjitbgeRAMRb2X4Wo0YZLFReRFeBS+l2cXJcU66pLMdZY2QPau+rDTXbt1Je4ewAr/GFPsbIHWUf0Yn0Mr+8Qt6YsrE862rvfZyEWbgxMyVb0AtRYQyOX9WboScY2EPIXfAYAg3Q+DeOC4kHQRw15NrPXA0IPm6bZ/kQ+dBpmIGV1n7g/oEzPZf40+HkkYYh0sKyS3W+zWnjRgMEVLQwUfasgNpingZfOF41ERuTmVcxxKYw72SJtkVtNPSwYw7EwrL5HkPxooGb8pSewTSR4T6jgSexNlcletp4NoJYf/hRyib7UuzKwcSSpaiwzPyqrnE0mNUznc1JXJpTv3oEQsCYFgzqDTjvUGCkDkGTBLmZ5XOnCenmc4cMq2F/robhvx2mAH9AkZ4/Nq5qBMHikyqNgMQqM32pjAFHY+v+943Vk2bD+mH5hnWuhEMrOF09kU2qJLPFUqbKOUDC1IwWj9PKyohPzuYOyp/ZKbMXMOAAWjnHcD/vNLUDhCN3gKthu8MSxgMT6kfe1E8/QfyziIe0wRKHFzTck4qWadxVqWI90qT46pbdqO8cR/2s8liR+7iaQeQ+/QKaAQSyBdCH5viJOBesHk9RG6HjDJKZU7VmKZJ3rtix+sKoc+xFOQTbtXtXQeeRWjQNc8DIIafSSV4htEl4MDlxOvlu+oY1NyR6MCptz7slRUe9jgeWdlubDWeU3doYkLsXD9fMkDGNbuJXElBcD98UE27jTkgRwpQsP5+WL/oAAAA=">
+
+<div class="seg" id="tabs">
+  <button data-tab="send" class="on">Send</button>
+  <button data-tab="receive">Receive</button>
+  <button data-tab="light">Light</button>
+  <button data-tab="code">Code</button>
+</div>
+
+<!-- SEND -->
+<section id="send">
+  <div class="card">
+    <h2>Message</h2>
+    <textarea id="text" rows="2" maxlength="300" placeholder="Type a message" autocapitalize="characters" autocomplete="off" spellcheck="false"></textarea>
+    <div class="chips" style="margin-top:10px">
+      <button class="chip" data-quick="SOS">SOS</button>
+      <button class="chip" data-quick="HELP">HELP</button>
+      <button class="chip" data-quick="OK">OK</button>
+      <button class="chip" data-quick="I AM HERE">I AM HERE</button>
+      <button class="chip" data-quick="NEED WATER">NEED WATER</button>
+    </div>
+    <div class="code" id="preview"></div>
+  </div>
+  <div class="card">
+    <h2>Send with</h2>
+    <div class="chips" id="outs">
+      <button class="chip" data-out="torch" id="outTorch">Flashlight</button>
+      <button class="chip" data-out="screen">Screen</button>
+      <button class="chip" data-out="beep">Beep</button>
+    </div>
+    <p class="note hidden" id="torchNote"></p>
+    <div class="row" style="margin-top:14px"><label for="wpm">Speed</label><input type="range" id="wpm" min="4" max="25" step="1"><span class="val" id="wpmVal"></span></div>
+    <div class="row"><label for="tone">Beep pitch</label><input type="range" id="tone" min="400" max="1200" step="20"><span class="val" id="toneVal"></span></div>
+    <div class="row"><label>Repeat</label><div class="chips"><button class="chip" id="repeat">Until I stop</button></div></div>
+    <button class="big" id="sendBtn">Send</button>
+    <p class="note" id="sendNote"></p>
+  </div>
+</section>
+
+<!-- RECEIVE -->
+<section id="receive" class="hidden">
+  <div class="card">
+    <h2>Listen or watch</h2>
+    <div class="chips" id="srcs">
+      <button class="chip on" data-src="mic">Beeps (microphone)</button>
+      <button class="chip" data-src="cam">Light (camera)</button>
+    </div>
+    <div class="cam hidden" id="camBox"><video id="video" playsinline muted autoplay></video><div class="target"></div></div>
+    <div class="row" style="margin-top:12px"><span class="lamp" id="lamp"></span><div class="meter" style="flex:1;margin-top:0"><div class="fill" id="fill"></div><div class="notch" id="notch"></div></div></div>
+    <div class="row"><span class="stat" id="rxStat">Not listening.</span></div>
+    <button class="big" id="rxBtn">Start listening</button>
+    <p class="msg" id="rxMsg"></p>
+  </div>
+  <div class="card">
+    <h2>Decoded</h2>
+    <div class="decoded" id="decoded"></div>
+    <div class="row" style="margin-top:12px">
+      <label for="rxWpm">Speed</label>
+      <div class="chips" style="flex:1"><button class="chip on" id="rxAuto">Auto</button></div>
+    </div>
+    <div class="row hidden" id="rxWpmRow"><label></label><input type="range" id="rxWpm" min="4" max="25" step="1"><span class="val" id="rxWpmVal"></span></div>
+    <div class="chips" style="margin-top:12px">
+      <button class="chip" id="rxClear">Clear</button>
+      <button class="chip" id="rxShare">Share text</button>
+    </div>
+    <p class="note">Hold the phone steady. For light, put the flashing lamp inside the dashed box; it works best in the dark. For beeps, a quiet place and a steady tone work best.</p>
+  </div>
+</section>
+
+<!-- LIGHT -->
+<section id="light" class="hidden">
+  <div class="card" id="torchCard">
+    <h2>Flashlight</h2>
+    <button class="big torchbtn" id="torchBtn"><svg viewBox="0 0 24 24"><path d="M7 2h10v4l-2 3v12a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1V9L7 6V2zm4 9v3h2v-3h-2z"/></svg><span>Turn on</span></button>
+    <div class="row" style="margin-top:12px"><label for="torchLevel">Brightness</label><input type="range" id="torchLevel" min="10" max="100" step="5"><span class="val" id="torchLevelVal"></span></div>
+    <p class="note hidden" id="torchCardNote"></p>
+  </div>
+  <div class="card">
+    <h2>Screen light</h2>
+    <div class="swatches" id="swatches"></div>
+    <div class="row" style="margin-top:14px"><label for="bright">Brightness</label><input type="range" id="bright" min="10" max="100" step="5"><span class="val" id="brightVal"></span></div>
+    <h2 style="margin-top:16px">Pattern</h2>
+    <div class="chips" id="modes">
+      <button class="chip" data-mode="steady">Steady</button>
+      <button class="chip" data-mode="strobe">Strobe</button>
+      <button class="chip" data-mode="sos">SOS</button>
+      <button class="chip" data-mode="beacon">Beacon</button>
+      <button class="chip" data-mode="pulse">Pulse</button>
+      <button class="chip" data-mode="alt">Two colours</button>
+    </div>
+    <div class="row hidden" id="rateRow" style="margin-top:12px"><label for="rate">Flashes</label><input type="range" id="rate" min="1" max="12" step="1"><span class="val" id="rateVal"></span></div>
+    <p class="note warn hidden" id="strobeWarn">Fast flashing can trigger seizures in people with photosensitive epilepsy.</p>
+    <div class="row" id="alsoTorchRow"><label>Also</label><div class="chips"><button class="chip" id="alsoTorch">Flash the flashlight too</button></div></div>
+    <button class="big" id="lightBtn">Light up the screen</button>
+    <p class="note">Turn the phone's brightness up in Control Centre for the strongest light. Tap the screen to stop.</p>
+  </div>
+</section>
+
+<!-- CODE -->
+<section id="code" class="hidden">
+  <div class="card">
+    <h2>Morse code</h2>
+    <div class="chart" id="chart"></div>
+    <p class="note">Tap a letter to hear it. A dash is three dots long; leave one dot between parts of a letter, three between letters and seven between words.</p>
+  </div>
+  <div class="card">
+    <h2>Good to know</h2>
+    <ul class="tips">
+      <li><b>SOS</b> is • • • — — — • • • sent as one signal with no gaps between the letters, then a pause, then again.</li>
+      <li><b>Three of anything</b> (three flashes, three whistle blasts, three fires in a row) is widely understood as a call for help.</li>
+      <li>Light carries much further at night. Aim at where people are likely to be and keep repeating.</li>
+      <li>Screen light uses less battery than the flashlight. Red keeps your night vision.</li>
+      <li>In a real emergency, call your local emergency number first if you can.</li>
+    </ul>
+  </div>
+</section>
+
+<div id="overlay"><div class="hint" id="overlayHint">Tap to stop</div></div>
+
+<script>
+(function(){
+'use strict';
+var $ = function(id){ return document.getElementById(id); };
+
+// ---------------------------------------------------------------- Morse table
+var MORSE = { A:'.-', B:'-...', C:'-.-.', D:'-..', E:'.', F:'..-.', G:'--.', H:'....', I:'..', J:'.---', K:'-.-', L:'.-..', M:'--',
+  N:'-.', O:'---', P:'.--.', Q:'--.-', R:'.-.', S:'...', T:'-', U:'..-', V:'...-', W:'.--', X:'-..-', Y:'-.--', Z:'--..',
+  '0':'-----', '1':'.----', '2':'..---', '3':'...--', '4':'....-', '5':'.....', '6':'-....', '7':'--...', '8':'---..', '9':'----.',
+  '.':'.-.-.-', ',':'--..--', '?':'..--..', "'":'.----.', '!':'-.-.--', '/':'-..-.', '(':'-.--.', ')':'-.--.-', '&':'.-...',
+  ':':'---...', ';':'-.-.-.', '=':'-...-', '+':'.-.-.', '-':'-....-', '"':'.-..-.', '@':'.--.-.' };
+var DECODE = {}; Object.keys(MORSE).forEach(function(k){ DECODE[MORSE[k]] = k; });
+DECODE['...---...'] = 'SOS';
+function pretty(code){ return code.replace(/\./g,'•').replace(/-/g,'—').split('').join(' '); }
+
+// "SOS" is sent as a single run of nine signals, the way it's meant to be.
+function tokens(text){
+  var out = [], up = String(text || '').toUpperCase().replace(/\s+/g,' ').trim();
+  var re = /\bSOS\b/g, last = 0, m;
+  function push(s){ for (var i = 0; i < s.length; i++) out.push(s[i] === ' ' ? ' ' : (MORSE[s[i]] ? s[i] : null)); }
+  while ((m = re.exec(up))) { push(up.slice(last, m.index)); out.push('SOS'); last = m.index + 3; }
+  push(up.slice(last));
+  return out.filter(function(t){ return t !== null; });
+}
+function codeOf(tok){ return tok === 'SOS' ? '...---...' : MORSE[tok]; }
+
+// [{on, ms, tok}] — the whole message as on/off spans; tok = index into tokens.
+function spans(toks, unit){
+  var s = [];
+  function add(on, n, ti){ if (!s.length && !on) return;
+    var l = s[s.length-1]; if (l && l.on === on) { l.ms += n*unit; return; } s.push({ on:on, ms:n*unit, tok:ti }); }
+  toks.forEach(function(t, ti){
+    if (t === ' ') { if (s.length) { var l = s[s.length-1]; if (!l.on) l.ms = 7*unit; else add(false, 7, ti); } return; }
+    var c = codeOf(t);
+    for (var i = 0; i < c.length; i++) { add(true, c[i] === '-' ? 3 : 1, ti); add(false, i === c.length-1 ? 3 : 1, ti); }
+  });
+  while (s.length && !s[s.length-1].on) s.pop();
+  return s;
+}
+
+// ---------------------------------------------------------------- settings
+var S = { tab:'send', text:'SOS', outs:{ beep:true, screen:false, torch:false }, wpm:10, tone:700, repeat:false,
+  rxSrc:'mic', rxAuto:true, rxWpm:10, color:'#ffffff', bright:100, mode:'steady', rate:4, alsoTorch:false, torchLevel:100 };
+function save(){ try { if (window.myllmStorage) window.myllmStorage.setItem('sk1', JSON.stringify(S)).catch(function(){}); } catch(_){} }
+function load(){ try { return window.myllmStorage ? window.myllmStorage.getItem('sk1').catch(function(){ return null; }) : Promise.resolve(null); }
+  catch(_){ return Promise.resolve(null); } }
+function haptic(s){ try { if (window.myllmHaptic) window.myllmHaptic(s || 'light').catch(function(){}); } catch(_){} }
+
+// ---------------------------------------------------------------- flashlight
+var torchOK = false;
+function hasTorchBridge(){ return typeof window.myllmTorch === 'function'; }
+function torch(v){ if (!torchOK) return Promise.resolve(false); try { return window.myllmTorch(v).catch(function(){ return false; }); } catch(_){ return Promise.resolve(false); } }
+function torchPattern(ms){ if (!torchOK) return Promise.resolve(false); try { return window.myllmTorchPattern(ms).catch(function(){ return false; }); } catch(_){ return Promise.resolve(false); } }
+function checkTorch(){
+  if (!hasTorchBridge()) return Promise.resolve(false);
+  try { return window.myllmTorchAvailable().then(function(v){ return !!v; }, function(){ return false; }); } catch(_){ return Promise.resolve(false); }
+}
+var TORCH_MISSING = 'The flashlight needs MyLLM 6.4 or later on an iPhone. Screen and Beep work everywhere.';
+
+// ---------------------------------------------------------------- audio
+var ac = null, osc = null, gain = null;
+function audio(){
+  if (!ac) { var C = window.AudioContext || window.webkitAudioContext; if (!C) return null; ac = new C(); }
+  if (ac.state === 'suspended') ac.resume();
+  if (!osc) { osc = ac.createOscillator(); gain = ac.createGain(); gain.gain.value = 0; osc.type = 'sine';
+    osc.connect(gain); gain.connect(ac.destination); osc.start(); }
+  osc.frequency.setValueAtTime(S.tone, ac.currentTime);
+  return ac;
+}
+function beepSchedule(sp, startAt){
+  var t = startAt, g = gain.gain, r = 0.004;
+  sp.forEach(function(x){ if (x.on) { g.setValueAtTime(0, t); g.linearRampToValueAtTime(0.8, t + r);
+    g.setValueAtTime(0.8, t + x.ms/1000 - r); g.linearRampToValueAtTime(0, t + x.ms/1000); } t += x.ms/1000; });
+}
+function beepStop(){ if (gain && ac) { gain.gain.cancelScheduledValues(0); gain.gain.setValueAtTime(0, ac.currentTime); } }
+
+// ---------------------------------------------------------------- overlay
+var overlay = $('overlay'), immersed = false;
+function showOverlay(on){
+  overlay.classList.toggle('show', on);
+  if (on !== immersed) { immersed = on;
+    try { if (window.myllmImmersive) window.myllmImmersive(on, { keepAwake:true }).catch(function(){}); } catch(_){} }
+  if (!on) overlay.style.background = '#000';
+}
+overlay.addEventListener('click', function(){ stopAll(); });
+
+// ---------------------------------------------------------------- tabs
+function tab(name){
+  S.tab = name; save();
+  document.querySelectorAll('#tabs button').forEach(function(b){ b.classList.toggle('on', b.dataset.tab === name); });
+  ['send','receive','light','code'].forEach(function(n){ $(n).classList.toggle('hidden', n !== name); });
+  $('hero').classList.toggle('hidden', name === 'receive' || name === 'light');
+  if (name !== 'receive' && rx.running) rxStop();
+}
+$('tabs').addEventListener('click', function(e){ var b = e.target.closest('button'); if (b) { haptic('selection'); tab(b.dataset.tab); } });
+
+// ================================================================ SEND
+var tx = { running:false, id:0, raf:0, timer:0 };
+function renderPreview(active){
+  var toks = tokens($('text').value), html = '';
+  toks.forEach(function(t, i){
+    if (t === ' ') { html += '<span class="ch"> / </span>'; return; }
+    html += '<span class="ch' + (i === active ? ' now' : '') + '">' + pretty(codeOf(t)) + '</span>&ensp;';
+  });
+  $('preview').innerHTML = html || '<span>Morse appears here.</span>';
+}
+function syncSendUI(){
+  document.querySelectorAll('#outs .chip').forEach(function(b){ b.classList.toggle('on', !!S.outs[b.dataset.out]); });
+  $('outTorch').disabled = !torchOK;
+  $('torchNote').textContent = TORCH_MISSING; $('torchNote').classList.toggle('hidden', torchOK);
+  $('wpm').value = S.wpm; $('wpmVal').textContent = S.wpm + ' wpm';
+  $('tone').value = S.tone; $('toneVal').textContent = S.tone + ' Hz';
+  $('repeat').classList.toggle('on', S.repeat);
+  $('sendBtn').textContent = tx.running ? 'Stop' : 'Send';
+  $('sendBtn').classList.toggle('stop', tx.running);
+}
+$('text').addEventListener('input', function(){ S.text = $('text').value; save(); renderPreview(-1); });
+$('text').addEventListener('keydown', function(e){ if (e.key === 'Enter') { e.preventDefault(); $('text').blur(); if (!tx.running) sendStart(); } });
+document.querySelectorAll('[data-quick]').forEach(function(b){ b.addEventListener('click', function(){
+  $('text').value = b.dataset.quick; S.text = b.dataset.quick; save(); renderPreview(-1); haptic(); }); });
+$('outs').addEventListener('click', function(e){ var b = e.target.closest('.chip'); if (!b || b.disabled) return;
+  S.outs[b.dataset.out] = !S.outs[b.dataset.out]; save(); syncSendUI(); haptic('selection'); });
+$('wpm').addEventListener('input', function(){ S.wpm = +$('wpm').value; save(); syncSendUI(); });
+$('tone').addEventListener('input', function(){ S.tone = +$('tone').value; save(); syncSendUI(); if (osc && ac) osc.frequency.setValueAtTime(S.tone, ac.currentTime); });
+$('repeat').addEventListener('click', function(){ S.repeat = !S.repeat; save(); syncSendUI(); });
+$('sendBtn').addEventListener('click', function(){ tx.running ? stopAll() : sendStart(); });
+
+function sendStart(){
+  var toks = tokens($('text').value);
+  if (!toks.some(function(t){ return t !== ' '; })) { $('sendNote').textContent = 'Type something to send.'; return; }
+  var outs = S.outs, any = (outs.torch && torchOK) || outs.screen || outs.beep;
+  if (!any) { $('sendNote').textContent = 'Choose Flashlight, Screen or Beep.'; return; }
+  $('sendNote').textContent = '';
+  stopAll(true);
+  tx.running = true; var id = ++tx.id; syncSendUI(); haptic('medium');
+  runMessage(toks, id, outs);
+}
+function runMessage(toks, id, outs){
+  var unit = 1200 / S.wpm, sp = spans(toks, unit), total = 0;
+  sp.forEach(function(x){ x.t0 = total; total += x.ms; x.t1 = total; });
+  var delay = 60, start = performance.now() + delay;
+  if (outs.beep) { var a = audio(); if (a) beepSchedule(sp, a.currentTime + delay/1000); }
+  if (outs.torch && torchOK) setTimeout(function(){ if (tx.id === id) torchPattern(sp.map(function(x){ return x.ms; })); }, delay);
+  if (outs.screen) { overlay.style.background = '#000'; showOverlay(true); }
+  var last = -1;
+  (function frame(){
+    if (tx.id !== id) return;
+    var t = performance.now() - start, cur = null;
+    for (var i = 0; i < sp.length; i++) if (t >= sp[i].t0 && t < sp[i].t1) { cur = sp[i]; break; }
+    if (outs.screen) overlay.style.background = cur && cur.on ? '#fff' : '#000';
+    var tok = cur ? cur.tok : -1; if (tok !== last) { last = tok; renderPreview(tok); }
+    if (t < total) { tx.raf = requestAnimationFrame(frame); return; }
+    if (outs.screen) overlay.style.background = '#000';
+    if (S.repeat) { tx.timer = setTimeout(function(){ if (tx.id === id) runMessage(toks, id, outs); }, 7 * unit); }
+    else { tx.running = false; showOverlay(false); renderPreview(-1); syncSendUI(); }
+  })();
+}
+
+// ================================================================ LIGHT
+var COLORS = [ ['#ffffff','White'], ['#ffd7a0','Warm'], ['#ff0000','Red'], ['#ffb000','Amber'], ['#00ff40','Green'], ['#2060ff','Blue'] ];
+var lt = { running:false, id:0, raf:0, torchOn:false };
+function scaled(hex, pct){
+  var n = parseInt(hex.slice(1), 16), k = pct / 100;
+  return 'rgb(' + Math.round((n>>16 & 255)*k) + ',' + Math.round((n>>8 & 255)*k) + ',' + Math.round((n & 255)*k) + ')';
+}
+function buildSwatches(){
+  var h = '';
+  COLORS.forEach(function(c){ h += '<button class="sw" data-c="' + c[0] + '" aria-label="' + c[1] + '" style="background:' + c[0] + '"></button>'; });
+  h += '<label class="sw custom" aria-label="Choose a colour"><input type="color" id="pick"></label>';
+  $('swatches').innerHTML = h;
+  $('pick').addEventListener('input', function(){ S.color = $('pick').value; save(); syncLightUI(); });
+}
+function syncLightUI(){
+  var known = COLORS.some(function(c){ return c[0] === S.color; });
+  document.querySelectorAll('#swatches .sw[data-c]').forEach(function(b){ b.classList.toggle('on', b.dataset.c === S.color); });
+  var cu = document.querySelector('#swatches .custom'); cu.classList.toggle('on', !known); if (!known) cu.style.background = S.color; else cu.style.background = '';
+  $('pick').value = S.color;
+  $('bright').value = S.bright; $('brightVal').textContent = S.bright + '%';
+  document.querySelectorAll('#modes .chip').forEach(function(b){ b.classList.toggle('on', b.dataset.mode === S.mode); });
+  var rated = S.mode === 'strobe' || S.mode === 'alt';
+  $('rateRow').classList.toggle('hidden', !rated);
+  $('rate').value = S.rate; $('rateVal').textContent = S.rate + ' a second';
+  $('strobeWarn').classList.toggle('hidden', !(rated && S.rate >= 3));
+  $('alsoTorchRow').classList.toggle('hidden', !torchOK || S.mode === 'pulse');
+  $('alsoTorch').classList.toggle('on', S.alsoTorch);
+  $('torchCard').classList.toggle('hidden', !hasTorchBridge());
+  $('torchBtn').disabled = !torchOK;
+  $('torchBtn').querySelector('span').textContent = lt.torchOn ? 'Turn off' : 'Turn on';
+  $('torchBtn').classList.toggle('stop', lt.torchOn);
+  $('torchLevel').value = S.torchLevel; $('torchLevelVal').textContent = S.torchLevel + '%';
+  $('torchCardNote').textContent = 'This device has no flashlight, or it is in use.';
+  $('torchCardNote').classList.toggle('hidden', torchOK);
+}
+$('swatches').addEventListener('click', function(e){ var b = e.target.closest('.sw[data-c]'); if (!b) return; S.color = b.dataset.c; save(); syncLightUI(); haptic('selection'); });
+$('bright').addEventListener('input', function(){ S.bright = +$('bright').value; save(); syncLightUI(); });
+$('modes').addEventListener('click', function(e){ var b = e.target.closest('.chip'); if (!b) return; S.mode = b.dataset.mode; save(); syncLightUI(); haptic('selection'); });
+$('rate').addEventListener('input', function(){ S.rate = +$('rate').value; save(); syncLightUI(); });
+$('alsoTorch').addEventListener('click', function(){ S.alsoTorch = !S.alsoTorch; save(); syncLightUI(); });
+$('torchLevel').addEventListener('input', function(){ S.torchLevel = +$('torchLevel').value; save(); syncLightUI(); if (lt.torchOn) torch(S.torchLevel / 100); });
+$('torchBtn').addEventListener('click', function(){
+  if (lt.torchOn) { lt.torchOn = false; torch(false); }
+  else { stopAll(true); lt.torchOn = true; torch(S.torchLevel / 100).then(function(ok){ if (!ok) { lt.torchOn = false; syncLightUI(); } }); }
+  haptic('medium'); syncLightUI();
+});
+$('lightBtn').addEventListener('click', lightStart);
+
+// One cycle of the pattern as [on, off, …] ms (null = steady or pulse).
+function cycle(mode, rate){
+  if (mode === 'strobe' || mode === 'alt') { var h = 500 / rate; return [h, h]; }
+  if (mode === 'sos') { var u = 200; return spans(['SOS'], u).map(function(x){ return x.ms; }).concat([7*u]); }
+  if (mode === 'beacon') return [150, 1850];
+  return null;
+}
+function lightStart(){
+  stopAll(true);
+  lt.running = true; var id = ++lt.id, mode = S.mode, rate = S.rate, col = scaled(S.color, S.bright);
+  var alt = mode === 'alt' ? (S.color.toLowerCase() === '#2060ff' ? scaled('#ff0000', S.bright) : scaled('#2060ff', S.bright)) : '#000';
+  var cyc = cycle(mode, rate), period = cyc ? cyc.reduce(function(a, b){ return a + b; }, 0) : 0;
+  showOverlay(true); haptic('medium');
+  // Flashlight follows the same pattern, re-sent in long chunks.
+  if (S.alsoTorch && torchOK && mode !== 'pulse') {
+    if (!cyc) torch(1);
+    else (function chunk(){
+      if (lt.id !== id) return;
+      var reps = Math.max(1, Math.floor(60000 / period)), seq = [];
+      for (var i = 0; i < reps && seq.length < 3800; i++) seq = seq.concat(cyc);
+      torchPattern(seq).then(function(){ chunk(); });
+    })();
+  }
+  var start = performance.now();
+  (function frame(){
+    if (lt.id !== id) return;
+    var t = performance.now() - start, bg = col;
+    if (mode === 'pulse') { var k = 0.15 + 0.85 * (0.5 - 0.5 * Math.cos(t / 1600 * 2 * Math.PI)); bg = scaled(S.color, Math.round(S.bright * k)); }
+    else if (cyc) { var p = t % period, on = true, acc = 0;
+      for (var i = 0; i < cyc.length; i++) { acc += cyc[i]; if (p < acc) { on = i % 2 === 0; break; } }
+      bg = on ? col : alt; }
+    overlay.style.background = bg;
+    lt.raf = requestAnimationFrame(frame);
+  })();
+}
+
+// ---------------------------------------------------------------- stop
+function stopAll(quiet){
+  if (tx.running || tx.raf) { tx.id++; cancelAnimationFrame(tx.raf); clearTimeout(tx.timer); tx.raf = 0; tx.running = false; beepStop(); renderPreview(-1); }
+  if (lt.running) { lt.id++; cancelAnimationFrame(lt.raf); lt.running = false; }
+  if (lt.torchOn) { lt.torchOn = false; }
+  torch(false);
+  showOverlay(false);
+  syncSendUI(); syncLightUI();
+  if (!quiet) haptic();
+}
+document.addEventListener('visibilitychange', function(){ if (document.hidden) { stopAll(true); if (rx.running) rxStop(); } });
+
+// ================================================================ RECEIVE
+// Both sources feed levels into one decoder. The threshold adapts to the
+// quietest and loudest levels seen lately. Every on/off span is kept, and the
+// recent ones are re-read each time with the latest idea of the speed, so
+// letters read before the speed was clear get corrected.
+var rx = { running:false, src:'mic', stream:null, ctx:null, an:null, buf:null, timer:0, raf:0, vfc:0,
+  canvas:null, g2:null, lockHist:null, lockBin:-1 };
+var D = null;
+function newDecoder(){
+  return { lo:null, hi:null, on:false, cand:null, candAt:0, since:performance.now(), started:false,
+    ev:[], frozen:'', text:'', sym:'', unit:1200 / S.rxWpm, bias:0, level:0, thrOn:0, thrOff:0, ready:false };
+}
+function feed(level, t){
+  var d = D;
+  if (!(level > -139)) return;            // the mic hasn't delivered sound yet
+  d.level = level;
+  if (d.lo === null) { d.lo = d.hi = level; d.warm = t + 400; }
+  // The first moments only learn the background (a camera settling its
+  // exposure, a mic opening), so they can't count as a signal.
+  if (t < d.warm) { d.lo = Math.min(d.lo + (level - d.lo) * 0.3, level); d.hi = Math.max(d.lo, d.hi + (level - d.hi) * 0.3); return; }
+  // Envelope followers: fast toward a new extreme, slow back.
+  d.lo = level < d.lo ? d.lo + (level - d.lo) * 0.5 : d.lo + (level - d.lo) * 0.004;
+  d.hi = level > d.hi ? d.hi + (level - d.hi) * 0.5 : d.hi + (level - d.hi) * 0.002;
+  var span = d.hi - d.lo, minSpan = rx.src === 'mic' ? 10 : 18;
+  d.ready = span >= minSpan;
+  d.thrOn = d.lo + span * 0.55; d.thrOff = d.lo + span * 0.4;
+  var want = d.ready ? (d.on ? level > d.thrOff : level > d.thrOn) : false;
+  // Glitch filter: a change counts once it has lasted a third of a dot.
+  var glitch = Math.max(15, Math.min(40, d.unit * 0.3));
+  if (want !== d.on) {
+    if (d.cand === null) { d.cand = want; d.candAt = t; }
+    else if (t - d.candAt >= glitch) { transition(want, d.candAt); d.cand = null; }
+  } else d.cand = null;
+  idle(t);
+}
+function transition(on, at){
+  var d = D, dur = at - d.since;
+  // The silence before the first signal isn't a gap.
+  if (d.started || !on) d.ev.push({ on:!on, ms:dur });
+  if (on) d.started = true;
+  d.on = on; d.since = at;
+  if (d.ev.length > 400) freeze();
+  redecode(0);
+}
+function idle(t){
+  var d = D; if (d.on || !d.started || t - (d.idleAt || 0) < 50) return;
+  d.idleAt = t; redecode(t - d.since);
+}
+function mean(a){ return a.reduce(function(x, y){ return x + y; }, 0) / a.length; }
+// Splits sorted durations where neighbours jump by 1.8× or more.
+function clusters(sorted){
+  var out = [], cur = [];
+  sorted.forEach(function(v, i){ if (i && v / sorted[i-1] >= 1.8) { out.push(cur); cur = []; } cur.push(v); });
+  if (cur.length) out.push(cur);
+  return out;
+}
+// The dot length (unit) and how much longer the receiver makes every signal
+// than it was sent (bias; the mic's analysis window smears tone into gaps).
+function estimate(ev){
+  var d = D, marks = [], gaps = [];
+  ev.slice(-120).forEach(function(e){ if (e.on && e.ms > d.unit * 10) return; (e.on ? marks : gaps).push(e.ms); });
+  if (!S.rxAuto) return { unit:1200 / S.rxWpm, bias:0 };
+  marks.sort(function(a, b){ return a - b; }); gaps.sort(function(a, b){ return a - b; });
+  var mc = marks.length >= 2 ? clusters(marks) : [], gc = gaps.length ? clusters(gaps) : [];
+  if (mc.length >= 2) {
+    var dot = mean(mc[0]), dash = mean(mc[1]);
+    var u = (dash - dot) / 2;
+    if (u > 15) return { unit:u, bias:Math.max(-u * 0.5, Math.min(u * 0.6, dot - u)) };
+  }
+  // Only one kind of mark so far: lean on the shortest gaps (one unit).
+  if (marks.length) {
+    var m = mean(marks);
+    if (gc.length) {
+      var g = mean(gc[0]);
+      // Marks this close to the short gap are dots; three times it, dashes.
+      var u2 = m < g * 2 ? (m + g) / 2 : g;
+      return { unit:u2, bias:m < g * 2 ? (m - g) / 2 : 0 };
+    }
+    return { unit:m < d.unit * 2 ? m : m / 3, bias:0 };
+  }
+  return { unit:d.unit, bias:d.bias };
+}
+function decodeRun(ev, tail, u, b){
+  var text = '', sym = '';
+  function flush(){ if (!sym) return; var ch = DECODE[sym];
+    text += ch ? (ch === 'SOS' ? ((text && !/ $/.test(text)) ? ' SOS ' : 'SOS ') : ch) : '?'; sym = ''; }
+  function gap(ms){ var g = ms + b;
+    if (g >= u * 2) flush();
+    if (g >= u * 5 && text && !/ $/.test(text)) text += ' '; }
+  ev.forEach(function(e){
+    // A light or tone held for 8+ dots isn't Morse (a lamp left on, a hum).
+    if (e.on && e.ms - b > u * 8) { flush(); return; }
+    if (e.on) { sym += (e.ms - b) < u * 2 ? '.' : '-'; if (sym.length > 9) flush(); }
+    else gap(e.ms);
+  });
+  if (tail) gap(tail);
+  return { text:text, sym:sym };
+}
+function redecode(tail){
+  var d = D, est = estimate(d.ev);
+  d.unit = Math.max(25, Math.min(400, est.unit)); d.bias = est.bias;
+  var r = decodeRun(d.ev, tail, d.unit, d.bias);
+  d.text = d.frozen + r.text; d.sym = r.sym;
+  render();
+}
+// Keep re-reading bounded: older spans, up to a word gap, become fixed text.
+function freeze(){
+  var d = D, cut = -1;
+  for (var i = 200; i < d.ev.length - 50; i++) if (!d.ev[i].on && d.ev[i].ms + d.bias >= d.unit * 5) { cut = i + 1; break; }
+  if (cut < 0) cut = 200;
+  var r = decodeRun(d.ev.slice(0, cut), 0, d.unit, d.bias);
+  d.frozen += r.text + (r.sym ? (DECODE[r.sym] || '?') : '');
+  d.ev = d.ev.slice(cut);
+}
+function flushSym(){ var d = D; if (d && d.started && !d.on) redecode(d.unit * 10); }
+function esc(s){ return s.replace(/[&<>]/g, function(c){ return { '&':'&amp;', '<':'&lt;', '>':'&gt;' }[c]; }); }
+function render(){
+  var d = D; if (!d) return;
+  $('decoded').innerHTML = esc(d.text) + (d.sym ? '<span class="pend">' + pretty(d.sym) + '</span>' : '');
+}
+function meter(){
+  var d = D; if (!d || d.lo === null) return;
+  var lo = d.lo - 3, hi = Math.max(d.hi + 3, lo + (rx.src === 'mic' ? 30 : 40));
+  var pct = function(v){ return Math.max(0, Math.min(100, (v - lo) / (hi - lo) * 100)); };
+  $('fill').style.width = pct(d.level) + '%';
+  $('fill').classList.toggle('on', d.on);
+  $('notch').style.left = pct(d.thrOn) + '%';
+  $('lamp').classList.toggle('on', d.on);
+  $('rxStat').textContent = d.ready ? ('Signal found · about ' + Math.round(1200 / d.unit) + ' wpm' +
+    (rx.src === 'mic' && rx.lockBin >= 0 ? ' · tone ' + Math.round(rx.lockBin * rx.ctx.sampleRate / rx.an.fftSize) + ' Hz' : ''))
+    : (rx.src === 'mic' ? 'Listening for beeps…' : 'Watching for a flashing light…');
+}
+
+$('srcs').addEventListener('click', function(e){ var b = e.target.closest('.chip'); if (!b) return;
+  var was = rx.running; if (was) rxStop();
+  S.rxSrc = b.dataset.src; save(); syncRxUI(); if (was) rxStart(); });
+$('rxBtn').addEventListener('click', function(){ rx.running ? rxStop() : rxStart(); });
+$('rxClear').addEventListener('click', function(){ if (D) { D.ev = []; D.frozen = ''; D.text = ''; D.sym = ''; D.started = false; } if (rx.lockHist) rx.lockHist.fill(0); rx.lockBin = -1; render(); if (!D) $('decoded').textContent = ''; });
+$('rxShare').addEventListener('click', function(){ var t = D ? D.text.trim() : ''; if (!t) return;
+  try { if (window.myllmShare) window.myllmShare(t).catch(function(){}); } catch(_){} });
+$('rxAuto').addEventListener('click', function(){ S.rxAuto = !S.rxAuto; save(); syncRxUI(); if (D) redecode(0); });
+$('rxWpm').addEventListener('input', function(){ S.rxWpm = +$('rxWpm').value; save(); syncRxUI(); if (D) redecode(0); });
+function syncRxUI(){
+  document.querySelectorAll('#srcs .chip').forEach(function(b){ b.classList.toggle('on', b.dataset.src === S.rxSrc); });
+  $('camBox').classList.toggle('hidden', !(S.rxSrc === 'cam' && rx.running));
+  $('rxBtn').textContent = rx.running ? 'Stop' : (S.rxSrc === 'mic' ? 'Start listening' : 'Start watching');
+  $('rxBtn').classList.toggle('stop', rx.running);
+  $('rxAuto').classList.toggle('on', S.rxAuto);
+  $('rxWpmRow').classList.toggle('hidden', S.rxAuto);
+  $('rxWpm').value = S.rxWpm; $('rxWpmVal').textContent = S.rxWpm + ' wpm';
+  if (!rx.running) { $('lamp').classList.remove('on'); $('fill').style.width = '0'; $('rxStat').textContent = 'Not listening.'; }
+}
+function rxError(e, what){
+  var n = e && e.name || '';
+  var setting = what === 'cam' ? 'Camera' : 'Microphone';
+  if (n === 'NotAllowedError' || n === 'SecurityError')
+    return setting + ' is off for apps. In MyLLMos, open the gear menu → Allow apps to use → ' + setting + ', and allow MyLLM in the iPhone\'s Settings too.' +
+      (what === 'cam' ? ' (The camera needs MyLLM 6.4 or later.)' : '');
+  if (n === 'NotFoundError' || n === 'OverconstrainedError') return 'No ' + setting.toLowerCase() + ' was found on this device.';
+  if (n === 'NotReadableError') return 'The ' + setting.toLowerCase() + ' is busy in another app.';
+  return 'Couldn\'t start the ' + setting.toLowerCase() + (n ? ' (' + n + ')' : '') + '.';
+}
+function rxStart(){
+  stopAll(true);
+  $('rxMsg').textContent = ''; $('rxMsg').classList.remove('err');
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    $('rxMsg').textContent = 'This version of MyLLM can\'t give apps the ' + (S.rxSrc === 'cam' ? 'camera' : 'microphone') + '. Update MyLLM and try again.';
+    $('rxMsg').classList.add('err'); return;
+  }
+  var keep = D ? D.text : '';
+  D = newDecoder(); D.frozen = keep && !/ $/.test(keep) ? keep + ' ' : keep; D.text = D.frozen;
+  rx.src = S.rxSrc; rx.running = true; syncRxUI(); render();
+  (rx.src === 'mic' ? micStart() : camStart()).catch(function(e){
+    rxStop(); $('rxMsg').textContent = rxError(e, rx.src); $('rxMsg').classList.add('err');
+  });
+}
+function rxStop(){
+  rx.running = false;
+  clearInterval(rx.timer); cancelAnimationFrame(rx.raf);
+  if (rx.vfc && $('video').cancelVideoFrameCallback) try { $('video').cancelVideoFrameCallback(rx.vfc); } catch(_){}
+  rx.vfc = 0;
+  if (rx.stream) rx.stream.getTracks().forEach(function(t){ t.stop(); });
+  rx.stream = null; $('video').srcObject = null;
+  if (rx.ctx) { try { rx.ctx.close(); } catch(_){} rx.ctx = null; }
+  if (D) { flushSym(); render(); }
+  syncRxUI();
+}
+
+// Mic: the strongest tone between 300 and 2000 Hz. Once a tone has been seen
+// for a while, only bins near it count, so speech and noise matter less.
+function micStart(){
+  return navigator.mediaDevices.getUserMedia({ audio:{ echoCancellation:false, noiseSuppression:false, autoGainControl:false } })
+    .catch(function(){ return navigator.mediaDevices.getUserMedia({ audio:true }); })
+    .then(function(stream){
+      if (!rx.running) { stream.getTracks().forEach(function(t){ t.stop(); }); return; }
+      rx.stream = stream;
+      var C = window.AudioContext || window.webkitAudioContext;
+      rx.ctx = new C(); if (rx.ctx.state === 'suspended') rx.ctx.resume();
+      var src = rx.ctx.createMediaStreamSource(stream);
+      rx.an = rx.ctx.createAnalyser(); rx.an.fftSize = 1024; rx.an.smoothingTimeConstant = 0;
+      src.connect(rx.an);
+      rx.buf = new Float32Array(rx.an.frequencyBinCount);
+      var hz = rx.ctx.sampleRate / rx.an.fftSize, b0 = Math.ceil(300 / hz), b1 = Math.floor(2000 / hz);
+      rx.lockHist = new Float32Array(rx.an.frequencyBinCount); rx.lockBin = -1;
+      var frames = 0;
+      rx.timer = setInterval(function(){
+        rx.an.getFloatFrequencyData(rx.buf);
+        var peak = -200, pb = -1;
+        for (var i = b0; i <= b1; i++) if (rx.buf[i] > peak) { peak = rx.buf[i]; pb = i; }
+        if (D.on && pb >= 0) { for (var j = 0; j < rx.lockHist.length; j++) rx.lockHist[j] *= 0.995; rx.lockHist[pb] += 1; frames++; }
+        if (frames > 25) { var m = -1, mb = -1; for (var k = b0; k <= b1; k++) if (rx.lockHist[k] > m) { m = rx.lockHist[k]; mb = k; } rx.lockBin = mb; }
+        var level = peak;
+        if (rx.lockBin >= 0) { level = -200; for (var q = rx.lockBin - 2; q <= rx.lockBin + 2; q++) if (rx.buf[q] > level) level = rx.buf[q]; }
+        if (!isFinite(level)) level = -200;
+        feed(Math.max(level, -140), performance.now());
+      }, 10);
+      (function ui(){ if (!rx.running) return; meter(); rx.raf = requestAnimationFrame(ui); })();
+    });
+}
+
+// Camera: brightness of the brightest tenth of the dashed box, so the lamp
+// doesn't have to fill it.
+function camStart(){
+  return navigator.mediaDevices.getUserMedia({ video:{ facingMode:{ ideal:'environment' }, width:{ ideal:320 }, height:{ ideal:240 }, frameRate:{ ideal:60 } }, audio:false })
+    .then(function(stream){
+      if (!rx.running) { stream.getTracks().forEach(function(t){ t.stop(); }); return; }
+      rx.stream = stream;
+      var v = $('video'); v.srcObject = stream; syncRxUI();
+      var p = v.play(); if (p && p.catch) p.catch(function(){});
+      if (!rx.canvas) { rx.canvas = document.createElement('canvas'); rx.canvas.width = 64; rx.canvas.height = 48;
+        rx.g2 = rx.canvas.getContext('2d', { willReadFrequently:true }); }
+      var hist = new Uint32Array(256);
+      function sample(now){
+        if (!rx.running) return;
+        if (v.readyState >= 2 && v.videoWidth) {
+          var vw = v.videoWidth, vh = v.videoHeight;
+          // The preview is object-fit:cover; take the same middle 40% the box shows.
+          var scale = Math.max(v.clientWidth / vw, v.clientHeight / vh) || 1;
+          var sw = v.clientWidth / scale * 0.4, sh = v.clientHeight / scale * 0.4;
+          rx.g2.drawImage(v, (vw - sw) / 2, (vh - sh) / 2, sw, sh, 0, 0, 64, 48);
+          var px = rx.g2.getImageData(0, 0, 64, 48).data, n = 64 * 48;
+          hist.fill(0);
+          for (var i = 0; i < px.length; i += 4) hist[(px[i] * 77 + px[i+1] * 150 + px[i+2] * 29) >> 8]++;
+          var want = n * 0.1, seen = 0, sum = 0;
+          for (var b = 255; b >= 0 && seen < want; b--) { var take = Math.min(hist[b], want - seen); seen += take; sum += take * b; }
+          feed(sum / Math.max(1, seen), typeof now === 'number' && now > 0 ? now : performance.now());
+          meter();
+        }
+        if (v.requestVideoFrameCallback) rx.vfc = v.requestVideoFrameCallback(function(t){ sample(t); });
+        else rx.raf = requestAnimationFrame(sample);
+      }
+      sample();
+    });
+}
+
+// ---------------------------------------------------------------- code chart
+(function(){
+  var keys = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'.split('').concat(['.', ',', '?', '/', '@']), h = '';
+  keys.forEach(function(k){ h += '<button data-k="' + k + '"><b>' + k + '</b><span>' + pretty(MORSE[k]) + '</span></button>'; });
+  $('chart').innerHTML = h;
+  $('chart').addEventListener('click', function(e){ var b = e.target.closest('button'); if (!b) return;
+    stopAll(true); var a = audio(); if (!a) return;
+    beepSchedule(spans([b.dataset.k], 1200 / Math.max(S.wpm, 12)), a.currentTime + 0.03); haptic('selection'); });
+})();
+
+// ---------------------------------------------------------------- start
+buildSwatches();
+load().then(function(raw){
+  try { var o = raw ? JSON.parse(raw) : null; if (o && typeof o === 'object') Object.keys(S).forEach(function(k){ if (k in o) S[k] = o[k]; }); } catch(_){}
+  S.outs = S.outs || { beep:true }; if (!/^#[0-9a-f]{6}$/i.test(S.color)) S.color = '#ffffff';
+  $('text').value = S.text || '';
+  return checkTorch();
+}).then(function(ok){
+  torchOK = ok;
+  if (!torchOK) S.outs.torch = false;
+  renderPreview(-1); syncSendUI(); syncLightUI(); syncRxUI(); tab(S.tab || 'send');
+});
+// Test rigs only (never set inside MyLLM).
+if (window.__skTest) window.__sk = { tokens:tokens, spans:spans, newDecoder:function(){ D = newDecoder(); return D; }, feed:function(l, t){ feed(l, t); }, D:function(){ return D; }, est:function(){ return estimate(D.ev); } };
+// First paint before storage answers.
+renderPreview(-1); syncSendUI(); syncLightUI(); syncRxUI();
+})();
+</script>
+</body>
+</html>
