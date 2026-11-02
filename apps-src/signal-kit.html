@@ -274,7 +274,10 @@ function checkTorch(){
   if (!hasTorchBridge()) return Promise.resolve(false);
   try { return window.myllmTorchAvailable().then(function(v){ return !!v; }, function(){ return false; }); } catch(_){ return Promise.resolve(false); }
 }
-var TORCH_MISSING = 'The flashlight needs MyLLM 6.4 or later on an iPhone. Screen and Beep work everywhere.';
+var ON_ANDROID = typeof window.Android !== 'undefined';
+var TORCH_MISSING = ON_ANDROID
+  ? 'The flashlight needs MyLLM 2.14 or later. Screen and Beep work everywhere.'
+  : 'The flashlight needs MyLLM 6.4 or later on an iPhone. Screen and Beep work everywhere.';
 
 // ---------------------------------------------------------------- audio
 var ac = null, osc = null, gain = null;
@@ -626,6 +629,9 @@ function syncRxUI(){
 function rxError(e, what){
   var n = e && e.name || '';
   var setting = what === 'cam' ? 'Camera' : 'Microphone';
+  if ((n === 'NotAllowedError' || n === 'SecurityError') && ON_ANDROID)
+    return setting + ' is off for apps. In MyLLM, open Settings → Allow apps to use the ' + setting.toLowerCase() + ', and allow MyLLM if Android asks.' +
+      (what === 'cam' ? ' (The camera needs MyLLM 2.14 or later.)' : '');
   if (n === 'NotAllowedError' || n === 'SecurityError')
     return setting + ' is off for apps. In MyLLMos, open the gear menu → Allow apps to use → ' + setting + ', and allow MyLLM in the iPhone\'s Settings too.' +
       (what === 'cam' ? ' (The camera needs MyLLM 6.4 or later.)' : '');
