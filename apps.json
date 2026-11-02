@@ -46,6 +46,62 @@
       "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/funny-faces.jpg"
     },
     {
+      "id": "colouring-pages",
+      "name": "Colouring Page Maker",
+      "emoji": "🖍️",
+      "tagline": "Printable pages to colour, from a prompt",
+      "description": "Describe anything and your AI draws a black-and-white colouring page you can save and print. Needs the latest MyLLM with “Allow apps to use the AI” enabled and an image server configured.",
+      "tags": [
+        "AI-powered",
+        "kids",
+        "creative"
+      ],
+      "iconSymbol": "paintpalette.fill",
+      "iconColor": "pink",
+      "version": 3,
+      "featured": true,
+      "requiresAI": true,
+      "aiUses": [
+        "image"
+      ],
+      "aiNeeds": [
+        "image"
+      ],
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/colouring-pages.jpg",
+      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/colouring-pages.html",
+      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/colouring-pages.myllmapp",
+      "sizeKB": 14,
+      "category": "Creative",
+      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/colouring-pages.jpg"
+    },
+    {
+      "id": "trivia-night",
+      "name": "Trivia Night",
+      "emoji": "🧠",
+      "tagline": "A fresh AI quiz on any topic",
+      "description": "Pick any topic and your own AI writes a 5-question quiz — multiple choice, instant scoring, an interesting fact after each answer, and your best score saved. Endless quizzes generated on demand. Needs the latest MyLLM with “Allow apps to use the AI” enabled in Settings.",
+      "tags": [
+        "AI-powered",
+        "quiz",
+        "games",
+        "saves data"
+      ],
+      "iconSymbol": "brain.head.profile",
+      "iconColor": "purple",
+      "version": 5,
+      "featured": true,
+      "requiresAI": true,
+      "aiUses": [
+        "ask"
+      ],
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/trivia-night.jpg",
+      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/trivia-night.html",
+      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/trivia-night.myllmapp",
+      "sizeKB": 29,
+      "category": "Games",
+      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/trivia-night.jpg"
+    },
+    {
       "id": "space-range",
       "name": "Space Range",
       "emoji": "👾",
@@ -330,64 +386,6 @@
       "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/airport-maps.jpg"
     },
     {
-      "id": "mind-map",
-      "name": "Mind Map",
-      "emoji": "🧠",
-      "tagline": "Think in branches",
-      "description": "Get an idea out of your head and into shape. Start from one thought and branch out: tap to add, drag to move a whole branch, fold what you're not looking at, and let Tidy lay it all out neatly, each branch in its own colour. Keep as many maps as you like. Stuck? Select an idea and tap Expand: your AI suggests a handful of next steps that fit where you are on the map, and one Undo takes them back. Save a map as an image, share it as an outline, or paste an indented list to turn it into a map. Works offline, light or dark.",
-      "tags": [
-        "mind map",
-        "ideas",
-        "planning",
-        "brainstorm",
-        "students",
-        "saves data"
-      ],
-      "iconSymbol": "point.3.connected.trianglepath.dotted",
-      "iconColor": "purple",
-      "version": 1,
-      "featured": true,
-      "requiresAI": false,
-      "aiUses": [
-        "ask"
-      ],
-      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/mind-map.jpg",
-      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/mind-map.html",
-      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/mind-map.myllmapp",
-      "sizeKB": 58,
-      "category": "Productivity",
-      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/mind-map.jpg"
-    },
-    {
-      "id": "periodic-table",
-      "name": "Periodic Table",
-      "emoji": "⚛️",
-      "tagline": "Every element, beautifully",
-      "description": "All 118 elements in a table that's a pleasure to explore. Colour it by family, or turn it into a heat map of electronegativity, atomic radius, melting point, density or the year each was discovered. Slide the temperature and watch which elements melt and boil. Tap any element for its full card: mass, electron configuration with an animated shell diagram, ionisation energy, radius, density and more, with units. Search, save favourites, and test yourself with a quick quiz. Ask your AI about any element for the story behind it. Data from PubChem (NIH). Works offline.",
-      "tags": [
-        "chemistry",
-        "science",
-        "students",
-        "reference",
-        "quiz",
-        "saves data"
-      ],
-      "iconSymbol": "atom",
-      "iconColor": "blue",
-      "version": 1,
-      "featured": true,
-      "requiresAI": false,
-      "aiUses": [
-        "ask"
-      ],
-      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/periodic-table.jpg",
-      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/periodic-table.html",
-      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/periodic-table.myllmapp",
-      "sizeKB": 58,
-      "category": "Students",
-      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/periodic-table.jpg"
-    },
-    {
       "id": "follow",
       "name": "Follow",
       "emoji": "📡",
@@ -447,33 +445,33 @@
       "category": "Health & Wellbeing"
     },
     {
-      "id": "scientific-calculator",
-      "name": "Scientific Calculator",
-      "emoji": "🧮",
-      "tagline": "Beautiful maths, full screen",
-      "description": "A scientific calculator made to be a pleasure to use, full screen. Type the whole sum and watch the answer appear as you go, then press equals. Trig in degrees or radians with the inverse and hyperbolic functions, logs, powers and roots, factorials, combinations, percentages that work the way a shop till does (200 + 15% = 230), memory, Ans, and a history of every sum that you can tap to reuse. Turn the phone sideways for every key at once, or fold the scientific keys away for a bigger keypad. Tap an answer to copy it. Describe a sum in words (\"15% tip on 64.50 split between 3\") and your AI writes the expression; the calculator does the maths, so the answer is never guessed. Works offline, light or dark.",
+      "id": "mind-map",
+      "name": "Mind Map",
+      "emoji": "🧠",
+      "tagline": "Think in branches",
+      "description": "Get an idea out of your head and into shape. Start from one thought and branch out: tap to add, drag to move a whole branch, fold what you're not looking at, and let Tidy lay it all out neatly, each branch in its own colour. Keep as many maps as you like. Stuck? Select an idea and tap Expand: your AI suggests a handful of next steps that fit where you are on the map, and one Undo takes them back. Save a map as an image, share it as an outline, or paste an indented list to turn it into a map. Works offline, light or dark.",
       "tags": [
-        "maths",
-        "calculator",
-        "science",
+        "mind map",
+        "ideas",
+        "planning",
+        "brainstorm",
         "students",
-        "utility",
         "saves data"
       ],
-      "iconSymbol": "plus.forwardslash.minus",
-      "iconColor": "orange",
-      "version": 3,
+      "iconSymbol": "point.3.connected.trianglepath.dotted",
+      "iconColor": "purple",
+      "version": 1,
       "featured": true,
       "requiresAI": false,
       "aiUses": [
         "ask"
       ],
-      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/scientific-calculator.jpg",
-      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/scientific-calculator.html",
-      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/scientific-calculator.myllmapp",
-      "sizeKB": 43,
-      "category": "Utilities",
-      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/scientific-calculator.jpg"
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/mind-map.jpg",
+      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/mind-map.html",
+      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/mind-map.myllmapp",
+      "sizeKB": 58,
+      "category": "Productivity",
+      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/mind-map.jpg"
     },
     {
       "id": "bin",
@@ -501,6 +499,96 @@
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/bin.myllmapp",
       "sizeKB": 25,
       "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/bin.jpg"
+    },
+    {
+      "id": "periodic-table",
+      "name": "Periodic Table",
+      "emoji": "⚛️",
+      "tagline": "Every element, beautifully",
+      "description": "All 118 elements in a table that's a pleasure to explore. Colour it by family, or turn it into a heat map of electronegativity, atomic radius, melting point, density or the year each was discovered. Slide the temperature and watch which elements melt and boil. Tap any element for its full card: mass, electron configuration with an animated shell diagram, ionisation energy, radius, density and more, with units. Search, save favourites, and test yourself with a quick quiz. Ask your AI about any element for the story behind it. Data from PubChem (NIH). Works offline.",
+      "tags": [
+        "chemistry",
+        "science",
+        "students",
+        "reference",
+        "quiz",
+        "saves data"
+      ],
+      "iconSymbol": "atom",
+      "iconColor": "blue",
+      "version": 1,
+      "featured": true,
+      "requiresAI": false,
+      "aiUses": [
+        "ask"
+      ],
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/periodic-table.jpg",
+      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/periodic-table.html",
+      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/periodic-table.myllmapp",
+      "sizeKB": 58,
+      "category": "Students",
+      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/periodic-table.jpg"
+    },
+    {
+      "id": "nutrition-lens",
+      "name": "Nutrition Lens",
+      "emoji": "🍎",
+      "tagline": "Photograph food, see what's in it",
+      "description": "Point your camera at an ingredient and see what it's made of — calories per 100 g, the protein/carbs/fat split, fibre and sugars, and the micronutrients it's actually a good source of. Values for 63 common ingredients come from public USDA reference data rather than being guessed, and anything outside that list is clearly badged as an AI estimate. You can also just type an ingredient, which works with no AI at all. Scanning needs the latest MyLLM with camera and AI access enabled.",
+      "tags": [
+        "AI-powered",
+        "camera",
+        "health",
+        "food",
+        "offline"
+      ],
+      "iconSymbol": "leaf.fill",
+      "iconColor": "green",
+      "version": 5,
+      "featured": false,
+      "requiresAI": true,
+      "aiUses": [
+        "ask",
+        "vision"
+      ],
+      "aiNeeds": [
+        "vision"
+      ],
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/nutrition-lens.jpg",
+      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/nutrition-lens.html",
+      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/nutrition-lens.myllmapp",
+      "sizeKB": 48,
+      "category": "Health & Wellbeing",
+      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/nutrition-lens.jpg"
+    },
+    {
+      "id": "scientific-calculator",
+      "name": "Scientific Calculator",
+      "emoji": "🧮",
+      "tagline": "Beautiful maths, full screen",
+      "description": "A scientific calculator made to be a pleasure to use, full screen. Type the whole sum and watch the answer appear as you go, then press equals. Trig in degrees or radians with the inverse and hyperbolic functions, logs, powers and roots, factorials, combinations, percentages that work the way a shop till does (200 + 15% = 230), memory, Ans, and a history of every sum that you can tap to reuse. Turn the phone sideways for every key at once, or fold the scientific keys away for a bigger keypad. Tap an answer to copy it. Describe a sum in words (\"15% tip on 64.50 split between 3\") and your AI writes the expression; the calculator does the maths, so the answer is never guessed. Works offline, light or dark.",
+      "tags": [
+        "maths",
+        "calculator",
+        "science",
+        "students",
+        "utility",
+        "saves data"
+      ],
+      "iconSymbol": "plus.forwardslash.minus",
+      "iconColor": "orange",
+      "version": 3,
+      "featured": true,
+      "requiresAI": false,
+      "aiUses": [
+        "ask"
+      ],
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/scientific-calculator.jpg",
+      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/scientific-calculator.html",
+      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/scientific-calculator.myllmapp",
+      "sizeKB": 43,
+      "category": "Utilities",
+      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/scientific-calculator.jpg"
     },
     {
       "id": "pinpoint",
@@ -535,38 +623,6 @@
       "sizeKB": 140,
       "category": "Utilities",
       "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/pinpoint.jpg"
-    },
-    {
-      "id": "nutrition-lens",
-      "name": "Nutrition Lens",
-      "emoji": "🍎",
-      "tagline": "Photograph food, see what's in it",
-      "description": "Point your camera at an ingredient and see what it's made of — calories per 100 g, the protein/carbs/fat split, fibre and sugars, and the micronutrients it's actually a good source of. Values for 63 common ingredients come from public USDA reference data rather than being guessed, and anything outside that list is clearly badged as an AI estimate. You can also just type an ingredient, which works with no AI at all. Scanning needs the latest MyLLM with camera and AI access enabled.",
-      "tags": [
-        "AI-powered",
-        "camera",
-        "health",
-        "food",
-        "offline"
-      ],
-      "iconSymbol": "leaf.fill",
-      "iconColor": "green",
-      "version": 5,
-      "featured": false,
-      "requiresAI": true,
-      "aiUses": [
-        "ask",
-        "vision"
-      ],
-      "aiNeeds": [
-        "vision"
-      ],
-      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/nutrition-lens.jpg",
-      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/nutrition-lens.html",
-      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/nutrition-lens.myllmapp",
-      "sizeKB": 48,
-      "category": "Health & Wellbeing",
-      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/nutrition-lens.jpg"
     },
     {
       "id": "metro-maps",
@@ -659,62 +715,6 @@
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/speed-check.myllmapp",
       "sizeKB": 28,
       "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/speed-check.jpg"
-    },
-    {
-      "id": "workbench",
-      "name": "Workbench",
-      "emoji": "🧰",
-      "tagline": "Write, open and convert documents",
-      "description": "A word processor for your shared workspace. Start a blank page, a document, meeting notes, a checklist, a table, JSON or a web page, and it is created in your workspace straight away so nothing is lost before the first save. Open anything already there from inside the app, or hand it a file from the Files app: Markdown renders as formatted text with tables and task boxes, CSV as a real table, JSON pretty-printed, logs and plain text as they are. Edit with a formatting toolbar, set the typeface, size, spacing and column width to taste, then Save. Save a copy converts as it writes - Markdown to a standalone web page, a table to JSON, JSON back to CSV - and Export sends a copy out through the share sheet. Ask MyLLM hands the document to the assistant by path, so it reads the file itself rather than having it pasted into the chat. Everything stays on your device.",
-      "category": "Productivity",
-      "iconSymbol": "wrench.and.screwdriver",
-      "iconColor": "indigo",
-      "version": 6,
-      "featured": true,
-      "requiresAI": false,
-      "aiUses": [
-        "ask"
-      ],
-      "uses": [
-        "files"
-      ],
-      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/workbench.html",
-      "tags": [
-        "files",
-        "writing",
-        "documents",
-        "utility",
-        "saves data"
-      ],
-      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/workbench.jpg"
-    },
-    {
-      "id": "channels",
-      "name": "Channels",
-      "emoji": "📺",
-      "tagline": "Your creators, played here",
-      "description": "Follow the video channels you actually watch and see what's new in one place — no account, no sign-in, nothing tracking what you watch. Paste a channel's address or @handle, or start from a few suggestions. Videos play right here in MyLLM in the official player, so you don't lose your place; there's a link out whenever you want the full site. It also takes the feed address of any other video site or video podcast, so everything you follow lives in one list. Needs internet access for apps.",
-      "tags": [
-        "video",
-        "channels",
-        "reader",
-        "network",
-        "saves data"
-      ],
-      "category": "News & Web",
-      "iconSymbol": "play.square.stack.fill",
-      "iconColor": "indigo",
-      "version": 6,
-      "featured": true,
-      "requiresAI": false,
-      "uses": [
-        "internet"
-      ],
-      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/channels.jpg",
-      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/channels.jpg",
-      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/channels.html",
-      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/channels.myllmapp",
-      "sizeKB": 26
     },
     {
       "id": "about-me",
@@ -828,31 +828,32 @@
       "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/budget-dashboard.jpg"
     },
     {
-      "id": "currency",
-      "name": "Currency",
-      "emoji": "💱",
-      "tagline": "Live exchange rates, simply",
-      "description": "A currency converter that stays out of your way. Type an amount, pick the two currencies from a searchable list of 160 with flags, and the answer is there, with the rate in both directions and when it was last updated. Swap with one tap, jump to common amounts, and star the currencies you use so the same amount shows in all of them at once. Rates are mid-market, refreshed daily from a public exchange-rate feed through MyLLM's network bridge, with the European Central Bank as a fallback; the latest rates are kept on this device so it works offline and tells you how old they are. Share a conversion as text. Indicative only — your bank or card applies its own spread.",
-      "tags": [
-        "utility",
-        "money",
-        "travel",
-        "saves data"
-      ],
-      "category": "Utilities",
-      "iconSymbol": "dollarsign.arrow.circlepath",
-      "iconColor": "mint",
+      "id": "workbench",
+      "name": "Workbench",
+      "emoji": "🧰",
+      "tagline": "Write, open and convert documents",
+      "description": "A word processor for your shared workspace. Start a blank page, a document, meeting notes, a checklist, a table, JSON or a web page, and it is created in your workspace straight away so nothing is lost before the first save. Open anything already there from inside the app, or hand it a file from the Files app: Markdown renders as formatted text with tables and task boxes, CSV as a real table, JSON pretty-printed, logs and plain text as they are. Edit with a formatting toolbar, set the typeface, size, spacing and column width to taste, then Save. Save a copy converts as it writes - Markdown to a standalone web page, a table to JSON, JSON back to CSV - and Export sends a copy out through the share sheet. Ask MyLLM hands the document to the assistant by path, so it reads the file itself rather than having it pasted into the chat. Everything stays on your device.",
+      "category": "Productivity",
+      "iconSymbol": "wrench.and.screwdriver",
+      "iconColor": "indigo",
       "version": 6,
       "featured": true,
       "requiresAI": false,
-      "uses": [
-        "internet"
+      "aiUses": [
+        "ask"
       ],
-      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/currency.jpg",
-      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/currency.html",
-      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/currency.myllmapp",
-      "sizeKB": 27,
-      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/currency.jpg"
+      "uses": [
+        "files"
+      ],
+      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/workbench.html",
+      "tags": [
+        "files",
+        "writing",
+        "documents",
+        "utility",
+        "saves data"
+      ],
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/workbench.jpg"
     },
     {
       "id": "net-worth",
@@ -913,6 +914,61 @@
       "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/fridge-chef.jpg"
     },
     {
+      "id": "channels",
+      "name": "Channels",
+      "emoji": "📺",
+      "tagline": "Your creators, played here",
+      "description": "Follow the video channels you actually watch and see what's new in one place — no account, no sign-in, nothing tracking what you watch. Paste a channel's address or @handle, or start from a few suggestions. Videos play right here in MyLLM in the official player, so you don't lose your place; there's a link out whenever you want the full site. It also takes the feed address of any other video site or video podcast, so everything you follow lives in one list. Needs internet access for apps.",
+      "tags": [
+        "video",
+        "channels",
+        "reader",
+        "network",
+        "saves data"
+      ],
+      "category": "News & Web",
+      "iconSymbol": "play.square.stack.fill",
+      "iconColor": "indigo",
+      "version": 6,
+      "featured": true,
+      "requiresAI": false,
+      "uses": [
+        "internet"
+      ],
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/channels.jpg",
+      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/channels.jpg",
+      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/channels.html",
+      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/channels.myllmapp",
+      "sizeKB": 26
+    },
+    {
+      "id": "currency",
+      "name": "Currency",
+      "emoji": "💱",
+      "tagline": "Live exchange rates, simply",
+      "description": "A currency converter that stays out of your way. Type an amount, pick the two currencies from a searchable list of 160 with flags, and the answer is there, with the rate in both directions and when it was last updated. Swap with one tap, jump to common amounts, and star the currencies you use so the same amount shows in all of them at once. Rates are mid-market, refreshed daily from a public exchange-rate feed through MyLLM's network bridge, with the European Central Bank as a fallback; the latest rates are kept on this device so it works offline and tells you how old they are. Share a conversion as text. Indicative only — your bank or card applies its own spread.",
+      "tags": [
+        "utility",
+        "money",
+        "travel",
+        "saves data"
+      ],
+      "category": "Utilities",
+      "iconSymbol": "dollarsign.arrow.circlepath",
+      "iconColor": "mint",
+      "version": 6,
+      "featured": true,
+      "requiresAI": false,
+      "uses": [
+        "internet"
+      ],
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/currency.jpg",
+      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/currency.html",
+      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/currency.myllmapp",
+      "sizeKB": 27,
+      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/currency.jpg"
+    },
+    {
       "id": "stocks",
       "name": "Stocks",
       "emoji": "📈",
@@ -942,62 +998,6 @@
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/stocks.myllmapp",
       "sizeKB": 37,
       "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/stocks.jpg"
-    },
-    {
-      "id": "colouring-pages",
-      "name": "Colouring Page Maker",
-      "emoji": "🖍️",
-      "tagline": "Printable pages to colour, from a prompt",
-      "description": "Describe anything and your AI draws a black-and-white colouring page you can save and print. Needs the latest MyLLM with “Allow apps to use the AI” enabled and an image server configured.",
-      "tags": [
-        "AI-powered",
-        "kids",
-        "creative"
-      ],
-      "iconSymbol": "paintpalette.fill",
-      "iconColor": "pink",
-      "version": 3,
-      "featured": true,
-      "requiresAI": true,
-      "aiUses": [
-        "image"
-      ],
-      "aiNeeds": [
-        "image"
-      ],
-      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/colouring-pages.jpg",
-      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/colouring-pages.html",
-      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/colouring-pages.myllmapp",
-      "sizeKB": 14,
-      "category": "Creative",
-      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/colouring-pages.jpg"
-    },
-    {
-      "id": "trivia-night",
-      "name": "Trivia Night",
-      "emoji": "🧠",
-      "tagline": "A fresh AI quiz on any topic",
-      "description": "Pick any topic and your own AI writes a 5-question quiz — multiple choice, instant scoring, an interesting fact after each answer, and your best score saved. Endless quizzes generated on demand. Needs the latest MyLLM with “Allow apps to use the AI” enabled in Settings.",
-      "tags": [
-        "AI-powered",
-        "quiz",
-        "games",
-        "saves data"
-      ],
-      "iconSymbol": "brain.head.profile",
-      "iconColor": "purple",
-      "version": 5,
-      "featured": true,
-      "requiresAI": true,
-      "aiUses": [
-        "ask"
-      ],
-      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/trivia-night.jpg",
-      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/trivia-night.html",
-      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/trivia-night.myllmapp",
-      "sizeKB": 29,
-      "category": "Games",
-      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/trivia-night.jpg"
     },
     {
       "id": "essentials-finder",
