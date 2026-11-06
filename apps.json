@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-27",
+  "updated": "2026-11-05",
   "categories": [
     "Students",
     "Productivity",
@@ -3831,6 +3831,46 @@
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@93e06ec9bd2af727f5dcefd1605586408cf0b045/apps-src/signal-kit.myllmapp",
       "sizeKB": 60,
       "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/signal-kit.jpg"
+    },
+    {
+      "id": "wind-tide",
+      "name": "Wind & Tide",
+      "emoji": "🌬️",
+      "tagline": "Wingfoil wind, live and forecast, with tides",
+      "description": "Wind for wingfoiling at your own beach. Save your spot and which way the sea is, and Wind & Tide shows the forecast hour by hour in knots with direction arrows, tells you whether the wind is onshore, cross-shore or offshore there, and picks out the hours that suit your wind range in daylight. Live wind from the nearest airport weather reports sits beside the forecast, so you can see whether it is windier or lighter than promised, and the app learns how far the forecast is usually out at your spot. Add a free Admiralty key for UK tide times and a tide curve, see a rough wing size for your weight, open the spot's Windguru page, and (with app AI on) get a short session summary. Forecast from MET Norway, live reports from aviationweather.gov.",
+      "tags": [
+        "wingfoil",
+        "wind",
+        "kitesurf",
+        "windsurf",
+        "sailing",
+        "tides",
+        "forecast",
+        "weather",
+        "beach",
+        "water sports",
+        "location",
+        "network",
+        "saves data"
+      ],
+      "category": "Utilities",
+      "iconSymbol": "wind",
+      "iconColor": "teal",
+      "version": 1,
+      "featured": false,
+      "requiresAI": false,
+      "aiUses": [
+        "ask"
+      ],
+      "uses": [
+        "internet",
+        "location"
+      ],
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/wind-tide.jpg",
+      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@main/apps-src/wind-tide.html",
+      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@main/apps-src/wind-tide.myllmapp",
+      "sizeKB": 79,
+      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/wind-tide.jpg"
     }
   ]
 }

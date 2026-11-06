@@ -1,0 +1,936 @@
+<!doctype html>
+<!--
+  Wind & Tide — MyLLMos™ App Gallery · © 2026 Opticell Ltd
+  Source-available: read it, remix it, run your version inside MyLLM™.
+  Not for redistribution or republication. Terms: https://github.com/TeamDzX/myllm-assets/blob/main/LICENSE
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Wind &amp; Tide</title>
+<style>
+  :root{--build-id:"52208c9049"; color-scheme:light dark;
+    --bg:var(--myllm-bg,#f2f2f7); --surface:var(--myllm-surface,#fff); --ink:var(--myllm-text,#111);
+    --muted:var(--myllm-muted,#6e6e73); --line:var(--myllm-border,#e3e3e8); --acc:var(--myllm-accent,#0891b2);
+    --sea:rgba(14,116,144,.13); --go:#15803d; --warn:#b45309; --bad:#b91c1c; --live:#0e7490; --fc:#7c3aed;--grain:0.253669293067;}
+  @media (prefers-color-scheme:dark){ :root{ --bg:var(--myllm-bg,#000); --surface:var(--myllm-surface,#1c1c1e);
+    --ink:var(--myllm-text,#f2f2f7); --muted:var(--myllm-muted,#a1a1a6); --line:var(--myllm-border,#2c2c2e);
+    --sea:rgba(34,211,238,.13); --go:#4ade80; --warn:#fbbf24; --bad:#f87171; --live:#22d3ee; --fc:#c4b5fd; } }
+  *{ margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body{ font-family:var(--myllm-font,-apple-system,system-ui,sans-serif); background:var(--bg); color:var(--ink);
+    max-width:620px; margin:0 auto; min-height:100dvh; -webkit-user-select:none; user-select:none;
+    padding:calc(12px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) calc(40px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left)); }
+  input,select{ -webkit-user-select:text; user-select:text; font:inherit; color:inherit; }
+  button{ font:inherit; color:inherit; cursor:pointer; } button:active{ transform:scale(.97); }
+  button:disabled{ opacity:.45; cursor:default; transform:none; }
+  h1{ font-size:22px; font-weight:800; letter-spacing:-.02em; margin:4px 2px 10px; display:flex; align-items:center; gap:10px; }
+  h1 .spot{ margin-left:auto; font-size:14px; font-weight:700; color:var(--acc); background:none; border:none; max-width:55%;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .tile{ width:34px; height:34px; border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0;
+    background:linear-gradient(145deg,#22d3ee,#0e7490); }
+  .tile svg{ width:20px; height:20px; stroke:#fff; fill:none; stroke-width:2.2; stroke-linecap:round; }
+  .hero{ width:100%; aspect-ratio:3/1; border-radius:18px; object-fit:cover; display:block; margin-bottom:12px; background:#0b3b4f; }
+  .seg{ display:flex; background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:3px; margin-bottom:12px;
+    position:sticky; top:calc(4px + env(safe-area-inset-top)); z-index:5; }
+  .seg button{ flex:1; border:none; background:none; color:var(--muted); border-radius:11px; padding:9px 2px; min-height:42px; font-size:15px; font-weight:700; }
+  .seg button.on{ background:var(--acc); color:#fff; }
+  .card{ background:var(--surface); border:1px solid var(--line); border-radius:18px; padding:14px; margin-bottom:12px; }
+  .card h2{ font-size:13px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin-bottom:10px;
+    display:flex; align-items:center; gap:8px; }
+  .card h2 .r{ margin-left:auto; text-transform:none; letter-spacing:0; font-weight:600; }
+  .note{ font-size:13px; color:var(--muted); margin-top:8px; line-height:1.45; }
+  .note.warn{ color:var(--warn); font-weight:600; }
+  .hidden{ display:none !important; }
+  .row{ display:flex; align-items:center; gap:10px; }
+  .row + .row{ margin-top:10px; }
+  .btn{ border:1px solid var(--line); background:var(--bg); border-radius:12px; padding:10px 14px; min-height:44px; font-size:15px; font-weight:700; }
+  .btn.pri{ background:var(--acc); border-color:var(--acc); color:#fff; }
+  .btn.small{ min-height:36px; padding:6px 12px; font-size:14px; }
+  .link{ background:none; border:none; color:var(--acc); font-weight:700; font-size:14px; padding:6px 0; }
+  .field{ width:100%; border:1px solid var(--line); border-radius:12px; padding:10px 12px; background:var(--bg); font-size:16px; min-height:44px; }
+  label.lb{ display:block; font-size:13px; font-weight:700; color:var(--muted); margin:12px 2px 6px; }
+
+  /* Now */
+  .now{ display:grid; grid-template-columns:auto 1fr; gap:14px; align-items:center; }
+  .compass{ width:168px; height:168px; }
+  .verdict{ display:inline-block; border-radius:999px; padding:6px 12px; font-weight:800; font-size:15px; color:#fff; background:var(--muted); }
+  .verdict.go{ background:var(--go); } .verdict.warn{ background:var(--warn); } .verdict.bad{ background:var(--bad); }
+  @media (prefers-color-scheme:dark){ .verdict.go,.verdict.warn,.verdict.bad{ color:#000; } }
+  .bigspd{ font-size:40px; font-weight:800; letter-spacing:-.03em; line-height:1; margin-top:10px; font-variant-numeric:tabular-nums; }
+  .bigspd small{ font-size:16px; font-weight:700; color:var(--muted); letter-spacing:0; }
+  .sub{ font-size:14px; color:var(--muted); margin-top:6px; line-height:1.4; }
+  .sub b{ color:var(--ink); }
+  .legend{ display:flex; gap:14px; font-size:12px; color:var(--muted); margin-top:10px; flex-wrap:wrap; }
+  .legend i{ display:inline-block; width:18px; height:3px; border-radius:2px; vertical-align:middle; margin-right:5px; }
+  .vs{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .vs > div{ background:var(--bg); border:1px solid var(--line); border-radius:12px; padding:10px; }
+  .vs .k{ font-size:12px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; }
+  .vs .v{ font-size:20px; font-weight:800; margin-top:4px; font-variant-numeric:tabular-nums; }
+  .diff{ margin-top:10px; font-size:14px; font-weight:700; }
+  .stations .st{ display:flex; align-items:center; gap:10px; padding:9px 0; border-top:1px solid var(--line); }
+  .stations .st:first-child{ border-top:none; padding-top:0; }
+  .st .nm{ flex:1; min-width:0; }
+  .st .nm b{ display:block; font-size:15px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .st .nm span{ font-size:12.5px; color:var(--muted); }
+  .st .w{ text-align:right; font-weight:800; font-variant-numeric:tabular-nums; }
+  .st .w span{ display:block; font-size:12px; font-weight:600; color:var(--muted); }
+  .arrow{ width:26px; height:26px; flex-shrink:0; }
+  .chart{ width:100%; height:170px; display:block; }
+  .raw{ font-family:ui-monospace,Menlo,monospace; font-size:12.5px; color:var(--muted); line-height:1.5; word-break:break-word;
+    background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:8px 10px; margin-top:8px; -webkit-user-select:text; user-select:text; }
+
+  /* Forecast */
+  .day{ margin-bottom:12px; }
+  .dayhead{ display:flex; align-items:baseline; gap:8px; margin:4px 4px 8px; }
+  .dayhead b{ font-size:17px; }
+  .dayhead span{ font-size:13px; color:var(--muted); }
+  .dayhead .best{ margin-left:auto; color:var(--go); font-weight:700; text-align:right; }
+  .hours{ background:var(--surface); border:1px solid var(--line); border-radius:16px; overflow:hidden; }
+  .hr{ display:grid; grid-template-columns:48px 28px 1fr 66px; align-items:center; gap:8px; padding:7px 10px 7px 8px;
+    border-top:1px solid var(--line); border-left:4px solid transparent; }
+  .hr:first-child{ border-top:none; }
+  .hr.go{ border-left-color:var(--go); }
+  .hr.night{ opacity:.55; }
+  .hr .t{ font-weight:700; font-variant-numeric:tabular-nums; font-size:14.5px; }
+  .hr .t small{ display:block; font-size:10.5px; font-weight:600; color:var(--muted); }
+  .hr .mid{ min-width:0; }
+  .bar{ height:9px; border-radius:5px; }
+  .hr .meta{ font-size:12px; color:var(--muted); margin-top:4px; line-height:1.35; }
+  .hr .meta .bad{ color:var(--bad); font-weight:700; } .hr .meta .warn{ color:var(--warn); font-weight:700; }
+  .hr .kn{ text-align:right; font-weight:800; font-variant-numeric:tabular-nums; font-size:16px; }
+  .hr .kn small{ display:block; font-size:11.5px; font-weight:600; color:var(--muted); }
+  .scale{ display:flex; border-radius:6px; overflow:hidden; margin-top:6px; }
+  .scale div{ flex:1; font-size:10.5px; font-weight:700; text-align:center; padding:3px 0; color:#111; }
+
+  /* Tides */
+  .tides .ev{ display:flex; align-items:center; gap:10px; padding:8px 0; border-top:1px solid var(--line); font-variant-numeric:tabular-nums; }
+  .tides .ev:first-child{ border-top:none; }
+  .ev .ty{ width:56px; font-weight:800; }
+  .ev .ty.hw{ color:var(--live); } .ev .ty.lw{ color:var(--muted); }
+  .ev .tm{ flex:1; font-weight:600; }
+  .ev .ht{ font-weight:800; }
+  .ev.past{ opacity:.5; }
+  .tidebig{ font-size:22px; font-weight:800; margin-bottom:6px; }
+
+  /* Spots */
+  .spotrow{ display:flex; align-items:center; gap:10px; padding:10px 0; border-top:1px solid var(--line); }
+  .spotrow:first-child{ border-top:none; }
+  .spotrow .nm{ flex:1; min-width:0; }
+  .spotrow .nm b{ display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .spotrow .nm span{ font-size:12.5px; color:var(--muted); }
+  .spotrow.cur .nm b{ color:var(--acc); }
+  .dial{ width:220px; height:220px; display:block; margin:6px auto 0; touch-action:none; }
+  .results button{ display:block; width:100%; text-align:left; border:none; border-top:1px solid var(--line); background:none; padding:10px 2px; }
+  .results button span{ display:block; font-size:12.5px; color:var(--muted); }
+  .grid2{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .sheet{ position:fixed; inset:0; background:rgba(0,0,0,.4); z-index:50; display:flex; align-items:flex-end; justify-content:center; }
+  .sheet > div{ background:var(--bg); width:100%; max-width:620px; max-height:92dvh; overflow:auto; border-radius:20px 20px 0 0;
+    padding:16px 16px calc(24px + env(safe-area-inset-bottom)); }
+  .sheet h3{ font-size:18px; font-weight:800; margin-bottom:6px; display:flex; align-items:center; }
+  .sheet h3 button{ margin-left:auto; }
+  .spin{ display:inline-block; width:14px; height:14px; border:2px solid var(--line); border-top-color:var(--acc); border-radius:50%;
+    animation:sp 0.8s linear infinite; vertical-align:-2px; }
+  @keyframes sp{ to{ transform:rotate(360deg); } }
+  .ai{ font-size:15px; line-height:1.5; margin-top:10px; -webkit-user-select:text; user-select:text; }
+</style>
+<style>
+@keyframes myllmAiSpin{to{transform:rotate(360deg)}}
+.myllm-ai-busy{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(18px);z-index:99999;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;display:flex;align-items:center;gap:10px;background:rgba(28,28,30,.96);color:#fff;border-radius:999px;padding:10px 16px 10px 14px;box-shadow:0 6px 22px rgba(0,0,0,.4);font-size:14px;font-weight:600;max-width:92%}
+.myllm-ai-busy.on{opacity:1;transform:translateX(-50%) translateY(0)}
+.myllm-ai-cog{font-size:18px;animation:myllmAiSpin 2.4s linear infinite;filter:drop-shadow(0 0 5px rgba(124,92,255,.85))}
+.myllm-ai-busy small{font-weight:400;opacity:.6}
+</style>
+<script>
+(function(){if(window.__myllmAiWrap||typeof window.myllmAsk!=='function')return;window.__myllmAiWrap=true;
+var orig=window.myllmAsk,depth=0,node=null;
+function ensure(){if(node)return;node=document.createElement('div');node.className='myllm-ai-busy';
+node.innerHTML='<span class="myllm-ai-cog">⚙️</span><span>AI is thinking… <small>privately, on your device</small></span>';
+(document.body||document.documentElement).appendChild(node);}
+function show(){ensure();depth++;node.classList.add('on');}
+function hide(){depth=Math.max(0,depth-1);if(depth===0&&node)node.classList.remove('on');}
+window.myllmAsk=function(){show();var p;try{p=orig.apply(this,arguments);}catch(e){hide();throw e;}
+return Promise.resolve(p).then(function(r){hide();return r;},function(e){hide();throw e;});};})();
+</script>
+</head>
+<body>
+<h1><span class="tile"><svg viewBox="0 0 24 24"><path d="M3 8h11a3 3 0 1 0-3-3"/><path d="M3 12h16a3 3 0 1 1-3 3"/><path d="M3 16h7"/></svg></span>Wind &amp; Tide
+  <button class="spot" id="spotBtn">Add a spot</button></h1>
+<img class="hero" id="hero" alt="" src="data:image/webp;base64,UklGRvQ5AABXRUJQVlA4IOg5AAAQTQGdASoMAwQBPrFOoU2nI6OvJlZq6eAWCWdtW/Peb6vFO/e6E/8Or9/gv/f1ugXk9o/ePds9yEWVa0nL71LDrFFPPG67vTSnipN2WpIvePLYm1+DNf+0fbg5+9Pnn9acePzz3ydyHFn9r4K/3/+35xe0n9i/neQClU836D+9CnW/hmW764+AEeA8IH3WRHnwuPtwSHowPej71/q+y1xNFniBSQy7Pxzf1ijfeaHpQiiOnN2lLk+xEH9YJV7juf6RUAx23XLozbkdBIUc8Fl9D/Xdv8PUDmZViCJPkxA7fEVxGmVjgyI46e806/s2k4fXInyITeg/mHYWuZWQV7ngbaVz4/SBoKw9TalUSwdgevNJlmlrVHvOOU6B9H4Dw9cFiPsR0Axcv8w5GVtbw7PBlH7iuPEWsA87csWqiAHxxkfm9MOo0AC8XprBLuoxZaeyXdH0iR24DtTzXMboSVW6Tg4FuvttVFUzv7SL0+KjLYENI2mzZyAe4tDj/bFR0TJ1ULthlBKVYerYTAAYJyDynUbzZkzNcqSWRnGXkVvEH/r0MHk1Tfh8fWdaNOzKOrnvs9EQsr2onK+NxDl5lzF8qLlyiD7y6VNA9SFEPLvZYRfywPaByl3pxz2G5YYldtLw9OaL+bWyszDTq903oZSAftuZp3DaAcJrwW4yUOAb0csHlOxLlLIyPTjftSJO3HsX7WYjwNuO6GtULuK/j9TotoAo/FOyIUX82SBTBsxGE6zbAH1OC38RDwRdJ5VPPiARCnyGn0ZUabW1ytdGRNiq0EFqjpJiYubATwe2CNJPx6ugUlnTBPZOvOYo5B+13pNwdKx2E5Ekaz/1cy9NbZp5Z9hgeo6uXIJknvNShHfqxiUGoKWuac8sFRInb3gNK+sul9QPpdP+oxpDychZpbXjMsip7np9IelZiJw2PCaxMQLz+nUXRwHwi4vMQa5y4EBBBAEEaJY6eRapg5+FoYBVNxB0+iQODgZCuuxBrGtLna6kw5kMekB0CMWLkz7hsgppyYZ23A/Zc0b41Oxfz4hMTFdSB2rxU35RX/bbzcuwe8E1LRLsEMKvYgrQwnASh1iUHs6CnSR+2r51Xe9dBvFe4yVSfY0kXiDriqSD+FqOPwhXpo14ueasr8A298kPTXa8rHJfnMncm0vw+8wTHL05v9aqHnif6/n1r6xNoISOip1SLI7F3JMfkSU0F3SPCE8wwX9KLc3MZNfYntGDia3EU/PvxxNWazcGz/rI4jbVDH85FQrTzaZmFqW8BAED9WhXO/NS63Gz6Fc7+QwvwvKE8CXoOsy0+DAjQ+QYnOt381I6oDsAxM8CnDsyk0WOSEgRYtGIWuBgSgRFSobudINhjJkEF7wOhCLnuquzpIzOAaWfpRuTvYQ+mGC8jRCiy9N/p64kZM9nniCXezVz1/lXZ1Bd14a+g7wmZRsbdNZHhE3eJ/2C+n+HJBE9yxi+aBViS4eXSlcDH1Sz/ERf317bczmc5eeLOLDLcLgHwB55Kh3R7KOnLNqCDN25NYNep5uippc9kBoZ4AFmwswzUp/a0+TN7IgAb5ghqATRlnasqmIz9DAQRPrFw3POU8Izh3MYGI/NkTvLGQKAPtm6nxZ5H6kCmcGfXIJKlHyM2YPQ84ftj4Y3v0Be9muS3cIR9s07lzJIuj3tmcMi7eCDagNgqIf+KtaBNeTFXzHLA8P3kLiYcoCi54zgzpu83TXLJdl+kongm3HF9RPVkGYubH1aE3+cYwSQ4ERwu/SZI1DxiaCtfn83mkV8XElYEZfRYArHOci20lZN5y373hrLKi7o5DA9sVngFpX1fFqxyAv67c3DoRy0TULTz752BpAUNyqm0SKenIA+0Rfo+4WFbPtdsbrO3oTbEPQ8j/9AxsgotkQVxFP9S5o45RhrlqpeOIAf7bfvLA7SSTjJSlAdTTiboBzfff9o8IaEZQxuYNFG8pGDgedGQu64orK2koop+8uWga7JZ8HRKg9T/M9LQ1svGljnffDUOyfYFSpeoXU4hWiHh1LA2+ZXxUpmgcVy/8kqCC4c3M5FdaX/KmaE2A8M4eVIGoNjLzSqkoIMYAzpM6MyvUsy3oN701KsByzWrkZQm1ln4F6eHbzU/CutfTviHn/cwWa7gRkljCnLiTRsjsD0+Yv52U60iaVR3bBI8ZSxkz55cvJCkEEYdZ2uXsKmkiS3LPlAlCzPSCQqtwUXDgQ0YipR29gS46ad8xGejqEjqp66F58dtGYiKRiCWowGaUH9fYyU4LPa9WX+AM7uRbBx4IROS3lc2x1HqxzPH510ijcAFtlF4l0/se3c17GecITu8pdCpmwyY4Hkk2tZG98URjf42FrxGKlpRNLqdjDJYKdoEZ6MA6pP7j4gW0rrLQI1bo0ByEoq34Yb71eSlQcgvRAUZxCclquVIEBcbexpQCYjwJlI8BOxET/v1uyMlfAVeYhxJwj15QOhDeUgMB6cqxTpbnZtWC8/MvkpiI9WP0scH+183I66V7o2QumQvHJu3GPHyy6Aj/0i7m57e+kMpw9Bjt9LpzCVrOvjzlHKLFhV04sX3P0nCe/MUB8nBlSE0xLCg6eKw1iWTCUZPK5w97pNzUOa04bQ3CCDmrEMWFLRFa3cZL/1Ii1PLGkdBgkK+OqjiZwMFhEyn4Gwy1yytfzwVK9C+GTcUp1hrg/t2Ynpu38/krL47yn87uLHGMvqGvpWi17M8vEawXYWtKXvkc7xGBTSyjfzQ5ashGYZbD8Wh9wkDxP+dhksBIGTY5BtOHj++/jmwXk/0TFuw9u7PZmD6oY8gwNmCuiaMJLQYQKScpwS3e/numP2kaZHbH9eiYeXO/6FpOfRWYvuEOeUVOGyK/fv+K0M2TlI2MQsjTow1cfzM/jDjLXJpYSEWl3w83ZDbAl/DbQHOXj1Fd2SCWn/1SEVzwFG6tdxTdumqGSWzMRGB79odXRk60xpfKUMbo/Fbcx6Jkigtx+KZF3AdPQOfrotXYfx5fd7BBBXoh+2QEun+4GMP9k28webWUUdUVWcP4EWaczXRGmHeMmMZjdiNnzKiNVk/4DkAWJjnlxANzkihJkQ6S3LMvT3bHP4b6CagUB3WVoAIqhTZc91NH/0xkCxWvpdFLmRhpmNNlLc8TB3GMvxxPUi4S2YHFQoxzuBlh9i3v61jyPZp3yTkdN36jlNDCoXyePo/lkKOMCFkv+Hc68W1Sj7lK78UE9qTJcc7YhI9DmDaSNfopQgtNKDfGI07S9HXM2FiFE8g2hidXX2ByNTLhPE7JgEVRUY0CMKiI7xO+3lSwTBDN34yuz71SxqJbE/fjQ8fSXDzxMgLwnx9f0ckU1wtsGmXn+1riVezTqoEy+UikXdLQxgrrlXiw1tdeFxqFMtducwmqRhFu/DbC2I3N6UP8zuIa4X1QmVy90aVajWBXMAxBR+9GmXWTGkKV9HOsff3QZceGnO7X8H9iO476QjOmR6apirccOY6pxs3ozcw7rCJSIdbzPYqAkP4xaRIDS0jD890sWtldQet0vNYfTi069F5oqCe7zQVIGs5pzp4JHDXAAA/q9BsPMPxCudWhhqC/uUu52b8BSXw7sBcTy+bz1Q2SNszqXK9Sgy2Z515pZ4G+tVETTaUmo5MrVBpC6sZQvV1mBMF0vgAJpxcZ7f0bSnjQNK44uSJb3i20QIGmb5e6FMN+8fmx/gxWW0ThSqWVVPPWIcJol9adK6SUMi4ifjBtFrdRhf/Ztb0cxPYi1icBdNmCWay/bYu+kJFpHWQC3/4JMmx1Sm47yEkGa6L1HnczpDeywruW9N9FhGcjkLb4186l1hpXxHlCTy8Tpcm/z2eA7XyGvds9r6ga4osV0HiOpDWRdTurDBKMDg1FGTI3tW4nCVtBHuD19uaJyVXJSM36AnYOcDtF39JFh7hJv5Jmq2EdYArkCKL+PX+5NkWTgXNLy/Z+MOfEC5d6w6IXSsFqPoMOHTDhHW0f/ONXN6ebrkJnDsUeK6Zcl39GdvSaROKrs24w+UCJ9khmGF5HWqRzcF52W5K1DR+J8w4uQF2lyB+vxE0f8JUHhDeRP1yB33PLui+v5gT9xdQHxay0ARL0Az9mLcp53JXlRCoxM6oQPNm7zyQDs/ZNi2aoA4iNtr9wj1dE6BXdyQrWKyLgJuZlMA6dnpudjWCEgdHS7gJguBtD1Sa3qhAZZkwii1cAh8A0Og3guUuzavRZxXzt+HhKJY1Co+NgyfBVXUyQEif1qC+yTtUfC9M1TebAJbnCw9E+m6AEGJzZdU4EjSXiOfu1rXfxc9bMjSVxKKNNRNvWpy/KzthjqU7BDFrRjw+zZpkuNqrwZCCGuwrtq2JxmzxqMv53DX3w9sbCtNjl8M053Mg7XxEiGsIqQOXzcAKZ47+PVs7J7UHaUXzVl/bVi03ESjohHelPfV1QdwmsIBYqM+i+q2p+wOWczv6IZHC49Nie8fxuACIMbgQJxmYsfcn9EnMqtWlQml6W6YZ2XDTF014gCVT42FPKuxKw5Gz9usb36sgIljkjhZfYM3y0stmqwG0YjIhaxTnVmh5Y8l9h67mZhdx/uMNbqakb9Yr+49VotaY5QaqCtJOS3Pz73IwWZkML4ZoHhah+T2dUE6WnqtLe1MhswUiKUANeg7JbpbaysbFZga3erA6CP+WMetAK1G7j7Qq5qNBLWbFArZyeZR7adtiL53vu60akPiDOujlGPda5CKy1+tK4jSKxmvFEHP1F3oxaTdKv0L29lV8x7gprA1qQ4vlWbRyU2ppN20kC77K52F2XWyp2kU70XDd5VtnpBbSY1KQ54bHtnTK/rC8ucRI32CE/EMpRF7+XH/U6I18a0xMQOwUnKQ1o+2kKqLu0o4OMfVARY4lcqEZgKuEc/zQoJ+O8jmmS5Vvp+gmVS5lWLG3BgED7lf91mzdvlp+9g6+LN9O8K64Jb9Oh3cNdrkGDuPuHEVCBYX+oN57u+9nU+UfPDXEG80du2xrkQyiwxHEeaHp08mgPe4Zf6rgFdfphxNda+b0zjDCtn1lsSE6Jtm8BSfC91gI7TlN0QXJvSg1W2kkhSbcGIhpSCJl7+uzn+R3Zj6IEg2bMm8p88K8Rq/p40+K02u0ZfK/c1/xITxHQtrrYVeLxosGc5lABkhAn85UDVPfLHI/B/QQmSTRJoaFuc3cWQ4K+5QOI5i4ZfMz6Z6eVASmcGRDYL5m7mpoV8q/j4jHSwvoOSLmObMypUOqGJLHW32ycckpYVQk8Gm/RpSMuKa1UvD+24x6mqfYFZs0GL4+9xPSn3jyRWtO/a1P5QTECt6JiNRursjpJxRTTFBMbkAz8B9u+nmKpkXtdRRY99ipG1JB4Hc6zXqKCo86mpwwCv+kERjng6rlDolLPsiGHa6032/5O7nwDWWLLE80JQ+1ncOhfguzX1huWueDOHCj3M4k9LYgv4nlquWlJ126R+PfH8mSzAUACES7+/RFBCV8rMdnFzbBH4sHQFZ5QzTjU1ws0WKSARy+jxD3jHJwzuacLarvowYuqTJXa18+Dhuq+Dk54PBPGuJFGxOoURwpLMQ+9f++kBFIFbnQtcr5K1cLo9RO0vsw2na0UtLLNi90wd4kzNT6e/GMVDnOCXxlZQSTTBRoRd04XEkk5C7tNTX3ek+At5YTBbO0rqflMZJNa9GdQzPC0nOgeDkoiEy1ObP1q5mmROWnA/us/NqIyttiGB5NUOuLxDPS47DAnDoAPclLkR7V4SAmkMteSzaV8hOL7qWDUL8+X0QUnJtZLjtwPqz9lDtOzu1U/Sd3iBrXsPEAua5OLy++idOnI+OxeFu6dpUX5kL0HNWaEMqM7Hz2cBsfym6ki8oGTNenePt/4eDyCnvZ6PuACyrwWa6R6wAWCZrmc7X1zb9WAXgR648i6GvK95/i4j0Q8vX360N1VYZVjjg7s/btFF4rTqT/RoFE5rfGftOBvUu1DoTIwm69IPx49/wIiar6lJiiqASM+PUjlNgZB4ODmiP7143epBty8tRjH6I4oMVGURF3yRTb2iik/ml9hQ1HlhPLJAUceldFgZkh49pgSRWOq3VJ9OVztfm40xRZUYd60SP3NHAAy+t0h6MXdTr42pNVJDujr5v8yaReYc7o175fkSiOgyZF8Kl+K6SmokvhirddXZIDlRKqI0FVMYW6BtKL/3PnHllJ+1nRiVmo2ZxWB2LRsIHmXUxSsfdCNAUM48yBBw0ap8G/EqMbiN+ulbMZ9PQvDhHgxN7M2suzVMV0G0eg5+AGbxJAvk4jsXDu8tzGU7XYHW22n6tIatr6ydfXcTicnm8/ocHcWPrEwqqPgpjksiE3BvkgQb+No3Fs1xtUXLSnuXq+nR3e87BnAEUn5tgYRtu0aBoQVwvE5SPchoT+ysiOIZLhOAKUuxLSuB9+4Tku2xl8117MD7ECPk+eseAiET7TVzRE6l59G6A0Vm+wAYq2c+q9JeXfs09zk1QgE+pOvTSD2RZKgucBtr43XZtDKUxveU4/qOpOaa1K+0u47KitMdX0zkROgqpXqV5lh8Q1z3U0fXc2ovXXLKJfxLTWyBQnL5mJvb6gSJiBW1xrdUgUdr44s3qhkYvz4zeopnt1+ZFj6pJdIx+Sl8gwJyNbGLOhCLvlw6jC0PTSESAG0iInh6m2PqP6p2MSGC23pADsDE7nSAjuNdfm9AUOzIehBRWCrYvXKDLwAAEJR49pDT5mtrNOe8sQakO9YSIAAS7Y3rmMp0ADUJLd1vBAPi703Q2MLrceZ2sNtBo4k2GiJ2DZRj6an7YfO6jE+PXxEaA8zG5wySXPIe1m/qRSr8YY3AVde7afsO8t2CEFhScFs+1b3+OgRow7yFq0WmswAtAZgVXY+NgEztDNXkhSyUDsCJ9AXNtr6l3NBZjFsL7B+Q7c2FW9/bPD1cVjz35r36GUgRB/KBIcsLudk1iz8wMiiev+VrkW2918JPtASU6V8duqA6uau+1IKL6bk3FToSTm3elweXeACjVCH1nlkZYvWsxH3bln3W+0QHrOgNplNtR8LaBDCq04S1Lo2LltRq04MSGBnOayXe1xo1xFXaSnHUShT3ys1N8i7nZjZRotWx4ljuNmwNfIq0jKE36u1OX0zwUZNoy5RYMkBhhHZCCe0l5s5x63yQ4epmIPHhMSbLMHwEtalRCFmgEb8JVfhrhzQm9t6TLuZWFr62Esgp3rIsb0IDdzFBcgGD69SOhfDhGA4mOO6UdbJRQs6PpFFP4zy7WkpGWMM2+aZAU3wpzT5E+6fkR5Fzh0yCebR2Ci5yRKjDgx4x2EnJ7h5wFEeEav91srCkCOj0Mt54qjJzYV86VhizJuIJZuDsVMDhiPTA3xR2pnnGgRXTMqN6DPa93ZvxOhHqC2ngI58zrWRhKdpKOMxlF2NFzUZQU7B8zFvGqYHNTnnJL/w1WlWCy3qWBz9NeK92XvFSqXtFdDl2K1oaGzi/ZOPyeBBPGLxSf6CVd3duluY3iMDxdHjh4XBennY58GmTj75fzoCXV3sEbEVSCs4oCk8VOlTLqiwZQ+eGOLEBzjq5imMDF/mxQsS/DkrvisrH6GSt9SfwYooABmijqhBVg/yZc6zDvudtmw6F66IGUlWQJkhfzX+s8iJM58aMEtZwpaPDqbyDrawsh+BiXMJXPAFYFPDEsLz9m3FEoHskHL7GWm3/cs7AVy+QYoRiNWEWjNzWjU4cwxjI9MYy7jtFvDQmFpW5r9RmevzlfMPtUqdGtcYLCFIPiKuUY9uJeIUgRfs4HmZtgsfEMVfyROtNGb9MbLVJXeEt8kDljAGAUc9uXf3y3twWjI0UEw5QLsk3kgh5Pvy8svVjNe0Ld5du9NK40eM9H5n42av2/BrAlFPt0MfsLTOcTjVd2K+4sL7vPPUtCacskE3ee8OV3qjM55yGyM3B+L2VpYekiAbHsK/DFM/BXvzsqcDKF6GkS1hV1HYlDBuHg0S96BSYvD8c8xcGyPxTl40XHGdNQyTiGMN4SDXG6ZOvA124kPt5QN14xMfvJrrHiVT7Onl37gNA+mMrNNw8bWCgl/h6vAEpw1bJPK+0xkAOzAwb8hfvAOq7/BradYWRoL0BE6GT7UGwcsy63Ml9+qU1V5xcK2QziOd03G8UiPDdapzkSaIv0QCVJBYAIdMvfxf6Xa3mhB4c+7wXCN6UTg7HTzl2ksxIQchEXEJEUuZS7LmKUcmaIwQFxstELi9p9pj5vb8bGyoUUfatcL0NdbzidFtMhTjRj+/vLV7cixy+mruXZhotogTT+ZiVRrdsvp9XJsjRBqMCTQSvgmAgHUxnMRR8Rjyuz99SHb/Zh8n11/iP4xPtT1gQTMsnG9+RvZTWpgd2mtNlbt4t6DAgydBmuK2TR81BYTTUjHu4hyEs+TeJ5nYLzYBNWEaPkTR8q0jk7vM2v5Bh3ZSDZsq9NNPpjPKv+I6F33QlJrg2oI6c9a3tGp1riYl2qtlYphRSDiWZGhxfYB19tNiIY2Uh0IycZ4fgAwVSxcvM82ShmInCSN8ENoxs/O6wbpApIVSzWTojZiCs9YlIyOm1IewKFO7zcXfNw6leLIro8Ru3Y5037GjN6O4pak8or207KF61ccQwb63JnHojTVAwYZyLACDAnNFoz3kDhK+dAYJuBq33LBn3aM8wSAIi7QUOKKMjqUpcwkvA7yaCRv8vVYfuZCQteOc7j6sCO+B1chhnEG/MIC4O00qYvvTNnYzqW0tZ0iiSHu4fPET8eGFo5Z4iScMLwEmligLmOulTp3/Ps3/YTFTV6anTRufFHJemtxFqRYi+XEH6mty7MvyF6yXhVf6GQwqxqxGAHZkoYTsVx6HhEuQZxg86Ro94RhhkCP8Xd/QOKKtn4rSYXju7PhjlN9xoAyadt8e7pkhYLMfe0thIikxfGYxR8b260Lo8gaUpFc17DjlW8jOYXMKdU17L+ffrnhpPbDshgFQeGuG7VH74RJZ6sQK4JuE7pz1wRIRdsIgqnAj3g0yCA/h4IssSsK2JDfU/Zwi4MXjJ8qjUPb6iP3+i270Y83Q4EXLWU1KCFq8MFe09cV5Ewm5ngg0eI0EVT7auI4kN9i3CJ2eOeFEZAFGvQNAXL3aTSMJx3GevIHkwdEVTnYX4FNMB2q9ZI4x4ixfl9HdZ3LWv11TpcIH0wFvs26EcW1VEo+kuKO322M+NDiO+Q1l8v8gsUHXLIXqcI95vf4J2mlFWa1CsNTkbxubHgp1SqMWbo6F4m+GPX+0QXyKZMNWaSsZ2yzjZUAPYszD+P829wjmsw7MxgI7uiF4Ioo+a1hqdWjypxfm7HBu2tOBBIPGzHHeNQgXkxvJJyBiC7tQ5JLWURF3ahnWgu+xVSfIWT/tQpgID9w7yfZnvXCw9qycQS1ZTGbwvk2WonuEVnPhRIfr7yF4D24ERnusA1kOdC2IN7BYfUrZVLWFGB8TkfQ3e0r9LAaVJ0NKD813mxgXo6Ndq21YEbHo19TcLnUOpEqta8UNjdp/cLFmpAv2ZY1tq6HImOG9tHefPbhlHVXC1Sd7jOz3eWOFh/KglA3gYIONDvZO97I38n6WRGaEIVvGZWXMcxuHJ01NfhUZpAfLw+z23MaslFjdXlCT2lbXMz1cSpXBRXyKVjQQ2CF4+atIoyW7tqFKycsM9/hvxtTdsxax9BtFzW33GQ6auCykbYZ/lCzXU6qA28EebBm5nqIIlkFTNwTv3R6dyml/1Bo0OEtVNmrbVkc5RIlX33+8RtgXGsZ3oxFLU5CRoj/Xcbfjo2Zz2aSVTiT4VCiS1nH4q40+LezexnmNVrapvRflJ/9u/P0qPLEx2aLj7E4a7NWImSfp4ChdZuAsxyURj9Atcc6aX1qqO9TvlfkKhgJ990krftRqFwMLODBaiVQQBs4XFtg7WHxPHCcwFyj42Gvc0MZAxHwTMyTeN+uBf/vH5qoNyYloecD2mepR/aKYIqY3Bze2Ssuj6bmE+35G91XMfpevSUtBRLoLJJ8ZFsGh7qNGc9DzbXib5IhaVifhbp1H3trrIwuP24mPuclVAE3izk+LtwCklR4x6A1dt1Z0181PygH1MuJwZh+E5M5W8dpu1lmFG5yGtJ1dzGLbw0BjMjeNYxyxXhMyNsETX5R5WoRIJFVrN01aFMo1IgQj/fdb8MgPLs1c2GVXBZCtU3PMoQBgLc/hEFk3161gIaQ/MRGblfZHxPrr2kADekSsWOmAHw3GDQiCXvTtSg4WyfIWRxe9ID4D6feu6Qgr9xCS0wbMS2WyOhd5Uh+7WHlNOOXJ+ZWqstDvwmBzZYRuP9nzqPDxebIwQXXaU5x1pAiqg51TKthE6/DkvNSHdmGJ17GGGr4TdHzSCGxyZz4ui4zrg+RUz3RXs0iZ+FTzE/j99WRjy+Zc57ITXHCNq3W2f1ifFMd8Oiuvh+mkVWS7G8hD4UjBU1eTj2MxAEfXD3l1Mius0IyS+2v4+uliJ6tJPC1SVXWDCQ0XrjoSpmF7jAW+SSF2Ne3NiKTvYqJUDomohJnNXu4dRqWAYHP/GhfeOAPUq1m9IBEvsLpkaO7IOpyKnTjazykjn+c263aFxnzfSqYDcabXdqojmOsraDpq8m5iWLAHZINb3BuOJOPCNNdn6pJymAVkqek1s7Sqk5xCsp9eduSv/GmGglhhvdcNDkEjo1nh9VWHgW1+gF8V1NTRgMVoFj5ltN82/REqbE5T0RQIAwDLPi7BNTsnxgxbJjSFc+IFzyvWRW6bpp/jn8zV3olxgy+jAJ4mfr7EsWHeTkO4ytvv/ueblDKXHLWVnJdWHOZk360rUVP2dmVeRHHylqjcG+1cxM30aMMvdNK3xsoBN9UVWsgjim4uGjt1iwqvgxn0BIoAOaPoRYhkDUKyYGYolCoFC87XXX3YyzbQW6zKwjqR+IEPk7qLzmmhY77NEZo2a0OM7TVvnOWPa68I0cUPiXa3b7jcm2d8uzfLQzAuOqxsACdtM3bQBsKWTI7fkp0OVAM8aoHC+dKP2OMY1sMieorH6qSRxcwgWIwzk1Cva/HPVzCipkgzqgoBx6+ERMc2OsOBPUu1O52mHrsJ8o8gPFmkzTI4X3aqOvmbDvvSch3AzjhbB0Pgdre0Z86Jf150/GYKy816jdRnZY3Iyk76OzCEoWBag3ov6sk9R2GC3pw8GUXU7f9N2RMM0Xcyt55lowXo0SfbdawuSTbl/grsazfbR/n0NY4gaxdZPN6SBynvQD3ufA55X1CwtzEPgxxL1PiRl1pRKH5HMBmKYJWXEKE7rDSvB5pUu8ujXIMffT/mIqK7bQzRD/4F/35jWcLEqn7Ebu5Y4srDRxS7QMVsTqlNesjQbnylMldT87OEzU8ubhybWle2afMGoTWkLiPBvzIvp6MzMK0vrOzAzHsrsHuw6I85wQpPVFex+asU1raoby1palVv6RrniPQoO36wryailx13aD3zNLnas+MSuauyvZ8eP46LjKKCOhMW2tW6/llOY/sSpstVgk92t4UpZQiGuu5up3sYCDMWFEyd/xrsr6aanA1lIVSZdYWoZHmfUmyMZSTY4VOCiMyzCvPKjB6tHpmZ64iaHpRIeIn1qch6pBWGFIvq/Rz4qXDZ0XP149llya9DXtkaF5jKmmBur6nxIX0BJnc57WwF+lEQXiiZM1N2h/tpWoL3tDCIPLskitCLxdzZhl7P2l9nHhhdphVNGYbk/aeuAznkeTKnhwgVVuBo5/N+WYxmjFIzRiwYeyC+Pd0KX0hav49FtdzEFVEssqvcVEZ1bhgk2GTLDPm7e7Z99mq9xgLCofjVvhd7uG17JHrNNZJ0UUrdAigAlAUm5fI3wHPfUI2OkI09ectZXtyNhzoa27UuD7RPwPXIQFVBTm93L6IwiDcktry2mXbhxs1UFhi0tZeEtGF74zQZ9ap5asu9T21MXOQVsoEDcHO+Mugnb117liJHoltwZwV9NhZrfkq6gTMzhVgCUylgU8B/DRf07QC25XWxj8uoCThK8u+uSiyKcUzV8CH5VX8oFY+TaRHN183liLA+fNXprrjdsAcB+9M6lUfCB4ud2fObz9Fd784GwntgatkoRhB278yHFSIYD5+Pq/4bmTkssEgnQMC21jbGhphdk6cIlAa8z54ZemU4iIazJzlPjiJeGFQdZdrwJRpi0ydSSgJj0OSqkNJFYraUd/Uh7fYkc2derG/NsBibFvTZf4ng/87tD266ViCeB7D/BuEFgei8Nsd2Ttb0L45ZS5HAoeB1lJ6kRjm/eBD1KT8vZSLAfWjWffDKCJVGH8v7v1RVtJQqdRVmEj/4WeaCUop0OSTbhMByfASFSmhMxUp3Ta69++oo3VcNol8aKlXC+MsyCEvIGd6xq/MIwUdKfRRtNdSHYdBHyp0m9sCjANS6wzXHNx/x/0uICm+GLwplx+Q84LprrIFdeN6X5A2bmscQ7LJg9gGs/gfcZJzWccPI/0MX5njiOFLDmzHEevxYAurrq0biol3P7jEoV5fTF3QThtUV8Ush7QTNLGdy74WO2eGrW4ZxLNd4PvCk2BwTlIaH+nf6PqGjuuPnQN9nm8Lh9ap93jqgyERmbLPK27rLc6X8XnCJV+ftlhWlVUjD8oU3HzD4NPWaSztMMWpbhZK3T6EC86/0ug119oUMJv99kfDdfx5MgefTRrmvCBhwdai3kJ6ioJhs2/iPU9tPZvX0YV0dydvD4gmoWMvBhWQr6kgDYVsCcGg6d6TvfkDY8iEVnOAAB2T+HftY03iwnMuZpP0kbyTjPQf0kKQ8vmqB6+O+ysF8g0cxtb+yO1ztXSEh70SI7LkCKVZHI4VxXqiBULbhItvJQ9yHecvbufCmrS0JvTePqeNvTuyphlLtFOhxncfokXxiDfwwRjd4l4R41lu5Fdvxsy7s1tDBi2v7vyZybd//hX//HUkqSBiRib5K5kAzAD669WWwA+gK8i8C/YGRuixsTSacKbaztCF03DkFAx8wqs7+RgGc2PtkKXW/Yp80ggI0E468rGUTY3/d5kYpkT72nUfKt9KEzsJmZ7/sXRgKRV5YELsG/W0A/gYSo2AXXcdpNsFkmBGM9zLRApZZhLi5QqRDw9d3nt7+mz3QYQY/ze8DeOGmJ31TBZqG9dmf4Usdq6rgGSoavM/bAACQ8cJYdS6Li0kojzUNZ3EWlnd+W6Vkkzz3ECIJXi0wDo/FL9eMCcRio3gp7O32BGyH8ygD6eadpew1T32fz/ttWpD5fa9pdxVqqz85U65WAKlD0JvMbUNFG67nlovgszFDeP1cupr4D8nvK5XftLxxYhpOqj5zLMAQMZq6QQUyQs0bcSn9+f9srVI0dne2ycIZXwucqCD6Pu/17yoEMOod8gaeRux+1qJ8jIbhyxVzzese3OLPyPQMC0+u8P2zP/f9r0gt9DtUESaaXWYNyHs9Wzmnxmsuke992XErs52Y4mEMEK649fYEIlhRM4QxTfNFbInKaclIXb/G3d6XHUWuTtIjv7d/ciUf4rrcIJxajLNvTrULuFFNFQOv3AHRPpRbFR7YG2zB4IUth9idW8nZlOalchsev+t6tg9Lk6+ICUX6wxLb860CVkzlJ0lVhYRthpikK4HBTYtiCoW8DQ9W100RZi+8wa1qhZZjfNqUN2lzbl2OHUjr8zn1+RqKxThoKLyCHKeu69ioP5oGcCawY5O+IO3aXqZAzr3wZyYy/h169BUz4YT17hMLaqHfcOcFbbm2yVdZoXoYOS+asIiZENXfk+iuFT9ZotbFOcCyG1fDh1Eh2ofVzrm8UWTFFsovOQObeGLWzwZbtrQnn/Tk4b82Ui6Gf+QephlaN6pMqS0KGxdXzfKiVBPPcBl+vyv92I0c5G5kxvaPv6DZrd+pM0goifC1CmWJpU5+7NzALsyMGwukRYm+jdVMSFXvR95wQ57jRh/vaF2Z6akVSDG8Ttsp+l5EnUztnvLX/uqNhUYv0jI5iI0zf6jUsIK5C3lEoQVTa4ZOglMjQ1ASz9c5kGfzROz715xcQee2za7dzCIj/2hn2Oib3ZsZDu/eUGLTYXrdgze/tSb5hv5+MroTH4lVwDVKqpmPf9+aVooJUkA/rqyRRc3FCbShIXCeb4rSItQ7RLRk9dCAA5dQJpLzgxqz0KaRzJbHr+EcW7OvRS2JDcjFZPml5WfyKEtTUmAIPDT426XXDRpdzDUB0f8OT5rM2o3usnB/gB47NNq9ndmB7OOHuzjw9YdRAwGGiol3u/vUryiHWdbJk5xjrhch/VftwJcVF8mBWMFhYkr8HxWfbkTdPHLx9mB4AmltfpJL/69Q/sq1q04lMHW2qKGi366z9n7tt1DQywgqHoWibdjYTIpUts0SyM3oeL/aKkdtSQR61pRAyZFqeEyD3pzdrNU9RkY50NEKBeq6w6XyW+j07Eeuyg1k23sg2mBDCKBdH6a3jNQvmQKq6VU70NXP3EgHfPYHqbpQnyqLnroz0/8HiwS7HsH8RkfEtmbAzov2s7ZUNCKyswcE6GOAeQlJzf2IMO0QsUVH6b37BOMIJVEOZCVECv1dmcrqZLystocbivnMWEa6Fu5U+1UJzTEM5oz7J2iQkQ0KNWc6mmPQyiisGO9Bpx9ebT5h8HKQYFT9JATXQFQLZDCT3F5SXYz+Hzqao4KsBBenfb9iJsZK4Z9wt+Sks7ViNRqrQm5CbHYQU1x0Uusg2V4D6yCMYtpmROL5rYKAJ4IpiH6oGIJDxNKZGGPZK9UkQCHzjMS+ExWjicSOZ2Yeds8tZ98lopI6AWCSqlbSNXsHUO4L4BBO/HgT/Mp+qGWU6mBMSJ92Y0U19EkRl+2ZBOhcNYfXy2xb96OOpm6jfyuiBS0lH/SNYNt/q4EIT2RAQZ5YFUkvbmuL66iSSzMaGtVveZCBjWB8j+kZVGLQ6FDLgzU+JOICh7CDsxYr3JAUbMQNmeaBWQbkATFYpLX3I1NU2PC1JdWNnIH/iP61KAEZTsPcZb5e5q3io+iX8ANrukbFznDVARjZc8S3ExbJpsutMWZVhiV5jFA8FUh9m4hMhpXznw4Q4TPhtpaWxXO1uSPPDB1nr/aSNRAyznWEmgzHGp2nAatDeBGCjn2sj9qBQ2JbBju5FLFCsXs7H4N2br1CD1a3q/WbNwEQ/9WRcg+6Hs3ajIuVZGf28socV/WD8Wb7B7U2AsllE4k5k5FVoAh3Z8lbkWZ8+lCwd2V/Gt2hbPKY2UKrQiHu6NOcnyTeRvHZGeCZ3CAreueLXz+W6WmrN5ZaGFNsLWULZUc13fAQikRXbmxZCunTS9FbA6d4ROz5376SuF6zbjhNMVclfm7fO0gdKSEBii0rCXQDeP2UCdIRJ+4ozQMrspkfSohSypn+g6AUnK16u81maAz5iUyQdAahFM/ygakNTT/WEMx237T6EHa6CYJwXZ57O2vOjS4B442ExOq7T22tsfx+KKTVycReYYvxDXOMbO2JMtCKIMTZYaQEgX5/ZvTGs3cJLOXSCWU1O7pOlJ2CfjNF10gyOYCFn/kmuX8erMGirvaaXPrjeztQNVDaOVJ1kAPcVuYduQtpd6S6kuben5GEbgs52Ruu98x0CV32qo5x406kjtiHj1C1MTjdWCQzoxJcLkMgJd4ItS6yEvFcliuY3vUWtvtsxykL/QawNndeViMq4cSOG649Ee5rZRW8BN4BfoFyHKzmi+e7CB4DZRNkGyIH9lyjYC04FePmPN0QWycsOgTgXl0N54LZ5smVTJCzdTGlzqvUqDqLu+lM8WI0yR0aKgOIW0Y/WJf440Qk4izjAiJBFAWwxoSLBTRGFGpW2EUCd1QfsoFxArSN77N36ZICQjJP1+w58cxdLVtPW1ChKAkZ7bqlovneMJlQfaQBkBrZKOCMBPUdnufxVI/xL6XRYTzWZl3WN3/bodDp+X28i/ncTC9dGhMvzZSjHv8DmNuEQ6D1ponLL7t4SLcEQrhWnMHSOpWculuFcfoleUEJjQaf/wZ1yYKx1jXCcVc5bPL6zQvzEPxQKhiXwaHldf6c73wLj4qsFrOMH5Z/aj3CqImE4NAzwUCKv9EJhjIK13ZPUDFUu/uqLpkvv4UFGtlfbpOmBlWSgy1jAYswuXaM/47I5pHXvhZRx8Z3nZ95QZR7CpkGQDM8Zg83G0B/NI5MjwxvC5C9+X9HcsU1cmH5XbCvfSm5f4wvvFTvszZiHYli0bMmA6n1PbUESjO1LTike3xNBfFt6x8DJeM8bdFAUu4FGiiCuGo5CZyrGhBaFPwrWudHRwAjOwqHi+R5KPhNqhjtqDQm1icNWzFGyKCBk0Ma0ndT6TVaDZLBIuNU9K2Y+FeRVVAPxG1y9EHF3PJsazvb1G7JT1NCAZbzgYbWMPQfKWDSV4DEx0eLXT3sTvBwwb1vG6HtNAu1MWTXV2PvitokebpGDnse9zWxhu/gHsbiOPlz6XBGarsL6h9ci7DI41ZoNwUZfJ+nUaws8Q0xyDE6n1dO52MMbl83b8vNMc8thRk81F+ejkAlUnlwET5I1DrBDzWW4UAlB3WEZrNwagNbOLpoDcjhttpSS+5v+C8vUbjREAruVIqsA4BgYpDxtjhvJbB/aXNYLn5fERXeylBx7pER33ecQsaYQIDFRR/nNzlMTWouvP+cfCez8fBkdmZj0L7BT/sPEg6kaq2EYcmFH/Fh3CLt1EYwiseqt0a5XXMRFXdDtcaGcR/lhQMyBmYYFIO6BLmqgutVDCc9b0FZESzIjDrohWsyWMwHAFRxTvzsLKgRXBnNYfPhkd6AHSrojyauiuR1doDTQ7J6Xqx/Isbe5Ue8uL+a/yfHEhFkMTgf4Ue/PXgZLBeMZ8wuVV8ZkznTRrpn+hFFo+vSiw1eWlqQAUlkeChiVdIYrtL+xA07XyEMiOiyIcvo/4+LPgK2jxn8rbnyacuuLto324eP11DhynrbpdDFv6qjDrzf2Ckw9clWDuO/xOR/zAW1f81cyn4D9VL3yfgndabKHglRPVZVU69W+rI6tt+TYQc/7EFK8J7AutfjINo5PmyEejriVEXvm2qAqwS4BmoRV6mh8+FadBbDjm1byjzsLMPl3xYtCautFG5UzgagHmupTv28q07jNJ8pa/Eo/q4YDijrK91swYiC3YXGxC4DNxcwd25rQQ5Wsy25LQsANxBoZkHnoJa0FTyvpgIo4wlpGrL9wqVVw81OJ8Bx/B+KD/1B0nwdP+1N7t802L0prAiXzldXEnAttS+eXta8iKqW33Q63/2YE4Tbr/0JDx5qsP1oENDVZp+fnz4ssZD3nulhOOiQllDzlv4zrmFJn+63oMooQaYw2GoldRBxXMd3YuDUbDdktEpgv7Yb61Vkvujas97LVTQZMUs+dW3lWoCivLcinu9UK4fxMeWBs2Av4vNYuOpYbQtuMmlg+KNG18du3ZpzFR57fUMKwxc7kTIwTaPCYXJAqiYBXjlnEkQfy/bpafiK7gBIEjE72m4EMsSOmfrfuSRoj7BTXbkuSb1TxTfQ6S2g5lhPWIdboMRV37a2bFjgmc6nYIODyswI4H4MHrOSx1HTFS3qRk2MVeDB2vSd7Xc5T0kSa5Jd0og2OcglUxy8Fe/HBZNi7otOYfbWu0XabKU0dIVF8eeQSnUJ4djWaOY14x/BiMt4Hfqphw4b1urL0Px7XuDAVVN0mGiuweqUY1j2Jvt2/7mUrke8phIkpizy/t0hMT3oJ7Yw0uiL+m/dJc420+BYj3bNpceXV3grHufoO3wBShYsgvS/Yd6HRd1mdNJb0pRPUe7X6WW+HCaVjNRRL/wKZAyLNNjTbC9pFWQ7HWyr6j41hmOkW5N/fTJMde9UIZSy6BJr2cWHQEM8zUTaBeDt5nwT2XAI9vKvoyBhtfU/X9VnkS/yIsFHvdQS93Li3Wf0prJAtBHAaQSerBCT2NYcMy2QDVmnsOAElyJayZSVNRDq+pdxf5b16zMAbv3+n1wHgz+Po3AbfVINiOTPCDKlgB9lNW+OnXuzw/FcqYvmAQ1I+7n/o8J2TY/n5DueOTrF3FueZQp59lKHWdL2iU/8440Jsn97sW0JX6XikxWUiT8i+Dr6mK/FgT2Akf5X7fQ5OkVWclN53wMre0YTnA9JE7Sn4TxkxBjRViJUw+mFyAkdpBYtbhyzuvsLoFD2YEtb7LXPyAkioNuVuOzi6xae7eG44zwhxrAboW8z3fJnE+Iw53F2vkF783KOYZ5in5e01iXtgdXrgbQRewi3q9Q4D2BZiyLQaOlm9oCxhZrpJY3O57Wk/ueWlhM2XAlSOwWjwVI1AdhOlACU37O84+HWbPIwtGP7fTLZ3m8P4eXT/c1laHwhvhZX8aswPaK1qqsuzy4J88Nt9ZdDtXIj9KQSXh6UPON1XqKZmfnitSqhQmlsfL0ziGb6fmvztjUklXZEexaUox9K6p3fmUUIYPmcyMAZU4bgsXn0tMNVtGF8nwkjGOYf3a4Hro1Vd7hEL6jza73fPQRpbcgNT8wSTqjDip2xBKrtAs1xEM681IFVmHt7NiBFMmwBQE44pLkas/8urxcDwdazMZ1xeN9iJ2J8GtvlXti4LJPEn5CbDAs+BjB8PWtTQQmXLL4DPr0NYfPnhlRjIhS1wBPp3FaCsAaQbevwdzaWPhysvwsMJnmi2uTV6WYzBu+9P95X0I/6ynrXrX1zU6uXV3m/bCTNDsE5pZ+Z6YLlRscixQI4sv2kgvcN4Cz5KbEaouILTUY4OVgCwy2Y+zlNqHYsB7f2U74L2+BXBtcAkiUJk4wbFEE66kGLf/22CDFzeaElvm/KmoJwwf+YLkzSFoeTdHHrbAJplJYjDXzIn+3NHDQfGdv1z0pxGuJKjrbGviO1FR9ezR4PmJatHFmHnZtKF96G9PGnjfotgUASn4ZG1OH0OV+kA6j80IjLa33T8np2ZlQa5x4kOGKpxO7NOthiw2Jbg80CpPgAbep6d80hYJbpd6A53Fv3NlxGokzVxfLmM+CDC5a+AxiARJiZsQVXnRSKKSUeityZH2OgFtRNrLD9tppsy42NzeDV67iFRyYg0Cdph0dNYhtERIM0unmhynAfEDAjezMCXcqf1eJcL9Q8xrbvNbGw2VuJFWQ/dfC7RWg/Kl5psYE5nqIdKutHgD8C28UCG1mZ60gZIU9/C6w9oWmIMLpqJEFneV/ctsHd3lI60Xvr7/U7N49TCPaJeFtS6YqNfgTZO+Q2zB8BCEPvAcxuodEdc5I2pVmRj4T/OTBku9+sEEttuldj4MsQY/yb/H8vSJ8FahHFj59m6YVrloUiDhh4a6JplgAkaAoT81F4HyYjh5rZSemwO7GnJm20YVO4xv/SNHPlw1M8sSHHfm3+NkZyqCSbgAVbbygP0uQL6OaaVICX3qOKPPJdEXNda7JaOR2biMHBaF1XZ9DowIFtqYhj1T9moFL8Y/ltUKwZNKRCqaaporcz88C1Vl1zNGYhPvroTuOurC8WUIBI7ngGX9LtbjdBJ/9G/DfDXNmLMd1oUF4Ug46cCuE/24A7k08txwrPoCeFFSovebsHkMvGlyD4Cj2U6LhHXyb3EZmDSgmf/7DETczhOEqD7MGW6aTWKN+8TGZsLnT3nj71vgozKmSqLjDFG4mjqs3Bq8c0xqF/VecOxxW1Uyd1ktLH1s/DdUyD3DolxVfA4MesuNmhN1FUtgU9uY4N4iVgMw9UvnPaYfB646Qrji21UtVU0X0hO5oRCHIRXv0Vh1xp5GIJ2CjEA0lStNEBeC9BWoe7fBOqOOaLzV62kGC7+FbgAA">
+
+<div class="seg" role="tablist">
+  <button data-tab="now" class="on">Now</button>
+  <button data-tab="fc">Forecast</button>
+  <button data-tab="tide">Tides</button>
+  <button data-tab="spots">Spots</button>
+</div>
+
+<!-- Now -->
+<section id="tab-now">
+  <div class="card hidden" id="welcome">
+    <h2>Welcome</h2>
+    <p style="font-size:15px;line-height:1.5">Add the beach you ride from. Wind &amp; Tide shows the live wind from the nearest airports next to the forecast for your spot, picks out the hours that suit wingfoiling, and adds the tides.</p>
+    <div class="row" style="margin-top:12px"><button class="btn pri" id="welcomeAdd">Add my spot</button></div>
+  </div>
+
+  <div class="card hidden" id="nowCard">
+    <div class="now">
+      <svg class="compass" id="compass" viewBox="-100 -100 200 200" aria-label="Wind direction"></svg>
+      <div>
+        <span class="verdict" id="verdict">…</span>
+        <div class="bigspd" id="bigSpd">–</div>
+        <div class="sub" id="nowSub"></div>
+      </div>
+    </div>
+    <div class="legend"><span><i style="background:var(--live)"></i>Live (airport)</span><span><i style="background:var(--fc)"></i>Forecast at your spot</span><span><i style="background:var(--sea);height:8px"></i>Sea side</span></div>
+    <div class="sub" id="liveLine" style="margin-top:10px"></div>
+    <p class="note" id="wingNote"></p>
+  </div>
+
+  <div class="card hidden" id="vsCard">
+    <h2>Forecast or reality? <span class="r" id="vsWhere"></span></h2>
+    <div class="vs">
+      <div><div class="k">Forecast</div><div class="v" id="vsFc">–</div></div>
+      <div><div class="k">Measured</div><div class="v" id="vsLive">–</div></div>
+    </div>
+    <div class="diff" id="vsDiff"></div>
+    <svg class="chart" id="chart" viewBox="0 0 340 170" preserveAspectRatio="none"></svg>
+    <div class="legend"><span><i style="background:var(--fc)"></i>Forecast</span><span><i style="background:var(--live);height:6px;width:6px;border-radius:3px"></i>Measured</span></div>
+    <p class="note" id="biasNote"></p>
+  </div>
+
+  <div class="card hidden" id="stCard">
+    <h2>Nearby live wind <span class="r"><button class="link" id="refresh">Refresh</button></span></h2>
+    <div class="stations" id="stations"></div>
+    <p class="note">From airport weather reports (METAR), usually every 30 to 60 minutes. Airports sit inland, so a beach can be windier.</p>
+  </div>
+
+  <div class="card hidden" id="tafCard">
+    <h2>Airport forecast <span class="r" id="tafWhere"></span></h2>
+    <div class="sub" id="tafSum"></div>
+    <div class="raw" id="tafRaw"></div>
+  </div>
+
+  <div class="card hidden" id="aiCard">
+    <h2>Session summary</h2>
+    <button class="btn" id="aiBtn">Summarise the next two days</button>
+    <div class="ai" id="aiOut"></div>
+  </div>
+  <p class="note" id="nowErr"></p>
+</section>
+
+<!-- Forecast -->
+<section id="tab-fc" class="hidden">
+  <div class="card">
+    <h2>Wind at your spot <span class="r" id="fcUpdated"></span></h2>
+    <div class="scale" id="scale"></div>
+    <p class="note">Green edge = good for wingfoiling: inside your wind range, not offshore, in daylight. Gusts are estimated: the free forecast doesn't give them for the UK.</p>
+  </div>
+  <div id="fcList"></div>
+  <p class="note" id="fcErr"></p>
+</section>
+
+<!-- Tides -->
+<section id="tab-tide" class="hidden">
+  <div class="card hidden" id="tideKeyCard">
+    <h2>Tides from the Admiralty</h2>
+    <p style="font-size:15px;line-height:1.5">UK tide times come from the UK Hydrographic Office. Their free <b>Discovery</b> plan gives 7 days of high and low water for about 600 UK ports. It needs your own free key:</p>
+    <ol style="font-size:14.5px;line-height:1.55;margin:10px 0 0 20px">
+      <li>Sign up at <a href="https://admiraltyapi.developer.azure-api.net" target="_blank" style="color:var(--acc)">admiraltyapi.developer.azure-api.net</a>.</li>
+      <li>Under Products, subscribe to <b>UK Tidal API – Discovery</b>.</li>
+      <li>Copy the primary key from your profile and paste it here.</li>
+    </ol>
+    <input class="field" id="tideKey" placeholder="Paste your Admiralty key" autocomplete="off" autocapitalize="off" spellcheck="false" style="margin-top:12px">
+    <div class="row" style="margin-top:10px"><button class="btn pri" id="tideKeySave">Save key</button></div>
+    <p class="note">The key stays in this app on your phone and is only sent to the Admiralty.</p>
+  </div>
+  <div class="card hidden" id="tideCard">
+    <h2>Tide <span class="r" id="tideWhere"></span></h2>
+    <div class="tidebig" id="tideNow"></div>
+    <svg class="chart" id="tideChart" viewBox="0 0 340 170" preserveAspectRatio="none"></svg>
+    <div class="tides" id="tideList"></div>
+    <p class="note">Predicted times from the UK Hydrographic Office. Wind and pressure can move the real tide by tens of minutes.</p>
+  </div>
+  <p class="note" id="tideErr"></p>
+</section>
+
+<!-- Spots -->
+<section id="tab-spots" class="hidden">
+  <div class="card">
+    <h2>Your spots <span class="r"><button class="link" id="addSpot">+ Add</button></span></h2>
+    <div id="spotList"></div>
+  </div>
+  <div class="card">
+    <h2>Your riding</h2>
+    <label class="lb">Wind range for your kit</label>
+    <div class="grid2">
+      <select class="field" id="pMin"></select>
+      <select class="field" id="pMax"></select>
+    </div>
+    <label class="lb">Your weight (for the wing size guide)</label>
+    <select class="field" id="pWeight"></select>
+    <label class="lb">Speed unit</label>
+    <select class="field" id="pUnit">
+      <option value="kn">Knots</option><option value="mph">mph</option><option value="kmh">km/h</option><option value="ms">m/s</option>
+    </select>
+    <label class="lb">Admiralty tide key</label>
+    <div class="row"><span class="sub" id="keyState" style="margin:0;flex:1"></span><button class="btn small" id="keyClear">Remove</button></div>
+  </div>
+  <div class="card">
+    <h2>About the data</h2>
+    <p class="note" style="margin-top:0">Forecast: MET Norway (CC BY 4.0). Live wind and airport forecasts: aviationweather.gov (US National Weather Service). Tides: UK Hydrographic Office, with your own key. Windguru has no public data feed, so each spot can open its Windguru page instead. Always check local conditions and never ride alone in offshore wind.</p>
+  </div>
+</section>
+
+<!-- Spot editor -->
+<div class="sheet hidden" id="sheet"><div>
+  <h3 id="sheetTitle">Add a spot <button class="link" id="sheetClose">Cancel</button></h3>
+  <div id="stepFind">
+    <div class="row" style="margin-top:8px"><button class="btn pri" id="useLoc" style="flex:1">Use my location</button></div>
+    <label class="lb">Or search for a beach or town</label>
+    <div class="row"><input class="field" id="q" placeholder="e.g. Studland, Hayling Island" enterkeyhint="search"><button class="btn" id="qGo">Search</button></div>
+    <div class="results" id="results"></div>
+    <label class="lb">Or type coordinates</label>
+    <div class="row"><input class="field" id="ll" placeholder="50.6936, -1.9459" inputmode="decimal"><button class="btn" id="llGo">Use</button></div>
+    <p class="note" id="findNote"></p>
+  </div>
+  <div id="stepSet" class="hidden">
+    <label class="lb">Name</label>
+    <input class="field" id="sName">
+    <label class="lb">Which way is the sea? Tap or drag the dial.</label>
+    <svg class="dial" id="dial" viewBox="-110 -110 220 220"></svg>
+    <p class="sub" id="dialTxt" style="text-align:center"></p>
+    <label class="lb">Windguru page (optional)</label>
+    <input class="field" id="sWg" placeholder="https://www.windguru.cz/…" autocapitalize="off" spellcheck="false">
+    <div class="row" style="margin-top:14px"><button class="btn pri" id="sSave" style="flex:1">Save spot</button><button class="btn hidden" id="sDel">Delete</button></div>
+  </div>
+</div></div>
+
+<script>
+(function(){
+'use strict';
+var $ = function(id){ return document.getElementById(id); };
+var store = window.myllmStorage || { getItem:function(){ return Promise.resolve(null); }, setItem:function(){ return Promise.resolve(); } };
+function haptic(k){ try{ if(window.myllmHaptic) window.myllmHaptic(k||'light'); }catch(e){} }
+var UA = 'MyLLM-WindTide/1.0 (+https://github.com/TeamDzX/myllm-assets)';
+var KN = 1.943844;          // m/s → knots
+var GUST = 1.3;             // gust estimate when the source gives none
+
+var S = { spots:[], cur:null, prefs:{ min:12, max:28, weight:80, unit:'kn' }, tideKey:'' };
+var D = {};                 // data for the current spot, rebuilt on each load
+var loadedAt = 0, loading = false;
+
+/* ---------- storage ---------- */
+function load(k, def){ return Promise.resolve(store.getItem('wt1.' + k)).then(function(v){ try{ return v ? JSON.parse(v) : def; }catch(e){ return def; } }, function(){ return def; }); }
+function save(k, v){ try{ return Promise.resolve(store.setItem('wt1.' + k, JSON.stringify(v))).catch(function(){}); }catch(e){ return Promise.resolve(); } }
+
+/* ---------- network: iOS answers {ok,status,body}, Android answers the body text ---------- */
+function getText(url, headers){
+  var f = window.myllmFetch;
+  if(typeof f !== 'function') return Promise.reject(new Error('This version of MyLLM has no network access for apps.'));
+  return Promise.resolve(f(url, { headers: headers || {} })).then(function(r){
+    if(typeof r === 'string') return r;
+    if(!r) throw new Error('No answer');
+    if(r.error) throw new Error(r.error);
+    if(r.ok === false) throw new Error('HTTP ' + r.status);
+    if(typeof r.body === 'string') return r.body;
+    if(r.bodyBase64) return atob(r.bodyBase64);
+    return '';
+  });
+}
+function getJSON(url, headers){
+  return getText(url, headers).then(function(t){
+    try{ return JSON.parse(t); }catch(e){ var err = new Error('unreadable answer'); err.body = String(t).slice(0, 200); throw err; }
+  });
+}
+
+/* ---------- units and angles ---------- */
+var UNITS = { kn:{ f:1, s:'kn' }, mph:{ f:1.150779, s:'mph' }, kmh:{ f:1.852, s:'km/h' }, ms:{ f:0.514444, s:'m/s' } };
+function sp(kn){ var u = UNITS[S.prefs.unit] || UNITS.kn; return Math.round(kn * u.f); }
+function us(){ return (UNITS[S.prefs.unit] || UNITS.kn).s; }
+var PTS = ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];
+function compassName(d){ return PTS[Math.round(((d % 360) + 360) % 360 / 22.5) % 16]; }
+function angDiff(a, b){ return Math.abs(((a - b) % 360 + 540) % 360 - 180); }
+// How the wind meets the beach. `facing` is the bearing from the beach out to sea.
+function relation(from, facing){
+  if(from == null || facing == null) return null;
+  var d = angDiff(from, facing);
+  if(d <= 30) return { k:'onshore', t:'onshore', lvl:'ok' };
+  if(d <= 75) return { k:'cross-on', t:'cross-onshore', lvl:'ok' };
+  if(d <= 105) return { k:'cross', t:'cross-shore', lvl:'ok' };
+  if(d <= 150) return { k:'cross-off', t:'cross-offshore', lvl:'warn' };
+  return { k:'off', t:'offshore', lvl:'bad' };
+}
+function verdict(kn, from, facing){
+  var r = relation(from, facing);
+  if(r && r.lvl === 'bad') return { t:'Offshore: stay in', c:'bad' };
+  if(kn < S.prefs.min) return { t: kn < S.prefs.min - 4 ? 'Too light' : 'Marginal', c: kn < S.prefs.min - 4 ? '' : 'warn' };
+  if(kn > S.prefs.max) return { t:'Too strong', c:'bad' };
+  if(r && r.lvl === 'warn') return { t:'Cross-offshore: take care', c:'warn' };
+  return { t:'Go', c:'go' };
+}
+function goodHour(h, facing){
+  var r = relation(h.dir, facing);
+  return h.kn >= S.prefs.min && h.kn <= S.prefs.max && !(r && r.lvl !== 'ok');
+}
+// A rough wing size, scaled from an 80 kg rider's quiver.
+function wingSize(kn){
+  if(kn < 9) return null;
+  var T = [[12,6],[14,5.5],[16,5],[18,4.5],[21,4],[25,3.5],[30,3],[99,2.5]];
+  var base = 2.5; for(var i = 0; i < T.length; i++){ if(kn < T[i][0]){ base = T[i][1]; break; } }
+  var m = Math.round(base * (S.prefs.weight / 80) * 2) / 2;
+  return Math.max(2, Math.min(7, m));
+}
+function colour(kn){
+  var C = [[5,'#dbeafe'],[8,'#a5f3fc'],[12,'#86efac'],[16,'#bef264'],[20,'#fde047'],[25,'#fdba74'],[30,'#f87171'],[999,'#e879f9']];
+  for(var i = 0; i < C.length; i++) if(kn < C[i][0]) return C[i][1];
+  return '#e879f9';
+}
+function km(a, b){
+  var R = 6371, toR = Math.PI / 180, dLa = (b.lat - a.lat) * toR, dLo = (b.lon - a.lon) * toR;
+  var x = Math.sin(dLa/2) * Math.sin(dLa/2) + Math.cos(a.lat*toR) * Math.cos(b.lat*toR) * Math.sin(dLo/2) * Math.sin(dLo/2);
+  return 2 * R * Math.asin(Math.sqrt(x));
+}
+function hm(d){ return d.toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' }); }
+function hh(d){ return d.toLocaleTimeString([], { hour:'2-digit' }).replace(/:00$/, ''); }
+function dayName(d){
+  var t = new Date(); t.setHours(0,0,0,0); var x = new Date(d); x.setHours(0,0,0,0);
+  var n = Math.round((x - t) / 864e5);
+  if(n === 0) return 'Today'; if(n === 1) return 'Tomorrow';
+  return x.toLocaleDateString([], { weekday:'long' });
+}
+function ago(ms){ var m = Math.round((Date.now() - ms) / 60000); if(m < 1) return 'just now'; if(m < 60) return m + ' min ago'; var h = Math.floor(m / 60); return h + ' h ' + (m % 60) + ' min ago'; }
+function esc(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){ return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c]; }); }
+function hourKey(d){ var x = new Date(d); x.setMinutes(0,0,0); return x.toISOString().slice(0, 13); }
+
+/* ---------- sunrise and sunset (NOAA approximation) ---------- */
+function sunTimes(date, lat, lon){
+  var rad = Math.PI / 180, d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate(), 12));
+  var n = Math.floor((d - Date.UTC(2000, 0, 1, 12)) / 864e5) + 0.0008;
+  var J = n - lon / 360, M = (357.5291 + 0.98560028 * J) % 360;
+  var C = 1.9148 * Math.sin(M*rad) + 0.02 * Math.sin(2*M*rad) + 0.0003 * Math.sin(3*M*rad);
+  var L = (M + C + 180 + 102.9372) % 360;
+  var Jt = 2451545 + J + 0.0053 * Math.sin(M*rad) - 0.0069 * Math.sin(2*L*rad);
+  var dec = Math.asin(Math.sin(L*rad) * Math.sin(23.44*rad));
+  var cosw = (Math.sin(-0.833*rad) - Math.sin(lat*rad) * Math.sin(dec)) / (Math.cos(lat*rad) * Math.cos(dec));
+  if(cosw > 1 || cosw < -1) return null;
+  var w = Math.acos(cosw) / rad;
+  var toDate = function(j){ return new Date((j - 2440587.5) * 864e5); };
+  return { rise: toDate(Jt - w / 360), set: toDate(Jt + w / 360) };
+}
+function daylight(t, spot){
+  var s = sunTimes(t, spot.lat, spot.lon); if(!s) return true;
+  return t >= new Date(s.rise.getTime() - 30*60000) && t <= new Date(s.set.getTime() + 30*60000);
+}
+
+/* ---------- sources ---------- */
+function metForecast(lat, lon){
+  var u = 'https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=' + lat.toFixed(4) + '&lon=' + lon.toFixed(4);
+  return getJSON(u, { 'User-Agent': UA }).then(function(j){
+    if(!j || !j.properties || !j.properties.timeseries) throw new Error('no forecast');
+    var out = [], prev = null;
+    j.properties.timeseries.forEach(function(x){
+      var i = x.data.instant.details, t = new Date(x.time);
+      var nx = x.data.next_1_hours || x.data.next_6_hours || {};
+      var step = prev ? Math.round((t - prev) / 36e5) : 1; prev = t;
+      out.push({ t:t, kn: i.wind_speed * KN, dir: i.wind_from_direction, temp: i.air_temperature,
+                 rain: nx.details && nx.details.precipitation_amount, sym: nx.summary && nx.summary.symbol_code, step: step });
+    });
+    if(out.length > 1) out[0].step = Math.round((out[1].t - out[0].t) / 36e5);
+    return { hours: out, updated: new Date(j.properties.meta.updated_at) };
+  });
+}
+function metarNear(spot){
+  function q(dLat, dLon){
+    var b = [spot.lat - dLat, spot.lon - dLon, spot.lat + dLat, spot.lon + dLon].map(function(v){ return v.toFixed(2); }).join(',');
+    return getJSON('https://aviationweather.gov/api/data/metar?bbox=' + b + '&format=json');
+  }
+  return q(0.8, 1.2).then(function(a){ return (a && a.length) ? a : q(2, 3); }).then(function(a){
+    return (a || []).map(function(m){
+      return { id:m.icaoId, name:(m.name || m.icaoId).replace(/,\s*[A-Z]{2},\s*[A-Z]{2}$/, ''), lat:m.lat, lon:m.lon,
+               dir: typeof m.wdir === 'number' ? m.wdir : null, vrb: m.wdir === 'VRB', kn: m.wspd || 0, gust: m.wgst || null,
+               at: (m.obsTime ? m.obsTime * 1000 : Date.parse(m.reportTime)), raw: m.rawOb,
+               dist: km(spot, { lat:m.lat, lon:m.lon }) };
+    }).filter(function(m){ return isFinite(m.dist); }).sort(function(a, b){ return a.dist - b.dist; }).slice(0, 4);
+  });
+}
+function metarHistory(id){
+  return getJSON('https://aviationweather.gov/api/data/metar?ids=' + id + '&format=json&hours=12').then(function(a){
+    return (a || []).map(function(m){ return { at: m.obsTime ? m.obsTime * 1000 : Date.parse(m.reportTime), kn: m.wspd || 0, gust: m.wgst || null,
+      dir: typeof m.wdir === 'number' ? m.wdir : null }; }).sort(function(a, b){ return a.at - b.at; });
+  });
+}
+function taf(id){
+  return getJSON('https://aviationweather.gov/api/data/taf?ids=' + id + '&format=json').then(function(a){ return a && a[0] ? a[0].rawTAF : null; });
+}
+var TIDE = 'https://admiraltyapi.azure-api.net/uktidalapi/api/V1/';
+var tideStations = null;     // kept for this visit only
+function tideFor(spot){
+  if(!S.tideKey) return Promise.resolve(null);
+  var k = 'subscription-key=' + encodeURIComponent(S.tideKey);
+  var stations = tideStations ? Promise.resolve(tideStations) : getJSON(TIDE + 'Stations?' + k).then(function(j){
+    tideStations = (j.features || []).map(function(f){ return { id:f.properties.Id, name:f.properties.Name,
+      lon:f.geometry.coordinates[0], lat:f.geometry.coordinates[1] }; });
+    return tideStations;
+  });
+  return stations.then(function(list){
+    var best = null;
+    list.forEach(function(s){ var d = km(spot, s); if(!best || d < best.dist) best = { st:s, dist:d }; });
+    if(!best || best.dist > 60) return { none:true, dist: best && best.dist };
+    return getJSON(TIDE + 'Stations/' + encodeURIComponent(best.st.id) + '/TidalEvents?duration=7&' + k).then(function(ev){
+      var events = (ev || []).map(function(e){ var s = String(e.DateTime || ''); if(!/Z|[+-]\d\d:?\d\d$/.test(s)) s += 'Z';
+        return { t:new Date(s), hw:e.EventType === 'HighWater', h:e.Height, approx: !!(e.IsApproximateTime || e.IsApproximateHeight) }; })
+        .filter(function(e){ return !isNaN(e.t); }).sort(function(a, b){ return a.t - b.t; });
+      return { station:best.st, dist:best.dist, events:events };
+    });
+  });
+}
+function tideAt(t, events){
+  for(var i = 0; i < events.length - 1; i++){
+    var a = events[i], b = events[i + 1];
+    if(t >= a.t && t <= b.t && a.h != null && b.h != null){
+      var f = (t - a.t) / (b.t - a.t);
+      return { h: a.h + (b.h - a.h) * (1 - Math.cos(Math.PI * f)) / 2, rising: b.hw, next: b };
+    }
+  }
+  return null;
+}
+
+/* ---------- forecast against what was measured ---------- */
+function recordAirport(id, fc, hist){
+  return Promise.all([load('snap.' + id, {}), load('pairs.' + id, [])]).then(function(r){
+    var snap = r[0], pairs = r[1], now = Date.now();
+    // Each coming hour keeps the latest forecast made before it.
+    fc.hours.forEach(function(h){ if(h.step === 1 && h.t.getTime() >= now - 30*60000 && h.t.getTime() < now + 36*36e5) snap[hourKey(h.t)] = Math.round(h.kn * 10) / 10; });
+    var have = {}; pairs.forEach(function(p){ have[p[0]] = 1; });
+    hist.forEach(function(o){
+      var k = hourKey(new Date(Math.round(o.at / 36e5) * 36e5));   // the nearest whole hour
+      if(snap[k] != null && !have[k] && o.at < now){ pairs.push([k, snap[k], o.kn]); have[k] = 1; }
+    });
+    var cut = new Date(now - 3 * 864e5).toISOString().slice(0, 13);
+    Object.keys(snap).forEach(function(k){ if(k < cut) delete snap[k]; });
+    pairs = pairs.slice(-300);
+    save('snap.' + id, snap); save('pairs.' + id, pairs);
+    return { snap:snap, pairs:pairs };
+  });
+}
+
+/* ---------- loading ---------- */
+function loadAll(force){
+  var spot = S.cur;
+  if(!spot){ render(); return; }
+  if(loading) return;
+  if(!force && D.spotId === spot.id && Date.now() - loadedAt < 10 * 60000){ render(); return; }
+  loading = true;
+  D = { spotId: spot.id, busy: true };
+  render();
+  var fcP = metForecast(spot.lat, spot.lon).then(function(f){ D.fc = f; }, function(e){ D.fcErr = e; });
+  var stP = metarNear(spot).then(function(list){
+    D.stations = list;
+    var a = list[0]; if(!a) return;
+    D.airport = a;
+    return Promise.all([
+      metarHistory(a.id).catch(function(){ return []; }),
+      metForecast(a.lat, a.lon).catch(function(){ return null; }),
+      taf(a.id).catch(function(){ return null; })
+    ]).then(function(r){
+      D.hist = r[0]; D.apFc = r[1]; D.taf = r[2];
+      if(D.apFc) return recordAirport(a.id, D.apFc, D.hist).then(function(x){ D.snap = x.snap; D.pairs = x.pairs; });
+    });
+  }, function(e){ D.stErr = e; });
+  var tdP = tideFor(spot).then(function(t){ D.tide = t; }, function(e){ D.tideErr = e; });
+  Promise.all([fcP, stP, tdP]).then(function(){ D.busy = false; loading = false; loadedAt = Date.now(); render(); });
+}
+
+/* ---------- drawing ---------- */
+function arrowPath(r){ return 'M0,' + (-r) + ' L' + (r*0.32) + ',' + (r*0.18) + ' L0,' + (r*0.02) + ' L' + (-r*0.32) + ',' + (r*0.18) + ' Z'; }
+// An arrow pointing the way the wind blows (from + 180).
+function arrowSVG(from, colourVar){
+  if(from == null) return '<svg class="arrow" viewBox="-12 -12 24 24"><circle r="4" fill="var(--muted)"/></svg>';
+  return '<svg class="arrow" viewBox="-12 -12 24 24"><path d="' + arrowPath(10) + '" fill="var(' + (colourVar || '--ink') + ')" transform="rotate(' + (from + 180) + ')"/></svg>';
+}
+function drawCompass(svg, facing, live, fc){
+  var h = '';
+  if(facing != null){
+    var a0 = (facing - 90) * Math.PI / 180, a1 = (facing + 90) * Math.PI / 180, r = 86;
+    var p = function(a){ return (r * Math.sin(a)).toFixed(1) + ',' + (-r * Math.cos(a)).toFixed(1); };
+    h += '<path d="M0,0 L' + p(a0) + ' A' + r + ',' + r + ' 0 0 1 ' + p(a1) + ' Z" fill="var(--sea)"/>';
+  }
+  h += '<circle r="86" fill="none" stroke="var(--line)" stroke-width="2"/>';
+  for(var i = 0; i < 16; i++){
+    var a = i * 22.5 * Math.PI / 180, o = i % 4 === 0 ? 74 : 80;
+    h += '<line x1="' + (o*Math.sin(a)).toFixed(1) + '" y1="' + (-o*Math.cos(a)).toFixed(1) + '" x2="' + (86*Math.sin(a)).toFixed(1) + '" y2="' + (-86*Math.cos(a)).toFixed(1) + '" stroke="var(--muted)" stroke-width="' + (i % 4 === 0 ? 2.4 : 1) + '"/>';
+  }
+  ['N','E','S','W'].forEach(function(t, i){
+    var a = i * Math.PI / 2;
+    h += '<text x="' + (62*Math.sin(a)).toFixed(1) + '" y="' + (-62*Math.cos(a) + 5).toFixed(1) + '" text-anchor="middle" font-size="14" font-weight="800" fill="var(--muted)">' + t + '</text>';
+  });
+  if(fc && fc.dir != null) h += '<g transform="rotate(' + (fc.dir + 180) + ')"><path d="' + arrowPath(56) + '" fill="none" stroke="var(--fc)" stroke-width="3" stroke-dasharray="6 4"/></g>';
+  if(live && live.dir != null) h += '<g transform="rotate(' + (live.dir + 180) + ')"><path d="' + arrowPath(56) + '" fill="var(--live)" opacity=".92"/></g>';
+  svg.innerHTML = h;
+}
+function drawLines(svg, series, opts){
+  // series: [{pts:[[t,v]], kind:'line'|'dots', col}], shared time and value axes
+  var W = 340, H = 170, L = 30, R = 8, T = 10, B = 22, all = [];
+  series.forEach(function(s){ s.pts.forEach(function(p){ all.push(p); }); });
+  if(!all.length){ svg.innerHTML = ''; return; }
+  var t0 = opts.t0 || Math.min.apply(null, all.map(function(p){ return p[0]; }));
+  var t1 = opts.t1 || Math.max.apply(null, all.map(function(p){ return p[0]; }));
+  if(t1 <= t0) t1 = t0 + 36e5;
+  var vmin = opts.vmin != null ? opts.vmin : Math.min.apply(null, all.map(function(p){ return p[1]; }));
+  var vmax = Math.max.apply(null, all.map(function(p){ return p[1]; }));
+  if(opts.vmin == null){ var pad = (vmax - vmin) * 0.15 || 0.5; vmin -= pad; vmax += pad; } else { vmax = Math.max(vmax * 1.15, vmin + 5); }
+  var x = function(t){ return L + (t - t0) / (t1 - t0) * (W - L - R); };
+  var y = function(v){ return T + (1 - (v - vmin) / (vmax - vmin)) * (H - T - B); };
+  var h = '';
+  var step = opts.vstep || Math.max(1, Math.round((vmax - vmin) / 4));
+  for(var v = Math.ceil(vmin / step) * step; v <= vmax; v += step){
+    h += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + y(v).toFixed(1) + '" y2="' + y(v).toFixed(1) + '" stroke="var(--line)" stroke-width="1"/>' +
+         '<text x="' + (L - 5) + '" y="' + (y(v) + 4).toFixed(1) + '" text-anchor="end" font-size="10" fill="var(--muted)">' + (opts.fmtV ? opts.fmtV(v) : v) + '</text>';
+  }
+  var hrs = (t1 - t0) / 36e5, every = hrs > 30 ? 12 : hrs > 14 ? 6 : 3;
+  var first = new Date(t0); first.setMinutes(0,0,0);
+  for(var t = first.getTime(); t <= t1; t += 36e5){
+    var d = new Date(t); if(d.getHours() % every || t < t0) continue;
+    h += '<text x="' + x(t).toFixed(1) + '" y="' + (H - 6) + '" text-anchor="middle" font-size="10" fill="var(--muted)">' + (d.getHours() === 0 && hrs > 30 ? d.toLocaleDateString([], { weekday:'short' }) : hh(d)) + '</text>';
+  }
+  if(opts.now && opts.now >= t0 && opts.now <= t1) h += '<line x1="' + x(opts.now).toFixed(1) + '" x2="' + x(opts.now).toFixed(1) + '" y1="' + T + '" y2="' + (H - B) + '" stroke="var(--muted)" stroke-dasharray="3 3"/>';
+  series.forEach(function(s){
+    if(s.kind === 'dots') s.pts.forEach(function(p){ h += '<circle cx="' + x(p[0]).toFixed(1) + '" cy="' + y(p[1]).toFixed(1) + '" r="3.4" fill="' + s.col + '"/>'; });
+    else if(s.pts.length) h += '<polyline fill="none" stroke="' + s.col + '" stroke-width="2.4" stroke-linejoin="round" points="' +
+      s.pts.map(function(p){ return x(p[0]).toFixed(1) + ',' + y(p[1]).toFixed(1); }).join(' ') + '"/>';
+  });
+  if(opts.marker) h += '<circle cx="' + x(opts.marker[0]).toFixed(1) + '" cy="' + y(opts.marker[1]).toFixed(1) + '" r="5" fill="var(--acc)" stroke="var(--surface)" stroke-width="2"/>';
+  svg.innerHTML = h;
+}
+
+/* ---------- render ---------- */
+var tab = 'now';
+function show(id, on){ $(id).classList.toggle('hidden', !on); }
+function currentHour(hours){
+  if(!hours) return null; var now = Date.now(), best = null;
+  hours.forEach(function(h){ if(!best || Math.abs(h.t - now) < Math.abs(best.t - now)) best = h; });
+  return best;
+}
+function render(){
+  var spot = S.cur;
+  $('spotBtn').textContent = spot ? spot.name + ' ▾' : 'Add a spot';
+  show('welcome', !spot);
+  ['nowCard','vsCard','stCard','tafCard','aiCard'].forEach(function(id){ show(id, false); });
+  $('nowErr').textContent = '';
+  if(spot) renderNow(spot);
+  renderFc(spot); renderTide(spot); renderSpots();
+}
+function renderNow(spot){
+  var fcNow = D.fc ? currentHour(D.fc.hours) : null, live = D.stations && D.stations[0];
+  show('nowCard', true);
+  drawCompass($('compass'), spot.facing, live, fcNow);
+  if(!fcNow && !live){
+    $('verdict').textContent = D.busy ? 'Loading…' : 'No data'; $('verdict').className = 'verdict';
+    $('bigSpd').innerHTML = D.busy ? '<span class="spin"></span>' : '–'; $('nowSub').textContent = ''; $('liveLine').textContent = ''; $('wingNote').textContent = '';
+  } else {
+    // The headline is the forecast for the beach itself; an airport inland reads lighter.
+    var head = fcNow || live, isFc = !!fcNow;
+    var v = verdict(head.kn, head.dir, spot.facing), r = relation(head.dir, spot.facing);
+    $('verdict').textContent = v.t; $('verdict').className = 'verdict ' + v.c;
+    var g = isFc ? head.kn * GUST : head.gust;
+    $('bigSpd').innerHTML = sp(head.kn) + ' <small>' + us() + '</small>' +
+      (g ? '<div class="sub" style="margin-top:4px;font-weight:600;letter-spacing:0">gusts ' + (isFc ? 'about ' : '') + sp(g) + ' ' + us() + (isFc ? ' (estimated)' : '') + '</div>' : '');
+    var dirTxt = !isFc && head.vrb ? 'variable' : head.dir != null ? 'from the ' + compassName(head.dir) + ' (' + Math.round(head.dir) + '°)' : '';
+    $('nowSub').innerHTML = esc(dirTxt) + (r ? ', <b>' + r.t + '</b> here' : '') + '<br>' + (isFc ? 'Forecast for ' + esc(spot.name) + ' this hour' : 'Live at ' + esc(head.name) + ' (no forecast)');
+    $('liveLine').innerHTML = isFc && live ? '<b style="color:var(--live)">Live:</b> ' + sp(live.kn) + (live.gust ? '–' + sp(live.gust) : '') + ' ' + us() + ' ' +
+      (live.vrb ? 'variable' : live.dir != null ? compassName(live.dir) : '') + ' at ' + esc(live.name) + ', ' + Math.round(live.dist) + ' km away, ' + ago(live.at) : '';
+    var w = wingSize(head.kn);
+    $('wingNote').textContent = w ? 'Rough wing size for ' + S.prefs.weight + ' kg: ' + w + ' m². Gusty or lumpy days call for less; ask local riders.' : '';
+  }
+
+  if(live && fcNow){
+    show('vsCard', true);
+    var apNow = D.apFc ? currentHour(D.apFc.hours) : null, f = apNow || fcNow;
+    $('vsWhere').textContent = live.name;
+    $('vsFc').textContent = sp(f.kn) + ' ' + us() + ' ' + compassName(f.dir);
+    $('vsLive').textContent = sp(live.kn) + (live.gust ? '–' + sp(live.gust) : '') + ' ' + us() + ' ' + (live.vrb ? 'VRB' : live.dir != null ? compassName(live.dir) : '');
+    var dk = live.kn - f.kn;
+    $('vsDiff').innerHTML = Math.abs(dk) < 2 ? 'The forecast is right on at ' + esc(live.name) + ' just now.' :
+      'It is <b>' + sp(Math.abs(dk)) + ' ' + us() + ' ' + (dk > 0 ? 'windier' : 'lighter') + '</b> than forecast at ' + esc(live.name) + ' just now.';
+    var now = Date.now(), t0 = now - 12 * 36e5, t1 = now + 12 * 36e5, fpts = [];
+    if(D.snap) Object.keys(D.snap).sort().forEach(function(k){ var t = Date.parse(k + ':00:00Z'); if(t >= t0 && t <= now) fpts.push([t, D.snap[k] * (UNITS[S.prefs.unit] || UNITS.kn).f]); });
+    if(D.apFc) D.apFc.hours.forEach(function(h){ var t = h.t.getTime(); if(t > now - 36e5 && t <= t1) fpts.push([t, h.kn * (UNITS[S.prefs.unit] || UNITS.kn).f]); });
+    fpts.sort(function(a, b){ return a[0] - b[0]; });
+    var opts = (D.hist || []).filter(function(o){ return o.at >= t0; }).map(function(o){ return [o.at, o.kn * (UNITS[S.prefs.unit] || UNITS.kn).f]; });
+    drawLines($('chart'), [{ pts:fpts, col:'var(--fc)' }, { pts:opts, kind:'dots', col:'var(--live)' }], { t0:t0, t1:t1, vmin:0, now:now, fmtV:function(v){ return Math.round(v); } });
+    var pairs = D.pairs || [];
+    if(pairs.length >= 3){
+      var m = pairs.reduce(function(a, p){ return a + (p[2] - p[1]); }, 0) / pairs.length;
+      $('biasNote').textContent = 'Over ' + pairs.length + ' hours checked at ' + live.id + ', the forecast was on average ' +
+        (Math.abs(m) < 1 ? 'within 1 ' + us() + ' of what was measured.' : sp(Math.abs(m)) + ' ' + us() + ' ' + (m > 0 ? 'below' : 'above') + ' what was measured.');
+    } else {
+      $('biasNote').textContent = 'The line before now shows forecasts this app saved earlier. Open the app now and then, and it learns how far the forecast is usually out here.';
+    }
+  }
+
+  if(D.stations && D.stations.length){
+    show('stCard', true);
+    $('stations').innerHTML = D.stations.map(function(s){
+      var old = Date.now() - s.at > 2 * 36e5;
+      return '<div class="st">' + arrowSVG(s.vrb ? null : s.dir, '--live') + '<div class="nm"><b>' + esc(s.name) + '</b><span>' + esc(s.id) + ' · ' +
+        Math.round(s.dist) + ' km · ' + (old ? '<b style="color:var(--warn)">' + ago(s.at) + '</b>' : ago(s.at)) + '</span></div><div class="w">' +
+        sp(s.kn) + (s.gust ? '–' + sp(s.gust) : '') + ' ' + us() + '<span>' + (s.vrb ? 'variable' : s.dir != null ? compassName(s.dir) + ' ' + s.dir + '°' : '') + '</span></div></div>';
+    }).join('');
+  }
+  if(D.taf && D.airport){
+    show('tafCard', true);
+    $('tafWhere').textContent = D.airport.id;
+    $('tafRaw').textContent = D.taf;
+    var m2 = /\b(\d{3}|VRB)(\d{2,3})(?:G(\d{2,3}))?KT\b/.exec(D.taf);
+    $('tafSum').innerHTML = m2 ? 'Main wind: <b>' + (m2[1] === 'VRB' ? 'variable' : compassName(+m2[1]) + ' (' + m2[1] + '°)') + ', ' + sp(+m2[2]) + (m2[3] ? ' gusting ' + sp(+m2[3]) : '') + ' ' + us() + '</b>' : '';
+  }
+  show('aiCard', !!(D.fc && typeof window.myllmAsk === 'function'));
+  var errs = [];
+  if(D.stErr) errs.push('Live wind could not load (' + D.stErr.message + ').');
+  if(D.fcErr) errs.push(fcErrText(D.fcErr));
+  $('nowErr').textContent = errs.join(' ');
+}
+function fcErrText(e){
+  return /unreadable|403/.test(e.message) ? 'The forecast service turned this version of MyLLM away. It works on iPhone and iPad, and comes to Android in the next update; live wind and tides still work.' :
+    'The forecast could not load (' + e.message + ').';
+}
+function renderFc(spot){
+  var list = $('fcList');
+  if(!spot){ list.innerHTML = '<div class="card note">Add a spot to see its forecast.</div>'; $('fcErr').textContent = ''; return; }
+  $('scale').innerHTML = [0,8,12,16,20,25,30].map(function(k, i, a){ return '<div style="background:' + colour(k) + '">' + sp(k) + (i === a.length - 1 ? '+' : '') + '</div>'; }).join('');
+  $('fcErr').textContent = D.fcErr ? fcErrText(D.fcErr) : '';
+  if(!D.fc){ list.innerHTML = D.busy ? '<div class="card"><span class="spin"></span> Loading the forecast…</div>' : ''; $('fcUpdated').textContent = ''; return; }
+  $('fcUpdated').textContent = 'updated ' + hm(D.fc.updated);
+  var now = Date.now() - 30*60000, days = {}, order = [];
+  D.fc.hours.forEach(function(h){
+    if(h.t.getTime() < now) return;
+    var k = h.t.toDateString(); if(!days[k]){ days[k] = []; order.push(k); } days[k].push(h);
+  });
+  var events = D.tide && D.tide.events;
+  list.innerHTML = order.map(function(k){
+    var hs = days[k], good = hs.filter(function(h){ return h.step === 1 && goodHour(h, spot.facing) && daylight(h.t, spot); });
+    var best = '';
+    if(good.length){
+      // the longest run of consecutive good hours
+      var run = [], top = [];
+      good.forEach(function(h){ if(run.length && h.t - run[run.length - 1].t > 36e5) run = []; run.push(h); if(run.length > top.length) top = run.slice(); });
+      var lo = Math.min.apply(null, top.map(function(h){ return h.kn; })), hi = Math.max.apply(null, top.map(function(h){ return h.kn; }));
+      best = top.length > 1 ? hh(top[0].t) + '–' + hh(new Date(top[top.length - 1].t.getTime() + 36e5)) + ', ' + sp(lo) + '–' + sp(hi) + ' ' + us() : hh(top[0].t) + ', ' + sp(lo) + ' ' + us();
+    }
+    var sun = sunTimes(hs[0].t, spot.lat, spot.lon);
+    return '<div class="day"><div class="dayhead"><b>' + dayName(hs[0].t) + '</b><span>' + (sun ? '☀︎ ' + hm(sun.rise) + '–' + hm(sun.set) : '') + '</span>' +
+      (best ? '<span class="best">Best ' + best + '</span>' : '') + '</div><div class="hours">' +
+      hs.map(function(h){
+        var r = relation(h.dir, spot.facing), ok = goodHour(h, spot.facing) && daylight(h.t, spot), night = !daylight(h.t, spot);
+        var g = h.kn * GUST, w = Math.min(100, h.kn / 35 * 100), td = events ? tideAt(h.t, events) : null;
+        var meta = compassName(h.dir) + (r ? ' · <span class="' + (r.lvl === 'ok' ? '' : r.lvl) + '">' + r.t + '</span>' : '') +
+          (h.temp != null ? ' · ' + Math.round(h.temp) + '°' : '') + (h.rain ? ' · ' + h.rain + ' mm' : '') +
+          (td ? ' · tide ' + (td.rising ? '↑' : '↓') + ' ' + td.h.toFixed(1) + ' m' : '');
+        return '<div class="hr' + (ok && h.step === 1 ? ' go' : '') + (night ? ' night' : '') + '"><div class="t">' + hh(h.t) + (h.step > 1 ? '<small>' + h.step + 'h</small>' : '') + '</div>' +
+          arrowSVG(h.dir) + '<div class="mid"><div class="bar" style="width:' + Math.max(6, w).toFixed(0) + '%;background:' + colour(h.kn) + '"></div><div class="meta">' + meta + '</div></div>' +
+          '<div class="kn">' + sp(h.kn) + '<small>gust ~' + sp(g) + '</small></div></div>';
+      }).join('') + '</div></div>';
+  }).join('');
+}
+function renderTide(spot){
+  show('tideKeyCard', !S.tideKey);
+  show('tideCard', false);
+  $('tideErr').textContent = '';
+  if(!S.tideKey || !spot) return;
+  if(D.tideErr){ $('tideErr').textContent = /401|403/.test(D.tideErr.message) ? 'The Admiralty did not accept the key. Check it in Spots → Admiralty tide key.' : 'Tides could not load (' + D.tideErr.message + ').'; return; }
+  var t = D.tide;
+  if(!t){ $('tideErr').innerHTML = D.busy ? '<span class="spin"></span> Loading tides…' : ''; return; }
+  if(t.none){ $('tideErr').textContent = 'No UK tide station within 60 km of this spot' + (t.dist ? ' (nearest ' + Math.round(t.dist) + ' km).' : '.'); return; }
+  show('tideCard', true);
+  $('tideWhere').textContent = t.station.name + ' · ' + Math.round(t.dist) + ' km';
+  var now = new Date(), cur = tideAt(now, t.events);
+  var nextE = t.events.filter(function(e){ return e.t > now; })[0];
+  $('tideNow').innerHTML = cur ? (cur.rising ? 'Rising ↑ ' : 'Falling ↓ ') + cur.h.toFixed(1) + ' m' + (nextE ? '<div class="sub">' + (nextE.hw ? 'High' : 'Low') + ' water at ' + hm(nextE.t) + (nextE.h != null ? ', ' + nextE.h.toFixed(1) + ' m' : '') + '</div>' : '') :
+    (nextE ? (nextE.hw ? 'High' : 'Low') + ' water at ' + hm(nextE.t) : '');
+  var t0 = now.getTime() - 3 * 36e5, t1 = now.getTime() + 27 * 36e5, pts = [];
+  for(var x = t0; x <= t1; x += 15 * 60000){ var v = tideAt(new Date(x), t.events); if(v) pts.push([x, v.h]); }
+  drawLines($('tideChart'), [{ pts:pts, col:'var(--live)' }], { t0:t0, t1:t1, now:now.getTime(), marker: cur ? [now.getTime(), cur.h] : null, vstep:1, fmtV:function(v){ return v + 'm'; } });
+  var lastDay = '';
+  $('tideList').innerHTML = t.events.filter(function(e){ return e.t > now - 6 * 36e5; }).map(function(e){
+    var dn = dayName(e.t), head = dn !== lastDay ? '<div class="sub" style="margin:10px 0 2px;font-weight:700">' + dn + '</div>' : ''; lastDay = dn;
+    return head + '<div class="ev' + (e.t < now ? ' past' : '') + '"><span class="ty ' + (e.hw ? 'hw' : 'lw') + '">' + (e.hw ? 'High' : 'Low') + '</span><span class="tm">' + hm(e.t) + (e.approx ? ' ≈' : '') + '</span><span class="ht">' + (e.h != null ? e.h.toFixed(1) + ' m' : '') + '</span></div>';
+  }).join('');
+}
+function renderSpots(){
+  $('spotList').innerHTML = S.spots.length ? S.spots.map(function(s){
+    return '<div class="spotrow' + (S.cur && S.cur.id === s.id ? ' cur' : '') + '"><div class="nm"><b>' + esc(s.name) + '</b><span>Sea to the ' + compassName(s.facing) +
+      ' · ' + s.lat.toFixed(3) + ', ' + s.lon.toFixed(3) + '</span></div>' +
+      (s.wg ? '<a class="btn small" href="' + esc(s.wg) + '" target="_blank" style="text-decoration:none">Windguru</a>' : '') +
+      '<button class="btn small" data-use="' + s.id + '">' + (S.cur && S.cur.id === s.id ? 'Showing' : 'Show') + '</button>' +
+      '<button class="link" data-edit="' + s.id + '">Edit</button></div>';
+  }).join('') : '<p class="note" style="margin:0">No spots yet.</p>';
+  $('pMin').value = S.prefs.min; $('pMax').value = S.prefs.max; $('pWeight').value = S.prefs.weight; $('pUnit').value = S.prefs.unit;
+  $('keyState').textContent = S.tideKey ? 'Saved (ends …' + S.tideKey.slice(-4) + ')' : 'Not set: add it on the Tides tab';
+  $('keyClear').classList.toggle('hidden', !S.tideKey);
+}
+
+/* ---------- AI summary ---------- */
+$('aiBtn').addEventListener('click', function(){
+  var spot = S.cur; if(!D.fc || !spot) return;
+  var now = Date.now(), lines = [];
+  D.fc.hours.forEach(function(h){
+    if(h.t < now || h.t > now + 48 * 36e5 || h.step !== 1 || !daylight(h.t, spot)) return;
+    var r = relation(h.dir, spot.facing), td = D.tide && D.tide.events ? tideAt(h.t, D.tide.events) : null;
+    lines.push(h.t.toLocaleString([], { weekday:'short', hour:'2-digit' }) + ' ' + Math.round(h.kn) + 'kn ' + compassName(h.dir) + (r ? ' ' + r.t : '') + (td ? ' tide ' + (td.rising ? 'rising' : 'falling') : ''));
+  });
+  var prompt = 'You help a wingfoiler at ' + spot.name + ' (rides ' + S.prefs.min + '–' + S.prefs.max + ' knots, weighs ' + S.prefs.weight + ' kg). ' +
+    'Daylight hourly forecast, wind in knots with how it meets the beach:\n' + lines.join('\n') +
+    '\nIn 3 short sentences, plain text: name the best session window(s), the wind and a wing size, and any safety point (offshore wind, gusts, light spells). If nothing is rideable, say so kindly.';
+  $('aiOut').textContent = '';
+  $('aiBtn').disabled = true;
+  Promise.resolve(window.myllmAsk(prompt)).then(function(t){ $('aiOut').textContent = String(t || '').trim(); }, function(e){ $('aiOut').textContent = 'The AI could not answer: ' + e.message; })
+    .then(function(){ $('aiBtn').disabled = false; });
+});
+
+/* ---------- spot editor ---------- */
+var draft = null;
+function openSheet(spot){
+  draft = spot ? JSON.parse(JSON.stringify(spot)) : null;
+  $('sheetTitle').firstChild.textContent = spot ? 'Edit spot ' : 'Add a spot ';
+  show('stepFind', !spot); show('stepSet', !!spot); show('sDel', !!spot);
+  $('results').innerHTML = ''; $('findNote').textContent = ''; $('q').value = ''; $('ll').value = '';
+  if(spot) fillSet();
+  show('sheet', true);
+}
+function fillSet(){
+  $('sName').value = draft.name || ''; $('sWg').value = draft.wg || '';
+  if(draft.facing == null) draft.facing = 180;
+  drawDial(); show('stepFind', false); show('stepSet', true);
+}
+function pick(lat, lon, name){
+  draft = { id: 's' + Date.now().toString(36), lat: +lat, lon: +lon, name: name || 'My spot', facing: 180, wg:'' };
+  fillSet();
+}
+function drawDial(){
+  var f = draft.facing, h = '', r = 96;
+  var p = function(a){ return (r * Math.sin(a)).toFixed(1) + ',' + (-r * Math.cos(a)).toFixed(1); };
+  var a0 = (f - 90) * Math.PI / 180, a1 = (f + 90) * Math.PI / 180;
+  h += '<circle r="100" fill="#d6b97a" opacity=".55"/>';
+  h += '<path d="M0,0 L' + p(a0) + ' A' + r + ',' + r + ' 0 0 1 ' + p(a1) + ' Z" fill="#38bdf8" opacity=".75"/>';
+  h += '<circle r="100" fill="none" stroke="var(--line)" stroke-width="2"/>';
+  PTS.forEach(function(t, i){ if(i % 2) return; var a = i * 22.5 * Math.PI / 180;
+    h += '<text x="' + (84*Math.sin(a)).toFixed(1) + '" y="' + (-84*Math.cos(a) + 4).toFixed(1) + '" text-anchor="middle" font-size="' + (i % 4 ? 10 : 13) + '" font-weight="800" fill="#0b2530">' + t + '</text>'; });
+  var fa = f * Math.PI / 180;
+  h += '<line x1="0" y1="0" x2="' + (60*Math.sin(fa)).toFixed(1) + '" y2="' + (-60*Math.cos(fa)).toFixed(1) + '" stroke="#0b2530" stroke-width="4" stroke-linecap="round"/>';
+  h += '<circle r="7" fill="#0b2530"/>';
+  h += '<text x="' + (36*Math.sin(fa + Math.PI)).toFixed(1) + '" y="' + (-36*Math.cos(fa + Math.PI) + 4).toFixed(1) + '" text-anchor="middle" font-size="12" font-weight="800" fill="#5b4520">beach</text>';
+  h += '<text x="' + (40*Math.sin(fa)).toFixed(1) + '" y="' + (-40*Math.cos(fa) - 8).toFixed(1) + '" text-anchor="middle" font-size="12" font-weight="800" fill="#0b2530">sea</text>';
+  $('dial').innerHTML = h;
+  $('dialTxt').innerHTML = 'Sea to the <b>' + compassName(f) + '</b> (' + f + '°). Wind from the ' + compassName(f) + ' is onshore; from the ' + compassName(f + 180) + ' it is offshore.';
+}
+function dialAt(ev){
+  var b = $('dial').getBoundingClientRect(), x = ev.clientX - b.left - b.width / 2, y = ev.clientY - b.top - b.height / 2;
+  if(Math.hypot(x, y) < 8) return;
+  draft.facing = (Math.round((Math.atan2(x, -y) * 180 / Math.PI + 360) % 360 / 5) * 5) % 360;
+  drawDial();
+}
+var dragging = false;
+$('dial').addEventListener('pointerdown', function(e){ dragging = true; try{ $('dial').setPointerCapture(e.pointerId); }catch(x){} dialAt(e); haptic('selection'); });
+$('dial').addEventListener('pointermove', function(e){ if(dragging) dialAt(e); });
+$('dial').addEventListener('pointerup', function(){ dragging = false; });
+$('dial').addEventListener('pointercancel', function(){ dragging = false; });
+
+$('useLoc').addEventListener('click', function(){
+  var L = window.myllmLocation;
+  if(!L || typeof L.current !== 'function'){ $('findNote').textContent = 'Location is not available here. Search or type coordinates instead.'; return; }
+  $('findNote').innerHTML = '<span class="spin"></span> Finding you…';
+  Promise.resolve(L.current()).then(function(p){
+    var lat = p.latitude != null ? p.latitude : p.lat, lon = p.longitude != null ? p.longitude : p.lon;
+    if(lat == null) throw new Error('no position');
+    var nm = (p.address && (p.address.locality || p.address.name || p.address.subLocality)) || p.locality || p.name || 'My spot';
+    $('findNote').textContent = ''; pick(lat, lon, typeof nm === 'string' ? nm : 'My spot');
+  }).catch(function(e){ $('findNote').textContent = 'Could not get your location (' + e.message + '). Allow apps to use location in MyLLM settings, or search instead.'; });
+});
+function doSearch(){
+  var q = $('q').value.trim(); if(!q) return;
+  var L = window.myllmLocation;
+  if(!L || typeof L.search !== 'function'){ $('findNote').textContent = 'Search is not available in this version of MyLLM. Type coordinates instead.'; return; }
+  $('findNote').innerHTML = '<span class="spin"></span> Searching…'; $('results').innerHTML = '';
+  Promise.resolve(L.search(q, { limit: 8 })).then(function(list){
+    list = list || [];
+    $('findNote').textContent = list.length ? '' : 'Nothing found. Try a nearby town.';
+    $('results').innerHTML = list.map(function(r, i){ return '<button data-i="' + i + '">' + esc(r.name) + '<span>' + esc(r.address || '') + '</span></button>'; }).join('');
+    Array.prototype.forEach.call($('results').querySelectorAll('button'), function(b){
+      b.addEventListener('click', function(){ var r = list[+b.dataset.i]; pick(r.latitude, r.longitude, r.name); });
+    });
+  }).catch(function(e){ $('findNote').textContent = 'Search failed (' + e.message + ').'; });
+}
+$('qGo').addEventListener('click', doSearch);
+$('q').addEventListener('keydown', function(e){ if(e.key === 'Enter') doSearch(); });
+$('llGo').addEventListener('click', function(){
+  var m = /(-?\d+(?:\.\d+)?)\s*[,\s]\s*(-?\d+(?:\.\d+)?)/.exec($('ll').value);
+  if(!m || Math.abs(+m[1]) > 90 || Math.abs(+m[2]) > 180){ $('findNote').textContent = 'Type latitude, longitude, for example 50.6936, -1.9459.'; return; }
+  pick(+m[1], +m[2], 'My spot');
+});
+$('sSave').addEventListener('click', function(){
+  draft.name = $('sName').value.trim() || 'My spot';
+  var wg = $('sWg').value.trim(); draft.wg = /^https?:\/\//.test(wg) ? wg : '';
+  var i = S.spots.findIndex(function(s){ return s.id === draft.id; });
+  if(i >= 0) S.spots[i] = draft; else S.spots.push(draft);
+  S.cur = draft; save('spots', S.spots); save('cur', draft.id);
+  show('sheet', false); haptic('success'); loadedAt = 0; loadAll(true);
+});
+$('sDel').addEventListener('click', function(){
+  S.spots = S.spots.filter(function(s){ return s.id !== draft.id; });
+  if(S.cur && S.cur.id === draft.id){ S.cur = S.spots[0] || null; D = {}; }
+  save('spots', S.spots); save('cur', S.cur ? S.cur.id : null);
+  show('sheet', false); loadAll(true);
+});
+$('sheetClose').addEventListener('click', function(){ show('sheet', false); });
+$('spotBtn').addEventListener('click', function(){ if(S.spots.length) setTab('spots'); else openSheet(null); });
+$('welcomeAdd').addEventListener('click', function(){ openSheet(null); });
+$('addSpot').addEventListener('click', function(){ openSheet(null); });
+$('spotList').addEventListener('click', function(e){
+  var u = e.target.closest('[data-use]'), ed = e.target.closest('[data-edit]');
+  if(u){ S.cur = S.spots.find(function(s){ return s.id === u.dataset.use; }); save('cur', S.cur.id); D = {}; haptic(); setTab('now'); loadAll(true); }
+  if(ed) openSheet(S.spots.find(function(s){ return s.id === ed.dataset.edit; }));
+});
+
+/* ---------- settings ---------- */
+(function(){
+  var o = ''; for(var k = 6; k <= 25; k++) o += '<option value="' + k + '">From ' + k + ' kn</option>'; $('pMin').innerHTML = o;
+  o = ''; for(k = 15; k <= 40; k++) o += '<option value="' + k + '">Up to ' + k + ' kn</option>'; $('pMax').innerHTML = o;
+  o = ''; for(k = 40; k <= 130; k += 5) o += '<option value="' + k + '">' + k + ' kg</option>'; $('pWeight').innerHTML = o;
+})();
+function prefChanged(){
+  S.prefs.min = +$('pMin').value; S.prefs.max = Math.max(+$('pMax').value, S.prefs.min + 2);
+  S.prefs.weight = +$('pWeight').value; S.prefs.unit = $('pUnit').value;
+  save('prefs', S.prefs); render();
+}
+['pMin','pMax','pWeight','pUnit'].forEach(function(id){ $(id).addEventListener('change', prefChanged); });
+$('tideKeySave').addEventListener('click', function(){
+  var k = $('tideKey').value.trim(); if(!/^[A-Za-z0-9]{16,64}$/.test(k)){ $('tideErr').textContent = 'That does not look like an Admiralty key (letters and numbers, usually 32 long).'; return; }
+  S.tideKey = k; save('tideKey', k); $('tideKey').value = ''; tideStations = null; haptic('success');
+  if(S.cur) tideFor(S.cur).then(function(t){ D.tide = t; D.tideErr = null; render(); }, function(e){ D.tideErr = e; render(); });
+  render();
+});
+$('keyClear').addEventListener('click', function(){ S.tideKey = ''; save('tideKey', ''); D.tide = null; D.tideErr = null; tideStations = null; render(); });
+$('refresh').addEventListener('click', function(){ haptic(); loadAll(true); });
+
+/* ---------- tabs ---------- */
+function setTab(t){
+  tab = t;
+  Array.prototype.forEach.call(document.querySelectorAll('.seg button'), function(b){ b.classList.toggle('on', b.dataset.tab === t); });
+  ['now','fc','tide','spots'].forEach(function(x){ show('tab-' + x, x === t); });
+  window.scrollTo(0, 0);
+}
+Array.prototype.forEach.call(document.querySelectorAll('.seg button'), function(b){ b.addEventListener('click', function(){ haptic('selection'); setTab(b.dataset.tab); }); });
+document.addEventListener('visibilitychange', function(){ if(!document.hidden) loadAll(false); });
+
+/* ---------- start ---------- */
+Promise.all([load('spots', []), load('cur', null), load('prefs', null), load('tideKey', '')]).then(function(r){
+  S.spots = r[0] || []; S.cur = S.spots.find(function(s){ return s.id === r[1]; }) || S.spots[0] || null;
+  if(r[2]) for(var k in r[2]) S.prefs[k] = r[2][k];
+  S.tideKey = r[3] || '';
+  render(); loadAll(true);
+});
+})();
+</script>
+</body>
+</html>
