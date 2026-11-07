@@ -134,6 +134,29 @@
   .chatrow input{ flex:1; min-width:0; font-size:16px; border:none; background:none; color:var(--ink); outline:none; font-family:inherit; }
   .chatrow button{ border:none; border-radius:50%; width:40px; height:40px; background:var(--mint); color:#fff; display:flex; align-items:center; justify-content:center; flex:0 0 auto; }
 
+
+  /* v18 living room: Wan-animated loops of the painted room (day, and a moonlit night while she
+     sleeps). Each fades in only once it is actually playing; until then the still above shows. */
+  .room video{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:center 72%;
+               opacity:0; transition:opacity 1.4s ease; pointer-events:none; }
+  .room video.dayv.ready{ opacity:1; }
+  .stage.sleeping .room.nightvid video.dayv{ opacity:0; }
+  .stage.sleeping .room video.nightv.ready{ opacity:1; }
+  /* with the painted night room showing, the old tint + CSS stars step back */
+  .room.nightvid ~ .night{ background:radial-gradient(60% 40% at 50% 88%, rgba(255,210,140,.18), transparent 70%),
+                                      linear-gradient(180deg, rgba(28,32,78,.42), rgba(22,22,56,.32)); }
+  .room.nightvid ~ .night .star{ display:none; }
+  /* v18 walk: a full-screen animated path (the camera backs along it as Mochi waddles toward you) */
+  .walkview .wvid{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:center 100%;
+                   opacity:0; transition:opacity .8s ease; pointer-events:none; }
+  .walkview.vidwalk .wvid{ opacity:1; }
+  .walkview.vidwalk .walktrack{ opacity:0; transition:opacity .8s ease; }
+  .walkview.vidwalk .sky{ display:none; }
+  .walkview.vidwalk .walkscene{ position:absolute; inset:0; height:auto; }
+  .walkview.vidwalk .walker{ bottom:calc(11% + env(safe-area-inset-bottom)); }
+  .walkview.vidwalk .wbubble-wrap{ top:calc(14px + env(safe-area-inset-top)); }
+  .walkview.vidwalk .walkhud{ position:absolute; left:0; right:0; bottom:0; z-index:4;
+                              background:linear-gradient(180deg, rgba(253,246,236,0), rgba(253,246,236,.82) 45%); }
   /* walk mode */
   .walkview{ position:fixed; inset:0; background:linear-gradient(180deg,#fdf6ec 0%,#f3ecdd 100%); display:none; flex-direction:column; z-index:8; }
   .walkview.show{ display:flex; }
@@ -459,6 +482,7 @@ function render(){
   el("moodchip").textContent = !S.hatched ? "" : S.sleeping ? "💤 Asleep" : m === "sad" ? "🥺 Needs you" :
     (S.happy >= 80 && S.hunger >= 50) ? "😊 Happy" : "🙂 Content";
   zzz(S.hatched && S.sleeping && !transient);
+  if (roomDay) syncVids();
 }
 
 /* ---------- little bits of joy ---------- */
@@ -702,6 +726,59 @@ function talk(){
   });
 }
 
+
+/* ---------- v18: living room + animated walks (ComfyUI Wan 2.2 loops) ----------
+   Plain <video src> (fetch() can't reach other origins from the app's sandbox; media can).
+   jsDelivr first (serves video/mp4), raw GitHub second; offline -> the stills, as before. */
+var VID = ["https://cdn.jsdelivr.net/gh/TeamDzX/myllm-media@main/apps/mochi/",
+           "https://raw.githubusercontent.com/TeamDzX/myllm-media/main/apps/mochi/"];
+var WALKS = ["walk_meadow", "walk_blossom", "walk_seaside", "walk_autumn"];
+var roomDay = null, roomNight = null, walkVids = {}, curWalkVid = null;
+function mkVid(name, cls, onReady){
+  var v = document.createElement("video"), si = 0;
+  v.muted = true; v.defaultMuted = true; v.loop = true; v.playsInline = true;
+  v.setAttribute("playsinline", ""); v.setAttribute("muted", ""); v.preload = "auto";
+  v.className = cls; v.dead = false;
+  v.addEventListener("playing", function(){ v.classList.add("ready"); if (onReady) onReady(v); });
+  v.addEventListener("error", function(){ if (++si < VID.length){ v.src = VID[si] + name + ".mp4"; v.load(); } else v.dead = true; });
+  v.src = VID[0] + name + ".mp4";
+  return v;
+}
+function vplay(v, on){
+  if (!v || v.dead) return;
+  if (on){ if (v.paused){ var p = v.play(); if (p && p.catch) p.catch(function(){}); } }
+  else if (!v.paused) v.pause();
+}
+/* only what's on screen plays: day or night in the room, the current path on a walk */
+function syncVids(){
+  var vis = !document.hidden, room = el("stage") && el("stage").querySelector(".room");
+  if (S && S.hatched && S.sleeping && !roomNight && room){
+    roomNight = mkVid("room_night", "nightv", function(){ room.classList.add("nightvid"); syncVids(); });
+    room.appendChild(roomNight);
+  }
+  var asleep = S && S.sleeping, nightOK = roomNight && !roomNight.dead;
+  vplay(roomDay, vis && !walking && !(asleep && nightOK && roomNight.classList.contains("ready")));
+  vplay(roomNight, vis && !walking && asleep);
+  for (var k in walkVids) vplay(walkVids[k], vis && walking && walkVids[k] === curWalkVid);
+}
+function walkVid(i){
+  var k = WALKS[((i % WALKS.length) + WALKS.length) % WALKS.length];
+  if (!walkVids[k]){
+    walkVids[k] = mkVid(k, "wvid", function(v){ if (walking && v === curWalkVid) el("walkview").classList.add("vidwalk"); });
+    el("walkview").querySelector(".walkscene").insertBefore(walkVids[k], el("walktrack"));
+  }
+  return walkVids[k];
+}
+function roomVidsBoot(){
+  var room = el("stage").querySelector(".room");
+  roomDay = mkVid("room_day", "dayv"); room.appendChild(roomDay);
+  walkVid((S.walks || 0));            /* the next walk's path loads while she's indoors */
+  syncVids();
+}
+document.addEventListener("visibilitychange", syncVids);
+/* a tap counts as a gesture for strict autoplay rules */
+addEventListener("pointerdown", function(){ syncVids(); }, true);
+
 /* ---------- walk mode ---------- */
 var walking = false, walkTimer = null, walkStart = 0, lastFind = 0, findCount = 0;
 
@@ -864,6 +941,8 @@ function startWalk(){
   if (S.energy < 25){ bubble(esc(S.name) + " is too tired for a walk right now. 🌙"); return; }
   haptic("success");
   walking = true; walkStart = Date.now(); lastFind = Date.now(); findCount = 0;
+  curWalkVid = walkVid(S.walks || 0);
+  if (curWalkVid.classList.contains("ready")) el("walkview").classList.add("vidwalk");
   S.walks = (S.walks || 0) + 1; checkUnlocks();   /* milestone: first walk */
   buildTrack();
   /* WebKit quirk: percentage-transform keyframes computed against a
@@ -876,6 +955,7 @@ function startWalk(){
   el("walkview").classList.add("show");
   syncChrome();
   startWalkAnim();
+  syncVids();
   el("walksteps").textContent = "";
   walkTimer = setInterval(walkTick, 5000);
   startCritters();
@@ -979,7 +1059,9 @@ function endWalk(tired){
      The HTTP cache still has it, so the next walk starts just as fast. */
   el("walkpet").style.backgroundImage = "";
   clearAccTransforms();
-  el("walkview").classList.remove("show");
+  el("walkview").classList.remove("show", "vidwalk");
+  curWalkVid = null; walkVid(S.walks || 0);   /* queue up the next path */
+  syncVids();
   syncChrome();
   haptic("selection");
   render(); save();
@@ -1196,6 +1278,7 @@ function closeWardrobe(){ el("wardrobe").classList.remove("show"); }
     applyMessy();
     checkUnlocks(true);   /* retroactively grant anything already earned, quietly */
     render(); save();
+    roomVidsBoot();
     setInterval(function(){ applyDecay(); checkUnlocks(false); render(); save(); }, 30000);
     /* one-time nudge so people discover the snack picker */
     store.getItem("mochi_food_tip").then(function(seen){
