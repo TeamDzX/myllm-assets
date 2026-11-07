@@ -38,6 +38,10 @@ body{padding-left:max(12px,env(safe-area-inset-left));padding-right:max(12px,env
   .stat b{ display:block; font-size:22px; font-weight:800; }
   .stat small{ font-size:11px; color:var(--myllm-muted,#8a8a8e); font-weight:650; }
   .stat.ok b{ color:#34c759; } .stat.warn b{ color:#ff9500; } .stat.err b{ color:#ff3b30; }
+  .alertbar{ background:rgba(255,149,0,.14); color:var(--myllm-text,#111); border-radius:14px; padding:10px 13px; margin-bottom:10px; font-size:13.5px; line-height:1.45; }
+  .alertbar.err{ background:rgba(255,59,48,.14); }
+  .alertbar small{ display:block; color:var(--myllm-muted,#8a8a8e); font-size:11.5px; margin-top:3px; }
+  code{ font-family:ui-monospace,Menlo,monospace; font-size:.92em; }
   .synced{ font-size:11.5px; color:var(--myllm-muted,#8a8a8e); text-align:center; margin-bottom:12px; min-height:14px; }
 
   .card{ background:var(--myllm-surface,#fff); border-radius:16px; padding:13px 14px; margin-bottom:10px;
@@ -139,6 +143,7 @@ body.imm .imm-safe{display:block}
   <div class="stat warn"><b id="cWarn">0</b><small>warn</small></div>
   <div class="stat err"><b id="cErr">0</b><small>error</small></div>
 </div>
+<div class="alertbar" id="alertbar" style="display:none" onclick="this.style.display='none'"></div>
 <div class="synced" id="synced"></div>
 
 <div id="cards"></div>
@@ -192,12 +197,39 @@ body.imm .imm-safe{display:block}
     <button class="btn sec" style="width:100%; margin-bottom:12px" onclick="setUpBackgroundPolling()">Keep polling when the app is closed…</button>
     <p class="note" style="margin:-6px 0 12px">Monitors are only polled while this app is open. That button drafts a routine for the assistant, which can poll them in the background — you send it.</p>
 
+    <label>What to check</label>
+    <select id="mKind" onchange="kindChanged()">
+      <option value="url">A status URL (JSON)</option>
+      <option value="ollama">An Ollama server: which models are loaded</option>
+      <option value="json">A value in JSON, with a limit</option>
+    </select>
     <label>Display name</label>
     <input id="mName" type="text" autocomplete="off" placeholder="Greenhouse">
-    <label>URL (returns JSON)</label>
+    <label id="mUrlLbl">URL (returns JSON)</label>
     <input id="mUrl" type="text" autocomplete="off" placeholder="http://greenhouse.local/status">
-    <label>Metrics to show (optional, comma-separated keys)</label>
-    <input id="mMetrics" type="text" autocomplete="off" placeholder="humidity, temp">
+    <div id="fUrl">
+      <label>Metrics to show (optional, comma-separated keys)</label>
+      <input id="mMetrics" type="text" autocomplete="off" placeholder="humidity, temp">
+    </div>
+    <div id="fOllama" style="display:none">
+      <label>Model that should be loaded (optional)</label>
+      <input id="mExpect" type="text" autocomplete="off" placeholder="qwen3:32b">
+      <p class="note">Reads <code>/api/ps</code>: each loaded model, how much of it is on the GPU, its context length and when it unloads. Warns when nothing is loaded, when a model is running on the CPU only, or when the model above isn't loaded.</p>
+    </div>
+    <div id="fJson" style="display:none">
+      <label>Value to read (a dotted path)</label>
+      <input id="mPath" type="text" autocomplete="off" placeholder="gpu.temperature">
+      <label>Warn when it is</label>
+      <div style="display:flex; gap:8px">
+        <select id="mOp" style="flex:0 0 42%">
+          <option value="&gt;">above</option><option value="&lt;">below</option>
+          <option value="=">equal to</option><option value="!=">not equal to</option>
+          <option value="contains">containing</option><option value="!contains">not containing</option>
+        </select>
+        <input id="mVal" type="text" autocomplete="off" placeholder="80">
+      </div>
+      <p class="note">For example <code>status</code> not equal to <code>ok</code> for a <code>/health</code> endpoint, or <code>gpu.temperature</code> above <code>80</code>. The app can't read a GPU by itself: the server needs an endpoint that reports it (an nvidia-smi exporter or a small script).</p>
+    </div>
     <label>Auth header (optional, kept private to this app)</label>
     <input id="mToken" type="text" autocomplete="off" placeholder="Bearer abc123">
     <div class="btnrow" style="margin-top:14px; justify-content:flex-start">
@@ -257,6 +289,12 @@ body.imm .imm-safe{display:block}
       Center is on screen. In 🌐 Monitors, <b>Keep polling when the app is closed</b> drafts a routine for
       the assistant: it reads the same monitor list from the shared workspace and writes the heartbeats
       back on a schedule, with nothing open. You review and send it.</div>
+
+    <div class="note"><b>Your own server</b> — in 🌐 Monitors, <b>What to check</b> also offers
+      <b>An Ollama server</b> (which models are loaded, how much is on the GPU, when they unload; warns
+      when nothing is loaded or a model is on the CPU only) and <b>A value in JSON, with a limit</b>
+      (a <code>/health</code> endpoint, or a GPU temperature your server reports). If one goes from ok to
+      warn while the app is open, the phone buzzes and it shows at the top.</div>
 
     <div class="note"><b>History</b> — 🕘 records every move between ok, warn and error (last 200), so
       "was it down overnight?" and "how often does this flap?" have real answers.</div>
@@ -325,6 +363,103 @@ async function writeHeartbeat(hb){
   try{ var old = await files.read(REG+safe+".json"); if(old) prev = JSON.parse(old).status; }catch(e){}
   await files.write(REG+safe+".json", JSON.stringify(hb));
   if(prev !== hb.status) await recordChange(hb, prev);
+  if(prev === 'ok' && (hb.status === 'warn' || hb.status === 'error')) flipped.push(hb);
+}
+
+/* ---------- alerts while the app is open ----------
+   Apps don't run in the background, so there are no push alerts: when a check
+   goes from ok to warn or error while Command Center is on screen, it buzzes
+   and says so at the top. The tile on the home screen carries the count. */
+var flipped = [];
+function showFlips(){
+  if(!flipped.length) return;
+  var worst = flipped.some(function(h){ return h.status==='error'; }) ? 'err' : 'warn';
+  var bar = el('alertbar');
+  bar.className = 'alertbar ' + worst;
+  bar.innerHTML = flipped.slice(0,4).map(function(h){
+    return '⚠︎ <b>'+esc(h.name||h.id)+'</b>: '+esc((h.errors&&h.errors[0]) || h.status);
+  }).join('<br>') + '<small>Just changed from ok. Tap to dismiss.</small>';
+  bar.style.display = 'block';
+  haptic(worst==='err' ? 'error' : 'warning');
+  flipped = [];
+}
+
+/* myllmFetch hands back {ok,status,body} in MyLLM for iPhone and the body text
+   alone on Android, so both shapes come through here. */
+async function fetchText(url, headers){
+  if(!window.myllmFetch) throw new Error("internet is off for apps");
+  var r = await myllmFetch(url, { headers: headers || {} });
+  if(typeof r === 'string') return r;
+  if(!r || !r.ok) throw new Error("HTTP "+(r ? r.status : '?'));
+  return r.body;
+}
+function parseJSON(t){
+  try{ return JSON.parse(t); }catch(e){ throw new Error("the reply wasn't JSON"); }
+}
+
+/* ---------- Ollama: /api/ps ---------- */
+function gb(bytes){ return (bytes/1e9).toFixed(bytes >= 1e10 ? 0 : 1)+' GB'; }
+function untilText(iso){
+  var t = Date.parse(iso); if(!t) return '';
+  var s = Math.round((t - Date.now())/1000);
+  if(s > 365*86400) return 'stays loaded';
+  if(s <= 0) return 'unloading';
+  if(s < 60) return 'unloads in '+s+'s';
+  if(s < 3600) return 'unloads in '+Math.round(s/60)+' min';
+  return 'unloads in '+Math.round(s/3600)+' h';
+}
+function ollamaBase(url){ return String(url).replace(/\/+$/,'').replace(/\/api(\/ps)?$/,''); }
+function ollamaReport(data, expect){
+  var models = (data && data.models) || [];
+  var metrics = {}, errors = [];
+  models.forEach(function(m){
+    var name = m.name || m.model || 'model';
+    var vram = m.size_vram || 0;
+    var bits = [vram > 0 ? gb(vram)+' on GPU' : 'CPU only'];
+    if(vram > 0 && m.size && vram < m.size) bits[0] = gb(vram)+' of '+gb(m.size)+' on GPU';
+    if(m.context_length) bits.push('ctx '+m.context_length);
+    var u = untilText(m.expires_at); if(u) bits.push(u);
+    metrics[name] = bits.join(' · ');
+    if(!vram) errors.push(name+' is running on the CPU only');
+  });
+  if(!models.length) errors.push('No model is loaded');
+  if(expect){
+    var e = String(expect).trim().toLowerCase();
+    var hit = models.some(function(m){
+      var n = String(m.name || m.model || '').toLowerCase();
+      return n === e || n.split(':')[0] === e || n === e+':latest';
+    });
+    if(!hit) errors.push(expect+' is not loaded');
+  }
+  return { status: errors.length ? 'warn' : 'ok', metrics: metrics, errors: errors };
+}
+
+/* ---------- a value in JSON, with a limit ---------- */
+function breaches(v, op, limit){
+  var a = Number(v), b = Number(limit), num = v !== '' && limit !== '' && isFinite(a) && isFinite(b);
+  var sv = String(v).toLowerCase(), sl = String(limit).toLowerCase();
+  switch(op){
+    case '>': return num && a > b;
+    case '<': return num && a < b;
+    case '=': return num ? a === b : sv === sl;
+    case '!=': return num ? a !== b : sv !== sl;
+    case 'contains': return sv.indexOf(sl) >= 0;
+    case '!contains': return sv.indexOf(sl) < 0;
+  }
+  return false;
+}
+var OP_WORDS = { '>':'above', '<':'below', '=':'equal to', '!=':'not equal to', 'contains':'containing', '!contains':'not containing' };
+function jsonReport(data, c){
+  var v = getPath(data, c.path);
+  var metrics = {}, errors = [];
+  if(v === undefined){
+    errors.push(c.path+' is missing from the reply');
+  }else{
+    metrics[c.path] = (v !== null && typeof v === 'object') ? JSON.stringify(v).slice(0,60) : v;
+    var shown = (v !== null && typeof v === 'object') ? JSON.stringify(v) : v;
+    if(breaches(shown, c.op, c.value)) errors.push(c.path+' is '+shown+' ('+(OP_WORDS[c.op]||c.op)+' '+c.value+')');
+  }
+  return { status: errors.length ? 'warn' : 'ok', metrics: metrics, errors: errors };
 }
 
 /* ---------- history ----------
@@ -410,6 +545,7 @@ async function render(){
   el('cardHint').style.display = items.length ? 'block' : 'none';
   bindLongPress();
   publishTile(items.length, counts);
+  showFlips();
 }
 
 /* Put the summary on this app's own springboard tile, so "is anything wrong?"
@@ -506,10 +642,17 @@ async function collectOne(c){
   var headers = {};
   var auth = await authMap(); if(auth[c.id]) headers.Authorization = auth[c.id];
   try{
-    if(!window.myllmFetch) throw new Error("internet is off for apps");
-    var r = await myllmFetch(c.url, { headers: headers });
-    if(!r.ok) throw new Error("HTTP "+r.status);
-    var data = JSON.parse(r.body);
+    if(c.kind === 'ollama'){
+      var ps = ollamaReport(parseJSON(await fetchText(ollamaBase(c.url)+'/api/ps', headers)), c.expect);
+      await writeHeartbeat({ id:c.id, name:c.name||c.id, status:ps.status, metrics:ps.metrics, errors:ps.errors, source:'ollama' });
+      return true;
+    }
+    if(c.kind === 'json'){
+      var jr = jsonReport(parseJSON(await fetchText(c.url, headers)), c);
+      await writeHeartbeat({ id:c.id, name:c.name||c.id, status:jr.status, metrics:jr.metrics, errors:jr.errors, source:'json' });
+      return true;
+    }
+    var data = parseJSON(await fetchText(c.url, headers));
     var metrics = {};
     var keys = (c.metrics && c.metrics.length) ? c.metrics
       : Object.keys(data).filter(function(k){ var t=typeof data[k]; return t==='number'||t==='string'||t==='boolean'; }).slice(0,8);
@@ -528,7 +671,7 @@ async function collectOne(c){
     await writeHeartbeat({ id:c.id, name:c.name||c.id, status:st, metrics:metrics, errors:(data.errors||[]), source:'url' });
     return true;
   }catch(e){
-    await writeHeartbeat({ id:c.id, name:c.name||c.id, status:'error', metrics:{}, errors:[String(e.message||e)], source:'url' });
+    await writeHeartbeat({ id:c.id, name:c.name||c.id, status:'error', metrics:{}, errors:[String(e.message||e)], source:c.kind||'url' });
     return false;
   }
 }
@@ -548,6 +691,15 @@ async function addMonitor(name, url, metrics, token, extra){
   if(extra && extra.statusPath)  c.statusPath  = extra.statusPath;
   if(extra && extra.statusMap)   c.statusMap   = extra.statusMap;
   if(extra && extra.metricPaths) c.metricPaths = extra.metricPaths;
+  if(extra && extra.kind === 'ollama'){
+    c.kind = 'ollama'; c.url = ollamaBase(url);
+    if(extra.expect) c.expect = String(extra.expect).trim();
+  }
+  if(extra && extra.kind === 'json'){
+    if(!extra.path) throw new Error("Say which value to read, e.g. status or gpu.temperature");
+    if(extra.value === '' || extra.value == null) throw new Error("Give the limit to compare with");
+    c.kind = 'json'; c.path = String(extra.path).trim(); c.op = extra.op || '>'; c.value = String(extra.value).trim();
+  }
   list.push(c);
   await writeCollectors(list);
   if(token){ var a=await authMap(); a[id]=token; await store.setItem('cc_auth', JSON.stringify(a)); }
@@ -599,20 +751,37 @@ async function removeMonitor(id){
 async function renderMonitors(){
   var list = await readCollectors();
   el('monList').innerHTML = list.length ? list.map(function(c){
-    return '<div class="mon"><div class="mon-i"><b>'+esc(c.name)+'</b><span>'+esc(c.url)+'</span></div>'
+    var what = c.kind === 'ollama' ? 'Ollama · '+c.url+(c.expect ? ' · expects '+c.expect : '')
+      : c.kind === 'json' ? c.path+' '+(OP_WORDS[c.op]||c.op)+' '+c.value+' → warn · '+c.url
+      : c.url;
+    return '<div class="mon"><div class="mon-i"><b>'+esc(c.name)+'</b><span>'+esc(what)+'</span></div>'
       + '<button class="mrm" onclick="removeMon(\''+c.id+'\')">Remove</button></div>';
   }).join('') : '<p class="note">No monitors yet. Add a URL below that returns JSON — e.g. a small status endpoint in front of your database or service. The assistant can add one too: just ask MyLLM to "monitor &lt;name&gt; at &lt;url&gt;".</p>';
 }
 async function openMonitors(){ await renderMonitors(); el('monitors').classList.add('show'); }
 async function submitMonitor(){
-  var metrics = el('mMetrics').value.split(',').map(function(s){return s.trim();}).filter(Boolean);
+  var kind = el('mKind').value;
+  var metrics = kind==='url' ? el('mMetrics').value.split(',').map(function(s){return s.trim();}).filter(Boolean) : null;
+  var extra = kind==='ollama' ? { kind:'ollama', expect:el('mExpect').value }
+    : kind==='json' ? { kind:'json', path:el('mPath').value.trim(), op:el('mOp').value, value:el('mVal').value.trim() } : null;
+  var name = el('mName').value || (kind==='ollama' ? 'Ollama' : '');
   el('mStatus').textContent='Adding…';
   try{
-    await addMonitor(el('mName').value, el('mUrl').value, metrics, el('mToken').value.trim());
+    await addMonitor(name, el('mUrl').value, metrics, el('mToken').value.trim(), extra);
     el('mName').value=el('mUrl').value=el('mMetrics').value=el('mToken').value='';
+    el('mExpect').value=el('mPath').value=el('mVal').value='';
     el('mStatus').textContent='Added and polled once.'; haptic('success');
     await renderMonitors(); await render();
   }catch(e){ el('mStatus').textContent='✗ '+e.message; haptic('error'); }
+}
+function kindChanged(){
+  var k = el('mKind').value;
+  el('fUrl').style.display = k==='url' ? 'block' : 'none';
+  el('fOllama').style.display = k==='ollama' ? 'block' : 'none';
+  el('fJson').style.display = k==='json' ? 'block' : 'none';
+  el('mUrlLbl').textContent = k==='ollama' ? 'Server address' : 'URL (returns JSON)';
+  el('mUrl').placeholder = k==='ollama' ? 'http://192.168.1.20:11434' : k==='json' ? 'http://my-server:8000/health' : 'http://greenhouse.local/status';
+  el('mName').placeholder = k==='ollama' ? 'Ollama' : k==='json' ? 'GPU temperature' : 'Greenhouse';
 }
 function removeMon(id){ removeMonitor(id).then(function(){ renderMonitors(); render(); haptic('selection'); }); }
 /* ---------- background polling ----------
@@ -629,7 +798,11 @@ function backgroundPollPrompt(){
     + 'shared workspace. For each entry, fetch its "url", then write the result to '
     + 'system/<id>.json as {"id","name","status","metrics","ts","source":"routine"} where '
     + 'status is "ok", "warn" or "error" — use "error" if the request fails, and put the '
-    + 'reason in an "errors" array. Set ts to the current time in milliseconds. '
+    + 'reason in an "errors" array. An entry with "kind":"ollama" is an Ollama server: fetch its url '
+    + 'plus /api/ps and use "warn" when no model is loaded, a model has size_vram 0, or its "expect" '
+    + 'model is missing. An entry with "kind":"json" means: read the dotted "path" from the reply and '
+    + 'use "warn" when it is "op" (>, <, =, !=, contains, !contains) "value". '
+    + 'Set ts to the current time in milliseconds. '
     + 'Do not report back unless something is in error.';
 }
 

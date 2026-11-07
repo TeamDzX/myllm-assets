@@ -3588,7 +3588,7 @@
       "name": "Command Center",
       "emoji": "🛰️",
       "tagline": "Monitor all your systems, one view",
-      "description": "A private dashboard for everything you run. Give each system a URL that returns JSON — a small status endpoint in front of a database or service — and Command Center polls it and shows every system live (green / amber / red), turning the JSON into metrics; a system that's down goes red. On-device MyLLMos apps can also write their status directly. Ask the assistant to “monitor X at <url>” to add one from chat, or “how is everything doing?” for a summary. Everything runs on your device.",
+      "description": "A private dashboard for everything you run. Give each system a URL that returns JSON — a small status endpoint in front of a database or service — and Command Center polls it and shows every system live (green / amber / red), turning the JSON into metrics; a system that's down goes red. It can also check your own AI server: which Ollama models are loaded and whether they are on the GPU, or any value in a JSON reply against a limit, such as a /health endpoint or a GPU temperature. On-device MyLLMos apps can also write their status directly. Ask the assistant to “monitor X at <url>” to add one from chat, or “how is everything doing?” for a summary. Everything runs on your device.",
       "tags": [
         "developer",
         "dashboard",
@@ -3597,7 +3597,7 @@
       ],
       "iconSymbol": "antenna.radiowaves.left.and.right",
       "iconColor": "blue",
-      "version": 9,
+      "version": 10,
       "featured": false,
       "requiresAI": false,
       "uses": [
@@ -3607,7 +3607,7 @@
       "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/command-center.jpg",
       "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/command-center.html",
       "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/command-center.myllmapp",
-      "sizeKB": 42,
+      "sizeKB": 52,
       "category": "Developer"
     },
     {
