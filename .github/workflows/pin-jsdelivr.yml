@@ -13,6 +13,7 @@ on:
     branches: [main]
     paths:
       - 'apps-src/**'
+      - 'apps.json'      # a version bump needs its date (stamp_dates.py)
 
 permissions:
   contents: write
@@ -34,6 +35,11 @@ jobs:
       - name: Re-pin changed app URLs to their commit
         run: python3 pin_jsdelivr.py --apply
 
+      # MyLLM 6.5.1's "New & Updated" row: when each app joined and when its
+      # current version came out, read from apps.json's own history.
+      - name: Date new apps and new versions
+        run: python3 stamp_dates.py --apply
+
       - name: Commit apps.json back if it changed
         id: pin
         run: |
@@ -45,7 +51,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add apps.json
-          git commit -m "chore: pin gallery URLs to latest commit [skip ci]"
+          git commit -m "chore: pin gallery URLs and date new versions [skip ci]"
           git push
           echo "changed=1" >> "$GITHUB_OUTPUT"
           echo "Re-pinned and pushed updated apps.json."
