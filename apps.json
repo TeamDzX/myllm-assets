@@ -48,6 +48,67 @@
       "updated": "2026-10-24"
     },
     {
+      "id": "essentials-finder",
+      "name": "Essentials Finder",
+      "emoji": "🧭",
+      "tagline": "The nearest of everything",
+      "description": "One-tap buttons for the nearest pharmacy, ATM, hospital, petrol, EV charger, supermarket, police, public toilet or hotel — sorted by distance with directions. Built for when you're travelling or somewhere unfamiliar and just need the closest thing, fast. On-device via Apple Maps, no account or API key. Needs the latest MyLLM with “Allow apps to use your location” enabled in Settings.",
+      "tags": [
+        "location",
+        "travel",
+        "essentials",
+        "nearby"
+      ],
+      "iconSymbol": "cross.case.fill",
+      "iconColor": "red",
+      "version": 4,
+      "featured": true,
+      "requiresAI": false,
+      "uses": [
+        "location"
+      ],
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/essentials-finder.jpg",
+      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/essentials-finder.html",
+      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/essentials-finder.myllmapp",
+      "sizeKB": 19,
+      "category": "Utilities",
+      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/essentials-finder.jpg",
+      "added": "2026-06-21",
+      "updated": "2026-09-26"
+    },
+    {
+      "id": "day-out-planner",
+      "name": "Day Out Planner",
+      "emoji": "🗺️",
+      "tagline": "An itinerary from a vibe",
+      "description": "Tell it a mood — “rainy day with kids”, “date night”, “foodie crawl” — and your own AI turns it into a route of real places around you, in visiting order, each with distance and one-tap directions. Then share the plan. Combines your location with on-device AI; works with simple presets if AI is off. Needs the latest MyLLM with “Allow apps to use your location” (and ideally “Allow apps to use the AI”) enabled in Settings.",
+      "tags": [
+        "AI-powered",
+        "location",
+        "travel",
+        "planner"
+      ],
+      "iconSymbol": "map.fill",
+      "iconColor": "orange",
+      "version": 4,
+      "featured": true,
+      "requiresAI": true,
+      "aiUses": [
+        "ask"
+      ],
+      "uses": [
+        "location"
+      ],
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/day-out-planner.jpg",
+      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/day-out-planner.html",
+      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/day-out-planner.myllmapp",
+      "sizeKB": 21,
+      "category": "Utilities",
+      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/day-out-planner.jpg",
+      "added": "2026-06-21",
+      "updated": "2026-09-26"
+    },
+    {
       "id": "colouring-pages",
       "name": "Colouring Page Maker",
       "emoji": "🖍️",
@@ -344,74 +405,6 @@
       "updated": "2026-10-13"
     },
     {
-      "id": "e-grid",
-      "name": "E-Grid",
-      "emoji": "🏁",
-      "tagline": "Every race, one app",
-      "description": "A race hub for thirteen championships — Formula 1, MotoGP, WRC, Formula E, IndyCar, NASCAR, WEC, IMSA, NHRA, Formula 2, Formula 3, Porsche Supercup and Clio Cup. A live countdown to the next race, the full season calendar, the F1 weekend broken down session by session in your own time zone, drivers' and constructors' standings, and motorsport headlines from Autosport, Motorsport.com, DirtFish, The Race and Crash, which open in a clean in-app reader with adjustable type, the original one tap away. Follow the series you care about and they lead your home screen. Also carries illustrated guides to 88 circuits with lengths, corner counts and lap records, driver and team profiles, the current technical regulations and a country-by-country guide to where each series is televised. Calendars and track guides work offline once loaded; live standings and headlines need app network access, which you can switch on in Settings. There is also a companion E-Grid app for iPhone and iPad, which adds race reminders and a home-screen widget. E-Grid is not affiliated with any championship, team or governing body.",
-      "tags": [
-        "motorsport",
-        "racing",
-        "sport",
-        "news",
-        "F1",
-        "MotoGP",
-        "offline",
-        "saves data"
-      ],
-      "iconSymbol": "flag.checkered",
-      "iconColor": "red",
-      "version": 10,
-      "featured": true,
-      "requiresAI": false,
-      "uses": [
-        "internet"
-      ],
-      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/e-grid.jpg",
-      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/e-grid.html",
-      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/e-grid.myllmapp",
-      "sizeKB": 77,
-      "category": "News & Web",
-      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/e-grid.png",
-      "added": "2026-08-12",
-      "updated": "2026-10-18"
-    },
-    {
-      "id": "airport-maps",
-      "name": "Airport Maps",
-      "emoji": "✈️",
-      "tagline": "Heathrow, Gatwick, Stansted, Dubai and Shanghai Pudong",
-      "description": "Airport maps for the moments that matter, at Heathrow, Gatwick, Stansted, Dubai International and Shanghai Pudong: find food, shops, toilets, lounges and your gate, terminal by terminal and floor by floor where the map records it. Filter by what you need, search a brand or a gate number, and see opening hours and whether a place is before or after security. Pick your gate to see the nearest coffee, toilets and lounges with walking times. Getting there shows trains, the transit trains between gates, buses, taxis and parking. Ask your AI about a terminal and it answers from the map. Built from OpenStreetMap, so coverage varies from one airport to the next. Works offline. Not affiliated with any airport operator.",
-      "tags": [
-        "travel",
-        "airport",
-        "heathrow",
-        "maps",
-        "offline",
-        "saves data",
-        "gatwick",
-        "stansted",
-        "dubai",
-        "shanghai"
-      ],
-      "iconSymbol": "airplane",
-      "iconColor": "cyan",
-      "version": 2,
-      "featured": true,
-      "requiresAI": false,
-      "aiUses": [
-        "ask"
-      ],
-      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/airport-maps.jpg",
-      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/airport-maps.html",
-      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/airport-maps.myllmapp",
-      "sizeKB": 367,
-      "category": "Utilities",
-      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/airport-maps.jpg",
-      "added": "2026-09-28",
-      "updated": "2026-09-30"
-    },
-    {
       "id": "follow",
       "name": "Follow",
       "emoji": "📡",
@@ -475,35 +468,37 @@
       "updated": "2026-10-14"
     },
     {
-      "id": "mind-map",
-      "name": "Mind Map",
-      "emoji": "🧠",
-      "tagline": "Think in branches",
-      "description": "Get an idea out of your head and into shape. Start from one thought and branch out: tap to add, drag to move a whole branch, fold what you're not looking at, and let Tidy lay it all out neatly, each branch in its own colour. Keep as many maps as you like. Stuck? Select an idea and tap Expand: your AI suggests a handful of next steps that fit where you are on the map, and one Undo takes them back. Save a map as an image, share it as an outline, or paste an indented list to turn it into a map. Works offline, light or dark.",
+      "id": "e-grid",
+      "name": "E-Grid",
+      "emoji": "🏁",
+      "tagline": "Every race, one app",
+      "description": "A race hub for thirteen championships — Formula 1, MotoGP, WRC, Formula E, IndyCar, NASCAR, WEC, IMSA, NHRA, Formula 2, Formula 3, Porsche Supercup and Clio Cup. A live countdown to the next race, the full season calendar, the F1 weekend broken down session by session in your own time zone, drivers' and constructors' standings, and motorsport headlines from Autosport, Motorsport.com, DirtFish, The Race and Crash, which open in a clean in-app reader with adjustable type, the original one tap away. Follow the series you care about and they lead your home screen. Also carries illustrated guides to 88 circuits with lengths, corner counts and lap records, driver and team profiles, the current technical regulations and a country-by-country guide to where each series is televised. Calendars and track guides work offline once loaded; live standings and headlines need app network access, which you can switch on in Settings. There is also a companion E-Grid app for iPhone and iPad, which adds race reminders and a home-screen widget. E-Grid is not affiliated with any championship, team or governing body.",
       "tags": [
-        "mind map",
-        "ideas",
-        "planning",
-        "brainstorm",
-        "students",
+        "motorsport",
+        "racing",
+        "sport",
+        "news",
+        "F1",
+        "MotoGP",
+        "offline",
         "saves data"
       ],
-      "iconSymbol": "point.3.connected.trianglepath.dotted",
-      "iconColor": "purple",
-      "version": 1,
+      "iconSymbol": "flag.checkered",
+      "iconColor": "red",
+      "version": 10,
       "featured": true,
       "requiresAI": false,
-      "aiUses": [
-        "ask"
+      "uses": [
+        "internet"
       ],
-      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/mind-map.jpg",
-      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/mind-map.html",
-      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/mind-map.myllmapp",
-      "sizeKB": 58,
-      "category": "Productivity",
-      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/mind-map.jpg",
-      "added": "2026-09-27",
-      "updated": "2026-09-27"
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/e-grid.jpg",
+      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/e-grid.html",
+      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/e-grid.myllmapp",
+      "sizeKB": 77,
+      "category": "News & Web",
+      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/e-grid.png",
+      "added": "2026-08-12",
+      "updated": "2026-10-18"
     },
     {
       "id": "bin",
@@ -535,35 +530,39 @@
       "updated": "2026-09-26"
     },
     {
-      "id": "periodic-table",
-      "name": "Periodic Table",
-      "emoji": "⚛️",
-      "tagline": "Every element, beautifully",
-      "description": "All 118 elements in a table that's a pleasure to explore. Colour it by family, or turn it into a heat map of electronegativity, atomic radius, melting point, density or the year each was discovered. Slide the temperature and watch which elements melt and boil. Tap any element for its full card: mass, electron configuration with an animated shell diagram, ionisation energy, radius, density and more, with units. Search, save favourites, and test yourself with a quick quiz. Ask your AI about any element for the story behind it. Data from PubChem (NIH). Works offline.",
+      "id": "airport-maps",
+      "name": "Airport Maps",
+      "emoji": "✈️",
+      "tagline": "Heathrow, Gatwick, Stansted, Dubai and Shanghai Pudong",
+      "description": "Airport maps for the moments that matter, at Heathrow, Gatwick, Stansted, Dubai International and Shanghai Pudong: find food, shops, toilets, lounges and your gate, terminal by terminal and floor by floor where the map records it. Filter by what you need, search a brand or a gate number, and see opening hours and whether a place is before or after security. Pick your gate to see the nearest coffee, toilets and lounges with walking times. Getting there shows trains, the transit trains between gates, buses, taxis and parking. Ask your AI about a terminal and it answers from the map. Built from OpenStreetMap, so coverage varies from one airport to the next. Works offline. Not affiliated with any airport operator.",
       "tags": [
-        "chemistry",
-        "science",
-        "students",
-        "reference",
-        "quiz",
-        "saves data"
+        "travel",
+        "airport",
+        "heathrow",
+        "maps",
+        "offline",
+        "saves data",
+        "gatwick",
+        "stansted",
+        "dubai",
+        "shanghai"
       ],
-      "iconSymbol": "atom",
-      "iconColor": "blue",
-      "version": 1,
+      "iconSymbol": "airplane",
+      "iconColor": "cyan",
+      "version": 2,
       "featured": true,
       "requiresAI": false,
       "aiUses": [
         "ask"
       ],
-      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/periodic-table.jpg",
-      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/periodic-table.html",
-      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/periodic-table.myllmapp",
-      "sizeKB": 58,
-      "category": "Students",
-      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/periodic-table.jpg",
-      "added": "2026-09-27",
-      "updated": "2026-09-27"
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/airport-maps.jpg",
+      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/airport-maps.html",
+      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/airport-maps.myllmapp",
+      "sizeKB": 367,
+      "category": "Utilities",
+      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/airport-maps.jpg",
+      "added": "2026-09-28",
+      "updated": "2026-09-30"
     },
     {
       "id": "nutrition-lens",
@@ -598,6 +597,68 @@
       "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/nutrition-lens.jpg",
       "added": "2026-08-07",
       "updated": "2026-09-22"
+    },
+    {
+      "id": "mind-map",
+      "name": "Mind Map",
+      "emoji": "🧠",
+      "tagline": "Think in branches",
+      "description": "Get an idea out of your head and into shape. Start from one thought and branch out: tap to add, drag to move a whole branch, fold what you're not looking at, and let Tidy lay it all out neatly, each branch in its own colour. Keep as many maps as you like. Stuck? Select an idea and tap Expand: your AI suggests a handful of next steps that fit where you are on the map, and one Undo takes them back. Save a map as an image, share it as an outline, or paste an indented list to turn it into a map. Works offline, light or dark.",
+      "tags": [
+        "mind map",
+        "ideas",
+        "planning",
+        "brainstorm",
+        "students",
+        "saves data"
+      ],
+      "iconSymbol": "point.3.connected.trianglepath.dotted",
+      "iconColor": "purple",
+      "version": 1,
+      "featured": true,
+      "requiresAI": false,
+      "aiUses": [
+        "ask"
+      ],
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/mind-map.jpg",
+      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/mind-map.html",
+      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/mind-map.myllmapp",
+      "sizeKB": 58,
+      "category": "Productivity",
+      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/mind-map.jpg",
+      "added": "2026-09-27",
+      "updated": "2026-09-27"
+    },
+    {
+      "id": "periodic-table",
+      "name": "Periodic Table",
+      "emoji": "⚛️",
+      "tagline": "Every element, beautifully",
+      "description": "All 118 elements in a table that's a pleasure to explore. Colour it by family, or turn it into a heat map of electronegativity, atomic radius, melting point, density or the year each was discovered. Slide the temperature and watch which elements melt and boil. Tap any element for its full card: mass, electron configuration with an animated shell diagram, ionisation energy, radius, density and more, with units. Search, save favourites, and test yourself with a quick quiz. Ask your AI about any element for the story behind it. Data from PubChem (NIH). Works offline.",
+      "tags": [
+        "chemistry",
+        "science",
+        "students",
+        "reference",
+        "quiz",
+        "saves data"
+      ],
+      "iconSymbol": "atom",
+      "iconColor": "blue",
+      "version": 1,
+      "featured": true,
+      "requiresAI": false,
+      "aiUses": [
+        "ask"
+      ],
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/periodic-table.jpg",
+      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/periodic-table.html",
+      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/periodic-table.myllmapp",
+      "sizeKB": 58,
+      "category": "Students",
+      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/periodic-table.jpg",
+      "added": "2026-09-27",
+      "updated": "2026-09-27"
     },
     {
       "id": "scientific-calculator",
@@ -701,68 +762,6 @@
       "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/metro-maps.jpg",
       "added": "2026-09-27",
       "updated": "2026-10-08"
-    },
-    {
-      "id": "substack-reader",
-      "name": "Substack Reader",
-      "emoji": "📬",
-      "tagline": "Your newsletters, in one inbox",
-      "description": "An unofficial reader for Substack. Follow any publication by pasting its address, or pick from a handful of starters, and every free post lands in one inbox sorted newest-first, with the publication's logo, a cover, hearts and comment counts, and a dot on anything you have not read. Posts open in a clean reading view with proper typography, images and footnotes, subscribe boxes stripped out, and podcast episodes playable in place. Read the comment threads, then ask your AI what the piece is really arguing. Paid posts show their preview. Liking, commenting and subscribing hand you straight to the post on Substack, where you are already signed in, because Substack has no public way to do those from another app. No account needed here, and your list stays on this device.",
-      "tags": [
-        "news",
-        "newsletters",
-        "reading",
-        "substack",
-        "saves data"
-      ],
-      "category": "News & Web",
-      "iconSymbol": "envelope.open.fill",
-      "iconColor": "orange",
-      "version": 9,
-      "featured": true,
-      "requiresAI": false,
-      "aiUses": [
-        "ask"
-      ],
-      "uses": [
-        "internet"
-      ],
-      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/substack-reader.jpg",
-      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/substack-reader.html",
-      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/substack-reader.myllmapp",
-      "sizeKB": 39,
-      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/substack-reader.jpg",
-      "added": "2026-09-03",
-      "updated": "2026-09-26"
-    },
-    {
-      "id": "speed-check",
-      "name": "Speed Check",
-      "emoji": "⚡",
-      "tagline": "How fast is this connection?",
-      "description": "A clean internet speed test. Tap Start and watch the dial: it measures ping and jitter, then download and upload using several parallel streams that size themselves to your connection, so slow and fast links both get a fair reading in about fifteen seconds. Results are translated into plain English — whether this connection will cope with 4K streaming, video calls, gaming or a whole household at once — alongside your public IP, country and the Cloudflare edge you were tested against. Every run is kept in an on-device history so you can compare Wi-Fi with mobile, or the kitchen with the back bedroom, and share a result as text. Tests run against Cloudflare's public speed-test service through MyLLM's network bridge; nothing but test data is sent. A full test moves up to about 160 MB, so bear that in mind on a metered plan.",
-      "tags": [
-        "network",
-        "wifi",
-        "utility",
-        "saves data"
-      ],
-      "category": "Utilities",
-      "iconSymbol": "gauge.with.dots.needle.67percent",
-      "iconColor": "orange",
-      "version": 6,
-      "featured": true,
-      "requiresAI": false,
-      "uses": [
-        "internet"
-      ],
-      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/speed-check.jpg",
-      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/speed-check.html",
-      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/speed-check.myllmapp",
-      "sizeKB": 28,
-      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/speed-check.jpg",
-      "added": "2026-09-03",
-      "updated": "2026-09-26"
     },
     {
       "id": "about-me",
@@ -884,33 +883,36 @@
       "updated": "2026-10-07"
     },
     {
-      "id": "workbench",
-      "name": "Workbench",
-      "emoji": "🧰",
-      "tagline": "Write, open and convert documents",
-      "description": "A word processor for your shared workspace. Start a blank page, a document, meeting notes, a checklist, a table, JSON or a web page, and it is created in your workspace straight away so nothing is lost before the first save. Open anything already there from inside the app, or hand it a file from the Files app: Markdown renders as formatted text with tables and task boxes, CSV as a real table, JSON pretty-printed, logs and plain text as they are. Edit with a formatting toolbar, set the typeface, size, spacing and column width to taste, then Save. Save a copy converts as it writes - Markdown to a standalone web page, a table to JSON, JSON back to CSV - and Export sends a copy out through the share sheet. Ask MyLLM hands the document to the assistant by path, so it reads the file itself rather than having it pasted into the chat. Everything stays on your device.",
-      "category": "Productivity",
-      "iconSymbol": "wrench.and.screwdriver",
-      "iconColor": "indigo",
-      "version": 6,
+      "id": "substack-reader",
+      "name": "Substack Reader",
+      "emoji": "📬",
+      "tagline": "Your newsletters, in one inbox",
+      "description": "An unofficial reader for Substack. Follow any publication by pasting its address, or pick from a handful of starters, and every free post lands in one inbox sorted newest-first, with the publication's logo, a cover, hearts and comment counts, and a dot on anything you have not read. Posts open in a clean reading view with proper typography, images and footnotes, subscribe boxes stripped out, and podcast episodes playable in place. Read the comment threads, then ask your AI what the piece is really arguing. Paid posts show their preview. Liking, commenting and subscribing hand you straight to the post on Substack, where you are already signed in, because Substack has no public way to do those from another app. No account needed here, and your list stays on this device.",
+      "tags": [
+        "news",
+        "newsletters",
+        "reading",
+        "substack",
+        "saves data"
+      ],
+      "category": "News & Web",
+      "iconSymbol": "envelope.open.fill",
+      "iconColor": "orange",
+      "version": 9,
       "featured": true,
       "requiresAI": false,
       "aiUses": [
         "ask"
       ],
       "uses": [
-        "files"
+        "internet"
       ],
-      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/workbench.html",
-      "tags": [
-        "files",
-        "writing",
-        "documents",
-        "utility",
-        "saves data"
-      ],
-      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/workbench.jpg",
-      "added": "2026-08-27",
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/substack-reader.jpg",
+      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/substack-reader.html",
+      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/substack-reader.myllmapp",
+      "sizeKB": 39,
+      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/substack-reader.jpg",
+      "added": "2026-09-03",
       "updated": "2026-09-26"
     },
     {
@@ -973,6 +975,65 @@
       "category": "Food & Cooking",
       "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/fridge-chef.jpg",
       "added": "2026-06-22",
+      "updated": "2026-09-26"
+    },
+    {
+      "id": "speed-check",
+      "name": "Speed Check",
+      "emoji": "⚡",
+      "tagline": "How fast is this connection?",
+      "description": "A clean internet speed test. Tap Start and watch the dial: it measures ping and jitter, then download and upload using several parallel streams that size themselves to your connection, so slow and fast links both get a fair reading in about fifteen seconds. Results are translated into plain English — whether this connection will cope with 4K streaming, video calls, gaming or a whole household at once — alongside your public IP, country and the Cloudflare edge you were tested against. Every run is kept in an on-device history so you can compare Wi-Fi with mobile, or the kitchen with the back bedroom, and share a result as text. Tests run against Cloudflare's public speed-test service through MyLLM's network bridge; nothing but test data is sent. A full test moves up to about 160 MB, so bear that in mind on a metered plan.",
+      "tags": [
+        "network",
+        "wifi",
+        "utility",
+        "saves data"
+      ],
+      "category": "Utilities",
+      "iconSymbol": "gauge.with.dots.needle.67percent",
+      "iconColor": "orange",
+      "version": 6,
+      "featured": true,
+      "requiresAI": false,
+      "uses": [
+        "internet"
+      ],
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/speed-check.jpg",
+      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/speed-check.html",
+      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/speed-check.myllmapp",
+      "sizeKB": 28,
+      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/speed-check.jpg",
+      "added": "2026-09-03",
+      "updated": "2026-09-26"
+    },
+    {
+      "id": "workbench",
+      "name": "Workbench",
+      "emoji": "🧰",
+      "tagline": "Write, open and convert documents",
+      "description": "A word processor for your shared workspace. Start a blank page, a document, meeting notes, a checklist, a table, JSON or a web page, and it is created in your workspace straight away so nothing is lost before the first save. Open anything already there from inside the app, or hand it a file from the Files app: Markdown renders as formatted text with tables and task boxes, CSV as a real table, JSON pretty-printed, logs and plain text as they are. Edit with a formatting toolbar, set the typeface, size, spacing and column width to taste, then Save. Save a copy converts as it writes - Markdown to a standalone web page, a table to JSON, JSON back to CSV - and Export sends a copy out through the share sheet. Ask MyLLM hands the document to the assistant by path, so it reads the file itself rather than having it pasted into the chat. Everything stays on your device.",
+      "category": "Productivity",
+      "iconSymbol": "wrench.and.screwdriver",
+      "iconColor": "indigo",
+      "version": 6,
+      "featured": true,
+      "requiresAI": false,
+      "aiUses": [
+        "ask"
+      ],
+      "uses": [
+        "files"
+      ],
+      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/workbench.html",
+      "tags": [
+        "files",
+        "writing",
+        "documents",
+        "utility",
+        "saves data"
+      ],
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/workbench.jpg",
+      "added": "2026-08-27",
       "updated": "2026-09-26"
     },
     {
@@ -1065,67 +1126,6 @@
       "sizeKB": 37,
       "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/stocks.jpg",
       "added": "2026-09-06",
-      "updated": "2026-09-26"
-    },
-    {
-      "id": "essentials-finder",
-      "name": "Essentials Finder",
-      "emoji": "🧭",
-      "tagline": "The nearest of everything",
-      "description": "One-tap buttons for the nearest pharmacy, ATM, hospital, petrol, EV charger, supermarket, police, public toilet or hotel — sorted by distance with directions. Built for when you're travelling or somewhere unfamiliar and just need the closest thing, fast. On-device via Apple Maps, no account or API key. Needs the latest MyLLM with “Allow apps to use your location” enabled in Settings.",
-      "tags": [
-        "location",
-        "travel",
-        "essentials",
-        "nearby"
-      ],
-      "iconSymbol": "cross.case.fill",
-      "iconColor": "red",
-      "version": 4,
-      "featured": true,
-      "requiresAI": false,
-      "uses": [
-        "location"
-      ],
-      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/essentials-finder.jpg",
-      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/essentials-finder.html",
-      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/essentials-finder.myllmapp",
-      "sizeKB": 19,
-      "category": "Utilities",
-      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/essentials-finder.jpg",
-      "added": "2026-06-21",
-      "updated": "2026-09-26"
-    },
-    {
-      "id": "day-out-planner",
-      "name": "Day Out Planner",
-      "emoji": "🗺️",
-      "tagline": "An itinerary from a vibe",
-      "description": "Tell it a mood — “rainy day with kids”, “date night”, “foodie crawl” — and your own AI turns it into a route of real places around you, in visiting order, each with distance and one-tap directions. Then share the plan. Combines your location with on-device AI; works with simple presets if AI is off. Needs the latest MyLLM with “Allow apps to use your location” (and ideally “Allow apps to use the AI”) enabled in Settings.",
-      "tags": [
-        "AI-powered",
-        "location",
-        "travel",
-        "planner"
-      ],
-      "iconSymbol": "map.fill",
-      "iconColor": "orange",
-      "version": 4,
-      "featured": true,
-      "requiresAI": true,
-      "aiUses": [
-        "ask"
-      ],
-      "uses": [
-        "location"
-      ],
-      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/day-out-planner.jpg",
-      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/day-out-planner.html",
-      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/day-out-planner.myllmapp",
-      "sizeKB": 21,
-      "category": "Utilities",
-      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/day-out-planner.jpg",
-      "added": "2026-06-21",
       "updated": "2026-09-26"
     },
     {
