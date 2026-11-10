@@ -665,7 +665,7 @@ var MIS = [
     text: 'A heavy bomber is inbound for the southern islands with four black-painted aces flying escort. If the bomber gets through, everything we defended is gone. Bring it down, and the aces with it.',
     obj: ['Shoot down the bomber before it reaches the south', 'Shoot down all 4 aces'],
     setup: function(){ var b = makeAir(UNITS.bomber, 1, [1500, 1150, 3500], PI, { primary: true, path: [[2400, 1150, 1200], [-600, 1150, 200], [-2400, 1150, -1000], [-800, 1150, -2600], [900, 1150, -3700]] }); M.bm = b;
-      for (var i = 0; i < 4; i++) spawnAir('ace', [1500 + (i - 1.5) * 150, 1250, 3300 - Math.abs(i - 1.5) * 90], PI, { primary: true });
+      for (var i = 0; i < 4; i++) spawnAir('ace', [1500 + (i - 1.5) * 150, 1250, 3300 - Math.abs(i - 1.5) * 90], PI, { primary: true }).ai.mcd = 11 + i * 5;
       radio('CONTROL', 'This is the big one. Kill the bomber. Good hunting.'); },
     tick: function(){ if (M.bm.alive && M.bm.arrived) fail('The bomber reached its target.'); if (!M.bmd && !M.bm.alive){ M.bmd = true; radio('CONTROL', 'Bomber is down! Clean up the escort.'); } } }
 ];
@@ -773,6 +773,46 @@ function proj(p){ var m = VP, x = p[0], y = p[1], z = p[2], w = m[3] * x + m[7] 
 var GRN = 'rgba(150,255,205,.92)', GRD = 'rgba(150,255,205,.45)', RED = '#ff5040', AMB = '#ffc857', STICK = null, TOUCH = false;
 function ln(c, x0, y0, x1, y1){ c.beginPath(); c.moveTo(x0, y0); c.lineTo(x1, y1); c.stroke(); }
 function txt(c, s, x, y, al, col, f){ c.font = f || '700 11px -apple-system,system-ui,sans-serif'; c.textAlign = al || 'left'; c.fillStyle = 'rgba(0,0,0,.55)'; c.fillText(s, x + 1, y + 1); c.fillStyle = col || GRN; c.fillText(s, x, y); }
+// ---------- analog flight instruments ----------
+function gFace(c, x, y, r, lab, ly){ c.fillStyle = 'rgba(7,13,17,.8)'; c.beginPath(); c.arc(x, y, r, 0, TAU); c.fill(); c.lineWidth = 2; c.strokeStyle = 'rgba(190,205,215,.8)'; c.stroke();
+  if (lab){ c.font = '700 ' + Math.max(5.5, r * .19).toFixed(1) + 'px system-ui'; c.textAlign = 'center'; c.fillStyle = 'rgba(210,228,235,.7)'; c.fillText(lab, x, y + r * (ly || .4)); } }
+function gTick(c, x, y, r, a, l, w, col){ c.strokeStyle = col || '#e8f2f5'; c.lineWidth = w; var cs = Math.cos(a), sn = Math.sin(a); c.beginPath(); c.moveTo(x + cs * (r - l), y + sn * (r - l)); c.lineTo(x + cs * r, y + sn * r); c.stroke(); }
+function gNum(c, x, y, r, a, s, fs){ c.font = '700 ' + fs.toFixed(1) + 'px system-ui'; c.textAlign = 'center'; c.fillStyle = '#e8f2f5'; c.fillText(s, x + Math.cos(a) * r, y + Math.sin(a) * r); }
+function gArc(c, x, y, r, a0, a1, col, w){ c.strokeStyle = col; c.lineWidth = w; c.beginPath(); c.arc(x, y, r, a0, a1); c.stroke(); }
+function gNeedle(c, x, y, a, l, w, col){ c.strokeStyle = col || '#fff'; c.lineWidth = w; c.lineCap = 'round'; c.beginPath(); c.moveTo(x - Math.cos(a) * l * .2, y - Math.sin(a) * l * .2); c.lineTo(x + Math.cos(a) * l, y + Math.sin(a) * l); c.stroke(); c.lineCap = 'butt';
+  c.fillStyle = '#cfd8dc'; c.beginPath(); c.arc(x, y, Math.max(1.6, w * 1.1), 0, TAU); c.fill(); }
+var VSS = 0;
+function gauges(c, rx, ry, R, S, pd){ var cock = CAMMODE === 1 && P.alive, g = Math.round((cock ? 37 : 31) * S + 2), gap = 8, y = H - g - 9, xs, D = PI / 180, i, a;
+  if (2 * (R + 4 * g + 2 * gap) <= W - 12) xs = [rx - R - 3 * g - 2 * gap, rx - R - g - gap, rx + R + g + gap, rx + R + 3 * g + 2 * gap];
+  else { cock = false; g = Math.min(g, Math.floor((W - 30) / 8.8)); y = 82 + g; xs = [W / 2 - 3.3 * g, W / 2 - 1.1 * g, W / 2 + 1.1 * g, W / 2 + 3.3 * g]; }
+  if (cock){ var x0 = xs[0] - g - 14, x1 = xs[3] + g + 14, y0 = Math.min(y - g, ry - R) - 10; c.fillStyle = 'rgba(15,21,26,.93)'; c.beginPath(); c.moveTo(x0 - 26, H); c.lineTo(x0, y0 + 14); c.quadraticCurveTo(x0 + 4, y0, x0 + 20, y0); c.lineTo(x1 - 20, y0); c.quadraticCurveTo(x1 - 4, y0, x1, y0 + 14); c.lineTo(x1 + 26, H); c.closePath(); c.fill();
+    c.strokeStyle = 'rgba(120,140,150,.5)'; c.lineWidth = 1.5; c.stroke(); }
+  var fs = Math.max(6, g * .24), s = P.spec, x;
+  // airspeed indicator, km/h
+  x = xs[0]; gFace(c, x, y, g, 'KM/H', .7); c.fillText('x100', x, y + g * .32); var av = function(v){ return (135 + 270 * clamp(v, 0, 1400) / 1400) * D; };
+  gArc(c, x, y, g - 3.5, av(0), av(s.vmin * 3.6), '#e0483c', 3); gArc(c, x, y, g - 3.5, av(s.vmin * 3.6), av(s.vmax * 3.6), '#3fd67a', 3); gArc(c, x, y, g - 3.5, av(s.vmax * 3.6), av(s.vmax * 1.18 * 3.6), '#ffc857', 3);
+  for (i = 0; i <= 14; i++){ a = av(i * 100); gTick(c, x, y, g - 6, a, i % 2 ? 3 : 6, i % 2 ? 1 : 1.6); if (i % 2 === 0 && i) gNum(c, x, y, g * .58, a, '' + i, fs); }
+  gNeedle(c, x, y, av(P.spd * 3.6), g * .78, 2.2);
+  // attitude indicator
+  x = xs[1]; var bank = Math.atan2(-P.r[1], P.u[1]), k = g / 34, off = clamp(pd, -90, 90) * k;
+  c.save(); c.beginPath(); c.arc(x, y, g - 1, 0, TAU); c.clip(); c.translate(x, y); c.rotate(-bank); c.fillStyle = '#3f8fd8'; c.fillRect(-2 * g, off - 4 * g, 4 * g, 4 * g); c.fillStyle = '#8a5b2c'; c.fillRect(-2 * g, off, 4 * g, 4 * g);
+  c.strokeStyle = '#fff'; c.lineWidth = 1.6; ln(c, -2 * g, off, 2 * g, off); c.lineWidth = 1; c.font = '700 ' + (fs * .8).toFixed(1) + 'px system-ui'; c.fillStyle = '#fff'; c.textAlign = 'left';
+  for (i = -80; i <= 80; i += 10){ if (!i) continue; var ly = off - i * k, hw = i % 20 ? g * .16 : g * .32; ln(c, -hw, ly, hw, ly); if (i % 20 === 0) c.fillText('' + Math.abs(i), hw + 2, ly); }
+  c.restore(); c.save(); c.translate(x, y);
+  [0, 10, 20, 30, 60, -10, -20, -30, -60].forEach(function(b){ gTick(c, 0, 0, g - 1, (-90 + b) * D, b % 30 ? 3.5 : 6, b ? 1.2 : 2); });
+  c.rotate(-bank); c.fillStyle = '#fff'; c.beginPath(); c.moveTo(0, -g + 7); c.lineTo(-3.5, -g + 13); c.lineTo(3.5, -g + 13); c.closePath(); c.fill(); c.restore();
+  c.strokeStyle = '#ffb02e'; c.lineWidth = 2.6; ln(c, x - g * .62, y, x - g * .22, y); ln(c, x + g * .22, y, x + g * .62, y); ln(c, x - g * .22, y, x - g * .22, y + 4); ln(c, x + g * .22, y, x + g * .22, y + 4); c.fillStyle = '#ffb02e'; c.beginPath(); c.arc(x, y, 2, 0, TAU); c.fill();
+  c.lineWidth = 2; c.strokeStyle = 'rgba(190,205,215,.8)'; c.beginPath(); c.arc(x, y, g, 0, TAU); c.stroke();
+  // altimeter: long needle hundreds of metres, short needle thousands
+  x = xs[2]; gFace(c, x, y, g, 'ALT M', -.36); var al = Math.max(0, P.p[1]);
+  for (i = 0; i < 50; i++){ a = (-90 + i * 7.2) * D; gTick(c, x, y, g - 2, a, i % 5 ? 2.5 : 5.5, i % 5 ? 1 : 1.6); if (i % 5 === 0) gNum(c, x, y, g * .68, a, '' + (i / 5), fs); }
+  c.fillStyle = '#05090c'; c.fillRect(x - g * .36, y + g * .24, g * .72, g * .28); c.strokeStyle = 'rgba(190,205,215,.5)'; c.lineWidth = 1; c.strokeRect(x - g * .36, y + g * .24, g * .72, g * .28); c.font = '700 ' + (fs * .95).toFixed(1) + 'px system-ui'; c.textAlign = 'center'; c.fillStyle = '#9dffd0'; c.fillText('' + Math.round(al), x, y + g * .385);
+  gNeedle(c, x, y, (-90 + 360 * al / 10000) * D, g * .46, 3.4, '#e8f2f5'); gNeedle(c, x, y, (-90 + 360 * (al % 1000) / 1000) * D, g * .82, 1.8);
+  // vertical speed indicator, m/s
+  x = xs[3]; gFace(c, x, y, g, '', 0); c.font = '700 ' + Math.max(5.5, g * .17).toFixed(1) + 'px system-ui'; c.fillStyle = 'rgba(210,228,235,.7)'; c.textAlign = 'center'; c.fillText('M/S', x + g * .3, y - g * .1); c.fillText('x10', x + g * .3, y + g * .1); VSS += (P.v[1] - VSS) * .12; var vv = function(v){ return (180 + 150 * (v < 0 ? -1 : 1) * Math.sqrt(clamp(Math.abs(v) / 200, 0, 1))) * D; };
+  [0, 10, 25, 50, 100, 150, 200].forEach(function(v){ [1, -1].forEach(function(sg){ if (!v && sg < 0) return; var a2 = vv(v * sg), big = v === 0 || v === 10 || v === 50 || v === 100 || v === 200; gTick(c, x, y, g - 2, a2, big ? 6 : 3, big ? 1.6 : 1); if (big) gNum(c, x, y, g * .64, a2, '' + v / 10, fs); }); });
+  c.font = '700 ' + (fs * .72).toFixed(1) + 'px system-ui'; c.fillStyle = 'rgba(210,228,235,.75)'; c.textAlign = 'center'; c.fillText('UP', x - g * .3, y - g * .26); c.fillText('DN', x - g * .3, y + g * .26);
+  gNeedle(c, x, y, vv(VSS), g * .8, 2.2); c.lineWidth = 1.5; return W < 560 && y < H / 2 ? y + g + 57 : Math.min(y - g, ry - R); }
 function drawHUD(){ var c = HX, d = hudC._d || 1; c.setTransform(d, 0, 0, d, 0, 0); c.clearRect(0, 0, W, H);
   if (!P || !(phase === 'play' || phase === 'dead' || phase === 'end' || phase === 'pause') || DBG) return;
   var i, e, pp, blink = (simT * 4 | 0) & 1, S = Math.min(1, H / 420); c.lineWidth = 1.5; c.strokeStyle = GRN; c.textBaseline = 'middle';
@@ -823,12 +863,12 @@ function drawHUD(){ var c = HX, d = hudC._d || 1; c.setTransform(d, 0, 0, d, 0, 
   c.fillStyle = P.railCd[0] <= 0 ? '#3fe6b6' : 'rgba(255,255,255,.25)'; c.fillRect(x0, hy + 30, 26, 4); c.fillStyle = P.railCd[1] <= 0 ? '#3fe6b6' : 'rgba(255,255,255,.25)'; c.fillRect(x0 + 30, hy + 30, 26, 4);
   var mm = Math.floor(M.t / 60), ss = Math.floor(M.t % 60); txt(c, '' + score, W - 14, y0, 'right', '#fff', '800 14px system-ui'); txt(c, mm + ':' + (ss < 10 ? '0' : '') + ss, W - 14, y0 + 17, 'right', GRD, '700 11px system-ui');
   // radar
-  var R = Math.round(46 * S + 6), rx = W / 2, ry = H - R - 10, rng = 3200; c.save(); c.beginPath(); c.arc(rx, ry, R, 0, TAU); c.clip(); c.globalAlpha = .7; c.fillStyle = '#04121a'; c.fillRect(rx - R, ry - R, R * 2, R * 2);
+  var R = Math.round(46 * S + 6), rx = W < 560 ? R + 12 : W / 2, ry = H - R - 10, rng = 3200; var gTop = P.alive ? gauges(c, rx, ry, R, S, pd) : ry - R; c.textBaseline = 'middle'; c.strokeStyle = GRN; c.save(); c.beginPath(); c.arc(rx, ry, R, 0, TAU); c.clip(); c.globalAlpha = .7; c.fillStyle = '#04121a'; c.fillRect(rx - R, ry - R, R * 2, R * 2);
   c.translate(rx, ry); c.rotate(hd); var sc = R / rng, ms = HALF * 2 * sc; c.globalAlpha = .55; c.drawImage(MAPC, (P.p[0] - HALF) * sc, (P.p[2] - HALF) * sc, ms, ms); c.globalAlpha = 1;
   function blip(o, col, sq){ var bx = -(o.p[0] - P.p[0]) * sc, by = -(o.p[2] - P.p[2]) * sc, l = Math.hypot(bx, by); if (l > R - 3){ bx *= (R - 3) / l; by *= (R - 3) / l; } c.fillStyle = col; if (sq) c.fillRect(bx - 2, by - 2, 4, 4); else { c.beginPath(); c.arc(bx, by, 2.4, 0, TAU); c.fill(); } }
   GND.forEach(function(o){ if (o.alive) blip(o, o.primary ? '#ff7a50' : '#c98a70', true); }); AIR.forEach(function(o){ if (o.alive && o !== P) blip(o, o.team ? '#ff4030' : '#6fd0ff'); }); MSL.forEach(function(o){ if (o.team === 1) blip(o, '#fff'); });
   c.restore(); c.strokeStyle = GRD; c.beginPath(); c.arc(rx, ry, R, 0, TAU); c.stroke(); c.fillStyle = GRN; c.beginPath(); c.moveTo(rx, ry - 5); c.lineTo(rx - 4, ry + 4); c.lineTo(rx + 4, ry + 4); c.closePath(); c.fill();
-  for (i = 0; i < MSGS.length; i++){ var mg = MSGS[i]; c.globalAlpha = clamp(mg.t, 0, 1); var ms2 = mg.who + ': ' + mg.txt, fs = 12; c.font = '600 12px system-ui'; var mw = c.measureText(ms2).width, lim = W - 2 * Math.min(W * .3, 250); if (mw > lim) fs = Math.max(8.5, 12 * lim / mw); txt(c, ms2, W / 2, ry - R - 13 - (MSGS.length - 1 - i) * 15, 'center', mg.who === 'WARNING' ? AMB : '#dff', '600 ' + fs.toFixed(1) + 'px system-ui'); c.globalAlpha = 1; }
+  for (i = 0; i < MSGS.length; i++){ var mg = MSGS[i]; c.globalAlpha = clamp(mg.t, 0, 1); var ms2 = mg.who + ': ' + mg.txt, fs = 12; c.font = '600 12px system-ui'; var mw = c.measureText(ms2).width, lim = W < 560 ? W - 16 : W - 2 * Math.min(W * .3, 250); if (mw > lim) fs = Math.max(8.5, 12 * lim / mw); txt(c, ms2, W / 2, gTop - 13 - (MSGS.length - 1 - i) * 15, 'center', mg.who === 'WARNING' ? AMB : '#dff', '600 ' + fs.toFixed(1) + 'px system-ui'); c.globalAlpha = 1; }
   if (STICK){ c.strokeStyle = 'rgba(160,255,215,.5)'; c.lineWidth = 2; c.beginPath(); c.arc(STICK.bx, STICK.by, 56, 0, TAU); c.stroke(); c.fillStyle = 'rgba(63,230,182,.45)'; c.beginPath(); c.arc(STICK.bx + INP.x * 56, STICK.by - INP.y * 56 * (STICK.inv ? -1 : 1), 24, 0, TAU); c.fill(); }
   else if (TOUCH && phase === 'play' && M.t < 6) txt(c, 'DRAG HERE TO FLY', W * .2, H * .72, 'center', GRD, '700 11px system-ui');
   el('hurt').style.opacity = hurtA > 0 ? Math.min(1, hurtA) : 0; }
