@@ -257,51 +257,110 @@ var MECHS = [
     blurb: 'Keeps you at range with arcing shells. The super calls a barrage down on your head.' }
 ];
 var MESH = {};
+// ---------- sculpted primitives: rounded armour, tapered limbs, pistons; smoothed normals ----------
+function orientTo(a, from, cfn){ for (var o = from; o < a.length; o += 30){ var mx = (a[o] + a[o + 10] + a[o + 20]) / 3, my = (a[o + 1] + a[o + 11] + a[o + 21]) / 3, mz = (a[o + 2] + a[o + 12] + a[o + 22]) / 3, c = cfn(mx, my, mz);
+  if (a[o + 3] * (mx - c[0]) + a[o + 4] * (my - c[1]) + a[o + 5] * (mz - c[2]) < 0) for (var j = 0; j < 3; j++){ a[o + j * 10 + 3] *= -1; a[o + j * 10 + 4] *= -1; a[o + j * 10 + 5] *= -1; } } }
+function smoothFrom(a, from, crease){
+  var n = (a.length - from) / 10, cosT = Math.cos(crease * PI / 180), face = new Float32Array(n * 3), groups = {}, i;
+  for (i = 0; i < n; i++){ var o = from + i * 10; face[i * 3] = a[o + 3]; face[i * 3 + 1] = a[o + 4]; face[i * 3 + 2] = a[o + 5]; var k = Math.round(a[o] * 500) + ',' + Math.round(a[o + 1] * 500) + ',' + Math.round(a[o + 2] * 500); (groups[k] || (groups[k] = [])).push(i); }
+  for (var key in groups){ var g = groups[key];
+    for (var x = 0; x < g.length; x++){ var ia = g[x] * 3, sx = 0, sy = 0, sz = 0;
+      for (var y = 0; y < g.length; y++){ var ib = g[y] * 3; if (face[ia] * face[ib] + face[ia + 1] * face[ib + 1] + face[ia + 2] * face[ib + 2] >= cosT){ sx += face[ib]; sy += face[ib + 1]; sz += face[ib + 2]; } }
+      var l = Math.hypot(sx, sy, sz) || 1, oo = from + g[x] * 10; a[oo + 3] = sx / l; a[oo + 4] = sy / l; a[oo + 5] = sz / l; } }
+}
+function sgp(w, e){ return (w < 0 ? -1 : 1) * Math.pow(Math.abs(w), e); }
+// superellipsoid: e ~0.3 = softened box, 1 = ellipsoid
+function RB(a, cx, cy, cz, sx, sy, sz, col, e, rotZ){
+  var s0 = a.length, nu = 16, nv = 10, cr = Math.cos(rotZ || 0), sr = Math.sin(rotZ || 0), P = [];
+  for (var j = 0; j <= nv; j++){ var v = -PI / 2 + PI * j / nv, row = [];
+    for (var i = 0; i <= nu; i++){ var u = -PI + TAU * i / nu, x = sx * sgp(Math.cos(v), e) * sgp(Math.cos(u), e), y = sy * sgp(Math.sin(v), e), z = sz * sgp(Math.cos(v), e) * sgp(Math.sin(u), e);
+      row.push([cx + x * cr - y * sr, cy + x * sr + y * cr, cz + z]); } P.push(row); }
+  for (j = 0; j < nv; j++) for (i = 0; i < nu; i++) quad(a, P[j][i], P[j][i + 1], P[j + 1][i + 1], P[j + 1][i], col);
+  orientTo(a, s0, function(){ return [cx, cy, cz]; }); smoothFrom(a, s0, 62);
+}
+// loft along -y: prof = [[y, rx, rz], ...]; superellipse cross-section
+function LOFT(a, prof, col, ox, oz){
+  ox = ox || 0; oz = oz || 0; var s0 = a.length, seg = 12, n = 2.6, rings = prof.map(function(p){ var r = []; for (var k = 0; k <= seg; k++){ var t = k / seg * TAU; r.push([ox + p[1] * sgp(Math.cos(t), 2 / n), p[0], oz + p[2] * sgp(Math.sin(t), 2 / n)]); } return r; });
+  for (var j = 0; j < rings.length - 1; j++) for (var k = 0; k < seg; k++) quad(a, rings[j][k], rings[j][k + 1], rings[j + 1][k + 1], rings[j + 1][k], col);
+  var top = prof[0][0], bot = prof[prof.length - 1][0];
+  for (k = 0; k < seg; k++){ tri(a, [ox, top, oz], rings[0][k], rings[0][k + 1], col); tri(a, [ox, bot, oz], rings[rings.length - 1][k + 1], rings[rings.length - 1][k], col); }
+  orientTo(a, s0, function(x, y){ return [ox, clamp(y, bot + .04, top - .04), oz]; }); smoothFrom(a, s0, 55);
+}
+function CYL(a, p0, p1, r, col){
+  var s0 = a.length, seg = 8, d = [p1[0] - p0[0], p1[1] - p0[1], p1[2] - p0[2]], L = Math.hypot(d[0], d[1], d[2]); d = [d[0] / L, d[1] / L, d[2] / L];
+  var up = Math.abs(d[1]) > .9 ? [1, 0, 0] : [0, 1, 0], u = [d[1] * up[2] - d[2] * up[1], d[2] * up[0] - d[0] * up[2], d[0] * up[1] - d[1] * up[0]], ul = Math.hypot(u[0], u[1], u[2]); u = [u[0] / ul, u[1] / ul, u[2] / ul];
+  var w = [d[1] * u[2] - d[2] * u[1], d[2] * u[0] - d[0] * u[2], d[0] * u[1] - d[1] * u[0]];
+  var ring = function(c){ var r2 = []; for (var k = 0; k <= seg; k++){ var t = k / seg * TAU, cc = Math.cos(t) * r, ss = Math.sin(t) * r; r2.push([c[0] + u[0] * cc + w[0] * ss, c[1] + u[1] * cc + w[1] * ss, c[2] + u[2] * cc + w[2] * ss]); } return r2; };
+  var A = ring(p0), B = ring(p1); for (var k = 0; k < seg; k++){ quad(a, A[k], A[k + 1], B[k + 1], B[k], col); tri(a, p1, B[k], B[k + 1], col); }
+  orientTo(a, s0, function(x, y, z){ var t = clamp(((x - p0[0]) * d[0] + (y - p0[1]) * d[1] + (z - p0[2]) * d[2]) / L, .02, .98); return [p0[0] + d[0] * L * t, p0[1] + d[1] * L * t, p0[2] + d[2] * L * t]; }); smoothFrom(a, s0, 60);
+}
 function buildMech(def){
-  var c = def.col, c2 = def.col2, g = def.glow, dk = [.14, .14, .17], mid = [.42, .43, .47], P = {};
-  MATOF.clear(); MATOF.set(c, 5); MATOF.set(c2, 5); MATOF.set(mid, 5);
-  var m;
-  var heavy = def.id === 'torque', slim = def.id === 'wisp', art = def.id === 'mortar';
+  var c = def.col, c2 = def.col2, g = def.glow, dk = [.12, .12, .15], mid = [.4, .41, .45], steel = [.7, .71, .76], P = {};
+  MATOF.clear(); MATOF.set(c, 5); MATOF.set(c2, 5); MATOF.set(mid, 6); MATOF.set(steel, 6); MATOF.set(dk, 7);
+  var id = def.id, heavy = id === 'torque', slim = id === 'wisp', art = id === 'mortar', szz = shZ(def), m;
+  var K = heavy ? 1.35 : slim ? .78 : art ? 1.12 : 1; // limb thickness
   // pelvis
-  m = []; box(m, -.36, .36, -.2, .28, -.42, .42, mid); box(m, -.42, .42, -.02, .12, -.46, .46, dk); box(m, .3, .44, -.15, .2, -.18, .18, c); P.pelvis = m;
-  // torso (joint at waist, chest up to ~1.0)
+  m = []; RB(m, 0, 0, 0, .3 * K + .04, .2, .38 * (heavy ? 1.15 : 1), mid, .45); RB(m, .22, -.02, 0, .12, .17, .2, c, .5);
+  RB(m, 0, 0, hipZ(def), .15 * K, .15 * K, .15 * K, dk, 1); RB(m, 0, 0, -hipZ(def), .15 * K, .15 * K, .15 * K, dk, 1);
+  RB(m, -.05, .02, .3, .2, .16, .08, c2, .45); RB(m, -.05, .02, -.3, .2, .16, .08, c2, .45); P.pelvis = m;
+  // torso
   m = [];
-  var cw = heavy ? .62 : slim ? .4 : .48, cd = heavy ? .68 : slim ? .46 : .54;
-  box(m, -cw * .8, cw * .8, 0, .42, -cd * .75, cd * .75, mid);
-  box(m, -cw, cw, .38, 1.0, -cd, cd, c, .06);
-  box(m, cw - .04, cw + .06, .5, .9, -cd * .62, cd * .62, c2);
-  box(m, cw + .05, cw + .1, .6, .82, -.16, .16, g);
-  box(m, -cw - .08, -cw + .02, .45, .95, -cd * .7, cd * .7, dk);
-  cylY(m, -cw - .05, .7, cd * .4, .1, .5, 6, dk, .08); cylY(m, -cw - .05, .7, -cd * .4, .1, .5, 6, dk, .08);
-  if (art){ box(m, -.5, .3, .95, 1.55, -cd - .1, -cd + .5, mid); for (var i = 0; i < 3; i++) for (var j = 0; j < 2; j++){ box(m, .28, .36, 1.05 + j * .24, 1.25 + j * .24, -cd + i * .17, -cd + .12 + i * .17, dk); box(m, .36, .44, 1.08 + j * .24, 1.22 + j * .24, -cd + .02 + i * .17, -cd + .1 + i * .17, [1, .3, .2]); } }
-  if (heavy){ box(m, -cw * .9, cw * .9, .98, 1.08, -cd * .9, cd * .9, dk); for (var hz = 0; hz < 6; hz++) box(m, cw + .055, cw + .07, .4 + hz * .1, .45 + hz * .1, -cd * .6, cd * .6, (hz & 1) ? dk : [1, .78, .15]); }
+  var cw = heavy ? .56 : slim ? .33 : art ? .5 : .44, cd = heavy ? .66 : slim ? .4 : art ? .58 : .5, ch = slim ? .3 : heavy ? .38 : .34;
+  LOFT(m, [[.46, cw * .62, cd * .7], [.32, cw * .55, cd * .62], [.14, cw * .5, cd * .6], [0, cw * .55, cd * .66]], mid);
+  RB(m, 0, .74, 0, cw, ch, cd, c, art ? .3 : .38);
+  RB(m, cw * .62, .76, 0, cw * .36, ch * .78, cd * .7, c2, .45);
+  RB(m, cw * .96, .78, 0, .045, ch * .3, cd * .28, g, .6);
+  RB(m, 0, 1.0, 0, cw * .55, .1, cd * .6, dk, .5);
+  RB(m, 0, .85, szz * .82, .17 * K, .17 * K, .17 * K, dk, 1); RB(m, 0, .85, -szz * .82, .17 * K, .17 * K, .17 * K, dk, 1);
+  for (var vs = -1; vs <= 1; vs += 2){ for (var vv = 0; vv < 3; vv++) RB(m, cw * .82, .56 + vv * .07, vs * cd * .62, .05, .022, .12, dk, .5); }
+  if (id === 'vanta'){ [-1, 1].forEach(function(s){ CYL(m, [-cw * .7, .58, s * cd * .45], [-cw - .22, .98, s * cd * .5], .11, dk); RB(m, -cw - .24, 1.02, s * cd * .5, .07, .05, .07, g, .8); }); RB(m, -cw * .7, .78, 0, .16, .26, cd * .55, c2, .45); }
+  if (heavy){ for (var hs = 0; hs < 7; hs++) RB(m, cw * .97, .54 + hs * .07, 0, .02, .03, cd * .62, (hs & 1) ? dk : [1, .78, .15], .4); RB(m, -cw * .6, .9, 0, .3, .18, cd * .8, mid, .4); CYL(m, [-cw * .8, .7, .3], [-cw * .8, 1.15, .45], .06, steel); CYL(m, [-cw * .8, .7, -.3], [-cw * .8, 1.15, -.45], .06, steel); }
+  if (slim){ RB(m, -cw * .5, .7, 0, .1, .3, .08, g, .6); RB(m, 0, .45, 0, cw * .4, .07, cd * .45, dk, .5); }
+  if (art){ RB(m, -.1, 1.28, -cd - .1, .42, .26, .3, mid, .32); for (var mi = 0; mi < 3; mi++) for (var mj = 0; mj < 2; mj++){ RB(m, .26, 1.2 + mj * .18, -cd - .27 + mi * .17, .05, .07, .07, dk, .7); RB(m, .31, 1.2 + mj * .18, -cd - .27 + mi * .17, .04, .05, .05, [1, .3, .2], 1); }
+    RB(m, -cw * .75, .78, 0, .2, .3, cd * .62, mid, .35); CYL(m, [-cw * .9, .55, .25], [-cw * .9, 1.2, -.3], .05, steel); }
   P.torso = m;
-  // head (joint at neck)
+  // head
   m = [];
-  if (heavy){ box(m, -.22, .26, 0, .32, -.22, .22, c); box(m, .2, .28, .1, .22, -.16, .16, g); }
-  else if (slim){ box(m, -.2, .24, 0, .38, -.17, .17, c2); box(m, .2, .26, .18, .28, -.14, .14, g); box(m, -.32, .05, .3, .62, -.04, .04, c); }
-  else { box(m, -.24, .26, 0, .42, -.21, .21, c); box(m, .22, .28, .18, .3, -.18, .18, g); box(m, -.1, .05, .42, .7, -.05, .05, dk); box(m, -.24, .26, .3, .36, -.22, .22, c2); }
+  if (heavy){ RB(m, .04, .16, 0, .2, .17, .2, c, .45); RB(m, .2, .17, 0, .04, .05, .15, g, .6); RB(m, -.06, .05, 0, .26, .08, .26, dk, .5); }
+  else if (slim){ RB(m, .02, .2, 0, .17, .19, .15, c2, .42); RB(m, .16, .21, 0, .05, .045, .12, g, .6); RB(m, -.15, .36, 0, .22, .05, .025, c, .5, -.5); RB(m, .1, .07, 0, .08, .05, .09, mid, .5); }
+  else if (art){ RB(m, .02, .2, 0, .22, .18, .2, c, .32); RB(m, .2, .22, 0, .035, .035, .17, g, .5); RB(m, -.05, .34, 0, .18, .05, .2, mid, .4); CYL(m, [-.1, .38, .14], [-.18, .7, .16], .022, dk); }
+  else { RB(m, .02, .21, 0, .21, .21, .19, c, .4); RB(m, .17, .23, 0, .06, .065, .16, g, .55); RB(m, .12, .06, 0, .1, .06, .12, mid, .5); [-1, 1].forEach(function(s){ RB(m, -.04, .28, s * .2, .12, .06, .03, c2, .5, -.3); }); CYL(m, [-.06, .38, .1], [-.26, .82, .13], .022, dk); }
   P.head = m;
-  // upper arm (joint at shoulder, hangs to -0.6)
-  m = []; var aw = heavy ? .26 : slim ? .13 : .18;
-  box(m, -aw - .14, aw + .14, -.28, .16, -aw - .14, aw + .14, c, .04); limb(m, .62, aw, aw * .85, aw, aw * .85, mid);
-  if (art) box(m, -.06, .06, -.55, -.1, -aw - .02, aw + .02, dk);
+  // upper arm
+  m = []; var ar = (heavy ? .21 : slim ? .135 : art ? .19 : .17);
+  RB(m, -.02, .02, 0, heavy ? .4 : slim ? .2 : .3, heavy ? .34 : slim ? .17 : .24, heavy ? .4 : slim ? .2 : .28, c, heavy ? .8 : .38);
+  if (!slim) RB(m, -.02, -.14, 0, (heavy ? .4 : .3) + .01, .045, (heavy ? .4 : .28) + .01, c2, .5);
+  LOFT(m, [[-.12, ar, ar], [-.32, ar * 1.12, ar * 1.08], [-.58, ar * .92, ar * .92]], c2);
+  RB(m, 0, -.62, 0, ar * 1.05, ar * 1.05, ar * 1.05, dk, 1);
   P.uarm = m;
-  // forearm + fist (joint at elbow)
-  m = []; var fw = heavy ? .34 : slim ? .15 : .21;
-  limb(m, .58, fw, fw * .9, fw, fw * .9, c); cylZ(m, 0, 0, 0, fw * .5, fw * 1.7, 8, mid);
-  box(m, -fw - .04, fw + .04, -.9, -.56, -fw - .02, fw + .02, heavy ? dk : c2);
-  if (heavy){ cylY(m, -fw - .05, -.5, 0, .07, .4, 6, [.7, .7, .74], .07); }
-  if (slim){ quad(m, [.12, -.05, 0], [.55, -.4, 0], [.25, -.95, 0], [.08, -.6, 0], g); }
+  // forearm + fist
+  m = []; var fr = heavy ? .27 : slim ? .14 : art ? .2 : .19;
+  LOFT(m, [[0, fr, fr], [-.18, fr * 1.3, fr * 1.25], [-.42, fr * 1.15, fr * 1.1], [-.52, fr * .9, fr * .9]], c);
+  RB(m, 0, -.53, 0, fr * .95, .045, fr * .95, dk, .6);
+  CYL(m, [-fr * .9, -.04, 0], [-fr * 1.05, -.44, 0], heavy ? .06 : .035, steel);
+  var fs = heavy ? 1.55 : slim ? .8 : art ? 1.15 : 1.05;
+  RB(m, .01, -.71, 0, .17 * fs, .16 * fs, .17 * fs, heavy ? dk : c2, .42); RB(m, .14 * fs, -.73, 0, .06 * fs, .12 * fs, .15 * fs, dk, .5);
+  if (heavy){ CYL(m, [fr * .8, -.02, .14], [fr * .9, -.45, .16], .05, steel); RB(m, 0, -.25, 0, fr * 1.36, .05, fr * 1.3, [1, .78, .15], .5); }
+  if (slim){ RB(m, .2, -.38, 0, .22, .05, .02, g, .5, -.9); RB(m, .32, -.58, 0, .22, .04, .015, g, .5, -1.1); }
   P.farm = m;
-  // thigh (joint at hip, length .78)
-  m = []; var lw = heavy ? .27 : slim ? .15 : .2;
-  limb(m, .78, lw, lw * .88, lw, lw * .88, mid); box(m, -lw - .03, lw + .03, -.35, .05, -lw - .03, lw + .03, c, .03); P.thigh = m;
-  // shin + foot (joint at knee, length .74)
-  m = []; limb(m, .74, lw * .95, lw * .8, lw, lw * .85, c); cylZ(m, 0, 0, 0, lw * .55, lw * 1.9, 8, mid); box(m, -.05, lw + .08, -.25, .08, -lw * .8, lw * .8, c2);
-  box(m, -lw - .06, lw * 2.2 + .12, -.95, -.72, -lw - .06, lw + .06, dk); box(m, lw * 2.2, lw * 2.2 + .16, -.95, -.8, -lw - .04, lw + .04, mid); P.shin = m;
+  // thigh
+  m = []; var lr = heavy ? .25 : slim ? .16 : art ? .22 : .21;
+  RB(m, 0, -.06, 0, lr * 1.25, .14, lr * 1.25, c, .45);
+  LOFT(m, [[-.08, lr * 1.12, lr * 1.12], [-.34, lr * 1.25, lr * 1.18], [-.62, lr * 1.0, lr], [-.74, lr * .85, lr * .85]], c2);
+  RB(m, .04, -.38, 0, lr * .55, lr * 1.6, lr * 1.05, c, .42);
+  RB(m, 0, -.78, 0, lr * .95, lr * .95, lr * .95, dk, 1);
+  P.thigh = m;
+  // shin + foot
+  m = [];
+  RB(m, .1, -.06, 0, lr * .7, lr * .85, lr * .9, c2, .45);
+  LOFT(m, [[-.06, lr * .95, lr * .95], [-.24, lr * 1.3, lr * 1.22], [-.52, lr * 1.0, lr], [-.66, lr * .75, lr * .78]], c);
+  CYL(m, [-lr * .9, -.12, 0], [-lr * .8, -.58, 0], .035, steel);
+  RB(m, 0, -.72, 0, lr * .7, lr * .7, lr * .7, dk, 1);
+  var ft = heavy ? 1.35 : slim ? .85 : 1;
+  RB(m, .12 * ft, -.86, 0, .27 * ft, .095, .17 * ft, dk, .38); RB(m, .34 * ft, -.85, 0, .09 * ft, .085, .16 * ft, c, .5); RB(m, -.12 * ft, -.86, 0, .1 * ft, .085, .14 * ft, mid, .5);
+  P.shin = m;
   MATOF.clear();
-  for (var k in P) MESH[def.id + '_' + k] = new Float32Array(P[k]);
+  for (var k in P) MESH[id + '_' + k] = new Float32Array(P[k]);
 }
 // skeleton dimensions (unscaled)
 var SK = { hip: 1.5, waist: .14, neck: 1.02, shY: .85, thigh: .78, shin: .74, uarm: .62, farm: .58 };
@@ -625,11 +684,14 @@ var gl = canvas.getContext('webgl', { antialias: true, alpha: true, premultiplie
 if (!gl){ var er0 = document.createElement('div'); er0.id = 'err'; er0.textContent = 'Rivet Rumble needs 3D graphics (WebGL), and this device has it switched off.'; document.body.appendChild(er0); return; }
 var VS = 'attribute vec3 aP;attribute vec3 aN;attribute vec3 aC;attribute float aM;uniform mat4 uVP,uM;varying vec3 vN,vC,vW,vO,vNo;varying float vM;' +
   'void main(){vec4 w=uM*vec4(aP,1.);vW=w.xyz;vN=(uM*vec4(aN,0.)).xyz;vC=aC;vO=aP;vNo=aN;vM=aM;gl_Position=uVP*w;}';
-var FS = 'precision highp float;varying vec3 vN,vC,vW,vO,vNo;varying float vM;uniform vec3 uCam,uSun,uSunCol,uAmb,uFog,uTint,uRim;uniform float uFogD,uFlash;uniform sampler2D uT1,uT2;' +
-  'void main(){vec3 N=normalize(vN);vec3 V=uCam-vW;float dist=length(V);V/=dist;if(dot(N,V)<0.)N=-N;' +
+var FS = 'precision highp float;varying vec3 vN,vC,vW,vO,vNo;varying float vM;uniform vec3 uCam,uSun,uSunCol,uAmb,uFog,uTint,uRim,uEnvA,uEnvB;uniform float uFogD,uFlash,uTwo;uniform sampler2D uT1,uT2;' +
+  'void main(){vec3 N=normalize(vN);vec3 V=uCam-vW;float dist=length(V);V/=dist;if(uTwo>.5&&dot(N,V)<0.)N=-N;' +
   'float d=max(dot(N,uSun),0.);vec3 c=vC*uTint*(uAmb+uSunCol*d+.1*N.y);' +
-  'if(vM>.5){vec3 an=abs(vNo);vec2 uv=(an.y>.7?vO.xz:(an.x>an.z?vO.zy:vO.xy));float tx=vM>4.5?texture2D(uT1,uv*.9).r:texture2D(uT2,uv*.22).r;c*=(vM>4.5?.62+tx*.76:.45+tx*1.1);}' +
-  'float rim=pow(1.-max(dot(N,V),0.),3.);c+=uRim*rim;c=mix(c,vec3(1.),uFlash);' +
+  'if(vM>.5&&vM<1.5){vec3 an=abs(vNo);vec2 uv=(an.y>.7?vO.xz:(an.x>an.z?vO.zy:vO.xy));c*=.45+texture2D(uT2,uv*.22).r*1.1;}' +
+  'if(vM>4.5){vec3 an=abs(vNo);vec2 uv=(an.y>.7?vO.xz:(an.x>an.z?vO.zy:vO.xy));float tx=texture2D(uT1,uv*1.4).r;c*=(vM<5.5?.86+tx*.28:.8+tx*.4);' +
+  'float gls=vM<5.5?.55:(vM<6.5?.4:.25);vec3 Rf=reflect(-V,N);vec3 env=mix(uEnvB,uEnvA,clamp(Rf.y*.6+.5,0.,1.));float fr=.06+.94*pow(1.-max(dot(N,V),0.),4.);' +
+  'c=mix(c,env,fr*gls*.55)+uSunCol*pow(max(dot(N,normalize(uSun+V)),0.),vM<5.5?70.:30.)*gls*1.1;}' +
+  'float rim=pow(1.-max(dot(N,V),0.),3.);c+=uRim*rim*.7;c=mix(c,vec3(1.),uFlash);' +
   'float f=1.-exp(-dist*dist*uFogD*uFogD);c=mix(c,uFog,clamp(f,0.,.9));gl_FragColor=vec4(c,1.);}';
 var BVS = 'attribute vec3 aP;attribute vec2 aT;uniform mat4 uVP;varying vec2 vT;void main(){vT=aT;gl_Position=uVP*vec4(aP,1.);}';
 var BFS = 'precision mediump float;varying vec2 vT;uniform sampler2D uTex;uniform vec3 uTint;void main(){gl_FragColor=vec4(texture2D(uTex,vT).rgb*uTint,1.);}';
@@ -669,8 +731,8 @@ canvas.addEventListener('webglcontextrestored', function(){ R = {}; try { initGL
 
 // ---------- arenas ----------
 var STAGES = {
-  yard: { name: 'Scrapyard', sun: [-.4, .7, .6], sunCol: [1.1, .86, .66], amb: [.5, .42, .52], fog: [.86, .55, .5], rim: [.9, .55, .35], ground: [.55, .5, .44], tint: [1, 1, 1] },
-  harbor: { name: 'Harbour', sun: [.35, .8, .45], sunCol: [.55, .6, .95], amb: [.38, .34, .55], fog: [.2, .16, .32], rim: [.4, .7, 1.2], ground: [.36, .36, .42], tint: [.95, .95, 1.05] }
+  yard: { name: 'Scrapyard', sun: [-.4, .7, .6], sunCol: [1.1, .86, .66], amb: [.5, .42, .52], fog: [.86, .55, .5], rim: [.9, .55, .35], envA: [1.0, .7, .62], envB: [.32, .24, .22], ground: [.55, .5, .44], tint: [1, 1, 1] },
+  harbor: { name: 'Harbour', sun: [.35, .8, .45], sunCol: [.55, .6, .95], amb: [.38, .34, .55], fog: [.2, .16, .32], rim: [.4, .7, 1.2], envA: [.45, .4, .75], envB: [.08, .08, .14], ground: [.36, .36, .42], tint: [.95, .95, 1.05] }
 };
 var STAGEDATA = {};
 function buildStages(){
@@ -766,8 +828,9 @@ function render(dt){
   gl.uniformMatrix4fv(m.u.uVP, false, VP); gl.uniform3fv(m.u.uCam, eye); gl.uniform3fv(m.u.uSun, norm(st.sun)); gl.uniform3fv(m.u.uSunCol, st.sunCol); gl.uniform3fv(m.u.uAmb, st.amb); gl.uniform3fv(m.u.uFog, st.fog); gl.uniform1f(m.u.uFogD, 1 / 70);
   gl.uniform3f(m.u.uTint, 1, 1, 1); gl.uniform3f(m.u.uRim, 0, 0, 0); gl.uniform1f(m.u.uFlash, 0);
   gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, R.steel); gl.uniform1i(m.u.uT1, 1); gl.activeTexture(gl.TEXTURE2); gl.bindTexture(gl.TEXTURE_2D, R.conc); gl.uniform1i(m.u.uT2, 2); gl.activeTexture(gl.TEXTURE0);
+  gl.uniform1f(m.u.uTwo, 1); gl.uniform3fv(m.u.uEnvA, st.envA); gl.uniform3fv(m.u.uEnvB, st.envB);
   draw(R.stages[stageId], IDENT);
-  gl.uniform3fv(m.u.uRim, st.rim);
+  gl.uniform3fv(m.u.uRim, st.rim); gl.uniform1f(m.u.uTwo, 0);
   F.forEach(function(f){
     var mats = fighterMats(f), fl = (f.flashT > 0) ? .55 : 0; f.flashT = Math.max(0, (f.flashT || 0) - 1);
     gl.uniform1f(m.u.uFlash, fl);
@@ -783,6 +846,7 @@ function render(dt){
     else if (p.type === 'shell'){ gl.uniform3f(m.u.uTint, 1.6, 1.2, 1.0); draw(R.mesh.shell, mul(T(p.x, p.y, .3), Rz(Math.atan2(p.vy, p.vx || .001) - PI / 2))); gl.uniform3f(m.u.uTint, 1, 1, 1); }
     else if (p.type === 'wave'){ var k = p.big ? 1.6 : 1; gl.uniform3f(m.u.uTint, 1.8, 1.4, 1.0); draw(R.mesh.wave, mul(T(p.x, 0, 0), mul(Ry(p.vx > 0 ? 0 : PI), Sc(k * (1 + Math.sin(p.t * 30) * .08))))); gl.uniform3f(m.u.uTint, 1, 1, 1); }
   });
+  gl.uniform1f(m.u.uTwo, 1);
   gl.disableVertexAttribArray(m.a.aP); gl.disableVertexAttribArray(m.a.aN); gl.disableVertexAttribArray(m.a.aC); gl.disableVertexAttribArray(m.a.aM);
   // particles + blob shadows
   var n = 0, o = 0;
@@ -1049,6 +1113,7 @@ function boot(){
     return Promise.all([store.getItem('rr.settings'), store.getItem('rr.records')]).then(function(v){ try { if (v[0]) Object.assign(SET, JSON.parse(v[0])); } catch (e) {} try { if (v[1]) Object.assign(REC, JSON.parse(v[1])); } catch (e) {} }).catch(function(){});
   }).then(function(){ toMenu(); requestAnimationFrame(frame); });
 }
+window.__rrVerts = function(){ var o = {}; MECHS.forEach(function(d){ var n = 0; ['pelvis','torso','head','uarm','farm','thigh','shin'].forEach(function(k){ n += MESH[d.id + '_' + k].length / 10 * ((k === 'uarm' || k === 'farm' || k === 'thigh' || k === 'shin') ? 2 : 1); }); o[d.id] = n; }); return o; };
 window.__rr = { get phase(){ return phase; }, get F(){ return F; }, get projs(){ return projs; }, IN: IN, tick: function(n){ for (var i = 0; i < n; i++) tick(); }, quick: function(a, b, s){ mode = 'quick'; pick = a; foe = b; stageId = s || 'yard'; startMatch(); },
   set camo(v){ CAMO = v; }, set pose(v){ F.forEach(function(f){ for (var k in PO[v]) f.pose[k] = PO[v][k]; }); }, place: function(i, x, face){ F[i].x = x; F[i].face = face; },
   set ai0(v){ AI0 = !!v; if (F[0]) F[0].ai = !!v; }, set diff(v){ SET.diff = v; }, press: function(k){ edges[k] = 1; }, hold: function(k, v){ keyHeld[k] = !!v; } };
