@@ -630,7 +630,7 @@ function salvagerAI(u, dt){
   }
 }
 // ---------- weapons ----------
-function muzzle(s){ var T = s.kind === 'unit' ? UT[s.type] : null, ang = s.kind === 'bld' ? s.aim : (T.turret ? s.th : s.h), y = (s.y || heightAt(s.x, s.z)) + (s.kind === 'bld' ? 2.4 : (s.type === 'tank' ? 1.7 : 1.5)); var L = s.type === 'tank' || s.type === 'turret' ? 3.2 : 1.2; return [s.x + Math.cos(ang) * L, y, s.z + Math.sin(ang) * L]; }
+function muzzle(s){ var T = s.kind === 'unit' ? UT[s.type] : null, ang = s.kind === 'bld' ? s.aim : (T.turret ? s.th : s.h), y = (s.y || heightAt(s.x, s.z)) + (s.kind === 'bld' ? 2.2 : (s.type === 'tank' ? 1.7 : 1.5)); var L = s.type === 'tank' ? 3.2 : s.type === 'turret' ? 3.9 : 1.2; return [s.x + Math.cos(ang) * L, y, s.z + Math.sin(ang) * L]; }
 function fire(src, tgt, W){
   var m = muzzle(src), ty = (tgt.kind === 'bld' ? tgt.y + 2 : heightAt(tgt.x, tgt.z) + 1);
   var tx = tgt.x + (rnd() - .5) * (tgt.kind === 'bld' ? tgt.w * 2.5 : 0.8), tz = tgt.z + (rnd() - .5) * (tgt.kind === 'bld' ? tgt.d * 2.5 : 0.8);
@@ -726,14 +726,17 @@ function stepProduction(t, dt){
     if (q.t >= q.total){
       tm.uq.shift();
       var from = q.type === 'salvager' && teamBlds(t, 'smelter').length ? teamBlds(t, 'smelter')[0] : fac[0];
-      spawnUnit(t, q.type, from); tm.built++;
+      if (from.type === 'factory'){ from.doorT = 3.2; } spawnUnit(t, q.type, from); tm.built++;
       if (t === 0 && !AIBOTH){ toast(UT[q.type].name + ' ready'); sfx('ready'); }
     }
   }
 }
 // ---------- turrets ----------
 function stepBuilding(b, dt){
-  if (b.rise < 1) b.rise = Math.min(1, b.rise + dt / 1.4);
+  if (b.rise < 1){ b.rise = Math.min(1, b.rise + dt / 2.6); if (rnd() < dt * 8) puff(b.x + (rnd() - .5) * b.w * CELL, b.y + .5, b.z + (rnd() - .5) * b.d * CELL, [.78, .7, .58, .5], 1.6, 1); }
+  b.recoil = Math.max(0, (b.recoil || 0) - dt * 4);
+  if (b.type === 'factory'){ b.doorT = (b.doorT || 0) - dt; b.door = clamp((b.door || 0) + (b.doorT > 0 ? dt : -dt) * 1.4, 0, 1); }
+  if (b.type === 'smelter' && b.rise >= 1){ b.smT = (b.smT || 0) - dt; if (b.smT <= 0){ b.smT = .45; spawnP(b.x + 3.6 + (rnd() - .5) * .6, b.y + 12.2, b.z - 1.6, (rnd() - .5) * .8 + .6, 1.4 + rnd(), (rnd() - .5) * .8, [.66, .62, .6, .22], 1.3 + rnd() * .6, 2.6 + rnd()); } }
   if (b.hp < b.max * .45){ b.smokeT -= dt; if (b.smokeT <= 0){ b.smokeT = .25; puff(b.x + (rnd() - .5) * b.w * 2, b.y + 3, b.z + (rnd() - .5) * b.d * 2, [.25, .24, .24, .55], 2, 4); if (rnd() < .4) spawnP(b.x, b.y + 2.5, b.z, 0, 2, 0, [1, .5, .2, 1], .9, .4); } }
   if (b.type !== 'turret' || b.rise < 1) return;
   var W = BT.turret.w2;
@@ -744,7 +747,7 @@ function stepBuilding(b, dt){
   if (b.target){
     var ang = Math.atan2(b.target.z - b.z, b.target.x - b.x);
     b.aim += clamp(angDiff(b.aim, ang), -2.6 * dt, 2.6 * dt);
-    if (Math.abs(angDiff(b.aim, ang)) < .1 && b.cool <= 0){ fire(b, b.target, W); b.cool = W.reload; }
+    if (Math.abs(angDiff(b.aim, ang)) < .1 && b.cool <= 0){ fire(b, b.target, W); b.cool = W.reload; b.recoil = 1; }
   }
 }
 
@@ -895,6 +898,9 @@ function buildWorld(){
   return new Float32Array(A);
 }
 // ---------- unit + building meshes (forward = +x) ----------
+function xform(a, start, rot, tx, ty, tz){ for (var o = start; o < a.length; o += 9){ var p = rot([a[o], a[o + 1], a[o + 2]]), n = rot([a[o + 3], a[o + 4], a[o + 5]]); a[o] = p[0] + tx; a[o + 1] = p[1] + ty; a[o + 2] = p[2] + tz; a[o + 3] = n[0]; a[o + 4] = n[1]; a[o + 5] = n[2]; } }
+function rZ(t){ var c = Math.cos(t), s = Math.sin(t); return function(v){ return [v[0] * c - v[1] * s, v[0] * s + v[1] * c, v[2]]; }; }
+function rY(t){ var c = Math.cos(t), s = Math.sin(t); return function(v){ return [v[0] * c - v[2] * s, v[1], v[0] * s + v[2] * c]; }; }
 function buildMeshes(){
   [0, 1].forEach(function(t){
     var tc = TEAMCOL[t], lite = t ? [.92, .86, .8] : [.95, .95, .97], dark = [.16, .16, .19], tire = [.08, .08, .09], hz = [1, .62, .12], glass = [.12, .18, .28], m;
@@ -927,24 +933,97 @@ function buildMeshes(){
     box(m, .6, .9, 2.1, 3.4, -.15, .15, hz); box(m, .6, 2.4, 3.2, 3.45, -.12, .12, hz); box(m, 2.2, 2.5, 2.4, 3.3, -.3, .3, dark);
     [[1.7, 1.15], [1.7, -1.15], [0, 1.15], [0, -1.15], [-1.7, 1.15], [-1.7, -1.15]].forEach(function(w){ cylZ(m, w[0], .58, w[1], .58, .42, 8, tire, [.6, .6, .62]); });
     MESH['salvager' + t] = new Float32Array(m);
-    // buildings (footprint centred on origin)
-    var conc = [.82, .8, .76], roof = [.5, .5, .54];
-    m = []; box(m, -5.6, 5.6, -1, 3.2, -5.6, 5.6, conc, .2); box(m, -4.2, 4.2, 3.2, 6.2, -4.2, 4.2, lite, .3); box(m, -4.4, 4.4, 6.1, 6.5, -4.4, 4.4, tc);
-    box(m, -1, 1, 6.5, 7.2, 2, 3.4, dark); cylY(m, 2.4, 6.5, -2.4, .12, 4, 4, dark); cylY(m, -1.4, 7.2, 2.7, 1.8, .9, 8, [.9, .9, .92], .3);
-    box(m, -5.7, 5.7, 1.2, 1.7, -5.7, 5.7, tc); box(m, -1.2, 1.2, -1, 2.4, 5.55, 5.7, dark);
+    // ---------- buildings: footprint centred on origin, the +z face looks at the camera ----------
+    var conc = [.82, .8, .76], concD = [.58, .57, .55], roofG = [.5, .5, .54], brick = [.52, .34, .26], warm = [1.3, 1.02, .62], winB = [.2, .33, .5], steel = [.72, .73, .77];
+    var stripes = function(m, x0, x1, y0, y1, z0, z1, n, alongZ){
+      for (var i = 0; i < n; i++){ var c = (i & 1) ? dark : hz;
+        if (alongZ){ var a = z0 + (z1 - z0) * i / n, b2 = z0 + (z1 - z0) * (i + 1) / n; box(m, x0, x1, y0, y1, a, b2, c); }
+        else { var a2 = x0 + (x1 - x0) * i / n, b3 = x0 + (x1 - x0) * (i + 1) / n; box(m, a2, b3, y0, y1, z0, z1, c); } }
+    };
+    var found = function(m, hx, hd){ box(m, -hx, hx, -1.6, .35, -hd, hd, concD); stripes(m, -hx, hx, .34, .44, hd - .3, hd + .02, Math.round(hx * 2.5)); };
+    var winZ = function(m, x0, x1, y0, y1, z, col){ quad(m, [x0, y0, z], [x1, y0, z], [x1, y1, z], [x0, y1, z], col); };
+    var winX = function(m, z0, z1, y0, y1, x, col){ quad(m, [x, y0, z0], [x, y0, z1], [x, y1, z1], [x, y1, z0], col); };
+    // HQ
+    m = []; found(m, 6, 6);
+    box(m, -5, 5, .35, 3.4, -5, 5, lite); box(m, -5.06, 5.06, 2.75, 3.4, -5.06, 5.06, tc);
+    winZ(m, -.9, .9, .44, 2.45, 5.02, dark); box(m, -1.7, 1.7, 2.45, 2.65, 4.4, 6.0, tc); box(m, -1.5, 1.5, .3, .5, 5.0, 5.95, conc);
+    [[-4.3, -2.9, warm], [-2.5, -1.5, winB], [1.5, 2.5, winB], [2.9, 4.3, warm]].forEach(function(w){ winZ(m, w[0], w[1], 1.0, 2.3, 5.02, w[2]); });
+    [-1, 1].forEach(function(sx){ for (var k = 0; k < 3; k++) winX(m, -3.8 + k * 2.6, -2.4 + k * 2.6, 1.0, 2.3, sx * 5.02, k === 1 ? warm : winB); });
+    box(m, -3.8, 3.8, 3.4, 6.2, -4, 2.4, tc);
+    for (var pn = 0; pn < 5; pn++) winZ(m, -3.4 + pn * 1.4, -2.2 + pn * 1.4, 4.2, 5.4, 2.42, (pn & 1) ? winB : warm);
+    box(m, -4.1, 4.1, 6.2, 6.55, -4.3, 2.7, roofG);
+    box(m, -3.3, -1.8, 6.55, 7.35, -3.6, -2.3, steel); box(m, -1.4, -.4, 6.55, 7.0, -3.6, -2.6, steel);
+    cylY(m, 3.0, 6.55, -3.4, .12, 5.4, 4, dark, .06); box(m, 2.4, 3.6, 10.2, 10.32, -3.46, -3.34, dark); box(m, 2.6, 3.4, 8.6, 8.7, -3.45, -3.35, dark);
+    cylY(m, 1.2, 6.55, -1.5, .4, 1.1, 8, dark, .3);
+    cylY(m, 4.7, .35, 5.5, .07, 6.2, 4, steel, .05); quad(m, [4.74, 5.3, 5.5], [6.4, 5.15, 5.5], [6.4, 6.4, 5.5], [4.74, 6.5, 5.5], tc);
+    stripes(m, 4.9, 5.1, .35, 2.75, 4.95, 5.08, 6, false);
     MESH['hq' + t] = new Float32Array(m);
-    m = []; box(m, -5.6, 5.6, -1, 3.6, -3.6, 3.6, conc, .15); box(m, -5.7, 5.7, 3.6, 4.1, -3.7, 3.7, roof); cylY(m, 3.6, 4.1, -1.6, 1.0, 6.5, 8, [.55, .52, .5], .8);
-    cylY(m, 3.6, 10.5, -1.6, .85, .3, 8, [.2, .2, .2]); box(m, -4.8, -1.4, 0, 2.4, 3.5, 3.75, [2.2, 1.0, .3]); box(m, -2, 1.8, 3.6, 5.2, -2.5, .5, lite, .3);
-    box(m, -5.8, -4.6, -1, 1.6, -3.8, 3.8, hz); box(m, -5.65, 5.65, 2.6, 3.2, -3.65, 3.65, tc);
+    // Smelter (12 x 8)
+    m = []; found(m, 6, 4);
+    box(m, -5.6, 1.2, .35, 4.0, -3.6, 3.0, conc); box(m, -5.75, 1.35, 4.0, 4.45, -3.75, 3.15, tc);
+    winZ(m, -5.0, -3.3, .4, 2.7, 3.02, dark); stripes(m, -5.3, -5.0, .35, 2.9, 3.0, 3.15, 5, false); stripes(m, -3.3, -3.0, .35, 2.9, 3.0, 3.15, 5, false); box(m, -5.3, -3.0, 2.7, 2.95, 3.0, 3.15, hz);
+    winZ(m, -2.6, -1.4, 1.6, 2.7, 3.02, warm); winZ(m, -1.0, .2, 1.6, 2.7, 3.02, winB);
+    box(m, 1.2, 5.6, .35, 5.0, -3.4, 2.2, brick); box(m, 1.1, 5.7, 4.65, 5.05, -3.5, 2.3, dark);
+    box(m, 2.1, 4.7, .35, .6, 2.2, 3.5, dark); winZ(m, 2.2, 4.6, .9, 3.25, 2.21, dark);
+    box(m, 2.0, 2.2, .6, 3.4, 2.2, 2.45, steel); box(m, 4.6, 4.8, .6, 3.4, 2.2, 2.45, steel); box(m, 2.0, 4.8, 3.25, 3.5, 2.2, 2.45, steel);
+    cylY(m, 3.6, 5.0, -1.6, 1.05, 7.4, 10, [.64, .62, .6], .86);
+    cylY(m, 3.6, 10.4, -1.6, .9, .55, 10, [.86, .2, .15], .89); cylY(m, 3.6, 11.5, -1.6, .89, .5, 10, [.86, .2, .15], .87);
+    cylY(m, -3.2, 4.45, -1.4, .7, 1.6, 8, steel, 1.35);
+    var cs = m.length; box(m, 0, 7.4, -.08, .22, -.45, .45, dark); box(m, 0, 7.4, .22, .32, -.45, .45, [.34, .3, .26]);
+    var cvP = Math.atan2(5.6, 4.6), cvY = Math.atan2(-4.8, 2.0);
+    xform(m, cs, function(v){ return rY(cvY)(rZ(cvP)(v)); }, -5.3, .35, 3.4);
+    for (var sp = 0; sp < 3; sp++) box(m, -5.3 + sp * .7, -5.0 + sp * .7, .35, .9 + sp * 1.4, 3.2 - sp * 1.65, 3.5 - sp * 1.65, dark);
+    for (var rk = 0; rk < 6; rk++) box(m, -2.2 + rk * .45, -1.7 + rk * .45, .35, .6 + (rk % 3) * .2, 3.2, 3.85, [[.56, .38, .24], [.5, .52, .56], [.6, .5, .4]][rk % 3]);
+    box(m, 1.25, 5.55, 5.05, 5.85, 2.15, 2.25, steel);
     MESH['smelter' + t] = new Float32Array(m);
-    m = []; box(m, -5.6, 5.6, -1, 5.4, -5.6, 5.6, conc, .1); quad(m, [-5.8, 5.4, -5.8], [5.8, 5.4, -5.8], [5.8, 7.2, 0], [-5.8, 7.2, 0], roof); quad(m, [-5.8, 5.4, 5.8], [-5.8, 7.2, 0], [5.8, 7.2, 0], [5.8, 5.4, 5.8], shade(roof, .85));
-    tri(m, [-5.8, 5.4, -5.8], [-5.8, 7.2, 0], [-5.8, 5.4, 5.8], conc); tri(m, [5.8, 5.4, -5.8], [5.8, 5.4, 5.8], [5.8, 7.2, 0], conc);
-    box(m, -3.2, 3.2, -1, 4.2, 5.55, 5.75, dark); for (var st = 0; st < 6; st++) box(m, -3.2 + st * 1.28, -3.2 + st * 1.28 + .64, 4.2, 4.6, 5.55, 5.8, hz);
-    box(m, 4.6, 5.0, 5.4, 9, -4, -3.6, hz); box(m, -5, 5, 8.6, 9, -4, -3.6, hz); box(m, -5.65, 5.65, 4.4, 5.1, -5.65, 5.65, tc);
+    // Factory (12 x 12): hangar with a ribbed barrel roof, roller door, gantry crane
+    m = []; found(m, 6, 6);
+    box(m, -5.6, 5.6, .35, 4.8, -5.4, 4.6, conc);
+    var arch = []; for (var ai = 0; ai <= 8; ai++) arch.push([-5.8 + 11.6 * ai / 8, 4.8 + 2.3 * Math.sin(PI * ai / 8)]);
+    for (ai = 0; ai < 8; ai++){
+      quad(m, [arch[ai][0], arch[ai][1], -5.6], [arch[ai + 1][0], arch[ai + 1][1], -5.6], [arch[ai + 1][0], arch[ai + 1][1], 4.8], [arch[ai][0], arch[ai][1], 4.8], shade(tc, (ai & 1) ? .9 : 1));
+      tri(m, [0, 4.8, 4.8], [arch[ai][0], arch[ai][1], 4.8], [arch[ai + 1][0], arch[ai + 1][1], 4.8], conc);
+      tri(m, [0, 4.8, -5.6], [arch[ai + 1][0], arch[ai + 1][1], -5.6], [arch[ai][0], arch[ai][1], -5.6], conc);
+      for (var rb = 0; rb < 5; rb++){ var rz = -5.4 + rb * 2.5; quad(m, [arch[ai][0], arch[ai][1] + .06, rz], [arch[ai + 1][0], arch[ai + 1][1] + .06, rz], [arch[ai + 1][0], arch[ai + 1][1] + .06, rz + .25], [arch[ai][0], arch[ai][1] + .06, rz + .25], lite); }
+    }
+    winZ(m, -3.4, 3.4, .35, 4.1, 4.62, [.07, .07, .09]);
+    stripes(m, -3.95, -3.4, .35, 4.6, 4.6, 5.0, 7, false); stripes(m, 3.4, 3.95, .35, 4.6, 4.6, 5.0, 7, false); box(m, -3.95, 3.95, 4.1, 4.75, 4.6, 5.0, tc);
+    [-1, 1].forEach(function(sx){ for (var k = 0; k < 4; k++) winX(m, -4.8 + k * 2.4, -3.4 + k * 2.4, 3.0, 3.9, sx * 5.62, (k & 1) ? warm : winB); });
+    quad(m, [-3.2, .37, 5.3], [3.2, .37, 5.3], [3.2, .37, 5.5], [-3.2, .37, 5.5], hz);
+    [[-5.85, -5.3], [5.85, -5.3], [-5.85, 4.4], [5.85, 4.4]].forEach(function(pp){ box(m, pp[0] - .22, pp[0] + .22, .35, 8.1, pp[1] - .22, pp[1] + .22, hz); });
+    box(m, -6.05, -5.65, 8.1, 8.4, -5.5, 4.6, dark); box(m, 5.65, 6.05, 8.1, 8.4, -5.5, 4.6, dark);
+    box(m, -.6, .6, 6.9, 7.6, -3.2, -2.0, steel); box(m, -.6, .6, 6.9, 7.6, 1.0, 2.2, steel);
     MESH['factory' + t] = new Float32Array(m);
-    m = []; cylY(m, 0, -1, 0, 1.8, 2.2, 8, conc, 1.6); MESH['turret' + t] = new Float32Array(m);
-    m = []; box(m, -1.1, 1.0, 0, .9, -1.0, 1.0, tc, .15); cylX(m, .9, .45, -.35, .12, 2.4, 5, dark); cylX(m, .9, .45, .35, .12, 2.4, 5, dark);
+    // Gun turret (4 x 4)
+    m = []; box(m, -2, 2, -1.6, .3, -2, 2, concD);
+    cylY(m, 0, .3, 0, 1.85, 1.0, 10, conc, 1.72);
+    for (var sg = 0; sg < 10; sg++){ var g0 = sg / 10 * TAU, g1 = (sg + 1) / 10 * TAU; quad(m, [Math.cos(g0) * 1.74, 1.05, Math.sin(g0) * 1.74], [Math.cos(g1) * 1.74, 1.05, Math.sin(g1) * 1.74], [Math.cos(g1) * 1.72, 1.3, Math.sin(g1) * 1.72], [Math.cos(g0) * 1.72, 1.3, Math.sin(g0) * 1.72], (sg & 1) ? dark : hz); }
+    cylY(m, 0, 1.3, 0, 1.55, .4, 10, dark, 1.45);
+    MESH['turret' + t] = new Float32Array(m);
+    m = []; box(m, -1.25, .95, 0, 1.05, -1.1, 1.1, tc, .2); box(m, .85, 1.35, .05, .95, -.95, .95, shade(tc, .8), .12);
+    box(m, -1.3, -.6, .2, .85, -1.15, 1.15, lite);
+    [-.4, .4].forEach(function(z){ cylX(m, 1.3, .5, z, .13, 2.4, 6, dark); box(m, 3.55, 3.95, .34, .66, z - .17, z + .17, dark); });
+    box(m, -.7, -.2, 1.05, 1.4, .35, .85, lite); winZ(m, -.6, -.3, 1.12, 1.32, .86, [.4, 1.4, 1.8]);
+    stripes(m, -1.0, .6, 1.05, 1.1, -.9, -.6, 6, false);
     MESH['turretTop' + t] = new Float32Array(m);
+  });
+  // animated building parts (shared by both teams)
+  var dsh = [];
+  for (k = 0; k < 12; k++){ var d0 = k / 12 * TAU, d1 = (k + 1) / 12 * TAU;
+    tri(dsh, [0, 0, 0], [.5, Math.cos(d0) * 1.6, Math.sin(d0) * 1.6], [.5, Math.cos(d1) * 1.6, Math.sin(d1) * 1.6], (k & 1) ? [.9, .9, .92] : [.82, .82, .86]); }
+  cylX(dsh, .2, 0, 0, .05, 1.2, 4, [.16, .16, .19]); box(dsh, 1.35, 1.6, -.12, .12, -.12, .12, [.16, .16, .19]);
+  xform(dsh, 0, rZ(.55), 0, 0, 0);
+  MESH.dish = new Float32Array(dsh);
+  var bc = []; box(bc, -.16, .16, 0, .32, -.16, .16, [2.8, .3, .25]); MESH.beacon = new Float32Array(bc);
+  var gw = []; quad(gw, [2.42, 1.05, 2.235], [4.38, 1.05, 2.235], [4.38, 3.05, 2.235], [2.42, 3.05, 2.235], [2.6, 1.15, .32]); MESH.glow = new Float32Array(gw);
+  var dr = []; box(dr, -3.4, 3.4, .35, 4.1, 4.55, 4.66, [.74, .75, .78]); for (k = 0; k < 7; k++) box(dr, -3.38, 3.38, .7 + k * .5, .78 + k * .5, 4.66, 4.7, [.55, .56, .6]); MESH.door = new Float32Array(dr);
+  var cr = []; box(cr, -6.1, 6.1, 8.4, 8.85, -.35, .35, [1, .62, .12]); box(cr, -.55, .55, 7.95, 8.4, -.45, .45, [.16, .16, .19]); cylY(cr, 0, 6.6, 0, .05, 1.4, 4, [.2, .2, .2], .05); box(cr, -.25, .25, 6.3, 6.6, -.25, .25, [1, .62, .12]); MESH.crane = new Float32Array(cr);
+  ['hq', 'smelter', 'factory', 'turret'].forEach(function(ty){
+    var B = BT[ty], hx = B.w * CELL / 2, hd = B.d * CELL / 2, ht = ty === 'turret' ? 3 : ty === 'smelter' ? 6 : 8, sc = [];
+    var px = [-hx, 0, hx], pz = [-hd, 0, hd];
+    px.forEach(function(x){ pz.forEach(function(z){ if (x === 0 && z === 0) return; box(sc, x - .09, x + .09, 0, ht, z - .09, z + .09, [1, .7, .15]); }); });
+    for (var y = 1.8; y < ht; y += 1.8){ box(sc, -hx, hx, y, y + .12, hd - .06, hd + .06, [1, .7, .15]); box(sc, -hx, hx, y, y + .12, -hd - .06, -hd + .06, [1, .7, .15]); box(sc, -hx - .06, -hx + .06, y, y + .12, -hd, hd, [1, .7, .15]); box(sc, hx - .06, hx + .06, y, y + .12, -hd, hd, [1, .7, .15]); }
+    MESH['scaf_' + ty] = new Float32Array(sc);
   });
   // scrap heap (one shape, scaled by remaining scrap)
   var m2 = [], r2 = mkRng(4);
@@ -1051,9 +1130,21 @@ function render(dt){
   wrecks.forEach(function(w){ var y = w.y - Math.max(0, w.t - 35) * .25; if (w.w) draw(R.mesh.rubble, mModel(w.x, y, w.z, 0, w.w * 2, 1, w.d * 2)); else draw(R.mesh.wreck, mModel(w.x, y, w.z, w.h)); });
   blds.forEach(function(b){
     if (b.dead) return;
-    var M = mModel(b.x, b.y, b.z, 0, 1, Math.max(.05, b.rise), 1);
+    var rise = b.rise < 1 ? smooth(0, 1, b.rise) : 1, M = mModel(b.x, b.y, b.z, 0, 1, Math.max(.04, rise), 1);
     draw(R.mesh[b.type + b.team], M);
-    if (b.type === 'turret'){ draw(R.mesh['turretTop' + b.team], mul(mModel(b.x, b.y + 1.2 * b.rise, b.z, b.aim), IDENT)); }
+    if (b.rise < 1){ draw(R.mesh['scaf_' + b.type], mModel(b.x, b.y, b.z, 0)); return; }
+    if (b.type === 'turret') draw(R.mesh['turretTop' + b.team], mModel(b.x - Math.cos(b.aim) * (b.recoil || 0) * .3, b.y + 1.7, b.z - Math.sin(b.aim) * (b.recoil || 0) * .3, b.aim));
+    else if (b.type === 'hq'){
+      draw(R.mesh.dish, mModel(b.x + 1.2, b.y + 7.95, b.z - 1.5, gameT * .7 + b.id));
+      var on = Math.sin(gameT * 5 + b.id) > .55; gl.uniform3f(m.u.uTint, on ? 1.3 : .3, on ? 1.3 : .3, on ? 1.3 : .3);
+      draw(R.mesh.beacon, mModel(b.x + 3.0, b.y + 11.9, b.z - 3.4, 0)); gl.uniform3f(m.u.uTint, 1, 1, 1);
+    } else if (b.type === 'smelter'){
+      var fl = .75 + .25 * Math.sin(gameT * 9 + b.id) + .15 * Math.sin(gameT * 23); gl.uniform3f(m.u.uTint, fl, fl, fl);
+      draw(R.mesh.glow, M); gl.uniform3f(m.u.uTint, 1, 1, 1);
+    } else if (b.type === 'factory'){
+      draw(R.mesh.door, mModel(b.x, b.y + (b.door || 0) * 3.5, b.z, 0, 1, 1 - (b.door || 0) * .85, 1));
+      draw(R.mesh.crane, mModel(b.x, b.y, b.z + Math.sin(gameT * .22 + b.id) * 4.2 - .4, 0));
+    }
   });
   units.forEach(function(u){
     if (u.dead) return;
