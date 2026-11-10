@@ -91,7 +91,7 @@ Top level:
   Every app's `category` **must** be one of these strings (case-sensitive). Add a
   new category here first if you need one. Current set:
   `Students · Productivity · News & Web · Health & Wellbeing · Kids & Sensory ·
-  Home & Garden · Food & Cooking · Astrology · Games · Creative · Developer ·
+  Home & Garden · Food & Cooking · Astrology · Games · Arcade · Creative · Developer ·
   Utilities`.
 - **`updated`** — bump to today's date when you publish a batch (cosmetic "last
   updated").
