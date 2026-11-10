@@ -889,7 +889,7 @@ function bindMesh(prog, m){
 function draw(m, M){ gl.uniformMatrix4fv(R.main.u.uM, false, M); bindMesh(R.main, m); gl.drawArrays(gl.TRIANGLES, 0, m.n); }
 function fighterMats(f){
   var P = f.pose, s = f.def.s, id = f.def.id, out = [];
-  var rootM = mul(T(f.x, 0, 0), mul(Ry((f.face > 0 ? -.78 : PI + .78) + P.tw * f.face), mul(Sc(s), mul(T(0, SK.hip + P.y, 0), Rz(P.lean)))));
+  var rootM = mul(T(f.x, 0, 0), mul(Ry((f.face > 0 ? -.32 : PI + .32) + P.tw * f.face), mul(Sc(s), mul(T(0, SK.hip + P.y, 0), Rz(P.lean)))));
   var torso = mul(rootM, mul(T(0, SK.waist, 0), Rz(P.torso))), head = mul(torso, mul(T(0, SK.neck, 0), Rz(P.head)));
   var sz = shZ(f.def), hz2 = hipZ(f.def);
   var shA = mul(torso, mul(T(0, SK.shY, sz), Rz(P.shA))), elA = mul(shA, mul(T(0, -SK.uarm, 0), Rz(P.elA)));
