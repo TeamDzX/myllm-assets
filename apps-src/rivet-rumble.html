@@ -1002,8 +1002,8 @@ function updateHUD(){
   el('superBtn').classList.toggle('hidden', !(F[0].meter >= 100 && phase === 'fight'));
 }
 // ---------- cinematics (Wan 2.2 clips, streamed; skipped when unavailable) ----------
-// jsDelivr serves video/mp4 with byte ranges (Safari needs both); raw.githubusercontent is the fallback
-var MEDIA = location.protocol === 'file:' ? 'rr-media/' : 'https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets-xl@main/apps/rivet-rumble/', MEDIA_FB = 'https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/rivet-rumble/';
+// jsDelivr serves video/mp4 with byte ranges (Safari needs both). Pinned to a commit: the xl repo is past jsDelivr's 50 MB @main limit. raw.githubusercontent is the fallback
+var MEDIA = location.protocol === 'file:' ? 'rr-media/' : 'https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets-xl@2e9b64a/apps/rivet-rumble/', MEDIA_FB = 'https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/rivet-rumble/';
 var VIDS = {}, cineDone = null, cineT = 0;
 function preloadCine(keys){ keys.forEach(function(k){ if (VIDS[k]) return; try { var v = document.createElement('video'); v.muted = true; v.playsInline = true; v.setAttribute('playsinline', ''); v.preload = 'auto'; v.onerror = function(){ if (!v._fb && MEDIA !== 'rr-media/'){ v._fb = 1; v.src = MEDIA_FB + k + '.mp4'; v.load(); } }; v.src = MEDIA + k + '.mp4'; v.load(); VIDS[k] = v; } catch (e) {} }); }
 function playCine(key, text, rate, done){
