@@ -55,6 +55,15 @@ h2{font-size:22px;font-weight:900;font-style:italic;letter-spacing:.08em;text-tr
 #rank{font-size:72px;font-weight:900;font-style:italic;color:#ffc857;line-height:1}
 .kv{display:grid;grid-template-columns:1fr auto;gap:4px 26px;font-size:13px;text-align:left;font-variant-numeric:tabular-nums}
 .kv span:nth-child(odd){opacity:.7;letter-spacing:.12em;text-transform:uppercase;font-size:11px;align-self:center}
+#hangar{pointer-events:none}#hangar .btn,#hangar .panel{pointer-events:auto}
+#hangRow{display:flex;gap:14px;align-items:flex-end;justify-content:space-between}
+#jetList{display:flex;flex-direction:column;gap:6px;width:min(190px,44vw)}
+#jetList .btn{display:flex;justify-content:space-between;align-items:center;gap:8px}#jetList small{font-size:9px;opacity:.6;letter-spacing:.1em;white-space:nowrap}
+#jetCard{min-width:0;width:min(330px,52vw);padding:14px 18px;gap:7px}
+#jetCard .sub{font-size:9px;letter-spacing:.2em;color:#9fffe0}#jetName{font-size:20px;font-style:italic;letter-spacing:.1em}
+#jetStats{display:flex;flex-direction:column;gap:5px}#jetSchool{font-size:11px;opacity:.6;border-top:1px solid rgba(140,255,215,.2);padding-top:6px}
+@media (max-width:560px){#hangRow{flex-direction:column;align-items:stretch}#jetList{flex-direction:row;flex-wrap:wrap;width:auto}#jetList .btn{flex:1 1 30%}#jetList small{display:none}#jetCard{width:auto}}
+@media (max-height:430px){#jetCard{padding:9px 14px;gap:4px}#jetSchool{display:none}#jetList .btn{padding:6px 12px}}
 /* touch pad */
 #pad{position:fixed;inset:0;z-index:5;pointer-events:none}
 #pad .tb{position:absolute;pointer-events:auto;border-radius:50%;border:1.5px solid rgba(160,255,215,.55);background:rgba(10,30,36,.34);color:#d6fff0;font-weight:800;font-size:11px;letter-spacing:.1em;display:flex;align-items:center;justify-content:center;touch-action:none}
@@ -100,12 +109,11 @@ h2{font-size:22px;font-weight:900;font-style:italic;letter-spacing:.08em;text-tr
 </div>
 
 <div id="hangar" class="scr hidden">
-  <div class="row"><button class="btn sm" data-back>‹ Back</button><h2>Hangar</h2></div>
+  <div class="row"><button class="btn sm" data-back>‹ Back</button><h2>Hangar</h2><span class="note">Drag the jet to turn it</span></div>
   <div class="grow"></div>
-  <div class="row" style="align-items:flex-end">
-    <div class="col" id="jetList"></div>
-    <div class="grow"></div>
-    <div class="panel" style="min-width:min(300px,50vw)"><b id="jetName" style="font-size:18px;font-style:italic;letter-spacing:.1em"></b><div class="note" id="jetDesc"></div><div id="jetStats" style="display:flex;flex-direction:column;gap:6px"></div></div>
+  <div id="hangRow">
+    <div id="jetList"></div>
+    <div class="panel" id="jetCard"><div class="sub" id="jetCls"></div><b id="jetName"></b><div class="note" id="jetDesc"></div><div id="jetStats"></div><div class="note" id="jetSchool"></div></div>
   </div>
 </div>
 
@@ -326,14 +334,14 @@ function box(b, cx, cy, cz, sx, sy, sz, c, yaw){ var cs = Math.cos(yaw || 0), sn
 // lofted body along z through superellipse rings {z,w,h,x,y}
 function loft(b, R, n, colf, ex){ ex = ex || 2; var G = [], NR = [], i, k;
   for (i = 0; i < R.length; i++){ var r = R[i], row = []; for (k = 0; k <= n; k++){ var a = k / n * TAU, c = Math.cos(a), s = Math.sin(a);
-      row.push([(r.x || 0) + Math.sign(c) * Math.pow(Math.abs(c), 2 / ex) * r.w, r.y + Math.sign(s) * Math.pow(Math.abs(s), 2 / ex) * r.h, r.z]); } G.push(row); }
+      row.push([(r.x || 0) + Math.sign(c) * Math.pow(Math.abs(c), 2 / ex) * r.w, r.y + Math.sign(s) * Math.pow(Math.abs(s), 2 / ex) * (s < 0 && r.hb ? r.hb : r.h), r.z]); } G.push(row); }
   for (i = 0; i < R.length; i++){ var nr = []; for (k = 0; k <= n; k++){ var i0 = Math.max(i - 1, 0), i1 = Math.min(i + 1, R.length - 1), k0 = (k - 1 + n) % n, k1 = (k + 1) % n;
       var nn = cross(sub(G[i][k1], G[i][k0]), sub(G[i1][k], G[i0][k])), rad = sub(G[i][k], [R[i].x || 0, R[i].y, R[i].z]);
       if (len(nn) < 1e-6) nn = rad; nn = norm(nn); if (dot(nn, rad) < 0) nn = scl(nn, -1); nr.push(nn); } NR.push(nr); }
   for (i = 0; i < R.length - 1; i++) for (k = 0; k < n; k++){ var col = colf(i, (k + .5) / n);
     pv(b, G[i][k], NR[i][k], col); pv(b, G[i][k + 1], NR[i][k + 1], col); pv(b, G[i + 1][k + 1], NR[i + 1][k + 1], col);
     pv(b, G[i][k], NR[i][k], col); pv(b, G[i + 1][k + 1], NR[i + 1][k + 1], col); pv(b, G[i + 1][k], NR[i + 1][k], col); }
-  [0, R.length - 1].forEach(function(e){ if (R[e].w < .06) return; var ce = [R[e].x || 0, R[e].y, R[e].z], col = colf(e === 0 ? 0 : R.length - 2, 0, true);
+  [0, R.length - 1].forEach(function(e){ if (R[e].w < .06) return; var ce = [R[e].x || 0, R[e].y, R[e].z], col = colf(e === 0 ? 0 : R.length - 2, 0, e === 0 ? 1 : 2);
     for (var q = 0; q < n; q++) tri(b, ce, G[e][q], G[e][q + 1], col); }); }
 function tube(b, p0, p1, r0, r1, n, c, cap){ var ax = norm(sub(p1, p0)), t = Math.abs(ax[1]) < .9 ? [0, 1, 0] : [1, 0, 0], u = norm(cross(ax, t)), v = cross(ax, u);
   for (var k = 0; k < n; k++){ var a0 = k / n * TAU, a1 = (k + 1) / n * TAU, d0 = add(scl(u, Math.cos(a0)), scl(v, Math.sin(a0))), d1 = add(scl(u, Math.cos(a1)), scl(v, Math.sin(a1)));
@@ -348,11 +356,15 @@ function plate(b, pts, map, t, c){ var n = pts.length, T = [], Bt = [], i;
 function upload(b){ var buf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, buf); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(b), gl.STATIC_DRAW); return { buf: buf, n: b.length / 9 }; }
 
 function jetMesh(g){ var b = [], C = g.col, WH = [.86, .86, .84];
-  loft(b, g.body, 18, function(i, t){ return i <= (g.noseDark || 0) ? C.dark : (t > .58 && t < .92 ? C.belly : C.main); }, g.ex || 2.6);
+  loft(b, g.body, g.n || 18, function(i, t){ return i <= (g.noseDark || 0) ? C.dark : (t > .58 && t < .92 ? C.belly : C.main); }, g.ex || 2.6);
   if (g.canopy) loft(b, g.canopy, 12, function(){ return C.canopy; }, 2);
   if (g.spine) loft(b, g.spine, 10, function(){ return C.main; }, 2.4);
   [1, -1].forEach(function(s){
-    plate(b, g.wing, function(a, z, w){ return [a * s, g.wy + w, z]; }, g.wt || .24, C.main);
+    if (g.wing) plate(b, g.wing, function(a, z, w){ return [a * s, g.wy + w, z]; }, g.wt || .24, C.main);
+    (g.flats || []).forEach(function(F){ var a0 = F.p[0][0], a1 = a0; F.p.forEach(function(q){ if (q[0] > a1) a1 = q[0]; if (q[0] < a0) a0 = q[0]; });
+      plate(b, F.p, function(a, z, w){ var k = (a - a0) / ((a1 - a0) || 1); return [a * s, F.y + (a - a0) * Math.tan(F.dih || 0) + w * lerp(1, F.tt == null ? .35 : F.tt, k), z]; }, F.t, C[F.c]); });
+    (g.fins2 || []).forEach(function(F){ if (F.mv) return; plate(b, F.p, function(a, z, w){ return [s * (F.x + a * Math.sin(F.cant) + w * Math.cos(F.cant)), F.y + a * Math.cos(F.cant) - w * Math.sin(F.cant), z]; }, F.t || .16, C[F.c]); });
+    (g.lofts || []).forEach(function(L){ if (!L.x && s < 0) return; loft(b, L.R.map(function(r){ return { z: r.z, w: r.w, h: r.h, hb: r.hb, y: r.y, x: s * L.x }; }), L.n || 10, function(i, t, cap){ return cap === 1 && L.cap ? L.cap : (cap === 2 && L.capB ? L.capB : (L.R[i].d ? C.noz : C[L.c])); }, L.ex); });
     if (g.wingTip) plate(b, g.wingTip, function(a, z, w){ return [a * s, g.wy + w, z]; }, (g.wt || .24) + .05, C.accent);
     if (g.canard) plate(b, g.canard, function(a, z, w){ return [a * s, g.cy + w, z]; }, .12, C.main);
     if (g.stab) plate(b, g.stab, function(a, z, w){ return [a * s, g.sy + w, z]; }, .15, C.main);
@@ -366,24 +378,72 @@ function jetMesh(g){ var b = [], C = g.col, WH = [.86, .86, .84];
   if (g.fin){ var F = g.fin, fm = function(a, z, w){ return [w, F.y + a, z]; }; plate(b, F.pts, fm, .18, C.main); if (F.tip) plate(b, F.tip, fm, .23, C.accent); }
   if (g.tstab) [1, -1].forEach(function(s){ plate(b, g.tstab.pts, function(a, z, w){ return [a * s, g.tstab.y + w, z]; }, .3, C.main); });
   (g.noz || []).forEach(function(x){ tube(b, [x, g.ny, g.nz0], [x, g.ny, g.nz1], g.nr, g.nr * .86, 12, [.2, .19, .18], [1.3, .5, .18]); });
-  return upload(b); }
-var KES = { main: [.42, .46, .5], belly: [.54, .56, .59], dark: [.2, .22, .26], accent: [.1, .58, .58], canopy: [.05, .09, .13] };
-var JK = { noseDark: 1, ex: 2.6,
-  body: [{ z: 8.8, w: .04, h: .04, y: 0 }, { z: 7.8, w: .36, h: .32, y: .04 }, { z: 6.4, w: .68, h: .6, y: .1 }, { z: 4.8, w: .92, h: .78, y: .14 }, { z: 3.2, w: 1.15, h: .86, y: .12 }, { z: 1.6, w: 1.6, h: .86, y: .02 }, { z: -1, w: 1.95, h: .82, y: -.04 }, { z: -4, w: 1.92, h: .78, y: -.04 }, { z: -6.3, w: 1.72, h: .72, y: -.05 }, { z: -7.1, w: 1.55, h: .66, y: -.05 }],
-  canopy: [{ z: 6.1, w: .05, h: .05, y: .7 }, { z: 5.3, w: .42, h: .36, y: .82 }, { z: 4.2, w: .5, h: .48, y: .92 }, { z: 3.0, w: .48, h: .44, y: .92 }, { z: 1.9, w: .34, h: .28, y: .84 }, { z: 1.2, w: .05, h: .05, y: .74 }],
-  spine: [{ z: 2.4, w: .42, h: .3, y: .72 }, { z: -1.5, w: .55, h: .38, y: .72 }, { z: -5.2, w: .38, h: .22, y: .62 }, { z: -6.6, w: .05, h: .05, y: .55 }],
-  wing: [[1.2, 3.0], [7.4, -4.4], [7.4, -5.6], [1.2, -6.6]], wy: -.12, wt: .22, wingTip: [[6.3, -3.05], [7.45, -4.4], [7.45, -5.6], [6.3, -5.56]],
-  canard: [[.9, 5.1], [2.9, 4.1], [2.9, 3.65], [.9, 3.8]], cy: .28,
-  tails: { x: 1.25, y: .55, cant: .26, pts: [[0, -2.8], [3.1, -5.3], [3.1, -6.7], [0, -7.0]], tip: [[2.45, -4.78], [3.15, -5.3], [3.15, -6.7], [2.45, -6.78]] },
-  intake: { x: 1.45, y: -.42, w: .55, h: .55, z0: 3.0, z1: -.8 }, pylons: [3.4, 5.2], noz: [.82, -.82], ny: -.05, nz0: -6.9, nz1: -8.1, nr: .7, col: KES };
+  var surf = []; [1, -1].forEach(function(s){
+    (g.ctl || []).forEach(function(F){ var sb = [], hg = F.hinge; plate(sb, F.p, function(a, z, w){ return [a * s, F.y + w, z]; }, F.t || .12, C[F.c || 'main']);
+      surf.push({ mesh: upload(sb), h: [s * hg[0][0], F.y, hg[0][1]], k: norm([s * (hg[1][0] - hg[0][0]), 0, hg[1][1] - hg[0][1]]), s: s, mix: F.mix, max: F.max || .45, fin: 0 }); });
+    (g.fins2 || []).forEach(function(F){ if (!F.mv) return; var sb = []; plate(sb, F.p, function(a, z, w){ return [s * (F.x + a * Math.sin(F.cant) + w * Math.cos(F.cant)), F.y + a * Math.cos(F.cant) - w * Math.sin(F.cant), z]; }, F.t || .16, C[F.c]);
+      surf.push({ mesh: upload(sb), h: [s * F.x, F.y, F.mv.z], k: [s * Math.sin(F.cant), Math.cos(F.cant), 0], s: s, mix: F.mv, max: F.mv.max || .3, fin: 1 }); }); });
+  var out = upload(b); out.surf = surf; return out; }
 function ext(a, o){ var r = {}, k; for (k in a) r[k] = a[k]; for (k in o) r[k] = o[k]; return r; }
-var JW = ext(JK, { canard: null, ex: 3.2, wing: [[1.1, 4.2], [6.9, -4.9], [6.9, -5.7], [3.6, -6.9], [1.1, -6.2]], wingTip: [[5.9, -3.3], [6.95, -4.9], [6.95, -5.7], [5.9, -6.05]],
-  tails: { x: 1.5, y: .45, cant: .62, pts: [[0, -3.2], [3.3, -5.9], [3.3, -7.0], [0, -7.1]], tip: [[2.6, -5.35], [3.35, -5.9], [3.35, -7.0], [2.6, -7.05]] }, pylons: [3.3],
-  col: { main: [.25, .25, .31], belly: [.32, .32, .38], dark: [.13, .13, .17], accent: [.5, .32, .85], canopy: [.16, .1, .04] } });
-var JB = ext(JK, { canard: null, wing: [[1.3, 2.4], [8.2, -2.2], [8.2, -3.9], [1.3, -4.6]], wingTip: [[7.2, -1.55], [8.25, -2.2], [8.25, -3.9], [7.2, -4.0]], wt: .3,
-  stab: [[1.2, -4.9], [4.4, -6.6], [4.4, -7.6], [1.2, -7.4]], sy: -.05, pylons: [3.2, 4.8, 6.4],
-  tails: { x: 1.3, y: .55, cant: .1, pts: [[0, -2.4], [4.0, -5.4], [4.0, -6.9], [0, -7.0]], tip: [[3.3, -4.9], [4.05, -5.4], [4.05, -6.9], [3.3, -6.92]] },
-  col: { main: [.62, .56, .43], belly: [.72, .68, .58], dark: [.3, .28, .24], accent: [.3, .4, .26], canopy: [.05, .09, .13] } });
+var GOLD = [.3, .2, .05];
+// KESTREL: western 5th-gen school. Chined body, diamond wing, canted twin tails, flat nozzles
+var JK = { noseDark: 0, ex: 1.55, n: 20,
+  body: [{ z: 9.4, w: .04, h: .04, y: 0 }, { z: 8.2, w: .46, h: .3, hb: .22, y: .02 }, { z: 6.6, w: .98, h: .55, hb: .34, y: .05 }, { z: 4.8, w: 1.4, h: .76, hb: .46, y: .06 }, { z: 2.9, w: 1.95, h: .84, hb: .6, y: .04 }, { z: 1, w: 2.3, h: .84, hb: .7, y: 0 }, { z: -2, w: 2.4, h: .78, hb: .7, y: 0 }, { z: -5.5, w: 2.2, h: .66, hb: .6, y: 0 }, { z: -7.3, w: 2.0, h: .5, hb: .48, y: 0 }],
+  canopy: [{ z: 7.0, w: .05, h: .05, y: .46 }, { z: 6.2, w: .4, h: .34, y: .6 }, { z: 5.0, w: .52, h: .5, y: .74 }, { z: 3.8, w: .5, h: .46, y: .8 }, { z: 2.8, w: .36, h: .28, y: .78 }, { z: 2.2, w: .05, h: .05, y: .72 }],
+  lofts: [{ x: 1.62, n: 8, ex: 5, c: 'dark', cap: [.03, .03, .04], R: [{ z: 3.9, w: .5, h: .5, y: -.2 }, { z: 3.3, w: .62, h: .62, y: -.2 }, { z: 1.2, w: .66, h: .6, y: -.2 }] },
+    { x: .98, n: 8, ex: 6, c: 'noz', capB: [1.3, .5, .18], R: [{ z: -7.0, w: .78, h: .46, y: 0 }, { z: -8.4, w: .66, h: .34, y: 0 }] }],
+  flats: [{ p: [[2.2, 2.7], [6.9, -2.5], [6.9, -3.7], [5.9, -4.04], [5.9, -3.14], [2.5, -4.3], [2.5, -5.2], [2.2, -5.3]], y: 0, t: .34, c: 'main' }, { p: [[6.0, -1.5], [6.95, -2.5], [6.95, -3.7], [6.0, -4.05]], y: 0, t: .2, tt: 1, c: 'accent' },],
+  ctl: [{ p: [[2.5, -4.3], [5.9, -3.14], [5.9, -4.04], [2.5, -5.2]], y: 0, t: .13, hinge: [[2.5, -4.3], [5.9, -3.14]], mix: { p: .5, r: 1, b: .5 }, max: .5 },
+    { p: [[2.1, -4.9], [5.0, -7.1], [5.0, -8.0], [2.1, -8.5]], y: -.05, t: .16, hinge: [[2.1, -6.7], [5.0, -7.55]], mix: { p: 1, r: .35 }, max: .4 }],
+  fins2: [{ x: 1.9, y: .45, cant: .46, p: [[0, -2.5], [2.9, -5.0], [2.9, -6.4], [0, -7.2]], c: 'main', mv: { z: -5.2, y: 1, b: 1 } }, { x: 1.9, y: .45, cant: .46, p: [[2.25, -4.45], [2.95, -5.0], [2.95, -6.4], [2.25, -6.6]], c: 'accent', t: .2, mv: { z: -5.2, y: 1, b: 1 } }],
+  col: { main: [.43, .46, .5], belly: [.5, .53, .57], dark: [.27, .29, .33], accent: [.1, .5, .52], canopy: GOLD, noz: [.2, .2, .21] } };
+// WRAITH: 6th-gen tailless. Flat blended body, cranked lambda wing, no tails, exhaust slots on top
+var JW = { noseDark: 0, ex: 1.4, n: 20,
+  body: [{ z: 9.6, w: .04, h: .04, y: 0 }, { z: 8.2, w: .52, h: .3, hb: .18, y: 0 }, { z: 6.2, w: 1.25, h: .56, hb: .28, y: 0 }, { z: 3.6, w: 2.25, h: .72, hb: .38, y: 0 }, { z: 0, w: 3.05, h: .72, hb: .44, y: 0 }, { z: -4, w: 3.05, h: .56, hb: .4, y: 0 }, { z: -7, w: 2.2, h: .34, hb: .3, y: 0 }, { z: -8.2, w: 1.5, h: .16, hb: .16, y: 0 }],
+  canopy: [{ z: 7.0, w: .05, h: .05, y: .36 }, { z: 6.0, w: .42, h: .3, y: .5 }, { z: 4.6, w: .52, h: .42, y: .62 }, { z: 3.2, w: .44, h: .3, y: .66 }, { z: 2.2, w: .05, h: .05, y: .6 }],
+  lofts: [{ x: 1.25, n: 8, ex: 3, c: 'dark', cap: [.03, .03, .04], R: [{ z: 1.2, w: .5, h: .16, y: .64 }, { z: .4, w: .58, h: .3, y: .62 }, { z: -2.2, w: .55, h: .2, y: .58 }] },
+    { x: 1.0, n: 8, ex: 6, c: 'noz', capB: [1.3, .5, .18], R: [{ z: -6.2, w: .8, h: .2, y: .36 }, { z: -7.7, w: .74, h: .13, y: .3 }] }],
+  flats: [{ p: [[3.0, 2.9], [8.6, -4.3], [8.6, -5.3], [8.2, -5.52], [8.2, -4.72], [6.1, -5.88], [6.1, -6.68], [5.7, -6.9], [5.4, -6.7], [5.4, -5.9], [3.3, -4.5], [3.3, -5.3], [3.0, -5.1]], y: 0, t: .36, tt: .25, c: 'main' }, { p: [[7.5, -2.9], [8.65, -4.3], [8.65, -4.75], [7.5, -4.3]], y: 0, t: .2, tt: 1, c: 'accent' }],
+  ctl: [{ p: [[6.1, -5.88], [8.2, -4.72], [8.2, -5.52], [6.1, -6.68]], y: 0, t: .12, hinge: [[6.1, -5.88], [8.2, -4.72]], mix: { p: .4, r: 1, b: -.7 }, max: .5 },
+    { p: [[3.3, -4.5], [5.4, -5.9], [5.4, -6.7], [3.3, -5.3]], y: 0, t: .14, hinge: [[3.3, -4.5], [5.4, -5.9]], mix: { p: 1, r: .3, b: .7 }, max: .45 }],
+  col: { main: [.21, .21, .26], belly: [.27, .27, .32], dark: [.12, .12, .15], accent: [.46, .3, .82], canopy: [.26, .17, .04], noz: [.14, .14, .15] } };
+// BULWARK: heavy 6th-gen tailless diamond with three engines and a dorsal intake
+var JB = { noseDark: 0, ex: 1.4, n: 20,
+  body: [{ z: 10.2, w: .04, h: .04, y: 0 }, { z: 8.6, w: .62, h: .36, hb: .24, y: 0 }, { z: 6.2, w: 1.55, h: .72, hb: .4, y: 0 }, { z: 3, w: 2.85, h: .92, hb: .52, y: 0 }, { z: -1, w: 3.6, h: .92, hb: .56, y: 0 }, { z: -5, w: 3.4, h: .72, hb: .5, y: 0 }, { z: -8, w: 2.6, h: .42, hb: .36, y: 0 }, { z: -9.2, w: 2.2, h: .26, hb: .26, y: 0 }],
+  canopy: [{ z: 7.6, w: .05, h: .05, y: .42 }, { z: 6.6, w: .5, h: .36, y: .58 }, { z: 5.2, w: .62, h: .5, y: .74 }, { z: 3.8, w: .56, h: .4, y: .84 }, { z: 2.8, w: .05, h: .05, y: .84 }],
+  lofts: [{ x: 0, n: 10, ex: 3, c: 'main', cap: [.03, .03, .04], R: [{ z: 2.4, w: .8, h: .3, y: .92 }, { z: 1.2, w: .95, h: .5, y: .96 }, { z: -4, w: .9, h: .44, y: .8 }, { z: -7.6, w: .7, h: .2, y: .5 }] },
+    { x: 2.1, n: 8, ex: 5, c: 'dark', cap: [.03, .03, .04], R: [{ z: 4.2, w: .55, h: .4, y: -.42 }, { z: 3.4, w: .7, h: .5, y: -.44 }, { z: .5, w: .7, h: .4, y: -.44 }] },
+    { x: 0, n: 8, ex: 6, c: 'noz', capB: [1.3, .5, .18], R: [{ z: -8.6, w: .62, h: .26, y: .1 }, { z: -9.9, w: .54, h: .18, y: .1 }] }, { x: 1.45, n: 8, ex: 6, c: 'noz', capB: [1.3, .5, .18], R: [{ z: -8.4, w: .62, h: .26, y: .05 }, { z: -9.7, w: .54, h: .18, y: .05 }] }],
+  flats: [{ p: [[3.2, 3.7], [9.3, -5.5], [9.3, -6.5], [8.9, -6.63], [8.9, -5.63], [6.3, -6.48], [6.3, -7.48], [6.0, -7.58], [6.0, -6.58], [3.6, -7.37], [3.6, -8.37], [3.2, -8.5]], y: 0, t: .42, tt: .22, c: 'main' }, { p: [[8.1, -3.7], [9.35, -5.5], [9.35, -6.0], [8.1, -5.4]], y: 0, t: .2, tt: 1, c: 'accent' }, { p: [[1.6, 7.0], [3.3, 3.7], [3.3, 1.2], [1.6, 3.2]], y: 0, t: .2, c: 'belly' }],
+  ctl: [{ p: [[6.3, -6.48], [8.9, -5.63], [8.9, -6.63], [6.3, -7.48]], y: 0, t: .13, hinge: [[6.3, -6.48], [8.9, -5.63]], mix: { p: .4, r: 1, b: -.7 }, max: .5 },
+    { p: [[3.6, -7.37], [6.0, -6.58], [6.0, -7.58], [3.6, -8.37]], y: 0, t: .16, hinge: [[3.6, -7.37], [6.0, -6.58]], mix: { p: 1, r: .3, b: .7 }, max: .45 }],
+  col: { main: [.5, .47, .4], belly: [.58, .56, .5], dark: [.26, .25, .22], accent: [.28, .36, .25], canopy: GOLD, noz: [.17, .17, .17] } };
+// SABLE: Russian-school 5th-gen. Wide flat centre body, spaced nacelles, leading-edge extensions, tail sting
+var JS = { noseDark: 0, ex: 1.6, n: 20,
+  body: [{ z: 9.8, w: .04, h: .04, y: .1 }, { z: 8.4, w: .42, h: .36, hb: .26, y: .12 }, { z: 6.4, w: .88, h: .62, hb: .4, y: .14 }, { z: 4.4, w: 1.3, h: .72, hb: .44, y: .14 }, { z: 2.4, w: 2.3, h: .56, hb: .3, y: .12 }, { z: -1, w: 2.95, h: .44, hb: .26, y: .1 }, { z: -5, w: 2.85, h: .4, hb: .24, y: .1 }, { z: -7.2, w: 2.4, h: .28, hb: .2, y: .1 }],
+  canopy: [{ z: 7.4, w: .05, h: .05, y: .6 }, { z: 6.6, w: .4, h: .34, y: .74 }, { z: 5.4, w: .5, h: .5, y: .88 }, { z: 4.2, w: .46, h: .42, y: .92 }, { z: 3.2, w: .05, h: .05, y: .86 }],
+  lofts: [{ x: 0, n: 10, ex: 2.4, c: 'main', R: [{ z: 3.6, w: .52, h: .4, y: .66 }, { z: 0, w: .6, h: .36, y: .5 }, { z: -4.5, w: .4, h: .2, y: .36 }, { z: -6, w: .05, h: .05, y: .3 }] },
+    { x: 1.78, n: 12, ex: 2.6, c: 'belly', cap: [.03, .03, .04], capB: [1.3, .5, .18], R: [{ z: 3.5, w: .66, h: .5, y: -.42 }, { z: 2.6, w: .74, h: .62, y: -.44 }, { z: -5.6, w: .8, h: .7, y: -.34 }, { z: -7.2, w: .74, h: .7, y: -.3, d: 1 }, { z: -8.6, w: .58, h: .58, y: -.3, d: 1 }] },
+    { x: 0, n: 8, ex: 2, c: 'dark', R: [{ z: -5.5, w: .5, h: .26, y: .1 }, { z: -8.4, w: .3, h: .2, y: .1 }, { z: -10, w: .04, h: .04, y: .1 }] }],
+  flats: [{ p: [[2.9, 2.7], [7.4, -3.2], [7.4, -4.4], [5.5, -4.91], [5.5, -4.06], [3.2, -4.67], [3.2, -5.52], [2.9, -5.6]], y: .1, t: .32, c: 'main' }, { p: [[5.6, -.85], [7.45, -3.2], [7.45, -4.4], [5.6, -4.9]], y: .1, t: .22, tt: 1, c: 'accent' },],
+  ctl: [{ p: [[3.2, -4.67], [5.5, -4.06], [5.5, -4.91], [3.2, -5.52]], y: .1, t: .13, hinge: [[3.2, -4.67], [5.5, -4.06]], mix: { p: .5, r: 1, b: .5 }, max: .5 },
+    { p: [[2.7, -5.5], [5.3, -7.7], [5.3, -8.7], [2.7, -8.2]], y: .06, t: .16, hinge: [[2.7, -6.9], [5.3, -8.2]], mix: { p: 1, r: .4 }, max: .42 },
+    { p: [[1.2, 5.6], [2.95, 3.0], [2.95, 1.6], [1.2, 2.4]], y: .12, t: .14, c: 'accent', hinge: [[1.2, 2.4], [2.95, 1.6]], mix: { p: .6 }, max: .32 }],
+  fins2: [{ x: 2.35, y: .3, cant: .44, p: [[0, -4.3], [2.4, -6.2], [2.4, -7.3], [0, -7.5]], c: 'accent', mv: { z: -6.3, y: 1, b: 1 } }],
+  col: { main: [.37, .45, .57], belly: [.56, .63, .71], dark: [.2, .22, .27], accent: [.2, .27, .38], canopy: GOLD, noz: [.2, .2, .21] } };
+// MANTIS: Chinese-school 5th-gen. Long chined body, canards, delta wing, small canted tails and ventral fins
+var JM = { noseDark: 0, ex: 1.6, n: 20,
+  body: [{ z: 10.8, w: .04, h: .04, y: 0 }, { z: 9.4, w: .4, h: .32, hb: .24, y: .02 }, { z: 7.4, w: .9, h: .6, hb: .38, y: .05 }, { z: 5.2, w: 1.3, h: .8, hb: .5, y: .06 }, { z: 2.6, w: 1.75, h: .9, hb: .66, y: .04 }, { z: 0, w: 2.0, h: .86, hb: .7, y: 0 }, { z: -4, w: 2.0, h: .76, hb: .66, y: 0 }, { z: -7.4, w: 1.72, h: .6, hb: .56, y: 0 }, { z: -8.6, w: 1.5, h: .5, hb: .5, y: 0 }],
+  canopy: [{ z: 8.2, w: .05, h: .05, y: .5 }, { z: 7.4, w: .4, h: .34, y: .64 }, { z: 6.2, w: .5, h: .48, y: .8 }, { z: 5.0, w: .46, h: .4, y: .86 }, { z: 4.0, w: .05, h: .05, y: .82 }],
+  lofts: [{ x: 1.42, n: 8, ex: 3, c: 'dark', cap: [.03, .03, .04], R: [{ z: 4.6, w: .4, h: .44, y: -.2 }, { z: 3.9, w: .58, h: .62, y: -.22 }, { z: 1.6, w: .62, h: .6, y: -.22 }] },
+    { x: .8, n: 12, ex: 2, c: 'noz', capB: [1.3, .5, .18], R: [{ z: -8.4, w: .7, h: .7, y: 0 }, { z: -9.7, w: .58, h: .58, y: 0 }] }],
+  flats: [{ p: [[1.9, 1.6], [6.9, -5.6], [6.9, -6.8], [5.8, -7.0], [5.8, -6.05], [4.2, -6.34], [4.2, -7.29], [4.0, -7.32], [4.0, -6.37], [2.3, -6.68], [2.3, -7.63], [1.9, -7.7]], y: -.05, t: .36, c: 'main' }, { p: [[5.9, -4.15], [6.95, -5.6], [6.95, -6.8], [5.9, -6.98]], y: -.05, t: .22, tt: 1, c: 'accent' },
+    { p: [[1.2, 3.4], [2.0, 1.6], [2.0, -1], [1.2, -1]], y: -.05, t: .2, tt: 1, c: 'belly' }],
+  ctl: [{ p: [[4.2, -6.34], [5.8, -6.05], [5.8, -7.0], [4.2, -7.29]], y: -.05, t: .13, hinge: [[4.2, -6.34], [5.8, -6.05]], mix: { p: .4, r: 1, b: -.6 }, max: .5 },
+    { p: [[2.3, -6.68], [4.0, -6.37], [4.0, -7.32], [2.3, -7.63]], y: -.05, t: .15, hinge: [[2.3, -6.68], [4.0, -6.37]], mix: { p: 1, r: .3, b: .6 }, max: .45 },
+    { p: [[1.5, 5.1], [3.9, 3.4], [3.9, 2.75], [1.5, 2.7]], y: .34, t: .12, hinge: [[1.5, 3.75], [3.9, 3.1]], mix: { p: -.8, r: -.25, b: -.6 }, max: .4 }],
+  fins2: [{ x: 1.5, y: .5, cant: .5, p: [[0, -4.9], [2.5, -7.0], [2.5, -8.0], [0, -8.3]], c: 'main', mv: { z: -6.8, y: 1, b: 1 } }, { x: 1.5, y: .5, cant: .5, p: [[1.9, -6.5], [2.55, -7.0], [2.55, -8.0], [1.9, -8.07]], c: 'accent', t: .2, mv: { z: -6.8, y: 1, b: 1 } }, { x: 1.5, y: -.4, cant: 2.5, p: [[0, -5.6], [1.2, -6.8], [1.2, -7.8], [0, -8.0]], c: 'dark' }],
+  col: { main: [.2, .21, .24], belly: [.27, .28, .31], dark: [.11, .11, .13], accent: [.8, .56, .1], canopy: GOLD, noz: [.16, .16, .17] } };
 var VCOL = { main: [.47, .17, .15], belly: [.56, .5, .47], dark: [.19, .19, .22], accent: [.88, .72, .22], canopy: [.05, .07, .1] };
 var JV = { noseDark: 1, ex: 2.3,
   body: [{ z: 8.0, w: .04, h: .04, y: 0 }, { z: 6.8, w: .35, h: .32, y: .05 }, { z: 5, w: .68, h: .62, y: .08 }, { z: 3, w: .88, h: .76, y: .08 }, { z: 1, w: 1.2, h: .8, y: 0 }, { z: -2, w: 1.2, h: .78, y: 0 }, { z: -5.5, w: .95, h: .7, y: 0 }, { z: -7, w: .8, h: .64, y: 0 }],
@@ -408,7 +468,7 @@ var JBM = { ex: 2.4, noseDark: 0, body: [{ z: 16, w: .2, h: .2, y: 0 }, { z: 14,
 var OLV = [.33, .37, .25], OLD = [.22, .25, .17], DRK = [.1, .1, .11], CON = [.56, .55, .52];
 function gndMesh(f){ var b = []; f(b); return upload(b); }
 var MESH = {
-  kestrel: jetMesh(JK), wraith: jetMesh(JW), bulwark: jetMesh(JB), vulture: jetMesh(JV), ace: jetMesh(JA), drone: jetMesh(JD), transport: jetMesh(JT), bomber: jetMesh(JBM),
+  kestrel: jetMesh(JK), wraith: jetMesh(JW), bulwark: jetMesh(JB), sable: jetMesh(JS), mantis: jetMesh(JM), vulture: jetMesh(JV), ace: jetMesh(JA), drone: jetMesh(JD), transport: jetMesh(JT), bomber: jetMesh(JBM),
   missile: gndMesh(function(b){ var W = [.9, .9, .88]; tube(b, [0, 0, 1.3], [0, 0, -1.5], .16, .16, 8, W, [2.2, 1.2, .5]); tube(b, [0, 0, 2.1], [0, 0, 1.3], .01, .16, 8, [.3, .3, .32], false);
     box(b, 0, 0, -1.2, 1.0, .04, .6, [.5, .1, .1]); box(b, 0, 0, -1.2, .04, 1.0, .6, [.5, .1, .1]); }),
   sam: gndMesh(function(b){ box(b, 0, .7, 0, 6, 1.4, 9, OLV); box(b, 0, 2.0, 3.2, 3.2, 1.3, 2.2, OLD); for (var i = 0; i < 4; i++){ var x = (i & 1 ? 1 : -1) * .75, y = i & 2 ? 2.9 : 1.9; tube(b, [x, y, -3.6], [x, y + 3.2, 1.6], .5, .5, 8, OLD, [.75, .75, .7]); }
@@ -433,13 +493,15 @@ var MESH = {
 // GAME STATE
 // ===================================================================
 var PLANES = [
-  { id: 'kestrel', name: 'KESTREL', desc: 'Balanced delta-canard multirole fighter. Does everything well.', mesh: 'kestrel', hp: 100, pr: 1.55, rr: 3.4, yr: .55, vmin: 85, cruise: 175, vmax: 300, msl: 48, flr: 30, rail: 2.6, gun: 3, rad: 9, bars: [.65, .7, .6, .6] },
-  { id: 'wraith', name: 'WRAITH', desc: 'Agile interceptor. Fast and brutal in a turn, but it cannot take many hits.', mesh: 'wraith', hp: 78, pr: 1.9, rr: 4.2, yr: .65, vmin: 90, cruise: 185, vmax: 330, msl: 36, flr: 24, rail: 2.2, gun: 3, rad: 9, bars: [.9, 1, .4, .45] },
-  { id: 'bulwark', name: 'BULWARK', desc: 'Heavy strike fighter. Tough airframe and a deep missile load.', mesh: 'bulwark', hp: 145, pr: 1.3, rr: 2.8, yr: .45, vmin: 80, cruise: 165, vmax: 280, msl: 66, flr: 36, rail: 3.0, gun: 4, rad: 10, bars: [.5, .45, 1, .85] }
+  { id: 'kestrel', name: 'KESTREL', cls: '5th-generation air-superiority fighter', school: 'Western school: chined body, diamond wing, canted twin tails, flat nozzles.', desc: 'The all-rounder. Good at everything, with no weak spot.', mesh: 'kestrel', hp: 100, pr: 1.55, rr: 3.4, yr: .55, vmin: 85, cruise: 175, vmax: 300, msl: 48, flr: 30, rail: 2.6, gun: 3, rad: 9, stealth: 1.25, span: 6.9, tipz: -3, burn: { x: [.98, -.98], y: 0, z: -8.6, r: .72 }, bars: [.65, .7, .6, .6, .6] },
+  { id: 'wraith', name: 'WRAITH', cls: '6th-generation stealth interceptor', school: 'Next-generation tailless design: flat blended body, cranked wing, no tail fins at all.', desc: 'Very hard to lock on to and very fast, but it cannot take many hits.', mesh: 'wraith', hp: 80, pr: 1.65, rr: 3.7, yr: .5, vmin: 90, cruise: 190, vmax: 335, msl: 40, flr: 24, rail: 2.3, gun: 3, rad: 9, stealth: 2.1, span: 8.6, tipz: -4.8, burn: { x: [1, -1], y: .3, z: -7.9, r: .6 }, bars: [.95, .78, .4, .5, 1] },
+  { id: 'bulwark', name: 'BULWARK', cls: '6th-generation heavy strike fighter', school: 'Next-generation tailless diamond: three engines, dorsal intake, huge internal bays.', desc: 'A flying arsenal. Tough airframe, the deepest missile load, slow in a turn.', mesh: 'bulwark', hp: 150, pr: 1.25, rr: 2.6, yr: .42, vmin: 80, cruise: 168, vmax: 290, msl: 72, flr: 36, rail: 2.8, gun: 4, rad: 11, stealth: 1.6, span: 9.3, tipz: -6, burn: { x: [0, 1.45, -1.45], y: .08, z: -10, r: .6 }, bars: [.55, .42, 1, 1, .75] },
+  { id: 'sable', name: 'SABLE', cls: '5th-generation supermanoeuvrable fighter', school: 'Russian school: wide flat body, widely spaced engines, moving leading-edge extensions, tail sting.', desc: 'Nothing out-turns it and it flies slower than anything before stalling. Easy to see on radar.', mesh: 'sable', hp: 95, pr: 1.95, rr: 4.2, yr: .7, vmin: 68, cruise: 172, vmax: 310, msl: 40, flr: 30, rail: 2.5, gun: 3, rad: 10, stealth: 1, span: 7.4, tipz: -3.8, burn: { x: [1.78, -1.78], y: -.3, z: -8.9, r: .7 }, bars: [.72, 1, .55, .5, .3] },
+  { id: 'mantis', name: 'MANTIS', cls: '5th-generation long-range interceptor', school: 'Chinese school: long chined body, canards ahead of a big delta wing, small canted tails, ventral fins.', desc: 'The fastest jet in the hangar with a big missile load. Wide turns.', mesh: 'mantis', hp: 95, pr: 1.4, rr: 3.1, yr: .5, vmin: 92, cruise: 195, vmax: 345, msl: 58, flr: 28, rail: 2.4, gun: 3, rad: 10, stealth: 1.35, span: 6.9, tipz: -6.2, burn: { x: [.8, -.8], y: 0, z: -9.9, r: .72 }, bars: [1, .55, .55, .8, .65] }
 ];
 var UNITS = {
-  fighter: { type: 'fighter', label: 'FIGHTER', mesh: 'vulture', hp: 30, pr: 1.2, rr: 2.6, yr: .45, vmin: 110, cruise: 175, vmax: 265, rad: 10, score: 300, msl: 1, gun: 1, flareP: .3, flr: 2 },
-  ace: { type: 'ace', label: 'ACE', mesh: 'ace', hp: 60, pr: 1.5, rr: 3.3, yr: .55, vmin: 110, cruise: 195, vmax: 300, rad: 10, score: 800, msl: 1, gun: 1, flareP: .75, flr: 5 },
+  fighter: { type: 'fighter', label: 'FIGHTER', burn: { x: [0], y: 0, z: -8.1, r: .9 }, mesh: 'vulture', hp: 30, pr: 1.2, rr: 2.6, yr: .45, vmin: 110, cruise: 175, vmax: 265, rad: 10, score: 300, msl: 1, gun: 1, flareP: .3, flr: 2 },
+  ace: { type: 'ace', label: 'ACE', burn: { x: [0], y: 0, z: -8.1, r: .9 }, mesh: 'ace', hp: 60, pr: 1.5, rr: 3.3, yr: .55, vmin: 110, cruise: 195, vmax: 300, rad: 10, score: 800, msl: 1, gun: 1, flareP: .75, flr: 5 },
   drone: { type: 'drone', label: 'DRONE', mesh: 'drone', hp: 8, pr: .7, rr: 1.6, yr: .3, vmin: 90, cruise: 105, vmax: 120, rad: 8, score: 100, scale: 1.6 },
   bomber: { type: 'bomber', label: 'BOMBER', mesh: 'bomber', hp: 520, pr: .35, rr: .8, yr: .2, vmin: 110, cruise: 120, vmax: 130, rad: 24, score: 2500, gun: 2 },
   transport: { type: 'transport', label: 'SHEPHERD', mesh: 'transport', hp: 240, pr: .4, rr: .9, yr: .22, vmin: 80, cruise: 88, vmax: 95, rad: 22, score: 0 }
@@ -475,7 +537,7 @@ function flyStep(e, pIn, rIn, yIn, thr, dt){ var s = e.spec, sf = clamp((e.spd -
   var tg = thr >= 0 ? s.cruise + thr * (s.vmax - s.cruise) : s.cruise + thr * (s.cruise - s.vmin);
   e.spd += (tg - e.spd) * (thr > 0 ? .9 : .7) * dt - e.f[1] * 36 * dt; e.spd = clamp(e.spd, s.vmin * .75, s.vmax * 1.18);
   if (e.spd < s.vmin * 1.08){ var st = clamp((s.vmin * 1.08 - e.spd) / (s.vmin * .3), 0, 1) * 1.3 * dt; e.f = norm([e.f[0], e.f[1] - st, e.f[2]]); e.stall = true; } else e.stall = false;
-  e.f = norm(e.f); e.r = norm(cross(e.f, e.u)); e.u = cross(e.r, e.f); e.v = scl(e.f, e.spd); e.p = madd(e.p, e.v, dt); e.thr = thr; e.pIn = pIn; }
+  e.f = norm(e.f); e.r = norm(cross(e.f, e.u)); e.u = cross(e.r, e.f); e.v = scl(e.f, e.spd); e.p = madd(e.p, e.v, dt); e.thr = thr; e.pIn = pIn; e.rIn = rIn || 0; e.yIn = yIn || 0; }
 function steerTo(e, T, agg){ var d = sub(T, e.p), D = len(d) || 1; d = scl(d, 1 / D);
   var lx = dot(d, e.r), ly = dot(d, e.u), lz = dot(d, e.f), off = Math.acos(clamp(lz, -1, 1)), bank = Math.atan2(-e.r[1], e.u[1]), rIn, pIn;
   if (off < .14){ rIn = clamp(-bank * 1.2 + lx * 5, -1, 1); pIn = clamp(ly * 7, -1, 1); }
@@ -504,7 +566,7 @@ function aiAir(e, dt){ var A = e.ai, T, tp, thr = 0, c; A.t -= dt; A.mcd -= dt;
     if (D < 190 && ang > 1.2){ A.st = 'extend'; A.t = 2 + rnd() * 1.5; A.dir = norm([e.f[0] + rs() * .6, .12, e.f[2] + rs() * .6]); }
     thr = D > 1300 ? 1 : (D < 380 ? -.5 : .3);
     if (e.spec.gun && ang < .1 && D < 800) aiGun(e, T, dt, DIFF.spread, 1.5);
-    if (e.spec.msl && ang < .34 && D < 2100 && D > 380){ A.lk += dt; if (A.lk > 1.5 && A.mcd <= 0 && incCount(T) < DIFF.maxInc){ fireMissile(e, T); A.mcd = DIFF.mcd * (.8 + rnd() * .5) * (e.type === 'ace' ? .75 : 1); A.lk = 0; } } else A.lk = Math.max(0, A.lk - dt); }
+    var stl = T.spec.stealth || 1; if (e.spec.msl && ang < .34 && D < 2100 / Math.sqrt(stl) && D > 380){ A.lk += dt; if (A.lk > 1.5 * stl && A.mcd <= 0 && incCount(T) < DIFF.maxInc){ fireMissile(e, T); A.mcd = DIFF.mcd * (.8 + rnd() * .5) * (e.type === 'ace' ? .75 : 1); A.lk = 0; } } else A.lk = Math.max(0, A.lk - dt); }
   c = steerTo(e, tp, 1); flyStep(e, c[0], c[1], c[2], thr, dt); }
 
 // ---------- weapons ----------
@@ -574,7 +636,7 @@ function updGround(dt){ for (var i = 0; i < GND.length; i++){ var e = GND[i]; e.
     if (e.road){ e.s += e.speed * dt; var rp = roadAt(e.road, e.s); e.p = rp[0]; e.yaw = Math.atan2(rp[1][0], rp[1][2]); e.v = scl(rp[1], e.speed); }
     if (e.type === 'radar') e.ang += dt * 1.6;
     if (!P || !P.alive) continue; var D = dist(P.p, e.p);
-    if (e.type === 'sam' || (e.type === 'ship' && e.sam)){ e.cd -= dt; if (D < 2700 && P.p[1] - Hg(P.p[0], P.p[2]) > 70 && e.cd <= 0 && incCount(P) < DIFF.maxInc){ e.cd = DIFF.samCd * (.8 + rnd() * .5); fireMissile(e, P, madd(e.p, [0, 18, 0], 1)); radio('WARNING', 'SAM launch! Break and flare!'); } }
+    if (e.type === 'sam' || (e.type === 'ship' && e.sam)){ e.cd -= dt; if (D < 2700 / Math.sqrt(P.spec.stealth || 1) && P.p[1] - Hg(P.p[0], P.p[2]) > 70 && e.cd <= 0 && incCount(P) < DIFF.maxInc){ e.cd = DIFF.samCd * (.8 + rnd() * .5); fireMissile(e, P, madd(e.p, [0, 18, 0], 1)); radio('WARNING', 'SAM launch! Break and flare!'); } }
     if (e.type === 'aaa' || e.type === 'flak' || e.type === 'ship'){ e.cd2 = (e.cd2 || 0) - dt; if (D < 1300){ if (e.burst > 0){ e.burst -= dt; e.gunCd = (e.gunCd || 0) - dt;
           if (e.gunCd <= 0){ e.gunCd = .11; var aim = norm(sub(madd(P.p, P.v, D / 800), madd(e.p, [0, 5, 0], 1))); aim = norm([aim[0] + rs() * DIFF.spread * 3, aim[1] + rs() * DIFF.spread * 3, aim[2] + rs() * DIFF.spread * 3]);
             BUL.push({ p: madd(madd(e.p, [0, 5, 0], 1), aim, 5), v: scl(aim, 800), life: 1.7, team: 1, dmg: 1.3, owner: e, red: 1 }); if (!QUIET && rnd() < .25) sfx('gun', dvol(e.p) * .5); } }
@@ -595,7 +657,7 @@ function playerCtrl(dt){ var sx = INP.x * (.45 + .55 * Math.abs(INP.x)), sy = (S
   if (out){ var c2 = steerTo(P, [0, P.p[1], 0], 1); P.outside = true; flyStep(P, c2[0], c2[1], c2[2], thr, dt); return; } P.outside = false;
   if (SET.assist === 0 && Math.abs(P.f[1]) < .82) rIn = clamp((sx * 1.3 - bank) * 2.8, -1, 1); else rIn = sx;
   flyStep(P, sy, rIn, yIn, thr, dt);
-  if (Math.abs(sy) > .6 && P.spd > 150){ part(madd(madd(P.p, P.r, 7.3), P.f, -5), scl(P.v, .1), .55, .5, 2.2, [1, 1, 1], .28, 1); part(madd(madd(P.p, P.r, -7.3), P.f, -5), scl(P.v, .1), .55, .5, 2.2, [1, 1, 1], .28, 1); } }
+  if (Math.abs(sy) > .6 && P.spd > 150){ var sp = P.spec.span || 7.3, tz = P.spec.tipz || -5; part(madd(madd(P.p, P.r, sp), P.f, tz), scl(P.v, .1), .55, .5, 2.2, [1, 1, 1], .28, 1); part(madd(madd(P.p, P.r, -sp), P.f, tz), scl(P.v, .1), .55, .5, 2.2, [1, 1, 1], .28, 1); } }
 function step(dt){ simT += dt; SHAKE = Math.max(0, SHAKE - dt * 2.2); hurtA = Math.max(0, hurtA - dt * 1.3);
   for (var i = MSGS.length - 1; i >= 0; i--) if ((MSGS[i].t -= dt) <= 0) MSGS.splice(i, 1); for (i = KMSG.length - 1; i >= 0; i--) if ((KMSG[i].t -= dt) <= 0) KMSG.splice(i, 1);
   if (phase === 'play' || phase === 'dead' || phase === 'end'){
@@ -716,6 +778,15 @@ function setCam(dt){ var f, u;
 function modelM(p, r, u, f, s){ var m = TM; m[0] = r[0] * s; m[1] = r[1] * s; m[2] = r[2] * s; m[3] = 0; m[4] = u[0] * s; m[5] = u[1] * s; m[6] = u[2] * s; m[7] = 0; m[8] = f[0] * s; m[9] = f[1] * s; m[10] = f[2] * s; m[11] = 0; m[12] = p[0]; m[13] = p[1]; m[14] = p[2]; m[15] = 1; return m; }
 function drawMesh(mesh, M4, spec, panel, flash, tint){ gl.uniformMatrix4fv(PM.u('uM'), false, M4); gl.uniform1f(PM.u('uSpec'), spec); gl.uniform1f(PM.u('uPanel'), panel); gl.uniform1f(PM.u('uFlash'), flash); gl.uniform3fv(PM.u('uTint'), tint || [1, 1, 1]);
   gl.bindBuffer(gl.ARRAY_BUFFER, mesh.buf); gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 36, 0); gl.vertexAttribPointer(1, 3, gl.FLOAT, false, 36, 12); gl.vertexAttribPointer(2, 3, gl.FLOAT, false, 36, 24); gl.drawArrays(gl.TRIANGLES, 0, mesh.n); }
+var JM = new Float32Array(16), LM = new Float32Array(16), SM = new Float32Array(16);
+function rotM(o, h, k, a){ var c = Math.cos(a), s = Math.sin(a), t = 1 - c, x = k[0], y = k[1], z = k[2];
+  o[0] = c + x * x * t; o[1] = y * x * t + z * s; o[2] = z * x * t - y * s; o[3] = 0; o[4] = x * y * t - z * s; o[5] = c + y * y * t; o[6] = z * y * t + x * s; o[7] = 0; o[8] = x * z * t + y * s; o[9] = y * z * t - x * s; o[10] = c + z * z * t; o[11] = 0;
+  o[12] = h[0] - (o[0] * h[0] + o[4] * h[1] + o[8] * h[2]); o[13] = h[1] - (o[1] * h[0] + o[5] * h[1] + o[9] * h[2]); o[14] = h[2] - (o[2] * h[0] + o[6] * h[1] + o[10] * h[2]); o[15] = 1; }
+// elevons, tailplanes, canards and rudders follow the pilot's inputs (TM must hold the jet's matrix)
+function drawSurf(e, dt, spec, flash, tint){ var S = e.mesh.surf; if (!S || !S.length) return; var cs = e.cs || (e.cs = { p: 0, r: 0, y: 0, b: 0 }), k = 1 - Math.exp(-dt * 11);
+  if (!e.dead){ cs.p += ((e.pIn || 0) - cs.p) * k; cs.r += ((e.rIn || 0) - cs.r) * k; cs.y += (clamp((e.yIn || 0) + (e.rIn || 0) * .5, -1, 1) - cs.y) * k; cs.b += ((e.thr < 0 ? 1 : 0) - cs.b) * k * .6; }
+  JM.set(TM); for (var i = 0; i < S.length; i++){ var q = S[i], m = q.mix, up = q.fin ? (m.y || 0) * cs.y + q.s * (m.b || 0) * cs.b : q.s * ((m.p || 0) * cs.p + q.s * (m.r || 0) * cs.r + (m.b || 0) * cs.b);
+    rotM(LM, q.h, q.k, clamp(up, -1, 1) * q.max + Math.sin(simT * 19 + i * 1.9) * .012); mul4(SM, JM, LM); drawMesh(q.mesh, SM, spec, 1, flash, tint); } }
 function yawBasis(y){ var f = [Math.sin(y), 0, Math.cos(y)]; return [norm(cross(f, [0, 1, 0])), [0, 1, 0], f]; }
 function burner(e, noz, ny, nz, nr){ var k = e.thr > .5 ? 1 : (e.thr < 0 ? .25 : .5), i; for (var n = 0; n < noz.length; n++){ var b = madd(madd(madd(e.p, e.r, noz[n] * e.scale), e.u, ny * e.scale), e.f, nz * e.scale);
     for (i = 0; i < 4; i++) sprite(madd(b, e.f, -i * 1.5 * k * e.scale), nr * (1.5 - i * .25) * e.scale * (.8 + k * .5), i < 2 ? [1, .8, .55] : [1, .45, .2], -(.75 - i * .14) * (.5 + k * .5), 0); } }
@@ -742,7 +813,7 @@ function render(dt){ gl.viewport(0, 0, canvas.width, canvas.height);
   var i, e;
   for (i = 0; i < GND.length; i++){ e = GND[i]; if (dist(e.p, CP) > 9000) continue; var B = yawBasis(e.yaw), dead = !e.alive; drawMesh(e.mesh, modelM(e.p, B[0], B[1], B[2], e.scale), dead ? 0 : .15, .5, e.flash > 0 ? .6 : 0, dead ? [.18, .17, .16] : null);
     if (e.type === 'radar' && !dead){ var D = yawBasis(e.ang); drawMesh(MESH.dish, modelM(madd(e.p, [0, 10 * e.scale, 0], 1), D[0], D[1], D[2], e.scale), .3, 0, 0); } }
-  for (i = 0; i < AIR.length; i++){ e = AIR[i]; if (e.gone || (e === P && CAMMODE === 1 && !DBG && e.alive)) continue; drawMesh(e.mesh, modelM(e.p, e.r, e.u, e.f, e.scale), .55, 1, e.flash > 0 ? .6 : 0, e.dead ? [.3, .28, .27] : null); }
+  for (i = 0; i < AIR.length; i++){ e = AIR[i]; if (e.gone || (e === P && CAMMODE === 1 && !DBG && e.alive)) continue; var fl = e.flash > 0 ? .6 : 0, tn2 = e.dead ? [.3, .28, .27] : null; drawMesh(e.mesh, modelM(e.p, e.r, e.u, e.f, e.scale), .55, 1, fl, tn2); drawSurf(e, dt, .55, fl, tn2); }
   for (i = 0; i < MSL.length; i++){ var m = MSL[i], r = norm(cross(m.d, Math.abs(m.d[1]) > .95 ? [1, 0, 0] : [0, 1, 0])); drawMesh(MESH.missile, modelM(m.p, r, cross(r, m.d), m.d, 1.5), .3, 0, 0); }
   // sprites
   SPN = 0; var A = [], q;
@@ -754,17 +825,19 @@ function render(dt){ gl.viewport(0, 0, canvas.width, canvas.height);
   for (i = 0; i < FLR.length; i++){ q = FLR[i]; sprite(q.p, 7 + rnd() * 3, [1, .9, .7], -1, 0); sprite(q.p, 22, [1, .6, .3], -.35, 0); }
   for (i = 0; i < MSL.length; i++) sprite(madd(MSL[i].p, MSL[i].d, -3), 4.5, [1, .7, .4], -1, 0);
   for (i = 0; i < AIR.length; i++){ e = AIR[i]; if (!e.alive || (e === P && CAMMODE === 1 && !DBG)) continue; var s = e.spec.mesh;
-    if (s === 'kestrel' || s === 'wraith' || s === 'bulwark') burner(e, [.82, -.82], -.05, -8.3, .9); else if (s === 'vulture' || s === 'ace') burner(e, [0], 0, -8.1, .9);
+    var bn = e.spec.burn; if (bn) burner(e, bn.x, bn.y, bn.z, bn.r);
     if (e === P && e.muzzle > 0) sprite(madd(e.p, e.f, 9.5), 2.4, [1, .85, .5], -1, 0); }
   gl.enable(gl.BLEND); gl.blendFuncSeparate(gl.ONE, gl.ONE_MINUS_SRC_ALPHA, gl.ZERO, gl.ONE); gl.depthMask(false);
   setCommon(PP, CP); gl.uniformMatrix4fv(PP.u('uVP'), false, VP); gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, TSPR); gl.uniform1i(PP.u('uTex'), 1);
   gl.bindBuffer(gl.ARRAY_BUFFER, SPB); gl.bufferSubData(gl.ARRAY_BUFFER, 0, SPV.subarray(0, SPN)); gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 36, 0); gl.vertexAttribPointer(1, 2, gl.FLOAT, false, 36, 12); gl.vertexAttribPointer(2, 4, gl.FLOAT, false, 36, 20);
   gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, SPI); gl.drawElements(gl.TRIANGLES, SPN / 36 * 6, gl.UNSIGNED_SHORT, 0); gl.depthMask(true); gl.disable(gl.BLEND); gl.activeTexture(gl.TEXTURE0); }
-function renderHangar(dt){ hangA += dt * .5; gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT); gl.enable(gl.DEPTH_TEST); gl.depthMask(true); gl.disable(gl.BLEND); gl.disable(gl.CULL_FACE);
-  CP = [0, 6, -27]; CF = norm([0, -.2, 1]); CR = norm(cross(CF, [0, 1, 0])); CU = cross(CR, CF); persp(PR, .75, W / H, 1, 500); viewM(VM, CP, CR, CU, CF); mul4(VP, PR, VM);
+var hangT = .42, hangIdle = 9, HANG = { cs: { p: 0, r: 0, y: 0, b: 0 }, dead: true };
+function renderHangar(dt){ hangIdle += dt; if (hangIdle > 2.5) hangA += dt * .45; gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT); gl.enable(gl.DEPTH_TEST); gl.depthMask(true); gl.disable(gl.BLEND); gl.disable(gl.CULL_FACE);
+  var wide = W > H * 1.3, D = wide ? 40 : 50, tg = [0, wide ? -1 : -7, 0]; CP = [tg[0], tg[1] + Math.sin(hangT) * D, -Math.cos(hangT) * D]; CF = norm(sub(tg, CP)); CR = norm(cross(CF, [0, 1, 0])); CU = cross(CR, CF); persp(PR, .62, W / H, 1, 500); viewM(VM, CP, CR, CU, CF); mul4(VP, PR, VM);
   gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, TSKY); setCommon(PM, CP); gl.uniform1f(PM.u('uFogD'), 0); gl.uniformMatrix4fv(PM.u('uVP'), false, VP); gl.uniform1f(PM.u('uAlpha'), 1);
-  gl.enableVertexAttribArray(0); gl.enableVertexAttribArray(1); gl.enableVertexAttribArray(2); var f = [Math.sin(hangA), 0, Math.cos(hangA)], u = norm([Math.sin(hangA + 1.57) * .2, 1, Math.cos(hangA + 1.57) * .2]), r = norm(cross(f, u));
-  drawMesh(MESH[PLANES[SET.jet].mesh], modelM([W > H * 1.3 ? 4 : 0, W > H * 1.3 ? 3.6 : 5, 0], r, cross(r, f), f, 1), .6, 1, 0); }
+  gl.enableVertexAttribArray(0); gl.enableVertexAttribArray(1); gl.enableVertexAttribArray(2); var f = [Math.sin(hangA), 0, Math.cos(hangA)], u = [0, 1, 0], r = norm(cross(f, u)), mesh = MESH[PLANES[SET.jet].mesh];
+  simT += dt; var t = simT; HANG.mesh = mesh; HANG.cs.p = Math.sin(t * 1.3) * .9; HANG.cs.r = Math.sin(t * .9 + 1) * .9; HANG.cs.y = Math.sin(t * .7 + 2) * .8; HANG.cs.b = Math.max(0, Math.sin(t * .4)) * .8;
+  drawMesh(mesh, modelM([wide ? 5.5 : 0, 0, 0], r, u, f, 1), .6, 1, 0); drawSurf(HANG, dt, .6, 0, null); }
 // ===================================================================
 // HUD
 // ===================================================================
@@ -928,8 +1001,13 @@ function buildSelect(){ var g = el('misGrid'); g.innerHTML = ''; MIS.forEach(fun
 function openBrief(m){ pending = m; go('brief'); el('brNo').textContent = m.surv ? 'ENDLESS' : 'MISSION ' + (MIS.indexOf(m) + 1); el('brName').textContent = m.name; el('brText').textContent = m.text; el('brObj').innerHTML = m.obj.map(function(o){ return '<li>' + o + '</li>'; }).join('');
   el('brJet').textContent = 'Aircraft: ' + PLANES[SET.jet].name; var c = el('mapC').getContext('2d'); c.drawImage(MAPC, 0, 0, 512, 512); c.strokeStyle = 'rgba(150,255,205,.25)'; c.lineWidth = 1; for (var i = 1; i < 8; i++){ c.beginPath(); c.moveTo(i * 64, 0); c.lineTo(i * 64, 512); c.moveTo(0, i * 64); c.lineTo(512, i * 64); c.stroke(); }
   var px = (HALF - (m.id === 'm4' ? -500 : 0)) / (HALF * 2) * 512, pz = (HALF + 3300) / (HALF * 2) * 512; c.fillStyle = '#6fd0ff'; c.beginPath(); c.moveTo(px, pz - 9); c.lineTo(px - 7, pz + 7); c.lineTo(px + 7, pz + 7); c.closePath(); c.fill(); c.font = '700 12px system-ui'; c.fillText('YOU', px + 11, pz + 5); }
-function buildHangar(){ phase = 'hangar'; var L = el('jetList'); L.innerHTML = ''; PLANES.forEach(function(p, i){ var b = document.createElement('button'); b.className = 'btn' + (i === SET.jet ? ' on' : ''); b.textContent = p.name; b.addEventListener('click', function(){ SET.jet = i; saveAll(); sfx('ui'); buildHangar(); }); L.appendChild(b); });
-  var p = PLANES[SET.jet]; el('jetName').textContent = p.name; el('jetDesc').textContent = p.desc; el('jetStats').innerHTML = ['Speed', 'Agility', 'Armour', 'Missiles'].map(function(n, i){ return '<div class="stat"><span>' + n + '</span><div class="bar"><u style="width:' + Math.round(p.bars[i] * 100) + '%"></u></div></div>'; }).join(''); }
+function buildHangar(){ phase = 'hangar'; var L = el('jetList'); L.innerHTML = ''; PLANES.forEach(function(p, i){ var b = document.createElement('button'); b.className = 'btn sm' + (i === SET.jet ? ' on' : ''); b.innerHTML = p.name + '<small>' + p.cls.slice(0, 3) + ' GEN</small>'; b.addEventListener('click', function(){ SET.jet = i; saveAll(); sfx('ui'); buildHangar(); }); L.appendChild(b); });
+  var p = PLANES[SET.jet]; el('jetName').textContent = p.name; el('jetCls').textContent = p.cls; el('jetDesc').textContent = p.desc; el('jetSchool').textContent = p.school;
+  el('jetStats').innerHTML = ['Speed', 'Agility', 'Armour', 'Missiles', 'Stealth'].map(function(n, i){ return '<div class="stat"><span>' + n + '</span><div class="bar"><u style="width:' + Math.round(p.bars[i] * 100) + '%"></u></div></div>'; }).join(''); }
+var hangDrag = null;
+canvas.addEventListener('pointerdown', function(e){ if (phase !== 'hangar') return; hangDrag = { id: e.pointerId, x: e.clientX, y: e.clientY }; try { canvas.setPointerCapture(e.pointerId); } catch (x) {} });
+canvas.addEventListener('pointermove', function(e){ if (!hangDrag || e.pointerId !== hangDrag.id) return; hangA += (e.clientX - hangDrag.x) * .012; hangT = clamp(hangT + (e.clientY - hangDrag.y) * .008, -.25, 1.45); hangDrag.x = e.clientX; hangDrag.y = e.clientY; hangIdle = 0; });
+['pointerup', 'pointercancel'].forEach(function(n){ canvas.addEventListener(n, function(e){ if (hangDrag && e.pointerId === hangDrag.id) hangDrag = null; }); });
 function buildSet(){ [['sAs', 'assist', 2], ['sPi', 'pitch', 2], ['sD', 'diff', 3], ['sQ', 'quality', 2]].forEach(function(r){ for (var i = 0; i < r[2]; i++) el(r[0] + i).classList.toggle('on', SET[r[1]] === i); });
   el('sSnd').textContent = SET.sound ? 'On' : 'Off'; el('sSnd').classList.toggle('on', SET.sound); el('asNote').textContent = SET.assist ? 'Expert: the stick rolls and pitches the jet directly. Loops and rolls are all yours.' : 'Novice: push the stick sideways to turn. The jet banks and levels itself.'; }
 [['sAs', 'assist', 2], ['sPi', 'pitch', 2], ['sD', 'diff', 3], ['sQ', 'quality', 2]].forEach(function(r){ for (var i = 0; i < r[2]; i++) (function(i){ el(r[0] + i).addEventListener('click', function(){ SET[r[1]] = i; saveAll(); sfx('ui'); resize(); buildSet(); }); })(i); });
@@ -959,7 +1037,7 @@ function frame(t){ requestAnimationFrame(frame); var dt = last ? Math.min(.1, (t
 TOUCH = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
 store.getItem('cs.save').then(function(v){ try { if (v){ var o = JSON.parse(v); if (o.SET) for (var k in o.SET) SET[k] = o.SET[k]; if (o.SAVE) for (var j in o.SAVE) SAVE[j] = o.SAVE[j]; } } catch (e) {} resize(); go('menu'); }, function(){ resize(); go('menu'); });
 resize(); go('menu'); requestAnimationFrame(frame);
-window.__cs = { get phase(){ return phase; }, get P(){ return P; }, get AIR(){ return AIR; }, get GND(){ return GND; }, get MSL(){ return MSL; }, get M(){ return M; }, get score(){ return score; }, get left(){ return M ? left() : -1; }, get parts(){ return PARTS.length; },
+window.__cs = { get phase(){ return phase; }, get P(){ return P; }, get AIR(){ return AIR; }, get GND(){ return GND; }, get MSL(){ return MSL; }, get M(){ return M; }, get score(){ return score; }, get left(){ return M ? left() : -1; }, get parts(){ return PARTS.length; }, hang: function(a, t){ hangA = a; hangT = t; hangIdle = -1e9; }, set jet(v){ SET.jet = v; },
   tick: function(n){ for (var i = 0; i < n && (phase === 'play' || phase === 'dead' || phase === 'end'); i++) step(1 / 60); }, start: function(i, jet){ if (jet != null) SET.jet = jet; launch(i < 0 ? SURV : MIS[i]); },
   set ai(v){ AI0 = !!v; }, set quiet(v){ QUIET = !!v; }, set dbg(v){ DBG = v; }, set cam(v){ CAMMODE = v; }, set touch(v){ TOUCH = !!v; }, INP: INP, missile: playerMissile, flare: playerFlare, go: go, unlock: function(){ SAVE.unl = MIS.length; }, Hg: Hg, set god(v){ if (P){ P.maxhp = P.hp = v ? 1e6 : P.spec.hp; } } };
 })();
