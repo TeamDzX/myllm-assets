@@ -253,7 +253,7 @@ var MECHS = [
     blurb: 'Slow but brutal. It slams the ground to send a shockwave. The super shakes the whole arena.' },
   { id: 'wisp', name: 'WISP', title: 'Speed and blades', col: [.32, .84, .7], col2: [.94, .95, .97], glow: [2.2, .45, 1.8], hp: 97, walk: 4.4, jump: 10.6, s: .94, dbl: true, sp: 'Arc Dash', su: 'Phantom Cuts',
     blurb: 'The fastest mech, with a double jump and a blade lunge. The super teleports around the opponent slashing.' },
-  { id: 'mortar', name: 'MORTAR', title: 'Artillery', col: [.74, .15, .2], col2: [.3, .3, .34], glow: [2.4, .3, .22], hp: 93, walk: 2.9, jump: 9, s: 1.05, sp: 'Lob Shell', su: 'Rain of Steel',
+  { id: 'mortar', name: 'MORTAR', title: 'Artillery', col: [.74, .15, .2], col2: [.3, .3, .34], glow: [2.4, .3, .22], hp: 99, walk: 3.0, jump: 9, s: 1.05, sp: 'Lob Shell', su: 'Rain of Steel',
     blurb: 'Keeps you at range with arcing shells. The super calls a barrage down on your head.' }
 ];
 var MESH = {};
@@ -480,7 +480,7 @@ function specialStep(f){
     if (id === 'wisp'){ if (a >= 6 && a < 22 && !f.connected){ f.vx = 16 * f.face; landHitRaw(f, [-.3, 1.9, .8, 2.5], { dmg: 12.5, hs: 20, bs: 10, kb: 3.4, chip: .2, meter: 9 }); if (rnd() < .6) spark(f.x + f.face, 1.8 * s, [1, .4, 1, 1], 1); }
       else f.vx *= .8; if (a > 38) endMove(f); return a < 6 ? 'jabW' : 'dashH'; }
     if (id === 'mortar'){ if (a === 14){ var dx = clamp(o.x - f.x, -11, 11), tt = .95, y0 = 3.1 * s; spawnProj(f, { type: 'shell', x: f.x - f.face * .2, y: y0, vx: dx / tt, vy: (1.0 - y0 + .5 * GRAV * tt * tt) / tt, g: GRAV, w: .5, h: .5, life: 2, splash: 1.5, H: { dmg: 10, hs: 18, bs: 12, kb: 3, chip: .15, meter: 7 } }); sfx('launch'); smoke(f.x - f.face * .3, y0, 6); }
-      if (a > 48) endMove(f); return a < 14 ? 'lobW' : 'lobH'; }
+      if (a > 42) endMove(f); return a < 14 ? 'lobW' : 'lobH'; }
   }
   if (f.st === 'super'){
     if (id === 'vanta'){
