@@ -127,9 +127,9 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,system-ui,"Segoe
       <b>Command:</b> tap a unit to select it, then tap the ground to move or an enemy to attack. Double-tap a unit to grab every unit of that type on screen. <b>Army</b> selects all your fighting units. Turn on <b>Box</b> and drag to select a group.<br>
       <b>Camera:</b> drag to pan, pinch to zoom, tap the minimap to jump.<br>
       <b>Units:</b> Buggies are fast and shred light units. Tanks are tough all-rounders. Rocket trucks out-range everything and wreck buildings, but need protecting. Repair trucks mend nearby units and buildings. Turrets guard your base.<br>
-      <b>Fog of war:</b> you only see what your units and buildings can see. Build a <b>Sat Uplink</b> (after the Tech Lab), let it charge, then tap <b>Satellite</b> to launch and spy on the enemy base for 40 seconds.<br>
+      <b>Fog of war:</b> you only see what your units and buildings can see. Build a <b>Sat Uplink</b> (after the Tech Lab): it launches a satellite straight away and shows you the whole map for as long as it stands.<br>
       <b>Support:</b> a <b>Recycler</b> adds 25% to every salvage delivery, a <b>Repair Bay</b> fixes nearby units and buildings, and the <b>Armory</b> researches Armour+, Weapons+ and Engines+ (Upgrade tab).<br>
-      <b>Missile Silo:</b> after the Tech Lab. When it’s charged, tap <b>Strike</b>, then tap anywhere on the map or minimap. Watch for red rings: the Syndicate has silos too.<br>
+      <b>Missile Silo:</b> after the Tech Lab. It charges in 90 seconds (tap the silo to check). When it’s ready, tap <b>Strike</b>, then tap anywhere on the map or minimap. Watch for red rings: the Syndicate has silos too.<br>
       <b>Tech Lab:</b> unlocks the Heavy Tank (twin cannons, huge armour), the Rail Tank (instant long-range railgun that cracks armour) and the Missile Tower (homing missile salvos, longest range).<br>
       <span style="opacity:.75">Mouse: drag (or push to a screen edge) to pan, scroll to zoom, click to select, Shift-drag for a box, right-click to move or attack. Keys: WASD or arrows pan, Space selects army, X stops, Esc pauses.</span>
     </div>
@@ -453,7 +453,7 @@ var BT = {
 var MULT = { mg: { light: 1, heavy: .45, bld: .22 }, shell: { light: .85, heavy: 1, bld: .75 }, rocket: { light: .6, heavy: 1, bld: 1.45 }, rail: { light: .7, heavy: 1.3, bld: .9 }, missile: { light: .95, heavy: 1, bld: .8 } };
 var TOPS = { tank: 1.25, heavy: 1.5, rail: 1.2 };
 var UPG = { armor: { name: 'Armour+', cost: 1000, time: 30, p: 'up_armor', tip: '+30% HP for every unit' }, dmg: { name: 'Weapons+', cost: 1200, time: 35, p: 'up_dmg', tip: '+20% damage for every unit and turret' }, speed: { name: 'Engines+', cost: 800, time: 25, p: 'up_speed', tip: '+15% speed for every unit' } };
-var SILO_TIME = 150, STRIKES = [];
+var SILO_TIME = 90, STRIKES = [];
 var DIFF = [
   { name: 'Easy', inc: .75, build: 1.3, wave: 220, size: 4, grow: 1 },
   { name: 'Normal', inc: 1, build: 1, wave: 165, size: 6, grow: 1 },
@@ -947,7 +947,7 @@ var FS = 'precision highp float;varying vec3 vN,vC,vW,vO,vNo;varying float vM;un
   'float d=max(dot(N,uSun),0.);vec3 c=vC*uTint*(uAmb+uSunCol*d+.1*N.y);' +
   'float gn=fract(sin(dot(floor(vW.xz*2.),vec2(12.9898,78.233)))*43758.5453);c*=1.+(gn-.5)*.12*uDetail*step(.75,N.y);' +
   'if(vM>.5){vec3 an=abs(vNo);vec2 uv=(an.y>.7?vO.xz:(an.x>an.z?vO.zy:vO.xy))*.21;' +
-  'float tx=vM<1.5?texture2D(uT1,uv*.8).r:(vM<2.5?texture2D(uT2,uv*1.3).r:(vM<3.5?texture2D(uT3,uv*.42).r:texture2D(uT4,uv).r));c*=.42+tx*1.16;}' +
+  'float tx=vM<1.5?texture2D(uT1,uv*.8).r:(vM<2.5?texture2D(uT2,uv*1.3).r:(vM<3.5?texture2D(uT3,uv*.42).r:(vM<4.5?texture2D(uT4,uv).r:texture2D(uT4,uv*2.6).r)));c*=(vM>4.5?.62+tx*.76:.42+tx*1.16);}' +
   'float f=1.-exp(-dist*dist*uFogD*uFogD);c=mix(c,uFog,clamp(f,0.,.85));' +
   'if(uVisOn>.5){float v=texture2D(uVis,vW.xz/320.).r;c*=mix(.1,1.,smoothstep(0.,1.,v));}' +
   'gl_FragColor=vec4(c,uAlpha);}';
@@ -1046,35 +1046,114 @@ function rY(t){ var c = Math.cos(t), s = Math.sin(t); return function(v){ return
 function buildMeshes(){
   [0, 1].forEach(function(t){
     var tc = TEAMCOL[t], lite = t ? [.92, .86, .8] : [.95, .95, .97], dark = [.16, .16, .19], tire = [.08, .08, .09], hz = [1, .62, .12], glass = [.12, .18, .28], m;
-    // buggy
-    m = []; box(m, -1.6, 1.6, .45, .95, -.85, .85, tc, .12); box(m, -1.1, .3, .95, 1.25, -.7, .7, dark, .1);
-    [[1, .9], [-1, .9]].forEach(function(o){ box(m, -1.0 * o[0] - .06, -1.0 * o[0] + .06, .95, 1.75, -.72, -.62, dark); box(m, -1.0 * o[0] - .06, -1.0 * o[0] + .06, .95, 1.75, .62, .72, dark); });
-    box(m, -1.08, .98, 1.7, 1.8, -.72, .72, dark); box(m, 1.2, 1.62, .6, .8, -.6, .6, lite);
-    cylX(m, .1, 1.95, 0, .07, 1.2, 5, dark); box(m, -.1, .2, 1.8, 2.05, -.12, .12, dark);
-    [[1.05, .95], [1.05, -.95], [-1.05, .95], [-1.05, -.95]].forEach(function(w){ cylZ(m, w[0], .45, w[1], .45, .35, 8, tire, [.6, .6, .62]); });
+    // ---------- vehicles: painted panels carry a fine steel-plate texture (material 5) ----------
+    var tcU = [tc[0], tc[1], tc[2]], liteU = [lite[0], lite[1], lite[2]], trimU = [.26, .27, .3], under = [.12, .12, .14];
+    var head = [2.3, 2.1, 1.6], tailL = [2.4, .25, .2], amber = [2.4, 1.3, .25], glassU = [.1, .15, .24], hub = [.62, .62, .66];
+    MATOF.clear(); MATOF.set(tcU, 5); MATOF.set(liteU, 5); MATOF.set(trimU, 5);
+    var tyre = function(m, x, y, z, r, w){ cylZ(m, x, y, z, r, w, 10, tire, hub); cylZ(m, x, y, z + Math.sign(z) * (w / 2 + .02), r * .42, .05, 6, [.4, .4, .43], [.8, .8, .84]); };
+    var lamps = function(m, xf, xr, yf, yr, zi, zo){ for (var s = -1; s <= 1; s += 2){ box(m, xf - .06, xf + .04, yf, yf + .16, s > 0 ? zi : -zo, s > 0 ? zo : -zi, head); box(m, xr - .04, xr + .06, yr, yr + .14, s > 0 ? zi : -zo, s > 0 ? zo : -zi, tailL); } };
+    var cab = function(m, x0, x1, y0, y1, hw){ box(m, x0, x1, y0, y1, -hw, hw, tcU, .08);
+      quad(m, [x1 + .005, y0 + (y1 - y0) * .45, -hw * .82], [x1 + .005, y0 + (y1 - y0) * .45, hw * .82], [x1 - .05, y1 - .1, hw * .76], [x1 - .05, y1 - .1, -hw * .76], glassU);
+      for (var s = -1; s <= 1; s += 2){ quad(m, [x1 - .75, y0 + (y1 - y0) * .45, s * (hw + .005)], [x1 - .15, y0 + (y1 - y0) * .45, s * (hw + .005)], [x1 - .15, y1 - .12, s * (hw + .005)], [x1 - .75, y1 - .12, s * (hw + .005)], glassU);
+        box(m, x1 - .35, x1 - .2, y1 - .55, y1 - .25, s > 0 ? hw : -hw - .22, s > 0 ? hw + .22 : -hw, trimU); }
+      box(m, x1 - .02, x1 + .08, y0, y0 + (y1 - y0) * .4, -hw * .7, hw * .7, trimU); };
+    var hzBar = function(m, x0, x1, y0, y1, z0, z1, n){ for (var i = 0; i < n; i++){ var a = z0 + (z1 - z0) * i / n, b = z0 + (z1 - z0) * (i + 1) / n; box(m, x0, x1, y0, y1, a, b, (i & 1) ? dark : hz); } };
+    var tracks = function(m, x0, x1, zi, zo, nw, rw){ for (var s = -1; s <= 1; s += 2){ var za = s > 0 ? zi : -zo, zb = s > 0 ? zo : -zi;
+        box(m, x0, x1, .08, .82, za, zb, tire); box(m, x0 + .1, x1 - .1, .82, .92, za, zb, [.2, .2, .22]);
+        for (var k = 0; k < nw; k++) cylZ(m, x0 + .45 + k * (x1 - x0 - .9) / (nw - 1), .42, s * (zi + zo) / 2, rw, (zo - zi) + .06, 8, [.17, .17, .19], [.55, .55, .58]);
+        cylZ(m, x1 - .28, .58, s * (zi + zo) / 2, .3, (zo - zi) + .08, 8, [.22, .22, .25], hz); } };
+    // scout buggy
+    m = [];
+    box(m, -1.9, 1.9, .5, .78, -.78, .78, under); box(m, -1.7, 1.55, .78, 1.12, -.86, .86, tcU, .1); box(m, 1.2, 2.05, .62, 1.02, -.75, .75, tcU, .16);
+    box(m, -1.72, 1.57, .98, 1.05, -.88, .88, liteU); box(m, 1.95, 2.15, .5, .86, -.82, .82, trimU); hzBar(m, 1.96, 2.16, .86, 1.0, -.82, .82, 6);
+    box(m, -.95, .35, 1.12, 1.34, -.62, .62, under);
+    [-1.0, .55].forEach(function(x){ [-.72, .72].forEach(function(z){ box(m, x - .05, x + .05, 1.1, 2.02, z - .05, z + .05, trimU); }); });
+    box(m, -1.05, .6, 1.96, 2.06, -.77, -.67, trimU); box(m, -1.05, .6, 1.96, 2.06, .67, .77, trimU); box(m, -1.05, -.95, 1.96, 2.06, -.75, .75, trimU); box(m, .5, .6, 1.96, 2.06, -.75, .75, trimU);
+    box(m, -.25, -.1, 1.3, 2.3, -.07, .07, trimU); box(m, -.5, .3, 2.24, 2.48, -.15, .15, trimU); cylX(m, .3, 2.36, 0, .06, 1.15, 5, dark); box(m, -.45, -.12, 2.08, 2.26, .15, .34, [.38, .34, .2]);
+    cylX(m, -2.18, 1.05, 0, .4, .24, 8, tire); lamps(m, 2.08, -1.88, .84, .84, .4, .62);
+    [[1.22, .97], [1.22, -.97], [-1.22, .97], [-1.22, -.97]].forEach(function(w){ tyre(m, w[0], .52, w[1], .52, .42); });
     MESH['buggy' + t] = new Float32Array(m);
-    // tank body + turret
-    m = []; box(m, -2.1, 2.1, .55, 1.25, -1.15, 1.15, tc, .18); box(m, 1.6, 2.35, .55, .95, -1.0, 1.0, shade(tc, .85), .1);
-    box(m, -2.3, 2.3, .1, .85, -1.45, -1.05, tire); box(m, -2.3, 2.3, .1, .85, 1.05, 1.45, tire);
-    box(m, -2.35, -2.1, .9, 1.15, -.8, .8, hz);
+    // battle tank: hull + tracks
+    m = [];
+    box(m, -2.2, 2.2, .45, .78, -1.05, 1.05, under); box(m, -2.15, 1.45, .78, 1.36, -1.12, 1.12, tcU, .1);
+    quad(m, [1.45, 1.36, -1.02], [2.38, .82, -1.02], [2.38, .82, 1.02], [1.45, 1.36, 1.02], tcU);
+    for (var s1 = -1; s1 <= 1; s1 += 2) tri(m, [1.45, .78, s1 * 1.02], [2.38, .82, s1 * 1.02], [1.45, 1.36, s1 * 1.02], tcU);
+    box(m, 2.26, 2.42, .45, .86, -1.0, 1.0, trimU);
+    tracks(m, -2.38, 2.38, 1.08, 1.52, 5, .33);
+    for (s1 = -1; s1 <= 1; s1 += 2) box(m, -2.3, 2.3, .74, 1.06, s1 > 0 ? 1.48 : -1.6, s1 > 0 ? 1.6 : -1.48, tcU);
+    for (var g = 0; g < 5; g++) box(m, -2.02 + g * .26, -1.9 + g * .26, 1.36, 1.42, -.72, .72, under);
+    cylY(m, -2.08, 1.0, .72, .1, .55, 6, dark, .1); cylY(m, -2.08, 1.0, -.72, .1, .55, 6, dark, .1);
+    lamps(m, 2.42, -2.18, .9, .98, .7, .92); hzBar(m, -2.22, -2.14, .78, .96, -.62, .62, 5);
     MESH['tank' + t] = new Float32Array(m);
-    m = []; box(m, -1.0, .9, 0, .62, -.85, .85, lite, .14); box(m, -1.2, -.95, .1, .5, -.6, .6, tc); cylX(m, .85, .32, 0, .14, 2.3, 6, dark); box(m, .5, .9, .55, .7, -.3, .3, tc);
+    m = []; box(m, -1.2, .9, .05, .72, -.95, .95, tcU, .2); box(m, -1.21, .91, .44, .52, -.96, .96, liteU);
+    box(m, -1.48, -1.15, .15, .62, -.78, .78, trimU); box(m, .85, 1.18, .12, .62, -.42, .42, trimU);
+    cylX(m, 1.12, .38, 0, .13, 2.15, 8, dark); cylX(m, 2.05, .38, 0, .18, .38, 8, dark); box(m, 3.2, 3.5, .25, .51, -.19, .19, dark);
+    cylY(m, -.42, .72, .36, .34, .14, 8, trimU, .3); box(m, -.55, -.3, .84, .98, -.45, -.25, dark); cylX(m, -.3, .91, -.35, .04, .65, 4, dark);
+    cylY(m, -1.0, .72, -.62, .025, 1.7, 3, dark, .012); box(m, -1.46, -1.2, .62, .78, -.6, .6, [.3, .3, .26]);
     MESH['tankTop' + t] = new Float32Array(m);
     // rocket truck
-    m = []; box(m, -2.3, 2.3, .55, .95, -1.0, 1.0, dark); box(m, 1.1, 2.3, .95, 2.0, -.95, .95, tc, .1); box(m, 1.75, 2.32, 1.45, 1.9, -.85, .85, glass);
-    box(m, -2.2, 1.0, .95, 1.3, -.95, .95, lite);
-    var rk = function(x, y, z){ var a = .45, c = Math.cos(a), s = Math.sin(a); var xx = x * c - (y - 1.3) * s, yy = x * s + (y - 1.3) * c; return [xx - .6, yy + 1.45, z]; };
-    box(m, -1.5, 1.2, 1.3, 2.1, -.85, .85, tc, .05, rk);
-    for (var mz = -.6; mz <= .61; mz += .4) for (var my = 1.5; my <= 1.95; my += .4) box(m, 1.2, 1.5, my - .12, my + .12, mz - .12, mz + .12, [.95, .3, .2], 0, rk);
-    [[1.6, 1], [1.6, -1], [0, 1], [0, -1], [-1.5, 1], [-1.5, -1]].forEach(function(w){ cylZ(m, w[0], .5, w[1], .5, .38, 8, tire, [.6, .6, .62]); });
+    m = []; box(m, -2.4, 2.3, .5, .86, -.95, .95, under); cab(m, 1.0, 2.3, .86, 2.05, .98);
+    box(m, -2.3, 1.0, .86, 1.16, -.98, .98, liteU); hzBar(m, -2.36, -2.28, .86, 1.12, -.9, .9, 6);
+    box(m, -.6, .25, 1.16, 1.52, -.5, .5, trimU);
+    var rk = function(x, y, z){ var a = .42, c = Math.cos(a), s = Math.sin(a); var xx = x * c - (y - 1.3) * s, yy = x * s + (y - 1.3) * c; return [xx - .55, yy + 1.5, z]; };
+    box(m, -1.6, 1.1, 1.3, 2.15, -.9, .9, tcU, .04, rk); box(m, -1.62, 1.12, 1.95, 2.05, -.91, .91, liteU, 0, rk);
+    for (var mz = -.58; mz <= .59; mz += .58) for (var my = 1.5; my <= 1.96; my += .44){ box(m, 1.1, 1.3, my - .15, my + .15, mz - .15, mz + .15, under, 0, rk); box(m, 1.3, 1.5, my - .1, my + .1, mz - .1, mz + .1, [.95, .3, .2], 0, rk); }
+    for (s1 = -1; s1 <= 1; s1 += 2) box(m, -2.25, -2.05, .15, .9, s1 > 0 ? .96 : -1.12, s1 > 0 ? 1.12 : -.96, hz);
+    lamps(m, 2.36, -2.38, .95, .92, .55, .8);
+    [[1.6, 1], [1.6, -1], [0, 1], [0, -1], [-1.5, 1], [-1.5, -1]].forEach(function(w){ tyre(m, w[0], .5, w[1], .5, .38); });
     MESH['rocket' + t] = new Float32Array(m);
     // salvager
-    m = []; box(m, -2.5, 2.4, .6, 1.05, -1.15, 1.15, dark); box(m, 1.2, 2.4, 1.05, 2.4, -1.1, 1.1, tc, .1); box(m, 1.85, 2.42, 1.75, 2.25, -1, 1, glass);
-    box(m, -2.4, 1.0, 1.05, 2.1, -1.15, 1.15, lite); box(m, -2.2, .8, 1.6, 2.15, -.95, .95, [.38, .3, .24]);
-    box(m, -2.42, -2.3, 1.05, 2.1, -1.15, 1.15, hz);
-    box(m, .6, .9, 2.1, 3.4, -.15, .15, hz); box(m, .6, 2.4, 3.2, 3.45, -.12, .12, hz); box(m, 2.2, 2.5, 2.4, 3.3, -.3, .3, dark);
-    [[1.7, 1.15], [1.7, -1.15], [0, 1.15], [0, -1.15], [-1.7, 1.15], [-1.7, -1.15]].forEach(function(w){ cylZ(m, w[0], .58, w[1], .58, .42, 8, tire, [.6, .6, .62]); });
+    m = []; box(m, -2.6, 2.5, .6, 1.02, -1.1, 1.1, under); cab(m, 1.3, 2.5, 1.02, 2.55, 1.12);
+    box(m, 1.6, 1.85, 2.55, 2.75, -.7, -.45, amber); box(m, 1.6, 1.85, 2.55, 2.75, .45, .7, amber);
+    box(m, -2.5, 1.15, 1.02, 2.35, -1.18, 1.18, liteU); box(m, -2.55, 1.2, 1.6, 1.75, -1.2, 1.2, tcU);
+    quad(m, [-2.35, 2.3, -1.02], [1.0, 2.3, -1.02], [1.0, 2.3, 1.02], [-2.35, 2.3, 1.02], [.2, .17, .15]);
+    for (var sc = 0; sc < 7; sc++) box(m, -2.1 + sc * .45, -1.75 + sc * .45, 2.2, 2.5 + (sc % 3) * .18, -.7 + (sc & 1) * .6, -.2 + (sc & 1) * .6, [[.56, .38, .24], [.5, .52, .56], [.6, .5, .4]][sc % 3]);
+    cylY(m, .8, 2.35, 0, .28, .4, 6, hz, .24);
+    var bs = m.length; box(m, 0, 2.2, -.12, .12, -.14, .14, hz); xform(m, bs, rZ(2.55), .8, 2.75, 0);
+    box(m, -1.25, -.95, 3.4, 3.75, -.25, .25, dark); box(m, -1.3, -1.2, 3.0, 3.42, -.25, -.15, dark); box(m, -1.3, -1.2, 3.0, 3.42, .15, .25, dark);
+    hzBar(m, -2.66, -2.56, .7, 1.05, -1.05, 1.05, 7); lamps(m, 2.55, -2.6, 1.15, 1.15, .65, .95);
+    [[1.7, 1.15], [1.7, -1.15], [0, 1.15], [0, -1.15], [-1.7, 1.15], [-1.7, -1.15]].forEach(function(w){ tyre(m, w[0], .62, w[1], .62, .48); });
     MESH['salvager' + t] = new Float32Array(m);
+    // repair truck
+    m = []; box(m, -2.2, 2.2, .55, .9, -1.0, 1.0, under); cab(m, 1.0, 2.2, .9, 2.05, .96);
+    box(m, 1.25, 1.9, 2.05, 2.2, -.72, .72, [.3, 1.9, .6]);
+    box(m, -2.1, 1.0, .9, 1.2, -.98, .98, liteU); box(m, -2.0, -.6, 1.2, 1.8, -.88, -.2, [.85, .2, .15]); box(m, -2.0, -.6, 1.2, 1.8, .2, .88, hz);
+    box(m, -.4, -.15, 1.2, 2.6, -.12, .12, hz); box(m, -.4, 1.5, 2.48, 2.68, -.1, .1, hz); box(m, 1.35, 1.55, 1.85, 2.58, -.08, .08, dark); box(m, 1.2, 1.7, 1.75, 1.88, -.2, .2, dark);
+    box(m, -2.25, -2.12, .9, 1.15, -.9, .9, hz); lamps(m, 2.26, -2.2, .98, 1.0, .55, .8);
+    [[1.4, 1], [1.4, -1], [-1.3, 1], [-1.3, -1]].forEach(function(w){ tyre(m, w[0], .5, w[1], .5, .38); });
+    MESH['repair' + t] = new Float32Array(m);
+    // heavy tank
+    m = [];
+    box(m, -2.8, 2.8, .5, .85, -1.3, 1.3, under); box(m, -2.75, 1.9, .85, 1.55, -1.42, 1.42, tcU, .12);
+    quad(m, [1.9, 1.55, -1.32], [3.0, .9, -1.32], [3.0, .9, 1.32], [1.9, 1.55, 1.32], tcU);
+    for (s1 = -1; s1 <= 1; s1 += 2) tri(m, [1.9, .85, s1 * 1.32], [3.0, .9, s1 * 1.32], [1.9, 1.55, s1 * 1.32], tcU);
+    box(m, 2.9, 3.08, .5, .95, -1.3, 1.3, trimU); box(m, -2.76, 1.92, 1.3, 1.38, -1.43, 1.43, liteU);
+    tracks(m, -3.0, 3.0, 1.38, 2.0, 6, .36);
+    for (s1 = -1; s1 <= 1; s1 += 2){ box(m, -2.9, 2.9, .78, 1.15, s1 > 0 ? 1.95 : -2.08, s1 > 0 ? 2.08 : -1.95, tcU); for (var ap = 0; ap < 4; ap++) box(m, -2.4 + ap * 1.35, -1.4 + ap * 1.35, .82, 1.12, s1 > 0 ? 2.08 : -2.14, s1 > 0 ? 2.14 : -2.08, trimU); }
+    for (g = 0; g < 6; g++) box(m, -2.6 + g * .28, -2.46 + g * .28, 1.55, 1.62, -.9, .9, under);
+    cylY(m, -2.65, 1.1, .9, .13, .7, 6, dark, .12); cylY(m, -2.65, 1.1, -.9, .13, .7, 6, dark, .12);
+    lamps(m, 3.08, -2.78, .98, 1.1, .85, 1.1); hzBar(m, -2.84, -2.74, .85, 1.1, -.8, .8, 6);
+    MESH['heavy' + t] = new Float32Array(m);
+    m = []; box(m, -1.5, 1.25, 0, .9, -1.25, 1.25, tcU, .22); box(m, -1.51, 1.26, .55, .64, -1.26, 1.26, liteU);
+    box(m, -1.8, -1.45, .12, .75, -.95, .95, trimU); box(m, 1.15, 1.55, .08, .78, -1.0, 1.0, trimU);
+    [-.44, .44].forEach(function(z){ cylX(m, 1.5, .44, z, .16, 2.5, 8, dark); cylX(m, 2.5, .44, z, .21, .4, 8, dark); box(m, 3.85, 4.25, .26, .62, z - .21, z + .21, dark); });
+    cylY(m, -.6, .9, .45, .38, .16, 8, trimU, .34); cylY(m, -.6, 1.06, .45, .2, .22, 6, glassU, .18);
+    box(m, -.9, -.6, 1.05, 1.2, -.7, -.45, dark); cylX(m, -.6, 1.12, -.58, .05, .8, 4, dark); cylY(m, -1.3, .9, -.85, .03, 2.0, 3, dark, .015);
+    MESH['heavyTop' + t] = new Float32Array(m);
+    // rail tank
+    m = []; box(m, -2.1, 2.2, .42, .72, -.98, .98, under); box(m, -2.05, 1.7, .72, 1.05, -1.05, 1.05, tcU, .16);
+    quad(m, [1.7, 1.05, -.95], [2.5, .75, -.95], [2.5, .75, .95], [1.7, 1.05, .95], liteU);
+    for (s1 = -1; s1 <= 1; s1 += 2) tri(m, [1.7, .72, s1 * .95], [2.5, .75, s1 * .95], [1.7, 1.05, s1 * .95], liteU);
+    tracks(m, -2.25, 2.3, 1.02, 1.38, 5, .28);
+    for (s1 = -1; s1 <= 1; s1 += 2) box(m, -2.0, 1.6, .9, .98, s1 > 0 ? 1.05 : -1.11, s1 > 0 ? 1.11 : -1.05, [.4, 1.7, 2.0]);
+    box(m, -2.12, -2.04, .75, 1.0, -.7, .7, [.4, 1.6, 1.9]); lamps(m, 2.5, -2.1, .78, .82, .5, .75);
+    MESH['rail' + t] = new Float32Array(m);
+    m = []; box(m, -1.05, .85, 0, .62, -.78, .78, liteU, .16); box(m, -1.3, -.95, .1, .52, -.58, .58, tcU); box(m, -1.06, .86, .4, .46, -.79, .79, tcU);
+    box(m, .75, 4.5, .27, .4, -.34, -.18, dark); box(m, .75, 4.5, .27, .4, .18, .34, dark);
+    for (var ci = 0; ci < 4; ci++) box(m, 1.0 + ci * .82, 1.34 + ci * .82, .16, .52, -.4, .4, [.35, 1.5, 1.85]);
+    box(m, 4.4, 4.7, .2, .48, -.42, .42, dark); cylY(m, -.5, .62, .3, .2, .3, 6, [.35, 1.5, 1.85], .1);
+    MESH['railTop' + t] = new Float32Array(m);
+    MATOF.clear();
     // ---------- buildings: footprint centred on origin, the +z face looks at the camera ----------
     var conc = [.82, .8, .76], concD = [.58, .57, .55], roofG = [.5, .5, .54], brick = [.52, .34, .26], warm = [1.3, 1.02, .62], winB = [.2, .33, .5], steel = [.72, .73, .77];
     MATOF.clear(); MATOF.set(conc, 1); MATOF.set(concD, 1); MATOF.set(roofG, 2); MATOF.set(brick, 3); MATOF.set(tc, 4); MATOF.set(lite, 4); MATOF.set(steel, 4);
@@ -1193,29 +1272,6 @@ function buildMeshes(){
     box(m, 2.5, 3.6, 1.6, 2.9, -3.6, -2.4, lite); box(m, 2.46, 3.64, 2.4, 2.9, -3.64, -2.36, tc); cylY(m, 3.1, 2.9, -3.0, .08, 2.4, 4, dark, .05);
     MESH['silo' + t] = new Float32Array(m);
     MATOF.clear();
-    // repair truck
-    m = []; box(m, -2.2, 2.2, .55, .95, -1.0, 1.0, dark); box(m, 1.0, 2.2, .95, 2.05, -.95, .95, tc, .1); box(m, 1.65, 2.22, 1.5, 1.95, -.85, .85, glass);
-    box(m, -2.1, 1.0, .95, 1.25, -.95, .95, lite); box(m, -2.0, -.6, 1.25, 1.85, -.85, -.2, [.85, .2, .15]); box(m, -2.0, -.6, 1.25, 1.85, .2, .85, hz);
-    box(m, 1.3, 1.9, 2.05, 2.2, -.7, .7, [.3, 1.8, .6]); box(m, -.4, -.15, 1.25, 2.6, -.12, .12, hz); box(m, -.4, 1.6, 2.5, 2.7, -.1, .1, hz); box(m, 1.4, 1.6, 1.9, 2.6, -.08, .08, dark);
-    [[1.4, 1], [1.4, -1], [-1.3, 1], [-1.3, -1]].forEach(function(w){ cylZ(m, w[0], .5, w[1], .5, .38, 8, tire, [.6, .6, .62]); });
-    MESH['repair' + t] = new Float32Array(m);
-    // heavy tank + twin-cannon turret
-    m = []; box(m, -2.7, 2.7, .6, 1.5, -1.5, 1.5, tc, .22); box(m, 2.0, 3.0, .6, 1.15, -1.3, 1.3, shade(tc, .82), .12);
-    box(m, -2.9, 2.9, .1, 1.05, -2.0, -1.5, tire); box(m, -2.9, 2.9, .1, 1.05, 1.5, 2.0, tire); box(m, -2.9, 2.9, .95, 1.1, -2.05, -1.45, shade(tc, .7)); box(m, -2.9, 2.9, .95, 1.1, 1.45, 2.05, shade(tc, .7));
-    box(m, -2.95, -2.7, 1.0, 1.4, -1.1, 1.1, hz); box(m, -2.4, -1.6, 1.5, 1.75, -.9, .9, dark);
-    MESH['heavy' + t] = new Float32Array(m);
-    m = []; box(m, -1.4, 1.2, 0, .85, -1.2, 1.2, lite, .18); box(m, -1.6, -1.2, .1, .7, -.9, .9, tc); box(m, .9, 1.5, .05, .75, -1.0, 1.0, shade(tc, .85), .1);
-    [-.42, .42].forEach(function(z){ cylX(m, 1.4, .42, z, .16, 2.6, 6, dark); box(m, 3.9, 4.3, .24, .6, z - .2, z + .2, dark); });
-    box(m, -.9, -.3, .85, 1.15, .4, .95, tc); box(m, -.2, .4, .85, 1.0, -.95, -.45, hz);
-    MESH['heavyTop' + t] = new Float32Array(m);
-    // rail tank + railgun turret
-    m = []; box(m, -2.1, 2.2, .45, 1.0, -1.05, 1.05, tc, .2); box(m, 1.6, 2.5, .45, .8, -.9, .9, lite, .1);
-    box(m, -2.2, 2.3, .1, .7, -1.35, -1.0, tire); box(m, -2.2, 2.3, .1, .7, 1.0, 1.35, tire); box(m, -2.25, -2.05, .7, .95, -.7, .7, [.4, 1.6, 1.8]);
-    MESH['rail' + t] = new Float32Array(m);
-    m = []; box(m, -1.0, .8, 0, .6, -.75, .75, lite, .14); box(m, -1.2, -.9, .1, .5, -.55, .55, tc);
-    box(m, .7, 4.4, .28, .4, -.32, -.18, dark); box(m, .7, 4.4, .28, .4, .18, .32, dark);
-    for (var ci = 0; ci < 4; ci++) box(m, 1.0 + ci * .8, 1.3 + ci * .8, .18, .5, -.38, .38, [.35, 1.5, 1.8]);
-    MESH['railTop' + t] = new Float32Array(m);
     // tech lab (8 x 8): lab block + glass dome with a glowing core
     m = []; found(m, 4, 4);
     box(m, -3.6, 3.6, .35, 2.8, -3.6, 3.6, lite); box(m, -3.66, 3.66, 2.2, 2.8, -3.66, 3.66, tc);
@@ -1312,7 +1368,8 @@ function updateVis(){
   for (var i = 0; i < VIS.length; i++) if (VIS[i] === 2) VIS[i] = 1;
   units.forEach(function(u){ if (!u.dead && u.team === 0) revealCircle(u.x, u.z, SIGHT[u.type] || 28); });
   blds.forEach(function(b){ if (!b.dead && b.team === 0) revealCircle(b.x, b.z, b.type === 'missile' ? 44 : b.type === 'turret' ? 34 : 26); });
-  if (SAT.active > 0) VIS.fill(2);
+  if (SAT.orbit) VIS.fill(2);
+  STRIKES.forEach(function(s){ revealCircle(s.x, s.z, 26); }); IMPACTS.forEach(function(q){ revealCircle(q.x, q.z, 28); });
   for (i = 0; i < VIS.length; i++) VISB[i] = VIS[i] === 2 ? 255 : VIS[i] === 1 ? 135 : 0;
   if (R.vis && !R.lost){ gl.bindTexture(gl.TEXTURE_2D, R.vis); gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, GW, GH, gl.LUMINANCE, gl.UNSIGNED_BYTE, VISB); }
   if (fogCtx){ var img = fogCtx.createImageData(GW, GH); for (i = 0; i < VIS.length; i++){ img.data[i * 4 + 3] = VIS[i] === 2 ? 0 : VIS[i] === 1 ? 110 : 235; } fogCtx.putImageData(img, 0, 0); }
@@ -1322,9 +1379,12 @@ var fogCanvas = document.createElement('canvas'); fogCanvas.width = GW; fogCanva
 // ===================================================================
 // SATELLITE UPLINK
 // ===================================================================
-var SAT = { charge: 0, active: 0, x: 0, z: 0, fly: -1, from: null, scan: 0 }, SAT_TIME = 75;
+var SAT = { charge: 0, active: 0, x: 0, z: 0, fly: -1, from: null, scan: 0, orbit: false }, SAT_TIME = 75, IMPACTS = [];
 function stepSat(dt){
   var ups = teamBlds(0, 'uplink').filter(function(b){ return b.rise >= 1; });
+  IMPACTS = IMPACTS.filter(function(q){ q.t -= dt; return q.t > 0; });
+  if (ups.length && !SAT.orbit && SAT.fly < 0){ SAT.fly = 0; SAT.from = ups[0]; sfx('launch'); toast('Sat Uplink online: launching satellite\u2026'); haptic('success'); }
+  if (!ups.length && SAT.orbit){ SAT.orbit = false; toast('Satellite link lost: the map fogs over', true); sfx('alert'); }
   if (SAT.active > 0) SAT.active -= dt;
   if (SAT.scan > 0) SAT.scan -= dt;
   if (SAT.fly >= 0){
@@ -1332,7 +1392,7 @@ function stepSat(dt){
     if (f && !f.dead){ var ry = f.y + .85 + SAT.fly * SAT.fly * 9; spawnP(f.x - 1.2 + (rnd() - .5) * .4, ry, f.z + .8 + (rnd() - .5) * .4, (rnd() - .5) * 2, -2, (rnd() - .5) * 2, [1, .75, .35, 1], .9, .35); puff(f.x - 1.2, Math.max(f.y + 1, ry - 2), f.z + .8, [.85, .82, .8, .5], 1.6, 1); }
     if (SAT.fly > 2.6){ SAT.fly = -1; satReveal(); }
   }
-  if (ups.length && SAT.fly < 0 && SAT.active <= 0 && SAT.charge < 1) SAT.charge = Math.min(1, SAT.charge + dt / SAT_TIME);
+
 }
 function satTarget(){
   var hq = blds.find(function(b){ return !b.dead && b.team === 1 && b.type === 'hq'; });
@@ -1342,6 +1402,8 @@ function satTarget(){
   return BASES[1];
 }
 function launchSat(){
+  if (SAT.orbit){ var tg = satTarget(); cam.x = tg[0]; cam.z = tg[1] + 12; cam.d = Math.max(cam.d, 80); SAT.x = tg[0]; SAT.z = tg[1]; SAT.scan = 2; return; }
+  if (SAT.fly >= 0){ toast('Satellite on its way to orbit\u2026'); return; }
   var up = teamBlds(0, 'uplink').filter(function(b){ return b.rise >= 1; })[0];
   if (!up){ toast('Build a Sat Uplink first', true); sfx('err'); return; }
   if (SAT.charge < 1 || SAT.fly >= 0){ toast('Satellite charging: ' + Math.floor(SAT.charge * 100) + '%', true); sfx('err'); return; }
@@ -1350,17 +1412,16 @@ function launchSat(){
   toast('Launching satellite…');
 }
 function satReveal(){
-  var t = satTarget(); SAT.x = t[0]; SAT.z = t[1]; SAT.active = 40; SAT.scan = 3;
-  updateVis(); cam.x = t[0]; cam.z = t[1] + 12; cam.d = Math.max(cam.d, 90);
-  toast('Satellite online: the whole map is visible for 40 s'); sfx('ready'); haptic('success');
+  var t = satTarget(); SAT.x = t[0]; SAT.z = t[1]; SAT.orbit = true; SAT.scan = 3;
+  updateVis();
+  toast('Satellite in orbit: you can see the whole map. Tap Sat Live to look at the enemy base'); sfx('ready'); haptic('success');
 }
 function updateSatUI(){
   var b = el('aSat'), has = teamBlds(0, 'uplink').length > 0;
   b.classList.toggle('hidden', !has);
   if (!has) return;
-  var ready = SAT.charge >= 1 && SAT.fly < 0;
-  b.classList.toggle('on', ready);
-  b.textContent = SAT.active > 0 ? 'Sat ' + Math.ceil(SAT.active) + 's' : ready ? 'Satellite' : 'Sat ' + Math.floor(SAT.charge * 100) + '%';
+  b.classList.toggle('on', SAT.orbit);
+  b.textContent = SAT.orbit ? 'Sat Live' : SAT.fly >= 0 ? 'Launching' : 'Sat \u2026';
 }
 
 
@@ -1401,7 +1462,7 @@ function stepStrikes(dt){
       var hit = function(e){ if (e.dead || e.team === s.t) return; var d = e.kind === 'bld' ? bDist(e, s.x, s.z) : Math.hypot(e.x - s.x, e.z - s.z); if (d < 18) damage(e, 760 * (1 - d / 18 * .7) * ({ light: 1.2, heavy: 1, bld: 1.1 })[armorOf(e)], null); };
       units.slice().forEach(hit); blds.slice().forEach(hit);
       wrecks.push({ x: s.x, z: s.z, y: y - .3, w: 3, d: 3, t: 0 });
-      if (s.t === 0) revealCircle(s.x, s.z, 24);
+      IMPACTS.push({ x: s.x, z: s.z, t: 6 });
     }
   }
 }
@@ -1524,7 +1585,7 @@ function render(dt){
       [[-3.3, -3.3], [3.3, 3.3], [-3.3, 3.3], [3.3, -3.3]].forEach(function(c){ draw(R.mesh.beacon, mModel(b.x + c[0], b.y + 1.6, b.z + c[1], 0)); }); gl.uniform3f(m.u.uTint, 1, 1, 1);
     } else if (b.type === 'uplink'){
       draw(R.mesh.dish, mModel(b.x + 2.3, b.y + 3.7, b.z - 2.2, gameT * .9 + b.id));
-      if (b.team === 0 && SAT.fly < 0){ var rs = SAT.active > 0 ? .02 : Math.max(.02, SAT.charge); draw(R.mesh.rocketM, mModel(b.x - 1.2, b.y + .85, b.z + .8, 0, 1, rs, 1)); }
+      if (b.team === 0 && SAT.fly < 0 && !SAT.orbit) draw(R.mesh.rocketM, mModel(b.x - 1.2, b.y + .85, b.z + .8, 0));
       else if (b.team === 0 && SAT.fly >= 0) draw(R.mesh.rocketM, mModel(b.x - 1.2, b.y + .85 + SAT.fly * SAT.fly * 9, b.z + .8, 0));
     } else if (b.type === 'factory'){
       draw(R.mesh.door, mModel(b.x, b.y + (b.door || 0) * 3.5, b.z, 0, 1, 1 - (b.door || 0) * .85, 1));
@@ -1534,9 +1595,9 @@ function render(dt){
   STRIKES.forEach(function(s){ draw(R.mesh.bigMissile, mOrientY(s.pos[0], s.pos[1], s.pos[2], s.dir)); });
   units.forEach(function(u){
     if (u.dead || (u.team === 1 && !visAt(u.x, u.z))) return;
-    var y = heightAt(u.x, u.z), rec = u.recoil * .25, M = mModel(u.x - Math.cos(u.h) * rec * .3, y, u.z - Math.sin(u.h) * rec * .3, u.h);
+    var y = heightAt(u.x, u.z), rec = u.recoil * .25, VS2 = 1.12, M = mModel(u.x - Math.cos(u.h) * rec * .3, y, u.z - Math.sin(u.h) * rec * .3, u.h, VS2, VS2, VS2);
     draw(R.mesh[u.type + u.team], M);
-    if (TOPS[u.type]) draw(R.mesh[u.type + 'Top' + u.team], mModel(u.x - Math.cos(u.th) * rec, y + TOPS[u.type], u.z - Math.sin(u.th) * rec, u.th));
+    if (TOPS[u.type]) draw(R.mesh[u.type + 'Top' + u.team], mModel(u.x - Math.cos(u.th) * rec, y + TOPS[u.type] * VS2, u.z - Math.sin(u.th) * rec, u.th, VS2, VS2, VS2));
   });
   // ghosts, rings, shadows (blended)
   gl.enable(gl.BLEND); gl.depthMask(false);
@@ -1800,7 +1861,8 @@ function updateSelUI(){
   var s = el('sel');
   var live = sel.filter(function(u){ return !u.dead; });
   if (live.length){ var c = {}; live.forEach(function(u){ c[UT[u.type].name] = (c[UT[u.type].name] || 0) + 1; }); s.textContent = Object.keys(c).map(function(k){ return c[k] + ' ' + k + (c[k] > 1 ? 's' : ''); }).join(' · '); show('sel'); }
-  else if (selB && !selB.dead){ s.textContent = BT[selB.type].name + ' · ' + Math.ceil(selB.hp) + '/' + selB.max + (selB.type === 'factory' ? ' · tap ground to set rally' : ''); show('sel'); }
+  else if (selB && !selB.dead){ var extra = selB.type === 'factory' ? ' · tap ground to set rally' : selB.type === 'silo' ? (selB.rise < 1 ? ' · under construction' : teams[0].siloC >= 1 ? ' · READY: tap Strike, then the target' : ' · charging ' + Math.floor(teams[0].siloC * 100) + '%') : selB.type === 'uplink' ? (SAT.orbit ? ' · satellite in orbit' : ' · launching') : '';
+    s.textContent = BT[selB.type].name + ' · ' + Math.ceil(selB.hp) + '/' + Math.round(selB.max) + extra; show('sel'); }
   else hide('sel');
 }
 el('aArmy').addEventListener('click', selectArmy);
@@ -1888,7 +1950,7 @@ function startGame(){
   cam.x = BASES[0][0] + 18; cam.z = BASES[0][1] + 6; cam.d = 80;
   hide('menu'); hide('endOv'); hide('pauseOv'); show('top'); show('bar'); show('mini'); hide('place');
   buildBar(); refreshBar(true); updateSelUI();
-  VIS.fill(0); SAT.charge = 0; SAT.active = 0; SAT.fly = -1; SAT.scan = 0; FOW = true; revealCircle(BASES[0][0], BASES[0][1], 46); updateVis();
+  VIS.fill(0); SAT.charge = 0; SAT.active = 0; SAT.fly = -1; SAT.scan = 0; SAT.orbit = false; IMPACTS = []; FOW = true; revealCircle(BASES[0][0], BASES[0][1], 46); updateVis();
   STRIKES = []; targeting = false; hide('tgtBar'); TAB = 'base';
   state = 'play'; immersive(true); updateSatUI(); updateStrikeUI();
   toast('Build a Smelter to start salvaging');
@@ -1992,6 +2054,7 @@ function boot(){
   }).catch(function(){}).then(function(){ toMenu(); });
   requestAnimationFrame(frame);
 }
+window.__isProjXZ = function(x, z){ return toScreen(x, heightAt(x, z), z); };
 window.__isProj = function(id){ var u = units.find(function(x){ return x.id === id; }); return toScreen(u.x, heightAt(u.x, u.z) + 1, u.z); };
 window.__is = { get state(){ return state; }, get teams(){ return teams; }, get units(){ return units; }, get blds(){ return blds; }, get heaps(){ return heaps; }, get t(){ return gameT; },
   set both(v){ AIBOTH = !!v; FOW = !AIBOTH; teams.forEach(function(t, i){ t.ai = AIBOTH || i === 1; }); }, get vis(){ return VIS; }, sat: SAT, get strikes(){ return STRIKES; }, strike: function(x, z){ return launchStrike(0, x, z); }, launch: function(){ launchSat(); }, give: function(c){ teams[0].credits += c; }, place: function(ty){ var hq = teamBlds(0, 'hq')[0]; var s = (function(){ for (var r = 0; r < 14; r++) for (var k = 0; k < 24; k++){ var a = k / 24 * TAU + r, cx = Math.round(hq.cx + 1 + Math.cos(a) * r), cz = Math.round(hq.cz + 1 + Math.sin(a) * r); if (canPlace(0, ty, cx, cz, true)) return [cx, cz]; } })(); return addBuilding(0, ty, s[0], s[1], false); }, start: function(){ startGame(); }, sim: function(sec){ for (var i = 0; i < sec / TICK && state !== 'over'; i++) simTick(TICK); },
