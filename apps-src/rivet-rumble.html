@@ -247,13 +247,13 @@ function cylZ(a, cx, cy, cz, r, w, segs, col){ var pm = MAT; if (MATOF.has(col))
 // MECHS
 // ===================================================================
 var MECHS = [
-  { id: 'vanta', name: 'VANTA', title: 'Balanced brawler', col: [.16, .36, .85], col2: [.9, .91, .95], glow: [.4, 1.7, 2.3], hp: 106, walk: 3.6, jump: 9.6, s: 1, sp: 'Rocket Fist', su: 'Overdrive Barrage',
+  { id: 'vanta', name: 'VANTA', title: 'Balanced brawler', col: [.11, .16, .4], col2: [.7, .72, .77], glow: [.4, 1.7, 2.3], hp: 106, walk: 3.6, jump: 9.6, s: 1, sp: 'Rocket Fist', su: 'Overdrive Barrage',
     blurb: 'Fires its fist across the arena. The super is a dashing punch flurry with an uppercut finish.' },
-  { id: 'torque', name: 'TORQUE', title: 'Heavyweight', col: [.95, .55, .12], col2: [.26, .26, .3], glow: [2.4, 1.4, .35], hp: 118, walk: 2.5, jump: 8.4, s: 1.12, sp: 'Quake Slam', su: 'Meltdown',
+  { id: 'torque', name: 'TORQUE', title: 'Heavyweight', col: [.86, .42, .08], col2: [.22, .22, .25], glow: [2.4, 1.4, .35], hp: 118, walk: 2.5, jump: 8.4, s: 1.12, sp: 'Quake Slam', su: 'Meltdown',
     blurb: 'Slow but brutal. It slams the ground to send a shockwave. The super shakes the whole arena.' },
-  { id: 'wisp', name: 'WISP', title: 'Speed and blades', col: [.32, .84, .7], col2: [.94, .95, .97], glow: [2.2, .45, 1.8], hp: 97, walk: 4.4, jump: 10.6, s: .94, dbl: true, sp: 'Arc Dash', su: 'Phantom Cuts',
+  { id: 'wisp', name: 'WISP', title: 'Speed and blades', col: [.26, .52, .44], col2: [.8, .82, .84], glow: [2.2, .45, 1.8], hp: 103, walk: 4.5, jump: 10.6, s: .94, dbl: true, sp: 'Arc Dash', su: 'Phantom Cuts',
     blurb: 'The fastest mech, with a double jump and a blade lunge. The super teleports around the opponent slashing.' },
-  { id: 'mortar', name: 'MORTAR', title: 'Artillery', col: [.74, .15, .2], col2: [.3, .3, .34], glow: [2.4, .3, .22], hp: 99, walk: 3.0, jump: 9, s: 1.05, sp: 'Lob Shell', su: 'Rain of Steel',
+  { id: 'mortar', name: 'MORTAR', title: 'Artillery', col: [.5, .07, .1], col2: [.27, .27, .3], glow: [2.4, .3, .22], hp: 99, walk: 3.0, jump: 9, s: 1.05, sp: 'Lob Shell', su: 'Rain of Steel',
     blurb: 'Keeps you at range with arcing shells. The super calls a barrage down on your head.' }
 ];
 var MESH = {};
@@ -294,82 +294,132 @@ function CYL(a, p0, p1, r, col){
   var A = ring(p0), B = ring(p1); for (var k = 0; k < seg; k++){ quad(a, A[k], A[k + 1], B[k + 1], B[k], col); tri(a, p1, B[k], B[k + 1], col); }
   orientTo(a, s0, function(x, y, z){ var t = clamp(((x - p0[0]) * d[0] + (y - p0[1]) * d[1] + (z - p0[2]) * d[2]) / L, .02, .98); return [p0[0] + d[0] * L * t, p0[1] + d[1] * L * t, p0[2] + d[2] * L * t]; }); smoothFrom(a, s0, 60);
 }
+// bevelled hard-surface plate: a near-box superellipsoid between two corners, optional top taper
+function BV(a, x0, x1, y0, y1, z0, z1, col, tap, e){
+  tap = tap === undefined ? 1 : tap; e = e || .2;
+  var cx = (x0 + x1) / 2, cy = (y0 + y1) / 2, cz = (z0 + z1) / 2, sx = (x1 - x0) / 2, sy = (y1 - y0) / 2, sz = (z1 - z0) / 2;
+  var s0 = a.length, nu = 12, nv = 8, P = [];
+  for (var j = 0; j <= nv; j++){ var v = -PI / 2 + PI * j / nv, row = [];
+    for (var i = 0; i <= nu; i++){ var u = -PI + TAU * i / nu + PI / 12;
+      var y = sy * sgp(Math.sin(v), e), k = lerp(1, tap, (y + sy) / (2 * sy || 1));
+      row.push([cx + sx * k * sgp(Math.cos(v), e) * sgp(Math.cos(u), e), cy + y, cz + sz * k * sgp(Math.cos(v), e) * sgp(Math.sin(u), e)]); }
+    P.push(row); }
+  for (j = 0; j < nv; j++) for (i = 0; i < nu; i++) quad(a, P[j][i], P[j][i + 1], P[j + 1][i + 1], P[j + 1][i], col);
+  orientTo(a, s0, function(){ return [cx, cy, cz]; }); smoothFrom(a, s0, 48);
+}
+function mirZ(fn){ fn(1); fn(-1); }
+function hand(m, s, cA, cB, dk){ // fist hanging below the wrist (y from -.55)
+  BV(m, -.15 * s, .13 * s, -.8 * s, -.55, -.16 * s, .16 * s, dk);
+  for (var f = 0; f < 4; f++){ var z = (-.12 + f * .08) * s; BV(m, .1 * s, .22 * s, -.8 * s, -.62 * s, z - .035 * s, z + .035 * s, cB); BV(m, .03 * s, .14 * s, -.86 * s, -.74 * s, z - .035 * s, z + .035 * s, dk); }
+  BV(m, .06 * s, .2 * s, -.66 * s, -.56 * s, .12 * s, .2 * s, cB);
+  BV(m, .14 * s, .25 * s, -.79 * s, -.6 * s, -.16 * s, .16 * s, cA, 1, .3);
+}
 function buildMech(def){
-  var c = def.col, c2 = def.col2, g = def.glow, dk = [.12, .12, .15], mid = [.4, .41, .45], steel = [.7, .71, .76], P = {};
+  var c = def.col, c2 = def.col2, g = def.glow, dk = [.1, .1, .13], mid = [.36, .37, .41], steel = [.68, .69, .74], P = {};
   MATOF.clear(); MATOF.set(c, 5); MATOF.set(c2, 5); MATOF.set(mid, 6); MATOF.set(steel, 6); MATOF.set(dk, 7);
-  var id = def.id, heavy = id === 'torque', slim = id === 'wisp', art = id === 'mortar', szz = shZ(def), m;
-  var K = heavy ? 1.35 : slim ? .78 : art ? 1.12 : 1; // limb thickness
-  // pelvis
-  m = []; RB(m, 0, 0, 0, .3 * K + .04, .2, .38 * (heavy ? 1.15 : 1), mid, .45); RB(m, .22, -.02, 0, .12, .17, .2, c, .5);
-  RB(m, 0, 0, hipZ(def), .15 * K, .15 * K, .15 * K, dk, 1); RB(m, 0, 0, -hipZ(def), .15 * K, .15 * K, .15 * K, dk, 1);
-  RB(m, -.05, .02, .3, .2, .16, .08, c2, .45); RB(m, -.05, .02, -.3, .2, .16, .08, c2, .45); P.pelvis = m;
-  // torso
+  var id = def.id, heavy = id === 'torque', slim = id === 'wisp', art = id === 'mortar', szz = shZ(def), hz = hipZ(def), m;
+  var W = heavy ? 1.32 : slim ? .78 : art ? 1.12 : 1;        // limb girth
+  var CW = heavy ? 1.35 : slim ? .78 : art ? 1.15 : 1;       // chest breadth
+  // ---------------- pelvis ----------------
   m = [];
-  var cw = heavy ? .56 : slim ? .33 : art ? .5 : .44, cd = heavy ? .66 : slim ? .4 : art ? .58 : .5, ch = slim ? .3 : heavy ? .38 : .34;
-  LOFT(m, [[.46, cw * .62, cd * .7], [.32, cw * .55, cd * .62], [.14, cw * .5, cd * .6], [0, cw * .55, cd * .66]], mid);
-  RB(m, 0, .74, 0, cw, ch, cd, c, art ? .3 : .38);
-  RB(m, cw * .62, .76, 0, cw * .36, ch * .78, cd * .7, c2, .45);
-  RB(m, cw * .96, .78, 0, .045, ch * .3, cd * .28, g, .6);
-  RB(m, 0, 1.0, 0, cw * .55, .1, cd * .6, dk, .5);
-  RB(m, 0, .85, szz * .82, .17 * K, .17 * K, .17 * K, dk, 1); RB(m, 0, .85, -szz * .82, .17 * K, .17 * K, .17 * K, dk, 1);
-  for (var vs = -1; vs <= 1; vs += 2){ for (var vv = 0; vv < 3; vv++) RB(m, cw * .82, .56 + vv * .07, vs * cd * .62, .05, .022, .12, dk, .5); }
-  if (id === 'vanta'){ [-1, 1].forEach(function(s){ CYL(m, [-cw * .7, .58, s * cd * .45], [-cw - .22, .98, s * cd * .5], .11, dk); RB(m, -cw - .24, 1.02, s * cd * .5, .07, .05, .07, g, .8); }); RB(m, -cw * .7, .78, 0, .16, .26, cd * .55, c2, .45); }
-  if (heavy){ for (var hs = 0; hs < 7; hs++) RB(m, cw * .97, .54 + hs * .07, 0, .02, .03, cd * .62, (hs & 1) ? dk : [1, .78, .15], .4); RB(m, -cw * .6, .9, 0, .3, .18, cd * .8, mid, .4); CYL(m, [-cw * .8, .7, .3], [-cw * .8, 1.15, .45], .06, steel); CYL(m, [-cw * .8, .7, -.3], [-cw * .8, 1.15, -.45], .06, steel); }
-  if (slim){ RB(m, -cw * .5, .7, 0, .1, .3, .08, g, .6); RB(m, 0, .45, 0, cw * .4, .07, cd * .45, dk, .5); }
-  if (art){ RB(m, -.1, 1.28, -cd - .1, .42, .26, .3, mid, .32); for (var mi = 0; mi < 3; mi++) for (var mj = 0; mj < 2; mj++){ RB(m, .26, 1.2 + mj * .18, -cd - .27 + mi * .17, .05, .07, .07, dk, .7); RB(m, .31, 1.2 + mj * .18, -cd - .27 + mi * .17, .04, .05, .05, [1, .3, .2], 1); }
-    RB(m, -cw * .75, .78, 0, .2, .3, cd * .62, mid, .35); CYL(m, [-cw * .9, .55, .25], [-cw * .9, 1.2, -.3], .05, steel); }
+  BV(m, -.28 * CW, .28 * CW, -.22, .16, -.36 * CW, .36 * CW, dk);
+  BV(m, .14, .36 * CW, -.36, .12, -.2, .2, c, .8);
+  BV(m, .3 * CW, .38 * CW, -.3, .06, -.1, .1, c2);
+  mirZ(function(s){ BV(m, -.16, .2, -.36, .1, s > 0 ? .28 * CW : -.44 * CW, s > 0 ? .44 * CW : -.28 * CW, c2, .85); RB(m, 0, 0, s * hz, .14 * W, .14 * W, .14 * W, dk, 1); });
+  BV(m, -.38 * CW, -.14, -.3, .1, -.24, .24, c);
+  P.pelvis = m;
+  // ---------------- torso ----------------
+  m = [];
+  BV(m, -.19 * CW, .17 * CW, 0, .17, -.23 * CW, .23 * CW, dk); BV(m, -.21 * CW, .19 * CW, .15, .3, -.25 * CW, .25 * CW, mid); BV(m, -.24 * CW, .22 * CW, .28, .45, -.29 * CW, .29 * CW, dk);
+  BV(m, .1 * CW, .26 * CW, .02, .4, -.2 * CW, .2 * CW, c, 1.1);
+  BV(m, -.44 * CW, .36 * CW, .42, 1.02, -.52 * CW, .52 * CW, c, 1.12);
+  mirZ(function(s){ BV(m, .16 * CW, .43 * CW, .64, 1.0, s > 0 ? .04 : -.48 * CW, s > 0 ? .48 * CW : -.04, c2, .92); BV(m, .3 * CW, .42 * CW, .46, .62, s > 0 ? .14 : -.42 * CW, s > 0 ? .42 * CW : -.14, c); });
+  BV(m, .38 * CW, .47 * CW, .58, .76, -.1, .1, g, 1, .5);
+  BV(m, -.22, .22, .98, 1.12, -.3 * CW, .3 * CW, dk);
+  mirZ(function(s){ RB(m, 0, .86, s * szz * .82, .16 * W, .16 * W, .16 * W, dk, 1); });
+  if (id === 'vanta' || slim){ BV(m, -.66 * CW, -.36 * CW, .5, 1.02, -.4 * CW, .4 * CW, mid, .9); mirZ(function(s){ CYL(m, [-.6 * CW, .58, s * .26 * CW], [-.78 * CW, .98, s * .3 * CW], .1, dk); RB(m, -.8 * CW, 1.02, s * .3 * CW, .07, .05, .07, g, .8); }); }
+  if (heavy){ for (var hs = 0; hs < 7; hs++) BV(m, .36 * CW, .44 * CW, .46 + hs * .075, .5 + hs * .075, -.34 * CW, .34 * CW, (hs & 1) ? dk : [1, .8, .15]); BV(m, -.7 * CW, -.36 * CW, .5, 1.05, -.48 * CW, .48 * CW, mid); mirZ(function(s){ CYL(m, [-.66 * CW, .62, s * .32 * CW], [-.66 * CW, 1.25, s * .5 * CW], .07, steel); }); }
+  if (slim){ BV(m, -.06, .06, .7, 1.18, -.03, .03, g); }
+  if (art){
+    BV(m, -.72 * CW, -.36 * CW, .45, 1.08, -.46 * CW, .46 * CW, mid);
+    var bx = -.05, by = 1.32, bz = -szz - .1;
+    BV(m, bx - .34, bx + .26, by - .22, by + .2, bz - .22, bz + .22, mid); BV(m, bx - .3, bx + .2, by + .16, by + .26, bz - .18, bz + .18, c);
+    for (var bb = 0; bb < 3; bb++){ var a0 = bb / 3 * TAU, oy = Math.cos(a0) * .1, oz = Math.sin(a0) * .1; CYL(m, [bx + .2, by + oy + .02, bz + oz], [bx + 1.05, by + oy + .22, bz + oz], .055, dk); CYL(m, [bx + 1.0, by + oy + .21, bz + oz], [bx + 1.1, by + oy + .23, bz + oz], .07, mid); }
+    CYL(m, [bx + .25, by + .02, bz], [bx + .55, by + .1, bz], .14, c);
+  }
+  for (var gb = 0; gb < 4; gb++){ mirZ(function(s){ RB(m, .37 * CW, .5 + gb * .14, s * .44 * CW, .03, .03, .03, steel, 1); }); }
+  mirZ(function(s){ BV(m, -.1 * CW, .3 * CW, .42, .47, s > 0 ? .3 * CW : -.54 * CW, s > 0 ? .54 * CW : -.3 * CW, dk); for (var vv = 0; vv < 4; vv++) BV(m, -.34 * CW, -.3 * CW, .55 + vv * .1, .6 + vv * .1, s > 0 ? .25 * CW : -.5 * CW, s > 0 ? .5 * CW : -.25 * CW, dk); });
   P.torso = m;
-  // head
+  // ---------------- head ----------------
   m = [];
-  if (heavy){ RB(m, .04, .16, 0, .2, .17, .2, c, .45); RB(m, .2, .17, 0, .04, .05, .15, g, .6); RB(m, -.06, .05, 0, .26, .08, .26, dk, .5); }
-  else if (slim){ RB(m, .02, .2, 0, .17, .19, .15, c2, .42); RB(m, .16, .21, 0, .05, .045, .12, g, .6); RB(m, -.15, .36, 0, .22, .05, .025, c, .5, -.5); RB(m, .1, .07, 0, .08, .05, .09, mid, .5); }
-  else if (art){ RB(m, .02, .2, 0, .22, .18, .2, c, .32); RB(m, .2, .22, 0, .035, .035, .17, g, .5); RB(m, -.05, .34, 0, .18, .05, .2, mid, .4); CYL(m, [-.1, .38, .14], [-.18, .7, .16], .022, dk); }
-  else { RB(m, .02, .21, 0, .21, .21, .19, c, .4); RB(m, .17, .23, 0, .06, .065, .16, g, .55); RB(m, .12, .06, 0, .1, .06, .12, mid, .5); [-1, 1].forEach(function(s){ RB(m, -.04, .28, s * .2, .12, .06, .03, c2, .5, -.3); }); CYL(m, [-.06, .38, .1], [-.26, .82, .13], .022, dk); }
+  if (heavy){ BV(m, -.2, .22, .02, .3, -.2, .2, c, .9); BV(m, .16, .24, .12, .22, -.16, .16, g); BV(m, -.3, .14, -.04, .12, -.3, .3, dk); BV(m, -.16, .1, .3, .36, -.12, .12, c2); }
+  else if (slim){ BV(m, -.17, .18, .02, .36, -.15, .15, c2, .85); BV(m, .12, .2, .08, .26, -.11, .11, c); BV(m, .18, .22, .19, .27, -.12, .12, g); BV(m, -.34, .1, .3, .38, -.025, .025, c, .3); BV(m, -.2, -.02, .24, .62, -.02, .02, c); }
+  else if (art){ BV(m, -.22, .22, .02, .34, -.2, .2, c); BV(m, .16, .24, .1, .26, -.18, .18, mid); BV(m, .22, .25, .17, .22, -.17, .17, g); BV(m, -.16, .12, .32, .42, -.16, .16, mid); CYL(m, [-.12, .4, .12], [-.2, .74, .14], .02, dk); }
+  else {
+    BV(m, -.2, .2, .02, .4, -.2, .2, c, .85); BV(m, .1, .25, .04, .28, -.16, .16, c2, .9); BV(m, .2, .26, .2, .29, -.17, .17, g);
+    BV(m, -.12, .14, .36, .46, -.035, .035, c2, .6);
+    mirZ(function(s){ BV(m, -.08, .08, .12, .32, s > 0 ? .19 : -.27, s > 0 ? .27 : -.19, dk); CYL(m, [-.02, .3, s * .24], [-.22, .72, s * .26], .022, dk); BV(m, -.02, .1, .24, .3, s > 0 ? .25 : -.29, s > 0 ? .29 : -.25, g); });
+  }
   P.head = m;
-  // upper arm
-  m = []; var ar = (heavy ? .21 : slim ? .135 : art ? .19 : .17);
-  RB(m, -.02, .02, 0, heavy ? .4 : slim ? .2 : .3, heavy ? .34 : slim ? .17 : .24, heavy ? .4 : slim ? .2 : .28, c, heavy ? .8 : .38);
-  if (!slim) RB(m, -.02, -.14, 0, (heavy ? .4 : .3) + .01, .045, (heavy ? .4 : .28) + .01, c2, .5);
-  LOFT(m, [[-.12, ar, ar], [-.32, ar * 1.12, ar * 1.08], [-.58, ar * .92, ar * .92]], c2);
-  RB(m, 0, -.62, 0, ar * 1.05, ar * 1.05, ar * 1.05, dk, 1);
+  // ---------------- upper arm (pauldron + bicep) ----------------
+  m = []; var pw = heavy ? .42 : slim ? .2 : art ? .34 : .32;
+  if (heavy){ RB(m, -.02, .02, 0, .44, .38, .44, c, .55); BV(m, -.4, .4, -.24, -.14, -.42, .42, dk); BV(m, -.3, .3, .3, .4, -.3, .3, [1, .8, .15]); }
+  else {
+    BV(m, -pw, pw, -.2, .2, -pw * 1.05, pw * 1.05, c, .82);
+    BV(m, -pw - .02, pw + .02, -.26, -.15, -pw * 1.08, pw * 1.08, c2);
+    BV(m, -pw * .7, pw * .7, .16, .27, -pw * .75, pw * .75, c2, .8);
+    if (!slim) BV(m, -pw * .35, pw * .35, -.02, .12, pw * 1.0, pw * 1.12, dk);
+  }
+  BV(m, -.14 * W, .14 * W, -.6, -.14, -.14 * W, .14 * W, mid, .9);
+  BV(m, .04 * W, .17 * W, -.5, -.22, -.11 * W, .11 * W, c2);
+  RB(m, 0, -.62, 0, .14 * W, .14 * W, .14 * W, dk, 1);
   P.uarm = m;
-  // forearm + fist
-  m = []; var fr = heavy ? .27 : slim ? .14 : art ? .2 : .19;
-  LOFT(m, [[0, fr, fr], [-.18, fr * 1.3, fr * 1.25], [-.42, fr * 1.15, fr * 1.1], [-.52, fr * .9, fr * .9]], c);
-  RB(m, 0, -.53, 0, fr * .95, .045, fr * .95, dk, .6);
-  CYL(m, [-fr * .9, -.04, 0], [-fr * 1.05, -.44, 0], heavy ? .06 : .035, steel);
-  var fs = heavy ? 1.55 : slim ? .8 : art ? 1.15 : 1.05;
-  RB(m, .01, -.71, 0, .17 * fs, .16 * fs, .17 * fs, heavy ? dk : c2, .42); RB(m, .14 * fs, -.73, 0, .06 * fs, .12 * fs, .15 * fs, dk, .5);
-  if (heavy){ CYL(m, [fr * .8, -.02, .14], [fr * .9, -.45, .16], .05, steel); RB(m, 0, -.25, 0, fr * 1.36, .05, fr * 1.3, [1, .78, .15], .5); }
-  if (slim){ RB(m, .2, -.38, 0, .22, .05, .02, g, .5, -.9); RB(m, .32, -.58, 0, .22, .04, .015, g, .5, -1.1); }
+  // ---------------- forearm + hand ----------------
+  m = []; var gw = heavy ? .3 : slim ? .13 : art ? .21 : .19;
+  BV(m, -gw, gw, -.55, -.02, -gw, gw, c, 1 / 1.25);
+  BV(m, gw * .55, gw * 1.15, -.48, -.08, -gw * .75, gw * .75, c2, .9);
+  BV(m, -gw * 1.05, gw * 1.05, -.58, -.48, -gw * 1.05, gw * 1.05, dk);
+  CYL(m, [-gw * 1.05, -.06, 0], [-gw * 1.12, -.46, 0], heavy ? .06 : .035, steel);
+  hand(m, heavy ? 1.15 : slim ? .78 : art ? 1.0 : .96, c2, c, dk);
+  if (heavy){ BV(m, -gw * 1.1, gw * 1.1, -.24, -.14, -gw * 1.1, gw * 1.1, [1, .8, .15]); CYL(m, [gw * .9, -.04, .16], [gw, -.46, .18], .05, steel); }
+  if (slim){ var bl = function(x0, y0, x1, y1, w2){ BV(m, Math.min(x0, x1), Math.max(x0, x1), Math.min(y0, y1), Math.max(y0, y1), -.015, .015, g, 1, .3); };
+    var arc = [], N2 = 9; for (var q = 0; q <= N2; q++){ var t = q / N2, ang = -.3 + t * 2.3, R1 = .95, cxp = -.1, cyp = -.55; arc.push([cxp + Math.cos(ang - 1.57) * -R1 * .55 + .12, cyp + Math.sin(ang - 1.57) * R1 * .75, (1 - Math.abs(t - .45) * 1.6) * .16 + .02]); }
+    for (q = 0; q < N2; q++){ var A2 = arc[q], B2 = arc[q + 1]; quad(m, [A2[0], A2[1], .02], [B2[0], B2[1], .02], [B2[0] + B2[2], B2[1] + B2[2] * .3, .02], [A2[0] + A2[2], A2[1] + A2[2] * .3, .02], g); quad(m, [A2[0], A2[1], -.02], [A2[0] + A2[2], A2[1] + A2[2] * .3, -.02], [B2[0] + B2[2], B2[1] + B2[2] * .3, -.02], [B2[0], B2[1], -.02], g); }
+    BV(m, .04, .2, -.2, .02, -.06, .06, dk); }
   P.farm = m;
-  // thigh
-  m = []; var lr = heavy ? .25 : slim ? .16 : art ? .22 : .21;
-  RB(m, 0, -.06, 0, lr * 1.25, .14, lr * 1.25, c, .45);
-  LOFT(m, [[-.08, lr * 1.12, lr * 1.12], [-.34, lr * 1.25, lr * 1.18], [-.62, lr * 1.0, lr], [-.74, lr * .85, lr * .85]], c2);
-  RB(m, .04, -.38, 0, lr * .55, lr * 1.6, lr * 1.05, c, .42);
-  RB(m, 0, -.78, 0, lr * .95, lr * .95, lr * .95, dk, 1);
+  // ---------------- thigh ----------------
+  m = []; var tw = heavy ? .26 : slim ? .15 : art ? .22 : .23;
+  BV(m, -tw, tw, -.76, -.02, -tw, tw, c2, .85);
+  BV(m, tw * .2, tw * 1.12, -.66, -.08, -tw * .85, tw * .85, c, .88);
+  BV(m, -tw * 1.05, tw * .2, -.6, -.15, -tw * 1.08, tw * 1.08, mid);
+  BV(m, tw * 1.08, tw * 1.16, -.6, -.14, -tw * .5, tw * .5, dk); mirZ(function(s){ BV(m, -tw * .5, tw * .8, -.64, -.1, s > 0 ? tw * .86 : -tw * .94, s > 0 ? tw * .94 : -tw * .86, dk); });
+  RB(m, 0, -.78, 0, tw * .92, tw * .92, tw * .92, dk, 1);
   P.thigh = m;
-  // shin + foot
-  m = [];
-  RB(m, .1, -.06, 0, lr * .7, lr * .85, lr * .9, c2, .45);
-  LOFT(m, [[-.06, lr * .95, lr * .95], [-.24, lr * 1.3, lr * 1.22], [-.52, lr * 1.0, lr], [-.66, lr * .75, lr * .78]], c);
-  CYL(m, [-lr * .9, -.12, 0], [-lr * .8, -.58, 0], .035, steel);
-  RB(m, 0, -.72, 0, lr * .7, lr * .7, lr * .7, dk, 1);
-  var ft = heavy ? 1.35 : slim ? .85 : 1;
-  RB(m, .12 * ft, -.86, 0, .27 * ft, .095, .17 * ft, dk, .38); RB(m, .34 * ft, -.85, 0, .09 * ft, .085, .16 * ft, c, .5); RB(m, -.12 * ft, -.86, 0, .1 * ft, .085, .14 * ft, mid, .5);
+  // ---------------- shin + boot ----------------
+  m = []; var sw = heavy ? .26 : slim ? .15 : art ? .22 : .23, ft = heavy ? 1.3 : slim ? .88 : 1.1;
+  BV(m, sw * .3, sw * 1.35, -.22, .12, -sw * .85, sw * .85, c2, .85);
+  BV(m, -sw, sw * 1.05, -.7, -.06, -sw * 1.02, sw * 1.02, c, 1 / 1.22);
+  BV(m, sw * .65, sw * 1.4, -.62, -.18, -sw * .72, sw * .72, c2, 1.1);
+  BV(m, -sw * 1.15, -sw * .4, -.62, -.2, -sw * .8, sw * .8, mid);
+  mirZ(function(s){ BV(m, -sw * .6, sw * .9, -.6, -.12, s > 0 ? sw * .96 : -sw * 1.06, s > 0 ? sw * 1.06 : -sw * .96, dk); for (var bo = 0; bo < 3; bo++) RB(m, sw * 1.38, -.26 - bo * .14, s * sw * .45, .025, .025, .025, steel, 1); });
+  RB(m, 0, -.74, 0, sw * .7, sw * .7, sw * .7, dk, 1);
+  BV(m, -.2 * ft, .38 * ft, -.95, -.74, -.22 * ft, .22 * ft, dk, .9);
+  BV(m, .2 * ft, .48 * ft, -.94, -.77, -.2 * ft, .2 * ft, c, .8);
+  BV(m, -.24 * ft, -.05, -.94, -.78, -.19 * ft, .19 * ft, mid);
   P.shin = m;
+  var stretch = function(arr, L0, L1){ for (var o = 0; o < arr.length; o += 10){ var y = arr[o + 1]; arr[o + 1] = y >= -L0 ? y * L1 / L0 : y - (L1 - L0); } };
+  stretch(P.thigh, .78, .9); stretch(P.shin, .74, .86);
   MATOF.clear();
   for (var k in P) MESH[id + '_' + k] = new Float32Array(P[k]);
 }
 // skeleton dimensions (unscaled)
-var SK = { hip: 1.5, waist: .14, neck: 1.02, shY: .85, thigh: .78, shin: .74, uarm: .62, farm: .58 };
+var SK = { hip: 1.74, waist: .14, neck: 1.02, shY: .85, thigh: .9, shin: .86, uarm: .62, farm: .58 };
 function shZ(def){ return def.id === 'torque' ? .78 : def.id === 'wisp' ? .5 : .62; }
 function hipZ(def){ return def.id === 'torque' ? .34 : .26; }
 
 // ---------- poses ----------
 var KEYS = ['lean', 'torso', 'head', 'shA', 'elA', 'shB', 'elB', 'hipA', 'kneeA', 'hipB', 'kneeB', 'y'];
-function pose(o){ var p = { lean: 0, torso: -.1, head: .05, shA: .72, elA: 1.5, shB: .5, elB: 1.7, hipA: .35, kneeA: -.6, hipB: -.28, kneeB: -.4, y: -.1 }; for (var k in o) p[k] = o[k]; return p; }
+function pose(o){ var p = { lean: 0, torso: -.04, head: 0, shA: .5, elA: 1.25, shB: .25, elB: 1.45, hipA: .22, kneeA: -.38, hipB: -.16, kneeB: -.26, y: -.06 }; for (var k in o) p[k] = o[k]; return p; }
 var PO = {
   guard: pose({}),
   crouch: pose({ torso: -.38, head: .3, shA: 1.0, elA: 1.95, shB: .85, elB: 2.05, hipA: 1.45, kneeA: -2.15, hipB: .95, kneeB: -1.95, y: -.66 }),
@@ -424,7 +474,7 @@ IN[0] = freshInput(); IN[1] = freshInput();
 function opp(f){ return F[1 - f.i]; }
 function grounded(f){ return f.y <= 0.0001 && f.vy <= 0; }
 function canAct(f){ return f.st === 'idle' || f.st === 'walk' || f.st === 'crouch' || f.st === 'block' || f.st === 'dash' && f.t > 8; }
-function hurtbox(f){ var s = f.def.s, h = (f.st === 'crouch' || (f.st === 'block' && f.crouch) || (f.atk && f.atk.crouch)) ? 1.85 : (f.st === 'down' ? .8 : 2.95); return [f.x - .58 * s, f.x + .58 * s, f.y, f.y + h * s]; }
+function hurtbox(f){ var s = f.def.s, h = (f.st === 'crouch' || (f.st === 'block' && f.crouch) || (f.atk && f.atk.crouch)) ? 2.05 : (f.st === 'down' ? .8 : 3.25); return [f.x - .58 * s, f.x + .58 * s, f.y, f.y + h * s]; }
 function startAttack(f, name){
   var A = ATK[name]; f.st = 'attack'; f.atk = A; f.atkName = name; f.af = 0; f.hitDone = false; f.connected = false;
   if (!A.air) f.vx = 0;
@@ -612,8 +662,8 @@ function stepFighter(f){
   if ((f.st === 'idle' || f.st === 'walk' || f.st === 'crouch') && grounded(f)) f.face = o.x >= f.x ? 1 : -1;
   // pose
   var tp = PO[target] || PO.guard;
-  if (target === 'walk'){ var ph = f.walkPh; tp = pose({ torso: -.14, hipA: .2 + Math.sin(ph) * .55, kneeA: -.5 - Math.max(0, -Math.cos(ph)) * .6, hipB: .2 - Math.sin(ph) * .55, kneeB: -.5 - Math.max(0, Math.cos(ph)) * .6, y: -.08 + Math.abs(Math.sin(ph)) * .05, shA: .72 - Math.sin(ph) * .12, shB: .5 + Math.sin(ph) * .12 }); }
-  if (target === 'guard'){ var br = Math.sin(f.t * .06 + f.i) * .03; tp = pose({ y: -.1 + br, torso: -.1 - br, shA: .72 + br }); }
+  if (target === 'walk'){ var ph = f.walkPh; tp = pose({ torso: -.14, hipA: .2 + Math.sin(ph) * .55, kneeA: -.5 - Math.max(0, -Math.cos(ph)) * .6, hipB: .2 - Math.sin(ph) * .55, kneeB: -.5 - Math.max(0, Math.cos(ph)) * .6, y: -.08 + Math.abs(Math.sin(ph)) * .05, shA: .5 - Math.sin(ph) * .12, shB: .25 + Math.sin(ph) * .12 }); }
+  if (target === 'guard'){ var br = Math.sin(f.t * .06 + f.i) * .03; tp = pose({ y: -.1 + br, torso: -.04 - br, shA: .5 + br }); }
   var rate = (f.st === 'attack' || f.st === 'special' || f.st === 'super') ? .45 : (f.st === 'hit' ? .5 : .22);
   KEYS.forEach(function(k){ f.pose[k] += (tp[k] - f.pose[k]) * rate; });
   if (f.hp < f.def.hp * .3 && rnd() < .08) smoke(f.x - f.face * .3, f.y + 2.6 * s, 1);
@@ -688,7 +738,7 @@ var FS = 'precision highp float;varying vec3 vN,vC,vW,vO,vNo;varying float vM;un
   'void main(){vec3 N=normalize(vN);vec3 V=uCam-vW;float dist=length(V);V/=dist;if(uTwo>.5&&dot(N,V)<0.)N=-N;' +
   'float d=max(dot(N,uSun),0.);vec3 c=vC*uTint*(uAmb+uSunCol*d+.1*N.y);' +
   'if(vM>.5&&vM<1.5){vec3 an=abs(vNo);vec2 uv=(an.y>.7?vO.xz:(an.x>an.z?vO.zy:vO.xy));c*=.45+texture2D(uT2,uv*.22).r*1.1;}' +
-  'if(vM>4.5){vec3 an=abs(vNo);vec2 uv=(an.y>.7?vO.xz:(an.x>an.z?vO.zy:vO.xy));float tx=texture2D(uT1,uv*1.4).r;c*=(vM<5.5?.86+tx*.28:.8+tx*.4);' +
+  'if(vM>4.5){vec3 an=abs(vNo);vec2 uv=(an.y>.7?vO.xz:(an.x>an.z?vO.zy:vO.xy));float tx=texture2D(uT1,uv*2.4).r;c*=(vM<5.5?.72+tx*.56:.72+tx*.56);' +
   'float gls=vM<5.5?.55:(vM<6.5?.4:.25);vec3 Rf=reflect(-V,N);vec3 env=mix(uEnvB,uEnvA,clamp(Rf.y*.6+.5,0.,1.));float fr=.06+.94*pow(1.-max(dot(N,V),0.),4.);' +
   'c=mix(c,env,fr*gls*.55)+uSunCol*pow(max(dot(N,normalize(uSun+V)),0.),vM<5.5?70.:30.)*gls*1.1;}' +
   'float rim=pow(1.-max(dot(N,V),0.),3.);c+=uRim*rim*.7;c=mix(c,vec3(1.),uFlash);' +
@@ -788,7 +838,7 @@ function bindMesh(prog, m){
 function draw(m, M){ gl.uniformMatrix4fv(R.main.u.uM, false, M); bindMesh(R.main, m); gl.drawArrays(gl.TRIANGLES, 0, m.n); }
 function fighterMats(f){
   var P = f.pose, s = f.def.s, id = f.def.id, out = [];
-  var rootM = mul(T(f.x, 0, 0), mul(Ry(f.face > 0 ? -.52 : PI + .52), mul(Sc(s), mul(T(0, SK.hip + P.y, 0), Rz(P.lean)))));
+  var rootM = mul(T(f.x, 0, 0), mul(Ry(f.face > 0 ? -.78 : PI + .78), mul(Sc(s), mul(T(0, SK.hip + P.y, 0), Rz(P.lean)))));
   var torso = mul(rootM, mul(T(0, SK.waist, 0), Rz(P.torso))), head = mul(torso, mul(T(0, SK.neck, 0), Rz(P.head)));
   var sz = shZ(f.def), hz2 = hipZ(f.def);
   var shA = mul(torso, mul(T(0, SK.shY, sz), Rz(P.shA))), elA = mul(shA, mul(T(0, -SK.uarm, 0), Rz(P.elA)));
