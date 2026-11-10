@@ -74,6 +74,7 @@ h2{font-size:22px;font-weight:900;font-style:italic;letter-spacing:.08em;text-tr
 #bTgt{width:54px;height:54px;right:calc(26px + env(safe-area-inset-right));bottom:calc(114px + env(safe-area-inset-bottom))}
 #bBst{width:54px;height:54px;right:calc(20px + env(safe-area-inset-right));bottom:calc(180px + env(safe-area-inset-bottom))}
 #bBrk{width:54px;height:54px;right:calc(84px + env(safe-area-inset-right));bottom:calc(166px + env(safe-area-inset-bottom))}
+#bGear{width:50px;height:50px;right:calc(166px + env(safe-area-inset-right));bottom:calc(92px + env(safe-area-inset-bottom))}
 #bPause{position:fixed;z-index:6;top:calc(8px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);width:40px;height:30px;border-radius:8px;border:1px solid rgba(160,255,215,.4);background:rgba(8,22,30,.5);color:#d6fff0;font-weight:900;font-size:12px}
 #hurt{position:fixed;inset:0;z-index:4;pointer-events:none;opacity:0;background:radial-gradient(ellipse at center,transparent 45%,rgba(255,40,30,.55) 100%)}
 @media (max-height:430px){.scr{gap:8px}h1.title{font-size:clamp(30px,6vw,54px)}.btn{padding:9px 16px}}
@@ -84,7 +85,7 @@ h2{font-size:22px;font-weight:900;font-style:italic;letter-spacing:.08em;text-tr
 <canvas id="hud"></canvas>
 <div id="hurt"></div>
 <div id="pad" class="hidden">
-  <div class="tb" id="bBrk">BRAKE</div><div class="tb" id="bBst">BOOST</div>
+  <div class="tb" id="bGear">GEAR</div><div class="tb" id="bBrk">BRAKE</div><div class="tb" id="bBst">BOOST</div>
   <div class="tb" id="bTgt">TGT</div><div class="tb" id="bFlr">FLARE</div>
   <div class="tb" id="bMsl">MSL</div><div class="tb" id="bGun">GUN</div>
 </div>
@@ -126,7 +127,7 @@ h2{font-size:22px;font-weight:900;font-style:italic;letter-spacing:.08em;text-tr
     <div class="row"><span class="note" style="width:90px">Difficulty</span><button class="btn sm" id="sD0">Easy</button><button class="btn sm" id="sD1">Normal</button><button class="btn sm" id="sD2">Hard</button></div>
     <div class="row"><span class="note" style="width:90px">Graphics</span><button class="btn sm" id="sQ0">Smooth</button><button class="btn sm" id="sQ1">Sharp</button></div>
     <div class="row"><span class="note" style="width:90px">Sound</span><button class="btn sm" id="sSnd">On</button></div>
-    <div class="note">Keyboard: arrows or WASD fly · Q/E rudder · Space guns · F or Enter missile · X flares · T next target · Shift boost · Z brake · C camera · P pause.</div>
+    <div class="note">Keyboard: arrows or WASD fly · Q/E rudder · Space guns · F or Enter missile · X flares · G landing gear · T next target · Shift boost · Z brake · C camera · P pause.</div>
   </div>
 </div>
 
@@ -487,6 +488,17 @@ var MESH = {
     tube(b, [0, 14.6, -3], [0, 24, -3], .35, .2, 6, DK); box(b, 0, 21, -3, 5, .2, .3, DK); tube(b, [0, 12, -11], [0, 17, -12], 1.5, 1.2, 10, [.2, .2, .22]);
     box(b, 0, 7, 20, 3.4, 2, 4, HU); tube(b, [0, 7.4, 21.5], [0, 8.4, 28], .28, .22, 6, DK); box(b, 0, 7, -24, 3, 2, 3.6, HU); tube(b, [.5, 7.6, -24], [.5, 10.4, -28], .15, .12, 5, DK); tube(b, [-.5, 7.6, -24], [-.5, 10.4, -28], .15, .12, 5, DK); }),
   fuel: gndMesh(function(b){ var W = [.84, .84, .8]; tube(b, [0, 0, 0], [0, 7, 0], 5, 5, 16, W, false); tube(b, [0, 7, 0], [0, 8.2, 0], 5, .3, 16, [.7, .7, .68]); box(b, 0, 3.5, 5.05, .8, 7, .2, [.75, .3, .15]); tube(b, [0, 2, 0], [0, 2.5, 0], 5.06, 5.06, 16, [.75, .3, .15], false); }),
+  carrier: gndMesh(function(b){ var HU = [.36, .39, .43], DK = [.17, .18, .2], WH = [.85, .85, .82], YL = [.85, .68, .12], i;
+    loft(b, [{ z: 158, w: 3, h: 13, y: 8 }, { z: 125, w: 21, h: 14, y: 6.5 }, { z: -138, w: 24, h: 14, y: 6.5 }, { z: -152, w: 21, h: 12, y: 8.5 }], 16, function(i, t){ return t > .56 && t < .94 ? [.3, .1, .09] : HU; }, 4);
+    box(b, 0, 20.5, 0, 62, 1.2, 304, DK); box(b, -33, 20.4, -30, 10, 1, 150, DK);
+    for (i = -9; i <= 9; i++) box(b, 0, 21.14, i * 15, 1.1, .1, 8, WH); box(b, -18, 21.14, 0, .7, .1, 290, WH); box(b, 18, 21.14, 0, .7, .1, 290, WH);
+    [-110, -92, -74, -56].forEach(function(z){ box(b, 0, 21.3, z, 38, .22, .5, [.06, .06, .07]); }); box(b, 0, 21.14, -128, 34, .1, 5, YL); box(b, 0, 21.14, -147, 40, .1, 3, WH);
+    box(b, 24, 31, 20, 11, 20, 38, HU); box(b, 24, 43.5, 24, 9, 5, 22, [.44, .47, .5]); box(b, 19.4, 43.8, 24, .2, 2, 20, [.07, .11, .15]); tube(b, [24, 46, 18], [24, 62, 18], .7, .35, 6, DK); box(b, 24, 56, 18, 9, .5, 1.2, DK); box(b, 24, 49, 34, 5, 4, 5, [.8, .82, .84]);
+    for (i = -9; i <= 9; i++){ box(b, -27, 21.3, i * 15 + 4, .5, .3, .5, [.3, 1.8, .7]); box(b, 18, 21.3, i * 15 + 4, .5, .3, .5, [.3, 1.8, .7]); }
+    box(b, -30.5, 23.2, -78, .6, 3.4, 1.6, [.1, .1, .1]); box(b, -30.5, 23.4, -78.9, .8, .8, .2, [2.2, 1.5, .2]); box(b, -30.5, 23.4, -78.95, 3.6, .3, .1, [.3, 1.8, .6]);
+    box(b, 30.4, 14, 60, .6, 5, 14, [.75, .75, .72]); box(b, 30.4, 14, -40, .6, 5, 14, [.75, .75, .72]); }),
+  gear: gndMesh(function(b){ var G = [.62, .64, .66], T = [.06, .06, .07]; tube(b, [0, 0, 0], [0, -2.0, 0], .1, .08, 6, G); tube(b, [0, -.5, 0], [0, -1.5, -.7], .05, .05, 5, G); tube(b, [-.24, -2.05, 0], [.24, -2.05, 0], .42, .42, 10, T, [.5, .5, .52]); }),
+  hook: gndMesh(function(b){ tube(b, [0, 0, 0], [0, 0, -3.3], .07, .07, 5, [.75, .75, .72]); box(b, 0, -.1, -3.3, .22, .3, .3, [.2, .2, .2]); }),
   bunker: gndMesh(function(b){ box(b, 0, 2.2, 0, 14, 4.4, 10, CON); box(b, 0, 4.7, 0, 15, .7, 11, [.42, .42, .4]); box(b, 0, 1.5, 5.05, 4, 3, .1, DRK); box(b, 4.5, 2.6, 5.05, 1.6, 1, .1, [.1, .15, .2]); })
 };
 // ===================================================================
@@ -534,16 +546,17 @@ function flyStep(e, pIn, rIn, yIn, thr, dt){ var s = e.spec, sf = clamp((e.spd -
   if (pIn){ a = pIn * s.pr * dt * sf; e.f = rot(e.f, e.r, a); e.u = rot(e.u, e.r, a); }
   if (yIn){ a = -yIn * s.yr * dt; e.f = rot(e.f, e.u, a); e.r = rot(e.r, e.u, a); }
   if (e.f[0] * e.f[0] + e.f[2] * e.f[2] > .05){ var bank = Math.atan2(-e.r[1], e.u[1]), w = -Math.sin(bank) * .34 * dt * sf * (e.u[1] > 0 ? 1 : .3), Y = [0, 1, 0]; e.f = rot(e.f, Y, w); e.r = rot(e.r, Y, w); e.u = rot(e.u, Y, w); }
-  var tg = thr >= 0 ? s.cruise + thr * (s.vmax - s.cruise) : s.cruise + thr * (s.cruise - s.vmin);
-  e.spd += (tg - e.spd) * (thr > 0 ? .9 : .7) * dt - e.f[1] * 36 * dt; e.spd = clamp(e.spd, s.vmin * .75, s.vmax * 1.18);
-  if (e.spd < s.vmin * 1.08){ var st = clamp((s.vmin * 1.08 - e.spd) / (s.vmin * .3), 0, 1) * 1.3 * dt; e.f = norm([e.f[0], e.f[1] - st, e.f[2]]); e.stall = true; } else e.stall = false;
+  var gd = (e.gear || 0) > .5, vm = gd ? s.vmin * .74 : s.vmin, tg = thr >= 0 ? s.cruise + thr * (s.vmax - s.cruise) : s.cruise + thr * (s.cruise - s.vmin);
+  if (gd && thr < .5) tg = thr < 0 ? vm * 1.12 : s.cruise * .68;
+  e.spd += (tg - e.spd) * (thr > 0 ? .9 : (gd ? .95 : .7)) * dt - e.f[1] * 36 * dt; e.spd = clamp(e.spd, vm * .75, s.vmax * 1.18);
+  if (e.spd < vm * 1.08){ var st = clamp((vm * 1.08 - e.spd) / (vm * .3), 0, 1) * 1.3 * dt; e.f = norm([e.f[0], e.f[1] - st, e.f[2]]); e.stall = true; } else e.stall = false;
   e.f = norm(e.f); e.r = norm(cross(e.f, e.u)); e.u = cross(e.r, e.f); e.v = scl(e.f, e.spd); e.p = madd(e.p, e.v, dt); e.thr = thr; e.pIn = pIn; e.rIn = rIn || 0; e.yIn = yIn || 0; }
 function steerTo(e, T, agg){ var d = sub(T, e.p), D = len(d) || 1; d = scl(d, 1 / D);
   var lx = dot(d, e.r), ly = dot(d, e.u), lz = dot(d, e.f), off = Math.acos(clamp(lz, -1, 1)), bank = Math.atan2(-e.r[1], e.u[1]), rIn, pIn;
   if (off < .14){ rIn = clamp(-bank * 1.2 + lx * 5, -1, 1); pIn = clamp(ly * 7, -1, 1); }
   else { var ra = Math.atan2(lx, ly); rIn = clamp(ra * 2.6, -1, 1); pIn = clamp(off * 2.2, 0, 1) * (Math.abs(ra) < 1.1 ? 1 : .15) * agg; }
   var la = madd(e.p, e.f, e.spd * 2.4), gh = Math.max(Hg(la[0], la[2]), Hg(e.p[0], e.p[2])), clr = Math.min(e.p[1], la[1]) - gh;
-  if (clr < (e.lowOK ? 70 : 230)){ rIn = clamp(-bank * 2.4, -1, 1); pIn = e.u[1] > .2 ? 1 : 0; }
+  if (!e.noAvoid && clr < (e.lowOK ? 70 : 230)){ rIn = clamp(-bank * 2.4, -1, 1); pIn = e.u[1] > .2 ? 1 : 0; }
   else if (e.p[1] > 2700 && e.f[1] > -.1){ rIn = clamp(-bank * 2, -1, 1); pIn = -.5; }
   return [pIn, rIn, clamp(lx * 2, -1, 1) * .4]; }
 function incCount(e){ var n = 0; for (var i = 0; i < MSL.length; i++) if (MSL[i].target === e) n++; return n; }
@@ -583,6 +596,7 @@ function playerFire(dt){ var s = P.spec; P.gunCd -= dt; P.railCd[0] -= dt; P.rai
     BUL.push({ p: madd(madd(P.p, P.f, 9), P.r, (P.rail ? .8 : -.8)), v: scl(dir, P.spd + 1000), life: 1.1, team: 0, dmg: s.gun, owner: P }); P.muzzle = .05; shots++; if (!QUIET && (shots & 1)) sfx('gun'); if ((shots % 6) === 0) haptic('light'); } }
 function playerMissile(){ if (!P || !P.alive || phase !== 'play') return; var i = P.railCd[0] <= 0 ? 0 : (P.railCd[1] <= 0 ? 1 : -1); if (i < 0 || P.mslLeft <= 0) return;
   P.railCd[i] = P.spec.rail; P.mslLeft--; fireMissile(P, locked ? P.tgtE : null); shots++; haptic('medium'); }
+function toggleGear(){ if (!P || !P.alive || phase !== 'play' || P.onDeck) return; P.gearT = P.gearT ? 0 : 1; kmsg(P.gearT ? 'GEAR DOWN' : 'GEAR UP', '#9fffe0'); if (!QUIET) nz(.5, 300, 90, .35); haptic('medium'); }
 function playerFlare(){ if (!P || !P.alive || phase !== 'play' || P.flr <= 0 || P.flrCd > 0) return; P.flr--; P.flrCd = 1; dropFlares(P); haptic('light'); }
 function targets(){ var a = []; AIR.forEach(function(e){ if (e.alive && e.team === 1) a.push(e); }); GND.forEach(function(e){ if (e.alive) a.push(e); }); return a; }
 function nextTarget(cycle){ if (!P) return; var L = targets().map(function(e){ var d = sub(e.p, P.p), D = len(d), ang = Math.acos(clamp(dot(d, P.f) / (D || 1), -1, 1)); return { e: e, s: ang * 1700 + D - (e.primary ? 600 : 0) }; }).sort(function(a, b){ return a.s - b.s; });
@@ -649,6 +663,8 @@ function updAir(dt){ for (var i = AIR.length - 1; i >= 0; i--){ var e = AIR[i]; 
     if (e.hp < e.maxhp * .45 && rnd() < .4) part(e.p, [rs() * 3, rs() * 3, rs() * 3], 1.2, 2, 9, [.2, .2, .2], .5, 1, .3);
     if (e.p[1] < Hg(e.p[0], e.p[2]) + 2) kill(e, null); } }
 function playerCtrl(dt){ var sx = INP.x * (.45 + .55 * Math.abs(INP.x)), sy = (SET.pitch ? -INP.y : INP.y) * (.45 + .55 * Math.abs(INP.y)), rIn, thr = INP.boost ? 1 : (INP.brake ? -1 : .15), yIn = INP.yaw, bank = Math.atan2(-P.r[1], P.u[1]);
+  if (AI0 && M.carrier){ var C = M.carrier, L = cLocal(C, P.p), s = -80 - L[2], sa = Math.max(s - 240, 0), ap = add(madd(madd(C.p, C.f, -80 - sa + C.spd * 2.5), C.r, 0), [0, glideAlt(sa) + (s < 60 ? -4 : 0), 0]);
+    if (s < 2700 && !P.gearT) toggleGear(); P.noAvoid = true; var ca = steerTo(P, ap, 1); INP.brake = 0; flyStep(P, ca[0], ca[1], ca[2], P.spd > (P.gearT ? P.spec.vmin * .98 : 150) ? -1 : .15, dt); INP.brake = 1; return; }
   if (AI0){ var T = P.tgtE, tp = T ? (T.kind === 'gnd' ? madd(T.p, [0, 1, 0], dist(T.p, P.p) > 900 ? 260 : 30) : madd(T.p, T.v, .5)) : [0, 900, 0]; P.lowOK = !!(T && T.kind === 'gnd');
     P.ext = (P.ext || 0) - dt; if (T && T.kind === 'gnd' && dist(T.p, P.p) < 420 && P.ext <= 0){ P.ext = 7; P.extD = norm([P.f[0], 0, P.f[2]]); } if (P.ext > 2.5){ tp = madd(madd(P.p, P.extD, 900), [0, 1, 0], 420 - P.p[1] + Hg(P.p[0], P.p[2])); P.lowOK = false; }
     var c = steerTo(P, tp, 1); if (incoming(P) && P.flr > 0 && P.flrCd <= 0) playerFlare(); if (locked && rnd() < .05) playerMissile(); INP.gun = T && dist(T.p, P.p) < 900 && dot(norm(sub(T.p, P.p)), P.f) > .99 ? 1 : 0;
@@ -658,14 +674,46 @@ function playerCtrl(dt){ var sx = INP.x * (.45 + .55 * Math.abs(INP.x)), sy = (S
   if (SET.assist === 0 && Math.abs(P.f[1]) < .82) rIn = clamp((sx * 1.3 - bank) * 2.8, -1, 1); else rIn = sx;
   flyStep(P, sy, rIn, yIn, thr, dt);
   if (Math.abs(sy) > .6 && P.spd > 150){ var sp = P.spec.span || 7.3, tz = P.spec.tipz || -5; part(madd(madd(P.p, P.r, sp), P.f, tz), scl(P.v, .1), .55, .5, 2.2, [1, 1, 1], .28, 1); part(madd(madd(P.p, P.r, -sp), P.f, tz), scl(P.v, .1), .55, .5, 2.2, [1, 1, 1], .28, 1); } }
+var DECKY = 21.1, GEARH = 2.9, WIRES = [-110, -92, -74, -56];
+function cLocal(C, p){ var d = sub(p, C.p); return [dot(d, C.r), p[1], dot(d, C.f)]; }
+function glideAlt(s){ return DECKY + GEARH + Math.max(0, s) * .061; }
+function crash(why){ if (!P.alive) return; M.why = why; P.hp = 0; kill(P, null); P.dead = false; P.gone = true; P.onDeck = false; boom(P.p, 2); }
+function deckCheck(){ var C = M.carrier; if (!C || !P.alive || P.onDeck) return; var L = cLocal(C, P.p), bot = P.p[1] - GEARH;
+  if (Math.abs(L[0] - 24) < 8 && L[2] > -2 && L[2] < 42 && P.p[1] < 49) return crash('You flew into the carrier island.');
+  if (Math.abs(L[0]) > 31 || Math.abs(L[2]) > 152 || bot > DECKY) return;
+  if (bot < DECKY - 3.5) return crash('Ramp strike: you hit the hull below the flight deck.');
+  var sink = -P.v[1], rel = P.spd - C.spd, bank = Math.abs(Math.atan2(-P.r[1], P.u[1]));
+  if ((P.gear || 0) < .9) return crash('Gear up! Lower the landing gear before touchdown.');
+  if (sink > 17) return crash('Touchdown too hard. Flatten your descent.');
+  if (rel > 135) return crash('Far too fast for the deck.');
+  if (dot(P.f, C.f) < .93 || bank > .42) return crash('Not lined up with the deck.');
+  var w = 0; for (var i = 0; i < 4; i++) if (L[2] < WIRES[i] - 1){ w = i + 1; break; }
+  P.onDeck = true; P.dk = { x: L[0], z: L[2], v: rel, wire: w, sink: sink, tdx: L[0] }; SHAKE = Math.max(SHAKE, .5 + sink * .06); haptic('heavy'); if (!QUIET){ sfx('hit'); nz(.5, 500, 80, .5); }
+  for (i = 0; i < 8; i++) part(madd(P.p, [rs() * 2, -GEARH, rs() * 2], 1), [rs() * 6, 3, rs() * 6], .9, 1.5, 6, [.8, .8, .8], .4, 1, 1);
+  if (w) kmsg('TRAPPED · ' + w + '-WIRE', '#9fffe0'); else kmsg('BOLTER! HOLD BRAKE FOR RETRO THRUST', '#ffc857'); }
+function deckRoll(dt){ var C = M.carrier, d = P.dk, retro = INP.brake && d.v > .5;
+  if (!d.wire && INP.boost && !d.done){ d.v += 64 * dt; if (d.v > P.spec.vmin * .9){ P.onDeck = false; P.f = norm([C.f[0], .16, C.f[2]]); P.u = [0, 1, 0]; P.r = norm(cross(P.f, P.u)); P.u = cross(P.r, P.f); P.spd = d.v + C.spd; P.p[1] += .7; kmsg('GO AROUND', '#ffc857'); return; } }
+  else d.v = Math.max(0, d.v - (9 + (d.wire ? 78 : 0) + (retro ? 50 : 0)) * dt);
+  d.z += d.v * dt; if (d.v > 3) d.x += INP.x * 5 * dt;
+  P.f = C.f.slice(); P.u = [0, 1, 0]; P.r = C.r.slice(); P.spd = d.v + C.spd; P.v = scl(P.f, P.spd); P.p = add(madd(madd(C.p, C.r, d.x), C.f, d.z), [0, DECKY + GEARH, 0]); P.thr = retro ? -1 : 0; P.pIn = P.rIn = P.yIn = 0; P.stall = false; P.retro = retro;
+  if (retro){ var bn = P.spec.burn; for (var i = 0; i < bn.x.length; i++){ var b = madd(madd(madd(P.p, P.r, bn.x[i]), P.u, bn.y), P.f, bn.z + 1.5), sd = bn.x[i] >= 0 ? 1 : -1;
+      part(b, add(add(scl(P.f, 70 + P.spd), scl(P.r, sd * 34 + rs() * 8)), [0, 4 + rs() * 6, 0]), .3, 1.2, 4.5, [1, .6, .25], -.8, 0, 2); if (rnd() < .5) part(b, add(add(scl(P.f, 50 + P.spd), scl(P.r, sd * 30)), [0, 8, 0]), .8, 2, 8, [.75, .75, .75], .3, 1, 2); }
+    if (!QUIET && rnd() < .2) nz(.3, 1600, 500, .3, 'bandpass', .7); SHAKE = Math.max(SHAKE, .12); }
+  if (Math.abs(d.x) > 31 || d.z > 153){ P.onDeck = false; P.offT = simT; return; }
+  if (d.v <= .01 && !d.done){ d.done = true; var pts = 50 + [0, 10, 18, 30, 16][d.wire] + clamp(1 - Math.abs(d.tdx) / 14, 0, 1) * 12 + clamp(1 - d.sink / 14, 0, 1) * 8;
+    M.grade = pts >= 88 ? 'S' : pts >= 74 ? 'A' : pts >= 60 ? 'B' : 'C'; M.landTxt = (d.wire ? d.wire + '-wire trap' : 'Stopped on retro thrust') + ', ' + Math.abs(d.tdx).toFixed(1) + ' m off centre'; score += Math.round(pts * 40); M.hold = false; win(); } }
+function updCarrier(dt){ var C = M.carrier; if (!C) return; C.p = madd(C.p, C.f, C.spd * dt);
+  if (rnd() < .7) part(madd(madd(C.p, C.f, -150 - rnd() * 12), C.r, rs() * 18), [rs() * 3, 0, rs() * 3], 7 + rnd() * 3, 9, 34, [.92, .96, .97], .5, 1); if (rnd() < .3) part(madd(madd(C.p, C.f, 150), C.r, rs() * 6), [rs() * 6, 2, rs() * 6], 2, 4, 14, [.95, .97, 1], .45, 1);
+  if (P && P.alive){ P.gear = clamp((P.gear || 0) + ((P.gearT || 0) - (P.gear || 0) > 0 ? 1 : -1) * dt * .9, 0, 1); if (Math.abs((P.gearT || 0) - P.gear) < .02) P.gear = P.gearT || 0; } }
 function step(dt){ simT += dt; SHAKE = Math.max(0, SHAKE - dt * 2.2); hurtA = Math.max(0, hurtA - dt * 1.3);
   for (var i = MSGS.length - 1; i >= 0; i--) if ((MSGS[i].t -= dt) <= 0) MSGS.splice(i, 1); for (i = KMSG.length - 1; i >= 0; i--) if ((KMSG[i].t -= dt) <= 0) KMSG.splice(i, 1);
   if (phase === 'play' || phase === 'dead' || phase === 'end'){
-    if (P && P.alive){ playerCtrl(dt); playerFire(dt); updLock(dt); P.muzzle = Math.max(0, (P.muzzle || 0) - dt); P.hitMark = Math.max(0, (P.hitMark || 0) - dt);
+    if (M.carrier) updCarrier(dt); else if (P && P.alive){ P.gear = clamp((P.gear || 0) + ((P.gearT || 0) > (P.gear || 0) ? 1 : -1) * dt * .9, 0, 1); }
+    if (P && P.alive){ if (P.onDeck) deckRoll(dt); else { playerCtrl(dt); deckCheck(); } if (!P.alive){} else { playerFire(dt); updLock(dt); } P.muzzle = Math.max(0, (P.muzzle || 0) - dt); P.hitMark = Math.max(0, (P.hitMark || 0) - dt);
       if (P.hp < P.maxhp * .4 && rnd() < .5) part(madd(P.p, P.f, -6), [rs() * 3, rs() * 3, rs() * 3], 1.3, 2, 9, [.18, .18, .18], .5, 1, .3);
-      if (P.p[1] < Hg(P.p[0], P.p[2]) + 2.5){ P.hp = 0; kill(P, null); P.dead = false; P.gone = true; boom(P.p, 2); } if (P.p[1] > 3000) P.f = norm([P.f[0], P.f[1] - dt, P.f[2]]); }
+      if (P.p[1] < Hg(P.p[0], P.p[2]) + 2.5){ if (P.offT && simT - P.offT < 9) M.why = 'You ran out of deck and went into the sea.'; P.hp = 0; kill(P, null); P.dead = false; P.gone = true; boom(P.p, 2); } if (P.p[1] > 3000) P.f = norm([P.f[0], P.f[1] - dt, P.f[2]]); }
     updAir(dt); updGround(dt); updMissiles(dt); updBullets(dt); updFlares(dt);
-    if (phase === 'play'){ M.t += dt; missionTick(dt); if (!P.alive){ phase = 'dead'; endT = 2.8; M.result = 'lost'; M.why = 'Your aircraft was destroyed.'; } }
+    if (phase === 'play'){ M.t += dt; missionTick(dt); if (!P.alive){ phase = 'dead'; endT = 2.8; M.result = 'lost'; M.why = M.why || 'Your aircraft was destroyed.'; } }
     else if ((endT -= dt) <= 0) finish(); }
   updParts(dt); }
 
@@ -730,6 +778,17 @@ var MIS = [
       for (var i = 0; i < 4; i++) spawnAir('ace', [1500 + (i - 1.5) * 150, 1250, 3300 - Math.abs(i - 1.5) * 90], PI, { primary: true }).ai.mcd = 11 + i * 5;
       radio('CONTROL', 'This is the big one. Kill the bomber. Good hunting.'); },
     tick: function(){ if (M.bm.alive && M.bm.arrived) fail('The bomber reached its target.'); if (!M.bmd && !M.bm.alive){ M.bmd = true; radio('CONTROL', 'Bomber is down! Clean up the escort.'); } } }
+  ,{ id: 'm7', name: 'Homecoming', short: 'Bring her back aboard the carrier.', par: 120,
+    text: 'The fight is over and you are low on fuel. The carrier Northwind is steaming into wind and waiting for you. Lower your gear, slow down, fly the green gates down to the deck and catch a wire. If you miss the wires, hold BRAKE for retro thrust, or BOOST to go around and try again.',
+    obj: ['Lower the landing gear (GEAR button, or G)', 'Fly the gates down to the deck and touch down gently', 'Stop before the end of the deck'],
+    setup: function(){ var best = null; for (var k = 0; k < 8 && !best; k++){ var yaw = (k >> 1) * PI / 2, f = [Math.sin(yaw), 0, Math.cos(yaw)], r = norm(cross(f, [0, 1, 0])), c = scl(r, (k & 1 ? -1 : 1) * 3450), ok = true;
+        for (var t = -4500; t <= 1900 && ok; t += 100){ var q = madd(c, f, t); if (Math.abs(q[0]) > HALF * 1.17 || Math.abs(q[2]) > HALF * 1.17 || Hq(q[0], q[2]) > -6 || Hq(q[0] + r[0] * 350, q[2] + r[2] * 350) > 40 || Hq(q[0] - r[0] * 350, q[2] - r[2] * 350) > 40) ok = false; }
+        if (ok) best = { p: c, yaw: yaw, f: f, r: r, spd: 8 }; }
+      if (!best){ var f0 = [0, 0, 1]; best = { p: [3450, 0, 0], yaw: 0, f: f0, r: norm(cross(f0, [0, 1, 0])), spd: 8 }; }
+      var C = M.carrier = best; M.hold = true; M.fuel = 200; P.p = add(madd(madd(C.p, C.f, -4300), C.r, 260), [0, 430, 0]); P.f = C.f.slice(); P.u = [0, 1, 0]; P.r = C.r.slice(); P.mslLeft = 0;
+      radio('NORTHWIND', 'We have you on radar. Gear down, follow the gates, call the ball.'); },
+    tick: function(dt){ if (!P.onDeck){ M.fuel -= dt; if (M.fuel <= 0) return fail('You ran out of fuel before getting aboard.'); if (M.fuel < 45 && !M.fw){ M.fw = true; radio('NORTHWIND', 'You are nearly dry. This pass has to count.'); } }
+      var L = cLocal(M.carrier, P.p); if (!M.g1 && L[2] > -2600 && !P.gearT){ M.g1 = true; radio('NORTHWIND', 'Drop your gear. Press GEAR.'); } } }
 ];
 var SURV = { id: 'sv', name: 'Survival', surv: true, par: 0, text: 'No objectives and no end. Waves of fighters keep coming, each one bigger than the last. Your hull is patched and missiles topped up a little between waves. See how long you last.', obj: ['Survive as many waves as you can'],
   setup: function(){ M.wave = 0; M.hold = true; M.gap = 2; },
@@ -747,6 +806,7 @@ function startMission(def){ AIR = []; GND = []; MSL = []; BUL = []; FLR = []; PA
   def.setup(); nextTarget(false); phase = 'play'; camSnap(); }
 function finish(){ var won = M.result === 'won', d = M.def, t = M.t, rank = '-';
   if (d.surv){ score += 0; if (score > (SAVE.surv || 0)) SAVE.surv = score; rank = M.wave >= 8 ? 'S' : M.wave >= 6 ? 'A' : M.wave >= 4 ? 'B' : 'C'; won = true; }
+  else if (won && M.grade){ rank = M.grade; var i7 = MIS.indexOf(d), b7 = SAVE.best[d.id]; if (!b7 || score > b7.score) SAVE.best[d.id] = { score: score, rank: (b7 && 'SABC'.indexOf(b7.rank) < 'SABC'.indexOf(rank)) ? b7.rank : rank }; if (i7 + 2 > SAVE.unl) SAVE.unl = Math.min(MIS.length, i7 + 2); }
   else if (won){ var pts = clamp(P.hp / P.maxhp, 0, 1) * 55 + clamp((d.par * 1.6 - t) / d.par, 0, 1) * 45; rank = pts >= 80 ? 'S' : pts >= 60 ? 'A' : pts >= 38 ? 'B' : 'C';
     score += Math.round(P.hp / P.maxhp * 1000) + Math.round(clamp((d.par * 1.6 - t) / d.par, 0, 1) * 1500); var i = MIS.indexOf(d), b = SAVE.best[d.id];
     if (!b || score > b.score) SAVE.best[d.id] = { score: score, rank: (b && 'SABC'.indexOf(b.rank) < 'SABC'.indexOf(rank)) ? b.rank : rank }; if (i + 2 > SAVE.unl) SAVE.unl = Math.min(MIS.length, i + 2); }
@@ -784,9 +844,14 @@ function rotM(o, h, k, a){ var c = Math.cos(a), s = Math.sin(a), t = 1 - c, x = 
   o[12] = h[0] - (o[0] * h[0] + o[4] * h[1] + o[8] * h[2]); o[13] = h[1] - (o[1] * h[0] + o[5] * h[1] + o[9] * h[2]); o[14] = h[2] - (o[2] * h[0] + o[6] * h[1] + o[10] * h[2]); o[15] = 1; }
 // elevons, tailplanes, canards and rudders follow the pilot's inputs (TM must hold the jet's matrix)
 function drawSurf(e, dt, spec, flash, tint){ var S = e.mesh.surf; if (!S || !S.length) return; var cs = e.cs || (e.cs = { p: 0, r: 0, y: 0, b: 0 }), k = 1 - Math.exp(-dt * 11);
-  if (!e.dead){ cs.p += ((e.pIn || 0) - cs.p) * k; cs.r += ((e.rIn || 0) - cs.r) * k; cs.y += (clamp((e.yIn || 0) + (e.rIn || 0) * .5, -1, 1) - cs.y) * k; cs.b += ((e.thr < 0 ? 1 : 0) - cs.b) * k * .6; }
+  if (!e.dead){ cs.p += ((e.pIn || 0) - cs.p) * k; cs.r += ((e.rIn || 0) - cs.r) * k; cs.y += (clamp((e.yIn || 0) + (e.rIn || 0) * .5, -1, 1) - cs.y) * k; cs.b += ((e.thr < 0 ? 1 : ((e.gear || 0) > .5 ? .55 : 0)) - cs.b) * k * .6; }
   JM.set(TM); for (var i = 0; i < S.length; i++){ var q = S[i], m = q.mix, up = q.fin ? (m.y || 0) * cs.y + q.s * (m.b || 0) * cs.b : q.s * ((m.p || 0) * cs.p + q.s * (m.r || 0) * cs.r + (m.b || 0) * cs.b);
     rotM(LM, q.h, q.k, clamp(up, -1, 1) * q.max + Math.sin(simT * 19 + i * 1.9) * .012); mul4(SM, JM, LM); drawMesh(q.mesh, SM, spec, 1, flash, tint); } }
+function drawGear(e){ var g = e.gear, gp = e.spec.gearp || [5.2, 1.7, -2.4, -.3], pos = [[0, gp[3], gp[0]], [gp[1], gp[3] - .05, gp[2]], [-gp[1], gp[3] - .05, gp[2]]];
+  modelM(e.p, e.r, e.u, e.f, e.scale); JM.set(TM);
+  for (var i = 0; i < 3; i++){ for (var k = 0; k < 16; k++) LM[k] = 0; LM[0] = 1; LM[5] = g; LM[10] = 1; LM[15] = 1; LM[12] = pos[i][0]; LM[13] = pos[i][1]; LM[14] = pos[i][2]; mul4(SM, JM, LM); drawMesh(MESH.gear, SM, .3, 0, 0); }
+  rotM(LM, [0, gp[3] - .1, gp[2] - 3.4], [1, 0, 0], -g * .62); LM[12] += 0; mul4(SM, JM, LM); for (k = 0; k < 16; k++) JM[k] = SM[k];
+  for (k = 0; k < 16; k++) LM[k] = 0; LM[0] = LM[5] = LM[10] = LM[15] = 1; LM[13] = gp[3] - .1; LM[14] = gp[2] - 3.4; mul4(SM, JM, LM); drawMesh(MESH.hook, SM, .3, 0, 0); modelM(e.p, e.r, e.u, e.f, e.scale); }
 function yawBasis(y){ var f = [Math.sin(y), 0, Math.cos(y)]; return [norm(cross(f, [0, 1, 0])), [0, 1, 0], f]; }
 function burner(e, noz, ny, nz, nr){ var k = e.thr > .5 ? 1 : (e.thr < 0 ? .25 : .5), i; for (var n = 0; n < noz.length; n++){ var b = madd(madd(madd(e.p, e.r, noz[n] * e.scale), e.u, ny * e.scale), e.f, nz * e.scale);
     for (i = 0; i < 4; i++) sprite(madd(b, e.f, -i * 1.5 * k * e.scale), nr * (1.5 - i * .25) * e.scale * (.8 + k * .5), i < 2 ? [1, .8, .55] : [1, .45, .2], -(.75 - i * .14) * (.5 + k * .5), 0); } }
@@ -811,9 +876,10 @@ function render(dt){ gl.viewport(0, 0, canvas.width, canvas.height);
   var I = modelM([0, 0, 0], [1, 0, 0], [0, 1, 0], [0, 0, 1], 1);
   if (M && M.road){ gl.enable(gl.POLYGON_OFFSET_FILL); gl.polygonOffset(-2, -6); drawMesh(M.road.mesh, I, 0, 0, 0); gl.disable(gl.POLYGON_OFFSET_FILL); }
   var i, e;
+  if (M && M.carrier){ var Cc = M.carrier; drawMesh(MESH.carrier, modelM(Cc.p, Cc.r, [0, 1, 0], Cc.f, 1), .12, 0, 0); }
   for (i = 0; i < GND.length; i++){ e = GND[i]; if (dist(e.p, CP) > 9000) continue; var B = yawBasis(e.yaw), dead = !e.alive; drawMesh(e.mesh, modelM(e.p, B[0], B[1], B[2], e.scale), dead ? 0 : .15, .5, e.flash > 0 ? .6 : 0, dead ? [.18, .17, .16] : null);
     if (e.type === 'radar' && !dead){ var D = yawBasis(e.ang); drawMesh(MESH.dish, modelM(madd(e.p, [0, 10 * e.scale, 0], 1), D[0], D[1], D[2], e.scale), .3, 0, 0); } }
-  for (i = 0; i < AIR.length; i++){ e = AIR[i]; if (e.gone || (e === P && CAMMODE === 1 && !DBG && e.alive)) continue; var fl = e.flash > 0 ? .6 : 0, tn2 = e.dead ? [.3, .28, .27] : null; drawMesh(e.mesh, modelM(e.p, e.r, e.u, e.f, e.scale), .55, 1, fl, tn2); drawSurf(e, dt, .55, fl, tn2); }
+  for (i = 0; i < AIR.length; i++){ e = AIR[i]; if (e.gone || (e === P && CAMMODE === 1 && !DBG && e.alive)) continue; var fl = e.flash > 0 ? .6 : 0, tn2 = e.dead ? [.3, .28, .27] : null; drawMesh(e.mesh, modelM(e.p, e.r, e.u, e.f, e.scale), .55, 1, fl, tn2); drawSurf(e, dt, .55, fl, tn2); if (e.gear > .02) drawGear(e); }
   for (i = 0; i < MSL.length; i++){ var m = MSL[i], r = norm(cross(m.d, Math.abs(m.d[1]) > .95 ? [1, 0, 0] : [0, 1, 0])); drawMesh(MESH.missile, modelM(m.p, r, cross(r, m.d), m.d, 1.5), .3, 0, 0); }
   // sprites
   SPN = 0; var A = [], q;
@@ -927,19 +993,28 @@ function drawHUD(){ var c = HX, d = hudC._d || 1; c.setTransform(d, 0, 0, d, 0, 
   else if (P.alive && agl < 170 && P.f[1] < -.12) warn = 'PULL UP'; else if (P.alive && P.stall) warn = 'STALL'; else if (P.outside) warn = 'RETURNING TO COMBAT AREA';
   if (warn && (blink || warn.length > 8)) txt(c, warn, W / 2, H * .27, 'center', RED, '900 ' + Math.round(20 * S + 2) + 'px system-ui');
   for (i = 0; i < KMSG.length; i++) txt(c, KMSG[i].txt, W / 2, H * .34 + i * 22, 'center', KMSG[i].col, '900 italic 17px system-ui');
+  if (M.carrier && P.alive){ var Cq = M.carrier, Lc = cLocal(Cq, P.p), sC = -80 - Lc[2], BL = '#6fd0ff';
+    pp = proj(madd(Cq.p, [0, 26, 0], 1)); if (pp && !P.onDeck){ c.strokeStyle = BL; c.lineWidth = 1.5; var cs2 = clamp(160 * H / pp[2], 9, 60); c.strokeRect(pp[0] - cs2, pp[1] - cs2 * .4, cs2 * 2, cs2 * .8); txt(c, 'NORTHWIND  ' + (dist(Cq.p, P.p) / 1000).toFixed(1) + ' KM', pp[0], pp[1] - cs2 * .4 - 9, 'center', BL, '700 10px system-ui'); }
+    if (!P.onDeck && sC > 30){ var up3 = [0, 1, 0], first = true; for (i = 1; i <= 9; i++){ var sg = i * 300; if (sg > sC + 120) break; var ce2 = add(madd(Cq.p, Cq.f, -80 - sg), [0, glideAlt(sg), 0]), q1 = proj(add(madd(ce2, Cq.r, -30), [0, 15, 0])), q2 = proj(add(madd(ce2, Cq.r, 30), [0, 15, 0])), q3 = proj(add(madd(ce2, Cq.r, 30), [0, -15, 0])), q4 = proj(add(madd(ce2, Cq.r, -30), [0, -15, 0]));
+        if (!q1 || !q2 || !q3 || !q4) continue; c.strokeStyle = 'rgba(120,255,170,' + (sg > sC - 300 ? .95 : .45) + ')'; c.lineWidth = sg > sC - 300 ? 2.2 : 1.2; c.beginPath(); c.moveTo(q1[0], q1[1]); c.lineTo(q2[0], q2[1]); c.lineTo(q3[0], q3[1]); c.lineTo(q4[0], q4[1]); c.closePath(); c.stroke(); }
+      if (sC < 3600){ var dev = P.p[1] - glideAlt(sC), a1 = dev > 30 ? 'TOO HIGH' : (dev < -20 ? 'TOO LOW' : 'ON GLIDEPATH'), a2 = Lc[0] > 22 ? 'COME LEFT' : (Lc[0] < -22 ? 'COME RIGHT' : 'LINED UP'), a3 = !P.gearT ? 'GEAR UP' : (P.spd * 3.6 > 440 ? 'SLOW DOWN' : 'SPEED GOOD');
+        var okc = '#9fffe0', x3 = W / 2, y3 = H * .2; txt(c, a1, x3 - 96, y3, 'center', a1 === 'ON GLIDEPATH' ? okc : AMB, '800 11px system-ui'); txt(c, a2, x3, y3, 'center', a2 === 'LINED UP' ? okc : AMB, '800 11px system-ui'); txt(c, a3, x3 + 92, y3, 'center', a3 === 'SPEED GOOD' ? okc : (blink ? RED : AMB), '800 11px system-ui'); } }
+    if (P.onDeck && !P.dk.done){ var rem = clamp((153 - P.dk.z) / 306, 0, 1); txt(c, P.dk.wire ? 'WIRE CAUGHT' : 'HOLD BRAKE: RETRO THRUST   ·   BOOST: GO AROUND', W / 2, H * .15, 'center', P.dk.wire ? '#9fffe0' : AMB, '800 12px system-ui');
+      c.fillStyle = 'rgba(0,0,0,.45)'; c.fillRect(W / 2 - 90, H * .15 + 12, 180, 6); c.fillStyle = rem > .3 ? '#3fe6b6' : RED; c.fillRect(W / 2 - 90, H * .15 + 12, 180 * rem, 6); txt(c, 'DECK LEFT', W / 2, H * .15 + 28, 'center', GRD, '700 9px system-ui'); } }
   // status block
   var x0 = 14 + (window._sl || 0), y0 = 16; var lf = left();
-  txt(c, M.def.surv ? 'WAVE ' + (M.wave || 0) : (M.def.id === 'm4' ? 'SHEPHERD ' + Math.round(M.tr.hp / M.tr.maxhp * 100) + '%' : 'TARGETS ' + lf), x0, y0, 'left', '#fff', '800 12px system-ui');
+  txt(c, M.def.surv ? 'WAVE ' + (M.wave || 0) : M.carrier ? 'LAND ON NORTHWIND' : (M.def.id === 'm4' ? 'SHEPHERD ' + Math.round(M.tr.hp / M.tr.maxhp * 100) + '%' : 'TARGETS ' + lf), x0, y0, 'left', '#fff', '800 12px system-ui');
   if (M.prog) txt(c, 'CONVOY ' + Math.round(M.prog * 100) + '% TO PORT', x0, y0 + 16, 'left', M.prog > .75 ? RED : AMB, '700 10px system-ui');
-  var hy = y0 + (M.prog ? 32 : 18); c.fillStyle = 'rgba(0,0,0,.45)'; c.fillRect(x0, hy, 110, 7); var hf = P.hp / P.maxhp; c.fillStyle = hf > .5 ? '#3fe6b6' : (hf > .25 ? AMB : RED); c.fillRect(x0, hy, 110 * clamp(hf, 0, 1), 7);
-  txt(c, 'MSL ' + P.mslLeft, x0, hy + 20, 'left', P.mslLeft ? GRN : RED, '800 12px system-ui'); txt(c, 'FLR ' + P.flr, x0 + 62, hy + 20, 'left', P.flr ? GRN : RED, '800 12px system-ui');
+  if (M.fuel != null){ var fu = Math.max(0, M.fuel); txt(c, 'FUEL ' + Math.floor(fu / 60) + ':' + (fu % 60 < 10 ? '0' : '') + Math.floor(fu % 60), x0, y0 + 16, 'left', fu < 45 ? RED : AMB, '700 10px system-ui'); }
+  var hy = y0 + (M.prog || M.fuel != null ? 32 : 18); c.fillStyle = 'rgba(0,0,0,.45)'; c.fillRect(x0, hy, 110, 7); var hf = P.hp / P.maxhp; c.fillStyle = hf > .5 ? '#3fe6b6' : (hf > .25 ? AMB : RED); c.fillRect(x0, hy, 110 * clamp(hf, 0, 1), 7);
+  txt(c, 'MSL ' + P.mslLeft, x0, hy + 20, 'left', P.mslLeft ? GRN : RED, '800 12px system-ui'); txt(c, 'FLR ' + P.flr, x0 + 62, hy + 20, 'left', P.flr ? GRN : RED, '800 12px system-ui'); if ((P.gear || 0) > .02) txt(c, 'GEAR', x0 + 122, hy + 20, 'left', P.gear > .9 ? '#9fffe0' : AMB, '800 12px system-ui');
   c.fillStyle = P.railCd[0] <= 0 ? '#3fe6b6' : 'rgba(255,255,255,.25)'; c.fillRect(x0, hy + 30, 26, 4); c.fillStyle = P.railCd[1] <= 0 ? '#3fe6b6' : 'rgba(255,255,255,.25)'; c.fillRect(x0 + 30, hy + 30, 26, 4);
   var mm = Math.floor(M.t / 60), ss = Math.floor(M.t % 60); txt(c, '' + score, W - 14, y0, 'right', '#fff', '800 14px system-ui'); txt(c, mm + ':' + (ss < 10 ? '0' : '') + ss, W - 14, y0 + 17, 'right', GRD, '700 11px system-ui');
   // radar
   var R = Math.round(46 * S + 6), rx = W < 560 ? R + 12 : W / 2, ry = H - R - 10, rng = 3200; var gTop = P.alive ? gauges(c, rx, ry, R, S, pd) : ry - R; c.textBaseline = 'middle'; c.strokeStyle = GRN; c.save(); c.beginPath(); c.arc(rx, ry, R, 0, TAU); c.clip(); c.globalAlpha = .7; c.fillStyle = '#04121a'; c.fillRect(rx - R, ry - R, R * 2, R * 2);
   c.translate(rx, ry); c.rotate(hd); var sc = R / rng, ms = HALF * 2 * sc; c.globalAlpha = .55; c.drawImage(MAPC, (P.p[0] - HALF) * sc, (P.p[2] - HALF) * sc, ms, ms); c.globalAlpha = 1;
   function blip(o, col, sq){ var bx = -(o.p[0] - P.p[0]) * sc, by = -(o.p[2] - P.p[2]) * sc, l = Math.hypot(bx, by); if (l > R - 3){ bx *= (R - 3) / l; by *= (R - 3) / l; } c.fillStyle = col; if (sq) c.fillRect(bx - 2, by - 2, 4, 4); else { c.beginPath(); c.arc(bx, by, 2.4, 0, TAU); c.fill(); } }
-  GND.forEach(function(o){ if (o.alive) blip(o, o.primary ? '#ff7a50' : '#c98a70', true); }); AIR.forEach(function(o){ if (o.alive && o !== P) blip(o, o.team ? '#ff4030' : '#6fd0ff'); }); MSL.forEach(function(o){ if (o.team === 1) blip(o, '#fff'); });
+  if (M.carrier) blip(M.carrier, '#6fd0ff', true); GND.forEach(function(o){ if (o.alive) blip(o, o.primary ? '#ff7a50' : '#c98a70', true); }); AIR.forEach(function(o){ if (o.alive && o !== P) blip(o, o.team ? '#ff4030' : '#6fd0ff'); }); MSL.forEach(function(o){ if (o.team === 1) blip(o, '#fff'); });
   c.restore(); c.strokeStyle = GRD; c.beginPath(); c.arc(rx, ry, R, 0, TAU); c.stroke(); c.fillStyle = GRN; c.beginPath(); c.moveTo(rx, ry - 5); c.lineTo(rx - 4, ry + 4); c.lineTo(rx + 4, ry + 4); c.closePath(); c.fill();
   for (i = 0; i < MSGS.length; i++){ var mg = MSGS[i]; c.globalAlpha = clamp(mg.t, 0, 1); var ms2 = mg.who + ': ' + mg.txt, fs = 12; c.font = '600 12px system-ui'; var mw = c.measureText(ms2).width, lim = W < 560 ? W - 16 : W - 2 * Math.min(W * .3, 250); if (mw > lim) fs = Math.max(8.5, 12 * lim / mw); txt(c, ms2, W / 2, gTop - 13 - (MSGS.length - 1 - i) * 15, 'center', mg.who === 'WARNING' ? AMB : '#dff', '600 ' + fs.toFixed(1) + 'px system-ui'); c.globalAlpha = 1; }
   if (STICK){ c.strokeStyle = 'rgba(160,255,215,.5)'; c.lineWidth = 2; c.beginPath(); c.arc(STICK.bx, STICK.by, 56, 0, TAU); c.stroke(); c.fillStyle = 'rgba(63,230,182,.45)'; c.beginPath(); c.arc(STICK.bx + INP.x * 56, STICK.by - INP.y * 56 * (STICK.inv ? -1 : 1), 24, 0, TAU); c.fill(); }
@@ -973,12 +1048,12 @@ var KEYS = {}, kx = 0, ky = 0;
 function keyInp(dt){ var tx = (KEYS.ArrowRight || KEYS.d ? 1 : 0) - (KEYS.ArrowLeft || KEYS.a ? 1 : 0), ty = (KEYS.ArrowUp || KEYS.w ? 1 : 0) - (KEYS.ArrowDown || KEYS.s ? 1 : 0), k = Math.min(1, dt * 7);
   kx += (tx - kx) * k; ky += (ty - ky) * k; if (!STICK){ INP.x = kx; INP.y = ky; } INP.yaw = (KEYS.e ? 1 : 0) - (KEYS.q ? 1 : 0); INP.gun = KEYS[' '] ? 1 : (HELD.bGun ? 1 : 0); INP.boost = KEYS.Shift || HELD.bBst ? 1 : 0; INP.brake = KEYS.z || HELD.bBrk ? 1 : 0; }
 window.addEventListener('keydown', function(e){ var k = e.key.length === 1 ? e.key.toLowerCase() : e.key; if (phase === 'play' && (k === ' ' || k.indexOf('Arrow') === 0 || k === 'Tab')) e.preventDefault(); if (KEYS[k]) return; KEYS[k] = 1; audioInit();
-  if (phase === 'play'){ if (k === 'f' || k === 'Enter') playerMissile(); else if (k === 'x') playerFlare(); else if (k === 't' || k === 'Tab') nextTarget(true); else if (k === 'c') CAMMODE = 1 - CAMMODE; else if (k === 'p' || k === 'Escape') pause(); }
+  if (phase === 'play'){ if (k === 'f' || k === 'Enter') playerMissile(); else if (k === 'x') playerFlare(); else if (k === 'g') toggleGear(); else if (k === 't' || k === 'Tab') nextTarget(true); else if (k === 'c') CAMMODE = 1 - CAMMODE; else if (k === 'p' || k === 'Escape') pause(); }
   else if (phase === 'pause' && (k === 'p' || k === 'Escape')) resume(); });
 window.addEventListener('keyup', function(e){ var k = e.key.length === 1 ? e.key.toLowerCase() : e.key; KEYS[k] = 0; });
 var HELD = {};
-['bGun', 'bMsl', 'bFlr', 'bTgt', 'bBst', 'bBrk'].forEach(function(id){ var b = el(id);
-  b.addEventListener('pointerdown', function(e){ e.preventDefault(); audioInit(); HELD[id] = 1; b.classList.add('dn'); try { b.setPointerCapture(e.pointerId); } catch (x) {} if (id === 'bMsl') playerMissile(); else if (id === 'bFlr') playerFlare(); else if (id === 'bTgt'){ nextTarget(true); haptic('light'); } });
+['bGun', 'bMsl', 'bFlr', 'bTgt', 'bBst', 'bBrk', 'bGear'].forEach(function(id){ var b = el(id);
+  b.addEventListener('pointerdown', function(e){ e.preventDefault(); audioInit(); HELD[id] = 1; b.classList.add('dn'); try { b.setPointerCapture(e.pointerId); } catch (x) {} if (id === 'bMsl') playerMissile(); else if (id === 'bFlr') playerFlare(); else if (id === 'bGear') toggleGear(); else if (id === 'bTgt'){ nextTarget(true); haptic('light'); } });
   ['pointerup', 'pointercancel'].forEach(function(n){ b.addEventListener(n, function(){ HELD[id] = 0; b.classList.remove('dn'); }); }); });
 canvas.addEventListener('pointerdown', function(e){ if (phase !== 'play' || e.pointerType === 'mouse') return; audioInit(); if (e.clientX < W * .5 && !STICK){ STICK = { id: e.pointerId, bx: e.clientX, by: e.clientY }; try { canvas.setPointerCapture(e.pointerId); } catch (x) {} } });
 canvas.addEventListener('pointermove', function(e){ if (!STICK || e.pointerId !== STICK.id) return; var dx = (e.clientX - STICK.bx) / 56, dy = (STICK.by - e.clientY) / 56, l = Math.hypot(dx, dy); if (l > 1){ dx /= l; dy /= l; } INP.x = dx; INP.y = dy; });
@@ -1017,7 +1092,7 @@ function pause(){ if (phase !== 'play') return; phase = 'pause'; go('pause'); }
 function resume(){ phase = 'play'; go('play'); last = 0; }
 function showDebrief(won, rank){ go('debrief'); immersive(false); var d = M.def; el('dbSub').textContent = d.surv ? 'SURVIVAL' : d.name.toUpperCase(); el('dbTitle').textContent = d.surv ? 'Shot down on wave ' + (M.wave || 1) : (won ? 'Mission complete' : 'Mission failed');
   el('rank').textContent = (won || d.surv) ? rank : ''; var mm = Math.floor(M.t / 60), ss = Math.floor(M.t % 60), rows = [['Score', score], ['Kills', kills], ['Time', mm + ':' + (ss < 10 ? '0' : '') + ss], ['Hull', Math.max(0, Math.round(P.hp / P.maxhp * 100)) + '%']];
-  if (!won && M.why) rows.unshift(['', M.why]); el('dbStats').innerHTML = rows.map(function(r){ return '<span>' + r[0] + '</span><span>' + r[1] + '</span>'; }).join('');
+  if (!won && M.why) rows.unshift(['', M.why]); if (won && M.landTxt) rows.unshift(['Landing', M.landTxt]); el('dbStats').innerHTML = rows.map(function(r){ return '<span>' + r[0] + '</span><span>' + r[1] + '</span>'; }).join('');
   var nx = MIS[MIS.indexOf(d) + 1]; el('dbNext').classList.toggle('hidden', !(won && !d.surv && nx)); }
 el('goCamp').addEventListener('click', function(){ audioInit(); sfx('ui'); go('select'); }); el('goSurv').addEventListener('click', function(){ audioInit(); sfx('ui'); openBrief(SURV); });
 el('goHangar').addEventListener('click', function(){ audioInit(); sfx('ui'); go('hangar'); }); el('goSet').addEventListener('click', function(){ audioInit(); sfx('ui'); go('settings'); });
@@ -1039,6 +1114,6 @@ store.getItem('cs.save').then(function(v){ try { if (v){ var o = JSON.parse(v); 
 resize(); go('menu'); requestAnimationFrame(frame);
 window.__cs = { get phase(){ return phase; }, get P(){ return P; }, get AIR(){ return AIR; }, get GND(){ return GND; }, get MSL(){ return MSL; }, get M(){ return M; }, get score(){ return score; }, get left(){ return M ? left() : -1; }, get parts(){ return PARTS.length; }, hang: function(a, t){ hangA = a; hangT = t; hangIdle = -1e9; }, set jet(v){ SET.jet = v; },
   tick: function(n){ for (var i = 0; i < n && (phase === 'play' || phase === 'dead' || phase === 'end'); i++) step(1 / 60); }, start: function(i, jet){ if (jet != null) SET.jet = jet; launch(i < 0 ? SURV : MIS[i]); },
-  set ai(v){ AI0 = !!v; }, set quiet(v){ QUIET = !!v; }, set dbg(v){ DBG = v; }, set cam(v){ CAMMODE = v; }, set touch(v){ TOUCH = !!v; }, INP: INP, missile: playerMissile, flare: playerFlare, go: go, unlock: function(){ SAVE.unl = MIS.length; }, Hg: Hg, set god(v){ if (P){ P.maxhp = P.hp = v ? 1e6 : P.spec.hp; } } };
+  set ai(v){ AI0 = !!v; }, set quiet(v){ QUIET = !!v; }, set dbg(v){ DBG = v; }, set cam(v){ CAMMODE = v; }, set touch(v){ TOUCH = !!v; }, INP: INP, missile: playerMissile, flare: playerFlare, gear: toggleGear, go: go, unlock: function(){ SAVE.unl = MIS.length; }, Hg: Hg, set god(v){ if (P){ P.maxhp = P.hp = v ? 1e6 : P.spec.hp; } } };
 })();
 </script></body></html>
