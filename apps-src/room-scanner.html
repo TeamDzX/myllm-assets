@@ -1,0 +1,839 @@
+<!doctype html>
+<!--
+  Room Scanner — MyLLMos™ App Gallery · © 2026 Opticell Ltd
+  Source-available: read it, remix it, run your version inside MyLLM™.
+  Not for redistribution or republication. Terms: https://github.com/TeamDzX/myllm-assets/blob/main/LICENSE
+--><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Room Scanner</title>
+<meta name="myllm:immersive" content="on">
+<style>:root{--build-id:"4d22f156e3";color-scheme:light dark;
+  --bg:var(--myllm-bg,#f2f2f7); --surface:var(--myllm-surface,#fff); --ink:var(--myllm-text,#111);
+  --muted:var(--myllm-muted,#8a8a8e); --line:var(--myllm-border,#e3e3e8); --acc:var(--myllm-accent,#0a84ff);
+  --fill:rgba(120,120,128,.12); --warn:#c2410c; --bad:#d70015; --ok:#1f9d55; --h:238;--grain:0.708804527605;}
+@media (prefers-color-scheme:dark){ :root{ --bg:var(--myllm-bg,#000); --surface:var(--myllm-surface,#1c1c1e);
+  --ink:var(--myllm-text,#f2f2f7); --muted:var(--myllm-muted,#8e8e93); --line:var(--myllm-border,#2c2c2e); --fill:rgba(120,120,128,.24);
+  --warn:#ff9f43; --bad:#ff6961; --ok:#4cd27a; } }
+  *{ margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html{ -webkit-text-size-adjust:100%; }
+  body{ font-family:var(--myllm-font,-apple-system,system-ui,sans-serif); background:var(--bg); color:var(--ink);
+    max-width:600px; margin:0 auto; min-height:100dvh; font-size:15.5px; line-height:1.4; overflow-x:hidden;
+    padding:calc(16px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) calc(30px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left)); }
+  @media (min-width:768px){ body{ max-width:760px; } }
+  svg.i{ width:1.25em; height:1.25em; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; flex-shrink:0; }
+  button{ font:inherit; color:inherit; cursor:pointer; border:0; background:none; } button:active{ transform:scale(.96); }
+  [hidden]{ display:none !important; }
+
+  .head{ display:flex; align-items:center; gap:12px; margin:2px 2px 14px; }
+  .tile{ display:flex; align-items:center; justify-content:center; color:#fff; flex-shrink:0;
+    background:linear-gradient(145deg, hsl(var(--h) 62% 52%), hsl(calc(var(--h) + 40) 58% 30%)); }
+  .head .tile{ width:44px; height:44px; border-radius:13px; font-size:20px; }
+  .head .ht{ flex:1; min-width:0; }
+  h1{ font-size:22px; font-weight:800; letter-spacing:-.01em; }
+  .head p{ font-size:13px; color:var(--muted); margin-top:1px; text-wrap:balance; }
+  .head .acts{ display:flex; gap:8px; flex-shrink:0; }
+  .useg{ display:flex; padding:3px; border-radius:12px; background:var(--fill); height:40px; }
+  .useg button{ min-width:36px; padding:0 8px; border-radius:9px; font-size:13.5px; font-weight:750; color:var(--muted); }
+  .useg button.on{ background:var(--surface); color:var(--ink); box-shadow:0 1px 4px rgba(0,0,0,.14); }
+
+  .hero{ border-radius:20px; padding:18px; color:#fff; margin-bottom:14px; position:relative; overflow:hidden;
+    background:linear-gradient(145deg, hsl(var(--h) 58% 46%), hsl(calc(var(--h) + 40) 58% 24%)); box-shadow:0 10px 28px hsl(var(--h) 60% 24% / .25); }
+  .hero .k{ font-size:11px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; opacity:.82; }
+  .hero h2{ font-size:21px; font-weight:800; letter-spacing:-.01em; margin-top:4px; line-height:1.2; }
+  .hero .sub{ font-size:14px; opacity:.86; margin-top:6px; max-width:30em; }
+  .hero .grid{ position:absolute; inset:0; opacity:.13; pointer-events:none;
+    background-image:linear-gradient(rgba(255,255,255,.9) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.9) 1px, transparent 1px);
+    background-size:22px 22px; -webkit-mask-image:linear-gradient(120deg, transparent 30%, #000); mask-image:linear-gradient(120deg, transparent 30%, #000); }
+  .hero > *{ position:relative; }
+  .hero .big{ font-size:46px; font-weight:800; line-height:1.05; letter-spacing:-.03em; font-variant-numeric:tabular-nums; margin-top:6px; }
+  .hero .big small{ font-size:22px; font-weight:750; letter-spacing:0; opacity:.9; }
+  .hero .row{ display:flex; gap:8px; flex-wrap:wrap; margin-top:14px; }
+  .pill{ display:inline-flex; align-items:center; gap:6px; border-radius:99px; padding:5px 11px; font-size:13px; font-weight:650;
+    background:rgba(255,255,255,.16); border:1px solid rgba(255,255,255,.22); font-variant-numeric:tabular-nums; }
+  .glass{ display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:48px; padding:0 18px; border-radius:14px;
+    font-size:16px; font-weight:750; color:hsl(var(--h) 60% 26%); background:#fff; box-shadow:0 4px 14px rgba(0,0,0,.18); }
+  .glass.ghost{ color:#fff; background:rgba(255,255,255,.14); border:1px solid rgba(255,255,255,.3); box-shadow:none; }
+  .glass:disabled{ opacity:.6; }
+  .hero .btns{ display:flex; flex-direction:column; gap:8px; margin-top:16px; }
+  .hero .btns .glass{ width:100%; white-space:nowrap; }
+  .hero .note{ font-size:12.5px; opacity:.85; margin-top:12px; display:flex; gap:7px; align-items:flex-start; }
+  .tog{ display:flex; align-items:center; gap:10px; margin-top:12px; font-size:13.5px; font-weight:600; opacity:.95; cursor:pointer; }
+  .tog input{ width:20px; height:20px; accent-color:#fff; flex-shrink:0; }
+
+  .slab{ font-size:12px; font-weight:800; letter-spacing:.07em; text-transform:uppercase; color:var(--muted); margin:18px 4px 8px; display:flex; justify-content:space-between; align-items:center; }
+  .card{ background:var(--surface); border:1px solid var(--line); border-radius:18px; padding:14px; margin-bottom:12px; }
+  .msg{ display:flex; gap:10px; align-items:flex-start; border-radius:14px; padding:12px 12px 12px 14px; margin-bottom:12px; font-size:14px;
+    background:color-mix(in srgb, var(--bad) 10%, var(--surface)); border:1px solid color-mix(in srgb, var(--bad) 35%, transparent); color:var(--ink); }
+  .msg svg{ color:var(--bad); margin-top:1px; }
+  .msg .t{ flex:1; min-width:0; overflow-wrap:anywhere; }
+  .msg button{ width:28px; height:28px; border-radius:8px; display:grid; place-items:center; color:var(--muted); flex-shrink:0; }
+
+  .list{ display:grid; grid-template-columns:minmax(0,1fr); gap:10px; }
+  @media (min-width:768px){ .list{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
+  .room{ display:flex; align-items:center; gap:12px; width:100%; text-align:left; background:var(--surface); border:1px solid var(--line);
+    border-radius:18px; padding:10px 12px 10px 10px; transition:transform .15s cubic-bezier(.2,.8,.2,1); }
+  .thumb{ width:60px; height:60px; border-radius:13px; background:hsl(var(--h) 60% 55% / .09); display:grid; place-items:center; flex-shrink:0; }
+  .thumb svg{ width:52px; height:52px; }
+  .room .rt{ flex:1; min-width:0; }
+  .room b{ display:block; font-size:16px; font-weight:750; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .room .m{ font-size:13px; color:var(--muted); font-variant-numeric:tabular-nums; margin-top:1px; }
+  .room .a{ font-size:17px; font-weight:800; font-variant-numeric:tabular-nums; white-space:nowrap; }
+  .room .chev{ color:var(--muted); font-size:15px; }
+  .badge{ display:inline-block; font-size:10.5px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; padding:1px 6px; border-radius:6px;
+    background:var(--fill); color:var(--muted); margin-left:4px; vertical-align:1px; }
+  .empty{ text-align:center; padding:26px 16px; }
+  .empty .tile{ width:56px; height:56px; border-radius:16px; margin:0 auto 12px; font-size:24px; }
+  .empty p{ color:var(--muted); font-size:14.5px; max-width:22em; margin:0 auto; }
+
+  .btn{ min-height:46px; padding:0 16px; border-radius:13px; font-size:15px; font-weight:700; display:inline-flex; align-items:center; justify-content:center; gap:7px; }
+  .btn.pri{ background:var(--acc); color:#fff; } .btn.sec{ background:var(--surface); border:1px solid var(--line); }
+  .btn.danger{ background:var(--bad); color:#fff; } .btn.wide{ width:100%; } .btn:disabled{ opacity:.5; }
+  .btnrow{ display:flex; gap:8px; margin-top:12px; } .btnrow .btn{ flex:1; }
+
+  .bar{ display:flex; align-items:center; gap:8px; margin:0 0 12px; }
+  .back{ display:inline-flex; align-items:center; gap:4px; min-height:40px; padding:0 12px 0 6px; border-radius:12px; font-weight:700; font-size:15px; color:var(--acc); }
+  .bar .sp{ flex:1; }
+  .ibtn{ width:40px; height:40px; border-radius:12px; border:1px solid var(--line); background:var(--surface); display:grid; place-items:center; font-size:17px; }
+
+  .plan{ padding:8px; }
+  .plan svg{ display:block; width:100%; height:auto; }
+  .pl .fl{ fill:hsl(var(--h) 70% 58% / .10); stroke:none; }
+  .pl .wall{ stroke:var(--ink); stroke-width:4.5; stroke-linecap:round; fill:none; }
+  .pl .wall .auto{ stroke:var(--warn); stroke-dasharray:5 5; }
+  .pl .gap{ stroke:var(--surface); stroke-width:7; stroke-linecap:butt; }
+  .pl .door{ stroke:hsl(var(--h) 60% 52%); stroke-width:1.6; fill:none; }
+  .pl .win{ stroke:hsl(195 85% 48%); stroke-width:1.6; fill:none; }
+  .pl .open{ stroke:var(--muted); stroke-width:1.4; stroke-dasharray:3 3; fill:none; }
+  .pl .obj{ fill:var(--fill); stroke:var(--muted); stroke-width:1; stroke-opacity:.7; }
+  .pl .ol{ fill:var(--muted); font-size:9px; font-weight:650; text-anchor:middle; dominant-baseline:central; }
+  .pl .lab{ fill:var(--ink); font-size:11px; font-weight:750; text-anchor:middle; dominant-baseline:central; font-variant-numeric:tabular-nums;
+    paint-order:stroke; stroke:var(--surface); stroke-width:4px; stroke-linejoin:round; }
+  .pl .sb{ stroke:var(--muted); stroke-width:1.5; fill:none; } .pl .sbt{ fill:var(--muted); font-size:9.5px; font-weight:700; }
+  .pl.th .wall{ stroke-width:2.2; stroke:hsl(var(--h) 55% 45%); }
+  @media (prefers-color-scheme:dark){ .pl.th .wall{ stroke:hsl(var(--h) 80% 75%); } }
+  .legend{ display:flex; flex-wrap:wrap; gap:6px 14px; font-size:12px; color:var(--muted); padding:2px 6px 4px; }
+  .legend span{ display:inline-flex; align-items:center; gap:5px; }
+  .legend i{ width:14px; height:3px; border-radius:2px; display:inline-block; }
+  .noplan{ text-align:center; color:var(--muted); font-size:14px; padding:30px 10px; }
+
+  .figs{ display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px; }
+  .fig{ background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:11px 13px; min-width:0; }
+  .fig .k{ font-size:11.5px; font-weight:750; color:var(--muted); letter-spacing:.02em; }
+  .fig .v{ font-size:20px; font-weight:800; font-variant-numeric:tabular-nums; margin-top:1px; letter-spacing:-.01em; overflow-wrap:anywhere; }
+
+  .est{ padding:0; overflow:hidden; }
+  .est .blk{ padding:14px; border-top:1px solid var(--line); }
+  .est .blk:first-child{ border-top:0; }
+  .est .hd{ display:flex; align-items:center; gap:11px; }
+  .est .hd .tile{ width:36px; height:36px; border-radius:11px; font-size:17px; }
+  .est .hd .nm{ flex:1; min-width:0; font-weight:750; font-size:15.5px; }
+  .est .hd .nm small{ display:block; font-size:12.5px; color:var(--muted); font-weight:500; }
+  .est .res{ font-size:22px; font-weight:800; font-variant-numeric:tabular-nums; text-align:right; white-space:nowrap; }
+  .est .res small{ display:block; font-size:12px; font-weight:600; color:var(--muted); }
+  .fields{ display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
+  .fld{ flex:1 1 92px; min-width:0; }
+  .fld span{ display:block; font-size:11.5px; font-weight:750; color:var(--muted); margin:0 2px 4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  input[type=number], input[type=text]{ width:100%; min-width:0; font:inherit; font-size:16px; font-weight:650; color:var(--ink); background:var(--bg);
+    border:1px solid var(--line); border-radius:11px; padding:9px 10px; outline:none; font-variant-numeric:tabular-nums; -webkit-user-select:text; user-select:text; }
+  input:focus{ border-color:var(--acc); }
+  input[type=number]{ -moz-appearance:textfield; appearance:textfield; }
+  input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button{ -webkit-appearance:none; margin:0; }
+  .sw{ display:flex; align-items:center; gap:10px; margin-top:10px; font-size:14px; cursor:pointer; }
+  .sw input{ width:20px; height:20px; accent-color:var(--acc); }
+  .sw em{ font-style:normal; margin-left:auto; font-weight:750; font-variant-numeric:tabular-nums; }
+  .hint{ font-size:12.5px; color:var(--muted); margin-top:8px; }
+
+  .seg{ display:flex; gap:3px; padding:3px; border-radius:13px; background:var(--fill); margin-bottom:12px; }
+  .seg button{ flex:1; height:38px; border-radius:10px; font-size:14px; font-weight:700; color:var(--muted); }
+  .seg button.on{ background:var(--surface); color:var(--ink); box-shadow:0 1px 4px rgba(0,0,0,.14); }
+  .wrow{ display:grid; grid-template-columns:28px 1fr 1fr 36px; gap:8px; align-items:center; margin-top:8px; }
+  .wrow .n{ font-size:13px; font-weight:800; color:var(--muted); text-align:center; font-variant-numeric:tabular-nums; }
+  .wrow .x{ width:36px; height:40px; border-radius:10px; display:grid; place-items:center; color:var(--muted); }
+  .wrow.hd{ margin-top:0; font-size:11.5px; font-weight:750; color:var(--muted); }
+  .close{ font-size:13.5px; margin-top:10px; padding:9px 11px; border-radius:11px; background:var(--fill); display:flex; gap:8px; align-items:flex-start; }
+  .close.ok{ color:var(--ok); } .close.warn{ color:var(--warn); }
+  .close b{ color:var(--ink); }
+  .step{ display:flex; align-items:center; gap:8px; }
+  .step button{ width:40px; height:40px; border-radius:11px; border:1px solid var(--line); background:var(--bg); display:grid; place-items:center; }
+  .step output{ min-width:22px; text-align:center; font-weight:800; font-size:17px; font-variant-numeric:tabular-nums; }
+  .orow{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-top:10px; }
+  .orow .lb{ flex:1 1 90px; font-weight:700; display:flex; align-items:center; gap:8px; }
+  .orow .sz{ display:flex; align-items:center; gap:6px; flex:1 1 160px; }
+  .orow .sz input{ padding:8px; }
+  .orow .sz i{ font-style:normal; color:var(--muted); font-size:13px; }
+  .model{ display:flex; align-items:center; gap:10px; font-size:13.5px; color:var(--muted); overflow-wrap:anywhere; }
+
+  .ov{ position:fixed; inset:0; z-index:50; background:rgba(0,0,0,.42); display:flex; align-items:center; justify-content:center;
+    padding:calc(16px + env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom)); opacity:0; pointer-events:none; transition:opacity .2s; }
+  .ov.show{ opacity:1; pointer-events:auto; }
+  .dlg{ width:100%; max-width:380px; background:var(--surface); border-radius:20px; padding:18px; box-shadow:0 20px 50px rgba(0,0,0,.3);
+    transform:translateY(10px) scale(.98); transition:transform .25s cubic-bezier(.2,.8,.2,1); }
+  .ov.show .dlg{ transform:none; }
+  .dlg h3{ font-size:18px; font-weight:800; }
+  .dlg p{ color:var(--muted); font-size:14.5px; margin-top:6px; }
+  .dlg input{ margin-top:12px; }
+  .toast{ position:fixed; left:50%; bottom:calc(20px + env(safe-area-inset-bottom)); transform:translate(-50%,16px); opacity:0; z-index:60;
+    background:rgba(28,28,30,.94); color:#fff; padding:10px 16px; border-radius:99px; font-size:14px; font-weight:600; transition:.25s; pointer-events:none; max-width:90%; }
+  .toast.on{ opacity:1; transform:translate(-50%,0); }
+  .spin{ width:18px; height:18px; border-radius:50%; border:2.5px solid currentColor; border-right-color:transparent; animation:sp .8s linear infinite; }
+  @keyframes sp{ to{ transform:rotate(360deg); } }
+  @media (max-width:340px){ h1{ font-size:17.5px; white-space:nowrap; } .head .acts{ gap:6px; } .useg button{ min-width:28px !important; padding:0 5px !important; } .head{ gap:10px; } .head .tile{ width:38px; height:38px; border-radius:11px; } .head p{ font-size:12px; } .hero .big{ font-size:38px; } .fig .v{ font-size:17px; } .useg button{ min-width:30px; padding:0 6px; } .wrow{ grid-template-columns:22px 1fr 1fr 32px; gap:6px; } }
+  @media (prefers-reduced-motion:reduce){ button:active{ transform:none; } .ov,.dlg,.toast{ transition:none; } .spin{ animation-duration:2s; } }
+
+/* myllm-fullscreen-v2 — MyLLM 5.6.2+ opens this app full screen; the ✕ is the way out. */
+.head .imm-acts{display:none;flex-shrink:0;margin-left:auto}
+.head .acts + .imm-acts{margin-left:0}
+body.imm .head .imm-acts{display:flex}
+.head .imm-acts button{width:40px;height:40px;border-radius:12px;border:1px solid var(--myllm-border,rgba(128,128,128,.28));
+  background:var(--myllm-surface,rgba(128,128,128,.12));color:var(--myllm-text,currentColor);display:grid;place-items:center;padding:0;cursor:pointer;transition:transform .12s}
+.head .imm-acts button:active,.head .imm-x:active{transform:scale(.94)}
+.head .imm-x{display:none !important}
+body.imm .head .imm-x{display:grid !important;place-items:center}
+.imm-x svg,.imm-acts svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round}
+.imm-safe{display:none}
+body.imm .imm-safe{display:block}
+</style></head><body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-cube" viewBox="0 0 24 24"><path d="M12 2.8 20 7.4v9.2l-8 4.6-8-4.6V7.4z"/><path d="M4 7.4l8 4.6 8-4.6M12 12v9.2" stroke-dasharray="2.2 2.2"/></symbol>
+  <symbol id="i-scan" viewBox="0 0 24 24"><path d="M3.5 8V5.5a2 2 0 0 1 2-2H8M16 3.5h2.5a2 2 0 0 1 2 2V8M20.5 16v2.5a2 2 0 0 1-2 2H16M8 20.5H5.5a2 2 0 0 1-2-2V16"/><path d="M7.5 15.5V9.8L12 7.5l4.5 2.3v5.7L12 17.8z"/></symbol>
+  <symbol id="i-ruler" viewBox="0 0 24 24"><path d="M3.2 15.8 15.8 3.2l5 5L8.2 20.8z"/><path d="M7 12l2 2M10 9l1.5 1.5M13 6l2 2M8.5 10.5l1 1M11.5 7.5l1 1"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></symbol>
+  <symbol id="i-chev" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></symbol>
+  <symbol id="i-share" viewBox="0 0 24 24"><path d="M12 3.5v11M7.5 8 12 3.5 16.5 8"/><path d="M7 11H5.5v9.5h13V11H17"/></symbol>
+  <symbol id="i-edit" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4.5 7h15M10 3.8h4M6.5 7l1 13h9l1-13M10 11v5.5M14 11v5.5"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 3.5 21.5 20h-19z"/><path d="M12 10v4.5M12 17.3v.2"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.7v.2"/></symbol>
+  <symbol id="i-paint" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="14" height="6" rx="1.5"/><path d="M17.5 6.5h2.5v5.5h-8v3"/><rect x="10.5" y="15" width="3" height="5.5" rx="1"/></symbol>
+  <symbol id="i-floor" viewBox="0 0 24 24"><path d="M3.5 3.5h17v17h-17zM3.5 12h17M12 3.5V12M8 12v8.5M16 12v8.5"/></symbol>
+  <symbol id="i-skirt" viewBox="0 0 24 24"><path d="M3.5 4v16.5h17"/><path d="M3.5 16.5h4v4M7.5 16.5h13"/></symbol>
+  <symbol id="i-door" viewBox="0 0 24 24"><path d="M5.5 20.5V4.5a1 1 0 0 1 1-1h11a1 1 0 0 1 1 1v16M3.5 20.5h17"/><path d="M15 12.5v.5"/></symbol>
+  <symbol id="i-window" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="1.5"/><path d="M12 4v16M4 12h16"/></symbol>
+  <symbol id="i-box" viewBox="0 0 24 24"><path d="M12 3 20.5 7.5v9L12 21l-8.5-4.5v-9z"/><path d="M3.5 7.5 12 12l8.5-4.5M12 12v9"/></symbol>
+</defs></svg>
+
+<div class="imm-safe"></div><div class="head">
+  <div class="tile"><svg class="i"><use href="#i-cube"/></svg></div>
+  <div class="ht"><h1>Room Scanner</h1><p>Floor plans, areas &amp; paint estimates</p></div>
+  <div class="acts"><div class="useg" role="group" aria-label="Units"><button type="button" data-u="m" class="on">m</button><button type="button" data-u="ft">ft</button></div></div>
+<div class="imm-acts"><button type="button" aria-label="Close Room Scanner" onclick="myllmFSClose()"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div></div>
+
+<!-- HOME -->
+<section id="vHome">
+  <div class="msg" id="err" hidden><svg class="i"><use href="#i-alert"/></svg><div class="t" id="errT"></div><button type="button" id="errX" aria-label="Dismiss"><svg class="i"><use href="#i-x"/></svg></button></div>
+  <div class="hero">
+    <div class="grid"></div>
+    <div class="k" id="hK">LiDAR room scan</div>
+    <h2 id="hT">Measure a whole room in a minute</h2>
+    <div class="sub" id="hS">Walk slowly round the room with your iPhone. You get a floor plan, wall and floor areas, and paint and flooring estimates.</div>
+    <div class="btns">
+      <button type="button" class="glass" id="scanBtn" disabled><span class="spin" id="scanSpin"></span><span id="scanL">Checking for LiDAR…</span></button>
+      <button type="button" class="glass ghost" id="handBtn"><svg class="i"><use href="#i-ruler"/></svg>Measure by hand</button>
+    </div>
+    <div class="note" id="hN" hidden><svg class="i"><use href="#i-info"/></svg><span id="hNT"></span></div>
+  </div>
+  <div class="slab"><span>Your rooms</span><span id="cnt"></span></div>
+  <div class="list" id="list"></div>
+</section>
+
+<!-- DETAIL -->
+<section id="vDetail" hidden>
+  <div class="bar">
+    <button type="button" class="back" data-home><svg class="i"><use href="#i-back"/></svg>Rooms</button><div class="sp"></div>
+    <button type="button" class="ibtn" id="dShare" aria-label="Share summary"><svg class="i"><use href="#i-share"/></svg></button>
+    <button type="button" class="ibtn" id="dRename" aria-label="Rename"><svg class="i"><use href="#i-edit"/></svg></button>
+    <button type="button" class="ibtn" id="dDelete" aria-label="Delete"><svg class="i"><use href="#i-trash"/></svg></button>
+  </div>
+  <div class="hero">
+    <div class="grid"></div>
+    <div class="k" id="dK"></div>
+    <h2 id="dName"></h2>
+    <div class="big" id="dArea"></div>
+    <div class="row" id="dPills"></div>
+  </div>
+  <div class="card plan" id="dPlan"></div>
+  <div class="figs" id="dFigs"></div>
+  <div class="slab"><span>Estimates</span></div>
+  <div class="card est">
+    <div class="blk">
+      <div class="hd"><div class="tile"><svg class="i"><use href="#i-paint"/></svg></div><div class="nm">Wall paint<small id="pSub"></small></div><div class="res" id="pRes"></div></div>
+      <div class="fields">
+        <label class="fld"><span>Coats</span><input type="number" inputmode="numeric" min="1" step="1" id="fCoats"></label>
+        <label class="fld"><span id="covL">Coverage m²/L</span><input type="number" inputmode="decimal" min="0.1" step="0.1" id="fCov"></label>
+      </div>
+      <label class="sw"><input type="checkbox" id="fCeil">Paint the ceiling too<em id="cRes"></em></label>
+    </div>
+    <div class="blk">
+      <div class="hd"><div class="tile"><svg class="i"><use href="#i-floor"/></svg></div><div class="nm">Flooring<small id="flSub"></small></div><div class="res" id="flRes"></div></div>
+      <div class="fields">
+        <label class="fld"><span>Waste %</span><input type="number" inputmode="decimal" min="0" step="1" id="fWaste"></label>
+        <label class="fld"><span id="packL">Pack size m² (optional)</span><input type="number" inputmode="decimal" min="0" step="0.01" id="fPack" placeholder="—"></label>
+      </div>
+    </div>
+    <div class="blk">
+      <div class="hd"><div class="tile"><svg class="i"><use href="#i-skirt"/></svg></div><div class="nm">Skirting board<small id="skSub"></small></div><div class="res" id="skRes"></div></div>
+    </div>
+  </div>
+  <div class="hint" style="margin:0 4px 12px">Estimates are a guide. Check the tin and pack for the real coverage, and buy a little extra.</div>
+  <div class="card" id="dModel" hidden><div class="model"><svg class="i"><use href="#i-box"/></svg><span id="dModelT"></span></div></div>
+</section>
+
+<!-- MANUAL -->
+<section id="vManual" hidden>
+  <div class="bar"><button type="button" class="back" data-home><svg class="i"><use href="#i-back"/></svg>Rooms</button></div>
+  <div class="seg" id="shape" role="tablist"><button type="button" data-s="rect" class="on">Rectangle</button><button type="button" data-s="l">L-shape</button><button type="button" data-s="poly">Custom</button></div>
+  <div class="card">
+    <label class="fld" style="display:block"><span>Room name</span><input type="text" id="mName" placeholder="Living room" enterkeyhint="done" maxlength="60"></label>
+    <div id="mRect" class="fields">
+      <label class="fld"><span class="ul">Length</span><input type="number" inputmode="decimal" step="0.01" min="0" id="rL"></label>
+      <label class="fld"><span class="ul">Width</span><input type="number" inputmode="decimal" step="0.01" min="0" id="rW"></label>
+    </div>
+    <div id="mL" hidden>
+      <div class="hint">The main part of the room, then the smaller part that sticks out along its far side.</div>
+      <div class="fields">
+        <label class="fld"><span class="ul">Main length</span><input type="number" inputmode="decimal" step="0.01" min="0" id="l1"></label>
+        <label class="fld"><span class="ul">Main width</span><input type="number" inputmode="decimal" step="0.01" min="0" id="w1"></label>
+      </div>
+      <div class="fields">
+        <label class="fld"><span class="ul">Extra length</span><input type="number" inputmode="decimal" step="0.01" min="0" id="l2"></label>
+        <label class="fld"><span class="ul">Extra width</span><input type="number" inputmode="decimal" step="0.01" min="0" id="w2"></label>
+      </div>
+    </div>
+    <div id="mPoly" hidden>
+      <div class="hint">Walk round the room clockwise. After each wall, the turn: 90 = right, −90 = left. The last wall closes the shape.</div>
+      <div class="wrow hd" style="margin-top:10px"><span></span><span class="ul">Length</span><span>Turn after (°)</span><span></span></div>
+      <div id="wl"></div>
+      <button type="button" class="btn sec wide" id="addWall" style="margin-top:10px"><svg class="i"><use href="#i-plus"/></svg>Add a wall</button>
+    </div>
+    <div class="fields">
+      <label class="fld"><span class="ul">Ceiling height</span><input type="number" inputmode="decimal" step="0.01" min="0" id="mH"></label>
+    </div>
+    <div id="closeMsg"></div>
+  </div>
+  <div class="card">
+    <div class="orow"><div class="lb"><svg class="i"><use href="#i-door"/></svg>Doors</div>
+      <div class="step"><button type="button" data-st="door:-1" aria-label="One fewer door"><svg class="i"><use href="#i-minus"/></svg></button><output id="nDoor">1</output><button type="button" data-st="door:1" aria-label="One more door"><svg class="i"><use href="#i-plus"/></svg></button></div></div>
+    <div class="orow"><div class="sz"><input type="number" inputmode="decimal" step="0.01" id="dW" aria-label="Door width"><i>×</i><input type="number" inputmode="decimal" step="0.01" id="dH" aria-label="Door height"><i class="uu">m</i></div></div>
+    <div class="orow" style="margin-top:14px"><div class="lb"><svg class="i"><use href="#i-window"/></svg>Windows</div>
+      <div class="step"><button type="button" data-st="win:-1" aria-label="One fewer window"><svg class="i"><use href="#i-minus"/></svg></button><output id="nWin">1</output><button type="button" data-st="win:1" aria-label="One more window"><svg class="i"><use href="#i-plus"/></svg></button></div></div>
+    <div class="orow"><div class="sz"><input type="number" inputmode="decimal" step="0.01" id="wW" aria-label="Window width"><i>×</i><input type="number" inputmode="decimal" step="0.01" id="wH" aria-label="Window height"><i class="uu">m</i></div></div>
+    <div class="hint">Width × height. Used for paintable area and skirting.</div>
+  </div>
+  <div class="card plan" id="mPlan"></div>
+  <button type="button" class="btn pri wide" id="mSave">Save room</button>
+</section>
+
+<div class="ov" id="ov" aria-hidden="true"><div class="dlg" role="dialog" aria-modal="true">
+  <h3 id="ovT"></h3><p id="ovP"></p><input type="text" id="ovI" maxlength="60" enterkeyhint="done" hidden>
+  <div class="btnrow"><button type="button" class="btn sec" id="ovNo">Cancel</button><button type="button" class="btn pri" id="ovOk">OK</button></div>
+</div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* Room Scanner. Saved rooms live in myllmStorage "rooms" (array of room objects,
+   the myllmRoom.scan() shape plus id / manual). Preferences in "prefs".
+   Everything is stored in metres; feet are display only. */
+var FT = 3.28084, SQFT = 10.7639, GAL = 0.264172, COVF = SQFT / GAL;
+var rooms = [], cur = null, lidar = null, scanning = false;
+var prefs = { units:'m', coats:2, coverage:12, ceiling:false, waste:10, pack:0, saveModel:false };
+var man = { shape:'rect', rect:{l:4, w:3.5}, l:{l1:5, w1:3, l2:3, w2:2.5}, poly:[[4,90],[3,90],[4,90],[3,90]], h:2.4,
+            doors:1, wins:1, dw:0.84, dh:1.98, ww:1.2, wh:1.2 };
+
+function $(i){ return document.getElementById(i); }
+function haptic(k){ try{ if(window.myllmHaptic) window.myllmHaptic(k||'light'); }catch(e){} }
+var store = {
+  get:function(k){ try{ var s=window.myllmStorage; return s ? Promise.resolve(s.getItem(k)).catch(function(){ return null; }) : Promise.resolve(null); }catch(e){ return Promise.resolve(null); } },
+  set:function(k,v){ try{ var s=window.myllmStorage; if(s) Promise.resolve(s.setItem(k,v)).catch(function(){}); }catch(e){} }
+};
+function saveRooms(){ store.set('rooms', JSON.stringify(rooms)); }
+var prefT; function savePrefs(){ clearTimeout(prefT); prefT=setTimeout(function(){ store.set('prefs', JSON.stringify(prefs)); }, 250); }
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+function num(v,d){ v=+v; return isFinite(v) ? v : (d||0); }
+function pos(v,d){ v=+v; return isFinite(v) && v>0 ? v : d; }
+var toastT; function toast(t){ var e=$('toast'); e.textContent=t; e.classList.add('on'); clearTimeout(toastT); toastT=setTimeout(function(){ e.classList.remove('on'); }, 2200); }
+
+/* ---------- units ---------- */
+function imp(){ return prefs.units==='ft'; }
+function fLen(m, short){
+  if(!imp()) return (short ? m.toFixed(2) : m.toFixed(2)) + ' m';
+  var inch = Math.round(m*39.3701), f = Math.floor(inch/12), i = inch%12;
+  return f + '′' + (i ? ' ' + i + '″' : '');
+}
+function fArea(a){ return imp() ? Math.round(a*SQFT).toLocaleString() + ' ft²' : (a<100 ? a.toFixed(1) : Math.round(a).toLocaleString()) + ' m²'; }
+function areaParts(a){ return imp() ? [Math.round(a*SQFT).toLocaleString(), 'ft²'] : [a.toFixed(1), 'm²']; }
+function fVol(l){ return imp() ? (l*GAL).toFixed(2) + ' gal' : l.toFixed(1) + ' L'; }
+function toDisp(m){ return imp() ? +(m*FT).toFixed(2) : +m.toFixed(2); }
+function fromDisp(v){ return imp() ? v/FT : v; }
+function uLen(){ return imp() ? 'ft' : 'm'; }
+
+/* ---------- geometry ---------- */
+function P(p){ return Array.isArray(p) && p.length>=2 && isFinite(+p[0]) && isFinite(+p[1]) ? [+p[0], +p[1]] : null; }
+function dist(a,b){ return Math.hypot(b[0]-a[0], b[1]-a[1]); }
+function shoelace(poly){ var s=0; for(var i=0;i<poly.length;i++){ var a=poly[i], b=poly[(i+1)%poly.length]; s+=a[0]*b[1]-b[0]*a[1]; } return Math.abs(s)/2; }
+function inPoly(p, poly){
+  var c=false; for(var i=0,j=poly.length-1;i<poly.length;j=i++){ var a=poly[i], b=poly[j];
+    if(((a[1]>p[1])!==(b[1]>p[1])) && (p[0] < (b[0]-a[0])*(p[1]-a[1])/(b[1]-a[1]) + a[0])) c=!c; } return c;
+}
+function median(a){ if(!a.length) return 0; a=a.slice().sort(function(x,y){ return x-y; }); var m=a.length>>1; return a.length%2 ? a[m] : (a[m-1]+a[m])/2; }
+
+/* Normalise whatever the bridge (or an old save) gave us into a complete room. */
+function norm(r){
+  r = r || {};
+  var o = { id:r.id || ('r'+Date.now().toString(36)+Math.floor(Math.random()*1e6).toString(36)),
+    name:String(r.name || 'Room').slice(0,60), scannedAt:num(r.scannedAt, Date.now()) || Date.now(), units:'m', manual:!!r.manual };
+  o.floor = (Array.isArray(r.floor) ? r.floor : []).map(P).filter(Boolean);
+  o.walls = (Array.isArray(r.walls) ? r.walls : []).map(function(w){
+    w = w || {}; var s=P(w.start), e=P(w.end), L=num(w.length);
+    if(!L && s && e) L = dist(s,e);
+    return { length:L, height:num(w.height), area:num(w.area), start:s, end:e, auto:!!w.auto };
+  }).filter(function(w){ return w.length>0 || (w.start && w.end); });
+  var H = num(r.ceilingHeight) || median(o.walls.map(function(w){ return w.height; }).filter(function(h){ return h>0; }));
+  if(!o.walls.length && o.floor.length>=3){
+    o.walls = o.floor.map(function(p,i){ var q=o.floor[(i+1)%o.floor.length]; return { length:dist(p,q), height:H, area:0, start:p, end:q }; });
+  }
+  o.walls.forEach(function(w){ if(!w.height) w.height=H; if(!w.area) w.area=w.length*w.height; });
+  o.ceilingHeight = H;
+  o.floorArea = num(r.floorArea) || (o.floor.length>=3 ? shoelace(o.floor) : 0);
+  o.perimeter = num(r.perimeter) || (o.floor.length>=3 ? o.floor.reduce(function(s,p,i){ return s+dist(p,o.floor[(i+1)%o.floor.length]); },0)
+                                                    : o.walls.reduce(function(s,w){ return s+w.length; },0));
+  function ops(list){ return (Array.isArray(list) ? list : []).map(function(d){ d=d||{};
+    var wi = d.wall==null ? null : num(d.wall, -1); if(wi!==null && (wi<0 || wi>=o.walls.length || wi%1)) wi=null;
+    return { width:num(d.width), height:num(d.height), center:P(d.center), wall:wi }; }).filter(function(d){ return d.width>0; }); }
+  o.doors = ops(r.doors); o.windows = ops(r.windows); o.openings = ops(r.openings);
+  o.objects = (Array.isArray(r.objects) ? r.objects : []).map(function(b){ b=b||{};
+    return { category:String(b.category||'object').slice(0,24), width:num(b.width), depth:num(b.depth), height:num(b.height), center:P(b.center), rotation:num(b.rotation) }; })
+    .filter(function(b){ return b.center && b.width>0 && b.depth>0; });
+  o.wallArea = num(r.wallArea) || o.walls.reduce(function(s,w){ return s+w.area; },0) || o.perimeter*H;
+  var opA = function(l){ return l.reduce(function(s,d){ return s+d.width*d.height; },0); };
+  o.openingArea = num(r.openingArea) || (opA(o.doors)+opA(o.windows)+opA(o.openings));
+  o.paintableArea = num(r.paintableArea) || Math.max(0, o.wallArea - o.openingArea);
+  if(r.modelPath) o.modelPath = String(r.modelPath);
+  return o;
+}
+
+/* Everything the plan needs, in metres. */
+function geo(r){
+  var segs = [];
+  r.walls.forEach(function(w,i){ if(w.start && w.end) segs.push({a:w.start, b:w.end, i:i, len:w.length, auto:w.auto}); });
+  if(!segs.length && r.floor.length>=3) r.floor.forEach(function(p,i){ var q=r.floor[(i+1)%r.floor.length]; segs.push({a:p, b:q, i:null, len:dist(p,q)}); });
+  var poly = r.floor.length>=3 ? r.floor : (segs.length>=3 ? segs.map(function(s){ return s.a; }) : []);
+  var pts = poly.slice(); segs.forEach(function(s){ pts.push(s.a, s.b); });
+  var objs = r.objects.map(function(b){
+    var c=Math.cos(b.rotation), s=Math.sin(b.rotation), hw=b.width/2, hd=b.depth/2;
+    var cs=[[-hw,-hd],[hw,-hd],[hw,hd],[-hw,hd]].map(function(v){ return [b.center[0]+v[0]*c-v[1]*s, b.center[1]+v[0]*s+v[1]*c]; });
+    return { b:b, cs:cs };
+  });
+  objs.forEach(function(o){ pts = pts.concat(o.cs); });
+  var cx=0, cy=0; poly.forEach(function(p){ cx+=p[0]; cy+=p[1]; }); if(poly.length){ cx/=poly.length; cy/=poly.length; }
+  segs.forEach(function(s){
+    var dx=s.b[0]-s.a[0], dy=s.b[1]-s.a[1], L=Math.hypot(dx,dy)||1; s.d=[dx/L, dy/L]; var n=[-s.d[1], s.d[0]];
+    var mid=[(s.a[0]+s.b[0])/2, (s.a[1]+s.b[1])/2], t=[mid[0]+n[0]*0.05, mid[1]+n[1]*0.05];
+    var inside = poly.length>=3 ? inPoly(t, poly) : ((cx-mid[0])*n[0]+(cy-mid[1])*n[1] > 0);
+    s.nIn = inside ? n : [-n[0], -n[1]]; s.mid = mid;
+  });
+  return { segs:segs, poly:poly, pts:pts, objs:objs };
+}
+function hostSeg(g, d){
+  var best=null, bd=1e9;
+  g.segs.forEach(function(s){
+    if(d.wall!==null && s.i===d.wall){ best=s; bd=-1; return; }
+    if(bd<0 || !d.center) return;
+    var t=(d.center[0]-s.a[0])*s.d[0]+(d.center[1]-s.a[1])*s.d[1], L=dist(s.a,s.b); t=Math.max(0,Math.min(L,t));
+    var q=[s.a[0]+s.d[0]*t, s.a[1]+s.d[1]*t], dd=dist(q,d.center); if(dd<bd){ bd=dd; best=s; }
+  });
+  return best;
+}
+
+/* SVG floor plan. opt: {w, maxH, thumb} */
+function planSVG(r, opt){
+  var g = geo(r), thumb = !!opt.thumb;
+  if(g.pts.length<2) return thumb ? '<svg viewBox="0 0 56 56"></svg>' : '<div class="noplan">No floor plan was captured for this room — the measurements below still apply.</div>';
+  var minX=1e9,minY=1e9,maxX=-1e9,maxY=-1e9;
+  g.pts.forEach(function(p){ minX=Math.min(minX,p[0]); minY=Math.min(minY,p[1]); maxX=Math.max(maxX,p[0]); maxY=Math.max(maxY,p[1]); });
+  var spanX=Math.max(maxX-minX,.5), spanY=Math.max(maxY-minY,.5);
+  var pad = thumb ? 4 : 28, padX = thumb ? 4 : 50, W = opt.w, foot = thumb ? 0 : 20;
+  var k = Math.min((W-2*padX)/spanX, ((opt.maxH||W)-2*pad-foot)/spanY);
+  var H = thumb ? W : Math.round(spanY*k + 2*pad + foot);
+  var ox = (W - spanX*k)/2, oy = thumb ? (H - spanY*k)/2 : pad;
+  function X(p){ return +(ox + (p[0]-minX)*k).toFixed(1); } function Y(p){ return +(oy + (p[1]-minY)*k).toFixed(1); }
+  function pt(p){ return X(p)+','+Y(p); }
+  var s = '<svg class="pl'+(thumb?' th':'')+'" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Floor plan of '+esc(r.name)+'">';
+  if(g.poly.length>=3) s += '<polygon class="fl" points="'+g.poly.map(pt).join(' ')+'"/>';
+  if(!thumb){
+    g.objs.forEach(function(o){
+      s += '<polygon class="obj" points="'+o.cs.map(pt).join(' ')+'"/>';
+      if(Math.min(o.b.width,o.b.depth)*k > 16 && Math.max(o.b.width,o.b.depth)*k > 38)
+        s += '<text class="ol" x="'+X(o.b.center)+'" y="'+Y(o.b.center)+'">'+esc(o.b.category)+'</text>';
+    });
+  }
+  s += '<g class="wall">'; g.segs.forEach(function(sg){ s += '<line'+(sg.auto?' class="auto"':'')+' x1="'+X(sg.a)+'" y1="'+Y(sg.a)+'" x2="'+X(sg.b)+'" y2="'+Y(sg.b)+'"/>'; }); s += '</g>';
+  if(!thumb){
+    function along(sg, d){
+      var L=dist(sg.a,sg.b), t;
+      if(d.center){ t=(d.center[0]-sg.a[0])*sg.d[0]+(d.center[1]-sg.a[1])*sg.d[1]; } else t=L/2;
+      var hw=Math.min(d.width, L)/2; t=Math.max(hw, Math.min(L-hw, t));
+      return { p1:[sg.a[0]+sg.d[0]*(t-hw), sg.a[1]+sg.d[1]*(t-hw)], p2:[sg.a[0]+sg.d[0]*(t+hw), sg.a[1]+sg.d[1]*(t+hw)], w:hw*2 };
+    }
+    function gap(a,b){ return '<line class="gap" x1="'+X(a)+'" y1="'+Y(a)+'" x2="'+X(b)+'" y2="'+Y(b)+'"/>'; }
+    r.doors.forEach(function(d){ var sg=hostSeg(g,d); if(!sg) return; var q=along(sg,d), n=sg.nIn, a=[], st;
+      s += gap(q.p1,q.p2);
+      for(st=0; st<=10; st++){ var th=st/10*Math.PI/2; a.push([q.p1[0]+q.w*(Math.cos(th)*n[0]+Math.sin(th)*sg.d[0]), q.p1[1]+q.w*(Math.cos(th)*n[1]+Math.sin(th)*sg.d[1])]); }
+      s += '<line class="door" x1="'+X(q.p1)+'" y1="'+Y(q.p1)+'" x2="'+X(a[0])+'" y2="'+Y(a[0])+'"/><polyline class="door" stroke-dasharray="2 2" points="'+a.map(pt).join(' ')+'"/>';
+    });
+    r.windows.forEach(function(d){ var sg=hostSeg(g,d); if(!sg) return; var q=along(sg,d), n=sg.nIn, o=2.2/k;
+      s += gap(q.p1,q.p2);
+      [-o,0,o].forEach(function(f){ var a=[q.p1[0]+n[0]*f, q.p1[1]+n[1]*f], b=[q.p2[0]+n[0]*f, q.p2[1]+n[1]*f];
+        s += '<line class="win" x1="'+X(a)+'" y1="'+Y(a)+'" x2="'+X(b)+'" y2="'+Y(b)+'"/>'; });
+    });
+    r.openings.forEach(function(d){ var sg=hostSeg(g,d); if(!sg) return; var q=along(sg,d);
+      s += gap(q.p1,q.p2) + '<line class="open" x1="'+X(q.p1)+'" y1="'+Y(q.p1)+'" x2="'+X(q.p2)+'" y2="'+Y(q.p2)+'"/>'; });
+    g.segs.forEach(function(sg){
+      if(sg.len*k < 30) return;
+      var txt=fLen(sg.len, true), off=Math.abs(sg.nIn[0])*(txt.length*3.3+3) + Math.abs(sg.nIn[1])*10 + 4;
+      var lx = X(sg.mid) - sg.nIn[0]*off, ly = Y(sg.mid) - sg.nIn[1]*off;
+      s += '<text class="lab" x="'+lx.toFixed(1)+'" y="'+ly.toFixed(1)+'">'+esc(txt)+'</text>';
+    });
+    var steps = imp() ? [1,2,3,5,10,20].map(function(f){ return [f/FT, f+' ft']; }) : [[.5,'50 cm'],[1,'1 m'],[2,'2 m'],[5,'5 m'],[10,'10 m']];
+    var sb = steps[0]; steps.forEach(function(v){ if(v[0]*k <= 90) sb=v; });
+    var bx = W - padX - sb[0]*k, by = H - 7;
+    s += '<path class="sb" d="M'+bx.toFixed(1)+' '+(by-4)+'v4h'+(sb[0]*k).toFixed(1)+'v-4"/><text class="sbt" x="'+(bx-5).toFixed(1)+'" y="'+(by+1)+'" text-anchor="end">'+sb[1]+'</text>';
+  }
+  return s + '</svg>';
+}
+
+/* ---------- estimates ---------- */
+function est(r){
+  var coats=Math.max(1, Math.round(pos(prefs.coats,2))), cov=pos(prefs.coverage,12);
+  var walls = r.paintableArea*coats/cov, ceil = r.floorArea*coats/cov;
+  var floor = r.floorArea*(1 + Math.max(0,num(prefs.waste,10))/100);
+  var boxes = prefs.pack>0 ? Math.ceil(floor/prefs.pack - 1e-9) : 0;
+  var cut = r.doors.reduce(function(s,d){ return s+d.width; },0) + r.openings.reduce(function(s,d){ return s+d.width; },0);
+  return { coats:coats, cov:cov, walls:walls, ceil:ceil, floor:floor, boxes:boxes, skirt:Math.max(0, r.perimeter-cut), cut:cut };
+}
+
+/* ---------- views ---------- */
+function show(v){
+  ['vHome','vDetail','vManual'].forEach(function(id){ $(id).hidden = id!==v; });
+  try{ window.scrollTo(0,0); }catch(e){}
+}
+function goHome(){ cur=null; renderHome(); show('vHome'); }
+
+function renderHome(){
+  var L=$('list');
+  $('cnt').textContent = rooms.length ? rooms.length + (rooms.length===1 ? ' room' : ' rooms') : '';
+  if(!rooms.length){
+    L.innerHTML = '<div class="card empty"><div class="tile"><svg class="i"><use href="#i-floor"/></svg></div><p>Rooms you scan or measure appear here, with their plan and estimates.</p></div>';
+    return;
+  }
+  var df = new Intl.DateTimeFormat(undefined, { day:'numeric', month:'short' });
+  L.innerHTML = rooms.slice().sort(function(a,b){ return b.scannedAt-a.scannedAt; }).map(function(r){
+    return '<button type="button" class="room" data-id="'+esc(r.id)+'"><div class="thumb">'+planSVG(r,{w:56,thumb:true})+'</div>'+
+      '<div class="rt"><b>'+esc(r.name)+'</b><div class="m">'+(r.manual?'Measured':'Scanned')+' '+df.format(new Date(r.scannedAt))+
+      ' · '+(r.walls.length ? r.walls.length+' walls' : fLen(r.perimeter)+' around')+'</div></div><div class="a">'+fArea(r.floorArea)+'</div><svg class="i chev"><use href="#i-chev"/></svg></button>';
+  }).join('');
+}
+
+function renderLidar(){
+  var b=$('scanBtn'), hand=$('handBtn');
+  $('scanSpin').hidden = !(lidar===null || scanning);
+  if(lidar===null){ b.disabled=true; $('scanL').textContent='Checking for LiDAR…'; return; }
+  if(lidar.supported){
+    b.hidden=false; b.disabled=scanning; $('scanL').textContent = scanning ? 'Scanning…' : 'Scan a room';
+    if(!b.querySelector('svg')) b.insertAdjacentHTML('afterbegin','<svg class="i"><use href="#i-scan"/></svg>');
+    b.querySelector('svg').style.display = scanning ? 'none' : '';
+    $('hN').hidden=true; hand.classList.add('ghost');
+  } else {
+    b.hidden=true; hand.classList.remove('ghost');
+    $('hK').textContent='Measure a room'; $('hT').textContent='Plan, areas and estimates for any room';
+    $('hS').textContent='Type in the wall lengths and Room Scanner draws the plan and works out paint, flooring and skirting.';
+    $('hNT').textContent = lidar.reason || 'Scanning needs an iPhone Pro with LiDAR and MyLLM 5.9 or later.';
+    $('hN').hidden=false;
+  }
+}
+function checkLidar(retry){
+  var R = window.myllmRoom;
+  if(!(R && typeof R.available==='function')){
+    if(retry){ setTimeout(function(){ checkLidar(false); }, 700); return; }
+    lidar = { supported:false, reason:'Scanning needs an iPhone Pro with LiDAR and MyLLM 5.9 or later.' }; renderLidar(); return;
+  }
+  var p; try{ p = Promise.resolve(R.available()); }catch(e){ p = Promise.reject(e); }
+  p.then(function(a){ lidar = { supported:!!(a && a.supported), reason:(a && a.reason) ? String(a.reason) : '' }; },
+         function(){ lidar = { supported:false, reason:'' }; }).then(renderLidar);
+}
+function showErr(t){ $('errT').textContent=t; $('err').hidden=false; }
+function startScan(){
+  var R = window.myllmRoom; if(scanning) return;
+  if(!(R && typeof R.scan==='function')){ showErr('Room scanning is not available in this version of MyLLM.'); return; }
+  $('err').hidden=true; scanning=true; renderLidar(); haptic('medium');
+  var nm = 'Room ' + (rooms.length+1), p;
+  try{ p = Promise.resolve(R.scan({ name:nm })); }catch(e){ p = Promise.reject(e); }
+  p.then(function(res){
+    scanning=false; renderLidar();
+    if(!res) return;                       /* cancelled: stay home, say nothing */
+    var r = norm(res); r.manual=false; if(!res.name) r.name=nm;
+    rooms.push(r); saveRooms(); haptic('success'); openRoom(r.id);
+  }, function(e){
+    scanning=false; renderLidar(); haptic('error');
+    showErr('The scan didn’t finish: ' + ((e && e.message) ? e.message : String(e || 'unknown error')));
+  });
+}
+
+function openRoom(id){
+  cur = rooms.filter(function(r){ return r.id===id; })[0]; if(!cur) return goHome();
+  renderDetail(); show('vDetail');
+}
+function renderDetail(){
+  var r=cur; if(!r) return;
+  var df = new Intl.DateTimeFormat(undefined, { day:'numeric', month:'long', year:'numeric' });
+  $('dK').textContent = (r.manual ? 'Measured by hand · ' : 'LiDAR scan · ') + df.format(new Date(r.scannedAt));
+  $('dName').textContent = r.name;
+  var ap = areaParts(r.floorArea); $('dArea').innerHTML = esc(ap[0]) + ' <small>' + ap[1] + ' floor</small>';
+  var pills = [r.walls.length ? r.walls.length + (r.walls.length===1?' wall':' walls') : '', r.doors.length + (r.doors.length===1?' door':' doors'), r.windows.length + (r.windows.length===1?' window':' windows')];
+  if(r.openings.length) pills.push(r.openings.length + (r.openings.length===1?' opening':' openings'));
+  if(r.objects.length) pills.push(r.objects.length + ' furniture');
+  $('dPills').innerHTML = pills.filter(Boolean).map(function(p){ return '<span class="pill">'+esc(p)+'</span>'; }).join('');
+  $('dPlan').innerHTML = planSVG(r, { w:330, maxH:380 }) +
+    (r.walls.length ? '<div class="legend"><span><i style="background:var(--ink)"></i>Wall</span><span><i style="background:hsl(var(--h) 60% 52%)"></i>Door</span><span><i style="background:hsl(195 85% 48%)"></i>Window</span>'+(r.openings.length?'<span><i style="background:var(--muted)"></i>Opening</span>':'')+(r.objects.length?'<span><i style="background:var(--fill);border:1px solid var(--muted);height:8px"></i>Furniture</span>':'')+'</div>' : '');
+  var F = [['Floor area', fArea(r.floorArea)], ['Perimeter', fLen(r.perimeter)], ['Ceiling height', r.ceilingHeight ? fLen(r.ceilingHeight) : '—'],
+           ['Wall area', fArea(r.wallArea)], ['Paintable walls', fArea(r.paintableArea)], ['Doors & windows', fArea(r.openingArea)]];
+  $('dFigs').innerHTML = F.map(function(f){ return '<div class="fig"><div class="k">'+f[0]+'</div><div class="v">'+esc(f[1])+'</div></div>'; }).join('');
+  $('dModel').hidden = !r.modelPath; if(r.modelPath) $('dModelT').textContent = '3D model saved to Files: ' + r.modelPath;
+  fillEstInputs(); renderEst();
+}
+function fillEstInputs(){
+  $('fCoats').value = prefs.coats;
+  $('fCov').value = imp() ? Math.round(prefs.coverage*COVF) : +(+prefs.coverage).toFixed(1);
+  $('covL').textContent = imp() ? 'Coverage ft²/gal' : 'Coverage m²/L';
+  $('fCeil').checked = !!prefs.ceiling; $('fWaste').value = prefs.waste;
+  $('fPack').value = prefs.pack>0 ? (imp() ? +(prefs.pack*SQFT).toFixed(1) : +(+prefs.pack).toFixed(2)) : '';
+  $('packL').textContent = imp() ? 'Pack size ft² (optional)' : 'Pack size m² (optional)';
+}
+function renderEst(){
+  var r=cur; if(!r) return; var e=est(r);
+  $('pRes').innerHTML = esc(fVol(e.walls + (prefs.ceiling ? e.ceil : 0))) + '<small>' + (prefs.ceiling ? 'walls + ceiling' : 'walls') + '</small>';
+  $('pSub').textContent = fArea(r.paintableArea) + ' × ' + e.coats + (e.coats===1?' coat':' coats');
+  $('cRes').textContent = fVol(e.ceil);
+  $('flRes').innerHTML = esc(fArea(e.floor)) + (e.boxes ? '<small>' + e.boxes + (e.boxes===1?' pack':' packs') + '</small>' : '');
+  $('flSub').textContent = fArea(r.floorArea) + ' + ' + num(prefs.waste,10) + '% waste';
+  $('skRes').textContent = fLen(e.skirt);
+  $('skSub').textContent = e.cut>0 ? 'Perimeter minus ' + fLen(e.cut) + ' of doorways' : 'The full perimeter';
+}
+function summary(r){
+  var e=est(r), L=[];
+  L.push(r.name + ' — ' + (r.manual ? 'measured by hand' : 'LiDAR scan'));
+  L.push('Floor area: ' + fArea(r.floorArea) + ' · Perimeter: ' + fLen(r.perimeter) + (r.ceilingHeight ? ' · Ceiling: ' + fLen(r.ceilingHeight) : ''));
+  if(r.walls.length) L.push('Walls: ' + r.walls.map(function(w){ return fLen(w.length); }).join(', '));
+  L.push('Wall area: ' + fArea(r.wallArea) + ' (paintable ' + fArea(r.paintableArea) + ')');
+  L.push('Doors: ' + r.doors.length + ' · Windows: ' + r.windows.length + (r.openings.length ? ' · Openings: ' + r.openings.length : ''));
+  L.push('Paint, ' + e.coats + ' coats: ' + fVol(e.walls) + ' for walls' + (prefs.ceiling ? ', ' + fVol(e.ceil) + ' for the ceiling' : ''));
+  L.push('Flooring with ' + num(prefs.waste,10) + '% waste: ' + fArea(e.floor) + (e.boxes ? ' (' + e.boxes + ' packs)' : ''));
+  L.push('Skirting: ' + fLen(e.skirt));
+  L.push('', 'Made with Room Scanner in MyLLM');
+  return L.join('\n');
+}
+
+/* ---------- modal ---------- */
+var ovCb = null;
+function modal(o){
+  $('ovT').textContent=o.title; $('ovP').textContent=o.text||''; $('ovP').hidden=!o.text;
+  var I=$('ovI'); I.hidden = o.input==null; if(o.input!=null) I.value=o.input;
+  var ok=$('ovOk'); ok.textContent=o.ok||'OK'; ok.className='btn ' + (o.danger ? 'danger' : 'pri');
+  ovCb=o.onOk; $('ov').classList.add('show'); $('ov').setAttribute('aria-hidden','false');
+  if(o.input!=null) setTimeout(function(){ try{ I.focus(); I.select(); }catch(e){} }, 60);
+}
+function closeModal(){ $('ov').classList.remove('show'); $('ov').setAttribute('aria-hidden','true'); ovCb=null; try{ $('ovI').blur(); }catch(e){} }
+function okModal(){ var cb=ovCb, v=$('ovI').value; closeModal(); if(cb) cb(v); }
+
+/* ---------- manual mode ---------- */
+function mGet(id){ var v=parseFloat($(id).value); return isFinite(v) && v>0 ? fromDisp(v) : 0; }
+function mSet(id, m){ $(id).value = m>0 ? toDisp(m) : ''; }
+function fillManual(){
+  mSet('rL', man.rect.l); mSet('rW', man.rect.w); mSet('l1', man.l.l1); mSet('w1', man.l.w1); mSet('l2', man.l.l2); mSet('w2', man.l.w2);
+  mSet('mH', man.h); mSet('dW', man.dw); mSet('dH', man.dh); mSet('wW', man.ww); mSet('wH', man.wh);
+  Array.prototype.forEach.call(document.querySelectorAll('#vManual .ul'), function(e){ e.textContent = e.textContent.replace(/ \((m|ft)\)$/,'') + ' (' + uLen() + ')'; });
+  Array.prototype.forEach.call(document.querySelectorAll('#vManual .uu'), function(e){ e.textContent = uLen(); });
+  renderWalls(); shapeUI();
+}
+function renderWalls(){
+  $('wl').innerHTML = man.poly.map(function(w,i){
+    return '<div class="wrow"><span class="n">'+(i+1)+'</span><input type="number" inputmode="decimal" step="0.01" min="0" data-wl="'+i+'" value="'+(w[0]>0?toDisp(w[0]):'')+'" aria-label="Wall '+(i+1)+' length">'+
+      '<input type="number" inputmode="numeric" step="1" data-wt="'+i+'" value="'+w[1]+'" aria-label="Turn after wall '+(i+1)+'"'+(i===man.poly.length-1?' disabled placeholder="—"':'')+'>'+
+      '<button type="button" class="x" data-wx="'+i+'" aria-label="Remove wall '+(i+1)+'"'+(man.poly.length<=3?' disabled style="opacity:.3"':'')+'><svg class="i"><use href="#i-x"/></svg></button></div>';
+  }).join('');
+}
+function shapeUI(){
+  Array.prototype.forEach.call(document.querySelectorAll('#shape button'), function(b){ b.classList.toggle('on', b.dataset.s===man.shape); });
+  $('mRect').hidden = man.shape!=='rect'; $('mL').hidden = man.shape!=='l'; $('mPoly').hidden = man.shape!=='poly';
+  $('nDoor').textContent = man.doors; $('nWin').textContent = man.wins;
+  preview();
+}
+function readManual(){
+  man.rect.l=mGet('rL'); man.rect.w=mGet('rW'); man.l.l1=mGet('l1'); man.l.w1=mGet('w1'); man.l.l2=mGet('l2'); man.l.w2=mGet('w2');
+  man.h=mGet('mH'); man.dw=mGet('dW'); man.dh=mGet('dH'); man.ww=mGet('wW'); man.wh=mGet('wH');
+}
+/* Outline in metres plus a closing report for the custom shape. */
+function manualPoly(){
+  var s=man.shape;
+  if(s==='rect'){ var a=man.rect.l, b=man.rect.w; if(!(a>0&&b>0)) return { err:'Enter the length and width.' }; return { poly:[[0,0],[a,0],[a,b],[0,b]] }; }
+  if(s==='l'){ var L1=man.l.l1, W1=man.l.w1, L2=man.l.l2, W2=man.l.w2;
+    if(!(L1>0&&W1>0&&L2>0&&W2>0)) return { err:'Enter all four measurements.' };
+    if(L2>=L1-0.005) return { err:'The extra part must be shorter than the main length, or it isn’t an L.' };
+    return { poly:[[0,0],[L1,0],[L1,W1],[L2,W1],[L2,W1+W2],[0,W1+W2]] }; }
+  var p=[[0,0]], hd=0, i;
+  for(i=0;i<man.poly.length;i++){ var w=man.poly[i]; if(!(w[0]>0)) return { err:'Wall ' + (i+1) + ' needs a length.' };
+    var last=p[p.length-1]; p.push([last[0]+Math.cos(hd)*w[0], last[1]+Math.sin(hd)*w[0]]); hd += (num(w[1],90))*Math.PI/180; }
+  var end=p[p.length-1], gapM=dist(end,p[0]); if(gapM<0.01) p.pop();
+  return { poly:p, gap:gapM, closed: gapM<0.01 };
+}
+function buildManual(){
+  readManual(); var mp=manualPoly(); if(mp.err) return mp;
+  var poly=mp.poly, H=man.h;
+  if(!(H>0)) return { err:'Enter the ceiling height.' };
+  var walls = poly.map(function(p,i){ var q=poly[(i+1)%poly.length], L=dist(p,q); return { length:L, height:H, area:L*H, start:p, end:q }; })
+                  .filter(function(w){ return w.length>0.005; });
+  if(mp.gap!=null && !mp.closed && walls.length) walls[walls.length-1].auto=true;
+  if(shoelace(poly)<0.05) return { err:'Those walls don’t enclose any floor. Check the turns.' };
+  /* Spread doors from the first wall onwards and windows from the longest wall down. */
+  var slots = walls.map(function(){ return []; }), order = walls.map(function(w,i){ return i; }).sort(function(a,b){ return walls[b].length-walls[a].length; });
+  var doors=[], wins=[], k;
+  for(k=0;k<man.doors;k++){ var d={ width:man.dw||0.84, height:man.dh||1.98, wall:k%walls.length }; doors.push(d); slots[d.wall].push(d); }
+  for(k=0;k<man.wins;k++){ var wi=order[(k + (man.doors && walls.length>1 && order[0]===0 ? 1 : 0)) % walls.length], wn={ width:man.ww||1.2, height:man.wh||1.2, wall:wi }; wins.push(wn); slots[wi].push(wn); }
+  slots.forEach(function(list, i){ var w=walls[i]; list.forEach(function(it, j){ var f=(j+1)/(list.length+1);
+    it.center=[w.start[0]+(w.end[0]-w.start[0])*f, w.start[1]+(w.end[1]-w.start[1])*f]; }); });
+  var nm = ($('mName').value || '').trim() || 'Room ' + (rooms.length+1);
+  return { room: norm({ name:nm, scannedAt:Date.now(), manual:true, floor:poly, walls:walls, doors:doors, windows:wins, openings:[], objects:[], ceilingHeight:H }), gap:mp.gap, closed:mp.closed };
+}
+function preview(){
+  var b = buildManual(), cm=$('closeMsg');
+  if(b.err){ $('mPlan').innerHTML = '<div class="noplan">'+esc(b.err)+'</div>'; cm.innerHTML=''; $('mSave').disabled=true; return; }
+  $('mSave').disabled=false;
+  $('mPlan').innerHTML = planSVG(b.room, { w:330, maxH:300 }) +
+    '<div class="legend"><span>Floor <b style="color:var(--ink)">'+esc(fArea(b.room.floorArea))+'</b></span><span>Perimeter <b style="color:var(--ink)">'+esc(fLen(b.room.perimeter))+'</b></span><span>Paintable <b style="color:var(--ink)">'+esc(fArea(b.room.paintableArea))+'</b></span></div>';
+  if(man.shape!=='poly' || b.gap==null){ cm.innerHTML=''; return; }
+  if(b.closed) cm.innerHTML = '<div class="close ok"><svg class="i"><use href="#i-info"/></svg><span><b>The shape closes neatly.</b></span></div>';
+  else cm.innerHTML = '<div class="close warn"><svg class="i"><use href="#i-alert"/></svg><span><b>The walls miss the start by '+esc(fLen(b.gap))+'.</b> A closing wall of that length was added. Check your lengths and turns'+(b.gap > 0.05*b.room.perimeter ? ' — the gap is large' : '')+'.</span></div>';
+}
+function openManual(){ $('mName').value=''; fillManual(); show('vManual'); }
+
+/* ---------- events ---------- */
+document.addEventListener('click', function(ev){
+  var t=ev.target.closest ? ev.target.closest('button') : null; if(!t) return;
+  if(t.dataset.home!==undefined){ goHome(); return; }
+  if(t.dataset.id){ haptic('light'); openRoom(t.dataset.id); return; }
+  if(t.dataset.u){ if(prefs.units===t.dataset.u) return; if(!$('vManual').hidden) readManual();
+    prefs.units=t.dataset.u; savePrefs(); haptic('selection'); syncUnits(); return; }
+  if(t.dataset.s){ readManual(); man.shape=t.dataset.s; haptic('selection'); shapeUI(); return; }
+  if(t.dataset.st){ var q=t.dataset.st.split(':'), key=q[0]==='door'?'doors':'wins'; man[key]=Math.max(0,Math.min(12,man[key]+(+q[1]))); readManual(); haptic('selection'); shapeUI(); return; }
+  if(t.dataset.wx){ readManual(); man.poly.splice(+t.dataset.wx,1); if(man.poly.length) man.poly[man.poly.length-1][1]=90; renderWalls(); preview(); return; }
+});
+function syncUnits(){
+  Array.prototype.forEach.call(document.querySelectorAll('.useg button'), function(b){ b.classList.toggle('on', b.dataset.u===prefs.units); });
+  renderHome(); if(cur && !$('vDetail').hidden) renderDetail(); if(!$('vManual').hidden) fillManual();
+}
+$('scanBtn').onclick = startScan;
+$('handBtn').onclick = function(){ haptic('light'); openManual(); };
+$('errX').onclick = function(){ $('err').hidden=true; };
+$('dShare').onclick = function(){ if(!cur) return; var t=summary(cur);
+  if(typeof window.myllmShare==='function'){ try{ Promise.resolve(window.myllmShare(t)).catch(function(){}); }catch(e){} }
+  else toast('Sharing needs the MyLLM app'); };
+$('dRename').onclick = function(){ if(!cur) return; var r=cur;
+  modal({ title:'Rename room', input:r.name, ok:'Save', onOk:function(v){ v=(v||'').trim().slice(0,60); if(!v) return; r.name=v; saveRooms(); renderDetail(); renderHome(); } }); };
+$('dDelete').onclick = function(){ if(!cur) return; var r=cur;
+  modal({ title:'Delete “' + r.name + '”?', text:'Its plan and measurements will be removed. This can’t be undone.', ok:'Delete', danger:true,
+    onOk:function(){ rooms=rooms.filter(function(x){ return x.id!==r.id; }); saveRooms(); haptic('warning'); goHome(); toast('Room deleted'); } }); };
+$('ovNo').onclick = closeModal; $('ovOk').onclick = okModal;
+$('ov').addEventListener('click', function(e){ if(e.target===this) closeModal(); });
+$('ovI').addEventListener('keydown', function(e){ if(e.key==='Enter'){ e.preventDefault(); okModal(); } });
+document.addEventListener('keydown', function(e){ if(e.key==='Escape' && $('ov').classList.contains('show')) closeModal(); });
+
+function estInput(){
+  var c=parseFloat($('fCoats').value); if(c>0) prefs.coats=Math.round(c);
+  var v=parseFloat($('fCov').value); if(v>0) prefs.coverage = imp() ? v/COVF : v;
+  var w=parseFloat($('fWaste').value); if(w>=0) prefs.waste=w;
+  var p=parseFloat($('fPack').value); prefs.pack = p>0 ? (imp() ? p/SQFT : p) : 0;
+  prefs.ceiling=$('fCeil').checked; savePrefs(); renderEst();
+}
+['fCoats','fCov','fWaste','fPack'].forEach(function(id){ $(id).addEventListener('input', estInput);
+  $(id).addEventListener('keydown', function(e){ if(e.key==='Enter') this.blur(); }); });
+$('fCeil').addEventListener('change', estInput);
+
+$('vManual').addEventListener('input', function(e){
+  var t=e.target;
+  if(t.dataset.wl!=null){ var v=parseFloat(t.value); man.poly[+t.dataset.wl][0] = v>0 ? fromDisp(v) : 0; }
+  else if(t.dataset.wt!=null){ var a=parseFloat(t.value); man.poly[+t.dataset.wt][1] = isFinite(a) ? a : 90; }
+  if(t.id==='mName') return;
+  preview();
+});
+$('vManual').addEventListener('keydown', function(e){ if(e.key==='Enter' && e.target.tagName==='INPUT'){ e.preventDefault(); e.target.blur(); } });
+$('addWall').onclick = function(){ readManual(); if(man.poly.length) man.poly[man.poly.length-1][1] = man.poly[man.poly.length-1][1] || 90;
+  man.poly.push([0,90]); renderWalls(); preview(); haptic('light');
+  var ins=document.querySelectorAll('#wl input[data-wl]'); try{ ins[ins.length-1].focus(); }catch(e){} };
+$('mSave').onclick = function(){
+  var b=buildManual(); if(b.err){ toast(b.err); return; }
+  rooms.push(b.room); saveRooms(); haptic('success'); openRoom(b.room.id);
+};
+
+/* ---------- boot ---------- */
+Promise.all([store.get('rooms'), store.get('prefs')]).then(function(v){
+  try{ var a=JSON.parse(v[0]||'[]'); if(Array.isArray(a)) rooms=a.map(norm); }catch(e){}
+  try{ var p=JSON.parse(v[1]||'{}'); if(p && typeof p==='object') for(var k in prefs) if(k in p) prefs[k]=p[k]; }catch(e){}
+  if(prefs.units!=='ft') prefs.units='m';
+  syncUnits();
+});
+renderHome(); renderLidar(); checkLidar(true);
+
+/* myllm-fullscreen-v2 — full screen where MyLLM can also close the app for us
+   (myllmClose, 5.6.2+): full screen hides MyLLM's Done, and a page with no way
+   out is worse than a repeated title, so elsewhere nothing changes.
+   The spacer keeps the header clear of the status bar / Dynamic Island. It is
+   live CSS — env(safe-area-inset-top) — not a measured number: the inset is
+   still 0 when the page loads and only grows once MyLLM's bar has gone (v1
+   measured once, so the title sat under the island). If the page's own styles
+   already pad the header down by the inset, the spacer stays at 0. */
+(function(){
+  function full(){ return !!(window.myllmClose && window.myllmImmersive); }
+  /* Does any rule that applies to the header or an ancestor already use the top inset? */
+  function pageHandlesInset(head){
+    var chain = [], n, found = false;
+    for (n = head; n && n.nodeType === 1; n = n.parentElement) chain.push(n);
+    function walk(rules){
+      for (var i = 0; i < rules.length && !found; i++){
+        var r = rules[i];
+        if (r.cssRules && !r.selectorText) { walk(r.cssRules); continue; }
+        if (!r.selectorText || !/safe-area-inset-top/.test(r.cssText) || !/(padding|margin|top)\s*:/.test(r.cssText)) continue;
+        if (/\.imm-safe/.test(r.selectorText)) continue;
+        for (var k = 0; k < chain.length; k++){
+          try { if (chain[k].matches(r.selectorText)) { found = true; break; } } catch(e){}
+        }
+      }
+    }
+    for (var s = 0; s < document.styleSheets.length && !found; s++){
+      try { walk(document.styleSheets[s].cssRules); } catch(e){}
+    }
+    for (n = head; n && n.nodeType === 1 && !found; n = n.parentElement){
+      if (/safe-area-inset-top/.test(n.getAttribute("style") || "")) found = true;
+    }
+    return found;
+  }
+  function fit(){
+    var sp = document.querySelector(".imm-safe"), head = document.querySelector(".head");
+    if (!sp || !head) return;
+    sp.style.height = (document.body.classList.contains("imm") && !pageHandlesInset(head)) ? "env(safe-area-inset-top)" : "0px";
+  }
+  function sync(){
+    var f = full();
+    document.body.classList.toggle("imm", f);
+    fit();
+    if (!f) return;
+    try { window.myllmImmersive(true, { keepAwake:false }).catch(function(){}); } catch(e){}
+  }
+  window.myllmFSClose = function(){
+    try { if (window.myllmHaptic) window.myllmHaptic("light"); } catch(e){}
+    try { window.myllmClose().catch(function(){}); } catch(e){}
+  };
+  document.addEventListener("visibilitychange", function(){ if (!document.hidden) sync(); });
+  sync();
+})();
+</script></body></html>

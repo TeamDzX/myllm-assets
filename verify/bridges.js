@@ -256,6 +256,43 @@
     },
   };
 
+  // 5.9: RoomPlan + LiDAR. available() never rejects; scan() resolves a room in
+  // metres, null when the user cancels, and rejects on unsupported / camera
+  // denied / failed. The harness answers as a LiDAR phone that scanned an
+  // L-shaped living room (6 walls, 1 door, 2 windows, 2 objects).
+  // __roomMode: 'unsupported' | 'cancel' | 'reject' exercise the other paths.
+  window.myllmRoom = {
+    available: () => later(window.__roomMode === 'unsupported'
+      ? { supported: false, reason: 'This iPhone has no LiDAR scanner.' }
+      : { supported: true }),
+    scan: (opts) => {
+      if (window.__roomMode === 'unsupported') return later(null).then(() => { throw new Error('Room scanning needs a LiDAR sensor.'); });
+      if (window.__roomMode === 'reject') return later(null, 40).then(() => { throw new Error('Camera access was denied.'); });
+      if (window.__roomMode === 'cancel') return later(null, 40);
+      const H = 2.5;
+      const floor = [[0, 0], [5, 0], [5, 3], [3, 3], [3, 5.5], [0, 5.5]];
+      const walls = floor.map((p, i) => {
+        const q = floor[(i + 1) % floor.length];
+        const length = Math.hypot(q[0] - p[0], q[1] - p[1]);
+        return { length, height: H, area: length * H, start: p, end: q };
+      });
+      const doors = [{ width: 0.84, height: 2.03, center: [0, 4.5], wall: 5 }];
+      const windows = [{ width: 1.2, height: 1.2, center: [2.5, 0], wall: 0 },
+                       { width: 1.6, height: 1.3, center: [5, 1.5], wall: 1 }];
+      const wallArea = walls.reduce((s, w) => s + w.area, 0);
+      const openingArea = [...doors, ...windows].reduce((s, d) => s + d.width * d.height, 0);
+      return later({
+        name: (opts && opts.name) || 'Living room', scannedAt: Date.now(), units: 'm',
+        floorArea: 22.5, perimeter: 21, ceilingHeight: H,
+        floor, walls, doors, windows, openings: [],
+        objects: [{ category: 'sofa', width: 2.1, depth: 0.9, height: 0.85, center: [2.5, 2.3], rotation: 0 },
+                  { category: 'table', width: 1.2, depth: 0.8, height: 0.75, center: [1.5, 4.3], rotation: 0.3 }],
+        wallArea, openingArea, paintableArea: wallArea - openingArea,
+        ...(opts && opts.saveModel ? { modelPath: 'Rooms/Living room.usdz' } : {}),
+      }, 60);
+    },
+  };
+
   // Tile state (roadmap #4). Publishing is fire-and-forget from the app's side.
   window.myllmWidget = {
     publish: (state) => later(true, 15),
