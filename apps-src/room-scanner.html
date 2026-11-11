@@ -55,7 +55,7 @@
   .glass:disabled{ opacity:.6; }
   .hero .btns{ display:flex; flex-direction:column; gap:8px; margin-top:16px; }
   .hero .btns .glass{ width:100%; white-space:nowrap; }
-  .hero .note{ font-size:12.5px; opacity:.85; margin-top:12px; display:flex; gap:7px; align-items:flex-start; }
+  .hero .note{ font-size:11.5px; line-height:1.35; opacity:.7; margin-top:12px; display:flex; gap:7px; align-items:flex-start; }
   .tog{ display:flex; align-items:center; gap:10px; margin-top:12px; font-size:13.5px; font-weight:600; opacity:.95; cursor:pointer; }
   .tog input{ width:20px; height:20px; accent-color:#fff; flex-shrink:0; }
 
@@ -548,7 +548,7 @@ function renderLidar(){
     b.hidden=true; hand.classList.remove('ghost');
     $('hK').textContent='Measure a room'; $('hT').textContent='Plan, areas and estimates for any room';
     $('hS').textContent='Type in the wall lengths and Room Scanner draws the plan and works out paint, flooring and skirting.';
-    $('hNT').textContent = lidar.reason || 'Scanning needs an iPhone Pro with LiDAR and MyLLM 5.9 or later.';
+    $('hNT').textContent = lidar.old ? 'Automatic scanning needs MyLLM 5.9 or later on an iPhone Pro or iPad Pro.' : 'Automatic scanning is only on iPhone Pro and iPad Pro models, which have a LiDAR sensor. Everything else works on this device.';
     $('hN').hidden=false;
   }
 }
@@ -556,7 +556,7 @@ function checkLidar(retry){
   var R = window.myllmRoom;
   if(!(R && typeof R.available==='function')){
     if(retry){ setTimeout(function(){ checkLidar(false); }, 700); return; }
-    lidar = { supported:false, reason:'Scanning needs an iPhone Pro with LiDAR and MyLLM 5.9 or later.' }; renderLidar(); return;
+    lidar = { supported:false, old:true }; renderLidar(); return;
   }
   var p; try{ p = Promise.resolve(R.available()); }catch(e){ p = Promise.reject(e); }
   p.then(function(a){ lidar = { supported:!!(a && a.supported), reason:(a && a.reason) ? String(a.reason) : '' }; },
