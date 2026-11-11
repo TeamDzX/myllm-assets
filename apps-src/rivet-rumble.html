@@ -49,12 +49,12 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,system-ui,"Segoe
 #pauseBtn{pointer-events:auto;position:absolute;left:50%;transform:translateX(-50%);top:calc(44px + env(safe-area-inset-top));width:38px;height:30px;border-radius:10px;border:1px solid rgba(255,255,255,.3);background:rgba(20,14,30,.5);color:#fff;font-size:12px;font-weight:900}
 /* touch pad */
 #pad{position:fixed;left:0;right:0;bottom:0;z-index:6;display:flex;justify-content:space-between;align-items:flex-end;padding:0 calc(14px + env(safe-area-inset-right)) calc(26px + env(safe-area-inset-bottom)) calc(14px + env(safe-area-inset-left));pointer-events:none}
-.dpad{position:relative;width:176px;height:176px;pointer-events:auto}
+.dpad{position:relative;width:176px;height:176px;pointer-events:auto;touch-action:none}
 .dpad button,.btns button{position:absolute;border-radius:18px;border:1.5px solid rgba(255,255,255,.35);background:rgba(20,14,30,.45);color:#fff;font-weight:900;font-size:13px;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);touch-action:none;display:flex;align-items:center;justify-content:center}
 .dpad button{width:60px;height:60px}
 .dpad svg{width:26px;height:26px;fill:#fff}
 .dpad [data-k=u]{left:58px;top:0}.dpad [data-k=l]{left:0;top:58px}.dpad [data-k=r]{left:116px;top:58px}.dpad [data-k=d]{left:58px;top:116px}
-.btns{position:relative;width:168px;height:150px;pointer-events:auto}
+.btns{position:relative;width:168px;height:150px;pointer-events:auto;touch-action:none}
 .btns button{width:72px;height:66px;font-size:14px}
 .btns [data-k=p]{left:0;top:0;background:rgba(255,170,60,.35)}.btns [data-k=k]{left:84px;top:0;background:rgba(255,90,80,.35)}
 .btns [data-k=s]{left:0;top:78px;background:rgba(90,200,255,.35)}.btns [data-k=b]{left:84px;top:78px;background:rgba(160,160,180,.35)}
@@ -681,6 +681,7 @@ function stepFighter(f){
   f.x += f.vx * DT;
   if (!grounded(f) || f.vy > 0){ f.vy -= GRAV * DT; f.y += f.vy * DT; if (f.y <= 0){ f.y = 0; f.vy = 0; if (f.st === 'jump'){ f.st = 'idle'; dust(f.x, 4); sfx('land'); } } }
   f.x = clamp(f.x, -STAGE_X, STAGE_X);
+  var oo = F[1 - f.i]; if (oo && phase !== 'menu'){ var ms = maxSep(); if (Math.abs(f.x - oo.x) > ms) f.x = oo.x + (f.x > oo.x ? ms : -ms); }
   // face the opponent when free
   if ((f.st === 'idle' || f.st === 'walk' || f.st === 'crouch') && grounded(f)) f.face = o.x >= f.x ? 1 : -1;
   // pose
@@ -821,7 +822,7 @@ function buildStages(){
   var conc = [.62, .6, .57], rust = [.6, .33, .2], teal = [.18, .45, .5], dk = [.15, .15, .17], hz = [1, .65, .15], wood = [.45, .32, .22];
   // scrapyard
   seed = 7; var A = []; MATOF.clear(); MATOF.set(conc, 1);
-  box(A, -40, 40, -1, 0, -9, 6, conc);
+  box(A, -40, 40, -1, 0, -9, 70, conc);
   for (var i = 0; i < 30; i++){ var x0 = -38 + i * 2.7; quad(A, [x0, .005, -1.6], [x0 + 1.4, .005, -1.6], [x0 + 1.4, .005, -1.4], [x0, .005, -1.4], [.48, .46, .43]); }
   for (var oi = 0; oi < 9; oi++){ var ox = -20 + rnd() * 40, oz = -1 + rnd() * 4; quad(A, [ox, .006, oz], [ox + 1.6, .006, oz + .4], [ox + 1.3, .006, oz + 1.4], [ox - .2, .006, oz + 1], [.3, .28, .26]); }
   var cont = function(x, y, z, l, c, rot){ box(A, x - l / 2, x + l / 2, y, y + 2.6, z - 1.25, z + 1.25, c); for (var r = 0; r < 8; r++){ var rx = x - l / 2 + .3 + r * (l - .6) / 7; box(A, rx - .06, rx + .06, y + .1, y + 2.5, z + 1.25, z + 1.3, shade(c, .8)); } };
@@ -835,7 +836,7 @@ function buildStages(){
   STAGEDATA.yard = new Float32Array(A);
   // harbour
   seed = 13; A = []; MATOF.clear(); MATOF.set(conc, 1);
-  box(A, -40, 40, -1, 0, -8, 6, [.44, .44, .48]);
+  box(A, -40, 40, -1, 0, -8, 70, [.44, .44, .48]);
   for (i = 0; i < 40; i++){ var wx = -40 + i * 2; box(A, wx, wx + 1.9, -1.2, -.05, -8.2, -8, [.3, .24, .2]); }
   quad(A, [-80, -1.4, -9], [80, -1.4, -9], [80, -1.4, -60], [-80, -1.4, -60], [.06, .1, .2]);
   [[-16, -14], [14, -16]].forEach(function(c){ box(A, c[0] - 3, c[0] - 2.4, -1.4, 16, c[1] - .3, c[1] + .3, [.8, .2, .15]); box(A, c[0] + 2.4, c[0] + 3, -1.4, 16, c[1] - .3, c[1] + .3, [.8, .2, .15]); box(A, c[0] - 6, c[0] + 9, 15.5, 16.6, c[1] - .5, c[1] + .5, [.8, .2, .15]); box(A, c[0] + 7, c[0] + 7.6, 16.6, 17.2, c[1] - .2, c[1] + .2, [2.8, .3, .2]); });
@@ -877,6 +878,8 @@ function stepParts(dt){ for (var i = parts.length - 1; i >= 0; i--){ var p = par
 // ===================================================================
 // RENDER
 // ===================================================================
+var FITM = 2.4, DMAX = 34, viewHV = 1;
+function maxSep(){ return Math.max(6.5, 2 * (DMAX * viewHV - FITM)); }
 var CAMO = null, cam = { x: 0, y: 2.2, d: 11 }, W = 1, H = 1, lastW = 0, lastH = 0, pData = new Float32Array(800 * 8);
 function resize(){ var dpr = Math.min(window.devicePixelRatio || 1, 2), w = Math.round(canvas.clientWidth * dpr), h = Math.round(canvas.clientHeight * dpr); if (w !== lastW || h !== lastH){ canvas.width = w; canvas.height = h; lastW = w; lastH = h; } W = canvas.clientWidth; H = canvas.clientHeight; }
 function bindMesh(prog, m){
@@ -911,11 +914,13 @@ function render(dt){
   resize();
   var st = STAGES[stageId], a = F[0], b = F[1];
   var midX = a && b ? (a.x + b.x) / 2 : 0, sep = a && b ? Math.abs(a.x - b.x) : 4;
-  var tgtD = clamp(sep * .55 + 6.6, 7.8, 15) * (W / H < 1.2 ? 1.55 : 1), tgtX = clamp(midX, -STAGE_X + 3.5, STAGE_X - 3.5), tgtY = 2.0 + (a && b ? Math.max(a.y, b.y) * .6 : 0); if (a && b) tgtD += Math.max(a.y, b.y) * .9;
-  if (superFx && freeze > 0){ var sf = F[superFx.i]; tgtX = sf.x; tgtD = 8.6; tgtY = 2.3; }
+  var hv = Math.tan(19 * PI / 180) * (W / H); viewHV = hv;
+  var tgtD = clamp(sep * .55 + 6.6, 7.8, 15), tgtX = clamp(midX, -STAGE_X + 3.5, STAGE_X - 3.5), tgtY = 2.0 + (a && b ? Math.max(a.y, b.y) * .6 : 0);
+  if (a && b){ tgtD += Math.max(a.y, b.y) * .9; tgtD = Math.max(tgtD, (Math.max(Math.abs(a.x - tgtX), Math.abs(b.x - tgtX)) + FITM) * (hv > .344 ? 1.1 : 1) / hv); }
+  if (superFx && freeze > 0){ var sf = F[superFx.i]; tgtX = sf.x; tgtD = Math.max(8.6, 2.7 / hv); tgtY = 2.3; }
   if (phase === 'menu' || phase === 'select'){ tgtX = Math.sin(performance.now() / 4000) * 3; tgtD = 13; }
   if (CAMO){ tgtX = CAMO.x; tgtD = CAMO.d; tgtY = CAMO.y; cam.x = tgtX; cam.d = tgtD; cam.y = tgtY; }
-  cam.x += (tgtX - cam.x) * .1; cam.d += (tgtD - cam.d) * .08; cam.y += (tgtY - cam.y) * .1;
+  cam.x += (tgtX - cam.x) * .1; cam.d += (tgtD - cam.d) * (tgtD > cam.d ? .2 : .08); cam.y += (tgtY - cam.y) * .1;
   var sh = shake; shake = Math.max(0, shake - dt * 2.5);
   var eye = [cam.x + (rnd() - .5) * sh * .6, cam.y + .9 + (rnd() - .5) * sh * .6, cam.d];
   zoomKick = Math.max(0, zoomKick - dt * 4);
@@ -929,7 +934,7 @@ function render(dt){
   gl.disableVertexAttribArray(bp.a.aP); gl.disableVertexAttribArray(bp.a.aT); gl.depthMask(true);
   // world
   var m = R.main; gl.useProgram(m.p);
-  gl.uniformMatrix4fv(m.u.uVP, false, VP); gl.uniform3fv(m.u.uCam, eye); gl.uniform3fv(m.u.uSun, norm(st.sun)); gl.uniform3fv(m.u.uSunCol, st.sunCol); gl.uniform3fv(m.u.uAmb, st.amb); gl.uniform3fv(m.u.uFog, st.fog); gl.uniform1f(m.u.uFogD, 1 / 70);
+  gl.uniformMatrix4fv(m.u.uVP, false, VP); gl.uniform3fv(m.u.uCam, eye); gl.uniform3fv(m.u.uSun, norm(st.sun)); gl.uniform3fv(m.u.uSunCol, st.sunCol); gl.uniform3fv(m.u.uAmb, st.amb); gl.uniform3fv(m.u.uFog, st.fog); gl.uniform1f(m.u.uFogD, 1 / Math.max(70, cam.d * 4.5));
   gl.uniform3f(m.u.uTint, 1, 1, 1); gl.uniform3f(m.u.uRim, 0, 0, 0); gl.uniform1f(m.u.uFlash, 0);
   gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, R.steel); gl.uniform1i(m.u.uT1, 1); gl.activeTexture(gl.TEXTURE2); gl.bindTexture(gl.TEXTURE_2D, R.conc); gl.uniform1i(m.u.uT2, 2);
   gl.activeTexture(gl.TEXTURE4); gl.bindTexture(gl.TEXTURE_2D, R.frm); gl.uniform1i(m.u.uFrm, 4); gl.uniform3fv(m.u.uFrmMean, TEXMEAN.frame || [.5, .5, .5]); gl.uniform1i(m.u.uArm, 3); gl.uniform3fv(m.u.uArmMean, [.5, .5, .5]);
@@ -1074,7 +1079,7 @@ function endMatch(won){
 function toMenu(){ AI0 = false; phase = 'menu'; immersive(false); ['hud', 'pad', 'select', 'endOv', 'pauseOv', 'vs'].forEach(hide); show('menu'); refreshMenu(); demoFighters(); }
 function demoFighters(){ F = [newFighter(0, MECHS[0]), newFighter(1, MECHS[1])]; F[0].ai = true; }
 function pause(){ if (phase !== 'fight' && phase !== 'intro') return; phase = 'paused'; show('pauseOv'); if (AU.ctx) AU.ctx.suspend(); immersive(false); }
-function resume(){ if (phase !== 'paused') return; phase = 'fight'; hide('pauseOv'); if (AU.ctx) AU.ctx.resume(); immersive(true); }
+function resume(){ if (phase !== 'paused') return; clearInput(); phase = 'fight'; hide('pauseOv'); if (AU.ctx) AU.ctx.resume(); immersive(true); }
 // select screen
 var selStage = 'yard';
 function openSelect(m){
@@ -1129,18 +1134,31 @@ document.addEventListener('visibilitychange', function(){ if (document.hidden) p
 // ===================================================================
 // INPUT
 // ===================================================================
-var padKeys = {}, keyHeld = {}, ptrs = {}, edges = {};
+var padKeys = {}, keyHeld = {}, edges = {};
 var KEYMAP = { ArrowLeft: 'l', KeyA: 'l', ArrowRight: 'r', KeyD: 'r', ArrowUp: 'u', KeyW: 'u', ArrowDown: 'd', KeyS: 'd', KeyJ: 'p', KeyK: 'k', KeyL: 's', Space: 'b', ShiftLeft: 'b', KeyU: 'x' };
 function setKey(k, on){ var was = !!(padKeys[k] || keyHeld[k]); if (on && !was) edges[k] = 1; }
-function clearInput(){ padKeys = {}; keyHeld = {}; ptrs = {}; edges = {}; IN[0] = freshInput(); document.querySelectorAll('#pad button').forEach(function(b){ b.classList.remove('on'); }); }
+function clearInput(){ padKeys = {}; keyHeld = {}; TCH = {}; mouseK = null; edges = {}; IN[0] = freshInput(); document.querySelectorAll('#pad button').forEach(function(b){ b.classList.remove('on'); }); }
 function padKeyAt(e){ var t = document.elementFromPoint(e.clientX, e.clientY); var b = t && t.closest ? t.closest('#pad button') : null; return b ? b.getAttribute('data-k') : null; }
 function padSync(){ document.querySelectorAll('#pad button').forEach(function(b){ var k = b.getAttribute('data-k'); b.classList.toggle('on', !!padKeys[k]); }); }
-var padEl = el('pad');
-padEl.addEventListener('pointerdown', function(e){ var k = padKeyAt(e); if (!k) return; e.preventDefault(); audioInit(); setKey(k, true); padKeys[k] = (padKeys[k] || 0) + 1; ptrs[e.pointerId] = k; padSync(); try { padEl.setPointerCapture(e.pointerId); } catch (er) {} haptic('selection'); });
-padEl.addEventListener('pointermove', function(e){ if (!(e.pointerId in ptrs)) return; var k = padKeyAt(e), old = ptrs[e.pointerId]; if (k && k !== old && 'lrud'.indexOf(k) >= 0 && 'lrud'.indexOf(old) >= 0){ padKeys[old]--; setKey(k, true); padKeys[k] = (padKeys[k] || 0) + 1; ptrs[e.pointerId] = k; padSync(); } });
-function ptrUp(e){ if (!(e.pointerId in ptrs)) return; var k = ptrs[e.pointerId]; padKeys[k] = Math.max(0, (padKeys[k] || 0) - 1); delete ptrs[e.pointerId]; padSync(); }
-padEl.addEventListener('pointerup', ptrUp); padEl.addEventListener('pointercancel', ptrUp);
-padEl.addEventListener('touchstart', function(e){ e.preventDefault(); }, { passive: false });
+var padEl = el('pad'), dpadEl = padEl.querySelector('.dpad'), TCH = {}, mouseK = null;
+// Held keys are rebuilt from the live touch list on every touch event, so a missed finger-lift can never leave a key stuck.
+function dpadKeys(x, y){ var r = dpadEl.getBoundingClientRect(), dx = x - (r.left + r.width / 2), dy = (r.top + r.height / 2) - y, o = {}; if (dx * dx + dy * dy < 196) return o;
+  var a = Math.atan2(dy, dx) * 180 / PI; if (Math.abs(a) < 60) o.r = 1; if (Math.abs(a) > 120) o.l = 1; if (a > 30 && a < 150) o.u = 1; if (a < -30 && a > -150) o.d = 1; return o; }
+function padRecalc(){ var nk = {}, id, k; for (id in TCH){ var t = TCH[id]; if (t.z === 'd'){ var dk = dpadKeys(t.x, t.y); for (k in dk) nk[k] = 1; } else nk[t.k] = 1; } if (mouseK) nk[mouseK] = 1;
+  for (k in nk) if (!padKeys[k]) setKey(k, true); padKeys = nk; padSync(); }
+function padRelease(){ TCH = {}; mouseK = null; keyHeld = {}; padKeys = {}; padSync(); }
+function touchSync(e){ var live = {}, i, t; for (i = 0; i < e.touches.length; i++){ t = e.touches[i]; live[t.identifier] = t; }
+  for (var id in TCH){ if (!live[id]) delete TCH[id]; else { TCH[id].x = live[id].clientX; TCH[id].y = live[id].clientY; } } padRecalc(); }
+padEl.addEventListener('touchstart', function(e){ e.preventDefault(); audioInit();
+  for (var i = 0; i < e.changedTouches.length; i++){ var t = e.changedTouches[i], tg = t.target, b = tg && tg.closest ? tg.closest('#pad button') : null, inD = tg && tg.closest ? tg.closest('.dpad') : null;
+    if (inD) TCH[t.identifier] = { z: 'd', x: t.clientX, y: t.clientY }; else if (b) TCH[t.identifier] = { z: 'b', k: b.getAttribute('data-k') }; else continue; haptic('selection'); }
+  touchSync(e); }, { passive: false });
+padEl.addEventListener('touchmove', function(e){ e.preventDefault(); touchSync(e); }, { passive: false });
+['touchend', 'touchcancel'].forEach(function(n){ window.addEventListener(n, touchSync, true); });
+padEl.addEventListener('mousedown', function(e){ var b = e.target.closest ? e.target.closest('#pad button') : null; if (!b) return; e.preventDefault(); audioInit(); mouseK = b.getAttribute('data-k'); padRecalc(); });
+window.addEventListener('mouseup', function(){ if (mouseK){ mouseK = null; padRecalc(); } });
+padEl.addEventListener('contextmenu', function(e){ e.preventDefault(); });
+window.addEventListener('blur', padRelease); window.addEventListener('pagehide', padRelease); document.addEventListener('visibilitychange', function(){ if (document.hidden) padRelease(); });
 window.addEventListener('keydown', function(e){
   if (e.code === 'Escape'){ if (phase === 'paused') resume(); else pause(); return; }
   var k = KEYMAP[e.code]; if (!k) return; e.preventDefault(); audioInit(); if (!e.repeat) setKey(k, true); keyHeld[k] = true;
