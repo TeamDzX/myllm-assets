@@ -459,7 +459,37 @@ function moodHint(){
   return "";
 }
 
-function save(){ store.setItem("mochi_state", JSON.stringify(S)); }
+function save(){ store.setItem("mochi_state", JSON.stringify(S)); publishPet(); }
+
+/* ---------- link with Mochi's Adventure (docs/SHARED_DATA.md) ----------
+   Mochi stars in the Mochi's Adventure platformer. This app publishes the pet's
+   name and outfit to data/pet.json so the hero there matches, and reads
+   data/mochi-adventure.json so Mochi can come home happy and talk about it.
+   Best-effort both ways: with shared files off, nothing changes here. */
+var lastPetPub = "";
+function publishPet(){
+  var F = window.myllmFiles; if (!F || !F.write || !S) return;
+  var body = { name: S.name || "Mochi", hatched: !!S.hatched, wearing: { head: W.head || null, eyes: W.eyes || null, neck: W.neck || null } };
+  var key = JSON.stringify(body); if (key === lastPetPub) return; lastPetPub = key;
+  body.schema = "myllm.pet"; body.version = 1; body.source = "mochi"; body.updated = new Date().toISOString();
+  try { Promise.resolve(F.write("data/pet.json", JSON.stringify(body))).catch(function(){}); } catch(_){}
+}
+var ADVENTURE = ["*practises a tiny swing*","i was so brave out there ⭐","wheee… like on the wire! 🪝","*counts star pieces*","the mushrooms were SO bouncy 🍄"];
+function readAdventure(){
+  var F = window.myllmFiles; if (!F || !F.read || !S || !S.hatched) return;
+  Promise.resolve().then(function(){ return F.read("data/mochi-adventure.json"); }).then(function(t){
+    var j = null; try { j = t ? JSON.parse(t) : null; } catch(_){}
+    if (!j || j.schema !== "myllm.mochi-adventure" || j.version !== 1) return;
+    S.adv = { cleared: +j.cleared || 0, stars: +j.stars || 0 };
+    var last = j.last;
+    if (last && typeof last.at === "string" && last.at > (S.advAt || "")){
+      S.advAt = last.at; S.happy = Math.min(100, S.happy + 10);
+      var line = last.finished ? "I found the fallen star!! 🌟" : (last.stars ? "I found " + last.stars + " star piece" + (last.stars > 1 ? "s" : "") + " on my adventure! ⭐" : "I went on an adventure! 🪝");
+      render(); save();
+      setTimeout(function(){ if (!S.sleeping) bubble(line, 5600); }, 2600);
+    }
+  }).catch(function(){});
+}
 
 /* ---------- rendering ---------- */
 function render(){
@@ -1106,6 +1136,7 @@ function ambientTick(now, rng){
     return "dream";
   }
   var pool = CHATTER[chatterMood()];
+  if (S.adv && S.adv.cleared && chatterMood() === "happy") pool = pool.concat(ADVENTURE);
   if (ASK && rng() < 0.3){
     var vibe = chatterMood();
     ASK("You are " + S.name + ", a tiny pet blob creature feeling " + vibe + ". " +
@@ -1150,7 +1181,7 @@ document.addEventListener("gesturestart", function(e){ e.preventDefault(); }, { 
 })();
 
 /* ---------- wardrobe logic ---------- */
-function saveWard(){ store.setItem("mochi_wardrobe", JSON.stringify(W)); }
+function saveWard(){ store.setItem("mochi_wardrobe", JSON.stringify(W)); publishPet(); }
 
 /* Point the six overlay <img>s (3 stage + 3 walk) at whatever's equipped, or
    hide them. Gated on hatched so a bare egg never wears a hat. */
@@ -1278,6 +1309,7 @@ function closeWardrobe(){ el("wardrobe").classList.remove("show"); }
     applyMessy();
     checkUnlocks(true);   /* retroactively grant anything already earned, quietly */
     render(); save();
+    readAdventure();
     roomVidsBoot();
     setInterval(function(){ applyDecay(); checkUnlocks(false); render(); save(); }, 30000);
     /* one-time nudge so people discover the snack picker */

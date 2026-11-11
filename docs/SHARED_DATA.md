@@ -49,6 +49,23 @@ Apps keep their own state in `myllmStorage`, which only that app can read. When 
   - `box-breathing/session`
   - `stretch/session`, with `minutes` and an optional `title`
 
+## data/pet.json (source: mochi)
+```json
+{ "schema": "myllm.pet", "version": 1, "source": "mochi", "updated": "…",
+  "name": "Mochi", "hatched": true, "wearing": { "head": "crown", "eyes": null, "neck": "bowtie" } }
+```
+- `wearing` holds Mochi wardrobe ids (beanie, bucket_hat, crown, flower, bow, sunglasses, heart_glasses, round_glasses, bowtie, chain) or `null` per slot.
+- Readers ignore the file until `hatched` is true.
+
+## data/mochi-adventure.json (source: mochi-adventure)
+```json
+{ "schema": "myllm.mochi-adventure", "version": 1, "source": "mochi-adventure", "updated": "…",
+  "cleared": 3, "levels": 12, "stars": 7, "starsTotal": 36,
+  "last": { "level": 3, "name": "Lily Pond", "world": "Sunny Meadow", "at": "…", "stars": 2, "seconds": 41.2, "finished": false } }
+```
+- `last` is the most recent finished level; `at` is how a reader tells a new run from one it has already seen.
+- `finished` is true only for the final level.
+
 ## Who reads what
 | File | Written by | Read by |
 |---|---|---|
@@ -56,3 +73,5 @@ Apps keep their own state in `myllmStorage`, which only that app can read. When 
 | data/todos.json | Quick Todo | Calendar Planner |
 | data/habits.json | Habit Streaks | Habit Streaks heatmap; any app |
 | data/activity.json | Box Breathing, Stretch | Habit Streaks heatmap |
+| data/pet.json | Mochi | Mochi's Adventure (hero name and outfit) |
+| data/mochi-adventure.json | Mochi's Adventure | Mochi (comes home happy, adventure chatter) |
