@@ -60,7 +60,7 @@ Apps keep their own state in `myllmStorage`, which only that app can read. When 
 ## data/mochi-adventure.json (source: mochi-adventure)
 ```json
 { "schema": "myllm.mochi-adventure", "version": 1, "source": "mochi-adventure", "updated": "…",
-  "cleared": 3, "levels": 12, "stars": 7, "starsTotal": 36,
+  "cleared": 3, "levels": 15, "stars": 7, "starsTotal": 45,
   "last": { "level": 3, "name": "Lily Pond", "world": "Sunny Meadow", "at": "…", "stars": 2, "seconds": 41.2, "finished": false } }
 ```
 - `last` is the most recent finished level; `at` is how a reader tells a new run from one it has already seen.
