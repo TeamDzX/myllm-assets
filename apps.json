@@ -52,39 +52,35 @@
       "updated": "2026-11-15"
     },
     {
-      "id": "light-meter",
-      "name": "Light Meter",
-      "emoji": "📷",
-      "tagline": "Read the light, set your camera in manual",
-      "description": "A light meter for photographers learning or shooting in manual mode. Take or choose a photo of the scene and Light Meter works out the light level from the shutter, aperture and ISO your phone used, or pick the light from twelve conditions, from snow in full sun to the Milky Way. Then choose any two of aperture, shutter and ISO and it works out the third in third-stop steps, within the limits of your own camera and lens. Starting points for portraits, landscapes, action, low light, silky water and the night sky, with exposure compensation and ND filters. Before you shoot it warns about camera shake, motion blur, diffraction, noise and settings out of range. The photo view shows a histogram, contrast in stops and lost highlights and shadows, and you can tap a spot such as a face and choose how bright it should come out using the Zone system. Includes a depth of field and hyperfocal calculator, in metres or feet. Readings are a guide, usually within half a stop. Works offline; nothing is uploaded.",
+      "id": "funny-faces",
+      "name": "Funny Faces",
+      "emoji": "👀",
+      "tagline": "Hold up your phone and pull a face",
+      "description": "Turn your phone into a giant pair of cartoon eyes or a big pair of lips. Hold it sideways over your own eyes or mouth and show everyone else the screen. The eyes blink, glance around and follow your finger, with ten moods from happy and in love (heart eyes) to angry, sleepy, sad (with tears), a wink, dizzy spirals and a side-eye. The lips smile, grin, laugh, chatter, blow kisses, stick out a tongue and smirk, in eight colours and four sizes. Pick hand-painted eyes (sky, hazel, cat, monster, galaxy or robot) and a face colour, tap the face for the next mood, swipe for a new look, or let Auto moods change it for you. Show a message in a speech bubble (or write your own) and the face plays along; nothing shows when there's no message. Full screen, and the screen stays awake while you play.",
       "tags": [
-        "photography",
-        "camera",
-        "light meter",
-        "exposure",
-        "manual mode",
-        "aperture",
-        "shutter speed",
-        "iso",
-        "depth of field",
-        "histogram",
-        "tools",
-        "offline",
+        "fun",
+        "party",
+        "kids",
+        "faces",
+        "eyes",
+        "lips",
+        "emotions",
+        "landscape",
         "saves data"
       ],
-      "category": "Creative",
-      "iconSymbol": "camera.aperture",
-      "iconColor": "orange",
+      "iconSymbol": "eyes",
+      "iconColor": "pink",
       "version": 1,
       "featured": true,
       "requiresAI": false,
-      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/light-meter.jpg",
-      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@f91ba6ef7c176f0b305c5dfeebe3c00516bf81c1/apps-src/light-meter.html",
-      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@f91ba6ef7c176f0b305c5dfeebe3c00516bf81c1/apps-src/light-meter.myllmapp",
-      "sizeKB": 166,
-      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/light-meter.jpg",
-      "added": "2026-11-15",
-      "updated": "2026-11-15"
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/funny-faces.jpg",
+      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@125ebb25a23e7bffd9f0275f70b0bedb4fdd9d51/apps-src/funny-faces.html",
+      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@125ebb25a23e7bffd9f0275f70b0bedb4fdd9d51/apps-src/funny-faces.myllmapp",
+      "sizeKB": 125,
+      "category": "Kids & Sensory",
+      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/funny-faces.jpg",
+      "added": "2026-10-24",
+      "updated": "2026-10-24"
     },
     {
       "id": "stormglass-pinball",
@@ -317,35 +313,68 @@
       "updated": "2026-11-10"
     },
     {
-      "id": "funny-faces",
-      "name": "Funny Faces",
-      "emoji": "👀",
-      "tagline": "Hold up your phone and pull a face",
-      "description": "Turn your phone into a giant pair of cartoon eyes or a big pair of lips. Hold it sideways over your own eyes or mouth and show everyone else the screen. The eyes blink, glance around and follow your finger, with ten moods from happy and in love (heart eyes) to angry, sleepy, sad (with tears), a wink, dizzy spirals and a side-eye. The lips smile, grin, laugh, chatter, blow kisses, stick out a tongue and smirk, in eight colours and four sizes. Pick hand-painted eyes (sky, hazel, cat, monster, galaxy or robot) and a face colour, tap the face for the next mood, swipe for a new look, or let Auto moods change it for you. Show a message in a speech bubble (or write your own) and the face plays along; nothing shows when there's no message. Full screen, and the screen stays awake while you play.",
+      "id": "light-meter",
+      "name": "Light Meter",
+      "emoji": "📷",
+      "tagline": "Read the light, set your camera in manual",
+      "description": "A light meter for photographers learning or shooting in manual mode. Take or choose a photo of the scene and Light Meter works out the light level from the shutter, aperture and ISO your phone used, or pick the light from twelve conditions, from snow in full sun to the Milky Way. Then choose any two of aperture, shutter and ISO and it works out the third in third-stop steps, within the limits of your own camera and lens. Starting points for portraits, landscapes, action, low light, silky water and the night sky, with exposure compensation and ND filters. Before you shoot it warns about camera shake, motion blur, diffraction, noise and settings out of range. The photo view shows a histogram, contrast in stops and lost highlights and shadows, and you can tap a spot such as a face and choose how bright it should come out using the Zone system. Includes a depth of field and hyperfocal calculator, in metres or feet. Readings are a guide, usually within half a stop. Works offline; nothing is uploaded.",
       "tags": [
-        "fun",
-        "party",
-        "kids",
-        "faces",
-        "eyes",
-        "lips",
-        "emotions",
-        "landscape",
+        "photography",
+        "camera",
+        "light meter",
+        "exposure",
+        "manual mode",
+        "aperture",
+        "shutter speed",
+        "iso",
+        "depth of field",
+        "histogram",
+        "tools",
+        "offline",
         "saves data"
       ],
-      "iconSymbol": "eyes",
-      "iconColor": "pink",
+      "category": "Creative",
+      "iconSymbol": "camera.aperture",
+      "iconColor": "orange",
       "version": 1,
       "featured": true,
       "requiresAI": false,
-      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/funny-faces.jpg",
-      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@125ebb25a23e7bffd9f0275f70b0bedb4fdd9d51/apps-src/funny-faces.html",
-      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@125ebb25a23e7bffd9f0275f70b0bedb4fdd9d51/apps-src/funny-faces.myllmapp",
-      "sizeKB": 125,
-      "category": "Kids & Sensory",
-      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/funny-faces.jpg",
-      "added": "2026-10-24",
-      "updated": "2026-10-24"
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/light-meter.jpg",
+      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@f91ba6ef7c176f0b305c5dfeebe3c00516bf81c1/apps-src/light-meter.html",
+      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@f91ba6ef7c176f0b305c5dfeebe3c00516bf81c1/apps-src/light-meter.myllmapp",
+      "sizeKB": 166,
+      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/light-meter.jpg",
+      "added": "2026-11-15",
+      "updated": "2026-11-15"
+    },
+    {
+      "id": "near-me",
+      "name": "Near Me",
+      "emoji": "📍",
+      "tagline": "Find what's around you",
+      "description": "A local explorer powered by your phone's location: see your area on a live map, tap a category (coffee, food, pharmacy, ATM, petrol, parking, hotels…) or search, and get distance-sorted places with one-tap directions and share. All on-device via Apple Maps — no account, no API key. Needs the latest MyLLM with “Allow apps to use your location” enabled in Settings.",
+      "tags": [
+        "location",
+        "maps",
+        "nearby",
+        "travel"
+      ],
+      "iconSymbol": "location.fill",
+      "iconColor": "blue",
+      "version": 4,
+      "featured": true,
+      "requiresAI": false,
+      "uses": [
+        "location"
+      ],
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/near-me.jpg",
+      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/near-me.html",
+      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/near-me.myllmapp",
+      "sizeKB": 176,
+      "category": "Utilities",
+      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/near-me.jpg",
+      "added": "2026-06-21",
+      "updated": "2026-09-26"
     },
     {
       "id": "essentials-finder",
@@ -674,37 +703,6 @@
       "updated": "2026-09-27"
     },
     {
-      "id": "shell",
-      "name": "Shell",
-      "emoji": "⌨️",
-      "tagline": "A directory you can talk to",
-      "description": "A terminal for your shared workspace — and an assistant standing in it. ls, tree, cat, head, stat, find, grep, du and cd to look around; mkdir, mv, write and rm to change things; rm moves to a trash folder and undo reverses your last change. Pipe commands into each other with | and save the result with >, and ask is a command too, so  cat notes.md | ask \"summarise this\" > summary.md  runs your model over a file and keeps the answer. dictate speaks instead of typing, open hands a file to another app, share sends it out through iOS. Aliases, command history and a .shellrc all carry over between visits. Type anything that isn't a command and it becomes a question: MyLLM answers from inside the current directory, running the read-only commands itself to find out, and asking your permission before it changes a single file. Your saved MyLLMos apps are files too, in apps/ (MyLLM 5.9.7 and later): ask MyLLM to change one and it reads only the lines it needs, shows you each edit, and checks the app afterwards, so even the model on your phone can do it. The same command grammar works when you talk to MyLLM in chat. Nothing leaves your device.",
-      "category": "Utilities",
-      "iconSymbol": "terminal",
-      "iconColor": "gray",
-      "version": 16,
-      "featured": true,
-      "requiresAI": true,
-      "aiUses": [
-        "ask"
-      ],
-      "uses": [
-        "microphone",
-        "files"
-      ],
-      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/shell.html",
-      "tags": [
-        "developer",
-        "files",
-        "utility",
-        "saves data"
-      ],
-      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/shell.jpg",
-      "sizeKB": 175,
-      "added": "2026-08-27",
-      "updated": "2026-10-13"
-    },
-    {
       "id": "follow",
       "name": "Follow",
       "emoji": "📡",
@@ -768,6 +766,66 @@
       "updated": "2026-10-14"
     },
     {
+      "id": "shell",
+      "name": "Shell",
+      "emoji": "⌨️",
+      "tagline": "A directory you can talk to",
+      "description": "A terminal for your shared workspace — and an assistant standing in it. ls, tree, cat, head, stat, find, grep, du and cd to look around; mkdir, mv, write and rm to change things; rm moves to a trash folder and undo reverses your last change. Pipe commands into each other with | and save the result with >, and ask is a command too, so  cat notes.md | ask \"summarise this\" > summary.md  runs your model over a file and keeps the answer. dictate speaks instead of typing, open hands a file to another app, share sends it out through iOS. Aliases, command history and a .shellrc all carry over between visits. Type anything that isn't a command and it becomes a question: MyLLM answers from inside the current directory, running the read-only commands itself to find out, and asking your permission before it changes a single file. Your saved MyLLMos apps are files too, in apps/ (MyLLM 5.9.7 and later): ask MyLLM to change one and it reads only the lines it needs, shows you each edit, and checks the app afterwards, so even the model on your phone can do it. The same command grammar works when you talk to MyLLM in chat. Nothing leaves your device.",
+      "category": "Utilities",
+      "iconSymbol": "terminal",
+      "iconColor": "gray",
+      "version": 16,
+      "featured": true,
+      "requiresAI": true,
+      "aiUses": [
+        "ask"
+      ],
+      "uses": [
+        "microphone",
+        "files"
+      ],
+      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/shell.html",
+      "tags": [
+        "developer",
+        "files",
+        "utility",
+        "saves data"
+      ],
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/shell.jpg",
+      "sizeKB": 175,
+      "added": "2026-08-27",
+      "updated": "2026-10-13"
+    },
+    {
+      "id": "bin",
+      "name": "Bin",
+      "emoji": "🗑️",
+      "tagline": "Deleted files, until you say so",
+      "description": "The bin for your shared workspace. Anything removed with rm or rmdir in the Shell app lands here instead of vanishing, and this app is the tile that shows it: every file with where it came from, its size and date, newest first. Tap one to restore it to its original place, look inside first, or delete it for good; if a file with the same name is already back in the workspace you choose whether to keep both or replace it. Select several to restore or delete together, and Empty Bin clears the lot when you are sure. It is simply the hidden .trash folder in the workspace, so the assistant can see and restore things too. A Rewind tab lists files that were overwritten, with their previous versions to look at or restore (needs MyLLM 5.1.2). Nothing leaves your device.",
+      "tags": [
+        "files",
+        "utility",
+        "workspace",
+        "trash"
+      ],
+      "category": "Utilities",
+      "iconSymbol": "trash.fill",
+      "iconColor": "mint",
+      "version": 9,
+      "featured": false,
+      "requiresAI": false,
+      "uses": [
+        "files"
+      ],
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/bin.jpg",
+      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/bin.html",
+      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/bin.myllmapp",
+      "sizeKB": 25,
+      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/bin.jpg",
+      "added": "2026-09-04",
+      "updated": "2026-09-26"
+    },
+    {
       "id": "e-grid",
       "name": "E-Grid",
       "emoji": "🏁",
@@ -801,33 +859,38 @@
       "updated": "2026-10-18"
     },
     {
-      "id": "bin",
-      "name": "Bin",
-      "emoji": "🗑️",
-      "tagline": "Deleted files, until you say so",
-      "description": "The bin for your shared workspace. Anything removed with rm or rmdir in the Shell app lands here instead of vanishing, and this app is the tile that shows it: every file with where it came from, its size and date, newest first. Tap one to restore it to its original place, look inside first, or delete it for good; if a file with the same name is already back in the workspace you choose whether to keep both or replace it. Select several to restore or delete together, and Empty Bin clears the lot when you are sure. It is simply the hidden .trash folder in the workspace, so the assistant can see and restore things too. A Rewind tab lists files that were overwritten, with their previous versions to look at or restore (needs MyLLM 5.1.2). Nothing leaves your device.",
+      "id": "nutrition-lens",
+      "name": "Nutrition Lens",
+      "emoji": "🍎",
+      "tagline": "Photograph food, see what's in it",
+      "description": "Point your camera at an ingredient and see what it's made of — calories per 100 g, the protein/carbs/fat split, fibre and sugars, and the micronutrients it's actually a good source of. Values for 63 common ingredients come from public USDA reference data rather than being guessed, and anything outside that list is clearly badged as an AI estimate. You can also just type an ingredient, which works with no AI at all. Scanning needs the latest MyLLM with camera and AI access enabled.",
       "tags": [
-        "files",
-        "utility",
-        "workspace",
-        "trash"
+        "AI-powered",
+        "camera",
+        "health",
+        "food",
+        "offline"
       ],
-      "category": "Utilities",
-      "iconSymbol": "trash.fill",
-      "iconColor": "mint",
-      "version": 9,
+      "iconSymbol": "leaf.fill",
+      "iconColor": "green",
+      "version": 5,
       "featured": false,
-      "requiresAI": false,
-      "uses": [
-        "files"
+      "requiresAI": true,
+      "aiUses": [
+        "ask",
+        "vision"
       ],
-      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/bin.jpg",
-      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/bin.html",
-      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/bin.myllmapp",
-      "sizeKB": 25,
-      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/bin.jpg",
-      "added": "2026-09-04",
-      "updated": "2026-09-26"
+      "aiNeeds": [
+        "vision"
+      ],
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/nutrition-lens.jpg",
+      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/nutrition-lens.html",
+      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/nutrition-lens.myllmapp",
+      "sizeKB": 48,
+      "category": "Health & Wellbeing",
+      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/nutrition-lens.jpg",
+      "added": "2026-08-07",
+      "updated": "2026-09-22"
     },
     {
       "id": "airport-maps",
@@ -863,40 +926,6 @@
       "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/airport-maps.jpg",
       "added": "2026-09-28",
       "updated": "2026-09-30"
-    },
-    {
-      "id": "nutrition-lens",
-      "name": "Nutrition Lens",
-      "emoji": "🍎",
-      "tagline": "Photograph food, see what's in it",
-      "description": "Point your camera at an ingredient and see what it's made of — calories per 100 g, the protein/carbs/fat split, fibre and sugars, and the micronutrients it's actually a good source of. Values for 63 common ingredients come from public USDA reference data rather than being guessed, and anything outside that list is clearly badged as an AI estimate. You can also just type an ingredient, which works with no AI at all. Scanning needs the latest MyLLM with camera and AI access enabled.",
-      "tags": [
-        "AI-powered",
-        "camera",
-        "health",
-        "food",
-        "offline"
-      ],
-      "iconSymbol": "leaf.fill",
-      "iconColor": "green",
-      "version": 5,
-      "featured": false,
-      "requiresAI": true,
-      "aiUses": [
-        "ask",
-        "vision"
-      ],
-      "aiNeeds": [
-        "vision"
-      ],
-      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/nutrition-lens.jpg",
-      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/nutrition-lens.html",
-      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/nutrition-lens.myllmapp",
-      "sizeKB": 48,
-      "category": "Health & Wellbeing",
-      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/nutrition-lens.jpg",
-      "added": "2026-08-07",
-      "updated": "2026-09-22"
     },
     {
       "id": "mind-map",
@@ -1028,42 +1057,6 @@
       "updated": "2026-09-27"
     },
     {
-      "id": "metro-maps",
-      "name": "Metro Maps",
-      "emoji": "🚇",
-      "tagline": "London, Paris, New York, Berlin, Madrid, Barcelona and Tokyo",
-      "description": "The metro systems of London, Paris, New York, Berlin, Madrid, Barcelona and Tokyo in your pocket, as a clean schematic diagram or a true-to-life map, both drawn by us from open data (New York and Tokyo are shown geographically). Pan and pinch around every line and station, browse any line stop by stop with its branches, and tap a station to see which lines stop there. Plan a route between any two stations, fastest or with the fewest changes, and see where to change and which way to head. Rivers run through both views, and sketches of each city's landmarks, from Big Ben to the Sagrada Família to Tokyo Skytree, show where you are and take you there in a tap. Check live line status for London and New York. Search Tokyo in English or Japanese. Save your usual routes. The maps and route planner work offline, underground. Not affiliated with any transport operator.",
-      "tags": [
-        "barcelona",
-        "berlin",
-        "london",
-        "madrid",
-        "metro",
-        "new york",
-        "offline",
-        "paris",
-        "saves data",
-        "tokyo",
-        "travel"
-      ],
-      "iconSymbol": "tram.fill",
-      "iconColor": "red",
-      "version": 6,
-      "featured": true,
-      "requiresAI": false,
-      "uses": [
-        "internet"
-      ],
-      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/metro-maps.jpg",
-      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/metro-maps.html",
-      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/metro-maps.myllmapp",
-      "sizeKB": 201,
-      "category": "Utilities",
-      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/metro-maps.jpg",
-      "added": "2026-09-27",
-      "updated": "2026-10-08"
-    },
-    {
       "id": "about-me",
       "name": "About Me",
       "emoji": "🙋",
@@ -1183,37 +1176,40 @@
       "updated": "2026-10-07"
     },
     {
-      "id": "substack-reader",
-      "name": "Substack Reader",
-      "emoji": "📬",
-      "tagline": "Your newsletters, in one inbox",
-      "description": "An unofficial reader for Substack. Follow any publication by pasting its address, or pick from a handful of starters, and every free post lands in one inbox sorted newest-first, with the publication's logo, a cover, hearts and comment counts, and a dot on anything you have not read. Posts open in a clean reading view with proper typography, images and footnotes, subscribe boxes stripped out, and podcast episodes playable in place. Read the comment threads, then ask your AI what the piece is really arguing. Paid posts show their preview. Liking, commenting and subscribing hand you straight to the post on Substack, where you are already signed in, because Substack has no public way to do those from another app. No account needed here, and your list stays on this device.",
+      "id": "metro-maps",
+      "name": "Metro Maps",
+      "emoji": "🚇",
+      "tagline": "London, Paris, New York, Berlin, Madrid, Barcelona and Tokyo",
+      "description": "The metro systems of London, Paris, New York, Berlin, Madrid, Barcelona and Tokyo in your pocket, as a clean schematic diagram or a true-to-life map, both drawn by us from open data (New York and Tokyo are shown geographically). Pan and pinch around every line and station, browse any line stop by stop with its branches, and tap a station to see which lines stop there. Plan a route between any two stations, fastest or with the fewest changes, and see where to change and which way to head. Rivers run through both views, and sketches of each city's landmarks, from Big Ben to the Sagrada Família to Tokyo Skytree, show where you are and take you there in a tap. Check live line status for London and New York. Search Tokyo in English or Japanese. Save your usual routes. The maps and route planner work offline, underground. Not affiliated with any transport operator.",
       "tags": [
-        "news",
-        "newsletters",
-        "reading",
-        "substack",
-        "saves data"
+        "barcelona",
+        "berlin",
+        "london",
+        "madrid",
+        "metro",
+        "new york",
+        "offline",
+        "paris",
+        "saves data",
+        "tokyo",
+        "travel"
       ],
-      "category": "News & Web",
-      "iconSymbol": "envelope.open.fill",
-      "iconColor": "orange",
-      "version": 9,
+      "iconSymbol": "tram.fill",
+      "iconColor": "red",
+      "version": 6,
       "featured": true,
       "requiresAI": false,
-      "aiUses": [
-        "ask"
-      ],
       "uses": [
         "internet"
       ],
-      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/substack-reader.jpg",
-      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/substack-reader.html",
-      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/substack-reader.myllmapp",
-      "sizeKB": 39,
-      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/substack-reader.jpg",
-      "added": "2026-09-03",
-      "updated": "2026-09-26"
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/metro-maps.jpg",
+      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/metro-maps.html",
+      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/metro-maps.myllmapp",
+      "sizeKB": 201,
+      "category": "Utilities",
+      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/metro-maps.jpg",
+      "added": "2026-09-27",
+      "updated": "2026-10-08"
     },
     {
       "id": "net-worth",
@@ -1275,6 +1271,39 @@
       "category": "Food & Cooking",
       "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/fridge-chef.jpg",
       "added": "2026-06-22",
+      "updated": "2026-09-26"
+    },
+    {
+      "id": "substack-reader",
+      "name": "Substack Reader",
+      "emoji": "📬",
+      "tagline": "Your newsletters, in one inbox",
+      "description": "An unofficial reader for Substack. Follow any publication by pasting its address, or pick from a handful of starters, and every free post lands in one inbox sorted newest-first, with the publication's logo, a cover, hearts and comment counts, and a dot on anything you have not read. Posts open in a clean reading view with proper typography, images and footnotes, subscribe boxes stripped out, and podcast episodes playable in place. Read the comment threads, then ask your AI what the piece is really arguing. Paid posts show their preview. Liking, commenting and subscribing hand you straight to the post on Substack, where you are already signed in, because Substack has no public way to do those from another app. No account needed here, and your list stays on this device.",
+      "tags": [
+        "news",
+        "newsletters",
+        "reading",
+        "substack",
+        "saves data"
+      ],
+      "category": "News & Web",
+      "iconSymbol": "envelope.open.fill",
+      "iconColor": "orange",
+      "version": 9,
+      "featured": true,
+      "requiresAI": false,
+      "aiUses": [
+        "ask"
+      ],
+      "uses": [
+        "internet"
+      ],
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/substack-reader.jpg",
+      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/substack-reader.html",
+      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/substack-reader.myllmapp",
+      "sizeKB": 39,
+      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/substack-reader.jpg",
+      "added": "2026-09-03",
       "updated": "2026-09-26"
     },
     {
@@ -1426,35 +1455,6 @@
       "sizeKB": 37,
       "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/stocks.jpg",
       "added": "2026-09-06",
-      "updated": "2026-09-26"
-    },
-    {
-      "id": "near-me",
-      "name": "Near Me",
-      "emoji": "📍",
-      "tagline": "Find what's around you",
-      "description": "A local explorer powered by your phone's location: see your area on a live map, tap a category (coffee, food, pharmacy, ATM, petrol, parking, hotels…) or search, and get distance-sorted places with one-tap directions and share. All on-device via Apple Maps — no account, no API key. Needs the latest MyLLM with “Allow apps to use your location” enabled in Settings.",
-      "tags": [
-        "location",
-        "maps",
-        "nearby",
-        "travel"
-      ],
-      "iconSymbol": "location.fill",
-      "iconColor": "blue",
-      "version": 4,
-      "featured": true,
-      "requiresAI": false,
-      "uses": [
-        "location"
-      ],
-      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/near-me.jpg",
-      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/near-me.html",
-      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/near-me.myllmapp",
-      "sizeKB": 176,
-      "category": "Utilities",
-      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/near-me.jpg",
-      "added": "2026-06-21",
       "updated": "2026-09-26"
     },
     {
