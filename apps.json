@@ -347,6 +347,63 @@
       "updated": "2026-11-10"
     },
     {
+      "id": "expense-tracker",
+      "name": "Expense Tracker",
+      "emoji": "💷",
+      "tagline": "Shared household spending, synced",
+      "description": "A shared expense tracker for a household sharing one card — everyone's phone updates the same Google Sheet, so the running total is always in sync. Categories, per-person summaries, recurring detection, and a private setup using your OWN free Google Sheet (paste-in Apps Script included). You can also just tell MyLLM “add £12 lunch to expenses”.",
+      "tags": [
+        "productivity",
+        "expenses",
+        "household",
+        "shared",
+        "google sheets"
+      ],
+      "iconSymbol": "creditcard.fill",
+      "iconColor": "green",
+      "version": 6,
+      "featured": true,
+      "requiresAI": false,
+      "uses": [
+        "internet"
+      ],
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/expense-tracker.jpg",
+      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/expense-tracker.html?v=3",
+      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/expense-tracker.myllmapp",
+      "sizeKB": 101,
+      "category": "Productivity",
+      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/expense-tracker.jpg",
+      "added": "2026-06-15",
+      "updated": "2026-10-04"
+    },
+    {
+      "id": "flashcard-forge",
+      "name": "Flashcard Forge",
+      "emoji": "🧠",
+      "tagline": "Decks that write themselves",
+      "description": "Type any topic and your own AI writes a fresh deck of study flashcards — tap to flip, swipe through, every deck saved on-device. Needs the latest MyLLM with “Allow apps to use the AI” enabled in Settings.",
+      "tags": [
+        "AI-powered",
+        "saves data"
+      ],
+      "iconSymbol": "brain.head.profile",
+      "iconColor": "indigo",
+      "version": 13,
+      "featured": true,
+      "requiresAI": true,
+      "aiUses": [
+        "ask"
+      ],
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/flashcard-forge.jpg",
+      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/flashcard-forge.html",
+      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/flashcard-forge.myllmapp",
+      "sizeKB": 69,
+      "category": "Students",
+      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/flashcard-forge.jpg",
+      "added": "2026-06-11",
+      "updated": "2026-10-04"
+    },
+    {
       "id": "light-meter",
       "name": "Light Meter",
       "emoji": "📷",
@@ -678,65 +735,6 @@
       "updated": "2026-09-26"
     },
     {
-      "id": "everquill",
-      "name": "Everquill",
-      "emoji": "🪶",
-      "tagline": "Endless AI adventure",
-      "description": "Your own AI is the storyteller. Choose a world — high fantasy, deep space, gaslight mystery or the high seas — name your hero, and the quill writes an adventure that has never been told before, one scene at a time. Pick a path or type anything; track your health and inventory; survive to the end and share the finished tale. If your server can paint, tap the brush to illustrate any scene. Requires \"Allow apps to use the AI\" in Settings — every word is written privately, on your device.",
-      "tags": [
-        "game",
-        "AI-powered",
-        "adventure",
-        "story"
-      ],
-      "iconSymbol": "wand.and.stars",
-      "iconColor": "purple",
-      "version": 7,
-      "featured": true,
-      "requiresAI": true,
-      "aiUses": [
-        "ask",
-        "image"
-      ],
-      "uses": [
-        "files"
-      ],
-      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/everquill.jpg",
-      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/everquill.html",
-      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/everquill.myllmapp",
-      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/everquill.jpg",
-      "sizeKB": 394,
-      "category": "Games",
-      "added": "2026-07-03",
-      "updated": "2026-09-22"
-    },
-    {
-      "id": "password-generator",
-      "name": "Password Generator",
-      "emoji": "🔑",
-      "tagline": "Strong, private, made on your phone",
-      "description": "Strong passwords, memorable passphrases and PINs, made on this iPhone with its secure random generator. Nothing is saved and nothing is sent. Choose the length and characters, leave out look-alikes, or pick a passphrase of real words from the EFF word list that's easy to type and hard to guess. The strength meter shows the exact strength in bits and how long cracking would take, and you can check a password you already use to see how it holds up. Tap to copy. Works offline.",
-      "tags": [
-        "security",
-        "passwords",
-        "privacy",
-        "utility"
-      ],
-      "iconSymbol": "key.fill",
-      "iconColor": "teal",
-      "version": 1,
-      "featured": true,
-      "requiresAI": false,
-      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/password-generator.jpg",
-      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/password-generator.html",
-      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/password-generator.myllmapp",
-      "sizeKB": 98,
-      "category": "Utilities",
-      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/password-generator.jpg",
-      "added": "2026-09-27",
-      "updated": "2026-09-27"
-    },
-    {
       "id": "follow",
       "name": "Follow",
       "emoji": "📡",
@@ -800,35 +798,37 @@
       "updated": "2026-11-23"
     },
     {
-      "id": "shell",
-      "name": "Shell",
-      "emoji": "⌨️",
-      "tagline": "A directory you can talk to",
-      "description": "A terminal for your shared workspace — and an assistant standing in it. ls, tree, cat, head, stat, find, grep, du and cd to look around; mkdir, mv, write and rm to change things; rm moves to a trash folder and undo reverses your last change. Pipe commands into each other with | and save the result with >, and ask is a command too, so  cat notes.md | ask \"summarise this\" > summary.md  runs your model over a file and keeps the answer. dictate speaks instead of typing, open hands a file to another app, share sends it out through iOS. Aliases, command history and a .shellrc all carry over between visits. Type anything that isn't a command and it becomes a question: MyLLM answers from inside the current directory, running the read-only commands itself to find out, and asking your permission before it changes a single file. Your saved MyLLMos apps are files too, in apps/ (MyLLM 5.9.7 and later): ask MyLLM to change one and it reads only the lines it needs, shows you each edit, and checks the app afterwards, so even the model on your phone can do it. The same command grammar works when you talk to MyLLM in chat. Nothing leaves your device.",
-      "category": "Utilities",
-      "iconSymbol": "terminal",
-      "iconColor": "gray",
-      "version": 16,
+      "id": "everquill",
+      "name": "Everquill",
+      "emoji": "🪶",
+      "tagline": "Endless AI adventure",
+      "description": "Your own AI is the storyteller. Choose a world — high fantasy, deep space, gaslight mystery or the high seas — name your hero, and the quill writes an adventure that has never been told before, one scene at a time. Pick a path or type anything; track your health and inventory; survive to the end and share the finished tale. If your server can paint, tap the brush to illustrate any scene. Requires \"Allow apps to use the AI\" in Settings — every word is written privately, on your device.",
+      "tags": [
+        "game",
+        "AI-powered",
+        "adventure",
+        "story"
+      ],
+      "iconSymbol": "wand.and.stars",
+      "iconColor": "purple",
+      "version": 7,
       "featured": true,
       "requiresAI": true,
       "aiUses": [
-        "ask"
+        "ask",
+        "image"
       ],
       "uses": [
-        "microphone",
         "files"
       ],
-      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/shell.html",
-      "tags": [
-        "developer",
-        "files",
-        "utility",
-        "saves data"
-      ],
-      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/shell.jpg",
-      "sizeKB": 175,
-      "added": "2026-08-27",
-      "updated": "2026-10-13"
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/everquill.jpg",
+      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/everquill.html",
+      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/everquill.myllmapp",
+      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/everquill.jpg",
+      "sizeKB": 394,
+      "category": "Games",
+      "added": "2026-07-03",
+      "updated": "2026-09-22"
     },
     {
       "id": "bin",
@@ -860,37 +860,30 @@
       "updated": "2026-09-26"
     },
     {
-      "id": "e-grid",
-      "name": "E-Grid",
-      "emoji": "🏁",
-      "tagline": "Every race, one app",
-      "description": "A race hub for thirteen championships — Formula 1, MotoGP, WRC, Formula E, IndyCar, NASCAR, WEC, IMSA, NHRA, Formula 2, Formula 3, Porsche Supercup and Clio Cup. A live countdown to the next race, the full season calendar, the F1 weekend broken down session by session in your own time zone, drivers' and constructors' standings, and motorsport headlines from Autosport, Motorsport.com, DirtFish, The Race and Crash, which open in a clean in-app reader with adjustable type, the original one tap away. Follow the series you care about and they lead your home screen. Also carries illustrated guides to 88 circuits with lengths, corner counts and lap records, driver and team profiles, the current technical regulations and a country-by-country guide to where each series is televised. Calendars and track guides work offline once loaded; live standings and headlines need app network access, which you can switch on in Settings. There is also a companion E-Grid app for iPhone and iPad, which adds race reminders and a home-screen widget. E-Grid is not affiliated with any championship, team or governing body.",
+      "id": "password-generator",
+      "name": "Password Generator",
+      "emoji": "🔑",
+      "tagline": "Strong, private, made on your phone",
+      "description": "Strong passwords, memorable passphrases and PINs, made on this iPhone with its secure random generator. Nothing is saved and nothing is sent. Choose the length and characters, leave out look-alikes, or pick a passphrase of real words from the EFF word list that's easy to type and hard to guess. The strength meter shows the exact strength in bits and how long cracking would take, and you can check a password you already use to see how it holds up. Tap to copy. Works offline.",
       "tags": [
-        "motorsport",
-        "racing",
-        "sport",
-        "news",
-        "F1",
-        "MotoGP",
-        "offline",
-        "saves data"
+        "security",
+        "passwords",
+        "privacy",
+        "utility"
       ],
-      "iconSymbol": "flag.checkered",
-      "iconColor": "red",
-      "version": 11,
+      "iconSymbol": "key.fill",
+      "iconColor": "teal",
+      "version": 1,
       "featured": true,
       "requiresAI": false,
-      "uses": [
-        "internet"
-      ],
-      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/e-grid.jpg",
-      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@8f36ae97a161e225479e1714cd8ae87d42e22328/apps-src/e-grid.html",
-      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@8f36ae97a161e225479e1714cd8ae87d42e22328/apps-src/e-grid.myllmapp",
-      "sizeKB": 103,
-      "category": "News & Web",
-      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/e-grid.png",
-      "added": "2026-08-12",
-      "updated": "2026-11-23"
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/password-generator.jpg",
+      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/password-generator.html",
+      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/password-generator.myllmapp",
+      "sizeKB": 98,
+      "category": "Utilities",
+      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/password-generator.jpg",
+      "added": "2026-09-27",
+      "updated": "2026-09-27"
     },
     {
       "id": "nutrition-lens",
@@ -925,6 +918,70 @@
       "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/nutrition-lens.jpg",
       "added": "2026-08-07",
       "updated": "2026-09-22"
+    },
+    {
+      "id": "shell",
+      "name": "Shell",
+      "emoji": "⌨️",
+      "tagline": "A directory you can talk to",
+      "description": "A terminal for your shared workspace — and an assistant standing in it. ls, tree, cat, head, stat, find, grep, du and cd to look around; mkdir, mv, write and rm to change things; rm moves to a trash folder and undo reverses your last change. Pipe commands into each other with | and save the result with >, and ask is a command too, so  cat notes.md | ask \"summarise this\" > summary.md  runs your model over a file and keeps the answer. dictate speaks instead of typing, open hands a file to another app, share sends it out through iOS. Aliases, command history and a .shellrc all carry over between visits. Type anything that isn't a command and it becomes a question: MyLLM answers from inside the current directory, running the read-only commands itself to find out, and asking your permission before it changes a single file. Your saved MyLLMos apps are files too, in apps/ (MyLLM 5.9.7 and later): ask MyLLM to change one and it reads only the lines it needs, shows you each edit, and checks the app afterwards, so even the model on your phone can do it. The same command grammar works when you talk to MyLLM in chat. Nothing leaves your device.",
+      "category": "Utilities",
+      "iconSymbol": "terminal",
+      "iconColor": "gray",
+      "version": 16,
+      "featured": true,
+      "requiresAI": true,
+      "aiUses": [
+        "ask"
+      ],
+      "uses": [
+        "microphone",
+        "files"
+      ],
+      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/shell.html",
+      "tags": [
+        "developer",
+        "files",
+        "utility",
+        "saves data"
+      ],
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/shell.jpg",
+      "sizeKB": 175,
+      "added": "2026-08-27",
+      "updated": "2026-10-13"
+    },
+    {
+      "id": "e-grid",
+      "name": "E-Grid",
+      "emoji": "🏁",
+      "tagline": "Every race, one app",
+      "description": "A race hub for thirteen championships — Formula 1, MotoGP, WRC, Formula E, IndyCar, NASCAR, WEC, IMSA, NHRA, Formula 2, Formula 3, Porsche Supercup and Clio Cup. A live countdown to the next race, the full season calendar, the F1 weekend broken down session by session in your own time zone, drivers' and constructors' standings, and motorsport headlines from Autosport, Motorsport.com, DirtFish, The Race and Crash, which open in a clean in-app reader with adjustable type, the original one tap away. Follow the series you care about and they lead your home screen. Also carries illustrated guides to 88 circuits with lengths, corner counts and lap records, driver and team profiles, the current technical regulations and a country-by-country guide to where each series is televised. Calendars and track guides work offline once loaded; live standings and headlines need app network access, which you can switch on in Settings. There is also a companion E-Grid app for iPhone and iPad, which adds race reminders and a home-screen widget. E-Grid is not affiliated with any championship, team or governing body.",
+      "tags": [
+        "motorsport",
+        "racing",
+        "sport",
+        "news",
+        "F1",
+        "MotoGP",
+        "offline",
+        "saves data"
+      ],
+      "iconSymbol": "flag.checkered",
+      "iconColor": "red",
+      "version": 11,
+      "featured": true,
+      "requiresAI": false,
+      "uses": [
+        "internet"
+      ],
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/e-grid.jpg",
+      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@8f36ae97a161e225479e1714cd8ae87d42e22328/apps-src/e-grid.html",
+      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@8f36ae97a161e225479e1714cd8ae87d42e22328/apps-src/e-grid.myllmapp",
+      "sizeKB": 103,
+      "category": "News & Web",
+      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/e-grid.png",
+      "added": "2026-08-12",
+      "updated": "2026-11-23"
     },
     {
       "id": "airport-maps",
@@ -1020,73 +1077,6 @@
       "sizeKB": 58,
       "category": "Students",
       "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/periodic-table.jpg",
-      "added": "2026-09-27",
-      "updated": "2026-09-27"
-    },
-    {
-      "id": "scientific-calculator",
-      "name": "Scientific Calculator",
-      "emoji": "🧮",
-      "tagline": "Beautiful maths, full screen",
-      "description": "A scientific calculator made to be a pleasure to use, full screen. Type the whole sum and watch the answer appear as you go, then press equals. Trig in degrees or radians with the inverse and hyperbolic functions, logs, powers and roots, factorials, combinations, percentages that work the way a shop till does (200 + 15% = 230), memory, Ans, and a history of every sum that you can tap to reuse. Turn the phone sideways for every key at once, or fold the scientific keys away for a bigger keypad. Tap an answer to copy it. Describe a sum in words (\"15% tip on 64.50 split between 3\") and your AI writes the expression; the calculator does the maths, so the answer is never guessed. Works offline, light or dark.",
-      "tags": [
-        "maths",
-        "calculator",
-        "science",
-        "students",
-        "utility",
-        "saves data"
-      ],
-      "iconSymbol": "plus.forwardslash.minus",
-      "iconColor": "orange",
-      "version": 3,
-      "featured": true,
-      "requiresAI": false,
-      "aiUses": [
-        "ask"
-      ],
-      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/scientific-calculator.jpg",
-      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/scientific-calculator.html",
-      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/scientific-calculator.myllmapp",
-      "sizeKB": 43,
-      "category": "Utilities",
-      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/scientific-calculator.jpg",
-      "added": "2026-09-27",
-      "updated": "2026-09-27"
-    },
-    {
-      "id": "pinpoint",
-      "name": "Pinpoint",
-      "emoji": "📍",
-      "tagline": "Share the exact spot you're standing on",
-      "description": "Share exactly where you are, down to a few metres, even where there's no street address: a festival gate, a trailhead, a car park row, a beach. Pinpoint shows your spot as a Plus Code, an open code that works anywhere on Earth, with the nearby address and live accuracy. Share it as a message with map links or as a QR code anyone's camera can open. Find a code someone sent you, or one on a sign, and get the distance and direction to walk. Save places like your car or your tent and find your way back, even offline. The SOS card shows your code, spelled out, with coordinates in huge type for an emergency call. Your AI can describe the spot in a sentence a friend can follow.",
-      "tags": [
-        "location",
-        "maps",
-        "share",
-        "travel",
-        "safety",
-        "offline",
-        "saves data"
-      ],
-      "iconSymbol": "mappin.and.ellipse",
-      "iconColor": "green",
-      "version": 1,
-      "featured": true,
-      "requiresAI": false,
-      "aiUses": [
-        "ask"
-      ],
-      "uses": [
-        "internet",
-        "location"
-      ],
-      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/pinpoint.jpg",
-      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/pinpoint.html",
-      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/pinpoint.myllmapp",
-      "sizeKB": 140,
-      "category": "Utilities",
-      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/pinpoint.jpg",
       "added": "2026-09-27",
       "updated": "2026-09-27"
     },
@@ -1210,40 +1200,35 @@
       "updated": "2026-11-23"
     },
     {
-      "id": "metro-maps",
-      "name": "Metro Maps",
-      "emoji": "🚇",
-      "tagline": "London, Paris, New York, Berlin, Madrid, Barcelona and Tokyo",
-      "description": "The metro systems of London, Paris, New York, Berlin, Madrid, Barcelona and Tokyo in your pocket, as a clean schematic diagram or a true-to-life map, both drawn by us from open data (New York and Tokyo are shown geographically). Pan and pinch around every line and station, browse any line stop by stop with its branches, and tap a station to see which lines stop there. Plan a route between any two stations, fastest or with the fewest changes, and see where to change and which way to head. Rivers run through both views, and sketches of each city's landmarks, from Big Ben to the Sagrada Família to Tokyo Skytree, show where you are and take you there in a tap. Check live line status for London and New York. Search Tokyo in English or Japanese. Save your usual routes. The maps and route planner work offline, underground. Not affiliated with any transport operator.",
+      "id": "scientific-calculator",
+      "name": "Scientific Calculator",
+      "emoji": "🧮",
+      "tagline": "Beautiful maths, full screen",
+      "description": "A scientific calculator made to be a pleasure to use, full screen. Type the whole sum and watch the answer appear as you go, then press equals. Trig in degrees or radians with the inverse and hyperbolic functions, logs, powers and roots, factorials, combinations, percentages that work the way a shop till does (200 + 15% = 230), memory, Ans, and a history of every sum that you can tap to reuse. Turn the phone sideways for every key at once, or fold the scientific keys away for a bigger keypad. Tap an answer to copy it. Describe a sum in words (\"15% tip on 64.50 split between 3\") and your AI writes the expression; the calculator does the maths, so the answer is never guessed. Works offline, light or dark.",
       "tags": [
-        "barcelona",
-        "berlin",
-        "london",
-        "madrid",
-        "metro",
-        "new york",
-        "offline",
-        "paris",
-        "saves data",
-        "tokyo",
-        "travel"
+        "maths",
+        "calculator",
+        "science",
+        "students",
+        "utility",
+        "saves data"
       ],
-      "iconSymbol": "tram.fill",
-      "iconColor": "red",
-      "version": 6,
+      "iconSymbol": "plus.forwardslash.minus",
+      "iconColor": "orange",
+      "version": 3,
       "featured": true,
       "requiresAI": false,
-      "uses": [
-        "internet"
+      "aiUses": [
+        "ask"
       ],
-      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/metro-maps.jpg",
-      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/metro-maps.html",
-      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/metro-maps.myllmapp",
-      "sizeKB": 201,
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/scientific-calculator.jpg",
+      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/scientific-calculator.html",
+      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/scientific-calculator.myllmapp",
+      "sizeKB": 43,
       "category": "Utilities",
-      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/metro-maps.jpg",
+      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/scientific-calculator.jpg",
       "added": "2026-09-27",
-      "updated": "2026-10-08"
+      "updated": "2026-09-27"
     },
     {
       "id": "net-worth",
@@ -1306,6 +1291,78 @@
       "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/fridge-chef.jpg",
       "added": "2026-06-22",
       "updated": "2026-09-26"
+    },
+    {
+      "id": "pinpoint",
+      "name": "Pinpoint",
+      "emoji": "📍",
+      "tagline": "Share the exact spot you're standing on",
+      "description": "Share exactly where you are, down to a few metres, even where there's no street address: a festival gate, a trailhead, a car park row, a beach. Pinpoint shows your spot as a Plus Code, an open code that works anywhere on Earth, with the nearby address and live accuracy. Share it as a message with map links or as a QR code anyone's camera can open. Find a code someone sent you, or one on a sign, and get the distance and direction to walk. Save places like your car or your tent and find your way back, even offline. The SOS card shows your code, spelled out, with coordinates in huge type for an emergency call. Your AI can describe the spot in a sentence a friend can follow.",
+      "tags": [
+        "location",
+        "maps",
+        "share",
+        "travel",
+        "safety",
+        "offline",
+        "saves data"
+      ],
+      "iconSymbol": "mappin.and.ellipse",
+      "iconColor": "green",
+      "version": 1,
+      "featured": true,
+      "requiresAI": false,
+      "aiUses": [
+        "ask"
+      ],
+      "uses": [
+        "internet",
+        "location"
+      ],
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/pinpoint.jpg",
+      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/pinpoint.html",
+      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/pinpoint.myllmapp",
+      "sizeKB": 140,
+      "category": "Utilities",
+      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/pinpoint.jpg",
+      "added": "2026-09-27",
+      "updated": "2026-09-27"
+    },
+    {
+      "id": "metro-maps",
+      "name": "Metro Maps",
+      "emoji": "🚇",
+      "tagline": "London, Paris, New York, Berlin, Madrid, Barcelona and Tokyo",
+      "description": "The metro systems of London, Paris, New York, Berlin, Madrid, Barcelona and Tokyo in your pocket, as a clean schematic diagram or a true-to-life map, both drawn by us from open data (New York and Tokyo are shown geographically). Pan and pinch around every line and station, browse any line stop by stop with its branches, and tap a station to see which lines stop there. Plan a route between any two stations, fastest or with the fewest changes, and see where to change and which way to head. Rivers run through both views, and sketches of each city's landmarks, from Big Ben to the Sagrada Família to Tokyo Skytree, show where you are and take you there in a tap. Check live line status for London and New York. Search Tokyo in English or Japanese. Save your usual routes. The maps and route planner work offline, underground. Not affiliated with any transport operator.",
+      "tags": [
+        "barcelona",
+        "berlin",
+        "london",
+        "madrid",
+        "metro",
+        "new york",
+        "offline",
+        "paris",
+        "saves data",
+        "tokyo",
+        "travel"
+      ],
+      "iconSymbol": "tram.fill",
+      "iconColor": "red",
+      "version": 6,
+      "featured": true,
+      "requiresAI": false,
+      "uses": [
+        "internet"
+      ],
+      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/metro-maps.jpg",
+      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/metro-maps.html",
+      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/metro-maps.myllmapp",
+      "sizeKB": 201,
+      "category": "Utilities",
+      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/metro-maps.jpg",
+      "added": "2026-09-27",
+      "updated": "2026-10-08"
     },
     {
       "id": "substack-reader",
@@ -1490,63 +1547,6 @@
       "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/stocks.jpg",
       "added": "2026-09-06",
       "updated": "2026-11-23"
-    },
-    {
-      "id": "expense-tracker",
-      "name": "Expense Tracker",
-      "emoji": "💷",
-      "tagline": "Shared household spending, synced",
-      "description": "A shared expense tracker for a household sharing one card — everyone's phone updates the same Google Sheet, so the running total is always in sync. Categories, per-person summaries, recurring detection, and a private setup using your OWN free Google Sheet (paste-in Apps Script included). You can also just tell MyLLM “add £12 lunch to expenses”.",
-      "tags": [
-        "productivity",
-        "expenses",
-        "household",
-        "shared",
-        "google sheets"
-      ],
-      "iconSymbol": "creditcard.fill",
-      "iconColor": "green",
-      "version": 6,
-      "featured": true,
-      "requiresAI": false,
-      "uses": [
-        "internet"
-      ],
-      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/expense-tracker.jpg",
-      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/expense-tracker.html?v=3",
-      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/expense-tracker.myllmapp",
-      "sizeKB": 101,
-      "category": "Productivity",
-      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/expense-tracker.jpg",
-      "added": "2026-06-15",
-      "updated": "2026-10-04"
-    },
-    {
-      "id": "flashcard-forge",
-      "name": "Flashcard Forge",
-      "emoji": "🧠",
-      "tagline": "Decks that write themselves",
-      "description": "Type any topic and your own AI writes a fresh deck of study flashcards — tap to flip, swipe through, every deck saved on-device. Needs the latest MyLLM with “Allow apps to use the AI” enabled in Settings.",
-      "tags": [
-        "AI-powered",
-        "saves data"
-      ],
-      "iconSymbol": "brain.head.profile",
-      "iconColor": "indigo",
-      "version": 13,
-      "featured": true,
-      "requiresAI": true,
-      "aiUses": [
-        "ask"
-      ],
-      "banner": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/flashcard-forge.jpg",
-      "html": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/flashcard-forge.html",
-      "json": "https://cdn.jsdelivr.net/gh/TeamDzX/myllm-assets@b87bcd86872b4cefaf1a306547da2c582e127d4d/apps-src/flashcard-forge.myllmapp",
-      "sizeKB": 69,
-      "category": "Students",
-      "icon": "https://raw.githubusercontent.com/TeamDzX/myllm-assets-xl/main/apps/icons/flashcard-forge.jpg",
-      "added": "2026-06-11",
-      "updated": "2026-10-04"
     },
     {
       "id": "language-lab",
