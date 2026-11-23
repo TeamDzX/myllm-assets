@@ -190,6 +190,109 @@ body.imm .imm-safe{display:block}
 .lk-toast.show{ opacity:1; transform:translate(-50%, 0); }
 @media (prefers-reduced-motion:reduce){ .lk-wrap,.lk-sheet,.lk-toast{ transition:none; } }
 /* /lists-kit:css */
+/* wide-v1 — Mac window / iPad (900px+): the tab bar becomes a left sidebar (an
+   icon rail until 1180px), totals sit beside the pots, charts beside their
+   lists, sheets become centred dialogs. Phones never match. */
+@media (min-width:900px){
+  body{ --side:92px; --gut:28px; max-width:none; margin:0;
+    padding:calc(22px + env(safe-area-inset-top)) max(calc(var(--gut) + env(safe-area-inset-right)), calc((100% - var(--side) - 1200px) / 2))
+            calc(40px + env(safe-area-inset-bottom)) calc(var(--side) + max(var(--gut), (100% - var(--side) - 1200px) / 2)); }
+  .head{ margin-bottom:18px; }
+  .lk-bar{ margin-bottom:18px; }
+  .lk-chip{ max-width:320px; }
+  .lk-line{ margin:-12px 4px 16px; }
+
+  .tabs{ top:0; right:auto; bottom:0; width:var(--side); display:block; overflow-y:auto; border-top:0; border-right:1px solid var(--line);
+    padding:calc(22px + env(safe-area-inset-top)) 10px calc(16px + env(safe-area-inset-bottom)) calc(10px + env(safe-area-inset-left)); }
+  .tabs .in{ flex-direction:column; gap:6px; max-width:none; }
+  .tabs button{ flex:none; padding:10px 0 8px; }
+
+  .hero{ padding:22px 26px; }
+  .hero .n{ font-size:54px; }
+  .hero .meta{ font-size:14px; gap:6px 20px; margin-top:10px; }
+  .hero .split{ margin-top:16px; }
+  #homeMain{ display:grid; grid-template-columns:minmax(0,1.15fr) minmax(0,1fr); column-gap:20px; align-items:start; }
+  #homeMain > .hero{ grid-column:1; grid-row:1; align-self:stretch; margin-bottom:0; display:flex; flex-direction:column; justify-content:center; }
+  #homeMain > .pots{ grid-column:2; grid-row:1; align-self:stretch; grid-auto-rows:1fr; }
+  #homeMain > h2:nth-of-type(1){ grid-column:2; grid-row:2; margin-top:26px; }
+  #fourCard{ grid-column:2; grid-row:3; padding:18px; }
+  #homeMain > h2:nth-of-type(2){ grid-column:1; grid-row:2; margin-top:26px; }
+  #homeMain > h2:nth-of-type(2) + .card{ grid-column:1; grid-row:3; padding:18px; }
+  #fourCard .big{ font-size:34px; }
+  .pot{ padding:14px 16px; }
+  .pot .pv{ font-size:23px; }
+  .empty{ max-width:520px; margin:9vh auto 0; padding:36px 24px 30px; }
+
+  /* charts are drawn at their real pixel size here (see lineChart), so type stays its own size */
+  svg.chart text{ font-size:12px; }
+  .legend{ font-size:13px; margin-top:12px; }
+  #chartSeg{ display:inline-flex; max-width:100%; margin-bottom:14px; }
+  #chartSeg button{ padding:8px 16px; }
+  #chartSeg + .card{ padding:18px; }
+  #chBody > select{ max-width:300px; }
+  #chBody .bars{ max-width:760px; }
+  #chBody .note, .card .cs{ max-width:76ch; }
+  #history{ grid-template-columns:1fr 1fr; column-gap:32px; }
+  #history .row:nth-last-child(2):nth-child(odd){ border-bottom:none; }
+  #history .row:only-child{ grid-column:1 / -1; }
+  #v-charts > h2 + .card{ padding:6px 18px; }
+
+  #v-update:not([hidden]){ display:grid; grid-template-columns:minmax(0,1fr) 300px; grid-template-rows:auto auto auto auto auto auto 1fr; column-gap:20px; align-items:start; }
+  #upTitle{ grid-column:1 / -1; grid-row:1; margin-top:4px; }
+  #upPots{ grid-column:1; grid-row:2 / 8; }
+  #upPots > .potH:first-child{ margin-top:2px; }
+  #upTitle + .card{ grid-column:2; grid-row:2; }
+  #upPots + .card{ grid-column:2; grid-row:3; margin-top:0 !important; }
+  #upSave{ grid-column:2; grid-row:4; margin-top:0; }
+  #upDelete{ grid-column:2; grid-row:5; }
+  #upCancel{ grid-column:2; grid-row:6; }
+
+  #v-accounts:not([hidden]){ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); column-gap:20px; align-items:start; }
+  #v-accounts > .hint{ grid-column:1 / -1; grid-row:1; max-width:76ch; margin-bottom:0 !important; }
+  #accPots{ grid-column:1 / -1; grid-row:2; display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); column-gap:20px; align-items:start; }
+  #accPots > :nth-child(6n+1), #accPots > :nth-child(6n+2), #accPots > :nth-child(6n+3){ grid-column:1; }
+  #accPots > :nth-child(6n+4), #accPots > :nth-child(6n+5), #accPots > :nth-child(6n){ grid-column:2; }
+  #accPots > :nth-child(-n+6):nth-child(3n+1){ grid-row:1; } #accPots > :nth-child(-n+6):nth-child(3n+2){ grid-row:2; } #accPots > :nth-child(-n+6):nth-child(3n){ grid-row:3; }
+  #accPots > :nth-child(n+7):nth-child(3n+1){ grid-row:4; } #accPots > :nth-child(n+7):nth-child(3n+2){ grid-row:5; } #accPots > :nth-child(n+7):nth-child(3n){ grid-row:6; }
+  #v-accounts > h2:nth-of-type(1){ grid-column:1; grid-row:3; }
+  #v-accounts > h2:nth-of-type(1) + .card{ grid-column:1; grid-row:4; padding:18px; }
+  #v-accounts > h2:nth-of-type(2){ grid-column:2; grid-row:3; }
+  #v-accounts > h2:nth-of-type(2) + .card{ grid-column:2; grid-row:4; padding:18px; }
+
+  .sheet, .lk-wrap{ align-items:center; padding:24px; }
+  .sheet .panel{ max-width:560px; max-height:84dvh; border-radius:20px; padding:22px 22px 20px; box-shadow:0 24px 60px rgba(0,0,0,.35); }
+  .sheet .acts{ justify-content:flex-end; margin-top:18px; }
+  .sheet .acts button{ flex:0 1 150px; }
+  .lk-sheet{ border-radius:22px; padding:22px; max-height:84dvh; box-shadow:0 24px 60px rgba(0,0,0,.35); transform:translateY(18px); opacity:0; transition:transform .2s cubic-bezier(.2,.8,.2,1), opacity .2s; }
+  .lk-wrap.show .lk-sheet{ opacity:1; }
+  .toast{ left:calc(50% + var(--side) / 2); bottom:calc(28px + env(safe-area-inset-bottom)); }
+}
+@media (min-width:1180px){
+  body{ --side:216px; }
+  #homeMain{ grid-template-columns:minmax(0,1.5fr) minmax(0,1fr); }
+  .tabs .in{ gap:3px; }
+  .tabs button{ flex-direction:row; gap:11px; min-height:42px; padding:8px 12px; font-size:14px; font-weight:650; text-align:left; }
+  .tabs button svg{ width:20px; height:20px; }
+  #v-charts:not([hidden]){ display:grid; grid-template-columns:minmax(0,1fr) 340px; column-gap:20px; align-items:start; }
+  #chartSeg{ grid-column:1; grid-row:1; justify-self:start; }
+  #chartSeg + .card{ grid-column:1; grid-row:2; }
+  #v-charts > h2{ grid-column:2; grid-row:1; align-self:end; margin:0 2px 14px; }
+  #v-charts > h2 + .card{ grid-column:2; grid-row:2; max-height:calc(100dvh - 210px); overflow-y:auto; }
+  #history{ grid-template-columns:1fr; }
+  #history .row:nth-last-child(2):nth-child(odd){ border-bottom:1px solid var(--line); }
+  #upPots{ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); column-gap:20px; align-items:start; }
+  #upPots > :nth-child(4n+1), #upPots > :nth-child(4n+2){ grid-column:1; } #upPots > :nth-child(4n+3), #upPots > :nth-child(4n){ grid-column:2; }
+  #upPots > :nth-child(1), #upPots > :nth-child(3){ grid-row:1; margin-top:2px; } #upPots > :nth-child(2), #upPots > :nth-child(4){ grid-row:2; }
+  #upPots > :nth-child(5), #upPots > :nth-child(7){ grid-row:3; } #upPots > :nth-child(6), #upPots > :nth-child(8){ grid-row:4; }
+}
+@media (hover:hover) and (min-width:900px){
+  .tabs button:not(.on):hover{ background:rgba(120,120,128,.1); color:var(--ink); }
+  .pot:hover, .head .acts button:hover, .head .imm-acts button:hover, .lk-chip:not(.on):hover{ border-color:var(--muted); }
+  .btn:not(.pri):hover, .chips button:not(.on):hover, .sheet .acts button:not(.pri):not(.dan):hover, .lk-btn:not(.pri):not(:disabled):hover, .lk-share:hover{ background:rgba(120,120,128,.3); }
+  .btn.pri:hover, .sheet .acts button.pri:hover, .sheet .acts button.dan:hover, .lk-btn.pri:not(:disabled):hover{ filter:brightness(1.1); }
+  .seg button:not(.on):hover{ color:var(--ink); }
+  h2 button:hover, .row button.lnk:hover{ text-decoration:underline; }
+}
 </style></head><body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
   <symbol id="i-trend" viewBox="0 0 24 24"><path d="M3 17l6-6 4 4 7-7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M15 8h5v5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
@@ -881,10 +984,23 @@ el('upCancel').onclick = function(){ editing = null; go('charts'); };
 /* ---------- Charts ---------- */
 function niceMax(v){ if (v <= 0) return 1; var p = Math.pow(10, Math.floor(Math.log10(v))), f = v / p; return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 5 ? 5 : 10) * p; }
 /* A line chart of snapshot totals: one line per series key, dots at each snapshot. */
+/* In a wide window (900px+) the chart is drawn at the width of its box, so type
+   and strokes keep their real size instead of being scaled up; it is redrawn
+   when that width changes. Phones always get 340 and the listener does nothing. */
+var chartW = 340, chartRT = null;
+function chartBox(){
+  var b = el(tab === 'home' ? 'homeChart' : 'chBody');
+  var w = b && window.matchMedia && window.matchMedia('(min-width:900px)').matches ? Math.floor(b.clientWidth) : 0;
+  return w > 340 ? w : 340;
+}
+window.addEventListener('resize', function(){
+  clearTimeout(chartRT);
+  chartRT = setTimeout(function(){ if ((tab === 'home' || tab === 'charts') && chartBox() !== chartW){ chartW = chartBox(); render(); } }, 120);
+});
 function lineChart(list, series, opt){
   opt = opt || {};
   if (list.length < 2) return '<div class="note">Charts start once you have two snapshots. Add one each month and the line builds up.</div>';
-  var W = 340, H = 190, L = 46, R = 10, T = 10, B = 26;
+  var W = chartW = chartBox(), big = W > 340, H = big ? Math.round(Math.max(230, Math.min(360, W * .42))) : 190, L = big ? 54 : 46, R = 10, T = 10, B = big ? 30 : 26;
   var vals = []; list.forEach(function(s){ var t = opt.map ? opt.map(s) : totals(s); series.forEach(function(se){ vals.push(t[se.key]); }); });
   vals = vals.concat(opt.include || []);              /* e.g. the yearly-spending line, so it stays on the chart */
   var fmt = opt.fmt || function(v){ return money(v, { compact:true }); };

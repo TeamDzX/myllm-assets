@@ -137,6 +137,43 @@
   #velWrap{ display:none; } #velWrap.on{ display:block; }
   @media (min-width:768px){ .cols2{ display:grid; grid-template-columns:1fr 1fr; gap:0 16px; align-items:start; } }
 
+  /* Wide windows (Mac, iPad landscape): a board. Summary, the add form and
+     velocity sit in a side panel; Backlog / In sprint / Done are columns of
+     story cards that scroll on their own. Below 900px nothing here applies and
+     the two board-only columns (.wcol) stay hidden. */
+  .wcol{ display:none; }
+  @media (min-width:900px){
+    body{ --side:clamp(290px,24vw,340px); max-width:none; margin:0; height:100dvh; min-height:700px;
+      display:grid; grid-template-columns:var(--side) minmax(0,1fr); grid-template-rows:repeat(6,auto) minmax(0,1fr); column-gap:22px;
+      padding:calc(20px + env(safe-area-inset-top)) calc(24px + env(safe-area-inset-right)) calc(20px + env(safe-area-inset-bottom)) calc(24px + env(safe-area-inset-left)); }
+    body > *{ grid-column:1; }
+    .hero .cols .k{ font-size:10px; letter-spacing:.07em; white-space:nowrap; }
+    #doneBtn{ margin-top:0 !important; }
+    #velWrap h2{ margin-top:18px; }
+    .cols2{ grid-column:2; grid-row:1/-1; min-height:0; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); grid-template-rows:minmax(0,3fr) minmax(0,2fr); gap:12px; align-items:stretch; }
+    .cols2 > div{ display:flex; flex-direction:column; min-width:0; min-height:0; border-radius:18px; background:rgba(118,118,128,.1); padding:0 10px 10px; }
+    .cols2 > div:first-child{ display:none; }
+    .cols2 > div:nth-child(2){ grid-row:1/-1; }
+    .cols2 h2{ margin:14px 6px 10px; }
+    .cols2 > div > div{ flex:1; min-height:0; overflow-y:auto; border-radius:14px; }
+    .cols2 .card{ margin:0; }
+    .cols2 .card.list{ background:none; border:0; border-radius:0; padding:0; }
+    .cols2 .card:not(.list){ background:none; border-style:dashed; }
+    .cols2 .empty{ padding:16px 6px 12px; } .cols2 .empty .tile{ width:40px; height:40px; border-radius:12px; font-size:18px; margin-bottom:10px; opacity:.85; }
+    .cols2 .row{ flex-wrap:wrap; gap:9px; min-height:0; padding:12px 12px 10px; margin-bottom:8px; background:var(--surface); border:1px solid var(--line); border-radius:14px; }
+    .cols2 .row:last-child{ border-bottom:1px solid var(--line); margin-bottom:0; }
+    .cols2 .row .ck{ order:0; align-self:flex-start; }
+    .cols2 .row .body{ order:1; flex:1 0 calc(100% - 35px); }
+    #backlogList .row .body{ flex-basis:100%; }
+    .cols2 .row .sp{ order:2; min-width:28px; height:28px; font-size:13px; border-radius:9px; }
+    .cols2 .row .mv{ order:3; margin-left:auto; height:30px; }
+    .cols2 .row .mv.ico{ width:30px; }
+    .cols2 .row .x{ order:4; width:30px; height:30px; margin:0 -5px 0 -3px; }
+  }
+  @media (min-width:1100px){ .cols2{ grid-template-columns:repeat(3,minmax(0,1fr)); grid-template-rows:minmax(0,1fr); } }
+  @media (hover:hover) and (min-width:900px){ button{ cursor:pointer; } .mv:hover,.btn.sec:hover{ background:rgba(118,118,128,.3); } .x:hover{ color:var(--bad); background:var(--fill); }
+    .btn.pri:not(:disabled):hover{ filter:brightness(1.08); } .pills button:not(.on):hover{ border-color:var(--muted); } .cols2 .ck:hover{ border-color:var(--good); opacity:1; } }
+
 /* myllm-fullscreen-v2 — MyLLM 5.6.2+ opens this app full screen; the ✕ is the way out. */
 .head .imm-acts{display:none;flex-shrink:0;margin-left:auto}
 .head .acts + .imm-acts{margin-left:0}
@@ -180,6 +217,8 @@ body.imm .imm-safe{display:block}
 <div class="cols2">
   <div><h2>Sprint <span class="pts" id="sprintPts">0 pts</span></h2><div id="sprintList"></div></div>
   <div><h2>Backlog <span class="pts" id="backlogPts">0 pts</span></h2><div id="backlogList"></div></div>
+  <div class="wcol"><h2>In sprint <span class="pts" id="todoPts">0 pts</span></h2><div id="todoList"></div></div>
+  <div class="wcol"><h2>Done <span class="pts" id="donePts">0 pts</span></h2><div id="doneList"></div></div>
 </div>
 <button class="btn pri wide" id="doneBtn" style="margin-top:6px"><svg><use href="#i-check"/></svg>Complete sprint</button>
 <div id="velWrap"><h2>Velocity</h2><div class="card"><div class="vel" id="velBars"></div><div class="note" id="velHist" style="margin-top:10px"></div></div></div>
@@ -247,15 +286,19 @@ function render(){
   el("sVel").textContent = velocities.length ? Math.round(velocities.reduce(function(a, b){ return a + b; }, 0) / velocities.length) : "–";
   el("doneBtn").disabled = !sprint.length;
   drawList("sprintList", sprint, true); drawList("backlogList", backlog, false);
+  /* The wide layout's board shows the sprint as two columns; hidden by CSS on a phone. */
+  el("todoPts").textContent = (all - doneP) + " pts"; el("donePts").textContent = doneP + " pts";
+  drawList("todoList", sprint.filter(function(x){ return !x.done; }), true, sprint.length ? ["check", "Everything in this sprint is done."] : null);
+  drawList("doneList", sprint.filter(function(x){ return x.done; }), true, ["check", "Tick a story off and it lands here."]);
   el("velWrap").classList.toggle("on", velocities.length > 0);
   el("velHist").textContent = velocities.length ? ("Past sprint velocity: " + velocities.join(", ") + " pts") : "";
   var recent = velocities.slice(-10), top = Math.max.apply(null, recent.concat([1]));
   el("velBars").innerHTML = recent.map(function(v){ return '<div><span>' + v + '</span><i style="height:' + Math.round(v / top * 100) + '%"></i></div>'; }).join("");
 }
-function drawList(id, list, inSprint){
+function drawList(id, list, inSprint, blank){
   var L = el(id); L.innerHTML = "";
   if (!list.length){
-    L.innerHTML = '<div class="card">' + (inSprint ? emptyState("run", "Move backlog items in to plan a sprint.") : emptyState("list", "Nothing in the backlog.", "Add a story", "title")) + '</div>'; return;
+    L.innerHTML = '<div class="card">' + (inSprint ? emptyState(blank ? blank[0] : "run", blank ? blank[1] : "Move backlog items in to plan a sprint.") : emptyState("list", "Nothing in the backlog.", "Add a story", "title")) + '</div>'; return;
   }
   var card = document.createElement("div"); card.className = "card list";
   list.forEach(function(it){

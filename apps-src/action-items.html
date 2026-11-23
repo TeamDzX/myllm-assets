@@ -147,6 +147,73 @@ body.imm .head .imm-x{display:grid !important;place-items:center}
 .imm-x svg,.imm-acts svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round}
 .imm-safe{display:none}
 body.imm .imm-safe{display:block}
+
+/* wide-screen-v1 — Mac window / iPad (900px and up): the capture panel sits on the
+   left and the log reads as a register on the right — one row per entry, fields
+   in aligned columns. Below 900px nothing here applies. The same frame is used by
+   Action Items and Risk & Decision Log. */
+.thead{ display:none; }
+@media (min-width:900px){
+  body{ max-width:none; display:grid; align-content:start; grid-template-columns:clamp(290px,27vw,430px) minmax(0,1fr);
+    grid-template-rows:auto auto auto 1fr; column-gap:clamp(20px,2.1vw,32px);
+    padding:calc(20px + env(safe-area-inset-top)) calc(clamp(20px,2.2vw,36px) + env(safe-area-inset-right)) calc(30px + env(safe-area-inset-bottom)) calc(clamp(20px,2.2vw,36px) + env(safe-area-inset-left)); }
+  .imm-safe{ grid-column:1 / -1; grid-row:1; }
+  .head{ grid-column:1 / -1; grid-row:2; margin:0 2px 18px; }
+  .head .ht{ display:flex; flex-wrap:wrap; align-items:baseline; gap:2px 14px; }
+  .head p{ margin-top:0; }
+  body > h2, .section > h2{ display:none; }
+
+  /* the headline number becomes a one-line strip over the register */
+  .hero{ grid-column:2; grid-row:3; margin:0 0 14px; display:flex; align-items:center; gap:4px 16px; min-height:54px;
+    padding:8px 20px; border-radius:16px; box-shadow:0 6px 18px hsl(var(--h) 60% 30% / .2); }
+  .hero .n{ order:-1; font-size:30px; line-height:1; }
+  .hero .s{ margin-top:0; }
+  .hero .bar{ flex:1; min-width:40px; margin-top:0; }
+  .hero .hbtn{ position:static; order:5; margin-right:-10px; }
+  .hero .marks{ margin:0 0 0 auto; flex-wrap:nowrap; }
+
+  /* register */
+  .card.list{ padding:0; margin-bottom:0; overflow:hidden; }
+  .thead{ align-items:center; min-height:36px; font-size:11px; font-weight:800; letter-spacing:.07em; text-transform:uppercase;
+    color:var(--muted); background:var(--fill); border-bottom:1px solid var(--line); }
+  .thead span{ min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .x{ width:32px; height:32px; margin:0; justify-self:end; }
+
+  /* left: add by hand, then paste-and-extract */
+  .addrow{ grid-column:1; grid-row:3; margin-bottom:14px; }
+  .addrow .btn{ min-height:0; }
+  body > .card{ grid-column:1; grid-row:4; align-self:start; position:sticky; top:16px; margin-bottom:0; }
+  #notes{ min-height:clamp(170px,36vh,400px); }
+  #list{ grid-column:2; grid-row:4; margin-top:0 !important; min-width:0; }
+
+  .thead, #list .card.list .row{ display:grid; grid-template-columns:26px minmax(0,1fr) minmax(130px,.36fr) minmax(130px,.36fr) 32px; column-gap:14px; padding-left:16px; padding-right:12px; }
+  #list .card.list .row{ align-items:start; padding-top:11px; padding-bottom:11px; min-height:50px; }
+  #list .row .body, #list .row .tags{ display:contents; }
+  #list .row .ck{ grid-column:1; grid-row:1; margin-top:1px; }
+  #list .row .tx{ grid-column:2; grid-row:1; padding-top:3px; }
+  #list .row .tag{ grid-row:1; justify-self:start; min-width:0; margin-top:3px; }
+  #list .row .tag.who{ grid-column:3; } #list .row .tag.when{ grid-column:4; }
+  #list .row .x{ grid-column:5; grid-row:1; margin-top:-2px; }
+  #list .skelcard{ margin-bottom:12px; }
+  #list .skelcard .row .body{ display:flex; grid-column:2 / 5; }
+}
+/* a narrower window: owner and due share one column */
+@media (min-width:900px) and (max-width:1179.98px){
+  .thead, #list .card.list .row{ grid-template-columns:26px minmax(0,1fr) 150px 32px; }
+  .thead span:nth-child(3)::after{ content:" / due"; } .thead span:nth-child(4){ display:none; }
+  #list .row .body{ display:grid; grid-column:2 / 4; grid-row:1; grid-template-columns:minmax(0,1fr) 150px; column-gap:14px; }
+  .btnrow .btn{ padding:0 11px; font-size:14px; }
+  #list .row .tags{ display:flex; flex-direction:column; align-items:flex-start; grid-column:2; margin-top:3px; }
+  #list .row .tx{ grid-column:1; } #list .row .tag{ margin-top:0; }
+  #list .row .x{ grid-column:4; }
+  #list .skelcard .row .body{ display:flex; grid-column:2 / 4; }
+}
+@media (hover:hover) and (min-width:900px){
+  button, .ck, .row .tx{ cursor:pointer; }
+  #list .card.list .row:hover{ background:hsl(var(--h) 70% 50% / .07); }
+  .x:hover{ color:var(--bad); background:var(--fill); }
+  .hero .hbtn:not(:disabled):hover{ background:rgba(255,255,255,.26); }
+}
 </style></head><body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
   <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.6l4.6 4.6L19.2 7.4" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></symbol>
@@ -295,6 +362,7 @@ function render(){
   }
   if (!items.length){ if (!busy) L.innerHTML = '<div class="card">' + emptyState("list", "No action items yet. Paste some notes above, or add one by hand.", "Add an item", "manual") + '</div>'; return; }
   var card = document.createElement("div"); card.className = "card list";
+  card.innerHTML = '<div class="thead" aria-hidden="true"><span></span><span>Action</span><span>Owner</span><span>Due</span><span></span></div>'; /* column heads, wide layout only */
   items.forEach(function(it){
     var d = document.createElement("div"); d.className = "row top" + (it.done ? " done" : "");
     var meta = "";

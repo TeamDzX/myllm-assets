@@ -150,6 +150,85 @@ body.imm .head .imm-x{display:grid !important;place-items:center}
 .imm-x svg,.imm-acts svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round}
 .imm-safe{display:none}
 body.imm .imm-safe{display:block}
+
+/* wide-screen-v1 — Mac window / iPad (900px and up): the capture panel sits on the
+   left and the log reads as a register on the right — one row per entry, fields
+   in aligned columns. Below 900px nothing here applies. The same frame is used by
+   Action Items and Risk & Decision Log. */
+.thead{ display:none; }
+@media (min-width:900px){
+  body{ max-width:none; display:grid; align-content:start; grid-template-columns:clamp(290px,27vw,430px) minmax(0,1fr);
+    grid-template-rows:auto auto auto 1fr; column-gap:clamp(20px,2.1vw,32px);
+    padding:calc(20px + env(safe-area-inset-top)) calc(clamp(20px,2.2vw,36px) + env(safe-area-inset-right)) calc(30px + env(safe-area-inset-bottom)) calc(clamp(20px,2.2vw,36px) + env(safe-area-inset-left)); }
+  .imm-safe{ grid-column:1 / -1; grid-row:1; }
+  .head{ grid-column:1 / -1; grid-row:2; margin:0 2px 18px; }
+  .head .ht{ display:flex; flex-wrap:wrap; align-items:baseline; gap:2px 14px; }
+  .head p{ margin-top:0; }
+  body > h2, .section > h2{ display:none; }
+
+  /* the headline number becomes a one-line strip over the register */
+  .hero{ grid-column:2; grid-row:3; margin:0 0 14px; display:flex; align-items:center; gap:4px 16px; min-height:54px;
+    padding:8px 20px; border-radius:16px; box-shadow:0 6px 18px hsl(var(--h) 60% 30% / .2); }
+  .hero .n{ order:-1; font-size:30px; line-height:1; }
+  .hero .s{ margin-top:0; }
+  .hero .bar{ flex:1; min-width:40px; margin-top:0; }
+  .hero .hbtn{ position:static; order:5; margin-right:-10px; }
+  .hero .marks{ margin:0 0 0 auto; flex-wrap:nowrap; }
+
+  /* register */
+  .card.list{ padding:0; margin-bottom:0; overflow:hidden; }
+  .thead{ align-items:center; min-height:36px; font-size:11px; font-weight:800; letter-spacing:.07em; text-transform:uppercase;
+    color:var(--muted); background:var(--fill); border-bottom:1px solid var(--line); }
+  .thead span{ min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .x{ width:32px; height:32px; margin:0; justify-self:end; }
+
+  /* left: which log, then its form */
+  .seg{ grid-column:1; grid-row:3; margin-bottom:14px; }
+  .seg button{ height:auto; min-height:38px; }
+  .section.on{ display:contents; }
+  .section > .card{ grid-column:1; grid-row:4; align-self:start; position:sticky; top:16px; margin-bottom:0; }
+  #dRat{ min-height:clamp(120px,24vh,260px); }
+  #riskList, #decList{ grid-column:2; grid-row:4; min-width:0; }
+
+  .thead, .card.list .entry{ display:grid; column-gap:14px; padding-left:16px; padding-right:12px; }
+  .card.list .entry{ align-items:start; padding-top:10px; padding-bottom:10px; }
+  .entry .top, .entry .li{ display:contents; }
+  .entry .ti, .entry .rat, .entry .lk, .entry .im, .entry .dt, .entry .score, .entry .x{ grid-row:1; margin-top:0; }
+  .entry .ti{ padding-top:8px; } .entry .rat{ padding-top:7px; color:var(--ink); }
+  .entry .x{ margin-top:2px; }
+
+  #riskList .thead, #riskList .entry{ grid-template-columns:50px minmax(0,1fr) 84px 60px minmax(0,1.15fr) 32px; }
+  #riskList .score{ grid-column:1; justify-self:start; } #riskList .ti{ grid-column:2; }
+  #riskList .lk{ grid-column:3; } #riskList .im{ grid-column:4; } #riskList .rat{ grid-column:5; } #riskList .x{ grid-column:6; }
+  .entry .lb, .entry .mul{ display:none; }
+  .entry .lk, .entry .im{ padding-top:7px; font-size:15.5px; font-weight:750; color:var(--ink); font-variant-numeric:tabular-nums; }
+  .entry .lk::after, .entry .im::after{ content:" / 5"; font-size:12px; font-weight:600; color:var(--muted); }
+
+  #decList .thead, #decList .entry{ grid-template-columns:104px minmax(0,1fr) minmax(0,1.25fr) 32px; }
+  #decList .dt{ grid-column:1; padding-top:10px; white-space:nowrap; } #decList .ti{ grid-column:2; } #decList .rat{ grid-column:3; } #decList .x{ grid-column:4; }
+}
+/* room for likelihood and impact side by side in the form */
+@media (min-width:1180px){
+  #s-risk > .card{ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); column-gap:12px; }
+  #s-risk > .card > input, #s-risk > .card > textarea, #s-risk > .card > .btn{ grid-column:1 / -1; }
+  #s-risk > .card > label:nth-of-type(1){ grid-column:1; grid-row:2; } #rLike{ grid-column:1; grid-row:3; }
+  #s-risk > .card > label:nth-of-type(2){ grid-column:2; grid-row:2; } #rImp{ grid-column:2; grid-row:3; }
+  #s-risk .pills{ gap:4px; } #s-risk .pills button{ height:38px; }
+}
+/* a narrower window: the mitigation / rationale drops under its title */
+@media (min-width:900px) and (max-width:1279.98px){
+  #riskList .thead, #riskList .entry{ grid-template-columns:50px minmax(0,1fr) 84px 60px 32px; }
+  #riskList .thead span:nth-child(5){ display:none; }
+  #riskList .rat{ grid-column:2 / 5; grid-row:2; padding-top:2px; color:var(--muted); } #riskList .x{ grid-column:5; }
+  #decList .thead, #decList .entry{ grid-template-columns:104px minmax(0,1fr) 32px; }
+  #decList .thead span:nth-child(3){ display:none; }
+  #decList .rat{ grid-column:2; grid-row:2; padding-top:2px; color:var(--muted); } #decList .x{ grid-column:3; }
+}
+@media (hover:hover) and (min-width:900px){
+  button{ cursor:pointer; }
+  .card.list .entry:hover{ background:hsl(var(--h) 80% 50% / .07); }
+  .x:hover{ color:var(--bad); background:var(--fill); }
+}
 </style></head><body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
   <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></symbol>
@@ -254,10 +333,11 @@ function render(){
   if (!sorted.length) L.innerHTML = '<div class="card">' + emptyState("shield", "No risks logged yet.", "Log a risk", "rTitle") + '</div>';
   else {
     var card = document.createElement("div"); card.className = "card list";
+    card.innerHTML = '<div class="thead" aria-hidden="true"><span>Score</span><span>Risk</span><span>Likelihood</span><span>Impact</span><span>Mitigation / owner</span><span></span></div>'; /* column heads, wide layout only */
     sorted.forEach(function(r){
       var s = r.like * r.imp, d = document.createElement("div"); d.className = "entry";
       d.innerHTML = '<div class="top"><div class="score ' + band(s) + '">' + s + '</div><div class="ti">' + esc(r.title) + '</div><button class="x" aria-label="Delete">' + icon("x") + '</button></div>' +
-        '<div class="li">Likelihood ' + r.like + ' × Impact ' + r.imp + '</div>' +
+        '<div class="li"><span class="lk"><span class="lb">Likelihood </span>' + r.like + '</span><span class="mul"> × </span><span class="im"><span class="lb">Impact </span>' + r.imp + '</span></div>' +
         (r.mit ? '<div class="rat">' + esc(r.mit) + '</div>' : '');
       d.querySelector(".x").onclick = function(){ delRisk(r.id); }; card.appendChild(d);
     });
@@ -269,6 +349,7 @@ function render(){
   if (!decisions.length) D.innerHTML = '<div class="card">' + emptyState("doc", "No decisions logged yet.", "Log a decision", "dTitle") + '</div>';
   else {
     var dc2 = document.createElement("div"); dc2.className = "card list";
+    dc2.innerHTML = '<div class="thead" aria-hidden="true"><span>Date</span><span>Decision</span><span>Rationale</span><span></span></div>';
     decisions.forEach(function(dc){
       var d = document.createElement("div"); d.className = "entry";
       d.innerHTML = '<div class="top"><div class="ti">' + esc(dc.title) + '</div><button class="x" aria-label="Delete">' + icon("x") + '</button></div>' +

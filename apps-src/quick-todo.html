@@ -193,6 +193,67 @@ body.imm .imm-safe{display:block}
 .lk-toast.show{ opacity:1; transform:translate(-50%, 0); }
 @media (prefers-reduced-motion:reduce){ .lk-wrap,.lk-sheet,.lk-toast{ transition:none; } }
 /* /lists-kit:css */
+/* wide-v1 — Mac window / iPad landscape: the lists become a sidebar, the open
+   list fills the rest in columns, sheets become dialogs. Phones never get here. */
+@media (min-width:900px){
+  body{ max-width:none; margin:0; padding:0; height:100dvh; min-height:0; overflow:hidden; display:grid;
+    grid-template-columns:calc(264px + env(safe-area-inset-left)) minmax(0,1fr) auto;
+    grid-template-rows:auto auto auto minmax(0,1fr) auto; }
+  body:before{ content:""; grid-column:1; grid-row:1/-1; background:color-mix(in srgb, var(--surface) 45%, var(--bg)); border-right:1px solid var(--line); }
+  .imm-safe{ grid-column:1/-1; grid-row:1; }
+  .head{ grid-column:1; grid-row:2; margin:0; gap:11px; padding:calc(16px + env(safe-area-inset-top)) 16px 16px calc(18px + env(safe-area-inset-left)); }
+  .head h1{ font-size:19px; }
+  .head p{ display:none; }
+  .head .imm-acts{ position:absolute; z-index:3; top:calc(18px + env(safe-area-inset-top)); right:calc(28px + env(safe-area-inset-right)); }
+  /* the lists */
+  .lk-bar{ display:contents; }
+  .lk-chips{ grid-column:1; grid-row:3/5; flex-direction:column; gap:2px; overflow:hidden auto; padding:6px 12px 12px calc(12px + env(safe-area-inset-left)); }
+  .lk-chips:before{ content:"Lists"; flex:none; font-size:12px; font-weight:800; letter-spacing:.07em; text-transform:uppercase; color:var(--muted); padding:0 12px 8px; }
+  .lk-chip{ width:100%; max-width:none; height:auto; min-height:40px; padding:8px 12px; border:0; border-radius:10px; background:none; font-size:14.5px; text-align:left; }
+  .lk-chip span{ flex:0 1 auto; min-width:0; }
+  .lk-chip .lk-i{ order:2; margin-left:auto; opacity:.7; }
+  .lk-chip .lk-dot{ order:3; }
+  .lk-chip .lk-i + span + .lk-dot{ margin-left:0; }
+  .lk-chip span + .lk-dot{ margin-left:auto; }
+  .lk-chip.on{ background:color-mix(in srgb, var(--acc) 16%, transparent); color:var(--acc); }
+  .lk-chip.lk-new{ margin-top:6px; border:0; }
+  .lk-chip.lk-new .lk-i{ order:0; margin-left:0; opacity:1; }
+  .lk-chip.lk-new span:after{ content:" list"; }
+  /* this list: add, who it's shared with, Share */
+  .addrow{ grid-column:2; grid-row:2; align-self:center; width:auto; max-width:560px; margin:env(safe-area-inset-top) 16px 0 28px; }
+  .lk-line{ grid-column:2/-1; grid-row:3; z-index:1; justify-self:end; align-self:center; max-width:min(560px,58%); text-align:right; margin:0 calc(30px + env(safe-area-inset-right)) 4px 0; }
+  .lk-share{ grid-column:3; grid-row:2; align-self:center; height:36px; padding:0 14px; margin:env(safe-area-inset-top) calc(28px + env(safe-area-inset-right)) 0 0; }
+  body.imm .lk-share{ margin-right:calc(80px + env(safe-area-inset-right)); }
+  .hero{ grid-column:1; grid-row:5; border-radius:16px; padding:13px 15px 14px; margin:8px 14px calc(16px + env(safe-area-inset-bottom)) calc(14px + env(safe-area-inset-left)); box-shadow:none; }
+  .hero .n{ font-size:34px; }
+  h2{ grid-column:2/-1; grid-row:3; min-height:32px; margin:4px calc(30px + env(safe-area-inset-right)) 10px 30px; }
+  #list{ grid-column:2/-1; grid-row:4/6; overflow-y:auto; padding:0 calc(28px + env(safe-area-inset-right)) calc(28px + env(safe-area-inset-bottom)) 28px; }
+  /* sheets become dialogs */
+  .lk-wrap{ align-items:center; padding:24px; }
+  .lk-sheet{ max-width:440px; max-height:100%; border-radius:20px; padding:22px; transform:translateY(14px); opacity:0;
+    transition:transform .25s cubic-bezier(.2,.8,.2,1), opacity .2s; box-shadow:0 24px 70px rgba(0,0,0,.34); }
+  .lk-wrap.show .lk-sheet{ opacity:1; }
+  .lk-toast,.toast{ left:calc(50% + 132px + env(safe-area-inset-left) / 2); max-width:min(560px, 60vw); }
+  .addrow input{ background:var(--surface); }
+  .duechip{ margin:0; cursor:pointer; }
+  /* tasks: one card each, in columns; done ones sink to their own section */
+  .card.list{ display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:8px; background:none; border:0; border-radius:0; padding:0; margin:0; }
+  .card.list .row,.card.list .row:last-child{ background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:9px 14px 9px 13px; min-height:58px; }
+  .card.list .row.done{ order:1; }
+  .card.list:has(.row.done):before{ content:"Done"; order:1; grid-column:1/-1; font-size:12px; font-weight:800; letter-spacing:.07em; text-transform:uppercase; color:var(--muted); margin:14px 2px 2px; }
+  .card.list:not(:has(.row:not(.done))):before{ margin-top:0; }
+  .row .body{ cursor:pointer; }
+  .rdate{ margin:0; cursor:pointer; }
+  #list > .card:not(.list){ max-width:520px; }
+}
+@media (hover:hover){
+  button,.lk-chip,.lk-share,.lk-btn{ cursor:pointer; }
+  .lk-chip:not(.on):hover{ background:var(--fill); }
+  .lk-share:hover,.lk-btn:not(:disabled):hover{ filter:brightness(1.08); }
+  .card.list .row:hover{ border-color:color-mix(in srgb, var(--acc) 55%, var(--line)); }
+  .x:hover{ color:var(--bad); background:var(--fill); }
+  .rdate:hover,.duechip:hover{ color:var(--acc); }
+}
 </style></head><body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
   <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.6l4.6 4.6L19.2 7.4" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></symbol>

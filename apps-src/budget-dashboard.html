@@ -103,6 +103,48 @@ body.imm .head .imm-acts{display:flex}
 .imm-x svg,.imm-acts svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round}
 .imm-safe{display:none}
 body.imm .imm-safe{display:block}
+/* wide-v1 — Mac window / iPad (900px+): month and budget beside the six-month
+   chart, categories beside places, sheets as centred dialogs. Phones never match. */
+@media (min-width:900px){
+  body{ max-width:1256px; padding:calc(22px + env(safe-area-inset-top)) calc(28px + env(safe-area-inset-right)) calc(40px + env(safe-area-inset-bottom)) calc(28px + env(safe-area-inset-left)); }
+  .head{ margin-bottom:18px; }
+  .notice{ margin-bottom:16px; }
+  #main{ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); column-gap:20px; align-items:start; }
+  #main > .month{ grid-column:1; grid-row:1; align-self:end; margin:0 0 10px; }
+  #main > h2:nth-of-type(1){ grid-column:2; grid-row:1; align-self:end; margin:0 2px 12px; }
+  #main > .hero{ grid-column:1; grid-row:2; align-self:stretch; margin-bottom:0; padding:22px 26px; display:flex; flex-direction:column; justify-content:center; }
+  #main > h2:nth-of-type(1) + .card{ grid-column:2; grid-row:2; align-self:stretch; margin-bottom:0; padding:18px 20px 14px; display:flex; flex-direction:column; justify-content:flex-end; }
+  #main > h2:nth-of-type(2){ grid-column:1; grid-row:3; margin-top:26px; }
+  #main > h2:nth-of-type(2) + .card{ grid-column:1; grid-row:4; }
+  #main > h2:nth-of-type(3){ grid-column:2; grid-row:3; margin-top:26px; }
+  #main > h2:nth-of-type(3) + .card{ grid-column:2; grid-row:4; }
+  #aiBox{ grid-column:1 / -1; grid-row:5; }
+  .hero .n{ font-size:54px; }
+  .hero .n small{ font-size:22px; }
+  .hero .bar{ height:10px; margin-top:14px; }
+  .hero .meta{ font-size:14px; gap:6px 20px; margin-top:12px; }
+  .hero .setb{ align-self:flex-start; margin-top:16px; padding:8px 14px; }
+  /* bars drawn against a taller plot: --v is the month's share of the tallest */
+  .chart{ height:196px; gap:14px; }
+  .chart .col i{ height:calc(var(--v,0) * 150px) !important; max-width:64px; border-radius:9px 9px 4px 4px; }
+  .chart .col span{ font-size:12.5px; }
+  .chart .col em{ font-size:12px; }
+  #main > h2 + .card:has(> .rows){ padding:8px 18px; }
+  #main > h2 + .card > .stack{ margin:10px 0 8px; }
+  .row{ padding:12px 2px; }
+  .say{ max-width:76ch; }
+  .empty{ max-width:520px; margin:9vh auto 0; padding:36px 24px 30px; }
+  .sheet{ align-items:center; padding:24px; }
+  .sheet .panel{ max-width:520px; border-radius:20px; padding:22px 22px 20px; box-shadow:0 24px 60px rgba(0,0,0,.35); }
+  .sheet .acts{ justify-content:flex-end; margin-top:16px; }
+  .sheet .acts button{ flex:0 1 150px; }
+}
+@media (hover:hover) and (min-width:900px){
+  .month button:not([disabled]):hover, .head .imm-acts button:hover{ border-color:var(--muted); }
+  .row button.tag:hover, .chips button:not(.on):hover, .sheet .acts button:not(.pri):hover{ background:rgba(120,120,128,.3); }
+  .sheet .acts button.pri:hover, .hero .setb:hover{ filter:brightness(1.1); }
+  h2 button:hover, .ghost:hover{ text-decoration:underline; }
+}
 </style></head><body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
   <symbol id="i-pie" viewBox="0 0 24 24"><path d="M11 3.1A9 9 0 1 0 20.9 13H11z" fill="currentColor"/><path d="M13 2v9h9A9 9 0 0 0 13 2z" fill="currentColor" opacity=".55"/></symbol>
@@ -277,7 +319,7 @@ function render(){
   var months = []; for (var i = 5; i >= 0; i--) months.push(shiftMonth(view, -i));
   var totals = months.map(function(k){ return sum(inMonth(k, cur)); }), max = Math.max.apply(null, totals.concat([b || 0, 1]));
   el('chart').innerHTML = months.map(function(k, i){
-    return '<div class="col' + (k === view ? ' cur' : '') + '"><em>' + (totals[i] ? esc(money(totals[i], cur).replace(/\.\d\d$/, '')) : '') + '</em><i style="height:' + Math.max(3, totals[i] / max * 92) + 'px"></i><span>' + esc(monthName(k, true)) + '</span></div>';
+    return '<div class="col' + (k === view ? ' cur' : '') + '"><em>' + (totals[i] ? esc(money(totals[i], cur).replace(/\.\d\d$/, '')) : '') + '</em><i style="height:' + Math.max(3, totals[i] / max * 92) + 'px;--v:' + (totals[i] / max).toFixed(4) + '"></i><span>' + esc(monthName(k, true)) + '</span></div>';
   }).join('');
 
   /* Categories: each place belongs to one; you set it once and it sticks. */
