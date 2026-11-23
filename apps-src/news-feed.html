@@ -75,7 +75,7 @@ h1{font-size:20px;margin:0 0 8px;flex:1}
 .manage{padding:0 16px 24px}
 .manage h2{font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:var(--dim)}
 .row{display:flex;gap:8px}
-input{flex:1;padding:10px;border:1px solid var(--line);border-radius:9px;font-size:15px;background:var(--card);color:var(--fg)}
+input{flex:1;min-width:0;padding:10px;border:1px solid var(--line);border-radius:9px;font-size:15px;background:var(--card);color:var(--fg)}
 .row button{border:0;background:var(--accent);color:#fff;border-radius:9px;padding:0 16px;font-weight:600}
 .feedrow{display:flex;align-items:center;gap:8px;padding:9px 0;font-size:14px;border-top:1px solid var(--line)}
 .feedrow .u{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--dim)}
@@ -671,14 +671,14 @@ function renderManage(){
   custom.forEach(function(c,i){
     var r=document.createElement('div');r.className='feedrow';
     r.innerHTML='<b>'+esc(c.name)+'</b><span class="u">'+esc(c.url)+'</span><button class="x" aria-label="Remove">✕</button>';
-    r.querySelector('.x').onclick=function(){custom.splice(i,1);saveCustom();renderManage();renderTabs()};
+    r.querySelector('.x').onclick=function(){custom.splice(i,1);saveCustom();active=tabs().length-1;renderManage();renderTabs()};
     F.appendChild(r);
   });
 }
 function addFeed(){
   var n=el('fname').value.trim(),u=el('furl').value.trim();
   if(!n||!/^https?:\/\//.test(u)){setStatus('Enter a name and a full feed URL (https://…).');return}
-  setStatus('');custom.push({name:n,url:u});saveCustom();renderManage();renderTabs();
+  setStatus('');custom.push({name:n,url:u});saveCustom();active=tabs().length-1;renderManage();renderTabs();
 }
 function saveCustom(){store.setItem('feeds',JSON.stringify(custom))}
 
