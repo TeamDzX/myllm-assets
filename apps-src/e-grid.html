@@ -242,6 +242,89 @@ a{color:var(--accent)}
 /* myllm-fullscreen-v2 — MyLLM 5.6.2+ opens E-Grid full screen; the ✕ beside Refresh is the way out. */
 #bar .imm-close{display:none}
 body.imm #bar .imm-close{display:grid;place-items:center}
+
+/* ---------- wide screens (Mac window, iPad): tabs become a sidebar, lists run in columns ----------
+   Hand-written: build_egrid.py only rewrites the FB block in the script, never this. */
+@media (min-width:900px){
+body{display:grid;grid-template-columns:208px minmax(0,1fr);grid-template-rows:auto minmax(0,1fr)}
+#bar{grid-column:2;grid-row:1;padding-left:28px;padding-right:max(28px,env(safe-area-inset-right))}
+#view{grid-column:2;grid-row:2;padding:22px max(28px,env(safe-area-inset-right)) calc(28px + env(safe-area-inset-bottom)) 28px}
+#tabs{grid-column:1;grid-row:1/3;flex-direction:column;gap:3px;border-top:0;border-right:1px solid var(--border);
+  padding:max(16px,calc(12px + env(safe-area-inset-top))) 10px calc(16px + env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left))}
+#tabs button{flex:none;flex-direction:row;gap:12px;min-height:44px;padding:8px 12px;border-radius:11px;
+  font-size:.88rem;letter-spacing:0;text-align:left}
+#tabs button[aria-selected=true]{background:var(--sunk)}
+.wrap{max-width:none}
+
+/* series catalogue: more, larger tiles */
+.grid{grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px;margin-bottom:14px}
+.grid .tile{min-height:150px;border-radius:16px}
+.grid .tile img{height:150px}
+.grid .tile .body{padding:12px 14px}
+.grid .tile .nm{font-size:1.02rem}
+.grid .tile .nx{font-size:.78rem}
+.grid .tile .star{top:10px;right:12px;font-size:1rem}
+
+/* every list card: rows flow into columns, ruled like a table */
+#view .card{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(330px,100%),1fr))}
+#view .card>*{grid-column:1/-1}
+#view .card>.row,#view .card>.news{grid-column:auto;border-top:0;box-shadow:1px 0 0 var(--border),0 1px 0 var(--border)}
+/* a long value wraps in its own share of the row instead of running over the label */
+#view .card>.row .right{flex:0 1 auto;max-width:60%}
+#view .card:has(>.news){grid-template-columns:repeat(auto-fill,minmax(min(400px,100%),1fr))}
+#view .card:has(>.cta){max-width:560px}
+.segs{flex-wrap:wrap;overflow:visible}
+#tsearch{display:block;max-width:440px}
+.wrap>.btn.fill{display:inline-block;width:auto;padding:12px 26px}
+
+/* heroes */
+.hero{min-height:clamp(260px,24vw,400px)}
+.hero img{height:clamp(260px,24vw,400px)}
+.hero .body{padding:20px 22px}
+.hero .title{font-size:1.9rem}
+.hero .sub{font-size:1rem}
+.wrap>div.hero{min-height:clamp(200px,17vw,300px)}
+.wrap>div.hero img{height:clamp(200px,17vw,300px)}
+.wrap>div.hero .body{padding-right:250px}
+/* Follow sits on the series banner instead of stretching under it */
+.wrap>div.hero+.btn{position:relative;z-index:1;width:auto;margin:-76px 20px 34px auto!important;padding:10px 18px;font-size:.9rem}
+.wrap>div.hero+.btn:not([style*="color:#fff"]){background:rgba(255,255,255,.2);color:#fff;-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
+/* a series calendar: the next round stays in view beside the full list */
+#segbody:has(>button.hero){display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.5fr);gap:0 20px;align-items:start}
+#segbody:has(>button.hero)>.card{grid-template-columns:repeat(auto-fill,minmax(min(420px,100%),1fr))}
+#segbody>button.hero{position:sticky;top:0}
+#segbody>button.hero,#segbody>button.hero img{min-height:300px;height:300px}
+
+/* race, track and profile sheets open as a dialog at a readable measure */
+#sheet{background:rgba(0,0,0,.52);align-items:center;justify-content:center;padding:32px;transform:none;opacity:0;
+  transition:opacity .2s ease,visibility 0s .2s}
+#sheet.open{opacity:1;transition:opacity .2s ease}
+#sheet .head,#sheetbody{width:min(680px,100%)}
+#sheet .head{padding:12px 16px;border:1px solid var(--border);border-radius:18px 18px 0 0}
+#sheetbody{flex:0 1 auto;background:var(--bg);border:1px solid var(--border);border-top:0;border-radius:0 0 18px 18px}
+#sheetbody .shot{height:280px}
+.art{padding-top:30px}
+}
+/* Home with room to spare: next race and your series on the left, what's coming up on the right */
+@media (min-width:1180px){
+.wrap:has(>button.hero):has(>h2.sec+.card):not(:has(>.notice)){display:grid;grid-template-columns:minmax(0,1.6fr) minmax(340px,1fr);
+  grid-template-rows:auto auto 1fr;column-gap:22px;align-items:start}
+.wrap:has(>button.hero):has(>h2.sec+.card):not(:has(>.notice))>*{grid-column:1/-1}
+.wrap:has(>button.hero):has(>h2.sec+.card):not(:has(>.notice))>button.hero{grid-column:1;grid-row:1}
+.wrap:has(>button.hero):has(>h2.sec+.card):not(:has(>.notice))>h2.sec{grid-column:1;grid-row:2;margin-top:8px}
+.wrap:has(>button.hero):has(>h2.sec+.card):not(:has(>.notice))>.grid{grid-column:1;grid-row:3}
+.wrap:has(>button.hero):has(>h2.sec+.card):not(:has(>.notice))>h2.sec:has(+.card){grid-column:2;grid-row:1;position:relative;z-index:1;
+  box-sizing:border-box;height:44px;margin:0;padding:14px 15px 0;line-height:18px;border-bottom:1px solid var(--border)}
+.wrap:has(>button.hero):has(>h2.sec+.card):not(:has(>.notice))>h2.sec+.card{grid-column:2;grid-row:1/4;padding-top:44px}
+}
+@media (hover:hover){
+.row[data-act]:hover,a.row:hover,.news:hover,.cta:hover{background:var(--sunk)}
+.grid .tile:hover img,button.hero:hover img{opacity:.95}
+.seg:hover{border-color:var(--muted)}
+#tabs button:hover{color:var(--text)}
+#tabs button[aria-selected=true]:hover{color:var(--accent)}
+.iconbtn:hover,.rbtn:hover{background:rgba(120,120,128,.3)}
+}
 </style>
 </head>
 <body>

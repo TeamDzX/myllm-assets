@@ -109,6 +109,51 @@ body.imm .head .imm-x{display:grid !important;place-items:center}
 .imm-x svg,.imm-acts svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round}
 .imm-safe{display:none}
 body.imm .imm-safe{display:block}
+
+/* ---------- wide screens (Mac window, iPad): watchlist on the left, the chart beside it ----------
+   "html body" on purpose: a later sheet caps body at 760px, and the sheets lock body scrolling
+   with an inline style, which the split layout must not inherit. */
+@media (min-width:900px){
+html body{--pane:clamp(360px,34vw,460px);max-width:none;width:var(--pane);margin:0;padding-top:22px;overflow:visible!important}
+html body:before{content:"";position:fixed;top:0;bottom:0;left:var(--pane);border-left:1px solid var(--border)}
+html body:after{content:"Choose a stock to see its chart";position:fixed;top:50%;left:var(--pane);right:0;transform:translateY(-50%);
+  padding:0 24px;text-align:center;font-size:15px;color:var(--muted);pointer-events:none}
+.row{margin:0 -14px;padding:12px 14px}
+.row:first-child{border-radius:calc(var(--radius) - 5px) calc(var(--radius) - 5px) 0 0}
+.row:last-child{border-radius:0 0 calc(var(--radius) - 5px) calc(var(--radius) - 5px)}
+#detail{left:var(--pane);border-left:1px solid var(--border);padding-left:0}
+#detail .bar{padding:calc(14px + env(safe-area-inset-top)) max(28px,calc(50% - 522px)) 14px;min-height:calc(67px + env(safe-area-inset-top))}
+#detail .bar .t{font-size:17px}
+#backBtn{display:none}
+#dBody{max-width:1100px;margin:0 auto;padding:26px 28px 12px}
+.big{font-size:48px}
+.dchg{font-size:16px}
+.chart{height:clamp(260px,38vh,420px);margin-top:18px}
+.chart polyline,.chart line{vector-effect:non-scaling-stroke}
+.ranges{max-width:420px;margin-top:10px}
+.ai .out{max-width:68ch}
+#search{inset:12vh 0 auto;width:min(560px,calc(100vw - 48px));max-height:70vh;margin:0 auto;padding:0 0 6px;z-index:11;
+  border:1px solid var(--border);border-radius:18px;box-shadow:0 0 0 100vmax rgba(0,0,0,.42),0 24px 60px rgba(0,0,0,.35)}
+#search .bar{padding:12px 14px}
+#search .srow:last-child{border-bottom:0}
+}
+@media (min-width:900px) and (max-width:1279px){.head p{display:none}}
+/* room for the figures beside the chart */
+@media (min-width:1280px){
+#dBody{display:grid;grid-template-columns:minmax(0,1fr) 320px;column-gap:28px;align-items:start}
+#dBody>*{grid-column:1/-1}
+#dBody>#dchart{grid-column:1;grid-row:3}
+#dBody>.ranges{grid-column:1;grid-row:4}
+#dBody>.stats{grid-column:2;grid-row:3;align-self:stretch;align-content:space-between;margin:18px 0 4px}
+#dBody>.holdings{grid-column:2;grid-row:4/6;margin-top:10px}
+#dBody>.ai{grid-column:1;grid-row:5;margin-top:4px}
+}
+@media (hover:hover) and (min-width:900px){
+.row:hover{background:rgba(128,128,128,.11)}
+.btn:not([disabled]):hover,.ranges button:not(.on):hover{border-color:var(--muted)}
+.btn.primary:hover{border-color:var(--accent);filter:brightness(1.08)}
+.btn,.row,.ranges button,.ai button.go{cursor:pointer}
+}
 </style></head><body>
 <style>
 @keyframes myllmAiSpin{to{transform:rotate(360deg)}}

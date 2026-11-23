@@ -106,6 +106,38 @@ body.imm .head .imm-x{display:grid !important;place-items:center}
 .imm-x svg,.imm-acts svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round}
 .imm-safe{display:none}
 body.imm .imm-safe{display:block}
+
+/* ---------- wide window (Mac, iPad landscape): a front page, not a column ---------- */
+@media (min-width:900px){
+  .wrap,.head,.stick{max-width:none;padding-left:max(28px,calc(50% - 880px));padding-right:max(28px,calc(50% - 880px))}
+  .head{padding-top:calc(18px + env(safe-area-inset-top));padding-bottom:6px}
+  .stick{padding-top:10px;-webkit-backdrop-filter:saturate(180%) blur(12px)}
+  .tabs{flex-wrap:wrap;overflow:visible;margin:0;padding:0 0 12px;gap:6px}
+  .tab{cursor:pointer}
+  .wrap{display:grid;grid-template-columns:repeat(auto-fill,minmax(400px,1fr));gap:14px;padding-top:8px;padding-bottom:calc(40px + env(safe-area-inset-bottom))}
+  .item{margin-bottom:0;padding:15px 16px;gap:14px;cursor:pointer}
+  .item .blurb{-webkit-line-clamp:3}
+  .thumb{width:104px;height:78px}
+  /* the lead story: two columns wide, picture first, at the feed image's own size */
+  .wrap>.item:first-child{grid-column:span 2;padding:18px;gap:20px;align-items:center}
+  .wrap>.item:first-child .thumb{order:-1;width:256px;height:144px;border-radius:11px}
+  .wrap>.item:first-child .title{font-size:25px;line-height:1.2;letter-spacing:-.01em}
+  .wrap>.item:first-child .meta{font-size:13px;margin-top:8px}
+  .wrap>.item:first-child .blurb{font-size:16px;line-height:1.45;margin-top:8px;-webkit-line-clamp:4}
+  .manage{grid-column:1/-1;width:100%;max-width:720px;margin:8px auto 0;padding:0 0 24px}
+  /* the reader keeps a book-width column however wide the window is */
+  .rbar{padding-left:max(10px,calc(50% - 480px));padding-right:max(10px,calc(50% - 480px))}
+  .art{max-width:720px;padding-top:28px;padding-bottom:calc(72px + env(safe-area-inset-bottom))}
+  .art h2{font-size:34px;line-height:1.16;margin-bottom:12px}
+  .byline{font-size:14px;margin-bottom:22px}
+  .art figure{margin:24px 0}
+}
+@media (hover:hover){
+  .item{transition:box-shadow .15s,transform .15s}
+  .item:hover{box-shadow:0 0 0 1px var(--line),0 8px 22px rgba(0,0,0,.14);transform:translateY(-1px)}
+  .tab:hover{color:var(--fg)}.tab.on:hover{color:#fff}
+  .icon:hover{opacity:1}
+}
 </style></head><body>
 
 <div class="imm-safe"></div><div class="head">

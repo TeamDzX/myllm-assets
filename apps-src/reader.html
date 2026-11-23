@@ -104,6 +104,36 @@ body.imm .head .imm-x{display:grid !important;place-items:center}
 .imm-x svg,.imm-acts svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round}
 .imm-safe{display:none}
 body.imm .imm-safe{display:block}
+
+/* Wide windows (Mac, iPad): the address bar, the question box and the AI's answer
+   become a fixed panel on the left; the article keeps its reading measure beside it. */
+@media (min-width:900px){
+  :root{ --side:clamp(300px,27vw,380px); --sat:env(safe-area-inset-top,0px); }
+  body{ max-width:none; margin:0; padding:var(--sat) 32px 0 calc(var(--side) + 32px + env(safe-area-inset-left)); }
+  body:before{ content:""; position:fixed; z-index:4; top:0; bottom:0; left:0; width:calc(var(--side) + env(safe-area-inset-left));
+    background:color-mix(in srgb, var(--surface) 45%, var(--bg)); border-right:1px solid var(--line); }
+  .imm-safe{ display:none !important; }
+  .head, .stick, .ask, .answer{ position:fixed; z-index:6; left:calc(20px + env(safe-area-inset-left)); width:calc(var(--side) - 40px); margin:0; }
+  .head{ top:calc(22px + var(--sat)); }
+  .head p{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .stick{ top:calc(88px + var(--sat)); padding:0; background:none; -webkit-backdrop-filter:none; backdrop-filter:none; }
+  .ask{ top:calc(146px + var(--sat)); bottom:auto; padding:0; background:none; -webkit-backdrop-filter:none; backdrop-filter:none; border-top:0; }
+  .ask .bar{ max-width:none; }
+  .ask .go span{ display:none; }
+  .answer{ top:calc(206px + var(--sat)); max-width:none; max-height:calc(100dvh - 228px - var(--sat) - env(safe-area-inset-bottom)); overflow-y:auto; }
+  .pad{ display:none; }
+  #status, .welcome{ max-width:720px; margin-left:auto; margin-right:auto; }
+  .welcome{ max-width:520px; margin-top:calc(50dvh - 130px); }
+  .notice{ margin-top:28px; }
+  .sk{ padding-top:36px; }
+  .content{ max-width:720px; padding:34px 4px 72px; }
+  .content .title{ font-size:34px; line-height:1.14; margin-bottom:10px; }
+  .content .src{ margin-bottom:28px; }
+  .content p, .content li{ font-size:19px; line-height:1.66; }
+  .content h2, .content h3{ font-size:23px; }
+  .myllm-ai-busy{ left:calc(50% + var(--side) / 2); }
+}
+@media (hover:hover){ .go:hover{ filter:brightness(1.08); } .field:hover{ border-color:var(--acc); } .head .imm-acts button:hover{ border-color:var(--acc); } }
 </style></head><body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
   <symbol id="i-book" viewBox="0 0 24 24"><path d="M12 6.2C10.2 4.9 7.8 4.3 4.5 4.5a1 1 0 0 0-1 1v11.8a1 1 0 0 0 1.05 1c3-.14 5.2.4 6.9 1.6.35.25.75.25 1.1 0 1.7-1.2 3.9-1.74 6.9-1.6a1 1 0 0 0 1.05-1V5.5a1 1 0 0 0-1-1c-3.3-.2-5.7.4-7.5 1.7zM11 8v9.1c-1.6-.8-3.5-1.2-5.5-1.2V6.4c2.3-.05 4 .45 5.5 1.6zm2 0c1.5-1.15 3.2-1.65 5.5-1.6v9.5c-2 0-3.9.4-5.5 1.2z"/></symbol>
@@ -139,7 +169,7 @@ return Promise.resolve(p).then(function(r){hide();return r;},function(e){hide();
 <div class="welcome" id="welcome">
   <div class="tile"><svg class="i"><use href="#i-book"/></svg></div>
   <b>Any article, without the clutter</b>
-  <p>Paste an article’s address above. The page is fetched and stripped down to clean, readable text on your phone — then you can ask your AI about it.</p>
+  <p>Paste an article’s address into the box and press Read. The page is fetched and stripped down to clean, readable text on your device — then you can ask your AI about it.</p>
 </div>
 <div class="content" id="content" hidden></div>
 <div class="answer" id="answer" hidden></div>

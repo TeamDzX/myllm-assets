@@ -139,6 +139,67 @@ body.imm .head .imm-x{display:grid !important;place-items:center}
 .imm-x svg,.imm-acts svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round}
 .imm-safe{display:none}
 body.imm .imm-safe{display:block}
+
+/* Wide windows (Mac, iPad): a sidebar with the two tabs and the publications,
+   posts as a grid of cards, and the article at its reading measure with the
+   Substack actions and the question box pinned beside it. */
+@media (min-width:900px){
+  body{max-width:none;margin:0;padding:0;height:100dvh;overflow:hidden;display:grid;
+    grid-template-columns:calc(268px + env(safe-area-inset-left)) minmax(0,1fr);grid-template-rows:auto auto auto minmax(0,1fr)}
+  body:before{content:"";grid-column:1;grid-row:1/-1;background:color-mix(in srgb,var(--surface) 45%,var(--bg));border-right:1px solid var(--border)}
+  .imm-safe{grid-column:1/-1;grid-row:1}
+  .head{grid-column:1;grid-row:2;margin:0;padding:20px 16px 18px calc(18px + env(safe-area-inset-left));gap:11px}
+  .head p{display:none}
+  .head h1{font-size:19px}
+  .head .acts,.head .imm-acts{position:absolute;top:calc(16px + env(safe-area-inset-top));right:calc(28px + env(safe-area-inset-right));z-index:3}
+  body.imm .head .acts{right:calc(76px + env(safe-area-inset-right))}
+  .seg{grid-column:1;grid-row:3;flex-direction:column;gap:3px;background:none;border-radius:0;padding:0 12px 0 calc(12px + env(safe-area-inset-left));margin:0}
+  .seg button{flex:none;text-align:left;padding:10px 12px;font-size:15px;color:var(--text);cursor:pointer}
+  .seg button.on{background:color-mix(in srgb,var(--accent) 16%,transparent);color:var(--accent);box-shadow:none}
+  #tabInbox{display:contents}
+  .pills{grid-column:1;grid-row:4;flex-direction:column;gap:2px;overflow:hidden auto;margin:18px 0 0;padding:14px 12px calc(16px + env(safe-area-inset-bottom)) calc(12px + env(safe-area-inset-left));border-top:1px solid var(--border)}
+  .pills:before{content:"Publications";flex:none;font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);padding:0 12px 8px}
+  .pill{flex:none;display:block;width:100%;text-align:left;border:0;background:none;border-radius:10px;padding:8px 12px;font-size:14px;line-height:22px;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
+  .pill img{width:22px;height:22px;border-radius:6px;vertical-align:top;margin-right:9px}
+  .pill.on{background:color-mix(in srgb,var(--text) 11%,transparent);color:var(--text)}
+  #status{grid-column:2;grid-row:2;align-self:center;text-align:left;margin:0;padding:0 150px 0 28px}
+  #artStatus{text-align:left}
+  #inbox{grid-column:2;grid-row:3/-1;overflow-y:auto;background:none;border:0;border-radius:0;padding:4px 28px calc(28px + env(safe-area-inset-bottom));
+    display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:14px;align-content:start}
+  .post,.post:first-child{border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);padding:16px;gap:14px}
+  .post .txt{display:flex;flex-direction:column}
+  .post h3{font-size:17px;margin-bottom:5px}
+  .post p{-webkit-line-clamp:3;margin-bottom:10px}
+  .post .meta{margin-top:auto}
+  .post .cover{width:92px;height:92px}
+  #inbox .empty{grid-column:1/-1;padding:18vh 8px}
+  #tabFollowing{grid-column:2;grid-row:3/-1;overflow-y:auto;padding:4px 28px calc(28px + env(safe-area-inset-bottom))}
+  #tabFollowing .card{max-width:1120px;padding:22px 24px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:auto auto 1fr;column-gap:40px}
+  #tabFollowing .card>*{grid-column:1}
+  #tabFollowing .starters{grid-column:2;grid-row:1/-1;border-left:1px solid var(--border);padding-left:40px}
+  .starters h4{margin-top:2px}
+  #tabFollowing .note{max-width:1120px;margin:14px 4px 0}
+
+  #article{display:block}
+  #article .bar{padding-left:28px;padding-right:28px}
+  .wrap{max-width:1160px;padding:30px 32px 48px;display:grid;grid-template-columns:minmax(0,720px) minmax(260px,320px);grid-template-rows:repeat(7,auto) 1fr;column-gap:56px;justify-content:center}
+  .wrap>*,#artBody>*{grid-column:1}
+  #artBody{display:contents}
+  .wrap h2.title{font-size:36px;line-height:1.14;margin:0 0 10px}
+  .wrap .subtitle{font-size:19px}
+  .wrap .byline{margin-bottom:22px}
+  .body{font-size:19px;line-height:1.66}
+  .handoff,#artBody>.ask{grid-column:2;grid-row:1/-1;align-self:start;position:sticky;margin:0}
+  .handoff{top:calc(88px + env(safe-area-inset-top));flex-direction:column;flex-wrap:nowrap;height:148px}
+  .handoff a{flex:1;min-width:0;display:flex;align-items:center;justify-content:center;gap:7px;padding:0 10px}
+  #artBody>.ask{top:calc(264px + env(safe-area-inset-top));margin-top:176px;padding-top:20px;border-top:1px solid var(--border)}
+  .ask .ans{max-height:calc(100dvh - 430px - env(safe-area-inset-top));overflow-y:auto}
+}
+@media (hover:hover){
+  .btn,.seg button,.pill,.srow button,.frow button,.handoff a{cursor:pointer}
+  .post:hover,.btn:hover,.handoff a:hover{border-color:var(--accent)}
+  .btn.primary:hover,.btn.brand:hover,.handoff a.brand:hover{filter:brightness(1.08)}
+}
 </style></head><body>
 
 <div class="imm-safe"></div><div class="head">
@@ -257,6 +318,7 @@ function fetchProfile(handle){
 }
 function fetchPub(host){
   return apiJSON('https://'+host+'/api/v1/archive?sort=new&limit=12').then(function(posts){
+    if(posts&&!Array.isArray(posts)&&Array.isArray(posts.posts))posts=posts.posts; /* the archive now answers {posts:[...]} */
     if(!Array.isArray(posts))throw new Error('Unexpected reply from '+host);
     return {meta:pubFromPosts(host,posts),posts:posts.map(function(p){return slim(host,p);})};
   });

@@ -118,6 +118,57 @@
   .disc{ font-size:12.5px; color:var(--myllm-muted,#8a8a8e); line-height:1.5; text-align:center; padding:10px 8px 0; }
   .about p{ font-size:14.5px; line-height:1.5; margin-bottom:8px; }
   .about a{ color:var(--myllm-accent,#0a84ff); text-decoration:none; font-weight:600; }
+
+  /* Wide windows (Mac, iPad): tabs become a sidebar, the catalogue runs in
+     columns and an entry opens in a panel beside it. The catalogue scrolls in
+     its own pane and the open entry scrolls the page, so the script's
+     scrollTo(0,0) starts each entry at its top and leaves the catalogue alone. */
+  @media (min-width:900px){
+    :root{ --sw:calc(236px + env(safe-area-inset-left)); --dw:clamp(380px, 36vw, 560px); }
+    body{ max-width:none; padding:0; }
+    .wrap, body.imm .wrap{ padding:0; }
+    .wrap::before{ content:""; position:fixed; left:0; top:0; bottom:0; width:var(--sw); border-right:1px solid var(--myllm-border,#e3e3e8); }
+    .head{ position:fixed; z-index:3; left:0; top:0; width:var(--sw); margin:0; gap:10px;
+      padding:calc(18px + env(safe-area-inset-top)) 14px 0 calc(14px + env(safe-area-inset-left)); }
+    .head .tile{ width:36px; height:36px; border-radius:11px; }
+    .head .tile svg{ width:20px; height:20px; }
+    .head h1{ font-size:19px; }
+    .head p{ display:none; }
+    .head .acts button{ width:34px; height:34px; border-radius:10px; }
+
+    #main{ display:block !important; position:fixed; left:var(--sw); top:0; bottom:0; right:0; overflow-y:auto; overscroll-behavior:contain;
+      padding:calc(20px + env(safe-area-inset-top)) calc(28px + env(safe-area-inset-right)) calc(32px + env(safe-area-inset-bottom)) 28px; }
+    .wrap:has(#detail:not(:empty)) #main{ right:var(--dw); padding-right:28px; }
+    .tabs{ position:fixed; z-index:3; left:0; top:calc(76px + env(safe-area-inset-top)); width:var(--sw); flex-direction:column; gap:3px;
+      background:none; border:0; border-radius:0; margin:0; padding:0 10px 0 calc(10px + env(safe-area-inset-left)); }
+    .tabs button{ flex:none; text-align:left; padding:10px 12px; font-size:14.5px; color:var(--myllm-text,#111); }
+    .tabs button.on{ background:color-mix(in srgb, var(--myllm-accent,#0a84ff) 15%, transparent); color:var(--myllm-accent,#0a84ff); }
+    .legend{ position:fixed; z-index:3; left:0; bottom:calc(18px + env(safe-area-inset-bottom)); width:var(--sw); flex-direction:column; gap:7px;
+      margin:0; padding:0 22px 0 calc(22px + env(safe-area-inset-left)); }
+
+    .search{ display:block; max-width:520px; }
+    .cats{ flex-wrap:wrap; overflow:visible; padding:12px 0 6px; }
+    .group{ display:grid; grid-template-columns:repeat(auto-fill, minmax(min(270px, 100%), 1fr)); margin:8px 0 16px; }
+    .item, .item:last-child{ min-width:0; padding:12px 14px; border-bottom:0;
+      box-shadow:1px 0 0 var(--myllm-border,#e3e3e8), 0 1px 0 var(--myllm-border,#e3e3e8); }
+    #list .go{ display:block; max-width:520px; }
+    #list .disc{ max-width:520px; text-align:left; padding-left:2px; }
+
+    #paneS{ display:grid; grid-template-columns:repeat(auto-fit, minmax(min(320px, 100%), 1fr)); gap:0 16px; align-items:start; max-width:980px; }
+    #paneS #checks, #paneS .disc{ grid-column:1 / -1; }
+    #paneA{ columns:2 340px; column-gap:16px; max-width:1100px; }
+    #paneA .card{ break-inside:avoid; }
+    #paneA .disc{ column-span:all; }
+
+    #detail{ position:relative; z-index:2; margin-left:auto; width:var(--dw); min-height:100dvh;
+      background:var(--myllm-bg,#f2f2f7); border-left:1px solid var(--myllm-border,#e3e3e8);
+      padding:calc(20px + env(safe-area-inset-top)) calc(22px + env(safe-area-inset-right)) calc(36px + env(safe-area-inset-bottom)) 22px; }
+  }
+  @media (hover:hover){
+    .item:hover{ background:color-mix(in srgb, var(--myllm-text,#111) 5%, transparent); }
+    .chip:hover, .back:hover, .head .acts button:hover{ border-color:var(--myllm-accent,#0a84ff); }
+    .tabs button:not(.on):hover{ color:var(--myllm-text,#111); }
+  }
 </style>
 </head>
 <body>

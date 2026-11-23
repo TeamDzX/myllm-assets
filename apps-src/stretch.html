@@ -145,6 +145,45 @@ body.imm .head .imm-x{display:grid !important;place-items:center}
 .imm-x svg,.imm-acts svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round}
 .imm-safe{display:none}
 body.imm .imm-safe{display:block}
+
+/* Wide windows (Mac, iPad): categories become a sidebar, the library a wider
+   card grid, and a stretch opens with its illustration beside the steps. The
+   illustration is capped near its native size so it is never blown up. */
+@media (min-width:900px){
+  :root{--sw:calc(236px + env(safe-area-inset-left))}
+  #library:before{content:"";position:fixed;left:0;top:0;bottom:0;width:var(--sw);border-right:1px solid var(--border)}
+  .lhead{position:fixed;z-index:11;left:0;top:0;width:var(--sw);max-width:none;margin:0;padding:calc(18px + env(safe-area-inset-top)) 14px 0 calc(14px + env(safe-area-inset-left))}
+  .head{margin:0;gap:10px}
+  .head .tile{width:36px;height:36px;border-radius:11px;font-size:16px}
+  .head h1{font-size:19px}
+  .head p{display:none}
+  .head .imm-acts button{width:34px;height:34px;border-radius:10px}
+  .bar{position:fixed;left:0;top:calc(76px + env(safe-area-inset-top));bottom:0;width:var(--sw);overflow-y:auto;background:none;border:0;padding:0}
+  .tabs{flex-direction:column;gap:3px;overflow:visible;padding:0 10px 16px calc(10px + env(safe-area-inset-left))}
+  .tab{height:40px;padding:0 12px;border-color:transparent;border-radius:10px;background:none;font-size:14.5px;justify-content:flex-start}
+  .tab.on{background:color-mix(in srgb,var(--accent) 15%,transparent);color:var(--accent);border-color:transparent}
+  #library .wrap{max-width:none;margin:0 0 0 var(--sw);padding:24px calc(28px + env(safe-area-inset-right)) 32px 28px}
+  .grid{grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:18px}
+  .card{display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start}
+  .card .b{padding:12px 14px 14px}
+  .empty{padding:90px 20px}
+  .disc{max-width:760px}
+
+  .dtop{padding-left:max(28px,calc(50% - 480px));padding-right:max(28px,calc(50% - 480px))}
+  .detail .wrap{max-width:1016px;padding:28px 28px 40px;display:grid;grid-template-columns:minmax(0,360px) minmax(0,1fr);grid-template-rows:repeat(8,auto) 1fr;column-gap:44px;align-items:start}
+  .detail .wrap>*{grid-column:2}
+  .detail .hero{grid-column:1;grid-row:1/-1;position:sticky;top:calc(86px + env(safe-area-inset-top));width:100%;max-height:calc(100dvh - 114px);margin:0}
+  .dname{font-size:30px;margin-bottom:10px}
+}
+@media (min-width:1500px) and (min-height:800px){
+  .dtop{padding-left:calc(50% - 560px);padding-right:calc(50% - 560px)}
+  .detail .wrap{max-width:1176px;grid-template-columns:minmax(0,440px) minmax(0,1fr);column-gap:56px;padding-top:36px}
+  .detail .hero{top:calc(94px + env(safe-area-inset-top))}
+}
+@media (hover:hover){
+  .card:hover,.dtop button:not(.on):hover,.dnav button:not(:disabled):hover,.aiBtn:not(:disabled):hover{border-color:var(--accent)}
+}
+@media (hover:hover) and (min-width:900px){.tab:not(.on):hover{border-color:transparent;background:color-mix(in srgb,var(--text) 6%,transparent)}}
 </style>
 </head>
 <body>
