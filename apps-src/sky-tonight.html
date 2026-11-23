@@ -476,8 +476,8 @@ function renderSky(){
     '<div class="kv"><span>Sunrise</span><b>' + fmtTime(sunrise) + '</b></div></div>';
 
   h += '<div class="card"><h2>ISS · live</h2><div class="iss" id="issbox"><div class="tile sat">' + icon("sat") + '</div>' +
-    '<div><b id="issline">' + (net() ? "Finding the Space Station…" : "Needs network access") + '</b>' +
-    '<small id="isssub">' + (net() ? "" : "Turn on app network access in Settings to track it.") + '</small></div></div></div>';
+    '<div><b id="issline">' + (net() ? "Finding the Space Station…" : "Live tracking is off") + '</b>' +
+    '<small id="isssub">' + (net() ? "" : "This card is the only part that needs the internet. To use it, turn on network access for apps in Settings.") + '</small></div></div></div>';
   h += '</div><div>';
 
   h += '<div class="card"><h2>Planets this evening</h2>' +
@@ -517,8 +517,9 @@ function pollIss(){
       Math.abs(j.longitude).toFixed(0) + "°" + ew + " at 27,500 km/h — currently " + vis +
       ". It laps the Earth every 92 minutes.";
   }).catch(function(){
-    var line = el("issline");
-    if (line) line.textContent = "Couldn't reach the ISS tracker";
+    var line = el("issline"), sub = el("isssub");
+    if (line) line.textContent = "Can't reach the tracker";
+    if (sub) sub.textContent = "This card needs the internet. Everything else here works without it.";
   });
 }
 
@@ -585,6 +586,12 @@ function findPlace(){
     store().setItem("obs", JSON.stringify(obs));
     renderSky(); haptic("success");
   };
+  /* one answer only: a search that hangs with no connection gives way to
+     the built-in list after a few seconds */
+  var settled = false, inner = done;
+  done = function(lat, lon, label){ if (settled) return; settled = true; inner(lat, lon, label); };
+  var known = localPlace(q);
+  if (known) setTimeout(function(){ done(known.lat, known.lon, known.label); }, 4000);
   if (loc() && loc().search){
     loc().search(q, {limit:1}).then(function(res){
       if (res && res.length) done(res[0].latitude, res[0].longitude, res[0].name || q);
@@ -592,17 +599,40 @@ function findPlace(){
     }).catch(function(){ geoFallback(q, done); });
   } else geoFallback(q, done);
 }
+/* A short built-in list of large cities, so a place name still works with no
+   connection. Online search is tried first: it knows far more places. */
+var CITIES = "London,GB,51.51,-0.13;Birmingham,GB,52.48,-1.90;Manchester,GB,53.48,-2.24;Leeds,GB,53.80,-1.55;Liverpool,GB,53.41,-2.98;Sheffield,GB,53.38,-1.47;Bristol,GB,51.45,-2.59;Newcastle,GB,54.98,-1.61;Nottingham,GB,52.95,-1.15;Leicester,GB,52.64,-1.13;Coventry,GB,52.41,-1.51;Hull,GB,53.74,-0.34;Southampton,GB,50.90,-1.40;Portsmouth,GB,50.82,-1.09;Bournemouth,GB,50.72,-1.88;Brighton,GB,50.82,-0.14;Plymouth,GB,50.38,-4.14;Exeter,GB,50.72,-3.53;Truro,GB,50.26,-5.05;Bath,GB,51.38,-2.36;Oxford,GB,51.75,-1.26;Cambridge,GB,52.21,0.12;Norwich,GB,52.63,1.30;York,GB,53.96,-1.08;Cardiff,GB,51.48,-3.18;Swansea,GB,51.62,-3.94;Edinburgh,GB,55.95,-3.19;Glasgow,GB,55.86,-4.25;Aberdeen,GB,57.15,-2.09;Dundee,GB,56.46,-2.97;Inverness,GB,57.48,-4.22;Belfast,GB,54.60,-5.93;Derry,GB,55.00,-7.31;Dublin,IE,53.35,-6.26;Cork,IE,51.90,-8.47;Galway,IE,53.27,-9.05;Limerick,IE,52.66,-8.63;Paris,FR,48.86,2.35;Lyon,FR,45.76,4.84;Marseille,FR,43.30,5.37;Toulouse,FR,43.60,1.44;Nice,FR,43.70,7.27;Bordeaux,FR,44.84,-0.58;Berlin,DE,52.52,13.40;Hamburg,DE,53.55,9.99;Munich,DE,48.14,11.58;Cologne,DE,50.94,6.96;Frankfurt,DE,50.11,8.68;Stuttgart,DE,48.78,9.18;Madrid,ES,40.42,-3.70;Barcelona,ES,41.39,2.17;Valencia,ES,39.47,-0.38;Seville,ES,37.39,-5.98;Malaga,ES,36.72,-4.42;Lisbon,PT,38.72,-9.14;Porto,PT,41.15,-8.61;Rome,IT,41.90,12.50;Milan,IT,45.46,9.19;Naples,IT,40.85,14.27;Turin,IT,45.07,7.69;Florence,IT,43.77,11.26;Venice,IT,45.44,12.32;Amsterdam,NL,52.37,4.90;Rotterdam,NL,51.92,4.48;Brussels,BE,50.85,4.35;Luxembourg,LU,49.61,6.13;Zurich,CH,47.38,8.54;Geneva,CH,46.20,6.14;Bern,CH,46.95,7.45;Vienna,AT,48.21,16.37;Prague,CZ,50.08,14.44;Warsaw,PL,52.23,21.01;Krakow,PL,50.06,19.94;Budapest,HU,47.50,19.04;Bucharest,RO,44.43,26.10;Sofia,BG,42.70,23.32;Athens,GR,37.98,23.73;Belgrade,RS,44.79,20.45;Zagreb,HR,45.81,15.98;Ljubljana,SI,46.06,14.51;Bratislava,SK,48.15,17.11;Copenhagen,DK,55.68,12.57;Stockholm,SE,59.33,18.07;Gothenburg,SE,57.71,11.97;Oslo,NO,59.91,10.75;Bergen,NO,60.39,5.32;Tromso,NO,69.65,18.96;Helsinki,FI,60.17,24.94;Reykjavik,IS,64.15,-21.94;Tallinn,EE,59.44,24.75;Riga,LV,56.95,24.11;Vilnius,LT,54.69,25.28;Kyiv,UA,50.45,30.52;Moscow,RU,55.76,37.62;Saint Petersburg,RU,59.93,30.34;Istanbul,TR,41.01,28.98;Ankara,TR,39.93,32.86;Valletta,MT,35.90,14.51;Nicosia,CY,35.17,33.36;New York,US,40.71,-74.01;Los Angeles,US,34.05,-118.24;Chicago,US,41.88,-87.63;Houston,US,29.76,-95.37;Phoenix,US,33.45,-112.07;Philadelphia,US,39.95,-75.17;San Antonio,US,29.42,-98.49;San Diego,US,32.72,-117.16;Dallas,US,32.78,-96.80;San Francisco,US,37.77,-122.42;Seattle,US,47.61,-122.33;Denver,US,39.74,-104.99;Boston,US,42.36,-71.06;Washington,US,38.91,-77.04;Miami,US,25.76,-80.19;Atlanta,US,33.75,-84.39;Las Vegas,US,36.17,-115.14;Portland,US,45.52,-122.68;Austin,US,30.27,-97.74;Minneapolis,US,44.98,-93.27;Detroit,US,42.33,-83.05;Honolulu,US,21.31,-157.86;Anchorage,US,61.22,-149.90;Toronto,CA,43.65,-79.38;Montreal,CA,45.50,-73.57;Vancouver,CA,49.28,-123.12;Calgary,CA,51.05,-114.07;Ottawa,CA,45.42,-75.70;Mexico City,MX,19.43,-99.13;Havana,CU,23.11,-82.37;Bogota,CO,4.71,-74.07;Lima,PE,-12.05,-77.04;Quito,EC,-0.18,-78.47;Caracas,VE,10.48,-66.90;Santiago,CL,-33.45,-70.67;Buenos Aires,AR,-34.60,-58.38;Montevideo,UY,-34.90,-56.16;Sao Paulo,BR,-23.55,-46.63;Rio de Janeiro,BR,-22.91,-43.17;Brasilia,BR,-15.79,-47.88;Cairo,EG,30.04,31.24;Lagos,NG,6.52,3.38;Nairobi,KE,-1.29,36.82;Addis Ababa,ET,9.03,38.74;Johannesburg,ZA,-26.20,28.05;Cape Town,ZA,-33.92,18.42;Accra,GH,5.60,-0.19;Casablanca,MA,33.57,-7.59;Marrakesh,MA,31.63,-7.99;Tunis,TN,36.81,10.18;Algiers,DZ,36.75,3.06;Dakar,SN,14.72,-17.47;Kinshasa,CD,-4.32,15.31;Dar es Salaam,TZ,-6.79,39.21;Tel Aviv,IL,32.09,34.78;Jerusalem,IL,31.77,35.21;Dubai,AE,25.20,55.27;Abu Dhabi,AE,24.45,54.38;Doha,QA,25.29,51.53;Riyadh,SA,24.71,46.68;Tehran,IR,35.69,51.39;Baghdad,IQ,33.31,44.37;Amman,JO,31.95,35.93;Beirut,LB,33.89,35.50;Delhi,IN,28.61,77.21;Mumbai,IN,19.08,72.88;Bengaluru,IN,12.97,77.59;Bangalore,IN,12.97,77.59;Kolkata,IN,22.57,88.36;Chennai,IN,13.08,80.27;Hyderabad,IN,17.39,78.49;Karachi,PK,24.86,67.01;Lahore,PK,31.55,74.34;Islamabad,PK,33.68,73.05;Dhaka,BD,23.81,90.41;Colombo,LK,6.93,79.86;Kathmandu,NP,27.72,85.32;Beijing,CN,39.90,116.41;Shanghai,CN,31.23,121.47;Guangzhou,CN,23.13,113.26;Shenzhen,CN,22.54,114.06;Chengdu,CN,30.57,104.07;Hong Kong,HK,22.32,114.17;Taipei,TW,25.03,121.57;Tokyo,JP,35.68,139.69;Osaka,JP,34.69,135.50;Kyoto,JP,35.01,135.77;Sapporo,JP,43.06,141.35;Seoul,KR,37.57,126.98;Busan,KR,35.18,129.08;Bangkok,TH,13.76,100.50;Hanoi,VN,21.03,105.85;Ho Chi Minh City,VN,10.82,106.63;Singapore,SG,1.35,103.82;Kuala Lumpur,MY,3.14,101.69;Jakarta,ID,-6.21,106.85;Manila,PH,14.60,120.98;Tashkent,UZ,41.30,69.24;Almaty,KZ,43.24,76.89;Sydney,AU,-33.87,151.21;Melbourne,AU,-37.81,144.96;Brisbane,AU,-27.47,153.03;Perth,AU,-31.95,115.86;Adelaide,AU,-34.93,138.60;Canberra,AU,-35.28,149.13;Hobart,AU,-42.88,147.33;Darwin,AU,-12.46,130.84;Auckland,NZ,-36.85,174.76;Wellington,NZ,-41.29,174.78;Christchurch,NZ,-43.53,172.64";
+function plain(t){
+  t = String(t).toLowerCase();
+  try { t = t.normalize("NFD").replace(/[\u0300-\u036f]/g, ""); } catch(e){}
+  return t.replace(/[^a-z ]+/g, " ").replace(/\s+/g, " ").trim();
+}
+function localPlace(q){
+  var want = plain(String(q).split(",")[0]);
+  if (want.length < 3) return null;
+  var rows = CITIES.split(";"), near = null;
+  for (var i = 0; i < rows.length; i++){
+    var c = rows[i].split(","), n = plain(c[0]);
+    var hit = {lat:parseFloat(c[2]), lon:parseFloat(c[3]), label:c[0] + ", " + c[1]};
+    if (n === want) return hit;
+    if (!near && n.indexOf(want) === 0) near = hit;
+  }
+  return near;
+}
+function offlineFind(q, done){
+  var p = localPlace(q);
+  if (p) done(p.lat, p.lon, p.label);
+  else el("setupnote").textContent = "Without a connection only large cities can be found. Try the nearest one, or \"lat, lon\" (e.g. 51.45, -2.59).";
+}
 function geoFallback(q, done){
-  if (!net()){ el("setupnote").textContent = "Couldn't find that — try \"lat, lon\" (e.g. 51.45, -2.59)."; return; }
+  if (!net()){ offlineFind(q, done); return; }
   net()("https://geocoding-api.open-meteo.com/v1/search?count=1&name=" + encodeURIComponent(q)).then(function(r){
     var j = JSON.parse(r.body);
     if (j.results && j.results.length){
       var p = j.results[0];
       done(p.latitude, p.longitude, p.name + (p.country_code ? ", " + p.country_code : ""));
     } else el("setupnote").textContent = "Couldn't find that place — try another spelling.";
-  }).catch(function(){
-    el("setupnote").textContent = "Couldn't search just now — try \"lat, lon\" instead.";
-  });
+  }).catch(function(){ offlineFind(q, done); });
 }
 function changeLoc(){ haptic("light"); setupUI(); }
 
