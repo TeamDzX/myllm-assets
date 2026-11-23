@@ -222,6 +222,8 @@ body.imm .imm-safe{display:block}
   <symbol id="i-person" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4.2" fill="currentColor"/><path d="M4 20.2c0-4.1 3.6-6.6 8-6.6s8 2.5 8 6.6a.8.8 0 0 1-.8.8H4.8a.8.8 0 0 1-.8-.8z" fill="currentColor"/></symbol>
   <symbol id="i-cal" viewBox="0 0 24 24"><path d="M7 2.8a1 1 0 0 1 1 1V5h8V3.8a1 1 0 0 1 2 0V5h.5A2.5 2.5 0 0 1 21 7.5v11a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 18.5v-11A2.5 2.5 0 0 1 5.5 5H6V3.8a1 1 0 0 1 1-1zM5 10.2v8.3c0 .3.2.5.5.5h13c.3 0 .5-.2.5-.5v-8.3z" fill="currentColor"/></symbol>
   <symbol id="i-spark" viewBox="0 0 24 24"><path d="M10 2.5l1.9 5.6 5.6 1.9-5.6 1.9L10 17.5l-1.9-5.6L2.5 10l5.6-1.9zM18.5 14l.95 2.55L22 17.5l-2.55.95L18.5 21l-.95-2.55L15 17.5l2.55-.95z" fill="currentColor"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M12 11v6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><circle cx="12" cy="7.6" r="1.4" fill="currentColor"/></symbol>
+  <symbol id="i-warn" viewBox="0 0 24 24"><path d="M12 3.6l9.2 16.2H2.8z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><path d="M12 10v4.6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><circle cx="12" cy="17.3" r="1.3" fill="currentColor"/></symbol>
   <symbol id="i-list" viewBox="0 0 24 24"><path d="M4.5 7.2l1.7 1.7 3-3.4M4.5 15.2l1.7 1.7 3-3.4M13 7.5h7M13 15.5h7" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/></symbol>
 </defs></svg>
 <script>
@@ -360,7 +362,7 @@ function render(){
     sk.innerHTML = [72, 54, 64].map(function(w){ return '<div class="row"><div class="ck"></div><div class="body"><div class="skel" style="width:' + w + '%"></div><div class="skel" style="width:' + (w - 34) + '%;height:10px"></div></div></div>'; }).join("");
     L.appendChild(sk);
   }
-  if (!items.length){ if (!busy) L.innerHTML = '<div class="card">' + emptyState("list", "No action items yet. Paste some notes above, or add one by hand.", "Add an item", "manual") + '</div>'; return; }
+  if (!items.length){ if (!busy) L.innerHTML = '<div class="card">' + emptyState("list", "No action items yet. Paste some meeting notes, or add one by hand.", "Add an item", "manual") + '</div>'; return; }
   var card = document.createElement("div"); card.className = "card list";
   card.innerHTML = '<div class="thead" aria-hidden="true"><span></span><span>Action</span><span>Owner</span><span>Due</span><span></span></div>'; /* column heads, wide layout only */
   items.forEach(function(it){

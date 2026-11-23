@@ -221,7 +221,7 @@ function shiftMonth(k, by){ var y = +k.slice(0, 4), m = +k.slice(5, 7) - 1 + by;
 function monthName(k, short){ var d = new Date(+k.slice(0, 4), +k.slice(5, 7) - 1, 1); return d.toLocaleDateString(undefined, short ? { month: 'short' } : { month: 'long', year: 'numeric' }); }
 function merchantKey(m){ return String(m || '').trim().toLowerCase(); }
 function catOf(r){ return r.category || settings.cats[merchantKey(r.merchant)] || null; }
-function money(n, cur){ var v = Math.abs(n) >= 1000 ? n.toFixed(0) : n.toFixed(2); return (cur || '') + v; }
+function money(n, cur){ var v = Math.abs(n) >= 1000 ? Math.round(n).toLocaleString('en-GB') : n.toFixed(2); return (cur || '') + v; }
 
 /* The currency most receipts use is the "main" one; the budget is in it.
    Others are shown separately rather than added up with the wrong unit. */
@@ -352,6 +352,7 @@ function catColor(c){ return c === 'Uncategorised' ? 'var(--fill)' : 'hsl(' + (C
 /* ---- the small sheet: budget amount, or a place's category ---- */
 var sheetDone = null;
 function openSheet(o){
+  el('shIn').hidden = false; el('shOk').hidden = false; el('shNo').textContent = 'Cancel';   /* undo the note-only form, however it was closed */
   el('shT').textContent = o.title; el('shP').textContent = o.text || '';
   el('shChips').innerHTML = (o.chips || []).map(function(c){ return '<button type="button" class="' + (c === o.selected ? 'on' : '') + '">' + esc(c) + '</button>'; }).join('');
   el('shChips').hidden = !o.chips;
@@ -386,8 +387,6 @@ el('places').addEventListener('click', function(e){
 el('catHelp').onclick = function(){
   openSheet({ title: 'Categories', text: 'Tap the tag next to a place under “Top places” to choose its category. It applies to every receipt from that place, so you only do it once.', done: null });
   el('shIn').hidden = true; el('shNo').textContent = 'OK'; el('shOk').hidden = true;
-  var restore = function(){ el('shIn').hidden = false; el('shNo').textContent = 'Cancel'; el('shOk').hidden = false; el('shNo').removeEventListener('click', restore); };
-  el('shNo').addEventListener('click', restore);
 };
 el('prevM').onclick = function(){ view = shiftMonth(view, -1); haptic('selection'); render(); };
 el('nextM').onclick = function(){ if (view < thisMonth()){ view = shiftMonth(view, 1); haptic('selection'); render(); } };
