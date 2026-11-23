@@ -78,6 +78,31 @@ pre{position:relative;background:var(--code);color:var(--codeink);font-family:va
 .sheet h3{font-size:18px;margin-bottom:10px}
 .leg{display:grid;grid-template-columns:auto 1fr;gap:9px 12px;align-items:center;font-size:14.5px}
 .sheet p{font-size:13.5px;color:var(--dim);margin-top:12px}
+/* wide screens (Mac window, iPad): sidebar nav, search bar across the top, entries in columns */
+@media (min-width:900px){
+#app{max-width:none;display:grid;grid-template-columns:212px minmax(0,1fr);grid-template-rows:auto minmax(0,1fr)}
+header{grid-column:2;grid-row:1;display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;padding:calc(16px + var(--sat)) 28px 10px}
+.top{display:contents}
+.top h1{display:none}
+#q{order:1;flex:1 1 320px;max-width:560px}
+.hb{order:2;margin-left:auto}
+#chips{order:3;flex:1 0 100%;flex-wrap:wrap;overflow:visible;padding:2px 0 0}
+main{grid-column:2;grid-row:2;padding:4px 28px 32px}
+nav{grid-column:1;grid-row:1/3;flex-direction:column;gap:3px;overflow-y:auto;border-top:0;border-right:1px solid var(--line);padding:calc(16px + var(--sat)) 10px calc(16px + var(--sab))}
+nav:before{content:"Mac Shortcuts";flex:none;font-size:19px;font-weight:800;letter-spacing:-.01em;padding:6px 10px 16px}
+nav button{flex:none;display:flex;align-items:center;gap:11px;min-height:42px;padding:8px 10px;font-size:14px;font-weight:650;letter-spacing:0;text-align:left}
+nav button svg{margin:0;flex:none;width:20px;height:20px}
+nav button.on{background:var(--accbg)}
+.grp{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));grid-auto-flow:dense}
+.it,.it:last-child{border-bottom:0;box-shadow:1px 0 0 var(--line),0 1px 0 var(--line)}
+.how.open{grid-column:1/-1}
+.how .more{max-width:760px}
+#quiz{max-width:760px;margin:0 auto}
+#opts{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
+.sheet{align-items:center}
+.sheet .in{max-width:560px;max-height:80%;border-radius:18px;padding-bottom:18px}
+}
+@media (hover:hover){nav button:hover,.chip:hover,.ib:hover{border-color:var(--acc)}nav button:hover{background:var(--panel2)}nav button.on:hover{background:var(--accbg)}}
 .hidden{display:none!important}
 </style>
 </head>
