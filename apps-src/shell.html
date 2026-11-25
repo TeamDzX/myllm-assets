@@ -264,7 +264,7 @@ var batchId = null;      /* set while an approved batch runs, so undo reverses a
 var batchWhy = '';       /* v15: the reason given for that batch, kept in the log */
 var RC = '.shellrc';     /* optional startup script, in the workspace root */
 var ASK_MAX = 8000;      /* how much material one `ask` may carry; a small on-device model has a small window */
-var VERBS = ['ls','tree','cat','head','tail','sed','stat','find','grep','diff','jq','wc','sort','uniq','cut','tr','paste','comm','awk','xargs','man','changes','preview','date','info','scratch','versions','history','du','ask','dictate','open','share','mkdir','mv','cp','write','replace','edit','rm','rmdir','undo','log','revert','trash','restore','alias','unalias','mark','cd','pwd','clear','help'];
+var VERBS = ['ls','tree','cat','head','tail','sed','stat','find','grep','diff','jq','wc','sort','uniq','cut','tr','paste','comm','awk','xargs','man','changes','preview','date','info','scratch','versions','history','du','ask','dictate','open','share','mkdir','mv','cp','write','replace','edit','rm','rmdir','undo','log','revert','trash','restore','alias','unalias','mark','sh','cd','pwd','clear','help'];
 var KNOWN = VERBS.concat(['dir']);   /* everything the switch below answers to */
 function inTrash(path){ return path === TRASH || path.indexOf(TRASH + '/') === 0; }
 /* v12 (#9): the assistant's scratch space. Hidden like .trash, always at the
@@ -366,6 +366,9 @@ var HELP = [
   ['… | xargs head -n 3', 'run a command on piped paths'],
   ['du', 'space used per folder'],
   ['check apps/<app>.html', 'open a saved app unseen, report errors'],
+  '',
+  ['a ; b   a && b', 'one after another / only if a worked'],
+  ['sh <path>', 'run a file of commands (asks first)'],
   '',
   ['ask "<question>"', 'ask MyLLM; pipe a file in to work on it'],
   ['dictate', 'speak instead of typing'],
@@ -477,8 +480,12 @@ function haptic(k){ try{ window.myllmHaptic && myllmHaptic(k); }catch(e){} }
 
 /* ---------- helpers that mirror the tool ---------- */
 
-function tokenize(s){
-  var outv = [], cur = '', q = null;
+/* v17: every word with where it ends in the line, so a command that takes
+   free text after a path (write) can find that text however the path was
+   quoted. Outside quotes "\ " is a space that does not end the word. */
+function tokenSpans(s){
+  var outv = [], cur = '', q = null, open = false;
+  var push = function(end){ if (cur || open){ outv.push({ text: cur, end: end }); } cur = ''; open = false; };
   /* grep/edit/replace: a /regex/ word may hold spaces (/todo \w+/). Only a
      span with no other / in it, so two paths are never glued together. */
   var rxVerb = /^\s*(grep|edit|replace)\b/i.test(s);
@@ -501,13 +508,15 @@ function tokenize(s){
         continue;
       }
     }
+    if (c === '\\' && s[i+1] === ' '){ cur += ' '; i++; continue; }
     if (c === '"' || c === "'"){ q = c; }
-    else if (c === ' '){ if (cur){ outv.push(cur); cur = ''; } }
+    else if (c === ' '){ push(i); }
     else cur += c;
   }
-  if (cur) outv.push(cur);
+  push(s.length);
   return outv;
 }
+function tokenize(s){ return tokenSpans(s).map(function(t){ return t.text; }); }
 
 function normalise(p){
   var s = String(p||'').trim();
@@ -586,6 +595,70 @@ function expandAlias(stage){
   return aliases[first] + (rest ? ' ' + rest : '');
 }
 
+/* v17: `a ; b`, `a && b` and line breaks. Quotes, {…} (awk) and a /regex/
+   word keep their ; — the same care splitPipeline takes with |. Each part
+   says what came before it: '' for the first, then ';' or '&&'. */
+function splitCommands(line){
+  var parts = [], cur = '', q = null, depth = 0, op = '';
+  var text = String(line || '');
+  var cut = function(next){ if (cur.trim()) parts.push({ cmd: cur.trim(), op: op }); cur = ''; op = next; };
+  for (var i = 0; i < text.length; i++){
+    var c = text.charAt(i);
+    if (q){ cur += c; if (c === '\\' && text.charAt(i + 1) === q){ cur += q; i++; } else if (c === q) q = null; continue; }
+    if (c === '"' || c === "'"){ q = c; cur += c; continue; }
+    if (c === '/' && (!cur.length || /\s$/.test(cur))){
+      var close = -1;
+      for (var j = i + 1; j < text.length; j++){
+        if (text.charAt(j) === '\\'){ j++; continue; }
+        if (text.charAt(j) === '/' && (j + 1 === text.length || /\s/.test(text.charAt(j + 1)))){ close = j; break; }
+      }
+      if (close > i + 1 && /[;&]/.test(text.slice(i + 1, close))){ cur += text.slice(i, close + 1); i = close; continue; }
+    }
+    if (c === '{'){ depth++; cur += c; continue; }
+    if (c === '}'){ if (depth) depth--; cur += c; continue; }
+    if (!depth && (c === ';' || c === '\n' || c === '\r')){ cut(';'); continue; }
+    if (!depth && c === '&' && text.charAt(i + 1) === '&'){ cut('&&'); i++; continue; }
+    cur += c;
+  }
+  cut('');
+  return parts;
+}
+/* The commands whose last argument is free text: "write list.md milk; eggs"
+   is one command, and has been since v1. */
+var FREE_TEXT = ['write', 'ask', 'alias', 'replace', 'edit'];
+async function runSeq(line){
+  var parts = isCommandLine(line) ? splitCommands(line) : [];
+  if (parts.length < 2) return runLine(line);
+  for (var i = 0; i < parts.length; i++){
+    if (isCommandLine(parts[i].cmd)) continue;
+    var v0 = (tokenize(expandAlias(parts[0].cmd))[0] || '').toLowerCase();
+    if (FREE_TEXT.indexOf(v0) >= 0) return runLine(line);
+    return print('part ' + (i + 1) + ' (' + parts[i].cmd + ') is not a command:  ;  and  &&  run commands one after another. Put text that holds one in quotes.', 'err');
+  }
+  var failed = false, anyFailed = false;
+  for (var k = 0; k < parts.length; k++){
+    if (parts[k].op === '&&' && failed){ print('skipped  ' + parts[k].cmd + '  — the command before && failed', 'dim'); continue; }
+    await captureOf(function(){ return runLine(parts[k].cmd); }, false);
+    failed = lastCaptureError; anyFailed = anyFailed || failed;
+    if (pending && k < parts.length - 1){ print('waiting for your answer — the ' + (parts.length - 1 - k) + ' command(s) after it did not run', 'dim'); break; }
+  }
+  /* For whoever is watching this line as a whole (a batch, the assistant). */
+  if (anyFailed && capture !== null) captureHadError = true;
+}
+/* A pasted block or a script: listed first, run on y — the same one-approval,
+   one-undo batch the assistant's proposals use. */
+function queueLines(lines, what){
+  lines = lines.slice(0, 50);
+  print(what + ' — ' + lines.length + ' command' + (lines.length === 1 ? '' : 's') + ':', 'propose');
+  lines.forEach(function(l, i){ print('  ' + (i + 1) + '. ' + l, 'propose'); });
+  print('run ' + (lines.length === 1 ? 'it' : 'them in order') + '? type  y  — it stops at the first error, and one  undo  reverses the lot', 'propose');
+  pending = { verb: 'batch', lines: lines, why: what };
+  pendingMemo = null;
+}
+function scriptLines(text){
+  return String(text || '').split(/\r\n|\r|\n/).map(function(l){ return l.trim(); }).filter(function(l){ return l && l.charAt(0) !== '#'; });
+}
+
 /* Only a line that STARTS with a command is parsed as a pipeline. "which files
    are > 1 kB?" is a sentence, and splitting it on the > would quietly eat it. */
 function isCommandLine(line){
@@ -599,6 +672,7 @@ function isCommandLine(line){
    without anyone typing y — the agent, and .shellrc at launch — so a redirect
    has to count as a mutation here even though every verb in it is read-only. */
 function unsafeReason(line, allowed){
+  if (splitCommands(line).length > 1) return 'one command per step here: ; and && are not run unattended (put a pattern that holds one in quotes)';
   var pl = splitPipeline(line);
   if (pl.redirect) return 'writing to a file with > or >> is a change — propose it instead';
   if (!pl.stages.length) return 'empty command';
@@ -899,6 +973,7 @@ var MAN = {
   restore: ['restore [-f] <path>  from .trash back to where it was'],
   alias: ['alias  list   alias ll "ls -l"  make one   unalias ll  remove'],
   unalias: ['unalias <name>'],
+  sh: ['sh <path>  — run a file of commands, one per line (blank lines and # lines are skipped)', 'it lists them first and runs on  y ; it stops at the first error and one  undo  reverses the lot', 'a ; b  runs b after a   ·   a && b  runs b only if a worked'],
   mark: ['mark  list   mark work [path]  save here (or path) as @work   mark -d work', 'use @work anywhere a path goes: cd @work, ls @work/reports'],
   cd: ['cd <path>   cd ..   cd /   cd -  (previous folder)   cd @mark'],
   pwd: ['pwd  where you are'],
@@ -913,6 +988,12 @@ var MAN = {
   check: ['check apps/<app>.html  open a saved app out of sight and report errors (with line numbers) or a blank screen', 'apps/ holds your saved MyLLMos apps (MyLLM 5.9.7+): read, grep, edit, replace, undo, versions, revert — create, delete and rename stay in MyLLMos']
 };
 var CHANGES = [
+  'Shell v17 (25 Nov 2026)',
+  '  paste several lines: Shell lists them and runs them in order on  y  (they used to run as one)',
+  '  a ; b  and  a && b  run commands one after another · sh <path> runs a file of commands',
+  '  write "my notes/list.md" "text" no longer leaves a stray quote in the file',
+  '  my\\ notes  works as well as "my notes" · alias ll="ls -R"',
+  '  the assistant is stopped from running the same command twice in one question',
   'Shell v16 (13 Oct 2026)',
   '  apps/: your saved MyLLMos apps as files (MyLLM 5.9.7+) — read a slice, grep -n, edit, replace,',
   '  undo, versions and revert work on them · check apps/<app> opens one out of sight and reports errors',
@@ -1211,7 +1292,11 @@ async function planEdit(line){
   if (!path) return { err: verb + ' needs a path' };
   var prev = await files.read(path);
   if (verb === 'write'){
-    var body = line.slice(line.indexOf(o.ops[0]) + o.ops[0].length).trim();
+    /* v17: after the path as it was typed. Looking for the path's text left
+       the closing quote of "my notes/list.md" at the front of the file. */
+    var wSpans = tokenSpans(line), wAt = -1;
+    for (var wi = 1; wi < wSpans.length; wi++) if (wSpans[wi].text === o.ops[0]){ wAt = wSpans[wi].end; break; }
+    var body = (wAt >= 0 ? line.slice(wAt) : line.slice(line.indexOf(o.ops[0]) + o.ops[0].length)).trim();
     /* write x "the text" — one quoted text loses its quotes (and \" inside). */
     var q0 = body.charAt(0);
     if ((q0 === '"' || q0 === "'") && body.length > 1 && body.charAt(body.length - 1) === q0 && body.slice(1, -1).indexOf(q0) < 0) body = body.slice(1, -1);
@@ -2033,6 +2118,18 @@ async function run(line){
       return print('shared ' + sName, 'ok');
     }
 
+    case 'sh': {
+      if (!ops.length) return print('sh <path>  — runs a file of commands, one per line', 'err');
+      var shText = await files.read(target);
+      if (shText == null) return print('No such file: ' + target, 'err');
+      var shLines = scriptLines(shText);
+      if (!shLines.length) return print(target + ' has no commands in it', 'dim');
+      for (var shi = 0; shi < shLines.length; shi++)
+        if (!isCommandLine(shLines[shi])) return print('line ' + (shi + 1) + ' of ' + target + ' is not a command: ' + shLines[shi].slice(0, 60) + '   (help  lists the commands)', 'err');
+      if (shLines.length > 50) print('only the first 50 lines will run', 'dim');
+      return queueLines(shLines, 'sh ' + target);
+    }
+
     case 'alias': {
       var aRest = restOf(line);
       if (!aRest){
@@ -2040,8 +2137,10 @@ async function run(line){
         if (!names.length) return print('no aliases yet — e.g.  alias ll "ls -R"', 'dim');
         return print(names.map(function(k){ return k + '\t' + aliases[k]; }).join('\n'));
       }
-      var aName = (tokenize(aRest)[0] || '').toLowerCase();
-      var aBody = unquote(restOf(aRest));
+      /* v17: alias ll=ls -R  and  alias ll="ls -R"  as well as  alias ll "ls -R". */
+      var aEq = /^([A-Za-z0-9_.-]+)=(.*)$/.exec(aRest);
+      var aName = (aEq ? aEq[1] : (tokenize(aRest)[0] || '')).toLowerCase();
+      var aBody = unquote(aEq ? aEq[2] : restOf(aRest));
       if (!aBody) return print(aliases[aName] ? aName + '\t' + aliases[aName] : 'no alias ' + aName, aliases[aName] ? '' : 'dim');
       if (KNOWN.indexOf(aName) >= 0) return print(aName + ' is already a command — pick another name', 'err');
       aliases[aName] = aBody; saveAliases();
@@ -2660,6 +2759,7 @@ async function agent(question){
      their output; older ones shrink to the command, so the request stays
      inside the phone's window however many steps it takes. */
   var looks = [];
+  var tried = {}, repeats = 0;
   var transcriptOf = function(){
     return opening + looks.map(function(l, k){
       return '\n\n' + (small && k < looks.length - 2 ? l.head + '\n(output read earlier)' : l.head + (l.body ? '\n' + l.body : ''));
@@ -2723,10 +2823,28 @@ async function agent(question){
           /* Every stage, not just the first verb — and a redirect turns a pipeline
              of read-only commands into a write, which is exactly the hole worth
              closing before the model finds it. */
-          var why2 = scratchOnly(cmd) ? null : unsafeReason(cmd, AGENT_OK);
+          /* v17: the same command in the same folder gives the same answer.
+             A small model that has lost its place will ask for it again and
+             again until the steps run out, so it is told instead of obeyed. */
+          var tKey = cwd + '\u0001' + cmd, before = tried[tKey];
+          if (before){
+            repeats++;
+            print('not run again: ' + cmd, 'dim');
+            if (repeats >= 3){
+              print('Stopped: MyLLM kept asking for a command it had already run. Ask again in other words, or run it yourself.', 'dim');
+              memo.said = '(stopped: it kept repeating a command)';
+              return;
+            }
+            looks.push({ head: 'Assistant tried again: ' + cmd, body: '[status: not run — you already ran exactly this at step ' + before.step + ' and it ended ' + before.status + '. Running it again gives the same result. Use a different command, or answer with "say" from what you have.]' });
+            continue;
+          }
+          var isScratch = scratchOnly(cmd);
+          var why2 = isScratch ? null : unsafeReason(cmd, AGENT_OK);
           if (why2){
             print('blocked: ' + cmd + ' — ' + why2, 'dim');
-            looks.push({ head: 'Assistant tried: ' + cmd, body: '[status: blocked — ' + why2 + ']. Use "propose" for anything that changes files.' });
+            tried[tKey] = { step: step + 1, status: 'blocked' };
+            looks.push({ head: 'Assistant tried: ' + cmd, body: '[status: blocked — ' + why2 + ']. Use "propose" for anything that changes files.'
+              + (/is not a command/.test(why2) ? ' The only commands here are: ' + AGENT_OK.join(', ') + '.' : '') });
             continue;
           }
           print('$ ' + cmd + (cwd !== userCwd ? '   (in /' + cwd + ')' : ''), 'step');
@@ -2735,6 +2853,8 @@ async function agent(question){
           var output;
           try { output = await runCaptured(cmd); } finally { agentRunning = false; }
           if (workStopped()){ print('stopped — ask again whenever you like', 'dim'); return; }
+          /* A scratch write changes what a later read will find. */
+          if (isScratch) tried = {}; else tried[tKey] = { step: step + 1, status: (/\[status: ([^\]]*)\]\s*$/.exec(output || '') || [0, 'ok'])[1] };
           looks.push({ head: 'Assistant ran: ' + cmd + (cwd ? '  (working folder /' + cwd + ')' : ''), body: 'Output:\n' + (output || '(no output)') });
         }
         continue;
@@ -2773,7 +2893,7 @@ document.getElementById('form').addEventListener('submit', async function(ev){
       try{
         if (p.verb === 'raw'){
           print('$ ' + p.line, 'cmd');
-          var rOut = await captureOf(function(){ return runLine(p.line); }, false);
+          var rOut = await captureOf(function(){ return runSeq(p.line); }, false);
           if (memoP) memoP.outcome = lastCaptureError ? 'approved, but it FAILED: ' + rOut.slice(0, 200) : 'approved and done: ' + rOut.slice(0, 160);
           if (!lastCaptureError) await checkTouchedApps([p.line], memoP);
         }
@@ -2782,7 +2902,7 @@ document.getElementById('form').addEventListener('submit', async function(ev){
           try {
             for (var bi = 0; bi < p.lines.length; bi++){
               print('$ ' + p.lines[bi], 'cmd');
-              await captureOf(function(){ return runLine(p.lines[bi]); }, false);
+              await captureOf(function(){ return runSeq(p.lines[bi]); }, false);
               if (lastCaptureError){ print('stopped at step ' + (bi + 1) + ' of ' + p.lines.length + ' — undo reverses the steps that ran', 'err');
                 if (memoP) memoP.outcome = 'approved; steps 1–' + bi + ' ran, step ' + (bi + 1) + ' FAILED, the rest did not run'; break; }
             }
@@ -2816,10 +2936,33 @@ document.getElementById('form').addEventListener('submit', async function(ev){
   saveHistory();
   if (isCommandLine(line)) print(prompt$() + ' \u276f ' + line, 'cmd');
   else printHTML('<div class="you"><span class="who">you</span>' + esc(line) + '</div>');
-  try { await runLine(line); }
+  try { await runSeq(line); }
   catch(e){ print(String(e && e.message || e), 'err'); }
   stdin = null;
   paintPrompt();
+  renderChips();
+});
+
+/* v17: a one-line box drops the line breaks of whatever is pasted into it,
+   so three commands arrived as one. Several commands are listed and wait for
+   y; anything else (prose, or a paste into a half-typed line) goes in as one
+   line with spaces where the breaks were. */
+input.addEventListener('paste', function(e){
+  var cd = e.clipboardData || window.clipboardData;
+  var t = cd ? String(cd.getData('text') || '') : '';
+  if (!/[\r\n]/.test(t)) return;
+  e.preventDefault();
+  var lines = scriptLines(t);
+  if (lines.length > 1 && !busy && !pending && !input.value.trim() && lines.every(isCommandLine)){
+    queueLines(lines, 'pasted');
+    haptic('selection'); renderChips(); out.scrollTop = out.scrollHeight;
+    return;
+  }
+  var a = input.selectionStart == null ? input.value.length : input.selectionStart;
+  var b = input.selectionEnd == null ? a : input.selectionEnd;
+  var joined = t.split(/\r\n|\r|\n/).map(function(l){ return l.trim(); }).filter(Boolean).join(' ');
+  input.value = input.value.slice(0, a) + joined + input.value.slice(b);
+  try { input.setSelectionRange(a + joined.length, a + joined.length); } catch(_e){}
   renderChips();
 });
 
