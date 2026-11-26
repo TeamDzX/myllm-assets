@@ -641,7 +641,7 @@ function tapLane(lane){
   }
   var kb=el('keys').children[lane];
   kb.classList.add('hit');setTimeout(function(){kb.classList.remove('hit')},90);
-  if(!best){playClick(false);return}
+  if(!best){if(cur.trk)haptic('light');else playClick(false);return}
   if(showNames){
     var lbl=kb.querySelector('.klbl');
     if(lbl){
@@ -653,7 +653,7 @@ function tapLane(lane){
   }
   var j=judge(now-best.t);
   best.hit=true;
-  playNote(best.m,best.d,cur.trk?.2:.55);
+  if(!cur.trk)playNote(best.m,best.d,.55);   // studio songs: the recording carries the tune; a synth note on top clashes
   cur.combo++;cur.maxCombo=Math.max(cur.maxCombo,cur.combo);
   var pts=(j==='perfect'?100:60)*multOf(cur.combo);
   cur.score+=pts;
